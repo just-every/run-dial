@@ -6,7 +6,7 @@ export function Hero() {
     <div className="hero-art"><HeroDial /></div>
     <div className="hero-copy">
       <h1 id="hero-title" className="hero-title"><span>Pick a time.</span> <span>That’s it.</span></h1>
-      <p className="lede">A booking page that checks your live calendar, speaks every timezone and never asks invitees to sign up. Open source, on your own Cloudflare account.</p>
+      <p className="lede">A booking page that checks your live calendar, speaks every timezone and never asks invitees to sign up. Open source.</p>
       <p className="fine fine-alternative">100% free, open source alternative to <strong>Calendly</strong>, <strong>Acuity&nbsp;Scheduling</strong> and <strong>SavvyCal</strong></p>
       <div className="actions">
         <a className="pill pill--lg" href="/run">Run Dial</a>
