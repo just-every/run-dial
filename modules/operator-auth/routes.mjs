@@ -41,7 +41,7 @@ export function createAuthHandler(auth) {
       if (path === '/auth/domain-rules' && request.method === 'GET') return json(await auth.listDomainRules(request));
       if (path === '/auth/providers' && request.method === 'GET') return json(await auth.listProviders(request));
       const posts = new Set(['/auth/bootstrap', '/auth/magic-link', '/auth/confirm', '/auth/signout', '/auth/invite', '/auth/invite/cancel', '/auth/review-session',
-        '/auth/operator/status', '/auth/operator/role', '/auth/session/revoke', '/auth/step-up', '/auth/domain-rules', '/auth/providers/unlink', '/auth/providers/relink']);
+        '/auth/operator/status', '/auth/operator/role', '/auth/session/revoke', '/auth/step-up', '/auth/domain-rules', '/auth/providers/unlink', '/auth/providers/relink', '/auth/setup-complete']);
       if (!posts.has(path)) return json({ error: 'not_found' }, 404);
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
       const query = readParameters(url.searchParams);
@@ -51,6 +51,7 @@ export function createAuthHandler(auth) {
       form = formPost(request) && ['/auth/magic-link', '/auth/step-up'].includes(path);
       const input = await readInput(request);
       switch (path) {
+        case '/auth/setup-complete': return json(await auth.completeLocalSetup(request));
         case '/auth/bootstrap': { const value = await auth.bootstrap(request, input); return seeOther(value.returnTo, value.cookie); }
         case '/auth/magic-link': {
           const result = await auth.requestMagicLink(request, input);

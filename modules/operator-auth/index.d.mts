@@ -137,6 +137,7 @@ export interface OperatorAuth {
   readonly providers: IdentityProviders | null;
   readonly admission: Admission;
   readonly accounts: AccountsAdapter;
+  completeLocalSetup(request:Request):Promise<{complete:boolean}>;
   bootstrap(request: Request, input: { token: string; displayName: string; returnTo?: string }): Promise<CompletedSession>;
   /** requiredProvider names the provider the address's domain must use, whoever asks. */
   requestMagicLink(request: Request, input: { email: string; returnTo?: string }): Promise<{ status: 'accepted'; requiredProvider?: string }>;

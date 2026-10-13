@@ -99,6 +99,12 @@ export function createOperatorAuth({ db, config: input, mailSender, clientIp, ro
     admission,
     /** Base's accounts adapter over the oa_ store. */
     accounts,
+    async completeLocalSetup(request) {
+      requirePost(request, config);
+      if (!await isLocalCli(request, config) || !await accounts.owner()) deny('owner_required',403);
+      await store.run('UPDATE oa_auth_settings SET first_setup=0 WHERE singleton=1');
+      return {complete:true};
+    },
     async getSession(request) {
       const value = await authenticate(request);
       if (!value) return null;

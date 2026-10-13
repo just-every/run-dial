@@ -1067,7 +1067,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "a4c0f28fdfa3ffe252f51207de34802b144c7923dba606e058765b5a9688ccb6",
+      "sha256": "ae5e44c6b474fdf114fc9dc8d10db833c03d170e82f8681bebdadab12f3a7ad1",
       "executable": false
     },
     "BASELINE.md": {
@@ -2535,7 +2535,7 @@
       "executable": false
     },
     "modules/operator-auth/index.d.mts": {
-      "sha256": "b5a7071a21d4d8af72f56713c7afa233b6c6c5fcbfefbbc804de3033fc59882e",
+      "sha256": "f7a03e6835c89d050ccf9775cfd9322a161975b19157f6c66bc20f5b5009d6de",
       "executable": false
     },
     "modules/operator-auth/index.mjs": {
@@ -2563,11 +2563,11 @@
       "executable": false
     },
     "modules/operator-auth/routes.mjs": {
-      "sha256": "ec5e9e22ed541ccc2924da2d411a4b54981af1b8809fcde04187c654bb2f082e",
+      "sha256": "bca6e6f8af3d795d59fa4ac71b5b20e3d1db21c49913beb76a55270f31fd2e35",
       "executable": false
     },
     "modules/operator-auth/service.mjs": {
-      "sha256": "27eb1a9d954b98712f71a789b30cc5053a708b27a914b02802969a2a9637c4f6",
+      "sha256": "04c1122bfcc1cf05003ffddbd39bc6cc59356d3c6420879716ecae9323f7f9cf",
       "executable": false
     },
     "modules/operator-auth/signin/index.mjs": {
@@ -6287,7 +6287,7 @@
       "executable": false
     },
     "src/core/features/operators/service.ts": {
-      "sha256": "d14c84add764f6970206d5a6155164dfb4b92a8ef749c1173b0c22a14f1ebb61",
+      "sha256": "05191a5ac9f0e85afe53fa83508c44aaa1213c670f321bddcaa28b6a14ae112c",
       "executable": false
     },
     "src/core/features/operators/signin-options.ts": {

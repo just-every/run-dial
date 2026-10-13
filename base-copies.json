@@ -1091,17 +1091,6 @@
       }
     },
     {
-      "path": "modules/operator-auth/routes.mjs",
-      "originPath": "modules/operator-auth/routes.mjs",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
-      "files": {
-        "modules/operator-auth/routes.mjs": "ec5e9e22ed541ccc2924da2d411a4b54981af1b8809fcde04187c654bb2f082e"
-      },
-      "modes": {
-        "modules/operator-auth/routes.mjs": "100644"
-      }
-    },
-    {
       "path": "modules/operator-auth/signin",
       "originPath": "modules/operator-auth/signin",
       "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
