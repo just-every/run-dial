@@ -8,6 +8,7 @@ import { assertNoSecretValues } from '../../scripts/owner-session/export-proof.m
 import { exported, excluded } from '../../scripts/archive/policy.mjs';
 import { spawnOwned } from '../native-process/lifecycle.mjs';
 import { openGateFromLink } from '../dev-key.mjs';
+import { anotherHostedOwner } from './hosted-authority.mjs';
 import { hostedRecords, answer } from './hosted-records.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
 
@@ -42,6 +43,7 @@ export async function hostedExportJourney(page, { origin, privateBytes, values }
   const upload = await page.request.put(origin + '/api/app/profile/avatar', { headers: { origin, 'content-type': 'image/png' }, data: png });
   assert.equal(upload.status(), 200); const profile = await upload.json();
   assert.deepEqual(Buffer.from(await (await page.request.get(origin + '/media/' + profile.avatarKey)).body()), png);
+  const otherCookie = await anotherHostedOwner(page, origin);
   const api = '/api/portability/exports';
   assert.equal((await fetch(origin + api, { method: 'POST', headers: { Origin: origin } })).status, 401);
   assert.equal((await fetch(origin + api, { method: 'POST', headers: { Origin: 'https://other.invalid', Cookie: cookie } })).status, 403);
@@ -51,6 +53,8 @@ export async function hostedExportJourney(page, { origin, privateBytes, values }
   // aborted through the published handler without touching product data.
   const created = await fetch(origin + api, { method: 'POST', headers: { Origin: origin, Cookie: cookie, 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(created.status, 201); const job = await created.json();
+  assert.equal((await fetch(origin + api + '/' + job.id, { headers: { Cookie: otherCookie } })).status, 404, 'another native owner cannot read this job');
+  assert.equal((await fetch(origin + api + '/' + job.id + '/abort', { method: 'POST', headers: { Origin: origin, Cookie: otherCookie } })).status, 404, 'another native owner cannot abort this job');
   assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 503);
   assert.equal((await fetch(origin + api + '/' + job.id + '/abort', { method: 'POST', headers: { Origin: origin, Cookie: cookie } })).status, 200);
   assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 200);
@@ -117,7 +121,7 @@ export async function hostedExportJourney(page, { origin, privateBytes, values }
   await runRer(directory, ['preview', '--stop']); await destination.owned.stop(); destination = undefined;
 
   assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 200, 'successful CLI cleanup reopens source');
-  Object.assign(evidence, { passed: true, completeTableCoverage: true, tables: source.manifest.tables.length, objects: source.manifest.objects.length, contentHash: source.closing.contentHash, sourceArchiveSha256: createHash('sha256').update(source.bytes).digest('hex'), independentEmptyDestination: true, saltMismatchRefused: true, sessionAndOriginRefused: true, remoteImportNotExposed: true, bytesAndMetadataEquivalent: true, publicBookingAndAnswer: true, freshRuntimeRestoredBooking: true, oldSessionRefused: true, nonemptyRestoreRefused: true, originalOwnerClaimPreserved: true });
+  Object.assign(evidence, { passed: true, completeTableCoverage: true, tables: source.manifest.tables.length, objects: source.manifest.objects.length, contentHash: source.closing.contentHash, sourceArchiveSha256: createHash('sha256').update(source.bytes).digest('hex'), independentEmptyDestination: true, saltMismatchRefused: true, sessionAndOriginRefused: true, otherNativeOwnerRefused: true, remoteImportNotExposed: true, bytesAndMetadataEquivalent: true, publicBookingAndAnswer: true, freshRuntimeRestoredBooking: true, oldSessionRefused: true, nonemptyRestoreRefused: true, originalOwnerClaimPreserved: true });
  } finally {
   await context?.close(); await destination?.owned.stop();
   await writeFile(evidencePath('hosted-export-roundtrip.json'), JSON.stringify(evidence, null, 2), { mode: 0o600 });

@@ -118,6 +118,40 @@ These checks must pass on the final integrated candidate before acceptance is re
 
 The adjacent-main launcher integration was checked on `5cb7574799d02d898ce1feb35e5d035536220963`: 17/17 native HTTP/private-file checks, the affected AVAIL-009 journey (1/1), typecheck and lint of 21 changed source files passed. Product, schema and production Vite configuration were unchanged from the corrected 11-test implementation above. Root restored the inherited-key isolation and bounded audit/capacity dispatch before this check. This narrow local integration receipt was followed by completed disconnected archive receipts on `b272` and `7157875`; consult the maintainers' private verification notes (not published) for the actual final docs-bearing-head archive result.
 
-## Calendar-optional booking candidate
+## Calendar-optional booking
 
-The existing `tests/host-setup-journey.test.mjs` adds a calendar-optional cold-host scenario at 1440px and 390px. It publishes real saved availability with no connected calendar, completes first run, books through the signed-out public UI, reloads the receipt and host list, checks occupied time is removed, and races independent nonces for one remaining slot. It requires one persisted winner, a 409 loser, `not_required` calendar state, no calendar outbox commands and a refused Google Meet publication. Existing connected-provider journeys remain required. Runtime receipts for the final integrated candidate must be recorded before claiming acceptance; no live provider acceptance is implied.
+Run `tests/host-setup-journey.test.mjs` at 1440px and 390px. The calendar-optional
+cold-host journey must publish saved availability with no connected calendar,
+complete first run, book through the signed-out public UI, reload the receipt
+and host list, remove occupied time, and race independent nonces for one
+remaining slot. Require one persisted winner, a 409 loser, `not_required`
+calendar state, no calendar outbox commands and refused Google Meet publication.
+Retain the connected-provider failure and recovery journeys alongside this flow.
+
+## Hosted export
+
+Run the bounded `native hosted export` case in
+`tests/local-setup-journey.test.mjs`:
+
+```sh
+node --test --test-concurrency=1 --test-name-pattern='native hosted export' tests/local-setup-journey.test.mjs
+```
+
+Use the real local production preview as a hosted stand-in. Populate it through
+native owner sign-in, public booking with a distinctive multiline answer and an
+original uploaded avatar. Export from a separate fresh checkout through Dial's
+CLI. For published-command qualification, supply the independently verified
+package entry through `DIAL_PUBLISHED_RER_ENTRY`; require its archive to match
+Dial's complete content hash and import that archive through the ordinary CLI.
+
+Require empty-destination import and re-export equivalence for all durable data,
+object metadata and original bytes. After fresh native sign-in, the restored
+runtime must serve the original booking, occurrence, answer and media through
+its ordinary APIs. Wrong-salt and nonempty restoration, anonymous and
+cross-origin export, another owner's job access, old session/manage authority
+and repeat first-owner bootstrap must be refused. Exercise source maintenance
+and cleanup, expiry refusal, credential redaction and exhaustive schema policy.
+
+The local hosted stand-in qualifies application transport and restoration. Live
+Cloudflare backup and account recovery require separate owner-account evidence;
+remote restore is not exposed. Keep execution receipts outside the public tree.

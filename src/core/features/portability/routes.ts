@@ -27,7 +27,16 @@ export async function hostedExport(request: Request, env: AppBindings, operators
   held = true;
   const catalogue = applicationCatalog((await env.DB.prepare(catalogQuery).all()).results);
   if (JSON.stringify(catalogue) !== JSON.stringify(schema.catalog)) return reply("archive_schema_mismatch", 409);
-  const { policy, knownSecrets } = await exportPolicy(env.DB, env, JSON.stringify(schema));
+  // Include the presented native capability if it was pasted into authored
+  // content. Only a cookie that independently authenticates this exact session
+  // is secret material; unrelated short cookies must not redact ordinary text.
+  let nativeCookie = "";
+  for (const cookie of (request.headers.get("cookie") ?? "").split(";").map(value => value.trim()).filter(value => /^(?:__Host-operator_session|operator_session_local)=/.test(value))) {
+   const headers = new Headers(request.headers); headers.set("cookie", cookie);
+   const current = await operators.auth.getSession(new Request(request.url, { headers }));
+   if (current?.id === session.id) nativeCookie = cookie.slice(cookie.indexOf("=") + 1);
+  }
+  const { policy, knownSecrets } = await exportPolicy(env.DB, { ...env, ARCHIVE_NATIVE_COOKIE_SECRET: nativeCookie }, JSON.stringify(schema));
   const handle = await createPortabilityHandler({ db: env.DB, buckets: { FILES: guardedBucket(env.FILES, knownSecrets) }, policy, appOrigin: origin,
    authorize: async (authorizedRequest, operation) => {
     const current = await operators.auth.getSession(authorizedRequest);

@@ -1031,7 +1031,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "2c03480437a4a298795bd781e6c3ef8f7b881055446aa87dbabd0e5ad1009d79",
+      "sha256": "773af3a5b43cf7a7c577d1c60d3e07dea22d0cd6bb03f1292e887fb633682afc",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -2635,7 +2635,7 @@
       "executable": false
     },
     "RELEASE.md": {
-      "sha256": "280802146d180d66d459b594c5cb10f3035935499802e6ecee1568d1e2cd65fc",
+      "sha256": "1f6ecf41d4deb11a6f0ab673fcaaf172a2ecc9b58c33934b42c0c835a49aaa41",
       "executable": false
     },
     "RENDERING.md": {
@@ -2675,7 +2675,7 @@
       "executable": false
     },
     "scripts/archive/environment-secrets.mjs": {
-      "sha256": "fbba877b06ed069685a6f16ba04ae8e915cc528e2ed8a9f01bcba9d5c57009e8",
+      "sha256": "1a8fe0b51e036352324c5dbf1c158626f566ff9fa3cf69ac579b63b930905071",
       "executable": false
     },
     "scripts/archive/export-policy.d.mts": {
@@ -6295,11 +6295,11 @@
       "executable": false
     },
     "src/core/features/portability/admission.ts": {
-      "sha256": "2817e116a8c00ec557f471057b1a28128634229dda61f61bc1f9714d7bca2b8c",
+      "sha256": "0b06dd4854f4ff98fab44508ceb04b0a3ed8eeeca88253253e365df0591a547a",
       "executable": false
     },
     "src/core/features/portability/routes.ts": {
-      "sha256": "24ffe3f04b3a96325d55b86cc853b5500db07d3df79f089ddca2b0f9b700e773",
+      "sha256": "4109ee5d40cfd595aaba0661ab54b39b58ab834ffb1f3513e4e0618af7940285",
       "executable": false
     },
     "src/core/features/portability/schema.d.ts": {
@@ -7878,8 +7878,12 @@
       "sha256": "cdf2ca5daaf8855e0beade18e97a149543666ad8148cb05538765b332adb2e49",
       "executable": false
     },
+    "tests/local-setup/hosted-authority.mjs": {
+      "sha256": "73f1a003d5b8f2f0ac3e51d4ff27fcdc99f17b681124886e0a35cf57b07810c0",
+      "executable": false
+    },
     "tests/local-setup/hosted-export.mjs": {
-      "sha256": "00449b4ca86b438e571c174f830a20c1c8d2e018a6887a8ede97a42317656222",
+      "sha256": "972b3c05395bf074f0d57044503134f1dee737e4017789bb3eb9806cc371e6b0",
       "executable": false
     },
     "tests/local-setup/hosted-records.mjs": {

@@ -6,4 +6,13 @@ Before a release, freeze and independently verify the candidate, refresh and che
 
 Publish or tag only through the authorized release procedure after review. A source publication check is distinct from whole-product, live-provider, deployment and accessibility/capacity acceptance; preserve the limitations in HANDOVER.md and ACCEPTANCE.md in any public announcement.
 
-Calendar-optional scheduling uses saved availability and persisted booking occupancy for fixed locations. Connected calendar failures still close booking; Google Meet still needs Google. Apply additive migration `0042_optional_calendar.sql` after backing up. It preserves existing provider obligations and records new schedule-only bookings without claiming calendar delivery. The existing cold-host journey includes the full booking and independent contention flow at 1440px and 390px; final candidate runtime receipts remain required.
+Calendar-optional scheduling uses saved availability and persisted booking occupancy for fixed locations. Connected calendar failures still close booking; Google Meet still needs Google. Apply additive migration `0042_optional_calendar.sql` after backing up. It preserves existing provider obligations and records new schedule-only bookings without claiming calendar delivery. The cold-host acceptance journey covers booking and independent contention at 1440px and 390px.
+
+Hosted export now uses the native owner session and published Base HTTP
+portability primitives. Migration `0043_hosted_portability.sql` adds source
+admission receipts and an expiring maintenance lease, excluded from archives.
+Run `rer export --target remote` from a stopped local checkout with the source
+origin and a private native-cookie file. Preserve the original SESSION_SECRET
+separately and rehearse ordinary import into a fresh empty local installation.
+Remote restore remains unavailable. See `docs/backups.md` and `OPERATIONS.md`
+for source maintenance, interrupted-job cleanup and crashed-writer recovery.
