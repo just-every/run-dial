@@ -1,3 +1,15 @@
+<p align="center">
+  <a href="https://justevery.com/#vol-dial">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.webp">
+      <source media="(prefers-color-scheme: light)" srcset=".github/assets/banner-light.webp">
+      <img src=".github/assets/banner-light.webp" width="100%" alt="Dial: Pick a time. That’s it. 100% free, open source alternative to Calendly, Acuity Scheduling and SavvyCal.">
+    </picture>
+  </a>
+</p>
+
+<p align="center"><a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
+
 # Dial
 
 Dial is a self-hosted scheduler for one business or independent host. Invitees
