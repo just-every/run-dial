@@ -16,7 +16,7 @@ export async function checkpointState(directory, id, operation = 'inspect') {
   (SELECT COUNT(*) FROM dial_portability_admission WHERE id='${id}' AND expires_at=0) AS expired,
   (SELECT COUNT(*) FROM rer_portability_parts WHERE job='${id}') AS parts,
   (SELECT COUNT(*) FROM rer_portability_segments WHERE job='${id}') AS segments,
-  (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'rer_portability_snap_${id.replaceAll('-', '')}_%') AS copies
+  (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND instr(name, 'rer_portability_snap_${id.replaceAll('-', '')}_')=1) AS copies
   FROM rer_portability_jobs WHERE id='${id}';`;
  let output = '';
  const command = spawnOwned(process.execPath, ['node_modules/wrangler/bin/wrangler.js', 'd1', 'execute', 'dial-local', '--local', '--persist-to', '.wrangler/state', '--config', 'wrangler.toml', '--command', sql, '--json'], { cwd: directory, env: environment() }, { label: 'expired checkpoint fixture' });

@@ -7887,7 +7887,7 @@
       "executable": false
     },
     "tests/local-setup/hosted-checkpoint.mjs": {
-      "sha256": "e158004625debe51086365e25c82a63d9e2f41edd005530642080e6847f687e9",
+      "sha256": "c0b626453e1d9b681618adceda4e796005d85aa39734f5c670e5e2ec732c7dd6",
       "executable": false
     },
     "tests/local-setup/hosted-export.mjs": {
