@@ -36,8 +36,8 @@ return {
     if (url.host !== new URL(runtime.APP_URL).host || (request.headers.has("host") && request.headers.get("host") !== new URL(runtime.APP_URL).host)) return new Response("Not found", { status: 404 });
     if (url.pathname === "/auth/owner-claim") return (await ownerClaim(env.DB, runtime, request)) ?? new Response("Not found", { status: 404 });
     if (url.pathname === "/__dev/key" || url.pathname === "/__dev/outbox" || url.pathname.startsWith("/__dev/outbox/")) return (await handleDevelopmentOutbox(request, env.DB, runtime, env.RER_DEV_KEY)) ?? new Response("Not found", { status: 404 });
-    if (url.pathname.startsWith("/assets/")) return fetchBuildAsset(request, env.ASSETS);
-    const asset = await staticAssetResponse(request, env); if (asset) return asset;
+    // General app build assets spend the native public budget before dispatch below.
+    const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
     const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };
     const state = await setupStateResponse(request, lobbyBindings, claimed); if (state) return state;
     const lobby = await lobbyResponse(request, lobbyBindings, identity, claimed); if (lobby) return lobby;
@@ -54,6 +54,7 @@ return {
     const bookingId = await bookingMutationTarget(request, env);
     if (bookingId) return forwardBookingRequest(env, bookingId, request);
     if (url.pathname.startsWith("/_serverFn/")) return start.fetch(request);
+    if (url.pathname.startsWith("/assets/")) return fetchBuildAsset(request, env.ASSETS);
     if (url.pathname === "/media" || url.pathname.startsWith("/media/")) return request.method === "GET" ? app.fetch(request, env, context) : new Response("Not found", { status: 404 });
     if (isThemeFile(request)) return env.ASSETS.fetch(request);
     if (url.pathname.startsWith("/auth/") || url.pathname === "/api" || url.pathname.startsWith("/api/") || url.pathname === "/health" || url.pathname === "/" || /^\/(app|setup|book|manage|embed)(\/|$)/.test(url.pathname) || ["/signin", "/privacy"].includes(url.pathname)) return app.fetch(request, env, context);

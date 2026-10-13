@@ -5407,7 +5407,7 @@
       "executable": false
     },
     "src/core/app/worker.ts": {
-      "sha256": "cc63ca178c8d6077e6f05507ad1e9da18713792407d97f829b9fcb65ca7ee5ae",
+      "sha256": "656d63ec936fd08f16a3223b6a2afa51ab9e578714fbc2b3d3a9205d3c50073e",
       "executable": false
     },
     "src/core/features/availability-requests/index.ts": {
