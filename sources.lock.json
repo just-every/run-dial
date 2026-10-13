@@ -1006,8 +1006,8 @@
       "sha256": "41c2c300a6c92566fd8d60414d15fd3208ecbea25313fa6f13a918b8cff812cf",
       "executable": false
     },
-    ".github/workflows/run-site-probe.yml": {
-      "sha256": "5e5bbb26ec3f99ef04d35ba5be07c0383ca7ffef2886e002be8d7b89afb7cda5",
+    ".github/workflows/run-site.yml": {
+      "sha256": "02faf2ab43bee5c58087b5e1be0c0e10c705d28271c8e04541ebc3c929861ab7",
       "executable": false
     },
     ".github/workflows/verify.yml": {
@@ -6583,7 +6583,7 @@
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Closing.tsx": {
-      "sha256": "2ae00a6fde2ec39fce95a797e3ebd1d78734fc4d79d5fb47182fa7ab7394eb9c",
+      "sha256": "ebe4287c14410565b72dbb0b205a3c223e77fd51575c3cde069f0b5260037b47",
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Essentials.tsx": {
@@ -6595,7 +6595,7 @@
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Hero.tsx": {
-      "sha256": "48916888ed71c9e87e12ae6323667f8a8bbba8388d276e655f0be028f276df14",
+      "sha256": "b4075fa1db7400e61fd03a74844d5e249cbeb6612c4c3e83deee6b93d123d779",
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Invitees.tsx": {
@@ -6603,7 +6603,7 @@
       "executable": false
     },
     "src/core/features/public-site/landing/sections/YoursToRun.tsx": {
-      "sha256": "9eaef3267107651667252e8e516d21b99af7397ab7ba81bf918ee209522b4167",
+      "sha256": "5806b442d97a3ba4e57a205f9bc93363c97a2bbe4f34917a2c153a06ed6f9ff2",
       "executable": false
     },
     "src/core/features/public-site/landing/styles/base.css": {
@@ -7139,11 +7139,11 @@
       "executable": false
     },
     "src/site/identity.ts": {
-      "sha256": "ab69427ca83d027e90a8855feb21364e69b012999ae22a95c57943b30137dad0",
+      "sha256": "1282b9361d57b446c77e31600470164dfc973f4091a42f1e688c304f03e4248d",
       "executable": false
     },
     "src/site/pages.tsx": {
-      "sha256": "de1378b078b50340883c23daab0aeded9abc23109d82f345c7dbc27af0b6901d",
+      "sha256": "f1127004d8c084b62b76dddd1867e81f654a7a7929134b81780a18e15650c1b7",
       "executable": false
     },
     "src/site/run.ts": {
