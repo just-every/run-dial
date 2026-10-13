@@ -34,6 +34,12 @@ export class PersonErasure {
     const email=foldEmail(input.email), records=await this.records(input.email);
     const operatorIdentityRetained=await operatorOverlap(this.db,email);
     if (input.expiresAt<Date.now() || input.expiresAt>Date.now()+300_000 || !constantEqual(input.confirmation,await this.signature(email,records,session,input.expiresAt,operatorIdentityRetained))) throw new ErasureError("erasure_preview_changed",409);
+    await requireErasureSession(this.db,session);
+    const custody = await importPersonValues(this.db, email, session);
+    // Base currently requires an absent native target for related redaction.
+    // A source-only invitee cannot name the peer's booking or sever its undo.
+    // Refuse before admission, native deletion or a completed receipt.
+    if (custody.sharedCustody) throw new ErasureError("erasure_import_shared_source",503);
     const requestedAt=nowIso(), proposedId=createId();
     // A failed request leaves this admission closed and visible to the next preview.
     // It carries no authority: every retry still needs a native session and confirmation.
@@ -53,7 +59,6 @@ export class PersonErasure {
     if(!pending?.receipt_id)throw new ErasureError("erasure_incomplete",503);
     const id=pending.receipt_id;
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
-    const custody = await importPersonValues(this.db, email, session);
     await erasePersonSourceCustody(this.db, email, custody.custodyOnly, custody.values, session);
     for (const booking of records.bookings) await eraseEntity("bookings",booking);
     for (const request of records.requests) await eraseEntity("availability-requests",request);
@@ -70,7 +75,7 @@ export class PersonErasure {
       {sql:"UPDATE erased_calendar_targets SET receipt_id=? WHERE booking_id IN(SELECT value FROM json_each(?))",params:[id,JSON.stringify(records.bookings)]},
       erasureAuthority(session),
     ];
-    await finishPersonCustody(this.db, custody.values, statements, session);
+    await finishPersonCustody(this.db, email, custody.values, statements, session);
     return this.receipt(id);
   }
   async receipt(id: string) {

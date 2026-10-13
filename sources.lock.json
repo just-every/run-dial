@@ -5847,7 +5847,7 @@
       "executable": false
     },
     "src/core/features/erasure/person.ts": {
-      "sha256": "9d9f6b52f8880551474b38df1606c72145e7259f99bd7d3a1941ed183dd533ae",
+      "sha256": "b1d3d4870203d069ce025d0b43ae7dedb4d207dd95aa7fd914b36dd2516da816",
       "executable": false
     },
     "src/core/features/erasure/portability.ts": {
@@ -6067,7 +6067,7 @@
       "executable": false
     },
     "src/core/features/move-in/erasure.ts": {
-      "sha256": "b97240eb61d7154b7a35a5340b17c786cdeb980af7b17ae49d9b7937b9676a57",
+      "sha256": "a73b3d16f6c293c5cf557078ae86e4d02071eaccaebe4416628ffd266d780aa3",
       "executable": false
     },
     "src/core/features/move-in/facts.ts": {
@@ -6099,7 +6099,7 @@
       "executable": false
     },
     "src/core/features/move-in/person-values.ts": {
-      "sha256": "62f86f5c2f80d9b4397a80c11dcc2fe3e9596e14cab8b4c8e7f59b54cb583b50",
+      "sha256": "1db4acc45a3ca77b0c9b53817ebb171e69f4678f1fa167a4ea84eb20be6f24ae",
       "executable": false
     },
     "src/core/features/move-in/planning.ts": {
@@ -7607,7 +7607,7 @@
       "executable": false
     },
     "tests/erasure/import-custody.mjs": {
-      "sha256": "17538cd5283f7f4e419fde91a033633632ae46e36853841bb479cfca74a07739",
+      "sha256": "f240483022dca49f845dca7ceb0996508a1fd820e8220e6905e491adc6aaa5bc",
       "executable": false
     },
     "tests/erasure/operator-overlap.mjs": {
@@ -7759,7 +7759,7 @@
       "executable": false
     },
     "tests/import-custody-erasure.test.mjs": {
-      "sha256": "d9a37d89edcbc63edc97fb1fe052865527a5627539f1abc9d118dd8052d3ba1c",
+      "sha256": "deb3ca5823589781de736253d0b5f307f4a71f767eddf25d490ceef776293d59",
       "executable": false
     },
     "tests/landing.test.mjs": {

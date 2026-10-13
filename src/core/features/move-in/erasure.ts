@@ -4,7 +4,7 @@ import { retirementScope, headerAbsence } from '../../../../modules/import-kit/s
 import type { SessionRecord } from '../operators';
 import { ErasureRepository } from '../erasure';
 import { erasurePortability } from '../erasure/portability';
-import { toD1Sql } from '../../../modules/erasure/index.mjs';
+import { ErasureError, toD1Sql } from '../../../modules/erasure/index.mjs';
 import { importContext } from './service';
 import { importPersonValues, personInvitees } from './person-values';
 import { stableId } from './model';
@@ -36,13 +36,19 @@ export async function erasePersonSourceCustody(db: D1Database, email: string, so
 /** A person can exist only in a header. No artificial target is invented: the
  * kit retires that header's closure with the final native receipt writes. If
  * there is no such custody, absence guards keep those writes fail-closed. */
-export async function finishPersonCustody(db: D1Database, values: string[], statements: D1Sql[], session: SessionRecord) {
+export async function finishPersonCustody(db: D1Database, email: string, values: string[], statements: D1Sql[], session: SessionRecord) {
+  // Imports may have been created after the first person scan or between native
+  // deletions. Recheck before completing, then fence the exact destination job
+  // set and fingerprints in the receipt transaction so a later import aborts it.
+  const custody = await importPersonValues(db, email, session);
+  if (custody.sharedCustody) throw new ErasureError('erasure_import_shared_source', 503);
+  if (custody.hasCustody) throw new ErasureError('erasure_incomplete', 503);
   const context = importContext(db, session), scope = await retirementScope(db, context.destination, values);
   if (scope.jobs.length || scope.streams.length || scope.stages.length || scope.anchors.length) {
     const fence = await erasurePortability(db), checkpoint = (await fence.redactionStatements()).map(toD1Sql);
-    await retireD1ImportCustody({ values }, statements, context, checkpoint);
+    await retireD1ImportCustody({ values }, [...custody.guards, ...statements], context, checkpoint);
   } else {
-    const guards = readonlyChecks(headerAbsence(context.destination, values));
+    const guards = [...custody.guards, ...readonlyChecks(headerAbsence(context.destination, values))];
     const writes: D1Sql[] = [...guards, ...statements, ...guards, erasureAuthority(session)];
     await db.batch(writes.map(statement => db.prepare(statement.sql).bind(...statement.params ?? [])));
   }

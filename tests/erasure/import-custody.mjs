@@ -8,13 +8,26 @@ export const people = [
   { email: 'custody-a-78321@example.test', name: 'CUSTODY_PERSON_A_78321', answer: 'CUSTODY_ANSWER_A_78321' },
   { email: 'custody-b-78321@example.test', name: 'CUSTODY_PERSON_B_78321', answer: 'CUSTODY_ANSWER_B_78321' },
 ];
-export async function importPeople(rt, subjects = people) {
+export async function importPeople(rt, subjects = people, cancelledPeer) {
   const files = await endedFiles();
   for (const [index, person] of subjects.entries()) {
     const file = files.find(file => file.name === `invitees-${index + 1}.json`), page = JSON.parse(file.bytes);
     Object.assign(page.collection[0], { email: person.email, name: person.name });
     page.collection[0].questions_and_answers[0].answer = person.answer;
     file.bytes = Buffer.from(JSON.stringify(page));
+  }
+  if (cancelledPeer) {
+    const file = files.find(file => file.name === 'invitees-2.json'), page = JSON.parse(file.bytes);
+    const active = page.collection[0], cancelled = structuredClone(active);
+    Object.assign(cancelled, { uri: `${active.event}/invitees/cancelled-peer`, email: cancelledPeer.email, name: cancelledPeer.name, status: 'canceled' });
+    cancelled.questions_and_answers[0].answer = cancelledPeer.answer;
+    page.collection.push(cancelled); page.pagination.count++;
+    file.bytes = Buffer.from(JSON.stringify(page));
+    for (const events of files.filter(row => row.name.startsWith('scheduled_events-'))) {
+      const payload = JSON.parse(events.bytes);
+      for (const event of payload.collection) if (event.uri === active.event) event.invitees_counter.total++;
+      events.bytes = Buffer.from(JSON.stringify(payload));
+    }
   }
   const manifest = files.find(file => file.name === 'manifest.json'), data = JSON.parse(manifest.bytes);
   for (const entry of data.files) {

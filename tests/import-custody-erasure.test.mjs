@@ -4,12 +4,28 @@ import { bookingRuntime } from './move-in/booking-runtime.mjs';
 import { importPeople, people, erase, finish, refuseReplay, assertErased, custodyEvidence } from './erasure/import-custody.mjs';
 import { snapshot } from './erasure/scan.mjs';
 
-contract('DATA-002', 'person HTTP erasure removes imported custody with an anonymous restore checkpoint while preserving a peer and safe undo', async context => {
+contract('DATA-002', 'person HTTP erasure preserves safe undo and refuses unsupported shared-source erasure before mutation', async context => {
   const rt = await bookingRuntime();
   try {
-    const imported = await importPeople(rt);
+    const cancelled = { email: 'cancelled-shared-94127@example.test', name: 'CANCELLED_SHARED_94127', answer: 'CANCELLED_ANSWER_94127' };
+    const historical = await importPeople(rt, people, cancelled);
+    await finish(rt, await rt.data(`/api/app/move-in/jobs/${historical.job.id}/undo`, {}), 'undone');
+    const imported = await importPeople(rt, people, cancelled);
+    assert.notEqual(imported.job.id, historical.job.id);
     const rows = await rt.data('/api/app/bookings'), peer = rows.find(row => row.inviteeEmail === people[1].email);
     const peerBefore = await rt.data(`/api/app/bookings/${peer.id}`);
+    const refuseShared = async () => {
+      const preview = await rt.data('/api/app/privacy/preview', { email: cancelled.email });
+      const before = await snapshot(rt.db), counts = await custodyEvidence(rt, cancelled);
+      assert.ok(Object.values(counts.custody).some(row => row.personalRows > 0));
+      const response = await rt.api('/api/app/privacy/erase', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({email:cancelled.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt}) });
+      assert.equal(response.status, 503);
+      assert.equal((await response.json()).error.code, 'erasure_import_shared_source');
+      const after = await snapshot(rt.db);
+      for (const table of Object.keys(before).filter(name => /^(ik_|rer_portability_|move_in_|bookings$|booking_|person_erasure_)/u.test(name))) assert.deepEqual(after[table], before[table], `${table}: unsupported erasure changes no custody, native data or receipt`);
+      assert.deepEqual(await custodyEvidence(rt, cancelled), counts);
+    };
+    await refuseShared();
     const beforeCounts = await custodyEvidence(rt, people[0]);
     const stateBefore = await rt.db.prepare('SELECT epoch FROM rer_portability_state WHERE id=1').first();
     await erase(rt, people[0].email);
@@ -25,7 +41,8 @@ contract('DATA-002', 'person HTTP erasure removes imported custody with an anony
     assert.equal(undone.job.erasedRecords > 0, true);
     assert.equal((await rt.db.prepare('SELECT count(*) AS n FROM bookings').first()).n, 0);
     await assertErased(rt, people[0]);
-    context.diagnostic(JSON.stringify({before:beforeCounts,afterErasure:afterCounts,peerUnchanged:true,afterUndo:await custodyEvidence(rt,people[0])}));
+    await refuseShared();
+    context.diagnostic(JSON.stringify({before:beforeCounts,afterErasure:afterCounts,peerUnchanged:true,afterUndo:await custodyEvidence(rt,people[0]),sharedSourceRefusedBeforeMutation:true,historicalCopies:2}));
   } finally { await rt.close(); }
 });
 
