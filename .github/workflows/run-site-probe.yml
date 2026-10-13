@@ -59,12 +59,17 @@ jobs:
               if (optional) return;
               throw new ProbeFailure(`${label}: invalid API response`);
             }
+            const object = body !== null && typeof body === 'object' && !Array.isArray(body);
+            const shape = (value) => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+            // Fixed field names and shape only: never provider values, keys, messages, or bodies.
+            console.log(`${label}: envelope=${shape(body)}; errors-present=${object && Object.hasOwn(body, 'errors')}; errors-type=${shape(body?.errors)}; errors-count=${Array.isArray(body?.errors) ? body.errors.length : 'n/a'}; result-present=${object && Object.hasOwn(body, 'result')}; result-type=${shape(body?.result)}`);
             if (optional && body?.success !== true) return;
+            check(object, `${label}: API envelope must be an object`);
             check(body?.success === true, `${label}: API success required`);
-            if (!optional) {
-              check(Array.isArray(body.errors) && body.errors.length === 0, `${label}: API errors must be empty`);
-              check(Object.hasOwn(body, 'result'), `${label}: API result required`);
-            }
+            // The vendored deploy-kit/provider.mjs accepts absent/null errors. Keep
+            // rejecting nonempty arrays and every other malformed errors value.
+            check(body.errors == null || Array.isArray(body.errors) && body.errors.length === 0, `${label}: API errors must be absent, null, or empty`);
+            check(Object.hasOwn(body, 'result'), `${label}: API result required`);
             return body.result;
           }
           try {
@@ -87,6 +92,7 @@ jobs:
             check(intended.length === 0, 'Apex and www Worker domains must be absent before first deployment');
             console.log('Apex/www Worker domains absent: yes');
             await get(`/accounts/${account}/workers/scripts/${script}/settings`, 'First-deploy Worker absence', 404);
+            console.log('First-deploy Worker absent: yes');
             // This setting is not called by the deploy kit; missing read permission is not a deploy gate.
             const https = await get(`/zones/${zone.id}/settings/always_use_https`, 'Always Use HTTPS', 200, true);
             check(!(https?.id === 'always_use_https' && https.value === 'off'), 'Always Use HTTPS is confirmed off');
