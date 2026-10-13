@@ -7183,7 +7183,7 @@
       "executable": false
     },
     "tests/archive/fixture.mjs": {
-      "sha256": "4f6c0c781334faa09098fce73dd787fed9cfc0dd2aa6730c5b91255551324394",
+      "sha256": "051099705fb818cbb37020f861d0d449da1b9688d0f7d7f0f3009c486f707097",
       "executable": false
     },
     "tests/archive/mail-worker.mjs": {

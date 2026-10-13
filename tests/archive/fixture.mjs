@@ -11,6 +11,9 @@ export const copyReport = {
 };
 const end = '2026-10-07T01:00:00.000Z';
 const overrides = {
+  // A historical header-only job was retired; its anonymous receipt outlives the job.
+  ik_d1_erasure_journal: { id: 'ik_d1_erasure_journal-1', destination: 'archive-history', recorded_at: instant, records_erased: 0, jobs_retired: 1, streams_retired: 0, stores_json: JSON.stringify([{ store: 'ik_jobs', rows: 1 }]) },
+  ik_d1_retirements: { id: 'ik_jobs-retired-1', kind: 'job', destination: 'archive-history', receipt_id: 'ik_d1_erasure_journal-1', retired_at: instant },
   rer_erasure_operations: { entity: "booking", subject: null, label: "Erased booking", phase: "complete", planned: "{}", deleted: "{}", retained: "[]", committed_at: instant, completed_at: instant },
   person_erasure_receipts: { bookings: 1, requests: 0, completed_at: instant },
   move_in_captures: { mode: 'catch_up', captured_at: instant },
