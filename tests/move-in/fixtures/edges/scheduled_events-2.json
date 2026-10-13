@@ -1,0 +1,10 @@
+{
+  "collection": [],
+  "pagination": {
+    "count": 0,
+    "next_page": "https://api.calendly.com/scheduled_events?page_token=last",
+    "previous_page": null,
+    "next_page_token": null,
+    "previous_page_token": null
+  }
+}

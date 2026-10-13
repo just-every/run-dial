@@ -1,0 +1,631 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 1
+        },
+        "evidence": {
+          "type": "string",
+          "const": "synthetic-only"
+        },
+        "state": {
+          "type": "string"
+        },
+        "sourceUser": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "timezone": {
+              "type": "string"
+            },
+            "handle": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "timezone",
+            "handle"
+          ],
+          "additionalProperties": false
+        },
+        "asOf": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "hostZone": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "counts": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "read": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "imported": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "changed": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "skipped": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "rejected": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "read",
+              "imported",
+              "changed",
+              "skipped",
+              "rejected"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              },
+              "mapped": {}
+            },
+            "required": [
+              "sourceId",
+              "mapped"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "erasedRecords": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "bookingCounts": {
+          "type": "object",
+          "properties": {
+            "read": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "toImport": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "past": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "cancelled": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "severalInvitees": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "skippedEvent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "overlapping": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "invalid": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "read",
+            "toImport",
+            "past",
+            "cancelled",
+            "severalInvitees",
+            "skippedEvent",
+            "overlapping",
+            "invalid"
+          ],
+          "additionalProperties": false
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "profile",
+                  "eventTypes",
+                  "questions",
+                  "locations",
+                  "availability",
+                  "overrides",
+                  "settings",
+                  "bookings"
+                ]
+              },
+              "sourceId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "imported",
+                  "changed",
+                  "skipped",
+                  "rejected"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "startAt": {
+                "type": "string"
+              },
+              "bookingOutcome": {
+                "type": "string",
+                "enum": [
+                  "toImport",
+                  "past",
+                  "cancelled",
+                  "severalInvitees",
+                  "skippedEvent",
+                  "overlapping",
+                  "invalid"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "sourceId",
+              "name",
+              "outcome",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "version",
+        "evidence",
+        "state",
+        "sourceUser",
+        "asOf",
+        "hostZone",
+        "fingerprint",
+        "counts",
+        "events",
+        "erasedRecords",
+        "bookingCounts",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 2
+        },
+        "evidence": {
+          "type": "string",
+          "const": "synthetic-only"
+        },
+        "state": {
+          "type": "string"
+        },
+        "sourceUser": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "timezone": {
+              "type": "string"
+            },
+            "handle": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "timezone",
+            "handle"
+          ],
+          "additionalProperties": false
+        },
+        "asOf": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "hostZone": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "counts": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "read": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "imported": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "changed": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "skipped": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "rejected": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "read",
+              "imported",
+              "changed",
+              "skipped",
+              "rejected"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              },
+              "mapped": {}
+            },
+            "required": [
+              "sourceId",
+              "mapped"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "erasedRecords": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "first",
+            "catch-up"
+          ]
+        },
+        "capturedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alreadyHere": {
+          "type": "object",
+          "properties": {
+            "profile": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "eventTypes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "bookings": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "profile",
+            "eventTypes",
+            "bookings"
+          ],
+          "additionalProperties": false
+        },
+        "bookingCounts": {
+          "type": "object",
+          "properties": {
+            "read": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "toImport": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "past": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "cancelled": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "severalInvitees": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "skippedEvent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "overlapping": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "invalid": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "movedAtSource": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "read",
+            "toImport",
+            "past",
+            "cancelled",
+            "severalInvitees",
+            "skippedEvent",
+            "overlapping",
+            "invalid",
+            "movedAtSource"
+          ],
+          "additionalProperties": false
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "profile",
+                  "eventTypes",
+                  "questions",
+                  "locations",
+                  "availability",
+                  "overrides",
+                  "settings",
+                  "bookings"
+                ]
+              },
+              "sourceId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "imported",
+                  "changed",
+                  "skipped",
+                  "rejected"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "startAt": {
+                "type": "string"
+              },
+              "bookingOutcome": {
+                "type": "string",
+                "enum": [
+                  "toImport",
+                  "past",
+                  "cancelled",
+                  "severalInvitees",
+                  "skippedEvent",
+                  "overlapping",
+                  "invalid",
+                  "movedAtSource"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "sourceId",
+              "name",
+              "outcome",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "differences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "bookingId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "unchanged",
+                  "moved",
+                  "cancelled",
+                  "invitee_changed",
+                  "missing"
+                ]
+              },
+              "startAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              "originalStartAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              "sourceStartAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "decision": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "kept",
+                      "released",
+                      "cancelled",
+                      "rescheduled"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "resolved": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "bookingId",
+              "name",
+              "kind",
+              "startAt",
+              "originalStartAt",
+              "sourceStartAt",
+              "decision",
+              "resolved"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "version",
+        "evidence",
+        "state",
+        "sourceUser",
+        "asOf",
+        "hostZone",
+        "fingerprint",
+        "counts",
+        "events",
+        "erasedRecords",
+        "mode",
+        "capturedAt",
+        "alreadyHere",
+        "bookingCounts",
+        "items",
+        "differences"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

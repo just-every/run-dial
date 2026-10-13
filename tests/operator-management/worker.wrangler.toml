@@ -1,0 +1,31 @@
+name = "dial-operator-management-test"
+main = "worker.ts"
+compatibility_date = "2026-09-08"
+compatibility_flags = ["nodejs_compat"]
+[assets]
+binding = "ASSETS"
+run_worker_first = true
+[vars]
+OWNER_EMAIL = "operator@dial.test"
+MAIL_FROM = "no-reply@dial.test"
+SETUP_TOKEN = "dial-test-only-setup-token-at-least-32"
+ENVIRONMENT = "preview"
+APP_URL = "http://127.0.0.1:41868"
+SESSION_SECRET = "operator-management-isolated-test-secret-only"
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-operator-management-test"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../../migrations/core"
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dial-operator-management-test"
+[[queues.producers]]
+binding = "JOBS"
+queue = "dial-operator-management-test"
+[[durable_objects.bindings]]
+name = "BOOKING_COORDINATOR"
+class_name = "BookingCoordinator"
+[[migrations]]
+tag = "v1-booking-coordinator"
+new_sqlite_classes = ["BookingCoordinator"]

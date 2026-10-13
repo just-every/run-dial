@@ -1,0 +1,20 @@
+/* The landing's page column and type. Everything is scoped under .dial-landing, which sits on the same element as .dial-site and
+   so inherits the frame's palette (chrome/site.css). Headings are Figtree at a heavy 760 (between bold and extra-bold, held
+   level with the sibling sites' headlines), tracked to the -0.02em floor the accessibility checks hold every heading to;
+   headings balance and paragraphs avoid orphans. */
+.dial-landing main { max-width: var(--page); margin: 0 auto; padding: 0 var(--gutter); }
+.dial-landing main:focus { outline: none; }
+.dial-landing :is(h1, h2) { font-weight: 760; letter-spacing: -0.02em; text-wrap: balance; }
+.dial-landing p { text-wrap: pretty; }
+@media (min-width: 701px) {
+  .dial-landing :is(.section-lede, .column-lede) { text-wrap: balance; }
+}
+.dial-landing .stacked > span { display: block; }
+.dial-landing h2 { font-size: clamp(32px, 3.5vw, 54px); line-height: 1.02; }
+.dial-landing .section-lede { max-width: 30em; margin-top: 28px; color: var(--soft); font-size: clamp(18px, 1.45vw, 22px); line-height: 1.52; }
+.dial-landing .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 40px; }
+
+/* Paper cards: the warm surface every drawing is made of, lifted on a soft shadow. */
+.dial-landing .paper-card { background: var(--card); border-radius: 24px; box-shadow: var(--shadow); }
+.dial-landing .scene { position: relative; }
+.dial-landing .icon { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }

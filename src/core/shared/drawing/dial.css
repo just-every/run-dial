@@ -1,0 +1,26 @@
+/* The dial language shared by every drawing, on the landing and in the app: ink segments, the golden chosen slot and hand, the
+   ink hub and the golden burst. A drawing applies inside any .dial-art element (the landing's root, or the drawing's own svg). */
+.dial-art .dial-segment { fill: var(--ink); }
+.dial-art .dial-chosen { fill: var(--gold); }
+.dial-art .dial-hand { fill: var(--gold); stroke: var(--gold); stroke-width: 6; stroke-linejoin: round; }
+.dial-art .dial-hub { fill: var(--ink); }
+.dial-art .burst-tick { fill: none; stroke: var(--gold); stroke-width: 9; stroke-linecap: round; }
+.dial-art .mini-dial .burst-tick { stroke-width: 7; }
+.dial-art .mini-dial .dial-hand { stroke-width: 3; }
+
+/* The app's states: a slot that could not be kept is drawn with the landing's busy hatch (week.css .week-busy), marked by an ink
+   badge. */
+.dial-art .dial-off { stroke: rgba(29, 28, 26, 0.2); stroke-width: 2; }
+.dial-art .dial-hatch-base { fill: var(--card); }
+.dial-art .dial-hatch-tint { fill: rgba(29, 28, 26, 0.045); }
+.dial-art .dial-hatch-line { stroke: rgba(29, 28, 26, 0.16); stroke-width: 4; }
+.dial-art .dial-badge { fill: var(--ink); stroke: var(--card); stroke-width: 8; }
+.dial-art .dial-badge-glyph { fill: #fff; }
+
+/* Line icons on the 32-unit grid, at whatever size the caller sets. */
+.line-icon { flex: none; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Setup progress: steps still to do are light, done steps gold, so an untouched checklist reads as a light ring with one gold
+   hand at step 1 rather than a full ink dial. */
+.dial-art.progress-dial .dial-segment { fill: var(--line); }
+.icon-tile .line-icon { stroke-width: 2.7; }

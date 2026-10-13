@@ -1,0 +1,52 @@
+name = "dial-local"
+main = "tests/review/worker.ts"
+compatibility_date = "2026-09-08"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-local"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations/core"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dial-local-files"
+
+[[queues.producers]]
+binding = "JOBS"
+queue = "dial-local-jobs"
+
+[[queues.consumers]]
+queue = "dial-local-jobs"
+max_batch_size = 10
+max_batch_timeout = 1
+max_retries = 3
+dead_letter_queue = "dial-local-jobs-dead"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[durable_objects.bindings]]
+name = "BOOKING_COORDINATOR"
+class_name = "BookingCoordinator"
+
+[[migrations]]
+tag = "v1-booking-coordinator"
+new_sqlite_classes = ["BookingCoordinator"]
+
+[vars]
+ENVIRONMENT = "development"
+APP_URL = "http://127.0.0.1:15702"
+GOOGLE_OAUTH_CLIENT_ID = "synthetic-client"
+GOOGLE_OAUTH_CLIENT_SECRET = "synthetic-secret"
+CALENDAR_WEBHOOK_SECRET = "synthetic-calendar-webhook-secret-for-test-only"
+SESSION_SECRET = "dial-task-review-session-secret-for-synthetic-data-only"
+
+OWNER_EMAIL = "operator@dial.test"
+MAIL_PROVIDER = "development"
+MAIL_FROM = "noreply@dial.test"

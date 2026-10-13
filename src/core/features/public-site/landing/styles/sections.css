@@ -1,0 +1,9 @@
+/* The two split sections (copy beside a drawing, alternating sides) and the three columns below them. */
+.dial-landing .split { display: grid; align-items: center; gap: clamp(32px, 4vw, 72px); padding-top: clamp(72px, 7vw, 120px); }
+.dial-landing .split--invitees { grid-template-columns: minmax(0, 41fr) minmax(0, 59fr); }
+.dial-landing .split--host { grid-template-columns: minmax(0, 50fr) minmax(0, 50fr); }
+.dial-landing .split--host .split-copy { padding-left: clamp(0px, 2vw, 32px); }
+
+.dial-landing .columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 56px clamp(32px, 4vw, 64px); padding-top: clamp(80px, 8vw, 132px); }
+.dial-landing .column h2 { font-size: clamp(30px, 2.95vw, 44px); line-height: 1.04; }
+.dial-landing .column-lede { max-width: 25em; margin-top: 22px; color: var(--soft); font-size: 18px; line-height: 1.55; }

@@ -1,0 +1,34 @@
+export type AppBindings = {
+  BOOKING_COORDINATOR: DurableObjectNamespace;
+  ASSETS: Fetcher;
+  DB: D1Database;
+  FILES: R2Bucket;
+  ENVIRONMENT: string;
+  APP_URL: string;
+  SESSION_SECRET: string;
+  RER_DEPLOY_SOURCE?: string;
+  RER_DEPLOY_FINGERPRINT?: string;
+  RER_VERSION?: { id: string };
+  OWNER_EMAIL?: string;
+  /** Local runtimes only: the checkout's key gate and the dev identity switch. Deploy refuses both. */
+  RER_DEV_KEY?: string;
+  RER_DEV_IDENTITY?: string;
+  RER_MANAGEMENT_ORIGIN?: string;
+  RER_INSTALLATION_ID?: string;
+  RER_OWNER_CLAIM_ISSUER?: string;
+  RER_OWNER_CLAIM_INSTALLATION_ID?: string;
+  RER_OWNER_CLAIM_APP_ORIGIN?: string;
+  RER_OWNER_CLAIM_PUBLIC_KEYS?: string;
+  SETUP_TOKEN?: string;
+  MAIL_PROVIDER?: "sendgrid" | "resend" | "development";
+  MAIL_API_KEY?: string;
+  MAIL_FROM?: string;
+  MAIL_WEBHOOK_KEY?: string;
+  GOOGLE_OAUTH_CLIENT_ID?: string;
+  GOOGLE_OAUTH_CLIENT_SECRET?: string;
+  CALENDAR_WEBHOOK_SECRET?: string;
+  RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string;
+  RESEND_WEBHOOK_SECRET?: string;
+  JOBS: Queue;
+};

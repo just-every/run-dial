@@ -1,0 +1,67 @@
+{
+  "collection": [
+    {
+      "uri": "https://api.calendly.com/scheduled_events/edges-3",
+      "event_type": "https://api.calendly.com/event_types/edges-1",
+      "name": "=Formula <img> שלום",
+      "status": "active",
+      "start_time": "2027-01-06T15:15:00.000Z",
+      "end_time": "2027-01-06T15:45:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/edges",
+          "buffered_start_time": "2027-01-06T15:15:00.000Z",
+          "buffered_end_time": "2027-01-06T15:45:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/edges-4",
+      "event_type": "https://api.calendly.com/event_types/edges-3",
+      "name": "Example 3",
+      "status": "active",
+      "start_time": "2027-01-07T15:00:00.000Z",
+      "end_time": "2027-01-07T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "google_conference",
+        "join_url": "https://meet.example.test/edges-4"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/edges",
+          "buffered_start_time": "2027-01-07T15:00:00.000Z",
+          "buffered_end_time": "2027-01-07T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    }
+  ],
+  "pagination": {
+    "count": 2,
+    "next_page": null,
+    "previous_page": null,
+    "next_page_token": null,
+    "previous_page_token": null
+  }
+}

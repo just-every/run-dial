@@ -1,0 +1,6 @@
+/* Icon tiles with a bold title and one sentence each. */
+.dial-landing .feature-list { display: grid; gap: 26px; margin-top: 36px; }
+.dial-landing .feature-list li { display: flex; align-items: flex-start; gap: 22px; }
+.dial-landing .feature-tile { display: grid; flex: none; place-items: center; width: 64px; height: 64px; border-radius: 18px; background: var(--card); box-shadow: 0 1px 2px rgba(64, 50, 18, 0.05), 0 8px 22px rgba(64, 50, 18, 0.07); }
+.dial-landing .feature-list h3 { margin: 4px 0 0; font-size: 17px; font-weight: 750; letter-spacing: 0; line-height: 1.3; }
+.dial-landing .feature-list p { margin-top: 3px; color: var(--soft); font-size: 16px; line-height: 1.45; }

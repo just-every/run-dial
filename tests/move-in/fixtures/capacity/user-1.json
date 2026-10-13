@@ -1,0 +1,12 @@
+{
+  "resource": {
+    "uri": "https://api.calendly.com/users/capacity",
+    "name": "Capacity Example",
+    "slug": "solo",
+    "timezone": "America/New_York",
+    "email": "owner@example.test",
+    "scheduling_url": "https://schedule.example.test/capacity",
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2027-01-01T00:00:00.000Z"
+  }
+}

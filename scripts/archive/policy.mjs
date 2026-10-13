@@ -1,0 +1,58 @@
+import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
+import { importExported } from './import-policy.mjs';
+import { scrub } from './redaction.mjs';
+import { parseJsonText } from './json-values.mjs';
+export { scrub, collectSecrets } from './redaction.mjs';
+// Exhaustive application-table policy. Unknown tables stop export and restore.
+// operator_setup_identity retains its durable first-run timestamp, including NULL.
+export const exported = [
+  ...importExported,
+  'rer_erasure_operations', 'person_erasure_receipts', 'operator_erasure_subjects',
+  'ext_custom_field_definitions', 'ext_custom_field_values',
+  'avatar_object_deletions', 'operators', 'host_profiles', 'host_link_copy_reports', 'profile_focus_areas', 'social_proof_entries', 'event_types',
+  'event_questions', 'recurring_availability_windows', 'availability_date_overrides',
+  'availability_date_override_windows', 'calendar_connections', 'calendar_connection_calendars',
+  'provider_connection_health', 'calendar_busy_intervals', 'calendar_busy_read_windows',
+  'delivery_outbox', 'delivery_attempts', 'provider_webhook_events', 'operator_delivery_preferences',
+  'bookings', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_attendance',
+  'blocked_address_rules', 'availability_requests', 'availability_request_windows', 'embed_allowed_origins',
+  'booking_calendar_conflicts', 'anonymized_audit', 'erased_calendar_targets', 'calendar_deletion_probes',
+  'oc_owner_claims', 'operator_setup_identity', 'operator_mail_invocations', 'oa_operators', 'oa_bootstrap', 'base_mail_dispatch',
+  'operator_creation_receipts', 'operator_creation_tombstones', 'oa_invitation_cancellations', 'oa_domain_rules',
+].sort();
+export { excluded } from "../../src/core/shared/archive-exclusions.mjs";
+import { excluded } from "../../src/core/shared/archive-exclusions.mjs";
+export const internal = {
+  booking_search_casefold: 'Normative Unicode folding data installed by the destination migration; contains no owner data',
+  _rer_deploy_migrations: 'Installer-only migration claims and hashes; retain destination history instead of archiving it',
+  d1_migrations: 'Installer migration ledger', sqlite_sequence: 'SQLite sequence bookkeeping',
+  sqlite_stat1: 'SQLite query planner statistics', sqlite_stat4: 'SQLite query planner samples', _cf_METADATA: 'D1 runtime metadata', _cf_KV: 'D1 platform key-value store',
+};
+export function assertCoverage(names) {
+  const application = names.filter(name => !Object.hasOwn(internal, name) && !name.startsWith('rer_portability_')).sort();
+  const classified = [...exported, ...Object.keys(excluded)].sort();
+  if (JSON.stringify(application) !== JSON.stringify(classified)) throw new Error('archive-unclassified-schema');
+}
+export function canonicalRow(name, source, secrets = []) {
+  const row = Object.fromEntries(Object.entries(source).map(([key, value]) => [key, scrub(value, secrets, name === 'delivery_outbox' && key === 'payload_json')]));
+  if (name === 'bookings') {
+    row.invitee_name_folded = foldBookingSearch(row.invitee_name);
+    row.invitee_email_folded = foldBookingSearch(row.invitee_email);
+  }
+  if (name === 'calendar_connections') {
+    for (const key of ['access_token_ciphertext', 'refresh_token_ciphertext', 'access_token_expires_at', 'channel_id', 'channel_resource_id', 'channel_expires_at']) row[key] = null;
+    row.status = 'unhealthy'; row.unhealthy_code = 'reauthorization_required';
+  }
+  if (name === 'provider_connection_health') { row.status = 'unhealthy'; row.unhealthy_code = row.provider === 'google_calendar' ? 'reauthorization_required' : 'mail_check_required'; row.alert_state = 'unhealthy_announced'; }
+  // Dev personas (<as>@dev.localhost) never travel active: Base suspends their auth rows in the archive, so the product's mirror row
+  // is removed too, which is the pairing import checks.
+  if (name === 'operators' && row.normalized_email.endsWith('@dev.localhost')) row.removed_at ??= row.updated_at;
+  if (name === 'availability_requests') row.nonce_hash = `restored:${source.id}`;
+  if (name === 'delivery_outbox') {
+    const payload = parseJsonText(row.payload_json);
+    row.payload_json = JSON.stringify({ ...payload, archiveHistorical: true });
+    if (['pending', 'processing'].includes(row.state)) { row.state = 'failed'; row.last_error_code = 'restored_historical_command'; }
+  }
+  if (name === 'calendar_deletion_probes' || name === 'erased_calendar_targets') row.archive_historical = 1;
+  return row;
+}

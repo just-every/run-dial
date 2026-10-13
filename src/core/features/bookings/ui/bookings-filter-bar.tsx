@@ -1,0 +1,65 @@
+import type { EventTypeRecord } from "../../event-types";
+import { Button, Card, Input, Segmented, Select } from "../../../app/ui/primitives";
+import { hasBookingFilters, type BookingFilters } from "./booking-filters";
+
+type LifecycleState = NonNullable<BookingFilters["state"]> | "all";
+const stateOptions = [["all", "All states"], ["confirmed", "Confirmed"], ["rescheduled", "Rescheduled"], ["cancelled", "Cancelled"]] as const;
+const fieldLabel = "grid content-start gap-2 text-sm font-[650] text-ink";
+
+export function BookingsFilterBar({
+  filters,
+  eventTypes,
+  onChange,
+  onClear,
+}: {
+  filters: BookingFilters;
+  eventTypes: EventTypeRecord[];
+  onChange: (change: Partial<BookingFilters>) => void;
+  onClear: () => void;
+}) {
+  const deliverySelection = filters.deliveryFailed === "true" ? "failed" : filters.deliveryFailed === "false" ? "clear" : "any";
+
+  return <Card className="grid gap-5 p-4 sm:p-5">
+    <Segmented<LifecycleState> stacked label="Lifecycle state" name="booking-lifecycle-state" value={filters.state ?? "all"} options={stateOptions} onChange={(state) => onChange({ state: state === "all" ? undefined : state })} />
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <label className={`${fieldLabel} sm:col-span-2 xl:col-span-1`}>
+        Search invitee name or email
+        <Input type="search" autoComplete="off" maxLength={160} value={filters.query ?? ""} onChange={(event) => onChange({ query: event.currentTarget.value || undefined })} placeholder="Name or email" />
+      </label>
+      <label className={fieldLabel}>
+        Start time
+        <Select value={filters.time ?? "all"} onChange={(event) => onChange({ time: event.currentTarget.value === "all" ? undefined : event.currentTarget.value as NonNullable<BookingFilters["time"]> })}>
+          <option value="all">Any time</option>
+          <option value="future">Future</option>
+          <option value="past">Past</option>
+        </Select>
+      </label>
+      <label className={fieldLabel}>
+        Event type
+        <Select value={filters.eventTypeId ?? "all"} onChange={(event) => onChange({ eventTypeId: event.currentTarget.value === "all" ? undefined : event.currentTarget.value })}>
+          <option value="all">All event types</option>
+          {eventTypes.map((eventType) => <option value={eventType.id} key={eventType.id}>{eventType.title}</option>)}
+        </Select>
+      </label>
+      <label className={fieldLabel}>
+        External delivery
+        <Select value={deliverySelection} onChange={(event) => onChange({ deliveryFailed: event.currentTarget.value === "any" ? undefined : event.currentTarget.value === "failed" ? "true" : "false" })}>
+          <option value="any">Any delivery state</option>
+          <option value="failed">Has a failed delivery</option>
+          <option value="clear">No failed deliveries</option>
+        </Select>
+      </label>
+      <label className={fieldLabel}>
+        From date (UTC)
+        <Input type="date" value={filters.from ?? ""} max={filters.to} onChange={(event) => onChange({ from: event.currentTarget.value || undefined })} />
+      </label>
+      <label className={fieldLabel}>
+        Through date (UTC)
+        <Input type="date" value={filters.to ?? ""} min={filters.from} onChange={(event) => onChange({ to: event.currentTarget.value || undefined })} />
+      </label>
+      <div className="flex items-end">
+        <Button type="button" variant="quiet" onClick={onClear} disabled={!hasBookingFilters(filters)}>Clear filters</Button>
+      </div>
+    </div>
+  </Card>;
+}

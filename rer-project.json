@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "projectId": "just-every/dial",
+  "name": "Dial",
+  "sourceRepository": "https://github.com/just-every/run-dial",
+  "license": "MIT",
+  "deployment": {
+    "target": "cloudflare-workers",
+    "artifactFile": "rer-worker-artifact.json"
+  },
+  "operations": {
+    "setup": "pnpm install --frozen-lockfile",
+    "build": "pnpm run build",
+    "verify": "pnpm run verify",
+    "artifact": "node scripts/build-delivery-artifact.mjs",
+    "recovery": "Preserve the private deployment receipt, owner-held SESSION_SECRET, and applied migration history. Restore only into an empty migrated installation with writers stopped; reconnect calendars and recheck mail before publishing booking events."
+  },
+  "verification": {
+    "sensitivePaths": [
+      "src/core/features/operators/**",
+      "src/core/features/editor/**",
+      "src/core/app/worker.ts",
+      "src/core/app/hono.ts",
+      "src/core/shared/runtime-env*",
+      "modules/operator-auth/**",
+      "modules/owner-claim/**",
+      "modules/editor/**",
+      "scripts/archive/**",
+      "scripts/delivery/**",
+      "scripts/projects/**",
+      "scripts/build-delivery-artifact.mjs",
+      "rer-setup.json",
+      ".github/workflows/rer-managed.yml"
+    ],
+    "migrationDirectories": [
+      "migrations/core"
+    ],
+    "guidanceFiles": [
+      "AGENTS.md",
+      "CONTRACT.md",
+      "OPERATIONS.md"
+    ],
+    "testPatterns": [
+      "tests/*.test.mjs"
+    ]
+  },
+  "setup": {
+    "path": "rer-setup.json",
+    "sha256": "510acd15d3fcf2569087036413c44c99187150d9dad49561c53082ab1eb42232"
+  }
+}

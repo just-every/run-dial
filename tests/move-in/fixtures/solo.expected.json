@@ -1,0 +1,19 @@
+{
+ "asOf":"2027-01-01T00:00:00.000Z",
+ "profile":{"name":"Alex Example","handle":"solo","timezone":"America/New_York"},
+ "eventTypes":{"count":4,"statuses":["draft","draft","draft","draft"],"slugs":["example-1","example-2","example-3","example-4"],"durations":[30,30,30,30],"listed":[1,1,1,0],"locations":["google_meet","in_person","phone","fixed_link"]},
+ "questions":{"count":4,"kinds":["text","textarea","single_choice","multiple_choice"],"required":[1,0,0,0]},
+ "availability":{"windows":4,"overrides":3},
+ "bookings":{"confirmed":10,"past":2,"cancelled":1,"overlapping":0,"dstStart":"2027-11-07T15:00:00.000Z"},
+ "bookingCounts":{"read":13,"toImport":10,"past":2,"cancelled":1,"severalInvitees":0,"skippedEvent":0,"overlapping":0,"invalid":0,"movedAtSource":0},
+ "counts":{
+  "profile":{"read":1,"imported":1,"changed":0,"skipped":0,"rejected":0},
+  "eventTypes":{"read":4,"imported":0,"changed":4,"skipped":0,"rejected":0},
+  "questions":{"read":5,"imported":4,"changed":0,"skipped":1,"rejected":0},
+  "locations":{"read":4,"imported":4,"changed":0,"skipped":0,"rejected":0},
+  "availability":{"read":4,"imported":4,"changed":0,"skipped":0,"rejected":0},
+  "overrides":{"read":6,"imported":3,"changed":0,"skipped":3,"rejected":0},
+  "settings":{"read":24,"imported":0,"changed":24,"skipped":0,"rejected":0},
+  "bookings":{"read":13,"imported":10,"changed":0,"skipped":3,"rejected":0}
+ }
+}

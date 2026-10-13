@@ -1,0 +1,11 @@
+/* The closing call: headline and line, both actions, and the dial at rest on a soft shadow, between two hairlines. */
+.dial-landing .closing { display: grid; grid-template-columns: minmax(0, 1.25fr) auto minmax(200px, 0.75fr); align-items: center; gap: 28px clamp(32px, 4vw, 64px); margin-top: clamp(80px, 8vw, 132px); padding: 40px 0 44px; border-top: 1px solid var(--line); }
+.dial-landing .closing h2 { font-size: clamp(32px, 3.5vw, 54px); line-height: 1.02; }
+.dial-landing .closing-copy p { max-width: 26em; margin-top: 16px; color: var(--soft); font-size: 19px; line-height: 1.5; }
+.dial-landing .closing-art { position: relative; justify-self: end; width: 260px; padding-bottom: 18px; }
+.dial-landing .closing-art::after { content: ""; position: absolute; z-index: -1; left: 6%; right: 6%; bottom: 0; height: 34px; border-radius: 50%; background: radial-gradient(closest-side, rgba(64, 50, 18, 0.16), transparent); }
+.dial-landing .closing-dial { width: 230px; height: 230px; margin: 0 auto; }
+.dial-landing .closing-chip { position: absolute; right: -6px; bottom: 34px; display: flex; align-items: center; gap: 9px; padding: 9px 16px 9px 10px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); transform: rotate(-6deg); }
+.dial-landing .closing-chip b { font-size: 17px; font-weight: 800; }
+.dial-landing .closing-chip small { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.dial-landing .card-dot-html { width: 22px; height: 22px; border-radius: 50%; background: var(--gold); }

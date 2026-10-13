@@ -1,0 +1,12 @@
+{
+ "resource": {
+  "uri": "https://api.calendly.com/users/cutover",
+  "name": "Cutover Host",
+  "slug": "cutover-host",
+  "email": "cutover-host@example.test",
+  "timezone": "UTC",
+  "scheduling_url": "https://schedule.example.test/cutover-host",
+  "created_at": "2025-06-01T00:00:00.000Z",
+  "updated_at": "2026-02-05T00:00:00.000Z"
+ }
+}

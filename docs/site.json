@@ -1,0 +1,35 @@
+{
+  "sections": [
+    { "title": "Start here", "pages": [
+      { "slug": "", "source": "docs/overview.md", "label": "Overview" },
+      { "slug": "install", "source": "docs/install.md", "label": "Install" },
+      { "slug": "booking-page", "source": "docs/booking-page.md", "label": "Your booking page" }
+    ]},
+    { "title": "Run it", "pages": [
+      { "slug": "calendar-and-email", "source": "docs/calendar-and-email.md", "label": "Calendar and email" },
+      { "slug": "backups", "source": "docs/backups.md", "label": "Backups and export" },
+      { "slug": "importing", "source": "docs/importing.md", "label": "Moving in" },
+      { "slug": "updating", "source": "docs/updating.md", "label": "Updating" }
+    ]}
+  ],
+  "githubOnly": [
+    { "source": "ACCEPTANCE.md", "reason": "Release evidence gates for the product requirements, for maintainers" },
+    { "source": "ADAPTERS.md", "reason": "Calendar and mail adapter contracts, for developers extending Dial" },
+    { "source": "AGENTS.consumer.md", "reason": "Instructions for coding agents working in an owner's copy of the source" },
+    { "source": "AGENTS.md", "reason": "Contributor and coding-agent rules for working on Dial" },
+    { "source": "BASELINE.md", "reason": "Security, privacy and operations requirement clauses, for maintainers" },
+    { "source": "CHANGELOG.md", "reason": "Release history for maintainers, which cites internal requirement records; the pages link it on GitHub" },
+    { "source": "CLAUDE.md", "reason": "A one-line pointer to AGENTS.md for coding agents" },
+    { "source": "CONTRACT.md", "reason": "Product requirement clauses, for maintainers and reviewers" },
+    { "source": "DIVERGENCE.md", "reason": "Design decisions record for maintainers" },
+    { "source": "ERASURE.md", "reason": "Storage census, destructive erasure and restore-fence implementation evidence with verification limits, for maintainers" },
+    { "source": "HANDOVER.md", "reason": "Maintainer orientation and the current verification scope; the Overview summarises what is not yet proven" },
+    { "source": "OPERATIONS.md", "reason": "Maintainer operating description with test-environment detail; the operator steps are in Install and Backups and export" },
+    { "source": "OPERATOR-NOTIFICATION-REMOVAL.md", "reason": "Design note on operator removal and notification custody, for maintainers" },
+    { "source": "README.md", "reason": "The repository front page, with developer commands; the docs home is Overview" },
+    { "source": "RELEASE.md", "reason": "Release and publication procedure for maintainers" },
+    { "source": "RENDERING.md", "reason": "Rendering and routing architecture notes for developers" },
+    { "source": "RUN-LOCALLY.md", "reason": "The full local command reference, with every flag and exit code; Install walks through the same first run" },
+    { "source": "SEED-COMMAND-CONTRACT.md", "reason": "The shared command contract behind every setup, run, export and deploy command, for maintainers" }
+  ]
+}

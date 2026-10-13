@@ -1,0 +1,30 @@
+.DS_Store
+node_modules/
+dist/
+.seed/deployment/
+.wrangler/
+wrangler.toml
+.dev.vars
+.dev.vars.*
+.wrangler-*.toml
+playwright-report/
+test-results/
+
+.tanstack/
+
+# Generated review and verification captures are private local output.
+evidence/
+artifacts/
+visual/
+.12ui/
+
+.rer/
+.seed/installer/
+exports/
+# Archives made before the move to exports/ stay private where they are.
+.exports/
+.cache/
+
+# Generated managed-delivery payloads
+delivery-artifact/
+rer-package/

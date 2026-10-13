@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "capturedAt": "2027-01-01T00:00:00.000Z",
+  "files": [
+    {
+      "name": "user-1.json",
+      "resource": "user",
+      "page": 1,
+      "size": 340,
+      "sha256": "f9dbeaacfdd23267800e24de3e64f62706d8950396d065de19ccaca93c4d0898",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "schedules-1.json",
+      "resource": "schedules",
+      "page": 1,
+      "size": 1407,
+      "sha256": "2eac46f03c60d69caef162f89c3de4e686a66401cfd4b8177611015e6b7e96b9",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-1.json",
+      "resource": "event_types",
+      "page": 1,
+      "size": 5820,
+      "sha256": "df9dcfc5b638e5d577f8289fc984dbfcbb7939257aadd23e91b63fb76670bf20",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_availability-1.json",
+      "resource": "event_availability",
+      "page": 1,
+      "size": 1506,
+      "sha256": "34b2187c11b1de2131a13e09a7d0e9cd9045d7fd527f72d10a8490a80d0932d9",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-1.json",
+      "resource": "scheduled_events",
+      "page": 1,
+      "size": 11611,
+      "sha256": "6d468bf11c7c08539c8ac1e72a6afcd36f898a1f2b6060cb69f6313a3b0db84b",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-1.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1258,
+      "sha256": "5cbab6d4d986e210bc1e13080a129dc684d6c63f00d43029f63017e316654b28",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-2.json",
+      "resource": "invitees",
+      "page": 2,
+      "size": 1258,
+      "sha256": "05aca7dd58390476d06e0010f6c06e9c94c4cf28888f7b00727aed893425b8f8",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-3.json",
+      "resource": "invitees",
+      "page": 3,
+      "size": 1258,
+      "sha256": "3cbf71badf8cadd75e0fa2dd45be6cf957850c526d541f494eb2103ad7006370",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-4.json",
+      "resource": "invitees",
+      "page": 4,
+      "size": 1258,
+      "sha256": "84af6446a76e68c9c2ce347aad5c3d92df386feff63ecdeee24666f041780262",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-5.json",
+      "resource": "invitees",
+      "page": 5,
+      "size": 1258,
+      "sha256": "3262510ee2b1f3028b000d52c7e5361e9c07fc688550831ee4a552f0625b6437",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-6.json",
+      "resource": "invitees",
+      "page": 6,
+      "size": 1258,
+      "sha256": "0752afa882db5a21b163572f37b6c23c8ebd7181b1409627520f4f27fb74faac",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-7.json",
+      "resource": "invitees",
+      "page": 7,
+      "size": 1258,
+      "sha256": "8b7e46547d046deb94bd67fa71ff118644d92ec4083bf8ca9e2aeed5d38b218b",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-8.json",
+      "resource": "invitees",
+      "page": 8,
+      "size": 1258,
+      "sha256": "2f1e0f25fe57fb621219dde06b79fde2504faaf67aa3b17251e40d00e3b2fb48",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-9.json",
+      "resource": "invitees",
+      "page": 9,
+      "size": 1258,
+      "sha256": "b961916494fc5c2f0621ff04c5ea2f3a885e67fc5228eba263cbaff2139f444c",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-10.json",
+      "resource": "invitees",
+      "page": 10,
+      "size": 1262,
+      "sha256": "5a0ba029964756ceed1f830a78cc160993bd95f332d64b24fd84353d7e776aaa",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-11.json",
+      "resource": "invitees",
+      "page": 11,
+      "size": 1264,
+      "sha256": "33823d22df21e3b2673c0edcc6795cd2280365baa22c2905837b974ae71ddf2f",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-12.json",
+      "resource": "invitees",
+      "page": 12,
+      "size": 1264,
+      "sha256": "a007f20fce7c036acf437272042f9d2153aceffc512d7bbdffdec845f0b13f79",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-13.json",
+      "resource": "invitees",
+      "page": 13,
+      "size": 1266,
+      "sha256": "579305ecd8e7bd4fe83aa40a981852d501f751e2b98b168e2dab6e6b14be7963",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    }
+  ]
+}

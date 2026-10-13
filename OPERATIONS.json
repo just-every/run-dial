@@ -1,0 +1,290 @@
+{
+  "version": 2,
+  "project": "just-every/dial",
+  "runtime": {
+    "requirements": [
+      {
+        "name": "node",
+        "version": "22.20.0"
+      },
+      {
+        "name": "pnpm",
+        "version": "10.12.4"
+      }
+    ]
+  },
+  "requiredEnvironment": [
+    "ENVIRONMENT",
+    "APP_URL",
+    "SESSION_SECRET"
+  ],
+  "documentation": {
+    "document": "OPERATIONS.md"
+  },
+  "acceptance": {
+    "document": "ACCEPTANCE.md"
+  },
+  "configuration": {
+    "module": "scripts/operations-config.mjs"
+  },
+  "commands": {
+    "install": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "install"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Frozen pinned dependencies only."
+    },
+    "setup": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "setup"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Build, migrate canonical local state, save private settings, claim first owner and request development mail, then stop."
+    },
+    "dev": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "dev"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Foreground local Vite development runtime; guarded outbox only."
+    },
+    "preview": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "preview"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Foreground fixed local production Worker and assets; guarded outbox only."
+    },
+    "build": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "build"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Build actual Worker/assets while excluding and restoring private settings."
+    },
+    "verify": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "verify"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Run complete product verification and public CLI journey."
+    },
+    "reset": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "reset"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Confirmed removal of inventoried local data and settings; preserves source, exports and deployment receipts."
+    },
+    "deploy": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "deploy"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Owner-account Base deploy-kit deployment and health; dry run only builds and validates locally without provider calls."
+    },
+    "export": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "export"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Export complete local Dial data through the reviewed portability policy. Remote unsupported."
+    },
+    "import": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "import"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Validate and restore complete local archive into an empty destination after explicit confirmation. Remote unsupported."
+    },
+    "release": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "release"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Base release producer and receipts; never pushes or deploys."
+    },
+    "outbox": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "outbox"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Show guarded local outbox URL; explicit owner email requests ordinary local sign-in."
+    },
+    "doctor": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "doctor"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Read-only tool and local configuration diagnostics."
+    },
+    "describe": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "describe"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Read-only declarations."
+    },
+    "check": {
+      "argv": [
+        "node",
+        "scripts/rer.mjs",
+        "check"
+      ],
+      "inputs": [
+        "scripts/rer.mjs",
+        "scripts/installer/local.mjs",
+        "rer-setup.json"
+      ],
+      "effects": "Read-only structural contract validation."
+    }
+  },
+  "environmentSources": {
+    "ENVIRONMENT": "Choose the target mode; the development outbox requires the development mode.",
+    "APP_URL": "Use the public origin recorded by deployment setup, or the canonical loopback origin for the development outbox.",
+    "SESSION_SECRET": "Generate a fresh session secret and supply it to the deploy step.",
+    "MAIL_PROVIDER": "Choose SendGrid or Resend explicitly, or development for the guarded local outbox; absence selects legacy Resend.",
+    "MAIL_API_KEY": "Supply the selected hosted provider credential privately as the native mail API key.",
+    "MAIL_FROM": "Use a verified noreply or no-reply sender for hosted mail, or the local setup sender for the development outbox.",
+    "RESEND_API_KEY": "Supply the legacy Resend credential privately when the provider selector is absent.",
+    "RESEND_FROM_EMAIL": "Use a verified noreply or no-reply sender for legacy Resend when the provider selector is absent."
+  },
+  "seedContract": {
+    "version": 1,
+    "profile": "first-party",
+    "adapter": "scripts/installer/local.mjs"
+  },
+  "loops": [
+    {
+      "id": "worker",
+      "type": "worker",
+      "required": true,
+      "enabled": true
+    },
+    {
+      "id": "operator-sign-in-mail",
+      "type": "mail",
+      "required": true,
+      "enabled": true,
+      "binding": {
+        "providerEnvironment": "MAIL_PROVIDER",
+        "providers": {
+          "sendgrid": {
+            "apiKeyEnvironment": "MAIL_API_KEY",
+            "requiredEnvironment": [
+              "MAIL_FROM"
+            ]
+          },
+          "resend": {
+            "apiKeyEnvironment": "MAIL_API_KEY",
+            "requiredEnvironment": [
+              "MAIL_FROM"
+            ]
+          },
+          "development": {
+            "requiredEnvironment": [
+              "MAIL_FROM"
+            ],
+            "development": {
+              "modeEnvironment": "ENVIRONMENT",
+              "originEnvironment": "APP_URL"
+            }
+          }
+        },
+        "whenUnset": {
+          "provider": "resend",
+          "apiKeyEnvironment": "RESEND_API_KEY",
+          "requiredEnvironment": [
+            "RESEND_FROM_EMAIL"
+          ]
+        }
+      }
+    }
+  ],
+  "environmentInspection": "RER check validates source declarations. RER doctor checks process-environment configuration and required loops, private local settings, state safety and installed tools. Neither contacts providers or proves delivery."
+}

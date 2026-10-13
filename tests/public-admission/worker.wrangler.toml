@@ -1,0 +1,46 @@
+name = "dial-public-admission-test"
+main = "./worker.ts"
+compatibility_date = "2026-09-08"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "../../public"
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-public-admission-test"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../../migrations/core"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dial-public-admission-files"
+
+[[queues.producers]]
+binding = "JOBS"
+queue = "dial-public-admission-jobs"
+
+[[durable_objects.bindings]]
+name = "BOOKING_COORDINATOR"
+class_name = "BookingCoordinator"
+
+[[migrations]]
+tag = "v1-booking-coordinator"
+new_sqlite_classes = ["BookingCoordinator"]
+
+[vars]
+OWNER_EMAIL = "operator@dial.test"
+MAIL_FROM = "no-reply@dial.test"
+SETUP_TOKEN = "dial-test-only-setup-token-at-least-32"
+ENVIRONMENT = "development"
+APP_URL = "http://127.0.0.1:15704"
+GOOGLE_OAUTH_CLIENT_ID = "synthetic-client"
+GOOGLE_OAUTH_CLIENT_SECRET = "synthetic-secret"
+CALENDAR_WEBHOOK_SECRET = "synthetic-calendar-webhook-secret-for-test-only"
+SESSION_SECRET = "dial-public-admission-synthetic-local-session-secret"
+RESEND_WEBHOOK_SECRET = "whsec_YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE="
+
+MAIL_PROVIDER = "development"
+RER_DEV_KEY = "dial-test-only-dev-key-abcdef0123456789abcdef0123456789"

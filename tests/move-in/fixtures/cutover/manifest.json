@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "capturedAt": "2026-02-01T00:00:00.000Z",
+  "files": [
+    {
+      "name": "user-1.json",
+      "resource": "user",
+      "page": 1,
+      "size": 339,
+      "sha256": "f8c0560fe315dba248548cf6101a141c847fec2389d523c3cd64bc0d09b98f5a",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "name": "schedules-1.json",
+      "resource": "schedules",
+      "page": 1,
+      "size": 1124,
+      "sha256": "6af4ce4c22bedac9ae10f69d6d85ed416ee1e1197e624b28e7dc92ce64f83ec2",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-1.json",
+      "resource": "event_types",
+      "page": 1,
+      "size": 1176,
+      "sha256": "98236441a3fd2a199b9325be12045bf73a39cddb6b4906eaa25f277a0b828589",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_availability-1.json",
+      "resource": "event_availability",
+      "page": 1,
+      "size": 466,
+      "sha256": "7099432937401347185d57f3d1f0f04e90a489bf030e00319419bfc9b9ff2da5",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-1.json",
+      "resource": "scheduled_events",
+      "page": 1,
+      "size": 2573,
+      "sha256": "4ec6c29c279a0d8174da162b3e0528fc6fc18b54e223d65ae3f70899f10c283e",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-1.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 796,
+      "sha256": "09516587958aec2913fff8414e16949d22def940495af844693126a0f0930e2b",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-2.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 796,
+      "sha256": "76ae5f9cd66690b27a75cc7be75aa7c144b775255400158d3add4e3f4d9efc83",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-3.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 794,
+      "sha256": "6fb3a13398d18dfbf7b385910f3290a07044b3077b5ab9688ad03ca59236fdd9",
+      "capturedAt": "2026-02-01T00:00:00.000Z"
+    }
+  ]
+}

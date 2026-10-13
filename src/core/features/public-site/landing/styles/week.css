@@ -1,0 +1,30 @@
+/* The host's drawing: a week of busy blocks with the golden slot checked, and the scheduling rules as chips beside it. Busy
+   blocks are pale ink with a thin, light hatch on an opaque card base that hides the hour lines, so the golden slot is the only
+   strong mark on the card. */
+.dial-landing .week-scene { display: flex; align-items: center; min-height: 440px; padding: 24px 0; }
+/* The tilted card's corners reach about 11px past its box on the left, so it is inset by that much to stay inside the gutter. */
+.dial-landing .week-card { position: relative; flex: none; width: clamp(340px, 64%, 450px); margin-left: 12px; padding: 22px 24px 24px 16px; transform: rotate(-2.5deg); }
+.dial-landing .week-head { display: flex; padding-left: 8px; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 16px; font-weight: 800; }
+.dial-landing .week-note { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.dial-landing .week-days { display: grid; grid-template-columns: 38px repeat(5, minmax(0, 1fr)); gap: 7px; margin-top: 16px; color: var(--muted); font-size: 11.5px; font-weight: 700; text-align: center; white-space: nowrap; }
+.dial-landing .week-body { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 7px; margin-top: 8px; }
+.dial-landing .week-hours { display: grid; grid-template-rows: repeat(8, 46px); color: var(--muted); font-size: 10.5px; font-weight: 600; line-height: 1; text-align: right; }
+.dial-landing .week-hours span { transform: translateY(-4px); }
+.dial-landing .week-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(16, 19px); gap: 4px 7px; background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 46px); }
+.dial-landing .week-busy { margin-top: 2px; border: 1px solid rgba(29, 28, 26, 0.2); border-radius: 7px; background: repeating-linear-gradient(135deg, rgba(29, 28, 26, 0.16) 0 1px, transparent 1px 7px), linear-gradient(rgba(29, 28, 26, 0.045), rgba(29, 28, 26, 0.045)) var(--card); }
+.dial-landing .week-chosen { position: relative; display: flex; align-items: center; margin-top: 2px; padding: 0 7px; border-radius: 7px; background: var(--gold); box-shadow: 0 0 0 3px var(--card), 0 0 0 4.5px var(--ink); }
+.dial-landing .week-chosen b { font-size: 11px; font-weight: 800; line-height: 1; }
+.dial-landing .week-check { position: absolute; top: -24px; right: -30px; display: grid; place-items: center; width: 44px; height: 44px; border: 4px solid var(--card); border-radius: 50%; background: var(--ink); color: var(--gold); }
+.dial-landing .week-check .icon { width: 24px; height: 24px; stroke-width: 3.6; }
+.dial-landing .week-burst { position: absolute; top: -66px; right: -66px; width: 54px; height: 54px; overflow: visible; }
+.dial-landing .week-burst .burst-tick { stroke-width: 6; }
+
+.dial-landing .rule-chips { position: relative; z-index: 1; display: grid; justify-items: start; gap: 11px; margin-left: -18px; }
+.dial-landing .rule-chips li { display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px; border-radius: 15px; background: var(--card); box-shadow: 0 1px 2px rgba(64, 50, 18, 0.05), 0 10px 24px rgba(64, 50, 18, 0.08); font-size: 15px; font-weight: 650; white-space: nowrap; }
+.dial-landing .rule-chips .icon { width: 24px; height: 24px; }
+.dial-landing .rule-chips li:nth-child(1) { transform: rotate(-6deg); margin-left: 10px; }
+.dial-landing .rule-chips li:nth-child(2) { transform: rotate(-4deg); margin-left: 16px; }
+.dial-landing .rule-chips li:nth-child(3) { transform: rotate(-1.5deg); margin-left: 22px; }
+.dial-landing .rule-chips li:nth-child(4) { transform: rotate(0.5deg); margin-left: 24px; }
+.dial-landing .rule-chips li:nth-child(5) { transform: rotate(-1deg); margin-left: 20px; }
+.dial-landing .rule-chips li:nth-child(6) { transform: rotate(1.5deg); margin-left: 18px; }

@@ -1,0 +1,375 @@
+{
+  "collection": [
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-1",
+      "event_type": "https://api.calendly.com/event_types/solo-1",
+      "name": "Example 1",
+      "status": "active",
+      "start_time": "2027-01-05T15:00:00.000Z",
+      "end_time": "2027-01-05T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "google_conference",
+        "join_url": "https://meet.example.test/solo-1"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-05T15:00:00.000Z",
+          "buffered_end_time": "2027-01-05T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-2",
+      "event_type": "https://api.calendly.com/event_types/solo-2",
+      "name": "Example 2",
+      "status": "active",
+      "start_time": "2027-01-06T15:00:00.000Z",
+      "end_time": "2027-01-06T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-06T15:00:00.000Z",
+          "buffered_end_time": "2027-01-06T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-3",
+      "event_type": "https://api.calendly.com/event_types/solo-3",
+      "name": "Example 3",
+      "status": "active",
+      "start_time": "2027-01-07T15:00:00.000Z",
+      "end_time": "2027-01-07T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-07T15:00:00.000Z",
+          "buffered_end_time": "2027-01-07T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-4",
+      "event_type": "https://api.calendly.com/event_types/solo-4",
+      "name": "Example 4",
+      "status": "active",
+      "start_time": "2027-01-08T15:00:00.000Z",
+      "end_time": "2027-01-08T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-08T15:00:00.000Z",
+          "buffered_end_time": "2027-01-08T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-5",
+      "event_type": "https://api.calendly.com/event_types/solo-1",
+      "name": "Example 1",
+      "status": "active",
+      "start_time": "2027-01-09T15:00:00.000Z",
+      "end_time": "2027-01-09T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "google_conference",
+        "join_url": "https://meet.example.test/solo-5"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-09T15:00:00.000Z",
+          "buffered_end_time": "2027-01-09T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-6",
+      "event_type": "https://api.calendly.com/event_types/solo-2",
+      "name": "Example 2",
+      "status": "active",
+      "start_time": "2027-01-10T15:00:00.000Z",
+      "end_time": "2027-01-10T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-10T15:00:00.000Z",
+          "buffered_end_time": "2027-01-10T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-7",
+      "event_type": "https://api.calendly.com/event_types/solo-3",
+      "name": "Example 3",
+      "status": "active",
+      "start_time": "2027-01-11T15:00:00.000Z",
+      "end_time": "2027-01-11T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-11T15:00:00.000Z",
+          "buffered_end_time": "2027-01-11T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-8",
+      "event_type": "https://api.calendly.com/event_types/solo-4",
+      "name": "Example 4",
+      "status": "active",
+      "start_time": "2027-01-12T15:00:00.000Z",
+      "end_time": "2027-01-12T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-12T15:00:00.000Z",
+          "buffered_end_time": "2027-01-12T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-9",
+      "event_type": "https://api.calendly.com/event_types/solo-1",
+      "name": "Example 1",
+      "status": "active",
+      "start_time": "2027-01-13T15:00:00.000Z",
+      "end_time": "2027-01-13T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "google_conference",
+        "join_url": "https://meet.example.test/solo-9"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-01-13T15:00:00.000Z",
+          "buffered_end_time": "2027-01-13T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-10",
+      "event_type": "https://api.calendly.com/event_types/solo-2",
+      "name": "Example 2",
+      "status": "active",
+      "start_time": "2027-11-07T15:00:00.000Z",
+      "end_time": "2027-11-07T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-11-07T15:00:00.000Z",
+          "buffered_end_time": "2027-11-07T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-11",
+      "event_type": "https://api.calendly.com/event_types/solo-3",
+      "name": "Example 3",
+      "status": "active",
+      "start_time": "2026-12-01T15:00:00.000Z",
+      "end_time": "2026-12-01T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2026-12-01T15:00:00.000Z",
+          "buffered_end_time": "2026-12-01T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-12",
+      "event_type": "https://api.calendly.com/event_types/solo-4",
+      "name": "Example 4",
+      "status": "active",
+      "start_time": "2026-12-02T15:00:00.000Z",
+      "end_time": "2026-12-02T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "physical",
+        "location": "100 Example Street"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2026-12-02T15:00:00.000Z",
+          "buffered_end_time": "2026-12-02T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    },
+    {
+      "uri": "https://api.calendly.com/scheduled_events/solo-13",
+      "event_type": "https://api.calendly.com/event_types/solo-1",
+      "name": "Example 1",
+      "status": "canceled",
+      "start_time": "2027-02-01T15:00:00.000Z",
+      "end_time": "2027-02-01T15:30:00.000Z",
+      "created_at": "2026-12-15T12:00:00.000Z",
+      "updated_at": "2027-01-01T00:00:00.000Z",
+      "location": {
+        "type": "google_conference",
+        "join_url": "https://meet.example.test/solo-13"
+      },
+      "invitees_counter": {
+        "active": 1,
+        "total": 1,
+        "limit": 1
+      },
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/solo",
+          "buffered_start_time": "2027-02-01T15:00:00.000Z",
+          "buffered_end_time": "2027-02-01T15:30:00.000Z"
+        }
+      ],
+      "event_guests": [],
+      "calendar_event": null
+    }
+  ],
+  "pagination": {
+    "count": 13,
+    "next_page": null,
+    "previous_page": null,
+    "next_page_token": null,
+    "previous_page_token": null
+  }
+}

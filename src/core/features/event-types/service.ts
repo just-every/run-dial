@@ -1,0 +1,181 @@
+import { validHostProfile } from "../host-setup";
+import type { ProfileRecord } from "../host-profile";
+import { toPublicEventType } from "./public";
+import { dateAvailabilityOverrideInputSchema, hostDateToday, isCanonicalIanaTimeZone } from "../../shared/scheduling";
+import type { AvailabilityWindowInput, EventDetailsInput, DateAvailabilityOverrideInput, EventTypeInput, EventTypeRecord } from "./repository";
+import { EventTypesRepository } from "./repository";
+
+export type HostTimezoneReader = { getHostTimezone(): Promise<string | undefined>; getProfile(): Promise<ProfileRecord | undefined> };
+export type EventPublicationReadiness = {
+  calendar: {
+    checkConnection(): Promise<
+      | { kind: "healthy"; conferenceCapable: boolean }
+      | { kind: "unavailable"; code: string }
+    >;
+  };
+  mail: { checkConnection(): Promise<{ checkedAt: string }> };
+};
+export type DateAvailabilityOverrideWriteResult =
+  | { kind: "saved"; override: Awaited<ReturnType<EventTypesRepository["replaceDateAvailabilityOverride"]>> }
+  | { kind: "event_not_found" | "profile_not_configured" | "profile_timezone_invalid" | "override_in_past" | "invalid_override" };
+
+export class EventTypesService {
+  constructor(
+    private readonly repository: EventTypesRepository,
+    private readonly hostTimezone: HostTimezoneReader,
+    private readonly publication?: EventPublicationReadiness,
+  ) {}
+
+  listEventTypes() {
+    return this.repository.list();
+  }
+
+  getEventType(id: string) {
+    return this.repository.get(id);
+  }
+
+  getPublicEvent(slug: string) {
+    return this.repository.getPublishedBySlug(slug);
+  }
+
+  /** Server-only resolver. Never return this record from a public route. */
+  resolvePublishedEventForPublicRequest(slug: string) {
+    return this.repository.getPublishedRecordBySlug(slug);
+  }
+
+  async getEventTypePreview(id: string) {
+    const eventType = await this.repository.get(id);
+    return eventType ? toPublicEventType(eventType) : undefined;
+  }
+
+  listPublicListedEventTypes() {
+    return this.repository.listPublishedListed();
+  }
+
+  createEventType(input: EventTypeInput) {
+    return this.repository.create(input);
+  }
+
+  updateEventType(id: string, input: EventTypeInput) {
+    return this.repository.update(id, input);
+  }
+
+  updateEventDetails(id: string, input: EventDetailsInput) {
+    return this.repository.updateDetails(id, input);
+  }
+
+  replaceRecurringAvailability(id: string, windows: AvailabilityWindowInput[]) {
+    return this.repository.replaceRecurringAvailability(id, windows);
+  }
+
+  disableEventType(id: string) {
+    return this.repository.setStatus(id, "disabled");
+  }
+
+  deleteEventType(id: string) {
+    return this.repository.delete(id);
+  }
+
+  ensureDraftEventType(input: EventTypeInput) {
+    return this.repository.ensureDraft(input);
+  }
+
+  async listDateAvailabilityOverrides(eventTypeId: string) {
+    if (!(await this.repository.hasEventType(eventTypeId))) return undefined;
+    return this.repository.listDateAvailabilityOverrides(eventTypeId);
+  }
+
+  async replaceDateAvailabilityOverride(eventTypeId: string, input: DateAvailabilityOverrideInput): Promise<DateAvailabilityOverrideWriteResult> {
+    const parsed = dateAvailabilityOverrideInputSchema.safeParse(input);
+    if (!parsed.success) return { kind: "invalid_override" };
+    if (!(await this.repository.hasEventType(eventTypeId))) return { kind: "event_not_found" };
+    const timezone = await this.hostTimezone.getHostTimezone();
+    if (!timezone) return { kind: "profile_not_configured" };
+    if (!isCanonicalIanaTimeZone(timezone)) return { kind: "profile_timezone_invalid" };
+    if (parsed.data.hostDate < hostDateToday(timezone)) return { kind: "override_in_past" };
+    return { kind: "saved", override: await this.repository.replaceDateAvailabilityOverride(eventTypeId, parsed.data) };
+  }
+
+  async deleteDateAvailabilityOverride(eventTypeId: string, hostDate: string) {
+    if (!(await this.repository.hasEventType(eventTypeId))) return "event_not_found" as const;
+    const timezone = await this.hostTimezone.getHostTimezone();
+    if (!timezone) return "profile_not_configured" as const;
+    if (!isCanonicalIanaTimeZone(timezone)) return "profile_timezone_invalid" as const;
+    if (hostDate < hostDateToday(timezone)) return "override_in_past" as const;
+    return (await this.repository.deleteDateAvailabilityOverride(eventTypeId, hostDate)) ? "deleted" as const : "not_found" as const;
+  }
+
+  async publishReadiness(eventType: EventTypeRecord) {
+    return this.eventReadiness(eventType, await this.providerReadiness());
+  }
+
+  /** The calendar and sending-address checks publication runs; one pass serves several event types. */
+  async providerReadiness() {
+    if (!this.publication) return null;
+    const [calendar, mail] = await Promise.all([
+      this.publication.calendar.checkConnection().catch(() => ({ kind: "unavailable" as const, code: "calendar_unavailable" })),
+      this.publication.mail.checkConnection().then(() => ({ kind: "healthy" as const })).catch(() => ({ kind: "unavailable" as const })),
+    ]);
+    return { calendar, mail };
+  }
+
+  async eventReadiness(eventType: EventTypeRecord, providers: Awaited<ReturnType<EventTypesService["providerReadiness"]>>) {
+    const missing = [
+      ...(!validHostProfile(await this.hostTimezone.getProfile()) ? ["host_profile"] : []),
+      ...(eventType.availability.length === 0 ? ["open_availability"] : []),
+      ...(eventType.locationType !== "google_meet" && !eventType.locationValue.trim() ? ["private_location"] : []),
+    ];
+    if (!providers) return { ready: false, missing: [...missing, "transactional_mail", "destination_calendar", ...(eventType.locationType === "google_meet" ? ["google_meet_capability"] : [])] };
+    const { calendar, mail } = providers;
+    if (calendar.kind !== "healthy") missing.push("destination_calendar");
+    if (mail.kind !== "healthy") missing.push("transactional_mail");
+    if (eventType.locationType === "google_meet" && (calendar.kind !== "healthy" || !calendar.conferenceCapable)) missing.push("google_meet_capability");
+    return { ready: missing.length === 0, missing };
+  }
+
+  completionReadiness(event: EventTypeRecord) {
+    return event.requestOnly ? this.requestRequirements(event) : this.publishReadiness(event);
+  }
+
+  async requestReadiness(event: EventTypeRecord) {
+    const readiness = await this.requestRequirements(event);
+    const missing = [...readiness.missing, ...(event.status === "published" ? ["event_already_published"] : [])];
+    return { ready: missing.length === 0, missing };
+  }
+
+  private async requestRequirements(event: EventTypeRecord) {
+    const missing = [
+      ...(!validHostProfile(await this.hostTimezone.getProfile()) ? ["host_profile"] : []),
+      ...(!event.alternativeRequestsEnabled ? ["alternative_requests_enabled"] : []),
+    ];
+    if (!this.publication || !(await this.publication.mail.checkConnection().then(() => true).catch(() => false))) missing.push("transactional_mail");
+    return { ready: missing.length === 0, missing };
+  }
+
+  async openRequests(id: string) {
+    const event = await this.repository.get(id);
+    if (!event) return { kind: "event_not_found" as const };
+    const readiness = await this.requestReadiness(event);
+    if (!readiness.ready) return { kind: "not_ready" as const, readiness };
+    const profile = await this.hostTimezone.getProfile();
+    if (!validHostProfile(profile)) return { kind: "not_ready" as const, readiness: { ready: false, missing: ["host_profile"] } };
+    const opened = await this.repository.openRequestsChecked(event, profile!);
+    return opened ? { kind: "published" as const, eventType: opened } : { kind: "not_ready" as const, readiness: { ready: false, missing: ["event_configuration_changed"] } };
+  }
+
+  setAlternativeRequests(id: string, enabled: boolean) { return this.repository.setAlternativeRequests(id, enabled); }
+
+  async publishEventType(id: string) {
+    const eventType = await this.repository.get(id);
+    if (!eventType) return { kind: "event_not_found" as const };
+    const readiness = await this.publishReadiness(eventType);
+    if (!readiness.ready) return { kind: "not_ready" as const, readiness };
+    const profile = await this.hostTimezone.getProfile();
+    if (!validHostProfile(profile)) return { kind: "not_ready" as const, readiness: { ready: false, missing: ["host_profile"] } };
+    const published = await this.repository.publishChecked(eventType, profile!);
+    if (published) return { kind: "published" as const, eventType: published };
+    const current = await this.repository.get(id);
+    if (!current) return { kind: "event_not_found" as const };
+    return { kind: "not_ready" as const, readiness: { ready: false, missing: [...(current.availability.length === 0 ? ["open_availability"] : []), "event_configuration_changed"] } };
+  }
+}

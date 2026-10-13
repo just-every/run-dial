@@ -1,0 +1,178 @@
+import { Hono, type Context } from "hono";
+import { z } from "zod";
+import type { AppEnvironment } from "../../app/context";
+import { apiError } from "../../shared/http";
+import { validate } from "../../shared/validation";
+import { hostDateSchema, ianaTimeZoneSchema } from "../../shared/scheduling";
+
+const handleSchema = z.object({ handle: z.string().regex(/^[a-z0-9-]+$/).max(80) });
+const eventSchema = handleSchema.extend({ slug: z.string().regex(/^[a-z0-9-]+$/).max(80) });
+const recoverySchema = z.object({ token: z.string().min(1).max(512) });
+const availabilityQuerySchema = z.object({ week: hostDateSchema.optional(), inviteeTimezone: ianaTimeZoneSchema.optional() });
+const selectionSchema = z.object({ startAt: z.string().datetime({ offset: true }), inviteeTimezone: ianaTimeZoneSchema });
+// Capability recovery must answer 404 for an absent or incomplete query, before
+// parsing selection values that an unauthorised caller is not entitled to validate.
+const selectionLookupSchema = z.object({
+  nonce: z.string().min(1).max(200).optional(),
+  startAt: z.string().optional(),
+  inviteeTimezone: z.string().optional(),
+});
+const confirmedLookupSchema = z.object({ token: z.string().min(1).max(512).optional() });
+const answerValueSchema = z.union([z.string().max(4_000), z.array(z.string().max(500)).max(50)]);
+const confirmationSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema) });
+const manageRescheduleSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), reason: z.string().trim().max(500).optional() });
+const cancelSchema = z.object({ reason: z.string().trim().max(500).optional() });
+
+export const availabilityResponseSchema = z.object({
+  state: z.literal("temporarily_unavailable"),
+  provider: z.literal("calendar_provider_unavailable"),
+  slots: z.array(z.never()),
+});
+
+export const publicBookingRoutes = new Hono<AppEnvironment>()
+  .get("/api/public/book/:handle/:slug/availability", validate("param", eventSchema), validate("query", availabilityQuerySchema.optional()), async (context) => {
+    const { handle, slug } = context.req.valid("param");
+    const query = context.req.valid("query") ?? {};
+    const result = await context.get("services").availability.listPublicWeek(handle, slug, query.week, query.inviteeTimezone);
+    if (!result) return apiError(context, 404, "event_not_available", "This event type is not publicly available.");
+    return context.json(result);
+  })
+  .post("/api/public/book/:handle/:slug/selection", validate("param", eventSchema), validate("json", selectionSchema), async (context) => {
+    const result = await context.get("services").bookings.issuePublicSelection(context.req.valid("param").handle, context.req.valid("param").slug, context.req.valid("json").startAt, context.req.valid("json").inviteeTimezone);
+    return selectionResult(context, result);
+  })
+  .get("/api/public/book/:handle/:slug/selection", validate("param", eventSchema), validate("query", selectionLookupSchema), async (context) => {
+    const query = context.req.valid("query");
+    const result = await context.get("services").bookings.getPublicSelection({ ...context.req.valid("param"), nonce: query.nonce ?? "", startAt: query.startAt ?? "", inviteeTimezone: query.inviteeTimezone ?? "" });
+    if (result.kind === "found") return context.json(result.selection);
+    return result.kind === "expired"
+      ? apiError(context, 410, "booking_nonce_expired", "This booking selection has expired. Choose a new time.")
+      : apiError(context, 404, "booking_nonce_not_found", "This booking selection is not valid.");
+  })
+  .post("/api/public/book/:handle/:slug/confirm", validate("param", eventSchema), validate("json", confirmationSchema), async (context) => {
+    const body = context.req.valid("json");
+    const result = await context.get("services").bookings.confirmPublic({ ...body, handle: context.req.valid("param").handle, slug: context.req.valid("param").slug, nonce: body.nonce ?? "" });
+    return confirmationResult(context, result);
+  })
+  .get("/api/public/manage/:token", validate("param", recoverySchema), async (context) => {
+    const result = await context.get("services").bookings.getManageBooking(context.req.valid("param").token);
+    if (result.kind === "found") return context.json(result.booking);
+    return result.kind === "expired"
+      ? apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.")
+      : apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
+  })
+  .get("/api/public/manage/:token/calendar.ics", validate("param", recoverySchema), async (context) => {
+    const result = await context.get("services").bookings.getCalendarFile(context.req.valid("param").token);
+    if (result.kind === "found") {
+      context.header("Content-Type", "text/calendar; charset=utf-8");
+      context.header("Content-Disposition", "attachment; filename=booking.ics");
+      return context.body(result.ics);
+    }
+    return result.kind === "expired"
+      ? apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.")
+      : apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
+  })
+  .get("/api/public/manage/:token/reschedule/availability", validate("param", recoverySchema), validate("query", availabilityQuerySchema.strict()), async (context) => {
+    const { week, inviteeTimezone } = context.req.valid("query");
+    const result = await context.get("services").bookings.getRescheduleAvailability(context.req.valid("param").token, week, inviteeTimezone);
+    if (result.kind === "found") return context.json(result.availability);
+    if (result.kind === "expired") return apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.");
+    if (result.kind === "policy_blocked") return apiError(context, 409, "reschedule_window_closed", "This booking can no longer be rescheduled online.");
+    return apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
+  })
+  .post("/api/public/manage/:token/reschedule/selection", validate("param", recoverySchema), validate("json", selectionSchema), async (context) => {
+    const result = await context.get("services").bookings.issueRescheduleSelection(context.req.valid("param").token, context.req.valid("json").startAt, context.req.valid("json").inviteeTimezone);
+    return selectionResult(context, result);
+  })
+  .post("/api/public/manage/:token/reschedule", validate("param", recoverySchema), validate("json", manageRescheduleSchema), async (context) => {
+    const body = context.req.valid("json");
+    const result = await context.get("services").bookings.rescheduleByManageToken({ ...body, token: context.req.valid("param").token, nonce: body.nonce ?? "" });
+    return rescheduleResult(context, result);
+  })
+  .post("/api/public/manage/:token/cancel", validate("param", recoverySchema), validate("json", cancelSchema), async (context) => {
+    const result = await context.get("services").bookings.cancelByManageToken(context.req.valid("param").token, context.req.valid("json").reason);
+    if (result.kind === "cancelled") return context.json(result.booking);
+    if (result.kind === "expired") return apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.");
+    if (result.kind === "policy_blocked") return apiError(context, 409, "cancellation_window_closed", "This booking can no longer be cancelled online.");
+    return apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
+  })
+  .get("/book/:handle/:slug/details", validate("param", eventSchema), validate("query", selectionLookupSchema), async (context) => {
+    const query = context.req.valid("query");
+    const result = await context.get("services").bookings.getPublicSelection({ ...context.req.valid("param"), nonce: query.nonce ?? "", startAt: query.startAt ?? "", inviteeTimezone: query.inviteeTimezone ?? "" });
+    return result.kind === "found" ? publicSurface(context) : recoverySurface(context, undefined, result.kind === "expired" ? 410 : 404);
+  })
+  .get("/book/:handle/:slug/confirmed", validate("param", eventSchema), validate("query", confirmedLookupSchema), async (context) => {
+    const result = await context.get("services").bookings.getPublicConfirmation({ ...context.req.valid("param"), token: context.req.valid("query").token ?? "" });
+    return result.kind === "found" ? publicSurface(context) : recoverySurface(context, undefined, result.kind === "expired" ? 410 : 404);
+  })
+  .get("/book/:handle/:slug/request", validate("param", eventSchema), async (context) => {
+    const { handle, slug } = context.req.valid("param");
+    return (await knownAlternativeRequestEvent(context, handle, slug)) ? publicSurface(context) : recoverySurface(context);
+  })
+  .get("/book/:handle/:slug", validate("param", eventSchema), async (context) => {
+    const { handle, slug } = context.req.valid("param");
+    return (await knownPublicEvent(context, handle, slug)) ? publicSurface(context) : recoverySurface(context);
+  })
+  .get("/book/:handle", validate("param", handleSchema), async (context) => {
+    return (await context.get("services").hostProfile.getPublicProfile(context.req.valid("param").handle))
+      ? publicSurface(context)
+      : recoverySurface(context);
+  })
+  .get("/book/*", (context) => recoverySurface(context))
+  .get("/manage/:token", validate("param", recoverySchema), async (context) => {
+    const result = await context.get("services").bookings.getManageBooking(context.req.valid("param").token);
+    return result.kind === "found" ? publicSurface(context) : recoverySurface(context, undefined, result.kind === "expired" ? 410 : 404);
+  })
+  .get("/manage/*", (context) => recoverySurface(context))
+  .get("/embed/*", (context) => recoverySurface(context, { blockFraming: true }))
+  .get("/privacy", (context) => publicSurface(context));
+
+async function knownPublicEvent(context: Context<AppEnvironment>, handle: string, slug: string) {
+  const profile = await context.get("services").hostProfile.getPublicProfile(handle);
+  return Boolean(profile && (await context.get("services").eventTypes.getPublicEvent(slug)));
+}
+
+async function knownAlternativeRequestEvent(context: Context<AppEnvironment>, handle: string, slug: string) {
+  const profile = await context.get("services").hostProfile.getPublicProfile(handle);
+  const eventType = await context.get("services").eventTypes.getPublicEvent(slug);
+  return Boolean(profile && eventType?.alternativeRequestsEnabled);
+}
+
+async function publicSurface(context: Context<AppEnvironment>) {
+  return context.get("services").spaSurface.serve(context.req.raw, 200, { blockFraming: true });
+}
+
+async function recoverySurface(context: Context<AppEnvironment>, options?: { blockFraming?: boolean }, status: 404 | 410 = 404) {
+  return context.get("services").spaSurface.serve(context.req.raw, status, options);
+}
+
+function selectionResult(context: Context<AppEnvironment>, result: Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["issuePublicSelection"]>> | Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["issueRescheduleSelection"]>>) {
+  if (result.kind === "issued") return context.json(result.nonce, 201);
+  if (result.kind === "not_found") return apiError(context, 404, "event_not_available", "This booking link is not available.");
+  if (result.kind === "expired") return apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.");
+  if (result.kind === "calendar_unavailable") return context.json(availabilityResponseSchema.parse({ state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] }), 503);
+  if (result.kind === "invalid_timezone") return apiError(context, 400, "invalid_request", "Choose a valid IANA timezone.");
+  return apiError(context, 409, "slot_unavailable", "That time is no longer available. Choose another time.");
+}
+
+function confirmationResult(context: Context<AppEnvironment>, result: Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["confirmPublic"]>>) {
+  if (result.kind === "created") return context.json(result.booking, 201);
+  if (result.kind === "replayed") return context.json(result.booking);
+  if (result.kind === "invalid_answers") return apiError(context, 400, "invalid_answers", "Review the required booking details.");
+  if (result.kind === "invalid_nonce") return apiError(context, 404, "booking_nonce_not_found", "This booking selection is not valid.");
+  if (result.kind === "expired_nonce") return apiError(context, 410, "booking_nonce_expired", "This booking selection has expired. Choose a new time.");
+  if (result.kind === "calendar_unavailable") return context.json(availabilityResponseSchema.parse({ state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] }), 503);
+  if (result.kind === "payload_mismatch") return apiError(context, 409, "booking_replay_mismatch", "This booking selection was already used with different details.");
+  if (result.kind === "blocked") return apiError(context, 409, "booking_unavailable", "This booking cannot be confirmed. Contact the host directly.");
+  return apiError(context, 409, result.kind === "slot_taken" ? "slot_taken" : "slot_unavailable", "That time is no longer available. Choose another time.");
+}
+
+function rescheduleResult(context: Context<AppEnvironment>, result: Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["rescheduleByManageToken"]>>) {
+  if (result.kind === "rescheduled" || result.kind === "replayed") return context.json(result.booking);
+  if (result.kind === "not_found" || result.kind === "invalid_nonce") return apiError(context, 404, "booking_nonce_not_found", "This booking selection is not valid.");
+  if (result.kind === "expired" || result.kind === "expired_nonce") return apiError(context, 410, "booking_nonce_expired", "This booking selection has expired. Choose a new time.");
+  if (result.kind === "policy_blocked") return apiError(context, 409, "reschedule_window_closed", "This booking can no longer be rescheduled online.");
+  if (result.kind === "calendar_unavailable") return context.json(availabilityResponseSchema.parse({ state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] }), 503);
+  if (result.kind === "payload_mismatch") return apiError(context, 409, "booking_replay_mismatch", "This booking selection was already used with different details.");
+  return apiError(context, 409, result.kind === "slot_taken" ? "slot_taken" : "slot_unavailable", "That time is no longer available. Choose another time.");
+}

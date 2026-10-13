@@ -1,0 +1,10 @@
+// What rer reads from the root: the deployed Worker entry for `rer check` and the Cron Triggers `rer dev` runs locally on their
+// schedule. Dial's real Worker configuration is deploy/wrangler.template.toml (rendered to wrangler.toml); every Dial command
+// passes that file explicitly, so this file configures nothing else. Base's checks and scheduler read only wrangler.json(c);
+// remove this file when Base reads wrangler.toml too. scripts/render-wrangler.mjs refuses to render (so build, setup and
+// verify fail) unless `main` and `triggers.crons` equal the template's.
+{
+  "name": "dial-local",
+  "main": "src/core/app/worker.ts",
+  "triggers": { "crons": ["* * * * *"] }
+}

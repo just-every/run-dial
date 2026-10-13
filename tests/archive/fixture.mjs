@@ -1,0 +1,111 @@
+import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
+import { schemaModel, quote } from '../../scripts/archive/schema.mjs';
+import { chunks } from '../../scripts/archive/streams.mjs';
+import { exported } from '../../scripts/archive/policy.mjs';
+export const instant = '2026-10-07T00:00:00.000Z';
+export const secret = 'PLANTED_PRIVATE_CREDENTIAL_0123456789';
+export const copyReport = {
+  id: '01K6Z21FDK9C9E2RVFQDBCGD53', event_type_id: 'event_types-1',
+  canonical_url: 'https://dial.example.test/book/host/event_types.slug',
+  accepted_at: '2026-10-07T00:01:02.003Z', created_at: '2026-10-06T23:58:59.001Z', updated_at: '2026-10-07T00:01:02.003Z',
+};
+const end = '2026-10-07T01:00:00.000Z';
+const overrides = {
+  rer_erasure_operations: { entity: "booking", subject: null, label: "Erased booking", phase: "complete", planned: "{}", deleted: "{}", retained: "[]", committed_at: instant, completed_at: instant },
+  person_erasure_receipts: { bookings: 1, requests: 0, completed_at: instant },
+  move_in_captures: { mode: 'catch_up', captured_at: instant },
+  move_in_source_links: { event_type_id: 'event_types-1', source_url: 'https://schedule.example.test/host/event' },
+  move_in_differences: { booking_id: 'bookings-1', kind: 'cancelled', decision: 'released', decided_at: instant },
+  ext_custom_field_definitions: { entity: 'booking', label: 'Internal preparation', kind: 'text', options_json: '[]' },
+  ext_custom_field_values: { definition_id: 'ext_custom_field_definitions-1', entity: 'booking', kind: 'text', event_type_id: null, booking_id: 'bookings-1', request_id: null, value_json: '"Private archive annotation"' },
+  operators: { id: 'owner', email: 'owner@example.test', normalized_email: 'owner@example.test' },
+  oa_operators: { id: 'owner', email: 'owner@example.test', display_name: 'Owner', role: 'owner', status: 'active', created_at: 1791331200000 },
+  oa_invitation_cancellations: { operator_id: 'zz-cancelled', operator_version: 2 },
+  oa_domain_rules: { domain: 'restricted.example.test', provider_id: 'retained-provider', created_by: 'owner', created_at: 1791331200000 },
+  oa_bootstrap: { singleton: 1, claim_id: 'owner', claimed_at: 1791331200000 },
+  oc_owner_claims: { email: 'owner@example.test', operator_id: 'owner', issued_at: 1791331200000, consumed_at: 1791331201000, expires_at: 1791331500000, completed: 1 },
+  operator_setup_identity: { operator_id: 'owner', onboarding_completed_at: instant },
+  host_profiles: { singleton_key: 'default', handle: 'host', timezone: 'UTC' },
+  host_link_copy_reports: copyReport,
+  event_types: { status: 'published', duration_minutes: 30, location_type: 'google_meet', slot_increment_minutes: 15, minimum_notice_minutes: 0, booking_horizon_days: 60 },
+  event_questions: { kind: 'text', options_json: '[]' },
+  recurring_availability_windows: { weekday: 1, start_minute: 540, end_minute: 600 },
+  availability_date_overrides: { host_date: '2026-10-07', mode: 'open' },
+  availability_date_override_windows: { start_minute: 540, end_minute: 600 },
+  calendar_connections: { singleton_key: 'default', provider: 'google', status: 'healthy', access_token_ciphertext: secret + '_ACCESS', refresh_token_ciphertext: secret + '_REFRESH', access_token_expires_at: end, authorised_by_operator_id: 'owner', sync_cursor: 'retained-sync-cursor', channel_id: secret + '_CHANNEL', account_email: 'calendar@example.test' },
+  calendar_connection_calendars: { purpose: 'destination', calendar_id: 'calendar@example.test' },
+  provider_connection_health: { provider: 'google_calendar', status: 'healthy', alert_state: 'healthy_announced' },
+  calendar_busy_intervals: { starts_at: instant, ends_at: end, transparency: 'opaque' },
+  calendar_busy_read_windows: { starts_at: instant, ends_at: end },
+  delivery_outbox: { kind: 'mail_send', state: 'pending', booking_id: 'bookings-1', occurrence_id: 'booking_occurrences-1', payload_json: JSON.stringify({ recipientRole: 'invitee', to: 'invitee@example.test', subject: 'Historical confirmation', wireMail: { text: `https://dial.example.test/manage/${secret}_MANAGE`, html: secret + '_HTML' }, settings: { nested: { webhookSecret: secret + '_WEBHOOK', accessToken: secret + '_NESTED', keep: 'delivery fact' } }, manageUrl: `https://dial.example.test/manage/${secret}_MANAGE`, rawBody: `visit https://dial.example.test/manage/${secret}_URL`, serialized: JSON.stringify({ setupToken: secret + '_SETUP', value: 'fact' }) }) },
+  delivery_attempts: { attempt_number: 1, outcome: 'retrying' },
+  provider_webhook_events: { provider: 'google_calendar', state: 'processed' },
+  bookings: { duration_minutes: 30, state: 'confirmed', calendar_state: 'pending', meeting_state: 'pending', current_occurrence_id: 'booking_occurrences-1', event_type_id: 'event_types-1', host_timezone: 'UTC', invitee_timezone: 'UTC', invitee_email: 'invitee@example.test' },
+  booking_occurrences: { sequence: 0, start_at: instant, end_at: end, occupied_start_at: instant, occupied_end_at: end, host_date: '2026-10-07', state: 'current', is_current: 1 },
+  booking_answers: { value_json: JSON.stringify(JSON.stringify({ answer: 'Preserve this answer', text: 'Preserve structured answer text', nested: { refresh_token: secret + '_ANSWER' } })) },
+  booking_history: { action: 'created', actor_type: 'operator', actor_id: 'owner' },
+  booking_attendance: { status: 'attended' },
+  blocked_address_rules: { kind: 'email', value: 'blocked@example.test' },
+  availability_requests: { state: 'submitted', nonce_hash: secret + '_NONCE', invitee_timezone: 'UTC' },
+  availability_request_windows: { requested_date: '2026-10-08', start_minute: 600, end_minute: 660 },
+  embed_allowed_origins: { origin: 'https://example.test' },
+  booking_calendar_conflicts: { state: 'open' },
+  anonymized_audit: { actor_type: 'operator', actor_id: 'owner' },
+  calendar_deletion_probes: { state: 'pending', occurrence_id: 'booking_occurrences-1' },
+  operator_mail_invocations: { state: 'invoking', attempt_number: 2 },
+  base_mail_dispatch: { state: 'uncertain' },
+};
+export async function fixture() {
+  const model = await schemaModel();
+  const db = model.db;
+  db.exec('BEGIN; PRAGMA defer_foreign_keys=ON');
+  const triggers = db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger'").all();
+  for (const trigger of triggers) db.exec(`DROP TRIGGER ${quote(trigger.name)}`);
+  for (const name of exported) {
+    // This semantic root exists only while erasure is incomplete; native archive policy requires it empty.
+    if (name === "operator_erasure_subjects") continue;
+    const columns = db.prepare(`PRAGMA table_info(${quote(name)})`).all();
+    const row = Object.fromEntries(columns.map(column => {
+      let value = null;
+      if (column.dflt_value !== null) value = db.prepare(`SELECT ${column.dflt_value} AS v`).get().v;
+      else if (column.notnull || column.pk) value = column.type === 'INTEGER' ? 1 : column.name === 'id' ? `${name}-1` : /_at$/.test(column.name) ? instant : column.name === 'singleton_key' ? 'default' : `${name}.${column.name}`;
+      return [column.name, value];
+    }));
+    for (const foreign of db.prepare(`PRAGMA foreign_key_list(${quote(name)})`).all()) row[foreign.from] = foreign.table === 'operators' || foreign.table === 'oa_operators' ? 'owner' : `${foreign.table}-1`;
+    Object.assign(row, overrides[name]);
+    if (name === 'bookings') { row.invitee_name_folded = foldBookingSearch(row.invitee_name); row.invitee_email_folded = foldBookingSearch(row.invitee_email); }
+    db.prepare(`INSERT INTO ${quote(name)} (${Object.keys(row).map(quote)}) VALUES (${Object.keys(row).map(() => '?')})`).run(...Object.values(row));
+  }
+  for (const trigger of triggers) db.exec(trigger.sql);
+  db.exec("INSERT INTO oa_operators VALUES ('zz-cancelled','cancelled@example.test','Cancelled invite','owner','inactive',2,1791331200000)");
+  db.exec(`INSERT INTO booking_manage_tokens VALUES('manage','bookings-1','${secret}_MANAGE_HASH','2099',NULL,NULL,'${instant}','${instant}');
+    INSERT INTO oa_tokens VALUES('old-token','${secret}_AUTH','magic','owner',1,NULL,NULL,'/app',1,9999999999999,NULL,NULL);
+    INSERT INTO rer_mail_development_outbox(id,created_at,message) VALUES('captured-signin',1791331200000,'{"deliveryId":"old-token","from":"mail@example.test","to":["owner@example.test"],"subject":"Your sign-in link for Dial","text":"https://dial.example.test/auth/confirm?token=${secret}_MAGIC"}');
+    INSERT INTO oa_sessions VALUES('old-session','${secret}_SESSION','owner',1,'native','old-token',1,9999999999999,NULL);
+    INSERT INTO oa_step_up_challenges VALUES('old-proof','${secret}_STEP_UP','old-session','owner',1,'domain-rule:set','/app',1,9999999999999,NULL);`);
+  db.exec('COMMIT');
+  if (db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('fixture foreign keys');
+  return model;
+}
+export function sqliteBinding(sqlite) {
+  const prepare = (sql, args = []) => ({ bind: (...values) => prepare(sql, values),
+    async raw() { const statement = sqlite.prepare(sql); statement.setReturnArrays(true); return statement.all(...args); },
+    async first() { return sqlite.prepare(sql).get(...args) ?? null; },
+    async all() { const results = sqlite.prepare(sql).all(...args); return { success: true, results, meta: { changes: Number(sqlite.prepare('SELECT changes() AS n').get().n) } }; },
+    async run() { const result = sqlite.prepare(sql).run(...args); return { success: true, results: [], meta: { changes: Number(result.changes) } }; },
+  });
+  return { prepare, async batch(statements) { sqlite.exec('BEGIN'); try { const results = []; for (const statement of statements) results.push(await statement.all()); sqlite.exec('COMMIT'); return results; } catch (error) { sqlite.exec('ROLLBACK'); throw error; } } };
+}
+export function testPlatform(db) {
+  const objects = new Map(); const writes = { database: 0, objects: 0 }; const binding = sqliteBinding(db);
+  return {
+    objects, writes, binding,
+    knownSecrets: () => [],
+    query: async (sql, params = []) => db.prepare(sql).all(...params),
+    async batch(statements) { if (statements.some(statement => !/^SELECT/.test(statement.sql))) writes.database++;
+      return (await binding.batch(statements.map(({ sql, params }) => binding.prepare(sql).bind(...params)))).map(result => result.results); },
+    listObjects: async () => [...objects.keys()].map(key => ({ key })),
+    getObject: async key => { const object = objects.get(key); return object && { body: object.bytes, size: object.bytes.length, contentType: object.contentType }; },
+    async putObject(key, body, contentType) { const buffers = []; for await (const bytes of chunks(body)) buffers.push(bytes); writes.objects++; objects.set(key, { bytes: Buffer.concat(buffers), contentType }); },
+  };
+}

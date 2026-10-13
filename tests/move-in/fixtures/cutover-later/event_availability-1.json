@@ -1,0 +1,20 @@
+{
+ "collection": [
+  {
+   "event_type": "https://api.calendly.com/event_types/cutover-intro",
+   "availability_setting": "host",
+   "availability_rule": {
+    "uri": "https://api.calendly.com/user_availability_schedules/cutover-default",
+    "timezone": "UTC",
+    "user": "https://api.calendly.com/users/cutover"
+   }
+  }
+ ],
+ "pagination": {
+  "count": 1,
+  "next_page": null,
+  "previous_page": null,
+  "next_page_token": null,
+  "previous_page_token": null
+ }
+}

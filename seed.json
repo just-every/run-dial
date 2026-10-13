@@ -1,0 +1,467 @@
+{
+  "id": "dial",
+  "name": "Dial",
+  "version": "0.1.0",
+  "maturity": "runtime-spine-public-port",
+  "category": "scheduling",
+  "spine": {
+    "id": "scheduling",
+    "record": "booking against an availability rule"
+  },
+  "replaces": ["Calendly", "Acuity Scheduling", "SavvyCal"],
+  "description": "An invitee-first, self-hosted scheduler for one business or independent host.",
+  "capabilities": [
+    {
+      "id": "public-home",
+      "clauses": [
+        "HOME-001"
+      ]
+    },
+    {
+      "id": "public-documentation",
+      "clauses": ["DOCS-001"]
+    },
+    {
+      "id": "access-and-authorisation",
+      "clauses": [
+        "AUTH-001",
+        "AUTH-002",
+        "AUTH-003",
+        "AUTH-004",
+        "AUTH-005",
+        "AUTH-006"
+      ]
+    },
+    {
+      "id": "owner-editor",
+      "clauses": [
+        "EDITOR-001"
+      ]
+    },
+    {
+      "id": "operator-workspace",
+      "clauses": [
+        "OPER-001",
+        "OPER-002",
+        "OPER-003",
+        "OPER-004",
+        "OPER-005"
+      ]
+    },
+    {
+      "id": "host-profile",
+      "clauses": [
+        "PROFILE-001",
+        "PROFILE-002",
+        "PROFILE-003"
+      ]
+    },
+    {
+      "id": "event-types",
+      "clauses": [
+        "EVENT-001",
+        "EVENT-002",
+        "EVENT-003",
+        "EVENT-004",
+        "EVENT-005",
+        "EVENT-006"
+      ]
+    },
+    {
+      "id": "public-booking",
+      "clauses": [
+        "PUBLIC-001",
+        "PUBLIC-002",
+        "PUBLIC-003",
+        "PUBLIC-004",
+        "PUBLIC-005",
+        "PUBLIC-006"
+      ]
+    },
+    {
+      "id": "availability",
+      "clauses": [
+        "AVAIL-001",
+        "AVAIL-002",
+        "AVAIL-003",
+        "AVAIL-004",
+        "AVAIL-005",
+        "AVAIL-006",
+        "AVAIL-007",
+        "AVAIL-008",
+        "AVAIL-009"
+      ]
+    },
+    {
+      "id": "booking-lifecycle",
+      "clauses": [
+        "BOOK-001",
+        "BOOK-002",
+        "BOOK-003",
+        "BOOK-004",
+        "BOOK-005",
+        "BOOK-006",
+        "BOOK-007",
+        "BOOK-008",
+        "BOOK-009",
+        "BOOK-010",
+        "BOOK-011",
+        "BOOK-012"
+      ]
+    },
+    {
+      "id": "calendar-and-meeting-sync",
+      "clauses": [
+        "CAL-001",
+        "CAL-002",
+        "CAL-003",
+        "CAL-004",
+        "CAL-005",
+        "CAL-006",
+        "CAL-007",
+        "CAL-008",
+        "CAL-009"
+      ]
+    },
+    {
+      "id": "alternative-availability",
+      "clauses": [
+        "REQUEST-001",
+        "REQUEST-002",
+        "REQUEST-003",
+        "REQUEST-004",
+        "REQUEST-005"
+      ]
+    },
+    {
+      "id": "notifications",
+      "clauses": [
+        "NOTIFY-001",
+        "NOTIFY-002",
+        "NOTIFY-003",
+        "NOTIFY-004",
+        "NOTIFY-005",
+        "NOTIFY-006",
+        "NOTIFY-007"
+      ]
+    },
+    {
+      "id": "data-portability",
+      "clauses": [
+        "DATA-001",
+        "DATA-002"
+      ]
+    },
+    {
+      "id": "move-in",
+      "clauses": [
+        "DATA-003"
+      ]
+    },
+    {
+      "id": "custom-fields",
+      "clauses": [
+        "CUSTOM-001",
+        "CUSTOM-002"
+      ]
+    }
+  ],
+  "nonGoals": [
+    "Multiple hosts or workspaces",
+    "Roles and permissions",
+    "Team round-robin or collective scheduling",
+    "Group events, classes, waitlists, or resource capacity",
+    "Additional invitee guests on a booking",
+    "Bookings that wait for host approval before they are confirmed",
+    "Payments, deposits, refunds, or booking fees",
+    "Recurring booking series or scheduling polls",
+    "Marketplace discovery, ratings, or invitee-submitted reviews",
+    "SMS, WhatsApp, phone automation, CRM, campaigns, or marketing automation",
+    "Automatic adoption of arbitrary external-calendar time or location edits",
+    "AI routing or ranking",
+    "Native mobile apps"
+  ],
+  "externals": [
+    {
+      "id": "google-calendar",
+      "required": true,
+      "why": "A scheduler must read the host's real busy time and place accepted bookings on the calendar people already use; Cloudflare has no calendar primitive. EVENT-006 blocks normal bookable publication without a healthy destination-calendar connection; its explicit request-only exception offers proposals without bookable slots, and AVAIL-004 fails booking closed without a readable calendar.",
+      "data": [
+        "host OAuth identity",
+        "calendar identifiers",
+        "booking event details",
+        "invitee name and email"
+      ],
+      "adapters": [
+        "calendar.provider.v2"
+      ]
+    },
+    {
+      "id": "google-meet",
+      "required": false,
+      "why": "The prototype's default location is a real Google Meet conference, which requires provider-side conference creation. EVENT-004 also lets an event type use a fixed link, a phone number, or an in-person address instead, so a deployment can run with no event type ever using Meet.",
+      "data": [
+        "booking correlation ID",
+        "event title",
+        "start and end instant"
+      ],
+      "adapters": [
+        "calendar.provider.v2"
+      ]
+    },
+    {
+      "id": "sendgrid",
+      "required": true,
+      "why": "Cloudflare does not provide transactional email delivery. The setup configures SendGrid through mail.sender.v1 for operator sign-in and transactional messages; EVENT-006 blocks normal or request-only publication while the configured mail-provider connection check is unhealthy.",
+      "data": [
+        "operator and invitee email",
+        "booking or request content",
+        "calendar attachment"
+      ],
+      "adapters": [
+        "mail.sender.v1"
+      ]
+    },
+    {
+      "id": "resend",
+      "required": false,
+      "why": "Existing installations may retain their Resend credentials and mail.sender.v1 configuration. New setup selects SendGrid; an explicitly configured provider failure is not replaced with another provider.",
+      "data": [
+        "operator and invitee email",
+        "booking or request content",
+        "calendar attachment"
+      ],
+      "adapters": [
+        "mail.sender.v1"
+      ]
+    }
+  ],
+  "env": [
+    {
+      "name": "ENVIRONMENT",
+      "secret": false,
+      "required": true,
+      "why": "Deployment mode: development, preview, or production. Controls local magic-link sink availability and cookie transport security."
+    },
+    {
+      "name": "APP_URL",
+      "secret": false,
+      "required": true,
+      "why": "Canonical deployment origin used in public links; local development uses its loopback HTTP origin."
+    },
+    {
+      "name": "SESSION_SECRET",
+      "secret": true,
+      "required": true,
+      "why": "Hashes opaque operator session and magic-link tokens."
+    },
+    {
+      "name": "OWNER_EMAIL",
+      "secret": false,
+      "required": true,
+      "why": "The setup-supplied identity of the first operator. The operator-auth store persists this identity explicitly and does not create or select a fixture operator."
+    },
+    {
+      "name": "SETUP_TOKEN",
+      "secret": true,
+      "required": false,
+      "why": "One-use credential for first-operator bootstrap on an empty auth store. Its durable bootstrap ledger rejects reuse; this bootstrap is independent of mail.sender.v1 and creates no fixture operator."
+    },
+    {
+      "name": "MAIL_PROVIDER",
+      "secret": false,
+      "required": false,
+      "why": "Selects the explicit SendGrid, retained Resend, or loopback-development mail.sender.v1 provider. Development captures use the local outbox and cannot run in production. The setup chooses SendGrid; an absent or unhealthy provider does not authorize normal or request-only publication."
+    },
+    {
+      "name": "MAIL_API_KEY",
+      "secret": true,
+      "required": false,
+      "why": "Authenticates the selected mail.sender.v1 provider. Missing or invalid credentials fail the provider connection check and block normal or request-only publication."
+    },
+    {
+      "name": "MAIL_FROM",
+      "secret": false,
+      "required": false,
+      "why": "Verified no-reply sender for the selected mail.sender.v1 provider and operator sign-in or transactional messages."
+    },
+    {
+      "name": "MAIL_WEBHOOK_KEY",
+      "secret": false,
+      "required": false,
+      "why": "Optional mail.sender.v1 SendGrid Event Webhook ECDSA P-256 public verification key for authenticated bounce callbacks. It is not needed for first-operator bootstrap or sign-in; the SendGrid connection check requires it for NOTIFY-005 bounce reconciliation before event types can be published."
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "secret": true,
+      "required": false,
+      "why": "Legacy Resend credential retained for installed mail.sender.v1 compatibility. If selected, its connection must pass before event publication."
+    },
+    {
+      "name": "RESEND_FROM_EMAIL",
+      "secret": false,
+      "required": false,
+      "why": "Verified no-reply sender used by the mail.sender.v1 adapter for magic links and transactional messages."
+    },
+    {
+      "name": "GOOGLE_OAUTH_CLIENT_ID",
+      "secret": false,
+      "required": false,
+      "why": "Identifies the calendar.provider.v2 Google OAuth client. Without a configured and connected calendar, Dial offers no verified availability; provider setup and live OAuth proof require separate acceptance."
+    },
+    {
+      "name": "GOOGLE_OAUTH_CLIENT_SECRET",
+      "secret": true,
+      "required": false,
+      "why": "Authenticates the calendar.provider.v2 Google OAuth client during authorisation and token refresh; missing configuration leaves calendar availability fail-closed."
+    },
+    {
+      "name": "CALENDAR_WEBHOOK_SECRET",
+      "secret": true,
+      "required": false,
+      "why": "Authenticates calendar.provider.v2 push callbacks together with the registered channel identity; without it, callbacks are rejected and provider health is not established."
+    },
+    {
+      "name": "RESEND_WEBHOOK_SECRET",
+      "secret": true,
+      "required": false,
+      "why": "Authenticates mail.sender.v1 Resend delivery and bounce callback signatures."
+    }
+  ],
+  "deploy": {
+    "healthPath": "/health",
+    "operatorPath": "/app",
+    "publicPaths": [
+      "/",
+      "/assets/",
+      "/rer-theme.css",
+      "/rer-mark.svg",
+      "/fonts/",
+      "/_serverFn/",
+      "/media/",
+      "/signin",
+      "/privacy",
+      "/docs",
+      "/docs/",
+      "/auth/",
+      "/api/auth/",
+      "/book/",
+      "/manage/",
+      "/embed/",
+      "/api/public/",
+      "/api/calendar/oauth/callback",
+      "/api/webhooks/google-calendar",
+      "/api/webhooks/sendgrid",
+      "/api/webhooks/resend",
+      "/health"
+    ]
+  },
+  "customFields": [
+    "eventType",
+    "booking",
+    "availabilityRequest"
+  ],
+  "extensionPoints": {
+    "contributions": [
+      "operator.route.v1",
+      "operator.page.v1",
+      "operator.navigation.v1",
+      "operator.settings-section.v1",
+      "job.handler.v1",
+      "cron.handler.v1",
+      "queue.consumer.v1"
+    ],
+    "policies": [
+      "operator.management.v1",
+      "booking.questions.v1",
+      "availability.recommendation.v1",
+      "booking.reschedule.v1",
+      "booking.cancellation.v1",
+      "availability-request.routing.v1",
+      "reminder.schedule.v1",
+      "calendar.external-deletion.v1"
+    ],
+    "events": [
+      "profile.updated.v1",
+      "event-type.published.v1",
+      "event-type.disabled.v1",
+      "event-type.deleted.v1",
+      "booking.confirmed.v1",
+      "booking.rescheduled.v1",
+      "booking.cancelled.v1",
+      "availability-request.created.v1",
+      "availability-request.handled.v1",
+      "availability-request.closed.v1",
+      "calendar.connection-health-changed.v1",
+      "delivery.failed.v1"
+    ],
+    "slots": [
+      "operator.navigation.after.v1",
+      "operator.dashboard.after.v1",
+      "event-type.header.actions.v1",
+      "event-type.settings.after.v1",
+      "booking.list.row-actions.v1",
+      "booking.detail.sidebar.after.v1",
+      "booking.detail.actions.after.v1",
+      "availability-request.detail.after.v1",
+      "public.profile.after.v1",
+      "public.event.before-booking.v1",
+      "public.confirmation.after.v1",
+      "settings.calendar.after.v1"
+    ],
+    "adapters": [
+      "calendar.provider.v2",
+      "mail.sender.v1"
+    ]
+  },
+  "limits": {
+    "status": "estimated-until-load-tested",
+    "estimatedAt": "2026-08-31",
+    "maxOperators": 10,
+    "maxEventTypes": 100,
+    "maxFocusAreas": 6,
+    "maxFocusAreaChars": 40,
+    "maxSocialProofEntries": 3,
+    "maxSocialProofChars": 280,
+    "maxBookingQuestionsPerEventType": 25,
+    "maxQuestionOptionsPerQuestion": 50,
+    "maxAvailabilityOverridesPerEventType": 1000,
+    "maxRequestDatesPerRequest": 10,
+    "maxRequestWindowsPerRequest": 20,
+    "maxConflictCalendars": 10,
+    "availabilityLookaheadDays": 365,
+    "maxBookings": 100000,
+    "maxBookingsPerMonth": 10000,
+    "concurrentSlotClaims": 50,
+    "publicRequestsPerIpPerMinute": 120,
+    "bookingMutationsPerIpPerMinute": 10,
+    "alternativeRequestsPerIpPerHour": 5,
+    "webhookRequestsPerProviderPerMinute": 600,
+    "maxUploadBytes": 5242880,
+    "allowedUploadTypes": [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif"
+    ],
+    "maxCustomFieldsPerEntity": 20
+  },
+  "accessibility": {
+    "level": "WCAG 2.2 AA",
+    "status": "target-until-automated-and-manual-audit"
+  },
+  "operatingCost": {
+    "status": "estimated",
+    "estimatedAt": "2026-08-31",
+    "currency": "USD",
+    "basis": "One host, one operator, 1,000 bookings per month, the default two reminders when both offsets apply, four to six transactional emails per unchanged booking, and usage inside Google Calendar's standard quota.",
+    "lowMonthly": 20,
+    "typicalMonthly": 25,
+    "notes": "These figures retain the prior Resend-compatible estimate: Resend Pro is the $20 low case and adding Cloudflare Workers Paid gives the $25 typical case. setup defaults to SendGrid, whose account tier and price have not been estimated here; the Resend figures do not estimate a SendGrid deployment. Smaller Resend-compatible deployments can fit both free allowances. More operators, changes, requests, or retries increase mail volume. Google Calendar standard use currently has no additional charge below its quota, but Google states over-quota billing is planned later in 2026.",
+    "sources": [
+      "https://developers.cloudflare.com/workers/platform/pricing/",
+      "https://resend.com/pricing",
+      "https://developers.google.com/workspace/calendar/api/guides/quota"
+    ]
+  }
+}

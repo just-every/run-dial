@@ -1,0 +1,64 @@
+{
+ "collection": [
+  {
+   "uri": "https://api.calendly.com/user_availability_schedules/solo-default",
+   "user": "https://api.calendly.com/users/solo",
+   "timezone": "America/New_York",
+   "default": true,
+   "name": "Weekdays",
+   "rules": [
+    {
+     "type": "wday",
+     "wday": "monday",
+     "intervals": [
+      {
+       "to": "17:00",
+       "from": "09:00"
+      }
+     ]
+    },
+    {
+     "type": "date",
+     "date": "2027-01-05",
+     "intervals": [
+      {
+       "to": "12:00",
+       "from": "10:00"
+      }
+     ]
+    },
+    {
+     "type": "date",
+     "date": "2026-12-30",
+     "intervals": []
+    }
+   ]
+  },
+  {
+   "uri": "https://api.calendly.com/user_availability_schedules/solo-second",
+   "user": "https://api.calendly.com/users/solo",
+   "timezone": "America/New_York",
+   "default": false,
+   "name": "Second schedule",
+   "rules": [
+    {
+     "type": "wday",
+     "wday": "tuesday",
+     "intervals": [
+      {
+       "to": "16:00",
+       "from": "13:00"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "pagination": {
+  "count": 2,
+  "next_page": null,
+  "previous_page": null,
+  "next_page_token": null,
+  "previous_page_token": null
+ }
+}

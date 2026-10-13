@@ -1,0 +1,56 @@
+{
+ "collection": [
+  {
+   "event_type": "https://api.calendly.com/event_types/solo-1",
+   "availability_setting": "host",
+   "availability_rule": {
+    "uri": "https://api.calendly.com/user_availability_schedules/solo-default",
+    "timezone": "America/New_York",
+    "user": "https://api.calendly.com/users/solo"
+   }
+  },
+  {
+   "event_type": "https://api.calendly.com/event_types/solo-2",
+   "availability_setting": "host",
+   "availability_rule": {
+    "uri": "https://api.calendly.com/user_availability_schedules/solo-default",
+    "timezone": "America/New_York",
+    "user": "https://api.calendly.com/users/solo"
+   }
+  },
+  {
+   "event_type": "https://api.calendly.com/event_types/solo-3",
+   "availability_setting": "host",
+   "availability_rule": {
+    "uri": "https://api.calendly.com/user_availability_schedules/solo-default",
+    "timezone": "America/New_York",
+    "user": "https://api.calendly.com/users/solo"
+   }
+  },
+  {
+   "event_type": "https://api.calendly.com/event_types/solo-4",
+   "availability_setting": "host",
+   "availability_rule": {
+    "uri": "https://api.calendly.com/user_availability_schedules/solo-second",
+    "timezone": "America/New_York",
+    "user": "https://api.calendly.com/users/solo"
+   }
+  },
+  {
+   "event_type": "https://api.calendly.com/event_types/solo-5",
+   "availability_setting": "host",
+   "availability_rule": {
+    "uri": "https://api.calendly.com/user_availability_schedules/solo-second",
+    "timezone": "America/New_York",
+    "user": "https://api.calendly.com/users/solo"
+   }
+  }
+ ],
+ "pagination": {
+  "count": 5,
+  "next_page": null,
+  "previous_page": null,
+  "next_page_token": null,
+  "previous_page_token": null
+ }
+}

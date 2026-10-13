@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "title": "Dial",
+  "groups": [
+    {
+      "id": "owner",
+      "label": "First owner"
+    }
+  ],
+  "fields": [
+    {
+      "name": "OWNER_EMAIL",
+      "label": "Owner email",
+      "help": "Sign-in links for this address appear in the local development outbox; no email is sent.",
+      "kind": "email",
+      "required": true,
+      "prefill": "account-email",
+      "group": "owner"
+    },
+    {
+      "name": "SESSION_SECRET",
+      "label": "Session secret",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "input": "managed",
+      "generate": "hex",
+      "group": "owner"
+    },
+    {
+      "name": "SETUP_TOKEN",
+      "label": "Setup token",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "generate": "hex",
+      "group": "owner"
+    }
+  ],
+  "steps": [
+    {
+      "type": "owner-claim",
+      "mode": "signed",
+      "emailField": "OWNER_EMAIL",
+      "tokenField": "SETUP_TOKEN",
+      "path": "/auth/owner-claim"
+    }
+  ]
+}

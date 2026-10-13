@@ -1,0 +1,19 @@
+/* One click, once, on load (about 1.6 seconds): the hand sweeps round and settles on the chosen slot, the slot fills gold, the
+   burst pops and the booked card settles into place. Every keyframe ends on the drawing's own resting state, so without this
+   file, without script or with reduced motion the hero simply shows the settled dial. Nothing loops. */
+@media (prefers-reduced-motion: no-preference) {
+  .dial-landing .hero-hand { transform-box: view-box; transform-origin: 372px 404px; animation: dial-landing-sweep 1.05s cubic-bezier(0.34, 0.04, 0.24, 1) 0.12s both; }
+  .dial-landing .hero-dial .dial-chosen { animation: dial-landing-fill 0.3s ease-out 0.98s both; }
+  .dial-landing .hero-dial .burst-tick { transform-box: fill-box; transform-origin: 0% 100%; animation: dial-landing-pop 0.36s cubic-bezier(0.2, 0.8, 0.3, 1.35) 1.1s both; }
+  .dial-landing .hero-dial .burst-tick--2 { animation-delay: 1.15s; }
+  .dial-landing .hero-dial .burst-tick--3 { animation-delay: 1.2s; }
+  .dial-landing .hero-card { transform-box: fill-box; transform-origin: 50% 50%; animation: dial-landing-settle 0.72s cubic-bezier(0.2, 0.75, 0.25, 1) 0.86s both; }
+
+  @keyframes dial-landing-sweep { 0% { transform: rotate(-150deg); } 78% { transform: rotate(5deg); } 100% { transform: rotate(0deg); } }
+  @keyframes dial-landing-fill { from { fill: var(--ink); } to { fill: var(--gold); } }
+  @keyframes dial-landing-pop { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: none; } }
+  @keyframes dial-landing-settle { 0% { opacity: 0; transform: translateY(40px) rotate(6deg); } 70% { opacity: 1; transform: translateY(-3px) rotate(-0.6deg); } 100% { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dial-site *, .dial-site *::before, .dial-site *::after { animation: none !important; transition: none !important; }
+}

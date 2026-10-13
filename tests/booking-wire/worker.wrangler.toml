@@ -1,0 +1,46 @@
+name = "dial-booking-wire-test"
+main = "worker.ts"
+compatibility_date = "2026-09-08"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-booking-wire-test"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../../migrations/core"
+
+[[d1_databases]]
+binding = "PROVIDER_DB"
+database_name = "dial-booking-wire-edge"
+database_id = "00000000-0000-0000-0000-000000000098"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dial-booking-wire-files"
+
+[[queues.producers]]
+binding = "JOBS"
+queue = "dial-booking-wire-jobs"
+
+[[durable_objects.bindings]]
+name = "BOOKING_COORDINATOR"
+class_name = "BookingCoordinator"
+
+[[migrations]]
+tag = "v1-booking-coordinator"
+new_sqlite_classes = ["BookingCoordinator"]
+
+[vars]
+OWNER_EMAIL = "operator@dial.test"
+MAIL_FROM = "no-reply@dial.test"
+SETUP_TOKEN = "dial-test-only-setup-token-at-least-32"
+ENVIRONMENT = "development"
+APP_URL = "http://127.0.0.1:15754"
+GOOGLE_OAUTH_CLIENT_ID = "synthetic-client"
+GOOGLE_OAUTH_CLIENT_SECRET = "synthetic-secret"
+CALENDAR_WEBHOOK_SECRET = "synthetic-calendar-webhook-secret-for-test-only"
+SESSION_SECRET = "dial-booking-wire-synthetic-local-session-secret"
+
+MAIL_PROVIDER = "sendgrid"
+MAIL_API_KEY = "wire-mail-key"
+MAIL_WEBHOOK_KEY = "test-only-wire-webhook-key"

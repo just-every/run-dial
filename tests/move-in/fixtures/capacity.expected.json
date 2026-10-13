@@ -1,0 +1,9 @@
+{
+  "account": "capacity",
+  "asOf": "2027-01-01T00:00:00.000Z",
+  "eventTypesRead": 101,
+  "result": "rejected",
+  "reason": "Import limit: 100 event types and 500 scheduled events.",
+  "nativeWrites": 0,
+  "kitWrites": 0
+}

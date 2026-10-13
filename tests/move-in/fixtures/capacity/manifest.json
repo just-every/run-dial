@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "capturedAt": "2027-01-01T00:00:00.000Z",
+  "files": [
+    {
+      "name": "user-1.json",
+      "resource": "user",
+      "page": 1,
+      "size": 352,
+      "sha256": "4edf7a2a2bdb8f55eeaf70f894825f4ae18dc934d04ffb5d18e7acb76d5fddd6",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-1.json",
+      "resource": "event_types",
+      "page": 1,
+      "size": 234610,
+      "sha256": "d211628fd91a7b38232dfc1a2df5376efa063399370e1bfad73db3cc86683c44",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "schedules-1.json",
+      "resource": "schedules",
+      "page": 1,
+      "size": 111,
+      "sha256": "c28427d0b62b5f2810b7878578f045856524fbf99f80bd8a9cde8c062b1cebbc",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_availability-1.json",
+      "resource": "event_availability",
+      "page": 1,
+      "size": 111,
+      "sha256": "c28427d0b62b5f2810b7878578f045856524fbf99f80bd8a9cde8c062b1cebbc",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-1.json",
+      "resource": "scheduled_events",
+      "page": 1,
+      "size": 111,
+      "sha256": "c28427d0b62b5f2810b7878578f045856524fbf99f80bd8a9cde8c062b1cebbc",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    }
+  ]
+}

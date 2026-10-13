@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "project": {
+    "schema": 1,
+    "projectId": "just-every/dial",
+    "name": "Dial",
+    "sourceRepository": "https://github.com/just-every/run-dial",
+    "license": "MIT",
+    "deployment": {
+      "target": "cloudflare-workers",
+      "artifactFile": "rer-worker-artifact.json"
+    },
+    "operations": {
+      "setup": "pnpm install --frozen-lockfile",
+      "build": "pnpm run build",
+      "verify": "pnpm run verify",
+      "artifact": "node scripts/build-delivery-artifact.mjs",
+      "recovery": "Preserve the private deployment receipt, owner-held SESSION_SECRET, and applied migration history. Restore only into an empty migrated installation with writers stopped; reconnect calendars and recheck mail before publishing booking events."
+    },
+    "verification": {
+      "sensitivePaths": [
+        "src/core/features/operators/**",
+        "src/core/features/editor/**",
+        "src/core/app/worker.ts",
+        "src/core/app/hono.ts",
+        "src/core/shared/runtime-env*",
+        "modules/operator-auth/**",
+        "modules/owner-claim/**",
+        "modules/editor/**",
+        "scripts/archive/**",
+        "scripts/delivery/**",
+        "scripts/projects/**",
+        "scripts/build-delivery-artifact.mjs",
+        "rer-setup.json",
+        ".github/workflows/rer-managed.yml"
+      ],
+      "migrationDirectories": [
+        "migrations/core"
+      ],
+      "guidanceFiles": [
+        "AGENTS.md",
+        "CONTRACT.md",
+        "OPERATIONS.md"
+      ],
+      "testPatterns": [
+        "tests/*.test.mjs"
+      ]
+    }
+  },
+  "managed": {
+    "workflowRef": "runeditrun/delivery/.github/workflows/trusted-build.yml@bf7a25abb44bec1457a7bc738ff63921d90fb52e",
+    "artifactFile": "rer-worker-artifact.json",
+    "buildProfile": "project",
+    "verificationProfiles": [
+      "full"
+    ],
+    "pnpmVersion": "10.12.4"
+  },
+  "setup": {
+    "manifestFile": "rer-setup.json"
+  },
+  "artifact": {
+    "specInputs": {
+      "publicVariableNames": [
+        "ENVIRONMENT",
+        "APP_URL",
+        "OWNER_EMAIL",
+        "MAIL_PROVIDER",
+        "MAIL_FROM",
+        "RESEND_FROM_EMAIL",
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "RER_MANAGEMENT_ORIGIN",
+        "RER_INSTALLATION_ID",
+        "RER_OWNER_CLAIM_ISSUER",
+        "RER_OWNER_CLAIM_INSTALLATION_ID",
+        "RER_OWNER_CLAIM_APP_ORIGIN",
+        "RER_OWNER_CLAIM_PUBLIC_KEYS"
+      ],
+      "secretNames": [
+        "SESSION_SECRET",
+        "SETUP_TOKEN"
+      ],
+      "optionalSecretNames": [
+        "MAIL_API_KEY",
+        "MAIL_WEBHOOK_KEY",
+        "GOOGLE_OAUTH_CLIENT_SECRET",
+        "CALENDAR_WEBHOOK_SECRET",
+        "RESEND_API_KEY",
+        "RESEND_WEBHOOK_SECRET"
+      ],
+      "providerEffects": [
+        "outbound-mail",
+        "outbound-google-calendar",
+        "outbound-google-meet",
+        "outbound-oauth"
+      ],
+      "surfaces": {
+        "app": {
+          "path": "/app",
+          "originVariable": "APP_URL",
+          "readiness": [
+            {
+              "path": "/health",
+              "statuses": [
+                200
+              ]
+            }
+          ]
+        },
+        "page": {
+          "path": "/",
+          "originVariable": "APP_URL"
+        }
+      },
+      "recovery": "Preserve the private deployment receipt, owner-held SESSION_SECRET, and applied migration history. Restore only into an empty migrated installation with writers stopped; reconnect calendars and recheck mail before publishing booking events."
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "capturedAt": "2027-01-01T00:00:00.000Z",
+  "files": [
+    {
+      "name": "user-1.json",
+      "resource": "user",
+      "page": 1,
+      "size": 353,
+      "sha256": "aa1d5df38a11d612be47a6d8495071e2185f38bf424edfdc7edc50ad4ba0fd0b",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "schedules-1.json",
+      "resource": "schedules",
+      "page": 1,
+      "size": 1408,
+      "sha256": "6da25b3119be8387d1739c8caf5c621252234fbfe2e51a0aef58a944d418a139",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-1.json",
+      "resource": "event_types",
+      "page": 1,
+      "size": 3776,
+      "sha256": "8acc54988a5ce26c684ed4be65a2612253c677810a9aa0887b11ca2fc9a26522",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-2.json",
+      "resource": "event_types",
+      "page": 2,
+      "size": 223,
+      "sha256": "54ed21a03d32d07924b1e3a6c151d881ade3100c85da002be0969441383f1684",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-3.json",
+      "resource": "event_types",
+      "page": 3,
+      "size": 4475,
+      "sha256": "7037857144701c9506eb2c1aebf1128ace29b4b47556aaf2ad3d2e28055a6f50",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "event_availability-1.json",
+      "resource": "event_availability",
+      "page": 1,
+      "size": 2173,
+      "sha256": "e1f54ea20d15a0bc493865869bdeb35ba47e625a3f55dd1cca6281fbde9964c0",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-1.json",
+      "resource": "scheduled_events",
+      "page": 1,
+      "size": 2009,
+      "sha256": "28e21fda61c2b749dc62cdd0df6e84b9cdc1204bfa6c97be20c2cb801ce3c87d",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-2.json",
+      "resource": "scheduled_events",
+      "page": 2,
+      "size": 228,
+      "sha256": "e3988f56206cd805c18012ab330d01edf73d5cc1d226443ee55bcc2917131f9e",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-3.json",
+      "resource": "scheduled_events",
+      "page": 3,
+      "size": 1963,
+      "sha256": "125177f9892d8c7ff2ee5ffb324e6725960d2574a77a87d449c8df21a8becf18",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-1.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1279,
+      "sha256": "85a3ffde24b6c81e7e7c6bd570638216353e5a387929c414a1a25f9c2b929c02",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-2.json",
+      "resource": "invitees",
+      "page": 2,
+      "size": 1279,
+      "sha256": "b6205029997dd40244af5a5fc050b212521717042a1948ff4817e73a3259893f",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-3.json",
+      "resource": "invitees",
+      "page": 3,
+      "size": 1279,
+      "sha256": "10ae148726a02b07d6c06e1e2e612f1a4a8265c1059a9b91637d1808300656dc",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-4.json",
+      "resource": "invitees",
+      "page": 4,
+      "size": 1279,
+      "sha256": "7f593830cc677d598ef28767c1949977a7e29e54628702ebc5d92226f155d11a",
+      "capturedAt": "2027-01-01T00:00:00.000Z"
+    }
+  ]
+}

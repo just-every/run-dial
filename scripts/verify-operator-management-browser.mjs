@@ -1,0 +1,60 @@
+import { evidencePath } from "./evidence-path.mjs";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
+import { chromium } from "@playwright/test";
+import { startRuntime, origin, root } from "../tests/operator-management/runtime.mjs";
+const cleanup = [];
+const destination = new URL(`file://${evidencePath("operator-access-captures/manifest.json").replace(/manifest.json$/, "")}`);
+await mkdir(destination, { recursive: true });
+const manifest = { revision: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), captures: [], scope: "Native local D1/session/operator settings; synthetic identities; no live mail/provider claim" };
+let browser;
+try {
+  await startRuntime({ after: (fn) => cleanup.push(fn) });
+  await fetch(origin + "/__test/setup", { method: "POST" });
+  browser = await chromium.launch({ channel: "chrome", headless: true });
+  for (const width of [1440, 390]) {
+    const context = await browser.newContext({ viewport: { width, height: 900 } });
+    const page = await context.newPage(); const errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    const link = await (await fetch(origin + "/__test/signin", { method: "POST", headers: { Origin: origin, "content-type": "application/json" }, body: JSON.stringify({ email: "setup@example.test" }) })).json();
+    await page.goto(link.link);
+    assert.equal((await context.cookies()).some((cookie) => cookie.name === "operator_session_local"), false, "reading the confirmation page does not create a session");
+    const confirmed = page.waitForResponse((response) => response.url() === origin + "/auth/confirm" && response.request().method() === "POST");
+    await page.getByRole("button", { name: "Confirm", exact: true }).click();
+    assert.equal((await confirmed).status(), 303);
+    await page.waitForURL(/\/app\/?$/);
+    assert.ok((await context.cookies()).some((cookie) => cookie.name === "operator_session_local"), "explicit confirmation creates the native session");
+    assert.equal((await page.request.get(origin + "/api/app/operators")).status(), 200);
+    await page.goto(origin + "/app/settings");
+    const card = page.locator("section").filter({ has: page.getByRole("heading", { name: "Operator access", exact: true }) });
+    await card.getByText("Setup operator · You", { exact: true }).waitFor();
+    const email = `browser-${width}@example.test`;
+    await card.getByLabel("Operator email").fill(email);
+    await card.getByRole("button", { name: "Invite operator", exact: true }).click();
+    await card.getByText(email, { exact: true }).waitFor();
+    await card.getByRole("status").filter({ hasText: "could not be sent" }).waitFor();
+    await card.getByRole("button", { name: `Remove ${email}`, exact: true }).click();
+    await card.getByRole("button", { name: "Keep access" }).click();
+    assert.equal(await card.getByRole("button", { name: "Confirm removal" }).count(), 0);
+    await card.evaluate((node) => { node.scrollIntoView({ block: "start" }); node.ownerDocument.defaultView.scrollBy(0, -88); });
+    assert.equal(await page.evaluate("document.documentElement.scrollWidth > innerWidth"), false);
+    const file = `operators-${width}.jpg`; await page.screenshot({ path: new URL(file, destination).pathname, type: "jpeg", quality: 85 });
+    manifest.captures.push({ file, width, height: 900 });
+    await card.getByRole("button", { name: `Remove ${email}`, exact: true }).click();
+    const removal = page.waitForResponse((response) => response.url().startsWith(origin + "/api/app/operators/") && response.url().endsWith("/remove") && response.request().method() === "POST");
+    await card.getByRole("button", { name: "Confirm removal" }).click();
+    const removed = await removal;
+    assert.equal(removed.status(), 204, removed.status() === 204 ? "removal acknowledged" : await removed.text());
+    await card.getByRole("status").filter({ hasText: "access removed" }).waitFor();
+    await card.getByText(email, { exact: true }).waitFor({ state: "detached" });
+    assert.equal(await card.getByText(email, { exact: true }).count(), 0);
+    await page.reload(); await card.getByText("Setup operator · You", { exact: true }).waitFor();
+    assert.equal(await card.getByText(email, { exact: true }).count(), 0);
+    assert.deepEqual(errors, []); await context.close();
+  }
+  await writeFile(new URL("manifest.json", destination), JSON.stringify(manifest, null, 2) + "\n");
+  console.log(JSON.stringify(manifest));
+} finally {
+  await browser?.close(); for (const fn of cleanup.reverse()) await fn();
+}

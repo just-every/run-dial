@@ -1,0 +1,28 @@
+{
+ "collection": [
+  {
+   "uri": "https://api.calendly.com/scheduled_events/cutover-2/invitees/one",
+   "event": "https://api.calendly.com/scheduled_events/cutover-2",
+   "name": "Ben Hart",
+   "email": "ben-hart@example.test",
+   "timezone": "Europe/London",
+   "status": "active",
+   "created_at": "2026-01-20T12:00:00.000Z",
+   "updated_at": "2026-01-20T12:00:00.000Z",
+   "questions_and_answers": [],
+   "rescheduled": false,
+   "old_invitee": null,
+   "new_invitee": null,
+   "cancel_url": "https://schedule.example.test/cancellations/cutover-2",
+   "reschedule_url": "https://schedule.example.test/reschedulings/cutover-2",
+   "no_show": null
+  }
+ ],
+ "pagination": {
+  "count": 1,
+  "next_page": null,
+  "previous_page": null,
+  "next_page_token": null,
+  "previous_page_token": null
+ }
+}

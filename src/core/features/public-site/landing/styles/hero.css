@@ -1,0 +1,41 @@
+/* Hero: the dial on the left, the headline and actions on the right, as in the approved first viewport. On a two-column window
+   the hero holds the rest of the first screen, so the next section starts below the fold instead of peeking into it, and the
+   copy sits level with the dial's centre. */
+.dial-landing .hero { display: grid; grid-template-columns: minmax(0, 52fr) minmax(0, 48fr); align-items: center; gap: clamp(24px, 3.4vw, 60px); padding-top: clamp(12px, 1.6vw, 28px); }
+.dial-landing .hero-art { min-width: 0; }
+.dial-landing .hero-dial { width: 100%; max-width: 760px; height: auto; overflow: visible; }
+.dial-landing .hero-copy { padding-bottom: clamp(0px, 2vw, 36px); }
+.dial-landing .hero-title { font-size: clamp(46px, 5.3vw, 76px); line-height: 0.98; }
+.dial-landing .hero-title span { display: block; }
+.dial-landing .lede { max-width: 27em; margin-top: 30px; font-size: clamp(18px, 1.45vw, 21px); line-height: 1.5; }
+.dial-landing .hero .actions { margin-top: 36px; }
+.dial-landing .fine { margin-top: 24px; color: var(--muted); font-size: 14px; }
+.dial-landing .fine-alternative { margin-top: 14px; text-wrap: balance; }
+.dial-landing .fine-alternative strong { white-space: nowrap; }
+@media (min-width: 1024px) {
+  /* The drawing runs taller below the dial than above it, so its centre sits above the art cell's centre by 876/2 - (404 - 22) = 56
+     of the drawing's 744 units: 7.53% of the art column, or 8.16% of the copy column (48fr against 52fr). The copy is centred on the
+     cell, so a bottom margin of twice that lifts it level with the dial (a margin moves the centre by half, and a grid item's
+     percentage margin is read against its own column). The copy's own bottom padding already lifts its text by half of itself, so
+     it is taken back out of the margin. */
+  .dial-landing .hero-copy { margin-bottom: calc(16.3% - clamp(0px, 2vw, 36px)); }
+  .dial-landing .hero { min-height: min(calc(100svh - 74px - clamp(40px, 4vw, 64px)), 980px); }
+}
+
+/* The booked meeting card inside the hero drawing. */
+.dial-landing .hero-dial .card-halo { fill: var(--paper); stroke: var(--paper); stroke-width: 2; }
+.dial-landing .hero-dial .card-plate { fill: var(--ink); }
+.dial-landing .hero-dial .card-face { fill: var(--card); stroke: #e3ddd0; stroke-width: 1.5; }
+.dial-landing .hero-dial .card-dot { fill: var(--gold); }
+.dial-landing .hero-dial .card-time { fill: var(--ink); font: 800 31px var(--font); letter-spacing: -0.01em; }
+.dial-landing .hero-dial .card-label { fill: var(--soft); font: 600 15px var(--font); letter-spacing: 0.16em; }
+.dial-landing .hero-dial .card-icon { fill: var(--ink); }
+.dial-landing .hero-dial .card-check { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* A visitor who came to book sees that path first: a compact chip on a soft gold wash above the headline, linking to the host's
+   booking profile. */
+.dial-landing .host-chip { display: inline-flex; flex-wrap: wrap; align-items: center; column-gap: 8px; max-width: 100%; margin-bottom: 28px; padding: 0 20px 0 14px; border: 1px solid #ead8a8; border-radius: 999px; background: var(--gold-wash); color: var(--soft); font-size: 15px; line-height: 1.3; }
+.dial-landing .host-chip-lead { display: inline-flex; align-items: center; min-height: 40px; }
+.dial-landing .host-chip-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); }
+.dial-landing .host-chip-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-weight: 650; text-decoration: underline; text-decoration-thickness: 1.5px; text-decoration-color: var(--gold-deep); text-underline-offset: 5px; }
+.dial-landing .host-chip-link:hover { text-decoration-color: var(--ink); }

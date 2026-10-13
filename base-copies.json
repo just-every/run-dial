@@ -1,0 +1,2441 @@
+{
+  "schemaVersion": 1,
+  "copies": [
+    {
+      "path": "RUN-LOCALLY.md",
+      "originPath": "export/RUN-LOCALLY.md",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "RUN-LOCALLY.md": "b0baa2140ffd6b4304e77d4127cfa66efbc8430f701cf027913d43f401abda25"
+      },
+      "modes": {
+        "RUN-LOCALLY.md": "100644"
+      }
+    },
+    {
+      "path": "SEED-COMMAND-CONTRACT.md",
+      "originPath": "export/SEED-COMMAND-CONTRACT.md",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "SEED-COMMAND-CONTRACT.md": "eddce909762f4660ce8f8727c85c1fc9c042cc9deaef505cde26589e7256ab53"
+      },
+      "modes": {
+        "SEED-COMMAND-CONTRACT.md": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0020_base_development_outbox.sql",
+      "originPath": "default-seed/migrations/core/0004_development_outbox.sql",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "migrations/core/0020_base_development_outbox.sql": "45d6b03eadfe1e91737763ae85cdff74e7216f859869e34431550bba48294996"
+      },
+      "modes": {
+        "migrations/core/0020_base_development_outbox.sql": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0023_base_invitation_cancellation.sql",
+      "originPath": "default-seed/migrations/core/0003_invitation_cancellation.sql",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "migrations/core/0023_base_invitation_cancellation.sql": "2130793483660155aaa1851b6111e51a7aeaf1f8ceb86d467d42ba684c35b562"
+      },
+      "modes": {
+        "migrations/core/0023_base_invitation_cancellation.sql": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0026_portability.sql",
+      "originPath": "modules/portability/schema/portability.sql",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "migrations/core/0026_portability.sql": "c7db9042f6d5c571e10297c02df858ad2f3466beb4fa85649fee407cc228747b"
+      },
+      "modes": {
+        "migrations/core/0026_portability.sql": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0028_owner_claim.sql",
+      "originPath": "modules/owner-claim/schema/owner-claim.sql",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "migrations/core/0028_owner_claim.sql": "c3ffe653727bb4867b064dc2489df5013613f08f4b5998d2fe2b6a8485cdb815"
+      },
+      "modes": {
+        "migrations/core/0028_owner_claim.sql": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0030_dev_sessions.sql",
+      "originPath": "modules/operator-auth/accounts/schema/dev-sessions.sql",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "migrations/core/0030_dev_sessions.sql": "18754583983c09f3624038131c1b03fadecb8375dddb0a5d09c449a4238ce298"
+      },
+      "modes": {
+        "migrations/core/0030_dev_sessions.sql": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0031_auth_domain_rules_step_up.sql",
+      "originPath": "modules/operator-auth/accounts/schema/domain-rules-step-up.sql",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "migrations/core/0031_auth_domain_rules_step_up.sql": "e41c7f1381f547582148cdf247b521d7f166461ab24058ace95acdf21839e815"
+      },
+      "modes": {
+        "migrations/core/0031_auth_domain_rules_step_up.sql": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0037_erasure_scope.sql",
+      "originPath": "default-seed/migrations/core/0017_erasure_scope.sql",
+      "revision": "dd81be2c3c4abb26202cb75da8663358ae749d1f",
+      "files": {
+        "migrations/core/0037_erasure_scope.sql": "10ec62e5e0e37441265141d56636cf0cc2a9537425819d7a27a9727fc4dabdff"
+      },
+      "modes": {
+        "migrations/core/0037_erasure_scope.sql": "100644"
+      }
+    },
+    {
+      "path": "migrations/core/0038_erasure_rates.sql",
+      "originPath": "modules/erasure/schema/erasure-rates.sql",
+      "revision": "dd81be2c3c4abb26202cb75da8663358ae749d1f",
+      "files": {
+        "migrations/core/0038_erasure_rates.sql": "84cedc143a2cb8ed642852159a2ade1381157abf811da918580ab7bc74d404b3"
+      },
+      "modes": {
+        "migrations/core/0038_erasure_rates.sql": "100644"
+      }
+    },
+    {
+      "path": "modules/deploy-kit",
+      "originPath": "modules/deploy-kit",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/deploy-kit/artifact.mjs": "c0873001fea7e2e5fa3ae27519b43943338db1f2802e5f940e449839c472974b",
+        "modules/deploy-kit/build-modules.mjs": "14583fe6bef98ceeebb26a41886e1c8a47259fb99d21c668d331f818045c2ba5",
+        "modules/deploy-kit/check.mjs": "e42e2aacb5f48748973bdf16758d37b014906ad703b55b685b71c3906bd9b79a",
+        "modules/deploy-kit/cli.mjs": "3422765e133b78fc6a408f29a720686dbf8f7c8ac75a0536a8b7042c2c539b4e",
+        "modules/deploy-kit/default-stage.mjs": "c0887feda400c958192ca8b2aa7968af6c34b2c50159fe66d554c6f00295a4d7",
+        "modules/deploy-kit/deploy.mjs": "6267d5a60857af84621a71d5dde67c83e7b6350f804459eeec1a712133c20f4a",
+        "modules/deploy-kit/health-request.mjs": "f75f5b4eaf8209fe436ed2da525dfe49c8feb2a8b7b71787116fe25422ee2634",
+        "modules/deploy-kit/health.mjs": "b95c3ee0156b27cdd939ada2383a406990b4fcc767662242d4a7f611c6e81dd2",
+        "modules/deploy-kit/index.mjs": "f2948bf9679127f47d97f2be5e0fd7adfde8ea12630e8ba5868aa71fc185b6ab",
+        "modules/deploy-kit/migrations.mjs": "063e146a93f2c43290569b5c5fac922667a9d434ebb0a9f6e0af97c8790961ce",
+        "modules/deploy-kit/owner-cli.mjs": "c22247a0f130d0c57bc57c7be18da9a391ce3b4acf209fffb6253febbdc68d94",
+        "modules/deploy-kit/owner.mjs": "21172c133ff76e80f85f72bab751a1da0a0b00bfffdc4bb7372b844d8d0e9041",
+        "modules/deploy-kit/prepare.mjs": "c144fd387c2a40b580708b8ac2c0c13b9cd12e8107f1728eafaf35324d200196",
+        "modules/deploy-kit/provider.mjs": "555563517af57d8c8a8b54fe0056f61173d46af546988a7eca4435dbb8999b4d",
+        "modules/deploy-kit/queue-consumer.mjs": "349b6200571359ab54e3a3f267c68d78c2f08fd479859fbf50473e57e1e0753f",
+        "modules/deploy-kit/README.md": "08eecdebbe9ddb94a98b69e5036bfd3b31882b73cbed966a56d21888ec100ba2",
+        "modules/deploy-kit/receipt.mjs": "b85d33d9404eb3466e3fcf5d3f73d1c5d2d7ab9e7d84b1b00505d5613ba57b31",
+        "modules/deploy-kit/render.mjs": "ae75f24596f0e15d7b5936e4ace20c36f5de06c10fceb8652b1912995a73d438",
+        "modules/deploy-kit/resources.mjs": "a1c016498f0b6bc55030042a3aab3513a0edfe14ac88e2ffe12b75967563a88d",
+        "modules/deploy-kit/sql-safety.mjs": "482634f15b0715c64756e819b02173fdc6292d206cd639c49abda6a78076e94b",
+        "modules/deploy-kit/sql-tokens.mjs": "ddbcb2639e902dce995b32d75d8827f922651e080b40e01dbe76a4b682a96357",
+        "modules/deploy-kit/teardown.mjs": "4d8ccf61559b193f12a0aa9e7713f6fab44b65560749afb39145810d3223f7d5",
+        "modules/deploy-kit/templates.mjs": "520ce28bd00ddb37918652cb1b3369ee1de950b03002071ae07e90735a84b0d0",
+        "modules/deploy-kit/validation.mjs": "a9d1892ecfd9e93ff9a6c4ed70fabfd113efb1b7c19110ef01d0d058401c8993",
+        "modules/deploy-kit/worker.mjs": "909db7741508929673752b0f1ab072f34a2c16fe3952af20eb0c946d8e727f3c"
+      },
+      "modes": {
+        "modules/deploy-kit/artifact.mjs": "100644",
+        "modules/deploy-kit/build-modules.mjs": "100644",
+        "modules/deploy-kit/check.mjs": "100644",
+        "modules/deploy-kit/cli.mjs": "100644",
+        "modules/deploy-kit/default-stage.mjs": "100644",
+        "modules/deploy-kit/deploy.mjs": "100644",
+        "modules/deploy-kit/health-request.mjs": "100644",
+        "modules/deploy-kit/health.mjs": "100644",
+        "modules/deploy-kit/index.mjs": "100644",
+        "modules/deploy-kit/migrations.mjs": "100644",
+        "modules/deploy-kit/owner-cli.mjs": "100644",
+        "modules/deploy-kit/owner.mjs": "100644",
+        "modules/deploy-kit/prepare.mjs": "100644",
+        "modules/deploy-kit/provider.mjs": "100644",
+        "modules/deploy-kit/queue-consumer.mjs": "100644",
+        "modules/deploy-kit/README.md": "100644",
+        "modules/deploy-kit/receipt.mjs": "100644",
+        "modules/deploy-kit/render.mjs": "100644",
+        "modules/deploy-kit/resources.mjs": "100644",
+        "modules/deploy-kit/sql-safety.mjs": "100644",
+        "modules/deploy-kit/sql-tokens.mjs": "100644",
+        "modules/deploy-kit/teardown.mjs": "100644",
+        "modules/deploy-kit/templates.mjs": "100644",
+        "modules/deploy-kit/validation.mjs": "100644",
+        "modules/deploy-kit/worker.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/editor",
+      "originPath": "modules/editor/src",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/editor/config.ts": "d0f8078bf43ac047a76179c54f0ac04905bea38364411a4904b4617bb6cb92ae",
+        "modules/editor/index.ts": "737a9c56675239e5261aceff927cbfecf2c420aa225b9bc25da796f00f5c4a85",
+        "modules/editor/lifecycle.ts": "bfe03d9e4c3c8908a240a99e95eab3f27f65ff1ffa43c1a1c0e649be3cc7b379",
+        "modules/editor/react.tsx": "d49313d808992ee6517888c850cc60c029063cdb7b74cdd39bf258db00a12c6e",
+        "modules/editor/visual-edits.json": "a33e5718fde2f6e3a4c330331d831b3301c7211e57a3a2fb052851e8b975dd30",
+        "modules/editor/widget/editor-icons.ts": "29f323dccea8fff24d377e1765a30ccfca29898eeb7777a1fa00ea0d1909e951",
+        "modules/editor/widget/editor-protocol.ts": "7c3bc495c9a8c9166f56597681d3a0d2cb87621070e2b20c9d64a438f6820adc",
+        "modules/editor/widget/editor-surface.ts": "f0d692922abe6f9fe341eca3cc0872b1a0a52f0a9b87d0ad0829fd3fb6359efc",
+        "modules/editor/widget/editor-widget.ts": "6535e9598b742575c50ed5e6c2483579821d5df8ff036292c0b6ed0cb9954e3b",
+        "modules/editor/widget/live-edit-contracts.ts": "2577ccb77819532e18776174b8997fdb3da4b3e6ef20051081b8371694dd1358",
+        "modules/editor/widget/live-edit-dom.ts": "6c1b455d1fdadf989ea3fb104e666f78c896e568c13bd007adbe55fcae7b30b4",
+        "modules/editor/widget/live-edit-runtime.ts": "a448aebb74d9a504635fc4f96742928d979bde024ae79f2e7ff50002d0f1abbd",
+        "modules/editor/widget/visual-style.ts": "29f8f23c5347e699a0ff207b9d62cc80032562e7b8831bb4e0accb3eba052c10"
+      },
+      "modes": {
+        "modules/editor/config.ts": "100644",
+        "modules/editor/index.ts": "100644",
+        "modules/editor/lifecycle.ts": "100644",
+        "modules/editor/react.tsx": "100644",
+        "modules/editor/visual-edits.json": "100644",
+        "modules/editor/widget/editor-icons.ts": "100644",
+        "modules/editor/widget/editor-protocol.ts": "100644",
+        "modules/editor/widget/editor-surface.ts": "100644",
+        "modules/editor/widget/editor-widget.ts": "100644",
+        "modules/editor/widget/live-edit-contracts.ts": "100644",
+        "modules/editor/widget/live-edit-dom.ts": "100644",
+        "modules/editor/widget/live-edit-runtime.ts": "100644",
+        "modules/editor/widget/visual-style.ts": "100644"
+      }
+    },
+    {
+      "path": "modules/import-kit/CONTRACT.md",
+      "originPath": "modules/import-kit/CONTRACT.md",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/import-kit/CONTRACT.md": "a9aae186f79952d1942e7a6cb04bda8e1eff8558b858440f9dde0ec1439713d7"
+      },
+      "modes": {
+        "modules/import-kit/CONTRACT.md": "100644"
+      }
+    },
+    {
+      "path": "modules/import-kit/FIXTURES.md",
+      "originPath": "modules/import-kit/FIXTURES.md",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/import-kit/FIXTURES.md": "2f193cf36fce01f7497721f577e4d6aca6dfaeb3cc5615c96be8c847cd6be5f3"
+      },
+      "modes": {
+        "modules/import-kit/FIXTURES.md": "100644"
+      }
+    },
+    {
+      "path": "modules/import-kit/README.md",
+      "originPath": "modules/import-kit/README.md",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/import-kit/README.md": "cb59cbda077f66159ddc3d9d8aec56a9c60226c9aa3cd7911c800b32846d2c05"
+      },
+      "modes": {
+        "modules/import-kit/README.md": "100644"
+      }
+    },
+    {
+      "path": "modules/import-kit/schema",
+      "originPath": "modules/import-kit/schema",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/import-kit/schema/importer-verification-receipt.schema.json": "710740a418fbd1fda5dd7a9017c247040c2bef98a6eadbec2a59220a5afa0ae7",
+        "modules/import-kit/schema/importers.schema.json": "70ffac46763ab493388cad8fb0bc40946be819b8e8036274a7bff30cf3b4d9c3"
+      },
+      "modes": {
+        "modules/import-kit/schema/importer-verification-receipt.schema.json": "100644",
+        "modules/import-kit/schema/importers.schema.json": "100644"
+      }
+    },
+    {
+      "path": "modules/import-kit/src",
+      "originPath": "modules/import-kit/src",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/import-kit/src/d1/apply.ts": "97190e9e8924fd0751d5f31c94f2a227705a6c5f3edda8672b70168fac2f6d8e",
+        "modules/import-kit/src/d1/budget.ts": "15a85719224332a015d653d2619ed5c60c8b230fe197573159b5209a2fd603bd",
+        "modules/import-kit/src/d1/compressed-plan.ts": "b96a798a51902178361933ac2509a7ccb549c932a778a7c3662b604f3b7a1430",
+        "modules/import-kit/src/d1/creation.ts": "06ed88e62a1afedbc47e1bbe8edac1f4cb434a3ccce5ddd1b3c9a3ea70fe91cf",
+        "modules/import-kit/src/d1/custody-state-schema.ts": "abd95460b9d732ec47f806c94c559c77a2e8b9967ef3286d7f0bc97c61b25966",
+        "modules/import-kit/src/d1/database.ts": "c9d57e3d1c67bac36a99beae42e0face3f65d044ce6eafae579487e6c0e3e03a",
+        "modules/import-kit/src/d1/erased-artifacts.ts": "685a9b9441166d8452ae792d672a328b83e0394df7d8601d7e7635473dda384c",
+        "modules/import-kit/src/d1/erased-custody.ts": "3b32fc2de77dc7ada815466f31645bc1322d8ef7a70bf357ddef3dc39455e51d",
+        "modules/import-kit/src/d1/erased-plan.ts": "964fd91f64201c2f4e7366f4137058beffb678e5a8e58acf46687c4944f8e9f5",
+        "modules/import-kit/src/d1/erased-reversal.ts": "1e451448d65086e2eb1d20df5c4f9190f7f04aec55d187bcf6adbe66068c61ec",
+        "modules/import-kit/src/d1/erasure-bounded.ts": "53a19e61fbce0fe8b3066a45e08486a795d7450a6496980d4ebb7d1f5e488f06",
+        "modules/import-kit/src/d1/erasure-claims.ts": "5254f570c850da5fefb213f74a44df73ec5ac5ca0ea3eae3972e60c55a48b022",
+        "modules/import-kit/src/d1/erasure-compiler.ts": "1d9d948ede9b3d5428db7ddc0c9e125b61bbe4cb24c2c5415abf6ad1003537c7",
+        "modules/import-kit/src/d1/erasure-disposition.ts": "d6edd39b94d4c063845d92f11ff435dd4f76898588f2d386b2d383e0df0cf045",
+        "modules/import-kit/src/d1/erasure-fragments.ts": "46d299b1a2efa8017e010fd17c500ce062e64126d7334605d1844e9085e24ed4",
+        "modules/import-kit/src/d1/erasure-index.ts": "9faab99ff8f7c1049859424af29187fd7fc57180e3876899234fe69e7add37d2",
+        "modules/import-kit/src/d1/erasure-pages.ts": "0224a40b3466a1b61f5b226ae614f7db8d160bbecfad9470c900de88c706f698",
+        "modules/import-kit/src/d1/erasure-report.ts": "2a8bdb6cab8a13100d2a351f61ff24d0b16aadc6d34fcf79ecad087241d81348",
+        "modules/import-kit/src/d1/erasure-schema.ts": "582dadabb6c8c010560fb8e5e46521766c72fdf743a3784cd08deb7b63988eef",
+        "modules/import-kit/src/d1/erasure-snapshot.ts": "5a16b9a9bf9ac22c9d22624314218e0f901d3ac511e3f642df11970bb2732244",
+        "modules/import-kit/src/d1/erasure-values.ts": "93b18362f5deb0ef80933b8f24f03ac4fa56e7015986ea993ba12b9ddff40e09",
+        "modules/import-kit/src/d1/erasure-writes.ts": "756b5efa1537f1e9286f2c85eeaf284d0fb1ec2abc51a06542220360706a306b",
+        "modules/import-kit/src/d1/erasure.ts": "f4cb07681ba5218e3eb80fe3d92f4f4719e08780a3611902cd6255eff406f851",
+        "modules/import-kit/src/d1/evolutions/0001-preserved-undo.ts": "8def72f17f375aeddfc3fabd4c3756fc26f4e1fed492cd70cf821d48847e0fe1",
+        "modules/import-kit/src/d1/expected-state.ts": "bd5b5bc97ee20b910646161186717418951da673a4c294e09e75653c98892df0",
+        "modules/import-kit/src/d1/guards.ts": "7f8c7d43a1d5f41d88017a24435d88f9c7b5cb58140ca8d9d0a343697ec09e44",
+        "modules/import-kit/src/d1/history.ts": "233fbd8e69298ba97804180a6e73308f3e09b2dbc95acd8a6bbad46a751960f1",
+        "modules/import-kit/src/d1/index.ts": "519b531216177eed7cbcdb2f3250a2a7876b5dc8fec301bd390c78c7b90760be",
+        "modules/import-kit/src/d1/integrity.ts": "bca91ca3bf5d9a1b868a8f53a9989dee12ddfa69c1b6edee10a9ee84d51c6b14",
+        "modules/import-kit/src/d1/inventory-snapshot.ts": "687f41c9ef55f372e4af0e1c63a70945a9808036d118acfe97978f9c6ec04d6f",
+        "modules/import-kit/src/d1/jobs.ts": "f7684d339f14b37362f8be7914850b56be088d0abe5cef1d2c62b4b88af66f37",
+        "modules/import-kit/src/d1/native-staging-admission.ts": "64d798314f2271d6af590ec2797c5e3395ca6e529aa221b2935c4c7b1b0a6ee3",
+        "modules/import-kit/src/d1/native-staging-context.ts": "726735c573ba08a308dfb89d50c5be63eb88dfb98e027be180db54032337535d",
+        "modules/import-kit/src/d1/native-staging-lifecycle.ts": "f404f3fd618e11ae9f37de7ead2f80ed70fbc6d4ce97af62ce0176ba2a154591",
+        "modules/import-kit/src/d1/native-staging-publication.ts": "fac9a4dd25642d962adcf2e0999a570c7b78d5abec7c98b2c61cd43e6a1191c9",
+        "modules/import-kit/src/d1/native-staging-rows.ts": "2b2b1ca60b43ce4fec23e6aabd237d42604793b43502d0a00b32b282358a2f75",
+        "modules/import-kit/src/d1/native-staging-schema.ts": "91c42d388b99a27f38f5c966e300e68da3280e0be208da0b946802a83142e0a7",
+        "modules/import-kit/src/d1/native-staging-state.ts": "d68629de82451055aa022c57131a5fec4db53762b37a6f792c12f74fdddc1ed3",
+        "modules/import-kit/src/d1/native-staging.ts": "5a91f76b297f059108622c18628fc5d23c0ca8dec01362cf5b5a8096e066573f",
+        "modules/import-kit/src/d1/original-copies.ts": "1c4d830a36c4a7300879dd842daff3b185b2d14caf6372141144e6c4c74adef6",
+        "modules/import-kit/src/d1/original-storage.ts": "48838aef6291fdf3a6b9108bd4ea80664c157064209e5aadccad6b6d65df968e",
+        "modules/import-kit/src/d1/originals.ts": "a28d07b21afba1f50bb272d709b540db1bbde728559a6c441d1e7540860af8a1",
+        "modules/import-kit/src/d1/plan-dictionary.ts": "408ba1ffeb295efc67fae52759da284e2eea627b21a00331d391868ded195782",
+        "modules/import-kit/src/d1/plans.ts": "4caabb330bb1dbb8dfe58cf5ee3baa5ac77173b8f236254abd86dc25c9daec94",
+        "modules/import-kit/src/d1/preparation-fingerprint.ts": "566ffe073ab090265cf3d2d745bad012d355e41bbe3cb454c486824ec6bf9e8c",
+        "modules/import-kit/src/d1/preparation-header.ts": "9b9f7a678ee0bdfd596bb6e9812c8b018c6b137c4e5e14f1521650250a2469b9",
+        "modules/import-kit/src/d1/preparation-reader.ts": "97e94e540e7d5c4f7437fc7d1bffba71842eb3ca310d31629590a1c3d65c5f6b",
+        "modules/import-kit/src/d1/preparation-schema.ts": "57af45460c857c59b3e2866e9885c1b18424aed5cb851fc0298186486958ecc1",
+        "modules/import-kit/src/d1/preparation-state.ts": "a46c501d435902eb66b06d89b2708d084ed5eca666822cde48873e0dfc2b5f12",
+        "modules/import-kit/src/d1/preparations.ts": "a29c90ca353d527b3aab5238307bcb0613614d8afb58f74f1eb4cf7459fd8aec",
+        "modules/import-kit/src/d1/preserved-reverse.ts": "8283befaf15dc5edf67f091808f1f182f1eb2038f4bf8f28351e0240ce3aebe4",
+        "modules/import-kit/src/d1/provenance-set.ts": "7ca32ce20a01711297cddb832ec92b4ba05fd65813fc5e1ea9f51592cf12ef3c",
+        "modules/import-kit/src/d1/publication-fence.ts": "b8fd1857119e520bec5cf10d07b3c81a2fbc1caf066b05c774394a8f2ba2c14a",
+        "modules/import-kit/src/d1/publication-receipt-schema.ts": "a8562507cad8506e7c3ceaade0161b6de82a202f5bad368ea322187c62be1929",
+        "modules/import-kit/src/d1/published-stream.ts": "8e672ca3c1921fce0dc2fe37fa4470a5ada1dd38924a9b39db0cb5a97060a222",
+        "modules/import-kit/src/d1/read-fence.ts": "e77cf651e56af1d6d37c78ac68ae339b7a5e98049dad2e3f501b602b01b203b3",
+        "modules/import-kit/src/d1/read-results.ts": "75fe5cb009f41c2aa850941e8db21bfe77261baeccf5a0203505871d4ef66e2d",
+        "modules/import-kit/src/d1/README.md": "3c529303b9de9b3a7eab9ac0b72dc7df8aeba074490d0022d5136811bb443c61",
+        "modules/import-kit/src/d1/retained-values.ts": "d864ad9edcfe335507dcc64c478bb6133a3633ea5e91040887381bf8e8f2d889",
+        "modules/import-kit/src/d1/reverse.ts": "5ee10cb52dd653a95ba3fa195b690480c33c25bff4f85efc6705998241e888e0",
+        "modules/import-kit/src/d1/reviewed-source.ts": "fa3d5a6847476721b0d1d4a0ff3546e394f8d2ab6ecf4ce63a4598a131014b84",
+        "modules/import-kit/src/d1/sets.ts": "f1a6572f8a5701fd3d72cf5793dcb0302dc05e7ef6f33c941636562291d179bd",
+        "modules/import-kit/src/d1/staging-admission.ts": "dcf561f9098294c33b0d85c52d3a85d7737f203c5cd09d502db6244a2300b343",
+        "modules/import-kit/src/d1/staging-control.ts": "4fb9c1677578f06d5f449c9e5b2d16f0698313a2454533b72507dabe13ba5b06",
+        "modules/import-kit/src/d1/staging-erasure.ts": "b334d4d6f381c49bec8acad7add6c830e81a5ac1c8ab11fa3a763b461b6051f4",
+        "modules/import-kit/src/d1/staging-lifecycle.ts": "ea30ff67be2de5ad877c322cde434bac3b3b2298fed4378dc2e40f38371f49fb",
+        "modules/import-kit/src/d1/staging-plan.ts": "0a277f2c6f7ff99b142f140962a1f4417f712d9706c0f51ea484063ba5d6f43f",
+        "modules/import-kit/src/d1/staging-privacy.ts": "68433ca2720cba3563ebe59fbdf7a1e82ccb0f15e5a944492977cbe9d7fd8574",
+        "modules/import-kit/src/d1/staging-publication.ts": "7c754477b91851ba6ceb91aa101f833f624687c6a8116092b9ff1881c0fc49d5",
+        "modules/import-kit/src/d1/staging-schema.ts": "0da4351c695f36487022b752765e4e65c03a290fbf6a6f8ca086a767a7065b0f",
+        "modules/import-kit/src/d1/staging-statements.ts": "85c3e700ddf7899638e07385240e0c6c7920b7b4a57d78b1876832769f2630b8",
+        "modules/import-kit/src/d1/staging-transport.ts": "6d54fc99eba677aa6c8b20dde4fceff812b98a77d5189e1963235a0a61d763c2",
+        "modules/import-kit/src/d1/stream-boundary.ts": "a3db1aa700d66c23c1297ccaea1afb24171dccd5ebd0416ebb02649820871833",
+        "modules/import-kit/src/d1/stream-create.ts": "81e288457d5bb8e094b3ce2bb8ea9607f167435864665a61b047ce6396a11860",
+        "modules/import-kit/src/d1/stream-identity-admission.ts": "04f7360f42814c168c643d83222968484a830d46167f5c5f9f21584e257637bb",
+        "modules/import-kit/src/d1/stream-input.ts": "4979b905310d8ebd94278267569301316bc38d3c1b6a8220ed44fb9159146b51",
+        "modules/import-kit/src/d1/stream-layout.ts": "9b1771a447233e39609e28a27c034270127ca9628d1045786066a7cc5f03f31c",
+        "modules/import-kit/src/d1/stream-origin.ts": "8c593ea5d256102b6027edc6759c4d2accff520fbb586391bb4240d11e84b1f1",
+        "modules/import-kit/src/d1/stream-page-integrity.ts": "b81cc04000f7733f537b3817a3513433abb5a5922d3590a506169888a91c035d",
+        "modules/import-kit/src/d1/stream-partition.ts": "d9afe61feb35a5b8e9b8d64364adef79879488e2afa4bfc9e85d29da728433cd",
+        "modules/import-kit/src/d1/stream-plan.ts": "096c2fa2b586b29e0ab277baeaf2db6f74bb65661539d1586d8d3e92a35f665c",
+        "modules/import-kit/src/d1/stream-receipt.ts": "0705e0833a5d105ea07c835bfcc41355a421cab4064c8c57caae372ee3c67365",
+        "modules/import-kit/src/d1/stream-revision-schema.ts": "33954cf1d174b0a8589e685cc0a77a6b5c07fbc64719e8e87d49384a461d150a",
+        "modules/import-kit/src/d1/stream-snapshot.ts": "82c8c6c698d7548bc781c776c6ad00a6c7293b21b2d2cd58bf75a85fa3d6ee4b",
+        "modules/import-kit/src/d1/stream-stage.ts": "9c18c0ffe72ad26a42d84b452fedebbc2885c09dae1a348ce98e8cc697b02c1b",
+        "modules/import-kit/src/d1/stream-state.ts": "79930506755884b83efeb43cb00c1f9a10a69cfdd3b5523bd38d37b4e8b67277",
+        "modules/import-kit/src/d1/stream-working-set.ts": "29b16f9d5ec10aabbd8f228130f897695ae8c7a7a81122130afbb9e023b0a293",
+        "modules/import-kit/src/d1/streams.ts": "581dc7bcaa8fd3cbef5e7cfbde6fda2cdb76ed1f628c81d23b57e2a6bc69ab1f",
+        "modules/import-kit/src/d1/target-guards.ts": "0109367eda7594ab16f0a449cdbfab93627e3c8f8fb3f74a4123383ba60bb716",
+        "modules/import-kit/src/d1/target-identities.ts": "6bea9b8ae58cc3e9fa5006918ce5649a6fa2967788a4c5459971ea89297846ec",
+        "modules/import-kit/src/d1/transport.ts": "8db08ec77553f58f816bc0e3325a20e63552e38a99604237a58e8843de7819bf",
+        "modules/import-kit/src/d1/types.ts": "b94748352b7dbbcd777445fe9dc43548bbe6a6367cab3a4e184fcce4bd225f24",
+        "modules/import-kit/src/d1/undo-observations.ts": "aa5c7eac0fd202244fe7a5518a95dcab377809b9eda12c52b610fe03b00f9958",
+        "modules/import-kit/src/d1/undo-report.ts": "10776e6240f7090e59023aa2e9ed212ead66b37c2c696ec0d44dba424be34b71",
+        "modules/import-kit/src/d1/undo-snapshot.ts": "e92301721da9d72c37213a99a308701c94c882657d2fe0a263ad95614d3928d2",
+        "modules/import-kit/src/d1/undo-state.ts": "f8f8f7935482b60cf619fb23f6aa04bc03376ed9f7f8162c4f8e9961c564f49b",
+        "modules/import-kit/src/d1/undo-types.ts": "39a110602c82019bf19bccd13316d590ee3e6f3fbc7171b5aa35d982e6158b50",
+        "modules/import-kit/src/engine/apply.ts": "f7b73708e4ecd05b7835cd384595bcf577239bf4e36fbffdf49609cedc8e6c2a",
+        "modules/import-kit/src/engine/index.ts": "b7570a4ab5a12e9df4eb427aec3ab3bdc2c55330c50fefcd42815ad76cd7c91f",
+        "modules/import-kit/src/engine/reverse.ts": "d9471fdfece79d7419a6832014cd9f6fe9b0349922968f8f82b1e7b4425d2a81",
+        "modules/import-kit/src/index.ts": "3d6c29b0cd2449988f6973da43ba44ef1d5d1ff66ec99a99d0a4daf556e718c6",
+        "modules/import-kit/src/journal/authority.ts": "45934861cf653954615329c2ac003a106d8abad33a8e42c633cde43832af7b37",
+        "modules/import-kit/src/journal/boundary.ts": "ee0ef90f37adaae55859d4875b56c12bf9de8eabbbcac892f9fc91d76c79cde0",
+        "modules/import-kit/src/journal/jobs.ts": "0108321240af0073d0f6c136929c9063dfe311e7d0cf5023142f61587ac1f440",
+        "modules/import-kit/src/journal/originals.ts": "8861f01cc383b4c4d16d1c5804b5369a158c16161f550ed9e9a8e066dadf4ae7",
+        "modules/import-kit/src/plan/budget.ts": "4a97e89a91edf916720fab61815a62ac50b35a975d52fff8cc9f346f2f26a837",
+        "modules/import-kit/src/plan/index.ts": "5f4e545df75190be885c79524e51d5ccb8d3abf3698a6b22beee16a7f11a0d4e",
+        "modules/import-kit/src/plan/size.ts": "769e9e4e53b8554550f0861d312e87b2c6f75907961579967b4ef76df605c04f",
+        "modules/import-kit/src/provenance/canonical-hash.ts": "c456931f94554f62dd9fae1923d44b9e04db63c822ec97fe708e55d687cadfe5",
+        "modules/import-kit/src/provenance/canonical-stream.ts": "94b9bef088d1d907edd4de44b74132ba257fa488a1ca447ad2cceb0f1d049890",
+        "modules/import-kit/src/provenance/credentials.ts": "2103f268a6b40afba8cc455e11157a8e9ce742e44944b504011f78f9b2f6a81f",
+        "modules/import-kit/src/provenance/identity.ts": "924dacb8c3599456a724b7c743226509e97cdf67f524c988f91f7a8b2207627e",
+        "modules/import-kit/src/provenance/json-snapshot.ts": "0f966fc02c2605bdb055b9db13fb954d499f64439ab5e4873137c8d825c4b212",
+        "modules/import-kit/src/provenance/numeric-credentials.ts": "dd21174c30a70a93e984a06a30f1045d1d36ca0d6a789c676c1cc183605f66c4",
+        "modules/import-kit/src/provenance/validate-json.ts": "43d2424fb804f11b10b716504bf1f0ab9c03381372e2c9fe5eb7500224449007",
+        "modules/import-kit/src/readers/api-policy.ts": "ebbe7df062cc4dee2e2fc42e1d7c8aa40570c39b2f7f4ff1fd505278b38b9380",
+        "modules/import-kit/src/readers/api.ts": "e7ffd06ea57383553296e5904d1e5773ab7fc101f1e9022e4388a05a587f6747",
+        "modules/import-kit/src/readers/bytes.ts": "deedcee195b9755a1cc531b1332ce8e7a1df0b4760f2bd86f04e849e705c9e5c",
+        "modules/import-kit/src/readers/errors.ts": "77acdcdbe7acd8ff93265c21f0659c4c3140218f0b207703d18f60edf493304d",
+        "modules/import-kit/src/readers/file.ts": "c4949da0c9531a577346882ec843ab6ab3908e2c5a68dfd96f0de4ae6d1a4813",
+        "modules/import-kit/src/readers/index.ts": "706ad319e14d9765dd4516548db083a59aced86cdb16a734142236d76262fe36",
+        "modules/import-kit/src/readers/json.ts": "027363a82d7a1e2a343cfc9a6a464bccee0f397bdb34c63acb68f5e36de06aa7",
+        "modules/import-kit/src/readers/numeric-lexemes.ts": "7db8e41a1660d86be02468fb6bb3b5f38fed31c2c84b3a65ef02ceea2a4c311b",
+        "modules/import-kit/src/readers/original.ts": "dd24c02854f80d86005d4f2677945a55ad736c478b752583e719bdd5141227a6",
+        "modules/import-kit/src/readers/README.md": "349b39f3c499e731cd0d05bb1e93233b72ce7205783a07291c4fdd3d5ca9fffd",
+        "modules/import-kit/src/readers/records.ts": "f8fab783215ba04596f6ef698f5f2fde15916e9e6370f799ebb5eccc50a09fb1",
+        "modules/import-kit/src/reconcile/index.ts": "0d73e5867657405de295b20e3aaaf659062a4f2e357b3a3ae18d1b5289d54f54",
+        "modules/import-kit/src/status/encoding.ts": "27c23888a400c38e63fad8febda18d339d9a6114a3f2fa6db79d3e1c7e18c49d",
+        "modules/import-kit/src/status/evidence.ts": "81bb217cf905da35c687ae9ed8d1da50b3da76731872cca2ced6fcbc5f2e535c",
+        "modules/import-kit/src/status/index.ts": "ae8a6d4e5081f29407a407d0d028f030ad5a8abffade573bd3985a80830aa225",
+        "modules/import-kit/src/status/schema.ts": "00a0255dd540b42140218f6b4832590d8be18ad8f7f70b6c414310d257d33f17",
+        "modules/import-kit/src/status/types.ts": "c77fdb0801f3b49fefa302540cfb42bccd421dc94e61fa047e511a252d4d4138",
+        "modules/import-kit/src/storage/cleanup.ts": "d07d231a526948e59ec89ef5113b01cf4a7b25b8e897e53bc6ede19183cdb58e",
+        "modules/import-kit/src/storage/integrity.ts": "d9dc5e580e97e6355e7b092bedaf9e6ecc395e53dd085f10f0fb440ac1cdf5c4",
+        "modules/import-kit/src/storage/originals.ts": "4d72a139b6de26cdda9b4f46091ec1323b62af3ff26ea00a5e842e6586e42ad1",
+        "modules/import-kit/src/storage/provenance.ts": "3451afc924b65570aff588773c75223d3a1b956c7e599b0573777c93aa611047",
+        "modules/import-kit/src/storage/schema.ts": "4173d0e3d1c02ee49899cbe651986363c4bb5d8a8c7d59fc068313d4c00ad5df",
+        "modules/import-kit/src/storage/sqlite.ts": "e13a6a0902ea266a40e5db7a95c32017e0c4341b8ad7c0d7587d3919729f545c",
+        "modules/import-kit/src/types.ts": "ece4ba2269831421ec40e2b36cca39ba729977bc8c21a62a50cd6e1dee6dddfd"
+      },
+      "modes": {
+        "modules/import-kit/src/d1/apply.ts": "100644",
+        "modules/import-kit/src/d1/budget.ts": "100644",
+        "modules/import-kit/src/d1/compressed-plan.ts": "100644",
+        "modules/import-kit/src/d1/creation.ts": "100644",
+        "modules/import-kit/src/d1/custody-state-schema.ts": "100644",
+        "modules/import-kit/src/d1/database.ts": "100644",
+        "modules/import-kit/src/d1/erased-artifacts.ts": "100644",
+        "modules/import-kit/src/d1/erased-custody.ts": "100644",
+        "modules/import-kit/src/d1/erased-plan.ts": "100644",
+        "modules/import-kit/src/d1/erased-reversal.ts": "100644",
+        "modules/import-kit/src/d1/erasure-bounded.ts": "100644",
+        "modules/import-kit/src/d1/erasure-claims.ts": "100644",
+        "modules/import-kit/src/d1/erasure-compiler.ts": "100644",
+        "modules/import-kit/src/d1/erasure-disposition.ts": "100644",
+        "modules/import-kit/src/d1/erasure-fragments.ts": "100644",
+        "modules/import-kit/src/d1/erasure-index.ts": "100644",
+        "modules/import-kit/src/d1/erasure-pages.ts": "100644",
+        "modules/import-kit/src/d1/erasure-report.ts": "100644",
+        "modules/import-kit/src/d1/erasure-schema.ts": "100644",
+        "modules/import-kit/src/d1/erasure-snapshot.ts": "100644",
+        "modules/import-kit/src/d1/erasure-values.ts": "100644",
+        "modules/import-kit/src/d1/erasure-writes.ts": "100644",
+        "modules/import-kit/src/d1/erasure.ts": "100644",
+        "modules/import-kit/src/d1/evolutions/0001-preserved-undo.ts": "100644",
+        "modules/import-kit/src/d1/expected-state.ts": "100644",
+        "modules/import-kit/src/d1/guards.ts": "100644",
+        "modules/import-kit/src/d1/history.ts": "100644",
+        "modules/import-kit/src/d1/index.ts": "100644",
+        "modules/import-kit/src/d1/integrity.ts": "100644",
+        "modules/import-kit/src/d1/inventory-snapshot.ts": "100644",
+        "modules/import-kit/src/d1/jobs.ts": "100644",
+        "modules/import-kit/src/d1/native-staging-admission.ts": "100644",
+        "modules/import-kit/src/d1/native-staging-context.ts": "100644",
+        "modules/import-kit/src/d1/native-staging-lifecycle.ts": "100644",
+        "modules/import-kit/src/d1/native-staging-publication.ts": "100644",
+        "modules/import-kit/src/d1/native-staging-rows.ts": "100644",
+        "modules/import-kit/src/d1/native-staging-schema.ts": "100644",
+        "modules/import-kit/src/d1/native-staging-state.ts": "100644",
+        "modules/import-kit/src/d1/native-staging.ts": "100644",
+        "modules/import-kit/src/d1/original-copies.ts": "100644",
+        "modules/import-kit/src/d1/original-storage.ts": "100644",
+        "modules/import-kit/src/d1/originals.ts": "100644",
+        "modules/import-kit/src/d1/plan-dictionary.ts": "100644",
+        "modules/import-kit/src/d1/plans.ts": "100644",
+        "modules/import-kit/src/d1/preparation-fingerprint.ts": "100644",
+        "modules/import-kit/src/d1/preparation-header.ts": "100644",
+        "modules/import-kit/src/d1/preparation-reader.ts": "100644",
+        "modules/import-kit/src/d1/preparation-schema.ts": "100644",
+        "modules/import-kit/src/d1/preparation-state.ts": "100644",
+        "modules/import-kit/src/d1/preparations.ts": "100644",
+        "modules/import-kit/src/d1/preserved-reverse.ts": "100644",
+        "modules/import-kit/src/d1/provenance-set.ts": "100644",
+        "modules/import-kit/src/d1/publication-fence.ts": "100644",
+        "modules/import-kit/src/d1/publication-receipt-schema.ts": "100644",
+        "modules/import-kit/src/d1/published-stream.ts": "100644",
+        "modules/import-kit/src/d1/read-fence.ts": "100644",
+        "modules/import-kit/src/d1/read-results.ts": "100644",
+        "modules/import-kit/src/d1/README.md": "100644",
+        "modules/import-kit/src/d1/retained-values.ts": "100644",
+        "modules/import-kit/src/d1/reverse.ts": "100644",
+        "modules/import-kit/src/d1/reviewed-source.ts": "100644",
+        "modules/import-kit/src/d1/sets.ts": "100644",
+        "modules/import-kit/src/d1/staging-admission.ts": "100644",
+        "modules/import-kit/src/d1/staging-control.ts": "100644",
+        "modules/import-kit/src/d1/staging-erasure.ts": "100644",
+        "modules/import-kit/src/d1/staging-lifecycle.ts": "100644",
+        "modules/import-kit/src/d1/staging-plan.ts": "100644",
+        "modules/import-kit/src/d1/staging-privacy.ts": "100644",
+        "modules/import-kit/src/d1/staging-publication.ts": "100644",
+        "modules/import-kit/src/d1/staging-schema.ts": "100644",
+        "modules/import-kit/src/d1/staging-statements.ts": "100644",
+        "modules/import-kit/src/d1/staging-transport.ts": "100644",
+        "modules/import-kit/src/d1/stream-boundary.ts": "100644",
+        "modules/import-kit/src/d1/stream-create.ts": "100644",
+        "modules/import-kit/src/d1/stream-identity-admission.ts": "100644",
+        "modules/import-kit/src/d1/stream-input.ts": "100644",
+        "modules/import-kit/src/d1/stream-layout.ts": "100644",
+        "modules/import-kit/src/d1/stream-origin.ts": "100644",
+        "modules/import-kit/src/d1/stream-page-integrity.ts": "100644",
+        "modules/import-kit/src/d1/stream-partition.ts": "100644",
+        "modules/import-kit/src/d1/stream-plan.ts": "100644",
+        "modules/import-kit/src/d1/stream-receipt.ts": "100644",
+        "modules/import-kit/src/d1/stream-revision-schema.ts": "100644",
+        "modules/import-kit/src/d1/stream-snapshot.ts": "100644",
+        "modules/import-kit/src/d1/stream-stage.ts": "100644",
+        "modules/import-kit/src/d1/stream-state.ts": "100644",
+        "modules/import-kit/src/d1/stream-working-set.ts": "100644",
+        "modules/import-kit/src/d1/streams.ts": "100644",
+        "modules/import-kit/src/d1/target-guards.ts": "100644",
+        "modules/import-kit/src/d1/target-identities.ts": "100644",
+        "modules/import-kit/src/d1/transport.ts": "100644",
+        "modules/import-kit/src/d1/types.ts": "100644",
+        "modules/import-kit/src/d1/undo-observations.ts": "100644",
+        "modules/import-kit/src/d1/undo-report.ts": "100644",
+        "modules/import-kit/src/d1/undo-snapshot.ts": "100644",
+        "modules/import-kit/src/d1/undo-state.ts": "100644",
+        "modules/import-kit/src/d1/undo-types.ts": "100644",
+        "modules/import-kit/src/engine/apply.ts": "100644",
+        "modules/import-kit/src/engine/index.ts": "100644",
+        "modules/import-kit/src/engine/reverse.ts": "100644",
+        "modules/import-kit/src/index.ts": "100644",
+        "modules/import-kit/src/journal/authority.ts": "100644",
+        "modules/import-kit/src/journal/boundary.ts": "100644",
+        "modules/import-kit/src/journal/jobs.ts": "100644",
+        "modules/import-kit/src/journal/originals.ts": "100644",
+        "modules/import-kit/src/plan/budget.ts": "100644",
+        "modules/import-kit/src/plan/index.ts": "100644",
+        "modules/import-kit/src/plan/size.ts": "100644",
+        "modules/import-kit/src/provenance/canonical-hash.ts": "100644",
+        "modules/import-kit/src/provenance/canonical-stream.ts": "100644",
+        "modules/import-kit/src/provenance/credentials.ts": "100644",
+        "modules/import-kit/src/provenance/identity.ts": "100644",
+        "modules/import-kit/src/provenance/json-snapshot.ts": "100644",
+        "modules/import-kit/src/provenance/numeric-credentials.ts": "100644",
+        "modules/import-kit/src/provenance/validate-json.ts": "100644",
+        "modules/import-kit/src/readers/api-policy.ts": "100644",
+        "modules/import-kit/src/readers/api.ts": "100644",
+        "modules/import-kit/src/readers/bytes.ts": "100644",
+        "modules/import-kit/src/readers/errors.ts": "100644",
+        "modules/import-kit/src/readers/file.ts": "100644",
+        "modules/import-kit/src/readers/index.ts": "100644",
+        "modules/import-kit/src/readers/json.ts": "100644",
+        "modules/import-kit/src/readers/numeric-lexemes.ts": "100644",
+        "modules/import-kit/src/readers/original.ts": "100644",
+        "modules/import-kit/src/readers/README.md": "100644",
+        "modules/import-kit/src/readers/records.ts": "100644",
+        "modules/import-kit/src/reconcile/index.ts": "100644",
+        "modules/import-kit/src/status/encoding.ts": "100644",
+        "modules/import-kit/src/status/evidence.ts": "100644",
+        "modules/import-kit/src/status/index.ts": "100644",
+        "modules/import-kit/src/status/schema.ts": "100644",
+        "modules/import-kit/src/status/types.ts": "100644",
+        "modules/import-kit/src/storage/cleanup.ts": "100644",
+        "modules/import-kit/src/storage/integrity.ts": "100644",
+        "modules/import-kit/src/storage/originals.ts": "100644",
+        "modules/import-kit/src/storage/provenance.ts": "100644",
+        "modules/import-kit/src/storage/schema.ts": "100644",
+        "modules/import-kit/src/storage/sqlite.ts": "100644",
+        "modules/import-kit/src/types.ts": "100644"
+      }
+    },
+    {
+      "path": "modules/local-signin",
+      "originPath": "default-seed/src/core/platform/auth",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/local-signin/dev-personas.ts": "545840507d030144ca6bb5df59b13d756017f3aea7c56c02c276996d4ec597ef",
+        "modules/local-signin/local.server.d.mts": "193f1fe5e872256428e2d51671322b6f20c3853378b848fdc24a2e1419a44e11",
+        "modules/local-signin/local.server.mjs": "44c11b0a74d666afce57bdf23f6e22739ddebbc0c3d37eac6b60181e1cd1635d",
+        "modules/local-signin/signin-options.server.d.mts": "aff2074af5d7721040655cb8a8522df064f675d71e602446daf67b531708e7a2",
+        "modules/local-signin/signin-options.server.mjs": "d2d72e93b6e20f041abbb4959b14d74a909a6b75b875551d72398031bfcf6dbb"
+      },
+      "modes": {
+        "modules/local-signin/dev-personas.ts": "100644",
+        "modules/local-signin/local.server.d.mts": "100644",
+        "modules/local-signin/local.server.mjs": "100644",
+        "modules/local-signin/signin-options.server.d.mts": "100644",
+        "modules/local-signin/signin-options.server.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/mail",
+      "originPath": "modules/mail",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/mail/.gitignore": "bac5cb305c3cbf6aa42e50e7f2c0f5331a71d70dac15f239b8ec6746afed0db5",
+        "modules/mail/doctor.mjs": "861a2be20c051247d590cc14d173037f648666fc28ac39f826d69e38e5e2f5d9",
+        "modules/mail/index.mjs": "c8d1c9cf36186c9e16a9c6a92ca01228cce91eab9f7395e0a01d3c9dd229c5d6",
+        "modules/mail/LICENSE": "2f5076ef027045b9e0e72df8aa61ca8551e54b1877d531656d6e7985b2c32324",
+        "modules/mail/live-proof/README.md": "2f6cf1d376a9356b24291765361930b502f8644a0dde4019650d5dddc7478a59",
+        "modules/mail/live-proof/run.mjs": "e0c9a4838d6e3ab467f98a7c5be3a74f874267ced6ec025e4de26e906fb45a04",
+        "modules/mail/package.json": "fb97ece867a3c13b9b1ad70c1ceb855e6547a49b30c2d8d265980f1759fe58f6",
+        "modules/mail/pnpm-lock.yaml": "9e2b9946e854b4e4aa2c32b9a5436971ee8e505561baa224bb83001877b0a6c7",
+        "modules/mail/README.md": "eb190b5cf222c2a90c800825f9a087601d8b377c93376e458a7fc536a02553bb",
+        "modules/mail/src/adapters/cloudflare/headers.mjs": "6bee46c1edb6228b9d3df8b26ca1acbb163c36d94ecbd8e28ace1a6811095f23",
+        "modules/mail/src/adapters/cloudflare/index.mjs": "377e4a322ac7803a1c56986ac909c35c1328896cff07c0610abbad5e8f8c3f86",
+        "modules/mail/src/adapters/cloudflare/README.md": "80531ce460180b853b7db0480b4ff3d4f919fa5ccc119f71255fb1ac13485c5a",
+        "modules/mail/src/adapters/cloudflare/response.mjs": "5eb6749653c10e45c712a76029f5f87503f660315f8f3f665531f2d346f70ddf",
+        "modules/mail/src/adapters/resend/index.mjs": "03d292468577cb51b012b2c71c13654cd7b0af82c240ec124921ee88e05639dc",
+        "modules/mail/src/adapters/resend/README.md": "07487907a351cde380774bed9b1f7b8d387f55f19be02990a521e25bdb09d468",
+        "modules/mail/src/adapters/resend/response.mjs": "a0f26cafacdae8c6b8070a9ddeb7c1a68a67b47310d27932e59f425450b4b650",
+        "modules/mail/src/adapters/resend/serialize.mjs": "724e04eba7ed515d0a137c69faf388c04061185677335076af7d9d91fdd7de94",
+        "modules/mail/src/adapters/resend/size.mjs": "1726a4e7ce6ca1198dce3b0fcfe43e0d1e9795ca0e334824a61560318c2eabd5",
+        "modules/mail/src/adapters/sendgrid/index.mjs": "bd94b2d46151ed35f4b0f8ba720588e4d64c899654111e114691b4c6421dfa4e",
+        "modules/mail/src/adapters/sendgrid/README.md": "37a03786dd7cbc6d114a344389daa828334967642574f939df35219b094ad536",
+        "modules/mail/src/adapters/sendgrid/serialize.mjs": "60d7836f94068a92283b1b66ccd27efeb78173c013fd1c9a6caaef1b928e09c0",
+        "modules/mail/src/core/errors.mjs": "ad6d85870719774eff284328d54bdcb20cc9fb24faf790e3f1e934d19be5197c",
+        "modules/mail/src/core/transport.mjs": "3f7bf52854e4908bb69b93032ac65cbd90bba57d03a62da1c2652ef4e470a1f8",
+        "modules/mail/src/core/validation.mjs": "c1f54ba93abdead716f8e647aa5ac05af0b47bafa2055e67682393d16791e89d",
+        "modules/mail/src/development/index.d.mts": "6fe266148a517c9759e1c70358a2d9ffba8fed36ed10bcb653c61fcc6e0b928d",
+        "modules/mail/src/development/index.mjs": "d4e2cd5726291a63af51b09e1d8d6fd8212091a330f083782c84fe0c45fb8e2e",
+        "modules/mail/src/development/outbox.mjs": "ca97ec8816a03cd606c90a37a98d3764fab809dba73411922cbd6f7a3f314376",
+        "modules/mail/src/development/schema.sql": "45d6b03eadfe1e91737763ae85cdff74e7216f859869e34431550bba48294996",
+        "modules/mail/src/development/viewer-html.mjs": "96706dc588fa35a18203cc3e3350fbf03c2db2ddad779fbdbd21fa29a7d8f00a",
+        "modules/mail/src/development/viewer.mjs": "8c8c7575c2364151501d1725515b90fa662be039422837643d89f6668f241627",
+        "modules/mail/src/doctor/common.mjs": "09d55a9065b133ca5e3c64e35a652cac6c5220cd1f130328c9014f994ebd1e23",
+        "modules/mail/src/doctor/dns.mjs": "dbbd30abedf91cbf041597be0016d8f308f86951685161af89eeee1e99a9450e",
+        "modules/mail/src/doctor/index.mjs": "bc7e27eb1066b48b0c10bf0d874e858016675124e87f9795b04aa90cd5a11860",
+        "modules/mail/src/doctor/probe.mjs": "8f784edc9b8b1d28543471a406bfb7539db0f4070cdd24065798804012b735c0",
+        "modules/mail/src/doctor/README.md": "03fbc37879c24a39d864147142b3474ade2f3611a3bc9343be214f2280619e14",
+        "modules/mail/src/doctor/receive.mjs": "c113c033011d3a98c4407c5d7bb5a1f7130de088620a03d36d9087fc536a24c7",
+        "modules/mail/src/doctor/records.mjs": "f5a8f43ab1d3e5a125056f34068380f7634ed178b238937eac26c92b67c686b1",
+        "modules/mail/src/events/index.mjs": "6184eeaf89d426b8650f68dfb064f7825541d33a8190ba91d29a9e7de0149a7d",
+        "modules/mail/src/events/intake.mjs": "88dc2902d523908a4d5a030814816c7322667373b5670d413de4c03c065c95ff",
+        "modules/mail/src/events/README.md": "14f2daf2819422b62059434910d5ca18995f0fc63f3ef4810c9cc80c8b60218e",
+        "modules/mail/src/events/storage.mjs": "56a1befc9d7bb799de431d7e938bf84470cd10f891c5275cb0be89704f2de32b",
+        "modules/mail/src/events/verify.mjs": "d5ab927fdcca001bebdf1128e7cdf4c6006b49468406aff983c10957ef5bf286",
+        "modules/mail/src/inbound/bytes.mjs": "cf6d59fff8c693a2833d0015f134d5c2559ec749aeb69b292b38585be7b7db7f",
+        "modules/mail/src/inbound/headers.mjs": "79673d562647f4e15e7fe10ca3b13241acd5b2cc25a651a32918cee45e02235c",
+        "modules/mail/src/inbound/index.mjs": "6defd48ac74f7a267f63d84f5b7cc8c1acfecfb26940df1a200088aa8be9f824",
+        "modules/mail/src/inbound/mime.mjs": "743ae43126ba32aa0cbc00b3be738a7486612b220787c548455c7a778fa1803c",
+        "modules/mail/src/inbound/multipart.mjs": "3696b971db5cf7a8c43eae84faca32123645293dcf97304382359be501d19cca",
+        "modules/mail/src/inbound/README.md": "19f1c3448ae767095f257e2aa0bef8e19e94bd9d00fe0cd7515fb4d0d9f53eff",
+        "modules/mail/src/inbound/resend-attachment.mjs": "a2ca74f17f0018c96b12a6bcaadc31c9b20d870687c5a2d7374de50e4c8fbff3",
+        "modules/mail/src/inbound/resend.mjs": "7d279b6dcb1280b0c3902afc05c7356a9fbfcc015051a5c852fbfbb789a41e17",
+        "modules/mail/src/inbound/sendgrid.mjs": "b599533e99e7912adfd10fc7343ba59e9387d783a623af0c6ac0843314265118",
+        "modules/mail/src/sender.mjs": "fb8a0036fcd591a8f218702ca2dc94b40853cfc02b7d1c98972224ad8a88e179",
+        "modules/mail/src/sendgrid-email/index.d.mts": "65efe2ed9647dd24ce7a7c1055cc5d8213ce94061db7597fb0460309baaa48be",
+        "modules/mail/src/sendgrid-email/index.mjs": "4b0a9132941f0ba7a2f91b86b46b16bb0cdb5d3b9396b19ad13fb060bd02737d",
+        "modules/mail/src/unsubscribe/index.mjs": "4cd7c05a3a885d4d16cfcb50e623fdc201fe6c6bb8d9418502b0837161e55295"
+      },
+      "modes": {
+        "modules/mail/.gitignore": "100644",
+        "modules/mail/doctor.mjs": "100644",
+        "modules/mail/index.mjs": "100644",
+        "modules/mail/LICENSE": "100644",
+        "modules/mail/live-proof/README.md": "100644",
+        "modules/mail/live-proof/run.mjs": "100644",
+        "modules/mail/package.json": "100644",
+        "modules/mail/pnpm-lock.yaml": "100644",
+        "modules/mail/README.md": "100644",
+        "modules/mail/src/adapters/cloudflare/headers.mjs": "100644",
+        "modules/mail/src/adapters/cloudflare/index.mjs": "100644",
+        "modules/mail/src/adapters/cloudflare/README.md": "100644",
+        "modules/mail/src/adapters/cloudflare/response.mjs": "100644",
+        "modules/mail/src/adapters/resend/index.mjs": "100644",
+        "modules/mail/src/adapters/resend/README.md": "100644",
+        "modules/mail/src/adapters/resend/response.mjs": "100644",
+        "modules/mail/src/adapters/resend/serialize.mjs": "100644",
+        "modules/mail/src/adapters/resend/size.mjs": "100644",
+        "modules/mail/src/adapters/sendgrid/index.mjs": "100644",
+        "modules/mail/src/adapters/sendgrid/README.md": "100644",
+        "modules/mail/src/adapters/sendgrid/serialize.mjs": "100644",
+        "modules/mail/src/core/errors.mjs": "100644",
+        "modules/mail/src/core/transport.mjs": "100644",
+        "modules/mail/src/core/validation.mjs": "100644",
+        "modules/mail/src/development/index.d.mts": "100644",
+        "modules/mail/src/development/index.mjs": "100644",
+        "modules/mail/src/development/outbox.mjs": "100644",
+        "modules/mail/src/development/schema.sql": "100644",
+        "modules/mail/src/development/viewer-html.mjs": "100644",
+        "modules/mail/src/development/viewer.mjs": "100644",
+        "modules/mail/src/doctor/common.mjs": "100644",
+        "modules/mail/src/doctor/dns.mjs": "100644",
+        "modules/mail/src/doctor/index.mjs": "100644",
+        "modules/mail/src/doctor/probe.mjs": "100644",
+        "modules/mail/src/doctor/README.md": "100644",
+        "modules/mail/src/doctor/receive.mjs": "100644",
+        "modules/mail/src/doctor/records.mjs": "100644",
+        "modules/mail/src/events/index.mjs": "100644",
+        "modules/mail/src/events/intake.mjs": "100644",
+        "modules/mail/src/events/README.md": "100644",
+        "modules/mail/src/events/storage.mjs": "100644",
+        "modules/mail/src/events/verify.mjs": "100644",
+        "modules/mail/src/inbound/bytes.mjs": "100644",
+        "modules/mail/src/inbound/headers.mjs": "100644",
+        "modules/mail/src/inbound/index.mjs": "100644",
+        "modules/mail/src/inbound/mime.mjs": "100644",
+        "modules/mail/src/inbound/multipart.mjs": "100644",
+        "modules/mail/src/inbound/README.md": "100644",
+        "modules/mail/src/inbound/resend-attachment.mjs": "100644",
+        "modules/mail/src/inbound/resend.mjs": "100644",
+        "modules/mail/src/inbound/sendgrid.mjs": "100644",
+        "modules/mail/src/sender.mjs": "100644",
+        "modules/mail/src/sendgrid-email/index.d.mts": "100644",
+        "modules/mail/src/sendgrid-email/index.mjs": "100644",
+        "modules/mail/src/unsubscribe/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/README.md",
+      "originPath": "modules/operator-auth/README.md",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/README.md": "d10c23ecc9adc92ddfdd81c3558d6fa9a28f00fae0b637d6ca73fe8051503e58"
+      },
+      "modes": {
+        "modules/operator-auth/README.md": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/accounts/adapter.mjs",
+      "originPath": "modules/operator-auth/accounts/adapter.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/accounts/adapter.mjs": "fa6e5590c336221144b759e9001e5faca82f2578fe83dca4b36685f012e4e693"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/adapter.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/accounts/admin.mjs",
+      "originPath": "modules/operator-auth/accounts/admin.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/accounts/admin.mjs": "3aefad08725a130de1b96bb4aec509e16d2a4d926f646e76b2a58e619779d70e"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/admin.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/accounts/index.d.mts",
+      "originPath": "modules/operator-auth/accounts/index.d.mts",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/accounts/index.d.mts": "70524ac95bafd50ae5bf195222c5ff933f43ca2def2e98292049aaddc99fc1f8"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/index.d.mts": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/accounts/index.mjs",
+      "originPath": "modules/operator-auth/accounts/index.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/accounts/index.mjs": "7891ecd3b9eb9e834358d80edf29eda08f8c7faf3b3752e24f79a4cab09cab42"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/accounts/oa.mjs",
+      "originPath": "modules/operator-auth/accounts/oa.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/accounts/oa.mjs": "5a195a69c5e1e58c9868790aa98c5b76220c0551f5729f3a6c97a079f099b02d"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/oa.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/accounts/roles.mjs",
+      "originPath": "modules/operator-auth/accounts/roles.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/accounts/roles.mjs": "9c4ab78154db3c38bac35e101b3411afe610c3892f58384a84d9e8516384810e"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/roles.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/accounts/schema",
+      "originPath": "modules/operator-auth/accounts/schema",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/accounts/schema/dev-sessions.sql": "18754583983c09f3624038131c1b03fadecb8375dddb0a5d09c449a4238ce298",
+        "modules/operator-auth/accounts/schema/domain-rules-step-up.sql": "e41c7f1381f547582148cdf247b521d7f166461ab24058ace95acdf21839e815",
+        "modules/operator-auth/accounts/schema/invitation-cancellation.sql": "2130793483660155aaa1851b6111e51a7aeaf1f8ceb86d467d42ba684c35b562",
+        "modules/operator-auth/accounts/schema/operator-auth.sql": "a3a586a6b095cae80501c3f22fd8df98f4140e0281bc08f3b944c818a977ecde"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/schema/dev-sessions.sql": "100644",
+        "modules/operator-auth/accounts/schema/domain-rules-step-up.sql": "100644",
+        "modules/operator-auth/accounts/schema/invitation-cancellation.sql": "100644",
+        "modules/operator-auth/accounts/schema/operator-auth.sql": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/branding.mjs",
+      "originPath": "modules/operator-auth/branding.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/branding.mjs": "644fb1f1873b77dbae239de2d3d3a9c6e5bf82942b8ad509536eaf8e71e522a7"
+      },
+      "modes": {
+        "modules/operator-auth/branding.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/config.mjs",
+      "originPath": "modules/operator-auth/config.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/config.mjs": "0f57f69f3acc16633bf59950c6ead79121623b8cbc9f6883748add089dcc0c9e"
+      },
+      "modes": {
+        "modules/operator-auth/config.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/conformance",
+      "originPath": "modules/operator-auth/conformance",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/conformance/README.md": "8ff3bf82c885df67e19abf1940273d64fb46f1f5765e0e4a27f286b621490e37",
+        "modules/operator-auth/conformance/index.d.mts": "b8e9b4a51bf2b0f9c20eaf5c01902d763f6ea652adc5c7c600da69d2542e7055",
+        "modules/operator-auth/conformance/index.mjs": "a0617178d1f8cc795f1559eb3e213733ee1dd307869cc20d02c544fd6378c0d0",
+        "modules/operator-auth/conformance/presentation.mjs": "5626e1c96f43c41dfe5ff8d15d0b98e4cd0c1965cb2693968b50ae1295671606"
+      },
+      "modes": {
+        "modules/operator-auth/conformance/README.md": "100644",
+        "modules/operator-auth/conformance/index.d.mts": "100644",
+        "modules/operator-auth/conformance/index.mjs": "100644",
+        "modules/operator-auth/conformance/presentation.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/crypto.mjs",
+      "originPath": "modules/operator-auth/crypto.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/crypto.mjs": "c9a843518d9223ec91698060bacd5a44cd0c4361adaa6b09c05be69f11a828b8"
+      },
+      "modes": {
+        "modules/operator-auth/crypto.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/dev",
+      "originPath": "modules/operator-auth/dev",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/dev/badge.mjs": "a21071f5c345fafb0470b606a8afd2ace1a287e4492e085463fa1cba2996ce32",
+        "modules/operator-auth/dev/index.d.mts": "7bd9b7a4082d367a8fb9f330906d97e647f05977491ebf3abbdd6940ff02821c",
+        "modules/operator-auth/dev/index.mjs": "048e562885ac112aec2794a6735d8a36b8c20bc16f9065c7c7ba8168cb80471c",
+        "modules/operator-auth/dev/personas.mjs": "888afa951b9520376cd1b0cdbe13e75b002213c368be26652e514eca0ca2e485",
+        "modules/operator-auth/dev/sign-in-as.d.mts": "e566a2c11c117ee408c3a4203326eecea4805478894f705a19f1c6edb08df992",
+        "modules/operator-auth/dev/sign-in-as.mjs": "c41b8030fc95b3fa401976322fb433ad547ff659471d5d5344eb120849e9b34a"
+      },
+      "modes": {
+        "modules/operator-auth/dev/badge.mjs": "100644",
+        "modules/operator-auth/dev/index.d.mts": "100644",
+        "modules/operator-auth/dev/index.mjs": "100644",
+        "modules/operator-auth/dev/personas.mjs": "100644",
+        "modules/operator-auth/dev/sign-in-as.d.mts": "100644",
+        "modules/operator-auth/dev/sign-in-as.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/dev-admission.mjs",
+      "originPath": "modules/operator-auth/dev-admission.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/dev-admission.mjs": "d8c59cea293b24364961dc0a9a1f2bfb615ffee73cd48507147f37b577cc0ef8"
+      },
+      "modes": {
+        "modules/operator-auth/dev-admission.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/dev-gate.mjs",
+      "originPath": "modules/operator-auth/dev-gate.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/dev-gate.mjs": "7b8e04432fe3cd467a113f4568e7fb1dc666043a63f3e4872617f459f794712d"
+      },
+      "modes": {
+        "modules/operator-auth/dev-gate.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/docs",
+      "originPath": "modules/operator-auth/docs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/docs/README.md": "098a5dfc2f761b962a0dae818a6130931789efe34376cc4efbd92cfc50d6fb2e",
+        "modules/operator-auth/docs/tanstack-start.md": "52557d15e2c9840fc92d0ef148d9f7f67ba7f5d718eabd5b7dbb80ab8dbff9e1",
+        "modules/operator-auth/docs/vite-spa.md": "ba684430f1a5adeae8bb7c28d02ca11a95a666242048a33256ab427d8fbce781"
+      },
+      "modes": {
+        "modules/operator-auth/docs/README.md": "100644",
+        "modules/operator-auth/docs/tanstack-start.md": "100644",
+        "modules/operator-auth/docs/vite-spa.md": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/errors.mjs",
+      "originPath": "modules/operator-auth/errors.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/errors.mjs": "393de2f6a068fc32d0904e238e88d6fae90576b197cca463da8d7dfabef36f47"
+      },
+      "modes": {
+        "modules/operator-auth/errors.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/http.mjs",
+      "originPath": "modules/operator-auth/http.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/http.mjs": "eb95dcb02bc2e2c4729f60727ba7e7a6a4dc9733b533a3e76f205e709bd0201d"
+      },
+      "modes": {
+        "modules/operator-auth/http.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/identity",
+      "originPath": "modules/operator-auth/identity",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/identity/admission.mjs": "fc8481b21f1cd215ea1b0c18e1bcc7e03226bd36c4c1f11a61eecaabb27e4a2e",
+        "modules/operator-auth/identity/email-link/confirmation.mjs": "20e3d8e91bb3562801abf762d84e93629c01469b89e646320e232946793e1499",
+        "modules/operator-auth/identity/email-link/message.mjs": "dcbd0eef8f8bac023235162b079945441daab3e0b27541f4738ba15c3ebebbec",
+        "modules/operator-auth/identity/index.d.mts": "740d93a59ef568ad3b65e85796d4acc3de3b2333cff958eba871be774498deac",
+        "modules/operator-auth/identity/index.mjs": "0b68a78d59ecf553a1cacc182e280071f9554b37271249cfc037afcbf2d54cfb",
+        "modules/operator-auth/identity/oidc/README.md": "7c2645ff1510458f9d7ef51aa865c8c0da8f26a11bf5f57a339d2d0e0be16f01",
+        "modules/operator-auth/identity/oidc/client-auth.mjs": "061ac35699976c075b120891f7eacb4b1c893b9081faff1e5b3bd0a5834d97ef",
+        "modules/operator-auth/identity/oidc/config.mjs": "f38385f3f62f43469458f8f47b4175755fe5bb0a53be5dc7bb60d3a74ac67a6f",
+        "modules/operator-auth/identity/oidc/crypto.mjs": "968787aa4d88b2d5323ef55dce0755d50e32502a6753505eaf3f6a0298078ff8",
+        "modules/operator-auth/identity/oidc/errors.mjs": "09b4452714fdbd7382d1ce71162c17cf41fd7a3e6c2ea74be768a156ec1e138d",
+        "modules/operator-auth/identity/oidc/index.d.mts": "666be89c22c8c2d825a797aab85f3e7d713266f347c95a9a62774e5b05173fc1",
+        "modules/operator-auth/identity/oidc/index.mjs": "dcb729ad24fa1d7a793d30493a0a7d086f5628bcc6bad539b5c74193ec546c59",
+        "modules/operator-auth/identity/oidc/jwt.mjs": "f051bc8095f18cbb97d9e189280df96dd42b5f6e60e2381e71c6d9d9e9b1c16e",
+        "modules/operator-auth/identity/oidc/network.mjs": "ee906ff3b434a2722a53d4650d6beb226d92adb3ce0ebefea504f3970847d684",
+        "modules/operator-auth/identity/oidc/presets.mjs": "5a3b39a1b52f0411801587fe8876b38079b099019f6b6592bf074f7f394b45ed",
+        "modules/operator-auth/identity/oidc/schema/oidc.sql": "f879fb86b079e591dfe4a8513752a8e0394e252b940aa35d3f7430f27b7382c6",
+        "modules/operator-auth/identity/oidc/store.mjs": "38324e70569f9da12672d63a02efa31b8e06f55ce6ea5c3e0ba0a024ba6e20ca",
+        "modules/operator-auth/identity/principal.mjs": "6b949a826dab8f63d70da4603e4da9d50d9071faf0e18684a66f86beec63ab03"
+      },
+      "modes": {
+        "modules/operator-auth/identity/admission.mjs": "100644",
+        "modules/operator-auth/identity/email-link/confirmation.mjs": "100644",
+        "modules/operator-auth/identity/email-link/message.mjs": "100644",
+        "modules/operator-auth/identity/index.d.mts": "100644",
+        "modules/operator-auth/identity/index.mjs": "100644",
+        "modules/operator-auth/identity/oidc/README.md": "100644",
+        "modules/operator-auth/identity/oidc/client-auth.mjs": "100644",
+        "modules/operator-auth/identity/oidc/config.mjs": "100644",
+        "modules/operator-auth/identity/oidc/crypto.mjs": "100644",
+        "modules/operator-auth/identity/oidc/errors.mjs": "100644",
+        "modules/operator-auth/identity/oidc/index.d.mts": "100644",
+        "modules/operator-auth/identity/oidc/index.mjs": "100644",
+        "modules/operator-auth/identity/oidc/jwt.mjs": "100644",
+        "modules/operator-auth/identity/oidc/network.mjs": "100644",
+        "modules/operator-auth/identity/oidc/presets.mjs": "100644",
+        "modules/operator-auth/identity/oidc/schema/oidc.sql": "100644",
+        "modules/operator-auth/identity/oidc/store.mjs": "100644",
+        "modules/operator-auth/identity/principal.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/index.mjs",
+      "originPath": "modules/operator-auth/index.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/index.mjs": "85d9d8e3219b72f574f762800767728f9e930788842a9b2fef80fd6fd5564b13"
+      },
+      "modes": {
+        "modules/operator-auth/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/input.mjs",
+      "originPath": "modules/operator-auth/input.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/input.mjs": "0b668bdbdce75d31acc6a2918ed8131d6baeff948d91048bde9fd58fb52a91e8"
+      },
+      "modes": {
+        "modules/operator-auth/input.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/local-cli.mjs",
+      "originPath": "modules/operator-auth/local-cli.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/local-cli.mjs": "b10dafbf33fc4f342e2c3c6db343afd353c3e6264208216a6155d50e71d1f19a"
+      },
+      "modes": {
+        "modules/operator-auth/local-cli.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/page.mjs",
+      "originPath": "modules/operator-auth/page.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/page.mjs": "a2e1ee2864aa33bee3db99c260af8044217616e8c0d5f5a618a711767434f92d"
+      },
+      "modes": {
+        "modules/operator-auth/page.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/policy.mjs",
+      "originPath": "modules/operator-auth/policy.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/policy.mjs": "d535aba35621d333cd6faae49fc3c6cb72e1d5718741f02d363cbe3e8eaf153c"
+      },
+      "modes": {
+        "modules/operator-auth/policy.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/routes.mjs",
+      "originPath": "modules/operator-auth/routes.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/routes.mjs": "ec5e9e22ed541ccc2924da2d411a4b54981af1b8809fcde04187c654bb2f082e"
+      },
+      "modes": {
+        "modules/operator-auth/routes.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/signin",
+      "originPath": "modules/operator-auth/signin",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/signin/index.mjs": "81693b4faae8dbb9ac0662ca51f54855b4ebf043d21df97cf6ec8d5ec2012315"
+      },
+      "modes": {
+        "modules/operator-auth/signin/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/owner-claim",
+      "originPath": "modules/owner-claim",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/owner-claim/index.d.mts": "62b73bae51da53154364f046546abc0a31812aa728ff5654ec07f1768979a8f0",
+        "modules/owner-claim/index.mjs": "80d2ca1bafa16e78a524224fb334645e11d4049426c7f9ce7eff013c6ff46cc1",
+        "modules/owner-claim/page.mjs": "1e03cd872c5bf95a2672e782153b71272f90f1cea7f10ee70f971fae0432e929",
+        "modules/owner-claim/README.md": "400d900fbe0981f9e6e27ff40b7913ebb140680bd045167cfb9ddb2a45a4c890",
+        "modules/owner-claim/transaction.mjs": "c3198c8ac52e6493a4b39dac55c1021f7c57ccd9b25694ce617f4267f4a0380b",
+        "modules/owner-claim/verify.mjs": "7378d81d2b453d7dea9cecb94f99ccbbbebc4455f02617146f844ed1151f7ad0"
+      },
+      "modes": {
+        "modules/owner-claim/index.d.mts": "100644",
+        "modules/owner-claim/index.mjs": "100644",
+        "modules/owner-claim/page.mjs": "100644",
+        "modules/owner-claim/README.md": "100644",
+        "modules/owner-claim/transaction.mjs": "100644",
+        "modules/owner-claim/verify.mjs": "100644"
+      }
+    },
+    {
+      "path": "operations",
+      "originPath": "operations",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "operations/operations.mjs": "d6ad5bd1971a5dd7d12ca73646c8b332e2ba21ef93e1de572a13673ce70c255d",
+        "operations/project-operations.mjs": "583a32cabf96c13a53b3cd493d8dd798c8a3e1ad4ff460b33512c4a37ef43385"
+      },
+      "modes": {
+        "operations/operations.mjs": "100644",
+        "operations/project-operations.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/bin/rer.mjs",
+      "originPath": "bin/rer.mjs",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/bin/rer.mjs": "6d1e16d1253010d0a0423f7dd9913997f2775355602aa11dfa35cf87d9287feb"
+      },
+      "modes": {
+        "scripts/base-cli/bin/rer.mjs": "100755"
+      }
+    },
+    {
+      "path": "scripts/base-cli/cli",
+      "originPath": "cli",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/cli/adapter.mjs": "7634f25d6de9c387e7d69e9de890342e9d9fd1221576f571ee51b01b120758ac",
+        "scripts/base-cli/cli/ai-local.mjs": "fadf55c0c44be0d831ba20b45a83b04d995c38b859e14efae96f288d3be8111b",
+        "scripts/base-cli/cli/archive-path.mjs": "cc637b25491ba7e8eb8ec32f3b66084ab1051e075700da62557dda35239a7c55",
+        "scripts/base-cli/cli/archive-vite.mjs": "539999f522cee2dfa311d32ec397388c510024970ecfaf9d67fb7146a4e62703",
+        "scripts/base-cli/cli/archive.mjs": "2ec5f162e824dfe3e43def0c8751dc5adaf933cc99010c3dafff32f118809811",
+        "scripts/base-cli/cli/auth-copy.mjs": "7583872f45a023cf5076e9f9f8a9408ce13b3b58e812e39856a38f90f70b2243",
+        "scripts/base-cli/cli/bounded.mjs": "5f7512fb79f15f154cdef29138cec3ebbf9525660030caffbc8a919df509696e",
+        "scripts/base-cli/cli/container-transfer.mjs": "37139d8bc02b227822b9bf61b200fe12046e5139e8df345a67e3a8dfda4a81d5",
+        "scripts/base-cli/cli/container.mjs": "66a64baffcab780ae7356738840bec9c501d406eb75fe837614d866523f2c587",
+        "scripts/base-cli/cli/contract.mjs": "fb2c655ffb7ade75b5993b0ee28da0357e20d4e6dcaa6d18e8238cd4bdc0cbb6",
+        "scripts/base-cli/cli/dependencies.mjs": "f63d0dfeb23984792fc53ca3cc6554eea7154415090b5a1e636a8d4ca14ee350",
+        "scripts/base-cli/cli/dependency-approval.mjs": "aae735341417293fb585ecd65785faab3ade1483f3e6f5a615d6ec866d7349c2",
+        "scripts/base-cli/cli/dependency-doctor.mjs": "8c91ac639cc2e97b51fe3c94ddc61c39f3e8416bb0d917d0d06cc42493266dcc",
+        "scripts/base-cli/cli/dependency-input.mjs": "b686a1c685ad3b842a1815de96424faaa6cf457eb0e4a97d4a71f5a9ea7060fd",
+        "scripts/base-cli/cli/deploy.mjs": "b3f66914fcaa85c200fcf14b7b3ad8886bb3d446d245e8e155d9957fe405e7fe",
+        "scripts/base-cli/cli/dev-identity.mjs": "37d8c790c2f55a235b44d13c0505236573d99b98c0e495ee45d6a9b535bf5663",
+        "scripts/base-cli/cli/errors.mjs": "0a46ac7fb14fab31ed1fade66ae85fd7fd194a2bbc80f1f997ff83cec7f65e1e",
+        "scripts/base-cli/cli/export.mjs": "ad67284f586bd70fb2f3618914824328ecaa8e568be727fb9fdcc5b0f31d9f3a",
+        "scripts/base-cli/cli/font-cache.mjs": "e540e9b5e48d9c27c0b54ca52d12c25273b917004111ebc389c25d08f67b5ada",
+        "scripts/base-cli/cli/independent.mjs": "1a411c883a52bb257b191f44f509a2e13cc25306ad0a164d4ea0b99fa865420a",
+        "scripts/base-cli/cli/inspect.mjs": "6cbd9618f5a25475fa9826b4345c38680b0ed42ea946343ff7208bd2c1927bc5",
+        "scripts/base-cli/cli/jsonc.mjs": "1aa887996cc0108d805a837b4b2520c1989a68d99aa1e928fed8020f78a61830",
+        "scripts/base-cli/cli/lifecycle.mjs": "745577f435229bc602a43e80f3eb69dc70c55748535b6f074e0be57d67d4f427",
+        "scripts/base-cli/cli/local.mjs": "f6512a71c0af0a5ba21897e4b8deae60c42addec0c20e629c85b89dd6ef41828",
+        "scripts/base-cli/cli/main.mjs": "6ecd40a8ff5ee25619e30137574a15b75468d9ae48b0cea3988efc0341b2dd83",
+        "scripts/base-cli/cli/managed-server.mjs": "78cecb625905a47c92a788e960e1ee0bf54c697c2380d8f0e46cfb64ea10fb9e",
+        "scripts/base-cli/cli/node-runtime-cache.mjs": "c44e401682340df3490d026d06cab082f31691ccb3d38ffe9dc5582505bc428d",
+        "scripts/base-cli/cli/node-runtime-discovery.mjs": "58c74d1c77a1c236ea1dbd0e27408ff27d5812469578cf1eb34a993ca3b0ec4b",
+        "scripts/base-cli/cli/node-runtime-download.mjs": "1c70b70903c48e75f8d2f0db4e649e475f3af849d62bdd9356babcd820dd96cc",
+        "scripts/base-cli/cli/node-runtime.mjs": "69608bfc074c8f55280d1cffc003528b3b8595f9664a3c60a2307b1b35d2bab3",
+        "scripts/base-cli/cli/output.mjs": "2c38addd2acd76d2c797c4edf55da6aa7c2e99de4cc2ec6c3a60330d707320bd",
+        "scripts/base-cli/cli/parse.mjs": "6a20eb80dc875b0835c78f622d2d1e0ffb25417d588f9b4f76b30ba888e46f1b",
+        "scripts/base-cli/cli/portability-worker.mjs": "0cdc2d550a0b648e4f598d74f8564046d10251db645b3c8ebadbdf24ee0b75c4",
+        "scripts/base-cli/cli/portability.mjs": "6431fd334d293db766ed951ec985151f2cbddf8658ceb0b527c6f96ecbf55c09",
+        "scripts/base-cli/cli/preview-cache.mjs": "af1d3ae4c6fd92aa4fd75cab83257506c5b8b9bd858ebb5c6db763de497f42a4",
+        "scripts/base-cli/cli/project.mjs": "1e59668e4b77b3a3af012980e32e8ac370b80f9b25da169214c817dccd65e4cf",
+        "scripts/base-cli/cli/README.md": "4a8e8e44bb6ca29ec131ddd4887f1360e86f6981a0d83b6b8de2f002cf2e94dc",
+        "scripts/base-cli/cli/release.mjs": "3f45fb4dad1eead46d13aaaf6321bfc5dadb0b7c2dac26bd72a32cc5ed78f6a9",
+        "scripts/base-cli/cli/runtime-front-door.mjs": "ff985206d8150da6b6aa41c58fd1086c49d7b92465c764641025a9fcfe73ba83",
+        "scripts/base-cli/cli/scheduled.mjs": "4269bc4a1e9318290fb94f025bd8c954ee66eae4d9c629169595beb4f155acf8",
+        "scripts/base-cli/cli/server-activity.mjs": "c018244e61ad7a064a9fa8b8363ef37f2b897161c4961d016fb518f2e551912c",
+        "scripts/base-cli/cli/server-proxy.mjs": "56ed58146c224116467cbeac7f0e00d49c97c6390318b608a65660a7639bdc04",
+        "scripts/base-cli/cli/server-registry.mjs": "f87bc06767a32fc9448ec4b57d77e694f9ef3f1d605218ed00ce14f8219db89d",
+        "scripts/base-cli/cli/server-resources.mjs": "a8050c168057ddc5b612da8bc5aacfb45daf2a545040bb5ee55cd252b6ed6858",
+        "scripts/base-cli/cli/settings.mjs": "97ac03b02d5012d821ed80d1aa1aaecaa3d41f0a0d263c0e714df13ec89f2aac",
+        "scripts/base-cli/cli/setup-answers.mjs": "25ed3e8c329c696929631e3d26699bb626169d53e230d6fb90e9fd8467c84dc2",
+        "scripts/base-cli/cli/setup-input.mjs": "62fba10c9f34dba80b6b36c0e4b685134e30b40544fc86400645c3183e9b1242",
+        "scripts/base-cli/cli/shared.mjs": "38bdde3688e3206fb76b6c3f6d407e9c733231443f312648ce4e5fd898da26d3",
+        "scripts/base-cli/cli/transfers.mjs": "f00080c827b040d57e241bed3965672c0db336f43e44115cf6458354505b8d8e"
+      },
+      "modes": {
+        "scripts/base-cli/cli/adapter.mjs": "100644",
+        "scripts/base-cli/cli/ai-local.mjs": "100644",
+        "scripts/base-cli/cli/archive-path.mjs": "100644",
+        "scripts/base-cli/cli/archive-vite.mjs": "100644",
+        "scripts/base-cli/cli/archive.mjs": "100644",
+        "scripts/base-cli/cli/auth-copy.mjs": "100644",
+        "scripts/base-cli/cli/bounded.mjs": "100644",
+        "scripts/base-cli/cli/container-transfer.mjs": "100644",
+        "scripts/base-cli/cli/container.mjs": "100644",
+        "scripts/base-cli/cli/contract.mjs": "100644",
+        "scripts/base-cli/cli/dependencies.mjs": "100644",
+        "scripts/base-cli/cli/dependency-approval.mjs": "100644",
+        "scripts/base-cli/cli/dependency-doctor.mjs": "100644",
+        "scripts/base-cli/cli/dependency-input.mjs": "100644",
+        "scripts/base-cli/cli/deploy.mjs": "100644",
+        "scripts/base-cli/cli/dev-identity.mjs": "100644",
+        "scripts/base-cli/cli/errors.mjs": "100644",
+        "scripts/base-cli/cli/export.mjs": "100644",
+        "scripts/base-cli/cli/font-cache.mjs": "100644",
+        "scripts/base-cli/cli/independent.mjs": "100644",
+        "scripts/base-cli/cli/inspect.mjs": "100644",
+        "scripts/base-cli/cli/jsonc.mjs": "100644",
+        "scripts/base-cli/cli/lifecycle.mjs": "100644",
+        "scripts/base-cli/cli/local.mjs": "100644",
+        "scripts/base-cli/cli/main.mjs": "100644",
+        "scripts/base-cli/cli/managed-server.mjs": "100644",
+        "scripts/base-cli/cli/node-runtime-cache.mjs": "100644",
+        "scripts/base-cli/cli/node-runtime-discovery.mjs": "100644",
+        "scripts/base-cli/cli/node-runtime-download.mjs": "100644",
+        "scripts/base-cli/cli/node-runtime.mjs": "100644",
+        "scripts/base-cli/cli/output.mjs": "100644",
+        "scripts/base-cli/cli/parse.mjs": "100644",
+        "scripts/base-cli/cli/portability-worker.mjs": "100644",
+        "scripts/base-cli/cli/portability.mjs": "100644",
+        "scripts/base-cli/cli/preview-cache.mjs": "100644",
+        "scripts/base-cli/cli/project.mjs": "100644",
+        "scripts/base-cli/cli/README.md": "100644",
+        "scripts/base-cli/cli/release.mjs": "100644",
+        "scripts/base-cli/cli/runtime-front-door.mjs": "100644",
+        "scripts/base-cli/cli/scheduled.mjs": "100644",
+        "scripts/base-cli/cli/server-activity.mjs": "100644",
+        "scripts/base-cli/cli/server-proxy.mjs": "100644",
+        "scripts/base-cli/cli/server-registry.mjs": "100644",
+        "scripts/base-cli/cli/server-resources.mjs": "100644",
+        "scripts/base-cli/cli/settings.mjs": "100644",
+        "scripts/base-cli/cli/setup-answers.mjs": "100644",
+        "scripts/base-cli/cli/setup-input.mjs": "100644",
+        "scripts/base-cli/cli/shared.mjs": "100644",
+        "scripts/base-cli/cli/transfers.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/composition/git-source.mjs",
+      "originPath": "composition/git-source.mjs",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/composition/git-source.mjs": "ccc04366daca482983510e8c0c24feab6eab7b7086604f71d4bb6f5529c47c04"
+      },
+      "modes": {
+        "scripts/base-cli/composition/git-source.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/edition-authoring/files.mjs",
+      "originPath": "edition-authoring/files.mjs",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/edition-authoring/files.mjs": "eb0b8a0b9958c4ed84735d85f5298f3d1307ef60ddee1c2a3329c6ed7af0902e"
+      },
+      "modes": {
+        "scripts/base-cli/edition-authoring/files.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/edition-authoring/manifest.mjs",
+      "originPath": "edition-authoring/manifest.mjs",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/edition-authoring/manifest.mjs": "0c93bd39b1dd869b23a9d2727671fe8f9c933a9d56c7a3df1ba83c4a6f816e7b"
+      },
+      "modes": {
+        "scripts/base-cli/edition-authoring/manifest.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/ai",
+      "originPath": "modules/ai",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/ai/client.mjs": "ab2d451f20bb618646e8cd56711ee5b665e7a639374b40af8e79543026045ab1",
+        "scripts/base-cli/modules/ai/config.mjs": "04b1f03a17c9268ce222f25fda041b049bf623b2f5fb4155e7c5c9af775e62ab",
+        "scripts/base-cli/modules/ai/dev/index.d.mts": "7c53486beecb6800ac7dd383667300753c15098ac6ba01c7b1bb2c6ef0611375",
+        "scripts/base-cli/modules/ai/dev/index.mjs": "1cf67d8c073c871d234086d0a32d3d7ea5ab14762b39284414922a26fcf41bda",
+        "scripts/base-cli/modules/ai/dev/outbox.mjs": "f9a3a5326e2e96b127452412570b27d4a8942b0bdbb81d6e94559d7ba7626ea8",
+        "scripts/base-cli/modules/ai/errors.mjs": "2a9574e85880c2c26252665e91c8b9f68e85844eb152260630ff717dc553da61",
+        "scripts/base-cli/modules/ai/fake/index.d.mts": "b5a59cc6ab4bd911ee81afc783c8a101f66260db5a4e7fc1b485a758f67d5a40",
+        "scripts/base-cli/modules/ai/fake/index.mjs": "cc9cfdaf67482b626c3a9c1f2c82f8aeff10fb3774043715acbdb579224087b2",
+        "scripts/base-cli/modules/ai/index.d.mts": "42c1cd6b07cfb4eba6b63a0f3876d412422e6130509870cf7c70d395b02a80cc",
+        "scripts/base-cli/modules/ai/index.mjs": "dc9100f9df3dabab1b43eecdba8aa4d337c85f987935eb28707335125380271a",
+        "scripts/base-cli/modules/ai/LICENSE": "2f5076ef027045b9e0e72df8aa61ca8551e54b1877d531656d6e7985b2c32324",
+        "scripts/base-cli/modules/ai/package.json": "e1952aea5cd307285f9b8ce5a5a43fbda965098c2de85e005049d0f6bc661601",
+        "scripts/base-cli/modules/ai/README.md": "7796be96e34ec997bb5bacb4bfffe56f815df3766b604035fa1071080aa1e623"
+      },
+      "modes": {
+        "scripts/base-cli/modules/ai/client.mjs": "100644",
+        "scripts/base-cli/modules/ai/config.mjs": "100644",
+        "scripts/base-cli/modules/ai/dev/index.d.mts": "100644",
+        "scripts/base-cli/modules/ai/dev/index.mjs": "100644",
+        "scripts/base-cli/modules/ai/dev/outbox.mjs": "100644",
+        "scripts/base-cli/modules/ai/errors.mjs": "100644",
+        "scripts/base-cli/modules/ai/fake/index.d.mts": "100644",
+        "scripts/base-cli/modules/ai/fake/index.mjs": "100644",
+        "scripts/base-cli/modules/ai/index.d.mts": "100644",
+        "scripts/base-cli/modules/ai/index.mjs": "100644",
+        "scripts/base-cli/modules/ai/LICENSE": "100644",
+        "scripts/base-cli/modules/ai/package.json": "100644",
+        "scripts/base-cli/modules/ai/README.md": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/container",
+      "originPath": "modules/container",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/container/adapters/d1.mjs": "5f0d08db5d58977984838d03435f174fb10b4e2165141f6112fe644a197b0c82",
+        "scripts/base-cli/modules/container/adapters/egress.mjs": "00746296756c05d3e4905ec443be823f79fc0d8de81d32f1e514d26a06378065",
+        "scripts/base-cli/modules/container/adapters/jobs.mjs": "b78d8f59767c9c155c697ce028f1371fcb9b07d86ed84f754deb054ccaa9892b",
+        "scripts/base-cli/modules/container/adapters/objects.mjs": "4e8bde7bb5be92297ec84f9479c5487a5a59d4e211531375afee01b264976feb",
+        "scripts/base-cli/modules/container/adapters/retained.mjs": "018fd16c05f6e8e302140e862649d03e26a8bdda8c2e5ef3fd6548fcc9c06310",
+        "scripts/base-cli/modules/container/adapters/sqlite-error.mjs": "3fc25c5c075a2172af7b6ff798165a858c489bd47d8e668682d84d6689a3c159",
+        "scripts/base-cli/modules/container/adapters/sqlite-worker.mjs": "4e3d16c28fa098746d5de0bec66337c7d03c70709120b6564d9050eebbc6e1ab",
+        "scripts/base-cli/modules/container/assets.mjs": "e394ff990bb8496f213a8c67efdb7980e37fc001f9797ef1ac7950732097ba2d",
+        "scripts/base-cli/modules/container/bindings.mjs": "5a7712241ab9eb51b6033c0884fbe5112c4ced9ff32bcf8c680fbc0cb77de38f",
+        "scripts/base-cli/modules/container/boundary.mjs": "c4fda1048b85ae32c4e47f3dabdb33453b97fff35a8215e77bff66f14e696a34",
+        "scripts/base-cli/modules/container/build.mjs": "c5b4858452fe25b1639cefd76573060b11b8cab1e13fa215425ff52027b10ded",
+        "scripts/base-cli/modules/container/deploy-input.mjs": "2846c0b122dfb495b1e73f1a70bb4e1d6da4b5733f2c5297afe3d4fdea3a0b2a",
+        "scripts/base-cli/modules/container/entrypoint.sh": "b942a9621354f2331e1ed4000ad4f741a96118b02fe432f9e3ace0ee561837b9",
+        "scripts/base-cli/modules/container/host.mjs": "2e951e8c66e4a8c124f3b2b6fe5c79a60239e47d52309f936516a194413fa53b",
+        "scripts/base-cli/modules/container/ingress.mjs": "b396503f8bf2c9f2d1ce402a8d751079a3ac3b37220895da69d4fc36aa53c5fe",
+        "scripts/base-cli/modules/container/lock.mjs": "61eee611ea4dc27dac2878d2abfd055e78d2d8c5ac6876f0a12c5ed7399bed9b",
+        "scripts/base-cli/modules/container/migrations.mjs": "6eeefa2ef40674e32ef653150f24d532ea5c72b88456ae2551c161399260bf0a",
+        "scripts/base-cli/modules/container/node-engine.mjs": "d33b14963f460aed2c2caf4726e5569db7eaa31bce4fc1fb2108817bf1fc0dda",
+        "scripts/base-cli/modules/container/portability-schema.mjs": "1224ecd1c951d8cbfe1f188f4bb0f2f9db96b230eefb483a703d8d64b097c2cd",
+        "scripts/base-cli/modules/container/README.md": "0e6c45203c2fd622090bec8bceaa9ea7bbbcf11a58d08576e8bba9d081575965",
+        "scripts/base-cli/modules/container/remote/deploy.py": "bf3e299fe794ee08afdddfa253ad136a2f61ec4e6d6c96aac3d4761f048a3eca",
+        "scripts/base-cli/modules/container/remote/files.py": "7c5134e95ddce59b8748311f394990998c80799a66815990a547f81fd1785526",
+        "scripts/base-cli/modules/container/remote/resources.py": "d3f7250aa3193bee6153fcb53c3e2781f818f4b3cd1fa5d6b0603da759a5a734",
+        "scripts/base-cli/modules/container/runner.mjs": "96eb7d7c11ab4c4d24c449256fded11a8718f2f124509e0d97e38f77d319d8eb",
+        "scripts/base-cli/modules/container/ssh-plan.mjs": "f2de40619d9819e6c056cc9ef27862936eda8f70417e1f7a43d9afb2125d696a",
+        "scripts/base-cli/modules/container/ssh.mjs": "51d01be804780bf5cb6a72643a2dbbe65094c03cb0f21cb04b3c220470070639",
+        "scripts/base-cli/modules/container/transfer.mjs": "65aa526b66c022d641d547daa1a851d406577abd826782da6fe6e69b32ccc386",
+        "scripts/base-cli/modules/container/worker-engine.mjs": "f127b84eb9d9e3b290e4404737536f3b0765a7b34a36e81b9e28062e850680dc"
+      },
+      "modes": {
+        "scripts/base-cli/modules/container/adapters/d1.mjs": "100644",
+        "scripts/base-cli/modules/container/adapters/egress.mjs": "100644",
+        "scripts/base-cli/modules/container/adapters/jobs.mjs": "100644",
+        "scripts/base-cli/modules/container/adapters/objects.mjs": "100644",
+        "scripts/base-cli/modules/container/adapters/retained.mjs": "100644",
+        "scripts/base-cli/modules/container/adapters/sqlite-error.mjs": "100644",
+        "scripts/base-cli/modules/container/adapters/sqlite-worker.mjs": "100644",
+        "scripts/base-cli/modules/container/assets.mjs": "100644",
+        "scripts/base-cli/modules/container/bindings.mjs": "100644",
+        "scripts/base-cli/modules/container/boundary.mjs": "100644",
+        "scripts/base-cli/modules/container/build.mjs": "100644",
+        "scripts/base-cli/modules/container/deploy-input.mjs": "100644",
+        "scripts/base-cli/modules/container/entrypoint.sh": "100644",
+        "scripts/base-cli/modules/container/host.mjs": "100644",
+        "scripts/base-cli/modules/container/ingress.mjs": "100644",
+        "scripts/base-cli/modules/container/lock.mjs": "100644",
+        "scripts/base-cli/modules/container/migrations.mjs": "100644",
+        "scripts/base-cli/modules/container/node-engine.mjs": "100644",
+        "scripts/base-cli/modules/container/portability-schema.mjs": "100644",
+        "scripts/base-cli/modules/container/README.md": "100644",
+        "scripts/base-cli/modules/container/remote/deploy.py": "100644",
+        "scripts/base-cli/modules/container/remote/files.py": "100644",
+        "scripts/base-cli/modules/container/remote/resources.py": "100644",
+        "scripts/base-cli/modules/container/runner.mjs": "100644",
+        "scripts/base-cli/modules/container/ssh-plan.mjs": "100644",
+        "scripts/base-cli/modules/container/ssh.mjs": "100644",
+        "scripts/base-cli/modules/container/transfer.mjs": "100644",
+        "scripts/base-cli/modules/container/worker-engine.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/dependencies",
+      "originPath": "modules/dependencies",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/dependencies/approval.mjs": "41599909a5a8d5c2b31db98a06d7fbcc3ea47564c9643c9dd8e20062eaebafbd",
+        "scripts/base-cli/modules/dependencies/auth.mjs": "fe44d7a89c6a6365b01f4aa58213fb6aed02873c2c177ceb1e3246b02a19570a",
+        "scripts/base-cli/modules/dependencies/authority.mjs": "fe89cd1fb7da306cf145b8ef3ebe160902f4e4a82284681eccb97193c68e8750",
+        "scripts/base-cli/modules/dependencies/crypto.mjs": "8dc3397e90b6f8ec1dad81ba68da6e1a5e966ddd8c1b9ace943e964098fea950",
+        "scripts/base-cli/modules/dependencies/index.d.mts": "667f8fd42fb7319b5d43c5cced539ad0ad13bfca46887c45b52c1bee19ef7a22",
+        "scripts/base-cli/modules/dependencies/index.mjs": "403205efea3e027bfead18c93912275f9aa38471e13796b01481f8286dbf1597",
+        "scripts/base-cli/modules/dependencies/logout.mjs": "3bfa236ead120187b96da5f05e94861da682eb8419954a97ac594ff2de49ceb0",
+        "scripts/base-cli/modules/dependencies/native.mjs": "746b101f850bbf8ab18070352bb4920e2ab7252978b2594e9b4aa66e021534ce",
+        "scripts/base-cli/modules/dependencies/protocol.mjs": "343c39b7dae78b4a5bb1611749fbb66f092f84324803bf93101d422a1b3596f1",
+        "scripts/base-cli/modules/dependencies/README.md": "0360447fa552c02ebcd86053fe29dbf9ca386bdaf280012c5ff29a9fc8ef812d",
+        "scripts/base-cli/modules/dependencies/schema/approval-attempt.sql": "7d3742369189b69ea28bdc000097f150f83221c6474f7e177c7b5590691b67e9",
+        "scripts/base-cli/modules/dependencies/schema/dependencies.sql": "3481d8aef870a9eda153a1617e99bb71a408e61a25dea92bb132efa7dd1c2526",
+        "scripts/base-cli/modules/dependencies/store.mjs": "1d102b080d60634fe28da383c80d32a191b9b99cd94600168d6071ac25f0a606"
+      },
+      "modes": {
+        "scripts/base-cli/modules/dependencies/approval.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/auth.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/authority.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/crypto.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/index.d.mts": "100644",
+        "scripts/base-cli/modules/dependencies/index.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/logout.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/native.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/protocol.mjs": "100644",
+        "scripts/base-cli/modules/dependencies/README.md": "100644",
+        "scripts/base-cli/modules/dependencies/schema/approval-attempt.sql": "100644",
+        "scripts/base-cli/modules/dependencies/schema/dependencies.sql": "100644",
+        "scripts/base-cli/modules/dependencies/store.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/deploy-kit",
+      "originPath": "modules/deploy-kit",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/deploy-kit/artifact.mjs": "c0873001fea7e2e5fa3ae27519b43943338db1f2802e5f940e449839c472974b",
+        "scripts/base-cli/modules/deploy-kit/build-modules.mjs": "14583fe6bef98ceeebb26a41886e1c8a47259fb99d21c668d331f818045c2ba5",
+        "scripts/base-cli/modules/deploy-kit/check.mjs": "e42e2aacb5f48748973bdf16758d37b014906ad703b55b685b71c3906bd9b79a",
+        "scripts/base-cli/modules/deploy-kit/cli.mjs": "3422765e133b78fc6a408f29a720686dbf8f7c8ac75a0536a8b7042c2c539b4e",
+        "scripts/base-cli/modules/deploy-kit/container-config.mjs": "c2f75cf5f5b2f1ac5ac9a55545342f2f73b6e5462c7e38b71e7dcf56c64bcf43",
+        "scripts/base-cli/modules/deploy-kit/default-stage.mjs": "c0887feda400c958192ca8b2aa7968af6c34b2c50159fe66d554c6f00295a4d7",
+        "scripts/base-cli/modules/deploy-kit/deploy.mjs": "dea2ebd983d100cfc0c06cd6fe9f552b2cb8c08a0bc35a946e43d277f059cf63",
+        "scripts/base-cli/modules/deploy-kit/health-request.mjs": "f75f5b4eaf8209fe436ed2da525dfe49c8feb2a8b7b71787116fe25422ee2634",
+        "scripts/base-cli/modules/deploy-kit/health.mjs": "248d8030aa7926c38a83006faa7bf80b9ca3ee28134aebfec71d648972653321",
+        "scripts/base-cli/modules/deploy-kit/index.mjs": "f2948bf9679127f47d97f2be5e0fd7adfde8ea12630e8ba5868aa71fc185b6ab",
+        "scripts/base-cli/modules/deploy-kit/local-only.mjs": "2d6bcd56534ec07ba47d1e1951252a6fae7949ff52fdc517e6f4b27fb76981ea",
+        "scripts/base-cli/modules/deploy-kit/migrations.mjs": "063e146a93f2c43290569b5c5fac922667a9d434ebb0a9f6e0af97c8790961ce",
+        "scripts/base-cli/modules/deploy-kit/owner-cli.mjs": "bddbc9c04317ffac63b06dfd12d40904a02ec86d52520de3b5d0d1992f686710",
+        "scripts/base-cli/modules/deploy-kit/owner.mjs": "156b0b98427d6fe1812208c30d867ab667ac647142076ae6ab710db14549f766",
+        "scripts/base-cli/modules/deploy-kit/prepare.mjs": "5acf640abf90af32692a7138bda1b935497bc9a7335b14230957007429aa9b22",
+        "scripts/base-cli/modules/deploy-kit/provider.mjs": "555563517af57d8c8a8b54fe0056f61173d46af546988a7eca4435dbb8999b4d",
+        "scripts/base-cli/modules/deploy-kit/queue-consumer.mjs": "349b6200571359ab54e3a3f267c68d78c2f08fd479859fbf50473e57e1e0753f",
+        "scripts/base-cli/modules/deploy-kit/README.md": "5c8afc85076355aa795bb120efd24e6a95608f23f59479dd0f3f4bc4e385fe14",
+        "scripts/base-cli/modules/deploy-kit/receipt.mjs": "b85d33d9404eb3466e3fcf5d3f73d1c5d2d7ab9e7d84b1b00505d5613ba57b31",
+        "scripts/base-cli/modules/deploy-kit/render.mjs": "20b687d2638fb973d5605f231a3b4a4d94227ae062818402ab889d86e10bbed0",
+        "scripts/base-cli/modules/deploy-kit/resources.mjs": "ed17ef6de4392319743b5457cc437b13b9a273028aba4fc9ed3385574f571e90",
+        "scripts/base-cli/modules/deploy-kit/service-grants.mjs": "441be67fe70a4f9fe126141df96db1d22e7a30f04229eb3d2f7fac637d961868",
+        "scripts/base-cli/modules/deploy-kit/sql-safety.mjs": "482634f15b0715c64756e819b02173fdc6292d206cd639c49abda6a78076e94b",
+        "scripts/base-cli/modules/deploy-kit/sql-tokens.mjs": "ddbcb2639e902dce995b32d75d8827f922651e080b40e01dbe76a4b682a96357",
+        "scripts/base-cli/modules/deploy-kit/teardown.mjs": "4d8ccf61559b193f12a0aa9e7713f6fab44b65560749afb39145810d3223f7d5",
+        "scripts/base-cli/modules/deploy-kit/templates.mjs": "520ce28bd00ddb37918652cb1b3369ee1de950b03002071ae07e90735a84b0d0",
+        "scripts/base-cli/modules/deploy-kit/validation.mjs": "1e9b0b3c20420176e8f8d10d5f88ae18776cb35649e1ac2e6051372c81ff1309",
+        "scripts/base-cli/modules/deploy-kit/worker.mjs": "ff618b55649a1a9a441d6e6980189416e2c489243daa773485aa4122ac9d8a5a"
+      },
+      "modes": {
+        "scripts/base-cli/modules/deploy-kit/artifact.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/build-modules.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/check.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/cli.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/container-config.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/default-stage.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/deploy.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/health-request.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/health.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/index.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/local-only.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/migrations.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/owner-cli.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/owner.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/prepare.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/provider.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/queue-consumer.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/README.md": "100644",
+        "scripts/base-cli/modules/deploy-kit/receipt.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/render.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/resources.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/service-grants.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/sql-safety.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/sql-tokens.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/teardown.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/templates.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/validation.mjs": "100644",
+        "scripts/base-cli/modules/deploy-kit/worker.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/integrations/core",
+      "originPath": "modules/integrations/core",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/integrations/core/CONTRACT.md": "ebe5045698c7bcf54641b6b89c1185589a3d2e7f71f1c0b7d3f1ecb16c0c1431",
+        "scripts/base-cli/modules/integrations/core/crypto.ts": "efb7ccc35949d54ae6964cb2910a33abb123cf5f57944777f003d38ff6781dd8",
+        "scripts/base-cli/modules/integrations/core/database.ts": "f6417f0de95f3eada2a8f5f52ba9a06a0f05981f7a87d7de2534d876c956fdf8",
+        "scripts/base-cli/modules/integrations/core/delivery.ts": "6bb1dda59f44c59679784540cf8251fa9d54d4bd2eff76dc78ba190036de6067",
+        "scripts/base-cli/modules/integrations/core/destination.ts": "81319328438a4b2336332df37c6fafd47bd11b9cc30b6c1950ac728b10ca5ce0",
+        "scripts/base-cli/modules/integrations/core/index.ts": "282c843fed821e26f5728163d2d7d055c094df3f5b1d191025e66331855ba5c0",
+        "scripts/base-cli/modules/integrations/core/node-transport.ts": "5a74bc51f88c6bff03bda514a1ab17009804bdbd2f2f19eb608176b708f26180",
+        "scripts/base-cli/modules/integrations/core/public-address.ts": "f8db1719d2e5361c4bc87a1e8de9721911d9f767db91b185aad8cea22b218eb7",
+        "scripts/base-cli/modules/integrations/core/README.md": "47a7d8f8e2bf05cddd3a9d82cea88655fb094a911b22a5ee721c4a3698e0a1e5",
+        "scripts/base-cli/modules/integrations/core/repository.ts": "9ece52823868fd984380b940172b8aadb2724cc4da45f6f0ab439b2a326fbd0c",
+        "scripts/base-cli/modules/integrations/core/schema.sql": "1a24ad5a3b682c5bb3ab53966732a62ea97a7e7a23a16effbefbd0a908722509",
+        "scripts/base-cli/modules/integrations/core/sqlite.ts": "11ea753841d9b0d4cd123dfc10976fa826b5a5e31c1e66c86b75caff63b8b82c",
+        "scripts/base-cli/modules/integrations/core/timestamped-body-signature.ts": "ad968f8955ecb72361022b6ef38b667d9253030351c423fcd685d9c6441acfad",
+        "scripts/base-cli/modules/integrations/core/tokens.ts": "e5778c038cafcbf0741f567eaa8fb5f6adac0f21eafe52a0d2180d595a2635fe",
+        "scripts/base-cli/modules/integrations/core/types.ts": "b5030701caa8c0863ab9adccfd9a2b8e56d0b580febcecda0d1ee5ebf7c196a3",
+        "scripts/base-cli/modules/integrations/core/upgrade-token-usage-context.sql": "da8094c17a33532455642b148e9776d66860b1d361e24dc744afd6c167671556",
+        "scripts/base-cli/modules/integrations/core/webhook.ts": "b04b0c72f431cd9194fef0e02b71ebec6abca739a87722a87909cc4f4caf7622"
+      },
+      "modes": {
+        "scripts/base-cli/modules/integrations/core/CONTRACT.md": "100644",
+        "scripts/base-cli/modules/integrations/core/crypto.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/database.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/delivery.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/destination.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/index.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/node-transport.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/public-address.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/README.md": "100644",
+        "scripts/base-cli/modules/integrations/core/repository.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/schema.sql": "100644",
+        "scripts/base-cli/modules/integrations/core/sqlite.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/timestamped-body-signature.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/tokens.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/types.ts": "100644",
+        "scripts/base-cli/modules/integrations/core/upgrade-token-usage-context.sql": "100644",
+        "scripts/base-cli/modules/integrations/core/webhook.ts": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/job-queue",
+      "originPath": "modules/job-queue",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/job-queue/cli.mjs": "20ec7c35d3b71bd3185aab373e35cedad0aaae0394b358b42b6e1a0ee137fb4b",
+        "scripts/base-cli/modules/job-queue/command.mjs": "b87d480e25ca495e2e364f4d945ca5dda97812f8a7cfd766ae46df3e722c5a21",
+        "scripts/base-cli/modules/job-queue/config.mjs": "896ca1048b7f3b1a9aa4094b1479ad72e8c76eb2fcfe5dc458cff190a38a28e6",
+        "scripts/base-cli/modules/job-queue/identity.mjs": "d62f823e55d57aeb90645da6e0f5626c05aa6b3042e4e97c6a95ee92695b69f8",
+        "scripts/base-cli/modules/job-queue/index.mjs": "910a3bf1a56b836e19124d30cd2033227adc864a6801d5746e4deaec9451222a",
+        "scripts/base-cli/modules/job-queue/membership.mjs": "93ee4b02bef24d78092b6a759d6e828312a7b525ab7edfd6b9f84a0bf43f8133",
+        "scripts/base-cli/modules/job-queue/module.json": "3194a3c7b688ab057dfe67cd9fe28fdc47467db1cfc9b3f36ed1eec3ac115a52",
+        "scripts/base-cli/modules/job-queue/policy.mjs": "104c5280362190b1a6c3d7fc9cb7b61adf858afedff4b7dd6d83ee881106efe4",
+        "scripts/base-cli/modules/job-queue/processes.mjs": "7ccc5569b720187e782c3ab5636d7201ea565638212529dbbb102f87aa9f5d39",
+        "scripts/base-cli/modules/job-queue/README.md": "61048021340e51e7ca72e6405f515dc5f8dc8d19d41fa9a4254b0a5097f3260a",
+        "scripts/base-cli/modules/job-queue/resources.mjs": "f79672d64f6869d86a74cb01d00e2b23ba9a01b74341faf568a201298e62fc1c",
+        "scripts/base-cli/modules/job-queue/storage.mjs": "65b15606e2f605b97c5c920573f81973f74f5a6c7b9dbb83147449964648fe4c",
+        "scripts/base-cli/modules/job-queue/supervisor.mjs": "19ab4716e7e561bce1db74cd411d24cd1ceeceac0e9afeaf30da0673c1f4b846"
+      },
+      "modes": {
+        "scripts/base-cli/modules/job-queue/cli.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/command.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/config.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/identity.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/index.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/membership.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/module.json": "100644",
+        "scripts/base-cli/modules/job-queue/policy.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/processes.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/README.md": "100644",
+        "scripts/base-cli/modules/job-queue/resources.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/storage.mjs": "100644",
+        "scripts/base-cli/modules/job-queue/supervisor.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/mail",
+      "originPath": "modules/mail",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/mail/.gitignore": "bac5cb305c3cbf6aa42e50e7f2c0f5331a71d70dac15f239b8ec6746afed0db5",
+        "scripts/base-cli/modules/mail/doctor.mjs": "861a2be20c051247d590cc14d173037f648666fc28ac39f826d69e38e5e2f5d9",
+        "scripts/base-cli/modules/mail/index.mjs": "085b8838752fd17fc8dfe0800b4808b322a1c9ccb921e676c507948b44e159f7",
+        "scripts/base-cli/modules/mail/LICENSE": "2f5076ef027045b9e0e72df8aa61ca8551e54b1877d531656d6e7985b2c32324",
+        "scripts/base-cli/modules/mail/live-proof/README.md": "2f6cf1d376a9356b24291765361930b502f8644a0dde4019650d5dddc7478a59",
+        "scripts/base-cli/modules/mail/live-proof/run.mjs": "e0c9a4838d6e3ab467f98a7c5be3a74f874267ced6ec025e4de26e906fb45a04",
+        "scripts/base-cli/modules/mail/package.json": "b099b75f009c5cfd41c42cccd748c8530fb6f1caf8444d3de82fbc42241e7dfe",
+        "scripts/base-cli/modules/mail/pnpm-lock.yaml": "c87e27684086028e3ca9e088e5c14f786069a4cecf0e33467577cb91dfba42e8",
+        "scripts/base-cli/modules/mail/README.md": "e23f4881540c927508d7cea43120d2f42e61e9d2ee685f8e2012e521a75f0608",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/headers.mjs": "6bee46c1edb6228b9d3df8b26ca1acbb163c36d94ecbd8e28ace1a6811095f23",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/index.mjs": "377e4a322ac7803a1c56986ac909c35c1328896cff07c0610abbad5e8f8c3f86",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/README.md": "80531ce460180b853b7db0480b4ff3d4f919fa5ccc119f71255fb1ac13485c5a",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/response.mjs": "5eb6749653c10e45c712a76029f5f87503f660315f8f3f665531f2d346f70ddf",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/contract.mjs": "33397b933e393dca874b673e45c65cbcc1c96b84eeaab10d0346e2b1230f30df",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/event-schema.mjs": "c1e971e32859954f7087412bd4044cec0a3a4d1e7b81c3b186dbd3aab3aa1fd1",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/index.mjs": "cb6165778b1265db6b68ed6fc7fdbe04f72beeea56e64d47cc8f3808b3d438e7",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/jws.mjs": "bac3ac5de7f1c65ac6a23d53e9e0508917ed9bba55c0b4011d466c117a5bfd0a",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/README.md": "b9dcfc5aeeb1ee2118486efa584b790cee9f77e1c7c95036d6ff99e48df317db",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/request.mjs": "40a8a800c8791bceb8a9d7c86976693c9fb6eeb37d0b902c0fdab93b6b5c7f71",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/serialize.mjs": "4ee46c1ccb75edfd53b94bfff67ccdb08196a3ee68576c1eb0aa2494f9d4e1f5",
+        "scripts/base-cli/modules/mail/src/adapters/resend/index.mjs": "03d292468577cb51b012b2c71c13654cd7b0af82c240ec124921ee88e05639dc",
+        "scripts/base-cli/modules/mail/src/adapters/resend/README.md": "07487907a351cde380774bed9b1f7b8d387f55f19be02990a521e25bdb09d468",
+        "scripts/base-cli/modules/mail/src/adapters/resend/response.mjs": "a0f26cafacdae8c6b8070a9ddeb7c1a68a67b47310d27932e59f425450b4b650",
+        "scripts/base-cli/modules/mail/src/adapters/resend/serialize.mjs": "724e04eba7ed515d0a137c69faf388c04061185677335076af7d9d91fdd7de94",
+        "scripts/base-cli/modules/mail/src/adapters/resend/size.mjs": "1726a4e7ce6ca1198dce3b0fcfe43e0d1e9795ca0e334824a61560318c2eabd5",
+        "scripts/base-cli/modules/mail/src/adapters/sendgrid/index.mjs": "bd94b2d46151ed35f4b0f8ba720588e4d64c899654111e114691b4c6421dfa4e",
+        "scripts/base-cli/modules/mail/src/adapters/sendgrid/README.md": "37a03786dd7cbc6d114a344389daa828334967642574f939df35219b094ad536",
+        "scripts/base-cli/modules/mail/src/adapters/sendgrid/serialize.mjs": "60d7836f94068a92283b1b66ccd27efeb78173c013fd1c9a6caaef1b928e09c0",
+        "scripts/base-cli/modules/mail/src/core/errors.mjs": "ad6d85870719774eff284328d54bdcb20cc9fb24faf790e3f1e934d19be5197c",
+        "scripts/base-cli/modules/mail/src/core/transport.mjs": "3f7bf52854e4908bb69b93032ac65cbd90bba57d03a62da1c2652ef4e470a1f8",
+        "scripts/base-cli/modules/mail/src/core/validation.mjs": "6a08d0f42f795b8e16520a3f7ea2a1accef17c91584f13f9be791c2d3e6f4f56",
+        "scripts/base-cli/modules/mail/src/development/index.d.mts": "e34cb5efff777655bbe94ed9db6875bee8825ac420f4cc3ae49d14d948b69e1b",
+        "scripts/base-cli/modules/mail/src/development/index.mjs": "d4e2cd5726291a63af51b09e1d8d6fd8212091a330f083782c84fe0c45fb8e2e",
+        "scripts/base-cli/modules/mail/src/development/outbox.mjs": "ca97ec8816a03cd606c90a37a98d3764fab809dba73411922cbd6f7a3f314376",
+        "scripts/base-cli/modules/mail/src/development/schema.sql": "45d6b03eadfe1e91737763ae85cdff74e7216f859869e34431550bba48294996",
+        "scripts/base-cli/modules/mail/src/development/viewer-html.mjs": "34104c18566538d608695a2bf0a4d4bb8e95db5bc31a68efa477d10e782cbc29",
+        "scripts/base-cli/modules/mail/src/development/viewer.mjs": "94b3096e3b8eb0e74e1cb8fe8a6feeea3f07a2b1e74329c2e31ca6980c66c8bd",
+        "scripts/base-cli/modules/mail/src/doctor/common.mjs": "09d55a9065b133ca5e3c64e35a652cac6c5220cd1f130328c9014f994ebd1e23",
+        "scripts/base-cli/modules/mail/src/doctor/dns.mjs": "dbbd30abedf91cbf041597be0016d8f308f86951685161af89eeee1e99a9450e",
+        "scripts/base-cli/modules/mail/src/doctor/index.mjs": "bc7e27eb1066b48b0c10bf0d874e858016675124e87f9795b04aa90cd5a11860",
+        "scripts/base-cli/modules/mail/src/doctor/probe.mjs": "8f784edc9b8b1d28543471a406bfb7539db0f4070cdd24065798804012b735c0",
+        "scripts/base-cli/modules/mail/src/doctor/README.md": "03fbc37879c24a39d864147142b3474ade2f3611a3bc9343be214f2280619e14",
+        "scripts/base-cli/modules/mail/src/doctor/receive.mjs": "c113c033011d3a98c4407c5d7bb5a1f7130de088620a03d36d9087fc536a24c7",
+        "scripts/base-cli/modules/mail/src/doctor/records.mjs": "f5a8f43ab1d3e5a125056f34068380f7634ed178b238937eac26c92b67c686b1",
+        "scripts/base-cli/modules/mail/src/events/d1-schema.sql": "c18a168f27d6994d2930730e775422d65cb97023f5550cdccc2d95fdf64440b1",
+        "scripts/base-cli/modules/mail/src/events/d1-storage.mjs": "994d21831a0783e9338e2cc2832c4e4936b4a8b9f962938ed947a32923305fe5",
+        "scripts/base-cli/modules/mail/src/events/index.mjs": "b59cbd19c3676bd36931929379e1a80605192ed4adb496fe39287e927b799ddc",
+        "scripts/base-cli/modules/mail/src/events/intake.mjs": "27b4092955b0e9fe58ad860f9e386d9c57656816bd9855db62022455a6bab2b4",
+        "scripts/base-cli/modules/mail/src/events/README.md": "31ca618acfcff4a9303772b31cf6ab4cec0c45d80e4ffb4eb5e1bbc8b97d8def",
+        "scripts/base-cli/modules/mail/src/events/storage.mjs": "56a1befc9d7bb799de431d7e938bf84470cd10f891c5275cb0be89704f2de32b",
+        "scripts/base-cli/modules/mail/src/events/verify.mjs": "d5ab927fdcca001bebdf1128e7cdf4c6006b49468406aff983c10957ef5bf286",
+        "scripts/base-cli/modules/mail/src/inbound/bytes.mjs": "cf6d59fff8c693a2833d0015f134d5c2559ec749aeb69b292b38585be7b7db7f",
+        "scripts/base-cli/modules/mail/src/inbound/headers.mjs": "79673d562647f4e15e7fe10ca3b13241acd5b2cc25a651a32918cee45e02235c",
+        "scripts/base-cli/modules/mail/src/inbound/index.mjs": "6defd48ac74f7a267f63d84f5b7cc8c1acfecfb26940df1a200088aa8be9f824",
+        "scripts/base-cli/modules/mail/src/inbound/mime.mjs": "743ae43126ba32aa0cbc00b3be738a7486612b220787c548455c7a778fa1803c",
+        "scripts/base-cli/modules/mail/src/inbound/multipart.mjs": "3696b971db5cf7a8c43eae84faca32123645293dcf97304382359be501d19cca",
+        "scripts/base-cli/modules/mail/src/inbound/README.md": "19f1c3448ae767095f257e2aa0bef8e19e94bd9d00fe0cd7515fb4d0d9f53eff",
+        "scripts/base-cli/modules/mail/src/inbound/resend-attachment.mjs": "a2ca74f17f0018c96b12a6bcaadc31c9b20d870687c5a2d7374de50e4c8fbff3",
+        "scripts/base-cli/modules/mail/src/inbound/resend.mjs": "7d279b6dcb1280b0c3902afc05c7356a9fbfcc015051a5c852fbfbb789a41e17",
+        "scripts/base-cli/modules/mail/src/inbound/sendgrid.mjs": "b599533e99e7912adfd10fc7343ba59e9387d783a623af0c6ac0843314265118",
+        "scripts/base-cli/modules/mail/src/sender.mjs": "1e4ec0a59b6a7a523ed929e56bc5a9433b039ff75c5611d8e1a9162d8a508a6b",
+        "scripts/base-cli/modules/mail/src/sendgrid-email/index.d.mts": "65efe2ed9647dd24ce7a7c1055cc5d8213ce94061db7597fb0460309baaa48be",
+        "scripts/base-cli/modules/mail/src/sendgrid-email/index.mjs": "4b0a9132941f0ba7a2f91b86b46b16bb0cdb5d3b9396b19ad13fb060bd02737d",
+        "scripts/base-cli/modules/mail/src/unsubscribe/index.mjs": "4cd7c05a3a885d4d16cfcb50e623fdc201fe6c6bb8d9418502b0837161e55295"
+      },
+      "modes": {
+        "scripts/base-cli/modules/mail/.gitignore": "100644",
+        "scripts/base-cli/modules/mail/doctor.mjs": "100644",
+        "scripts/base-cli/modules/mail/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/LICENSE": "100644",
+        "scripts/base-cli/modules/mail/live-proof/README.md": "100644",
+        "scripts/base-cli/modules/mail/live-proof/run.mjs": "100644",
+        "scripts/base-cli/modules/mail/package.json": "100644",
+        "scripts/base-cli/modules/mail/pnpm-lock.yaml": "100644",
+        "scripts/base-cli/modules/mail/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/headers.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/cloudflare/response.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/contract.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/event-schema.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/jws.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/request.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/messaging/serialize.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/resend/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/resend/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/resend/response.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/resend/serialize.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/resend/size.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/sendgrid/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/sendgrid/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/adapters/sendgrid/serialize.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/core/errors.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/core/transport.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/core/validation.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/development/index.d.mts": "100644",
+        "scripts/base-cli/modules/mail/src/development/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/development/outbox.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/development/schema.sql": "100644",
+        "scripts/base-cli/modules/mail/src/development/viewer-html.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/development/viewer.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/doctor/common.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/doctor/dns.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/doctor/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/doctor/probe.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/doctor/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/doctor/receive.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/doctor/records.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/events/d1-schema.sql": "100644",
+        "scripts/base-cli/modules/mail/src/events/d1-storage.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/events/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/events/intake.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/events/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/events/storage.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/events/verify.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/bytes.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/headers.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/mime.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/multipart.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/README.md": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/resend-attachment.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/resend.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/inbound/sendgrid.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/sender.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/sendgrid-email/index.d.mts": "100644",
+        "scripts/base-cli/modules/mail/src/sendgrid-email/index.mjs": "100644",
+        "scripts/base-cli/modules/mail/src/unsubscribe/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/operator-auth",
+      "originPath": "modules/operator-auth",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/operator-auth/accounts/adapter.mjs": "989fca51e86ecc80cb150661b6d6cb8b6a57f82a85eb408d1fa6286a8372a3aa",
+        "scripts/base-cli/modules/operator-auth/accounts/admin.mjs": "ad164e6b03136b67407e6f0b9ac7089dbcad505f65c07ac05c991705e17c69b1",
+        "scripts/base-cli/modules/operator-auth/accounts/credentials.mjs": "da7b4825fd3ec58fd0310083762fdad67a094b407629fe76406f7f8ce11c1517",
+        "scripts/base-cli/modules/operator-auth/accounts/editor-owner.mjs": "ed47e235de1fc52aa4b92e9ab60be5f7fbb07d8f29a5fc3d3c0b3e86702c4da7",
+        "scripts/base-cli/modules/operator-auth/accounts/index.d.mts": "bea6399182774eaa7a2269aa1575679af98ec5d3340325098edac4aac2445cc0",
+        "scripts/base-cli/modules/operator-auth/accounts/index.mjs": "f6510c4c973812299256c9ecaf5a8e6736f874400eeddf1cba98ae548e754ebd",
+        "scripts/base-cli/modules/operator-auth/accounts/native.d.mts": "ab920e7d3d35119dec57cc80ade5e8e9144e0a7a5c79880dc2b2511c52544051",
+        "scripts/base-cli/modules/operator-auth/accounts/native.mjs": "70d40b63c359838812adcf7e9e1062895222e1fd70de6319874716b38ff46951",
+        "scripts/base-cli/modules/operator-auth/accounts/oa.mjs": "84508f8c507d12d3df4cd0d683baa8bbd5a3b60522bd08d31cf49ebb92a72aa1",
+        "scripts/base-cli/modules/operator-auth/accounts/provider-control.mjs": "753a21fd66170fb3bfac89a1aa0af3a47e881be53cbcb346696c8ec8a4facb5a",
+        "scripts/base-cli/modules/operator-auth/accounts/provider-pin.mjs": "ebc398d4c8dc573fdc724c3d1a7d790b9b9fbb7e18043eafdc4400ffce84aac6",
+        "scripts/base-cli/modules/operator-auth/accounts/roles.mjs": "9c4ab78154db3c38bac35e101b3411afe610c3892f58384a84d9e8516384810e",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/dependency-setup.sql": "7b36f7e1fb0991fe3e808613d911393bbad3386ead06427082c69a48c5738108",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/dev-sessions.sql": "18754583983c09f3624038131c1b03fadecb8375dddb0a5d09c449a4238ce298",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/domain-rules-step-up.sql": "e41c7f1381f547582148cdf247b521d7f166461ab24058ace95acdf21839e815",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/invitation-cancellation.sql": "2130793483660155aaa1851b6111e51a7aeaf1f8ceb86d467d42ba684c35b562",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/operator-auth.sql": "389e6fc3201a73ab5e7280bbe4fdb793b652b84f157e444bab48cc3c25eb8c41",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/provider-control.sql": "f19cc7a792538a8ff36d87760a3cad58fccab0316984488d1834af14fbf37cfe",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/provider-pins.sql": "f0cfb6b3740869fd098ee449efb25807f8b1ef51c353fd07bafeb00ce38aeb63",
+        "scripts/base-cli/modules/operator-auth/accounts/settings-page.mjs": "3036524d91e838e63654748b6fe0c8671c8590bc6632eb9990fc2b518e1bbcc7",
+        "scripts/base-cli/modules/operator-auth/accounts/store.mjs": "c6ea4f85cc62bbe9c4d0827a99df1051755be5c1a11498f2017534d37e43ad4a",
+        "scripts/base-cli/modules/operator-auth/branding.mjs": "fc88270b035fcf5a44bbc8383a1939d89742189c4d410c1ca825d9af3e2f85cb",
+        "scripts/base-cli/modules/operator-auth/config.mjs": "0f57f69f3acc16633bf59950c6ead79121623b8cbc9f6883748add089dcc0c9e",
+        "scripts/base-cli/modules/operator-auth/conformance/index.d.mts": "b8e9b4a51bf2b0f9c20eaf5c01902d763f6ea652adc5c7c600da69d2542e7055",
+        "scripts/base-cli/modules/operator-auth/conformance/index.mjs": "f5212253274fd56bea57442604c5bd2a1ae39769704fd2b88befae02b7586bc3",
+        "scripts/base-cli/modules/operator-auth/conformance/presentation.mjs": "5626e1c96f43c41dfe5ff8d15d0b98e4cd0c1965cb2693968b50ae1295671606",
+        "scripts/base-cli/modules/operator-auth/conformance/README.md": "62b9e2dea277cd62ba0ddfd0ec9246bab7347de0d6c367971af209dae03163e6",
+        "scripts/base-cli/modules/operator-auth/crypto.mjs": "c9a843518d9223ec91698060bacd5a44cd0c4361adaa6b09c05be69f11a828b8",
+        "scripts/base-cli/modules/operator-auth/dev-admission.d.mts": "4fa20898bba75ecf5a09005fd4ea3ae520f8a43b4b2cca5ecb5069443cd72d1d",
+        "scripts/base-cli/modules/operator-auth/dev-admission.mjs": "d8c59cea293b24364961dc0a9a1f2bfb615ffee73cd48507147f37b577cc0ef8",
+        "scripts/base-cli/modules/operator-auth/dev-gate.mjs": "7b8e04432fe3cd467a113f4568e7fb1dc666043a63f3e4872617f459f794712d",
+        "scripts/base-cli/modules/operator-auth/dev/badge.mjs": "c38dfaaa40abf492c857d1d5596e484728d118e4219e1b7cf8f59c48ae8a5f5d",
+        "scripts/base-cli/modules/operator-auth/dev/index.d.mts": "7bd9b7a4082d367a8fb9f330906d97e647f05977491ebf3abbdd6940ff02821c",
+        "scripts/base-cli/modules/operator-auth/dev/index.mjs": "c5fd4267455f1e106e34b820b68e06dd09a5a58dca59c368b1ba847720668e0d",
+        "scripts/base-cli/modules/operator-auth/dev/personas.mjs": "888afa951b9520376cd1b0cdbe13e75b002213c368be26652e514eca0ca2e485",
+        "scripts/base-cli/modules/operator-auth/dev/sign-in-as.d.mts": "e566a2c11c117ee408c3a4203326eecea4805478894f705a19f1c6edb08df992",
+        "scripts/base-cli/modules/operator-auth/dev/sign-in-as.mjs": "c41b8030fc95b3fa401976322fb433ad547ff659471d5d5344eb120849e9b34a",
+        "scripts/base-cli/modules/operator-auth/docs/native-accounts.md": "068f1c664d3e6ac55942f2ea0db5791dd9656b3607b456aacb69c8c8480d701c",
+        "scripts/base-cli/modules/operator-auth/docs/README.md": "098a5dfc2f761b962a0dae818a6130931789efe34376cc4efbd92cfc50d6fb2e",
+        "scripts/base-cli/modules/operator-auth/docs/tanstack-start.md": "52557d15e2c9840fc92d0ef148d9f7f67ba7f5d718eabd5b7dbb80ab8dbff9e1",
+        "scripts/base-cli/modules/operator-auth/docs/vite-spa.md": "ba684430f1a5adeae8bb7c28d02ca11a95a666242048a33256ab427d8fbce781",
+        "scripts/base-cli/modules/operator-auth/errors.mjs": "393de2f6a068fc32d0904e238e88d6fae90576b197cca463da8d7dfabef36f47",
+        "scripts/base-cli/modules/operator-auth/http.mjs": "eb95dcb02bc2e2c4729f60727ba7e7a6a4dc9733b533a3e76f205e709bd0201d",
+        "scripts/base-cli/modules/operator-auth/identity/admission.mjs": "a9247a655bf71c606cb1a9a3eae97202f7e4cde8695252f06ab4dff151e1dd39",
+        "scripts/base-cli/modules/operator-auth/identity/after-confirm.mjs": "cb43ccb5fdb90ad1739ac581d5deb6b15fd4e490f91a658c06693d7e8f83b2d4",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/confirmation.mjs": "20e3d8e91bb3562801abf762d84e93629c01469b89e646320e232946793e1499",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/index.d.mts": "0c6209f3f74a0b483f428d5a457b8f9fa60c1ed8249b819f0098603947353f97",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/index.mjs": "eadf57db13711637de084d763ad4fa2bfcc3c7b5896e33665bb0767112eefb2b",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/message.mjs": "dcbd0eef8f8bac023235162b079945441daab3e0b27541f4738ba15c3ebebbec",
+        "scripts/base-cli/modules/operator-auth/identity/index.d.mts": "5c7b8c2bf70f7a1e57dd53110ab88e4be8a46297d8838405763a3e95870a0b88",
+        "scripts/base-cli/modules/operator-auth/identity/index.mjs": "0b68a78d59ecf553a1cacc182e280071f9554b37271249cfc037afcbf2d54cfb",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/client-auth.mjs": "061ac35699976c075b120891f7eacb4b1c893b9081faff1e5b3bd0a5834d97ef",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/config.mjs": "da65b4a181b68f5cc703af6d9702db9851efe81cfefe25ef9988790f3debac8e",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/crypto.mjs": "968787aa4d88b2d5323ef55dce0755d50e32502a6753505eaf3f6a0298078ff8",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/errors.mjs": "09b4452714fdbd7382d1ce71162c17cf41fd7a3e6c2ea74be768a156ec1e138d",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/index.d.mts": "e4b8e2a583daf21e024355c77f5399c0d7184aff69b81cd1266681de05f91922",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/index.mjs": "18c97a2f0283a154c27cb985d1cb52dbedf30b190be42a3a0aeaf92c43876c87",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/jwt.mjs": "b66750270020887f31339122c08ee9a55a7c6057486777e629d18bf7678d8562",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/network.mjs": "fabd93891da5a2d90ca6a4a97ea56f5cad07cdb4390aacfe1e9eda8f1ec31130",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/presets.mjs": "8fdfa82f855de54cd984ff700a396a2a89c870f724faeaa4f74a6dcd131c240c",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/README.md": "580fd879a529579d717bdf75da42b9f4c7f0696f06edfcb21e5c99328d99af5d",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/schema/oidc.sql": "f879fb86b079e591dfe4a8513752a8e0394e252b940aa35d3f7430f27b7382c6",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/store.mjs": "9395f0d0a2a7dd23e8ee59c819a65583510a0dbd5c230541751cda121b99a9a3",
+        "scripts/base-cli/modules/operator-auth/identity/principal.mjs": "6b949a826dab8f63d70da4603e4da9d50d9071faf0e18684a66f86beec63ab03",
+        "scripts/base-cli/modules/operator-auth/index.d.mts": "1c9810201965c2500de2a35312312b40d9e06c8b1c5b3f7243c86ee3a7dd631c",
+        "scripts/base-cli/modules/operator-auth/index.mjs": "85d9d8e3219b72f574f762800767728f9e930788842a9b2fef80fd6fd5564b13",
+        "scripts/base-cli/modules/operator-auth/input.mjs": "0b668bdbdce75d31acc6a2918ed8131d6baeff948d91048bde9fd58fb52a91e8",
+        "scripts/base-cli/modules/operator-auth/local-cli.mjs": "b10dafbf33fc4f342e2c3c6db343afd353c3e6264208216a6155d50e71d1f19a",
+        "scripts/base-cli/modules/operator-auth/page.mjs": "7be772d9166961033d532b0141e51c4d511f45c4b0f4845b71d4433a8de43118",
+        "scripts/base-cli/modules/operator-auth/policy.mjs": "d535aba35621d333cd6faae49fc3c6cb72e1d5718741f02d363cbe3e8eaf153c",
+        "scripts/base-cli/modules/operator-auth/README.md": "7d68c35c884dcd4713cd589166f676b2be09b13613bce89dd5dfe80cc2d48c8d",
+        "scripts/base-cli/modules/operator-auth/routes.mjs": "4b8682c89f66fa7e0df4c66554131fbd317f7a7c61272ff576e40e0ee13ece13",
+        "scripts/base-cli/modules/operator-auth/service.mjs": "107dadbca207bff69c562a8630e693384201408986ee176c908f56d933e81ef8",
+        "scripts/base-cli/modules/operator-auth/signin/index.mjs": "81693b4faae8dbb9ac0662ca51f54855b4ebf043d21df97cf6ec8d5ec2012315"
+      },
+      "modes": {
+        "scripts/base-cli/modules/operator-auth/accounts/adapter.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/admin.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/credentials.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/editor-owner.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/index.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/index.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/native.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/native.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/oa.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/provider-control.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/provider-pin.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/roles.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/dependency-setup.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/dev-sessions.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/domain-rules-step-up.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/invitation-cancellation.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/operator-auth.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/provider-control.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/schema/provider-pins.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/settings-page.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/accounts/store.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/branding.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/config.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/conformance/index.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/conformance/index.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/conformance/presentation.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/conformance/README.md": "100644",
+        "scripts/base-cli/modules/operator-auth/crypto.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/dev-admission.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/dev-admission.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/dev-gate.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/dev/badge.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/dev/index.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/dev/index.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/dev/personas.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/dev/sign-in-as.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/dev/sign-in-as.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/docs/native-accounts.md": "100644",
+        "scripts/base-cli/modules/operator-auth/docs/README.md": "100644",
+        "scripts/base-cli/modules/operator-auth/docs/tanstack-start.md": "100644",
+        "scripts/base-cli/modules/operator-auth/docs/vite-spa.md": "100644",
+        "scripts/base-cli/modules/operator-auth/errors.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/http.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/admission.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/after-confirm.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/confirmation.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/index.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/index.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/email-link/message.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/index.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/index.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/client-auth.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/config.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/crypto.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/errors.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/index.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/index.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/jwt.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/network.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/presets.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/README.md": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/schema/oidc.sql": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/oidc/store.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/identity/principal.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/index.d.mts": "100644",
+        "scripts/base-cli/modules/operator-auth/index.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/input.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/local-cli.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/page.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/policy.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/README.md": "100644",
+        "scripts/base-cli/modules/operator-auth/routes.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/service.mjs": "100644",
+        "scripts/base-cli/modules/operator-auth/signin/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/owner-claim",
+      "originPath": "modules/owner-claim",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/owner-claim/idp.mjs": "edb09dfeb0b66849cd84b651099d46c6420d1dc3f270446ae96595d91754d3e6",
+        "scripts/base-cli/modules/owner-claim/index.d.mts": "33fc8d1b756cb2c0a4317ea4dbc29ae704dd137f76993278859d98ae5e9ad184",
+        "scripts/base-cli/modules/owner-claim/index.mjs": "71e4b0f9f967981146dd1daa5f6b14ab30f577adac4901c8e3d47bb8a5a76991",
+        "scripts/base-cli/modules/owner-claim/page.mjs": "1e03cd872c5bf95a2672e782153b71272f90f1cea7f10ee70f971fae0432e929",
+        "scripts/base-cli/modules/owner-claim/README.md": "400d900fbe0981f9e6e27ff40b7913ebb140680bd045167cfb9ddb2a45a4c890",
+        "scripts/base-cli/modules/owner-claim/schema/idp.sql": "a870102648a2226b18a2fe8168d096389b698af88333d112fa8137e582fc2b33",
+        "scripts/base-cli/modules/owner-claim/schema/owner-claim.sql": "c3ffe653727bb4867b064dc2489df5013613f08f4b5998d2fe2b6a8485cdb815",
+        "scripts/base-cli/modules/owner-claim/transaction.mjs": "ca36db33042d7778d518b407bd9b403dd4bac82d4b89d81beeb78ed47421cca2",
+        "scripts/base-cli/modules/owner-claim/verify.mjs": "7378d81d2b453d7dea9cecb94f99ccbbbebc4455f02617146f844ed1151f7ad0"
+      },
+      "modes": {
+        "scripts/base-cli/modules/owner-claim/idp.mjs": "100644",
+        "scripts/base-cli/modules/owner-claim/index.d.mts": "100644",
+        "scripts/base-cli/modules/owner-claim/index.mjs": "100644",
+        "scripts/base-cli/modules/owner-claim/page.mjs": "100644",
+        "scripts/base-cli/modules/owner-claim/README.md": "100644",
+        "scripts/base-cli/modules/owner-claim/schema/idp.sql": "100644",
+        "scripts/base-cli/modules/owner-claim/schema/owner-claim.sql": "100644",
+        "scripts/base-cli/modules/owner-claim/transaction.mjs": "100644",
+        "scripts/base-cli/modules/owner-claim/verify.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/portability",
+      "originPath": "modules/portability",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/portability/catalogue.mjs": "684e1e4471eea48a9b15d7f5e58ea575f2e93403966cc79e0a5d3ed710552c74",
+        "scripts/base-cli/modules/portability/cli-options.mjs": "fe6f2202e9f1571ca9a040e2cf7e393c63dc4c979045709da9b3a9f341ed71ba",
+        "scripts/base-cli/modules/portability/cli.mjs": "cfeea55c0ae9cc22de0ad1aa438385cc58a380e27aa0a9f0e92b9db5ad75afd3",
+        "scripts/base-cli/modules/portability/copies.mjs": "b17c9429bff65d4d86437284860340694705a5bb8d67fded3dff5d87d3f4c2a1",
+        "scripts/base-cli/modules/portability/dev-data.mjs": "2627e3e19d677b3aee90917e40ec24f3ba3b5ae63b7052e0ff2103e1d8101b79",
+        "scripts/base-cli/modules/portability/diff.mjs": "39535327c3aab2ca4231e26d086a8415f6ced81b4bf24a56b5a0b37eb8737e98",
+        "scripts/base-cli/modules/portability/export.mjs": "49553048e0f2b41552504dae7901df813a5765f968368d2214502492d0416027",
+        "scripts/base-cli/modules/portability/files.mjs": "8c01c61f3b4e9bb4ed027b88f24847b0d502bc0feddf6eef4a1bcb0fec8a0b8f",
+        "scripts/base-cli/modules/portability/format.mjs": "7b6924a4c07695097bede2a5271cbdf9cda12c3064947ac6d14bd6b0eaeae322",
+        "scripts/base-cli/modules/portability/generated.mjs": "dbc9139b4f89f626805ce1939c545b939f209dc4c4b8c6e7f96efe242c104129",
+        "scripts/base-cli/modules/portability/hash.mjs": "b31b726749cdceb3240dc2a1a9f6a7a2b17011af07bf53e85f7b6793fe5bcac2",
+        "scripts/base-cli/modules/portability/http.mjs": "c4dad3b6ea5c2a5384262e391bfebe83365ba3f934f99050cb3efd54171af16d",
+        "scripts/base-cli/modules/portability/import.mjs": "c826b5cbd52fc0fc9f75d7ee22e74fc8265f541d0f41e878467c58aa50e1aca5",
+        "scripts/base-cli/modules/portability/index.d.mts": "c85793321cd59a10c85a6b5e032f7f3b91fade4d85655d276c677062e73b5758",
+        "scripts/base-cli/modules/portability/index.mjs": "2da7a86e587bffda3c3f3bdfee93437d9493c4cdc15f78e8a999bc0fb9868d42",
+        "scripts/base-cli/modules/portability/journal.mjs": "8d8fb95b4045d03ac4535cf175315f4566f9f8223ab2644ca6ad0b9fb1c468b7",
+        "scripts/base-cli/modules/portability/legacy-files.mjs": "371b50fb9b18fde8762559cb7ac0b68083765de5c6727b6ea2061549e36be116",
+        "scripts/base-cli/modules/portability/legacy-safety.mjs": "b951c826e6cf35737e95272ca8c5903b830a7bfe2e08df94f43db2fc2c6db1dd",
+        "scripts/base-cli/modules/portability/lines.mjs": "dda9e5466d17ddcfa78a6a227d5b0e05ddef7462516662c97bf9cb01dc57ea49",
+        "scripts/base-cli/modules/portability/payloads.mjs": "396263dd8a6a0852950147a7a2f2eebda968670614e496cd5df18b48e692531f",
+        "scripts/base-cli/modules/portability/provider-data.mjs": "5b13db72f2bcfd631a9f0fc12136f0fb65bd1b5524f543235066237b94daa36e",
+        "scripts/base-cli/modules/portability/README.md": "14450ce16c4b6f5722268a57ecbb0c8cbf3d3c6355ce1504d611e856cdff413d",
+        "scripts/base-cli/modules/portability/restore-safety.mjs": "6a291534ea7bce3a59600b9b98140a24ecdb6f627a50e557b1d9d97796fa2823",
+        "scripts/base-cli/modules/portability/schema/portability.sql": "c7db9042f6d5c571e10297c02df858ad2f3466beb4fa85649fee407cc228747b",
+        "scripts/base-cli/modules/portability/storage.mjs": "9b8e4329b69afd081ea1744aae70d3a6d342d623a47790a26e198b58278518c5"
+      },
+      "modes": {
+        "scripts/base-cli/modules/portability/catalogue.mjs": "100644",
+        "scripts/base-cli/modules/portability/cli-options.mjs": "100644",
+        "scripts/base-cli/modules/portability/cli.mjs": "100644",
+        "scripts/base-cli/modules/portability/copies.mjs": "100644",
+        "scripts/base-cli/modules/portability/dev-data.mjs": "100644",
+        "scripts/base-cli/modules/portability/diff.mjs": "100644",
+        "scripts/base-cli/modules/portability/export.mjs": "100644",
+        "scripts/base-cli/modules/portability/files.mjs": "100644",
+        "scripts/base-cli/modules/portability/format.mjs": "100644",
+        "scripts/base-cli/modules/portability/generated.mjs": "100644",
+        "scripts/base-cli/modules/portability/hash.mjs": "100644",
+        "scripts/base-cli/modules/portability/http.mjs": "100644",
+        "scripts/base-cli/modules/portability/import.mjs": "100644",
+        "scripts/base-cli/modules/portability/index.d.mts": "100644",
+        "scripts/base-cli/modules/portability/index.mjs": "100644",
+        "scripts/base-cli/modules/portability/journal.mjs": "100644",
+        "scripts/base-cli/modules/portability/legacy-files.mjs": "100644",
+        "scripts/base-cli/modules/portability/legacy-safety.mjs": "100644",
+        "scripts/base-cli/modules/portability/lines.mjs": "100644",
+        "scripts/base-cli/modules/portability/payloads.mjs": "100644",
+        "scripts/base-cli/modules/portability/provider-data.mjs": "100644",
+        "scripts/base-cli/modules/portability/README.md": "100644",
+        "scripts/base-cli/modules/portability/restore-safety.mjs": "100644",
+        "scripts/base-cli/modules/portability/schema/portability.sql": "100644",
+        "scripts/base-cli/modules/portability/storage.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/modules/release",
+      "originPath": "modules/release",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/modules/release/catalogue.mjs": "24fdf0a3802208ddd693e7b6b2951574f81e47f7b8fa257d4f141da2af5fe89e",
+        "scripts/base-cli/modules/release/export.mjs": "05f179928e53ccf657cf0225fe587fd082a8649791223db09df3ff3006c413db",
+        "scripts/base-cli/modules/release/produce.mjs": "efea87e13565155c19109c4a27725fce61359b70ed0e3e14cf2b58aac9b1012d",
+        "scripts/base-cli/modules/release/public-child-transport-state.cjs": "3c977e2358dbb76f7873c95724e2fc03b6255e8d4ed3d5c25a5036135fa131dc",
+        "scripts/base-cli/modules/release/public-child.mjs": "66bceaf1f3750623053580140604a0d5e8180af42d2d89679a744aa35b2eed1a",
+        "scripts/base-cli/modules/release/public-git.mjs": "4bf251cde65fd6f863464f6246e23e94023313841ecee7d2f0341ffb564c70f3",
+        "scripts/base-cli/modules/release/publication-scan.mjs": "66d24cc1a7870d3257303760917375cee2f50913d0ac0103e545a027c57b8f5b",
+        "scripts/base-cli/modules/release/publish-handoff.mjs": "4a49fbbaf4ad43c6bd73d3812ca1fa0dab10b37c89eb643ebecd364a90e87378",
+        "scripts/base-cli/modules/release/README.md": "73a17d5441f8cb19c760803146197b359abf7a87dec1429e3b35d066af93a787",
+        "scripts/base-cli/modules/release/source.mjs": "f972c509d4e2e207afa42de5520b54a4abd2eb031498b8e707332dc3e8c04da3",
+        "scripts/base-cli/modules/release/test-summary.mjs": "acc20d26b6f4cf38b81db8ad2cd3ba44bab8c1b801c32a7923f2ad8ccc8629ef"
+      },
+      "modes": {
+        "scripts/base-cli/modules/release/catalogue.mjs": "100644",
+        "scripts/base-cli/modules/release/export.mjs": "100644",
+        "scripts/base-cli/modules/release/produce.mjs": "100644",
+        "scripts/base-cli/modules/release/public-child-transport-state.cjs": "100644",
+        "scripts/base-cli/modules/release/public-child.mjs": "100644",
+        "scripts/base-cli/modules/release/public-git.mjs": "100644",
+        "scripts/base-cli/modules/release/publication-scan.mjs": "100644",
+        "scripts/base-cli/modules/release/publish-handoff.mjs": "100644",
+        "scripts/base-cli/modules/release/README.md": "100644",
+        "scripts/base-cli/modules/release/source.mjs": "100644",
+        "scripts/base-cli/modules/release/test-summary.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/operations",
+      "originPath": "operations",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/operations/operations.mjs": "d6ad5bd1971a5dd7d12ca73646c8b332e2ba21ef93e1de572a13673ce70c255d",
+        "scripts/base-cli/operations/project-operations.mjs": "583a32cabf96c13a53b3cd493d8dd798c8a3e1ad4ff460b33512c4a37ef43385",
+        "scripts/base-cli/operations/README.md": "9196f477458610ddbf27160d644c482eece577e018f0ce7dfec738dc6764abb9"
+      },
+      "modes": {
+        "scripts/base-cli/operations/operations.mjs": "100644",
+        "scripts/base-cli/operations/project-operations.mjs": "100644",
+        "scripts/base-cli/operations/README.md": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check",
+      "originPath": "scripts/publish-check",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/checksum_maps.py": "7e844ce56f885bd1ff2e1f8cea821c73ee3775013580ea63c585948c14bdd77f",
+        "scripts/base-cli/scripts/publish-check/cli.py": "988f950254beecce3584b192f28200f8827a377c410a6215248db2ff5ec575ea",
+        "scripts/base-cli/scripts/publish-check/command_arguments.py": "33de13be68f16d1cff4232b17706717ea904004d5896288f32901cdb328e7834",
+        "scripts/base-cli/scripts/publish-check/command_shell_quotes.py": "b94e325bfaf696efa2d10ac35c5c0dbe6dd834a81d64a07e41d4ef74ba9f1d6a",
+        "scripts/base-cli/scripts/publish-check/command_source_quotes.py": "bdbac63186cbf1fc32d0dea316928fcba7b81b6298164fe81cb5ce278aed0732",
+        "scripts/base-cli/scripts/publish-check/content_identities.py": "c29796b3daf95b24b22fdfd545924e4192ea14b3653e70680bd816c60672eba3",
+        "scripts/base-cli/scripts/publish-check/copy_identities.py": "9b2e620930bf9756939d0f013effb2eb3208dfcb8ad470d8face849359a40961",
+        "scripts/base-cli/scripts/publish-check/der.py": "1debcbeec1caa149c979e06979c8f34885264e61e21f0cccf25728674ccfc3d8",
+        "scripts/base-cli/scripts/publish-check/destination.py": "3020b0d197f3e757749eccdbb1db37abf168ed7622d79bab353138d56fed5b8d",
+        "scripts/base-cli/scripts/publish-check/env_values.py": "a2cbbe311d8e43db4bf7cc530d314fa5f7154c99f5d33ea072c24de4353aa1a4",
+        "scripts/base-cli/scripts/publish-check/font_licence.py": "95688834bd02187d508cd9d2da45fc8519cad3abcf24fe7d710ee3d4f82bce51",
+        "scripts/base-cli/scripts/publish-check/git_history.py": "e030b91f4c2d5ad967cf52d51916321ad51a37f96ad4e024e5b48339f6f71805",
+        "scripts/base-cli/scripts/publish-check/github_refs.py": "9d902ad62d0522caf01c4a04aa40d7393c4f93975f611069f71e495defdff9fb",
+        "scripts/base-cli/scripts/publish-check/gitleaks.py": "72281597b995796912339e18e0072e052566df0a30bd52fe1a68c91c9f59ecf5",
+        "scripts/base-cli/scripts/publish-check/gitleaks.toml": "1f07ccaadfd4ce6cd7056a44e5464b262cb908bd3124cd2f5b3eeeb0eac2081a",
+        "scripts/base-cli/scripts/publish-check/history_scan.py": "335a9334bf16c96afddaea7a245163e68e44e4655de85ef1c94ad2f18dd49501",
+        "scripts/base-cli/scripts/publish-check/hit_location.py": "adcd3403de1f3a3abaf57518acb14273ae06ace5a17d5136192fadfc2d5f194d",
+        "scripts/base-cli/scripts/publish-check/hygiene_config.py": "9beda373434b63499651a583b81d89aa5926126ebe02003145b3ad8d28f88920",
+        "scripts/base-cli/scripts/publish-check/hygiene_text.py": "fc40e2bee209781daedeef87c570b56a04af8c044ed121905ef1c2f43bdf10f8",
+        "scripts/base-cli/scripts/publish-check/identity-recipe.mjs": "3340971aebf0f97adaa1969f925f52bd3bb5629c08225fd216b4b06c715fb98c",
+        "scripts/base-cli/scripts/publish-check/json_identity.py": "6da083788a0a5c67b1b7fbe7d17f8eb1e19c89e3c66f180f5f35d2b91bf4b9d3",
+        "scripts/base-cli/scripts/publish-check/license-exceptions.json": "fe0216169f28b7171ced0f3139a467452eb44e8793c778e17c23e75dea989db3",
+        "scripts/base-cli/scripts/publish-check/licenses.py": "5dc4d9ff275c880295d8b2429c8589f9ecb1b4043afc2af2386697fe532c3853",
+        "scripts/base-cli/scripts/publish-check/policy.py": "02166aca1594dcd590cdfdfc402c46af9792d38298eda3d224ca19cd162457bb",
+        "scripts/base-cli/scripts/publish-check/project_identity.py": "69c66600a94565a8956459c425cf185e4fcf0d48ecddac1a7d7443521f9a2b8e",
+        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "54a757808e4f7797a8b5b36c514123b76ec07c37d5ab3d2fcea3cc116c4a4abe",
+        "scripts/base-cli/scripts/publish-check/provenance.py": "e53399a9ebd67945498d88f509a9f7b110127fb45144025cf46a21eb7f439205",
+        "scripts/base-cli/scripts/publish-check/public_base.py": "534c76c74393677c095afc201e431831d8344cc322534ee4327b3fec50847c94",
+        "scripts/base-cli/scripts/publish-check/public_hygiene.py": "d594f07f3ebee1bfdfa01e7b6b28cc7ece0ce10c8c2bc044e3db29420ea4fc7e",
+        "scripts/base-cli/scripts/publish-check/publication_config.py": "95f27857b529622706969fdd5d15da02f166adeba3d502884f28c0bac9bed732",
+        "scripts/base-cli/scripts/publish-check/publication-config.json": "9c1ef02bc815c2cb06d539410212aee1dd9f1305049769c562fbd240b22c64bd",
+        "scripts/base-cli/scripts/publish-check/README.md": "6538febbfa0497943376734ef9131d8d18a1531879d9a82f3c526e960733ee41",
+        "scripts/base-cli/scripts/publish-check/report.py": "e0fe3ae6977862c38f3e5ce019ec8fd0e750e0c2333f7a42bc578048e337c3a4",
+        "scripts/base-cli/scripts/publish-check/repository_commands.py": "757a216ca35ccb8267f756072e7de0e8a1524ce29ad1d3f49b65a08e119b6d03",
+        "scripts/base-cli/scripts/publish-check/repository_intent.py": "cd51f0fed01eab9ac94d93f14eb2fc6ddd0d1a942a37b642611c483f9c04105d",
+        "scripts/base-cli/scripts/publish-check/reviewed.py": "fb6676f8eff7098da50ccf165366305fb08afc5e24c6b733425c4ad3cb8de28e",
+        "scripts/base-cli/scripts/publish-check/source_hashes.mjs": "3b0f7090ada00c7570e6ddbd7096f69c15116261a6c823086c85ddec59df928e",
+        "scripts/base-cli/scripts/publish-check/tree_scan.py": "4c5cc73e89fc1cefb0eff65872abf535f0713c478721a8d180360659123a9991",
+        "scripts/base-cli/scripts/publish-check/trust_bundle.py": "5b13b2d51b89cbcfc8a6d9667b1af911f23ee6befbafd60afc9f5ebb7e24e871"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/checksum_maps.py": "100644",
+        "scripts/base-cli/scripts/publish-check/cli.py": "100644",
+        "scripts/base-cli/scripts/publish-check/command_arguments.py": "100644",
+        "scripts/base-cli/scripts/publish-check/command_shell_quotes.py": "100644",
+        "scripts/base-cli/scripts/publish-check/command_source_quotes.py": "100644",
+        "scripts/base-cli/scripts/publish-check/content_identities.py": "100644",
+        "scripts/base-cli/scripts/publish-check/copy_identities.py": "100644",
+        "scripts/base-cli/scripts/publish-check/der.py": "100644",
+        "scripts/base-cli/scripts/publish-check/destination.py": "100644",
+        "scripts/base-cli/scripts/publish-check/env_values.py": "100644",
+        "scripts/base-cli/scripts/publish-check/font_licence.py": "100644",
+        "scripts/base-cli/scripts/publish-check/git_history.py": "100644",
+        "scripts/base-cli/scripts/publish-check/github_refs.py": "100644",
+        "scripts/base-cli/scripts/publish-check/gitleaks.py": "100644",
+        "scripts/base-cli/scripts/publish-check/gitleaks.toml": "100644",
+        "scripts/base-cli/scripts/publish-check/history_scan.py": "100644",
+        "scripts/base-cli/scripts/publish-check/hit_location.py": "100644",
+        "scripts/base-cli/scripts/publish-check/hygiene_config.py": "100644",
+        "scripts/base-cli/scripts/publish-check/hygiene_text.py": "100644",
+        "scripts/base-cli/scripts/publish-check/identity-recipe.mjs": "100644",
+        "scripts/base-cli/scripts/publish-check/json_identity.py": "100644",
+        "scripts/base-cli/scripts/publish-check/license-exceptions.json": "100644",
+        "scripts/base-cli/scripts/publish-check/licenses.py": "100644",
+        "scripts/base-cli/scripts/publish-check/policy.py": "100644",
+        "scripts/base-cli/scripts/publish-check/project_identity.py": "100644",
+        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "100644",
+        "scripts/base-cli/scripts/publish-check/provenance.py": "100644",
+        "scripts/base-cli/scripts/publish-check/public_base.py": "100644",
+        "scripts/base-cli/scripts/publish-check/public_hygiene.py": "100644",
+        "scripts/base-cli/scripts/publish-check/publication_config.py": "100644",
+        "scripts/base-cli/scripts/publish-check/publication-config.json": "100644",
+        "scripts/base-cli/scripts/publish-check/README.md": "100644",
+        "scripts/base-cli/scripts/publish-check/report.py": "100644",
+        "scripts/base-cli/scripts/publish-check/repository_commands.py": "100644",
+        "scripts/base-cli/scripts/publish-check/repository_intent.py": "100644",
+        "scripts/base-cli/scripts/publish-check/reviewed.py": "100644",
+        "scripts/base-cli/scripts/publish-check/source_hashes.mjs": "100644",
+        "scripts/base-cli/scripts/publish-check/tree_scan.py": "100644",
+        "scripts/base-cli/scripts/publish-check/trust_bundle.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check.mjs",
+      "originPath": "scripts/publish-check.mjs",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-cli/scripts/publish-check.mjs": "68e9fe13d03ac4d47d014eeca35123ad4beb16cac4374d1b0cb7437ba527a89b"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-onboarding",
+      "originPath": "onboarding",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "scripts/base-onboarding/activity.mjs": "5da8bedb86fde163b7e9854a4d3a50c0b33e9a96978154db3f0fcb895ba95ec0",
+        "scripts/base-onboarding/adapter-auth.mjs": "b0009e8e93b0f4a73774dbf397fd3ceea244ae12f1d97c4b830f178d3b955512",
+        "scripts/base-onboarding/adapter-hosting.mjs": "a6793a8492aa0c573d0e7d76d7088ead042e7b489b569b2e5b64a7c2640fb87b",
+        "scripts/base-onboarding/adapter-labels.mjs": "d87140e8efcd1566a3c5a57f93e1ba15e716856d4e9dac83f73930ede95045eb",
+        "scripts/base-onboarding/adapter-settings.mjs": "bc04f1226f1d9be15a4424caff546a219e45335ca690e77375239baeda72930c",
+        "scripts/base-onboarding/adapter.mjs": "eaf669a875499d6d284b84042c328e0ddd9af4d70976d2f2aa0ab4e7373e1439",
+        "scripts/base-onboarding/agent-handoff.mjs": "fa148216c541ecfda8211a43c0d1ec167c7e03a355b1496bc372442e234a8835",
+        "scripts/base-onboarding/app-processes.mjs": "1785ff0fed553c5490fdecce12b55e7fd6fbc39b29e9316681aa1c0893e06b19",
+        "scripts/base-onboarding/archive-output.d.mts": "3d356b3b0306994c6acd4357ca7ae8638e5dea5246600cbf792f58ab285fcb23",
+        "scripts/base-onboarding/archive-output.mjs": "f1a63ae7083027491cdc20d6cf1d32a1f7d4c92b1c9775fcf7d2189d43b54eca",
+        "scripts/base-onboarding/command-custody.mjs": "60c2be80991054feb4c9d56205e65ed0c8d01cfbe10dec698eb312bf90faecf6",
+        "scripts/base-onboarding/command-recovery.mjs": "4b6e383f56206a4b3b9f2394b79f1921cc8e20384f5be9e9694c1bb0dde968b6",
+        "scripts/base-onboarding/commands.mjs": "1b6e83b646a715dee9fbee0b600c83f16847a1454bb94f1fb19fa1aea4c76b85",
+        "scripts/base-onboarding/dependency-approval.mjs": "98e8db6cfdf5593ce795a503a8e7a4bcb7b8ed821cc0fb06e19dfd0b4f7a407f",
+        "scripts/base-onboarding/dev-identity.mjs": "366d06e748a5a221ecb8f039f9e349f75495665c61409195f94eb14ea26d7780",
+        "scripts/base-onboarding/email.mjs": "19613fc0312e0a3da1cc4d59266d89221b68e571e2cdfe4bd255e23591d1a616",
+        "scripts/base-onboarding/failures.mjs": "aa813bdbb06f1d3afa89ff65d9ab77c74f00e4d8250943e63bd024e6a7ea21fd",
+        "scripts/base-onboarding/input-limits.mjs": "a6995a5ff62f052f48b6d3677759db235165d153644730c7489dbd4e7ce8de6a",
+        "scripts/base-onboarding/installer-inputs.mjs": "801e904d914fe65ea6a6da1d0bf91aa19014276e32e8f61632176bd2a2bc55fe",
+        "scripts/base-onboarding/launcher.mjs": "59e5926638d8f498f43ff4b080fcd7697f920b371c89b56b9c8650b68cece4bb",
+        "scripts/base-onboarding/local/build-files.mjs": "8e11de1362b96da6068ca6b9055ad74d5f76473c30fa79bd60cd520cf417284f",
+        "scripts/base-onboarding/local/build.mjs": "8768afb79d2ca9f2d38894790c78ba23a247c2576074b9f943d7dbb387a523f3",
+        "scripts/base-onboarding/local/environment.mjs": "490d97379baeecfba64c8afb008d7f65ee04877131bc1b7ec388e8daea9ed1c2",
+        "scripts/base-onboarding/local/files.mjs": "7b80d8280c492cf130ada3e0f37fed8b80aa3cb50715a3725939f296821c5014",
+        "scripts/base-onboarding/local/operation.mjs": "5f938fbd2eb550030b34da17f27e47eaa084995b79f31ef4fb67a0ff6cbd18e7",
+        "scripts/base-onboarding/local/owner.mjs": "d2eef0ae7a594af51fc733d27ca5f66e538f472f7271caaa0f2e2a8739cb188b",
+        "scripts/base-onboarding/local/process-table.mjs": "8b7c9324fc1fb11757cd0fa68e0b8214588c57e641f6039629ceea54e658133f",
+        "scripts/base-onboarding/local/recovery.mjs": "bb1c3d1f842a8c03796376100b7e3c7112671c37f47ac8b54ec0bb92ee5c6ec1",
+        "scripts/base-onboarding/local/state.mjs": "67c9e1f7352fd1f46575e8ce54b2d3d540dc045a22574a4d1c6c01c47a731a12",
+        "scripts/base-onboarding/metadata.mjs": "5dba3f1c9e6c72cf89e52f2c0e4cc1c7a06295e2841c7b0800d865baf24a92ce",
+        "scripts/base-onboarding/operator-install.mjs": "933ca8cc3689586a43227d51ae3672d3c37821e8edbb207289d9be8bf887a87d",
+        "scripts/base-onboarding/operator-installer.mjs": "7802777542ea69ffe63338b40fc62b639b0338910d6e32e031b2e8fec4bc5efd",
+        "scripts/base-onboarding/operator-prerequisites.mjs": "04dd690833fc14c1c506ac88d32ee4f3c70eda0828198a192543c2e3256c0c10",
+        "scripts/base-onboarding/package.json": "426a264b8a8d6ec12549ebaf5e9f013ab49e710053c0404431e229e5bf1ca34f",
+        "scripts/base-onboarding/prefill.mjs": "b5977c83e7c2ab3d36ac73cf95ab2204936c7fbaff9eb55187d29a85feb9b80b",
+        "scripts/base-onboarding/private-files.mjs": "d164b1513e8f7585b100066f964f022d4db810a4e97756463e7cf87c11e78378",
+        "scripts/base-onboarding/private.mjs": "6b974afe918c709dabfd5ce2c90ce0743f500dcf7f1a98f5d34f19fcd5452526",
+        "scripts/base-onboarding/process-cleanup.mjs": "b82c3706fb801c4a0b81fbf92be8e117ec4a530567e872993b545a134958be33",
+        "scripts/base-onboarding/process-diagnostics.mjs": "1d5b7efc73a64845a4f02202885ff4a06009e7a2e1cbac6e3f40aa38007d5284",
+        "scripts/base-onboarding/process-scope.mjs": "14906360603414b95a1d3d5beded2115a9fa9613e01655740016954f777268ed",
+        "scripts/base-onboarding/process-table.mjs": "bd91963a9e6f012805b723fa63fa83b9c81393bb6c781f8d668ed7cbcef0f224",
+        "scripts/base-onboarding/process-tree.mjs": "ad72d744fd4163b4dac4a53e564377adf3b1aa00f82dda4763534a736e721092",
+        "scripts/base-onboarding/production-modules.mjs": "b4eba2d375b7db1ee80c2091e63cf4406ae1c0d70b8a4ed199817d64191f6feb",
+        "scripts/base-onboarding/production-options.mjs": "5e2841e072b53facf6e292f51e4a3400f375aed8eb05a0882e6a1b70e381aae6",
+        "scripts/base-onboarding/production-runtime.mjs": "757e28be8d001a9d8488b2b8c5c5b55fc8249c33320f4e91208cd7ab7f93cfbd",
+        "scripts/base-onboarding/providers.mjs": "a92e23179d8a941a1b191f414536ffc67121274a2f7ef6bb53bf95ab0364ee18",
+        "scripts/base-onboarding/queue.mjs": "f749e36e0512e14a157f9a4993c3430a808782f9fe57503f46c8d9d0e449528e",
+        "scripts/base-onboarding/queued-entry.mjs": "5541efe0c0349db508eb8b2e9aee86902944960223648a0c6008391053cc652e",
+        "scripts/base-onboarding/readiness.mjs": "9ccb41a87cf35a1e0f3f653119bf00a97a034e1982c83675d46c855bac11cbea",
+        "scripts/base-onboarding/README.md": "fa4d898237b3b16ed02e482401beea6e46f33bb803a4d923b2777041ea65161b",
+        "scripts/base-onboarding/redaction-jwt.mjs": "a2149ea07ab9ad718a730ced41c2268564c664d35840d26d2fc00031817cd922",
+        "scripts/base-onboarding/redaction.mjs": "5807c2d5b2bc454d5bd9ad61fc39508e7d84a3b5deef05323b53d29cc7face6c",
+        "scripts/base-onboarding/schema/dependencies.mjs": "4bfc30fa75029db2727a9d1fb095d4969dc756c5317ac55ce768202bb869e2b7",
+        "scripts/base-onboarding/schema/json-schema.mjs": "ed601a8f68d25769ff3706a90f69f1a9e18dd6eb4b3b5f81a18b7cd0dcfc8fa3",
+        "scripts/base-onboarding/schema/setup-validation.mjs": "1de5a2f31cdcd9dc1590f363aa47afa5b1882b9b6920935852ce0ed021f28361",
+        "scripts/base-onboarding/schema/SETUP.schema.json": "73e9238b4cec48821b614f8bc8ffb8e6c367deeccb35d510e35d95a1075b1099",
+        "scripts/base-onboarding/secrets.mjs": "16c967bdb8f6be41091ad4ec12a507b60a737a73703c575d6075ef1745d74007",
+        "scripts/base-onboarding/server.mjs": "d390f2b9217a8f8106b066666460ff731364fd830010996870fdf5d4bc8db90a",
+        "scripts/base-onboarding/setup-manifest.mjs": "589070a19b5be31f07add8b811ef11ece594b4b66a72538b6ee72ff5ad9f6729",
+        "scripts/base-onboarding/state.mjs": "b7c0dc812f2e573a392c8da7af4829d1709546023ff5e5e39245b07a687473b7",
+        "scripts/base-onboarding/theme-files.mjs": "a3c4a7b55aa8727af200f7120edf1f7d252a10e8c9bde08139e8eab3698b1a19",
+        "scripts/base-onboarding/theme.mjs": "98b5c33854a044dd1c04a4029524ea86911e60a7305c3a9ca0d9263129ca345c",
+        "scripts/base-onboarding/ui/activity.js": "e9a354b4987df90fd6dab734bc540ebe353a3ec4ee0d1a48348928fa61f30d21",
+        "scripts/base-onboarding/ui/address-client.mjs": "22d9177e8d0888f340a50fa2d43e555f5e60d406778e180a7085cec749564279",
+        "scripts/base-onboarding/ui/app.js": "b44746e75ca7a4d67c56891639411fd6c958cd64a0ce5c542578e54c4c17db26",
+        "scripts/base-onboarding/ui/index.html": "7e4f45f5c859f54ab43f7b3312371ddedff7bda713930ed175e48db10a10f4c7",
+        "scripts/base-onboarding/ui/model-core.mjs": "75016783325a2d5d4107cea6371c24062dc705459568195da01aa46970a0085e",
+        "scripts/base-onboarding/ui/model.mjs": "951a9203356a4a35769826a066263463f429ad88a7a019a705c08869b88352f4",
+        "scripts/base-onboarding/ui/style.css": "ab55061f70333fe3e162633003e6d2c13de6ae3685c5adaf5fc6700c8d7e7826",
+        "scripts/base-onboarding/ui/theme.css": "32e58ad46a8582f005df40900f2345779990c16acf2d8de8dc526337cb38a4ad",
+        "scripts/base-onboarding/ui/workspace-art.js": "711def24cf59028cba80a2471f5f59bf0394a7a9bdc83267d118547f3b607f17",
+        "scripts/base-onboarding/wrangler-auth.mjs": "f007c9edcad08d7fcd2d8609fcd44d88baee12aab2c6f8f59b4f086a9b35f0f0"
+      },
+      "modes": {
+        "scripts/base-onboarding/activity.mjs": "100644",
+        "scripts/base-onboarding/adapter-auth.mjs": "100644",
+        "scripts/base-onboarding/adapter-hosting.mjs": "100644",
+        "scripts/base-onboarding/adapter-labels.mjs": "100644",
+        "scripts/base-onboarding/adapter-settings.mjs": "100644",
+        "scripts/base-onboarding/adapter.mjs": "100644",
+        "scripts/base-onboarding/agent-handoff.mjs": "100644",
+        "scripts/base-onboarding/app-processes.mjs": "100644",
+        "scripts/base-onboarding/archive-output.d.mts": "100644",
+        "scripts/base-onboarding/archive-output.mjs": "100644",
+        "scripts/base-onboarding/command-custody.mjs": "100644",
+        "scripts/base-onboarding/command-recovery.mjs": "100644",
+        "scripts/base-onboarding/commands.mjs": "100644",
+        "scripts/base-onboarding/dependency-approval.mjs": "100644",
+        "scripts/base-onboarding/dev-identity.mjs": "100644",
+        "scripts/base-onboarding/email.mjs": "100644",
+        "scripts/base-onboarding/failures.mjs": "100644",
+        "scripts/base-onboarding/input-limits.mjs": "100644",
+        "scripts/base-onboarding/installer-inputs.mjs": "100644",
+        "scripts/base-onboarding/launcher.mjs": "100644",
+        "scripts/base-onboarding/local/build-files.mjs": "100644",
+        "scripts/base-onboarding/local/build.mjs": "100644",
+        "scripts/base-onboarding/local/environment.mjs": "100644",
+        "scripts/base-onboarding/local/files.mjs": "100644",
+        "scripts/base-onboarding/local/operation.mjs": "100644",
+        "scripts/base-onboarding/local/owner.mjs": "100644",
+        "scripts/base-onboarding/local/process-table.mjs": "100644",
+        "scripts/base-onboarding/local/recovery.mjs": "100644",
+        "scripts/base-onboarding/local/state.mjs": "100644",
+        "scripts/base-onboarding/metadata.mjs": "100644",
+        "scripts/base-onboarding/operator-install.mjs": "100644",
+        "scripts/base-onboarding/operator-installer.mjs": "100644",
+        "scripts/base-onboarding/operator-prerequisites.mjs": "100644",
+        "scripts/base-onboarding/package.json": "100644",
+        "scripts/base-onboarding/prefill.mjs": "100644",
+        "scripts/base-onboarding/private-files.mjs": "100644",
+        "scripts/base-onboarding/private.mjs": "100644",
+        "scripts/base-onboarding/process-cleanup.mjs": "100644",
+        "scripts/base-onboarding/process-diagnostics.mjs": "100644",
+        "scripts/base-onboarding/process-scope.mjs": "100644",
+        "scripts/base-onboarding/process-table.mjs": "100644",
+        "scripts/base-onboarding/process-tree.mjs": "100644",
+        "scripts/base-onboarding/production-modules.mjs": "100644",
+        "scripts/base-onboarding/production-options.mjs": "100644",
+        "scripts/base-onboarding/production-runtime.mjs": "100644",
+        "scripts/base-onboarding/providers.mjs": "100644",
+        "scripts/base-onboarding/queue.mjs": "100644",
+        "scripts/base-onboarding/queued-entry.mjs": "100644",
+        "scripts/base-onboarding/readiness.mjs": "100644",
+        "scripts/base-onboarding/README.md": "100644",
+        "scripts/base-onboarding/redaction-jwt.mjs": "100644",
+        "scripts/base-onboarding/redaction.mjs": "100644",
+        "scripts/base-onboarding/schema/dependencies.mjs": "100644",
+        "scripts/base-onboarding/schema/json-schema.mjs": "100644",
+        "scripts/base-onboarding/schema/setup-validation.mjs": "100644",
+        "scripts/base-onboarding/schema/SETUP.schema.json": "100644",
+        "scripts/base-onboarding/secrets.mjs": "100644",
+        "scripts/base-onboarding/server.mjs": "100644",
+        "scripts/base-onboarding/setup-manifest.mjs": "100644",
+        "scripts/base-onboarding/state.mjs": "100644",
+        "scripts/base-onboarding/theme-files.mjs": "100644",
+        "scripts/base-onboarding/theme.mjs": "100644",
+        "scripts/base-onboarding/ui/activity.js": "100644",
+        "scripts/base-onboarding/ui/address-client.mjs": "100644",
+        "scripts/base-onboarding/ui/app.js": "100644",
+        "scripts/base-onboarding/ui/index.html": "100644",
+        "scripts/base-onboarding/ui/model-core.mjs": "100644",
+        "scripts/base-onboarding/ui/model.mjs": "100644",
+        "scripts/base-onboarding/ui/style.css": "100644",
+        "scripts/base-onboarding/ui/theme.css": "100644",
+        "scripts/base-onboarding/ui/workspace-art.js": "100644",
+        "scripts/base-onboarding/wrangler-auth.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/artifact.mjs",
+      "originPath": "modules/delivery-producer/artifact.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/artifact.mjs": "1adf5deb9ead7f065d317d488d93098dab4656f7322339bc45e01c99ba4e9e14"
+      },
+      "modes": {
+        "scripts/delivery/base/artifact.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/bindings.mjs",
+      "originPath": "modules/delivery-producer/bindings.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/bindings.mjs": "5548f71b7bb32c6e6c75442f0e6cf0af9da3226aebcaf964c7702ea549e48392"
+      },
+      "modes": {
+        "scripts/delivery/base/bindings.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/capabilities.mjs",
+      "originPath": "modules/delivery-producer/capabilities.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/capabilities.mjs": "5e4db1f4428f107c91b51be3c9c18e7757d7e23574dd977a872f6944abd32a1d"
+      },
+      "modes": {
+        "scripts/delivery/base/capabilities.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/cli.mjs",
+      "originPath": "modules/delivery-producer/cli.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/cli.mjs": "5d60954f6b03216613d17ec0d19464c339ce3a8a441c7972bf3f80ceea4f7ad5"
+      },
+      "modes": {
+        "scripts/delivery/base/cli.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/declarations.mjs",
+      "originPath": "modules/delivery-producer/declarations.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/declarations.mjs": "a1da486ff5ddd563a0fece919d30dc5a8d053080c75d9f10b361626b2636a772"
+      },
+      "modes": {
+        "scripts/delivery/base/declarations.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/export.mjs",
+      "originPath": "modules/delivery-producer/export.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/export.mjs": "d6887f6adc6da41e89ce8c09f175373a5c9d5fef8dc2f92456ddec3bc4f35933"
+      },
+      "modes": {
+        "scripts/delivery/base/export.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/generators/integration.mjs",
+      "originPath": "modules/delivery-producer/generators/integration.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/generators/integration.mjs": "ec9689f03b339466ee20c4a77da5227ba39789cc3de52d33687127148d4889f3"
+      },
+      "modes": {
+        "scripts/delivery/base/generators/integration.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/generators/managed.mjs",
+      "originPath": "modules/delivery-producer/generators/managed.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/generators/managed.mjs": "275131025f7b1810b7757053caa7439f9cd8119bfec94512c4fa4cf1ee1a5c60"
+      },
+      "modes": {
+        "scripts/delivery/base/generators/managed.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/generators/project.mjs",
+      "originPath": "modules/delivery-producer/generators/project.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/generators/project.mjs": "0145e434d6ea08e654680a64e4f32c843a19e0c16ae02c580233a0b52a3162ab"
+      },
+      "modes": {
+        "scripts/delivery/base/generators/project.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/generators/validation.mjs",
+      "originPath": "modules/delivery-producer/generators/validation.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/generators/validation.mjs": "ec5e0cdd38e4143530fd1366930b9e8e0e081a0729687926ed13a256834519a9"
+      },
+      "modes": {
+        "scripts/delivery/base/generators/validation.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/migrations.mjs",
+      "originPath": "modules/delivery-producer/migrations.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/migrations.mjs": "41650d5f2c22c0dbf8c4d8640bc89d872907828b558df4af89c4f70059d4878f"
+      },
+      "modes": {
+        "scripts/delivery/base/migrations.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/package.mjs",
+      "originPath": "modules/delivery-producer/package.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/package.mjs": "8daa16d77dfd21ea918dd896b25bcf7e67627d7bf89933e5f5719fe9093e6ca8"
+      },
+      "modes": {
+        "scripts/delivery/base/package.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/paths.mjs",
+      "originPath": "modules/delivery-producer/paths.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/paths.mjs": "1325dc10e44eccb18eef79450e46895ab5c069f0706f3aeebb28da02d9710cbe"
+      },
+      "modes": {
+        "scripts/delivery/base/paths.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/payloads.mjs",
+      "originPath": "modules/delivery-producer/payloads.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/payloads.mjs": "da3a9d09860c33bdd0b287bca9abc6210b12d13439e569d178a5b31fec563ee5"
+      },
+      "modes": {
+        "scripts/delivery/base/payloads.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/schema/SETUP.schema.json",
+      "originPath": "schema/SETUP.schema.json",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/schema/SETUP.schema.json": "29e51a7dd7bf1070f31de43417198135d41fa9ea36c2327d525f646e2133179b"
+      },
+      "modes": {
+        "scripts/delivery/base/schema/SETUP.schema.json": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/schema/json-schema.mjs",
+      "originPath": "schema/json-schema.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/schema/json-schema.mjs": "ed601a8f68d25769ff3706a90f69f1a9e18dd6eb4b3b5f81a18b7cd0dcfc8fa3"
+      },
+      "modes": {
+        "scripts/delivery/base/schema/json-schema.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/schema/setup-validation.mjs",
+      "originPath": "schema/setup-validation.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/schema/setup-validation.mjs": "b3999ae37e36ddef051f522abb256e51968ee3fc9d723f86d0a07297ce4abded"
+      },
+      "modes": {
+        "scripts/delivery/base/schema/setup-validation.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/spec.mjs",
+      "originPath": "modules/delivery-producer/spec.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/spec.mjs": "4526a4d0f3ec141b4afa8d848badb12a08e42d60e1b00bd1db9e63064483428b"
+      },
+      "modes": {
+        "scripts/delivery/base/spec.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/edition-authoring",
+      "originPath": "edition-authoring",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/edition-authoring/base-copies.mjs": "cbe640dddce2db44b3d1f64215adb443fb75f0079af155424e1a2d79422629a4",
+        "scripts/edition-authoring/cli.mjs": "d9bc25b361c056ec4bebe2b8e506baff95fdd06ec4d4f54a63f20d873025a89b",
+        "scripts/edition-authoring/files.mjs": "eb0b8a0b9958c4ed84735d85f5298f3d1307ef60ddee1c2a3329c6ed7af0902e",
+        "scripts/edition-authoring/manifest.mjs": "0c93bd39b1dd869b23a9d2727671fe8f9c933a9d56c7a3df1ba83c4a6f816e7b",
+        "scripts/edition-authoring/parent-comparison.mjs": "fba6c894e2fe5a48c2f8706ab74b09d1935bd7fa38049a264d3d91ff6d336003",
+        "scripts/edition-authoring/projection-lock.mjs": "bbb939b4e5bc6b5db8bf51156ec770fa30fc5df7a8fbb21a751c8ede69b1444b",
+        "scripts/edition-authoring/README.md": "26988b6b5d0426377ee85fa7d61cbbaa29ad2ad93744159a842ab448b60a6c3a",
+        "scripts/edition-authoring/release.mjs": "40acdb670edbde2eafa731f535bbe7403360a3327b576ed47355936bcc4a543a",
+        "scripts/edition-authoring/sources.mjs": "1033adaaa5f1f52053c34552c0979b6f868907f00cc1005d39fd8f845df4be09",
+        "scripts/edition-authoring/updates.mjs": "54e7246025a618ed16ee042c22dc9a8dc27b06175c30f81c4c6568992ed04799"
+      },
+      "modes": {
+        "scripts/edition-authoring/base-copies.mjs": "100644",
+        "scripts/edition-authoring/cli.mjs": "100644",
+        "scripts/edition-authoring/files.mjs": "100644",
+        "scripts/edition-authoring/manifest.mjs": "100644",
+        "scripts/edition-authoring/parent-comparison.mjs": "100644",
+        "scripts/edition-authoring/projection-lock.mjs": "100644",
+        "scripts/edition-authoring/README.md": "100644",
+        "scripts/edition-authoring/release.mjs": "100644",
+        "scripts/edition-authoring/sources.mjs": "100644",
+        "scripts/edition-authoring/updates.mjs": "100644"
+      }
+    },
+    {
+      "path": "src/modules/erasure",
+      "originPath": "modules/erasure",
+      "revision": "dd81be2c3c4abb26202cb75da8663358ae749d1f",
+      "files": {
+        "src/modules/erasure/audit.mjs": "c08bcc656363584b3ba30a99f1280241cf908d4adf642cbb68ed2c999232852a",
+        "src/modules/erasure/blobs.mjs": "1632e2e409b5f2288fac8bdd44829b94cf16f69efb5091fc4274ea0e4fd20e84",
+        "src/modules/erasure/cascade.mjs": "ce984ad3f1630bdf04cd7f15b29dac93c62c247d2ebc46c13e4e363a3e689c62",
+        "src/modules/erasure/completion.mjs": "fcc6d978039ae308c1c2e0e54caba296906c202d26f24586db5fd9a85230bd95",
+        "src/modules/erasure/declaration.mjs": "e18f4ec895f3134e0d984d4cccf5406f7710f1b190b47b6c744f9fa1ab3d1e12",
+        "src/modules/erasure/fence.mjs": "be8b2f3c0b131c0bdf3fe1099ac4f49e90b449ce2d7a4cffed0c58e6974a5323",
+        "src/modules/erasure/index.d.mts": "17b5d3e0fc10b8cf8cbc734e6a209eab26f8872bbd4cefb364f5b8e6bac59909",
+        "src/modules/erasure/index.mjs": "3db675becd9f30683c24ce9b72b43c36210643af2493c7ee2a2db6ec53978d46",
+        "src/modules/erasure/order.mjs": "feba1dc27446a68c22084a752ade64a9bbe28576fb357911955d68e7d3700531",
+        "src/modules/erasure/plan.mjs": "d4c9fb297acd3cbefb230365843c31443b4fc259b5917f74a6fb183c2393d553",
+        "src/modules/erasure/rate.mjs": "ac4ccd147cdfc35aa1b5d04a89a056643fa21abdb16dfe2fc3468f4b9e5640e9",
+        "src/modules/erasure/receipt.mjs": "87c810c360ce92fc9c2994123a3a937912693af14989c442c8945ccf0c57fc6f",
+        "src/modules/erasure/root.mjs": "9b2f24911d5ef1ddd299c8642177fd35646dc7ae303554d3237d81c4e8d1a37d",
+        "src/modules/erasure/schema/erasure-rates.sql": "84cedc143a2cb8ed642852159a2ade1381157abf811da918580ab7bc74d404b3",
+        "src/modules/erasure/schema/erasure.sql": "44fd4fac1aee4fda0d1d580373cbed9ef3da837e0186e7fe2130fb68dfceadbe",
+        "src/modules/erasure/scope.mjs": "18cb8fca91c4d8bb7289ac3461b94d862133c57de702678f0899f24f81bc81c0",
+        "src/modules/erasure/sql.mjs": "9df68070ed93da0466ec4ee2354172323707f0d56b939143be88987ef95832c9",
+        "src/modules/erasure/verification.mjs": "15b6a1e5af57066d719932a82fca181cc9e385f5f77c9ca89d9129f051518cd5"
+      },
+      "modes": {
+        "src/modules/erasure/audit.mjs": "100644",
+        "src/modules/erasure/blobs.mjs": "100644",
+        "src/modules/erasure/cascade.mjs": "100644",
+        "src/modules/erasure/completion.mjs": "100644",
+        "src/modules/erasure/declaration.mjs": "100644",
+        "src/modules/erasure/fence.mjs": "100644",
+        "src/modules/erasure/index.d.mts": "100644",
+        "src/modules/erasure/index.mjs": "100644",
+        "src/modules/erasure/order.mjs": "100644",
+        "src/modules/erasure/plan.mjs": "100644",
+        "src/modules/erasure/rate.mjs": "100644",
+        "src/modules/erasure/receipt.mjs": "100644",
+        "src/modules/erasure/root.mjs": "100644",
+        "src/modules/erasure/schema/erasure-rates.sql": "100644",
+        "src/modules/erasure/schema/erasure.sql": "100644",
+        "src/modules/erasure/scope.mjs": "100644",
+        "src/modules/erasure/sql.mjs": "100644",
+        "src/modules/erasure/verification.mjs": "100644"
+      }
+    }
+  ],
+  "ignore": [
+    "src/core/features/editor/visual-edits.json"
+  ]
+}

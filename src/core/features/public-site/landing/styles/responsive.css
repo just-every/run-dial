@@ -1,0 +1,80 @@
+/* Narrower windows: the three columns become full-width rows in source order (heading and line beside their list or drawing),
+   then the hero and the splits put their copy above their drawing, then the drawings unpin their overlapping cards so nothing
+   is cut off on a phone. */
+@media (max-width: 1180px) {
+  .dial-landing .split--host { grid-template-columns: minmax(0, 1fr); }
+  .dial-landing .split--host .split-copy { order: -1; max-width: 680px; padding-left: 0; }
+  .dial-landing .closing { grid-template-columns: minmax(0, 1fr) auto; row-gap: 32px; }
+  .dial-landing .closing-copy { grid-column: 1; }
+  .dial-landing .closing-actions { grid-column: 1; grid-row: 2; }
+  .dial-landing .closing-art { grid-column: 2; grid-row: 1 / span 2; }
+}
+@media (min-width: 701px) and (max-width: 1180px) {
+  /* Stacked under its copy, the week and its rule chips sit centred in the column instead of leaving the right side empty. */
+  .dial-landing .split--host .week-scene { justify-content: center; }
+}
+@media (max-width: 1100px) {
+  .dial-landing .columns { grid-template-columns: minmax(0, 1fr); row-gap: 88px; }
+  .dial-landing .column { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: clamp(32px, 4vw, 64px); align-items: start; }
+  .dial-landing .column > :is(.feature-list, .request-scene) { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  /* In the half-width column the booked card gives up its offset before its lines wrap. */
+  .dial-landing .booked-card { margin-left: clamp(0px, calc(100% - 310px), 54px); }
+  .dial-landing .booked-card :is(b, small) { white-space: nowrap; }
+}
+@media (max-width: 1023px) {
+  .dial-landing .hero, .dial-landing .split--invitees { grid-template-columns: minmax(0, 1fr); }
+  .dial-landing .hero-copy { order: -1; padding-top: 28px; }
+  .dial-landing .hero-title { font-size: clamp(46px, 7.6vw, 64px); }
+  .dial-landing .hero-art { justify-self: center; width: min(100%, 460px); }
+  .dial-landing .split-copy { max-width: 680px; }
+  .dial-landing .picker-scene { max-width: 760px; }
+}
+@media (max-width: 700px) {
+  .dial-landing .columns { row-gap: 72px; }
+  .dial-landing .column { display: block; }
+  .dial-landing .column > .feature-list { margin-top: 32px; }
+  .dial-landing .column > .request-scene { margin-top: 40px; }
+  .dial-landing .picker-scene { display: grid; gap: 16px; min-height: 0; padding: 8px 0 0; }
+  .dial-landing .picker-card { transform: none; }
+  .dial-landing .zone-card, .dial-landing .change-card { position: relative; inset: auto; justify-self: start; }
+  .dial-landing .zone-card { transform: rotate(-1.5deg); }
+  .dial-landing .change-card { transform: rotate(1.5deg); }
+  .dial-landing .week-scene { display: grid; gap: 20px; min-height: 0; }
+  .dial-landing .week-card { width: min(calc(100% - 14px), 440px); margin-left: 7px; transform: rotate(-1.5deg); }
+  .dial-landing .rule-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-items: stretch; margin-left: 0; gap: 10px; }
+  .dial-landing .rule-chips li, .dial-landing .rule-chips li:nth-child(n) { margin-left: 0; transform: none; padding: 10px 12px; font-size: 14px; white-space: normal; }
+  .dial-landing .closing { grid-template-columns: minmax(0, 1fr); }
+  .dial-landing .closing-copy, .dial-landing .closing-actions, .dial-landing .closing-art { grid-column: 1; grid-row: auto; }
+  .dial-landing .closing-art { justify-self: center; }
+}
+@media (max-width: 560px) {
+  .dial-landing .host-chip { row-gap: 0; margin-bottom: 24px; padding: 0 16px 0 14px; border-radius: 20px; }
+}
+@media (max-width: 480px) {
+  .dial-landing .hero-title { font-size: clamp(46px, 14vw, 56px); }
+  .dial-landing .pill--lg { min-height: 56px; padding: 0 28px; font-size: 18px; }
+  .dial-landing .actions { gap: 10px 28px; }
+  /* The stacked invitee cards line up: the picker spans the column, and the zone and plans cards share one inset from its right. */
+  .dial-landing .picker-card { width: 100%; padding: 16px 14px; border-radius: 20px; }
+  .dial-landing :is(.zone-card, .change-card) { justify-self: stretch; margin-right: 16px; }
+  .dial-landing .picker-days { gap: 4px; }
+  .dial-landing .picker-day { font-size: 14px; border-radius: 10px; }
+  .dial-landing .picker-body { grid-template-columns: minmax(0, 1fr); }
+  .dial-landing .picker-others { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dial-landing .feature-list li { gap: 16px; }
+  .dial-landing .feature-tile { width: 54px; height: 54px; border-radius: 16px; }
+  .dial-landing .feature-tile .icon { width: 30px; height: 30px; }
+  /* A smaller sun with room beside the card, so about two fifths of it shows rather than a thin crescent. */
+  .dial-landing .request-scene { padding-left: 48px; }
+  .dial-landing .request-sun { left: -4px; width: 128px; height: 128px; }
+  .dial-landing .request-windows li { flex-direction: column; gap: 0; }
+  .dial-landing .booked-card { margin-left: -20px; margin-right: 0; }
+}
+@media (max-width: 359px) {
+  /* The narrowest phones show weekday names alone so the labels keep their gaps, and a smaller check sits clear of the time. */
+  .dial-landing .week-date { display: none; }
+  .dial-landing .week-check { top: -30px; right: -22px; width: 36px; height: 36px; border-width: 3px; }
+  .dial-landing .week-check .icon { width: 20px; height: 20px; }
+}

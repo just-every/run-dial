@@ -1,0 +1,19 @@
+import type { Answers } from "./answer-retention";
+export type ConfirmationInput = { nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: Answers };
+/** Keep an uncertain confirmation byte-equivalent even if current questions change. */
+export class ConfirmationAttempt {
+  private input?: ConfirmationInput;
+  private uncertain = false;
+  begin(input: ConfirmationInput) {
+    this.input ??= structuredClone(input);
+    return structuredClone(this.input);
+  }
+  unknown() { this.uncertain = true; }
+  refuse(status: number, code?: string) {
+    const knownRefusal = status >= 400 && status < 500 && code !== undefined && ["invalid_answers", "booking_nonce_not_found", "booking_nonce_expired", "booking_unavailable", "slot_taken", "slot_unavailable", "rate_limited", "invalid_request", "event_not_available"].includes(code);
+    if (this.uncertain || !knownRefusal) { this.unknown(); return false; }
+    this.input = undefined;
+    return true;
+  }
+  get pending() { return this.input !== undefined; }
+}

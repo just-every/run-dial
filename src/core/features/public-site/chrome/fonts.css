@@ -1,0 +1,64 @@
+/* Figtree (SIL Open Font License 1.1), self-hosted from ../fonts/figtree with its LICENSE.txt. Vite emits the files under /assets/,
+   so the public site makes no third-party request. One variable file per subset covers every weight from 300 to 900. */
+@font-face {
+  font-family: Figtree;
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('../fonts/figtree/figtree-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: Figtree;
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('../fonts/figtree/figtree-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Figtree Fallback: the system Arial (or its metric twin Liberation Sans) resized to Figtree's advance widths and given Figtree's
+   vertical metrics (ascent 950, descent 250, no line gap, per 1000 units), so text painted before Figtree arrives takes the room
+   Figtree will and nothing reflows when it swaps in. Arial has two weights where Figtree is variable, so each band of weights the
+   site uses gets its own scale, measured against a paragraph and a headline: up to 549 and 550-649 on Arial, 650-749 and the black
+   headline weights on Arial Bold. Each override is divided by its size-adjust, because the browser scales the overrides again. */
+@font-face {
+  font-family: 'Figtree Fallback';
+  font-style: normal;
+  font-weight: 100 549;
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+  size-adjust: 100%;
+  ascent-override: 95%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Figtree Fallback';
+  font-style: normal;
+  font-weight: 550 649;
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+  size-adjust: 101.5%;
+  ascent-override: 93.6%;
+  descent-override: 24.63%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Figtree Fallback';
+  font-style: normal;
+  font-weight: 650 749;
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 96%;
+  ascent-override: 98.96%;
+  descent-override: 26.04%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Figtree Fallback';
+  font-style: normal;
+  font-weight: 750 1000;
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 98.5%;
+  ascent-override: 96.45%;
+  descent-override: 25.38%;
+  line-gap-override: 0%;
+}

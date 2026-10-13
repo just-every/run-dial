@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "capturedAt": "2027-01-02T00:00:00.000Z",
+  "files": [
+    {
+      "name": "user-1.json",
+      "resource": "user",
+      "page": 1,
+      "size": 322,
+      "sha256": "4a6a75e18c11727f1222db6edd17ebb22beb8845a42720121f7e0bddab0b5515",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "schedules-1.json",
+      "resource": "schedules",
+      "page": 1,
+      "size": 1158,
+      "sha256": "126b53d42f4b62489d31d96dae5fe454cc6dd6ed4a34a9f6c1585a979167eb2a",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-1.json",
+      "resource": "event_types",
+      "page": 1,
+      "size": 6055,
+      "sha256": "b5cadbdd25b926f62c8390d3a9ca1df3cd1558c88683690af89acd44b87293f2",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "event_availability-1.json",
+      "resource": "event_availability",
+      "page": 1,
+      "size": 1684,
+      "sha256": "6945e5e4399bc8430a51e93b38e71c4e204af43884467829add9fc1c660d2ab0",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-1.json",
+      "resource": "scheduled_events",
+      "page": 1,
+      "size": 7207,
+      "sha256": "a8ef22405df3dca0ef8d98ed23d7758719e5335350f3f688de3708efa8e431ce",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-1.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1142,
+      "sha256": "6e120772a9a2b8f63111d0b0151e9960f236b9170aaf6bacf52e8ff0f4bfeb73",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-2.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1142,
+      "sha256": "f7d94b26068a307e6bef4ea51c1dc993d8cc58757cdd30756ec360a80c25ced1",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-3.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1142,
+      "sha256": "abb9b55cf50940a7e30e972413d0679f31d13bbeeb22734ae9a237e3c997723c",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-4.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1366,
+      "sha256": "2e9223a37593623acca6de47bbc8c0f8c7b91bead93a68a787da2e02dcb7a1ca",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-14.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1205,
+      "sha256": "a0379d60535fdd465464cc6368604397b5b57d840379191c18da2017313e4cc0",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-5.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1312,
+      "sha256": "228a8d05b44d924d202133fda260842b441419a65547b27b2b38de82ff3f51c8",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-6.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1158,
+      "sha256": "791d185af2ce4edba53039f04b775b0231396ac714177de5aba7d83b3589989c",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-15.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1148,
+      "sha256": "4fb0445633db9332e3662d7d48f84492427bfca790d111ab04a9dcb0dc4e4ec4",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-16.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 1148,
+      "sha256": "8c4d6d77d6601f03afb5b5f9cbe516a6d10ca1bb0f7514642d9e4c0243405e73",
+      "capturedAt": "2027-01-02T00:00:00.000Z"
+    }
+  ]
+}

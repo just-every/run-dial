@@ -1,0 +1,65 @@
+{
+  "collection": [
+    {
+      "event_type": "https://api.calendly.com/event_types/edges-1",
+      "availability_setting": "host",
+      "availability_rule": {
+        "uri": "https://api.calendly.com/user_availability_schedules/edges-default",
+        "timezone": "Europe/London",
+        "user": "https://api.calendly.com/users/edges"
+      }
+    },
+    {
+      "event_type": "https://api.calendly.com/event_types/edges-2",
+      "availability_setting": "host",
+      "availability_rule": {
+        "uri": "https://api.calendly.com/user_availability_schedules/edges-default",
+        "timezone": "Europe/London",
+        "user": "https://api.calendly.com/users/edges"
+      }
+    },
+    {
+      "event_type": "https://api.calendly.com/event_types/edges-3",
+      "availability_setting": "host",
+      "availability_rule": {
+        "uri": "https://api.calendly.com/user_availability_schedules/edges-default",
+        "timezone": "Europe/London",
+        "user": "https://api.calendly.com/users/edges"
+      }
+    },
+    {
+      "event_type": "https://api.calendly.com/event_types/edges-4",
+      "availability_setting": "host",
+      "availability_rule": {
+        "uri": "https://api.calendly.com/user_availability_schedules/edges-default",
+        "timezone": "Europe/London",
+        "user": "https://api.calendly.com/users/edges"
+      }
+    },
+    {
+      "event_type": "https://api.calendly.com/event_types/edges-5",
+      "availability_setting": "host",
+      "availability_rule": {
+        "uri": "https://api.calendly.com/user_availability_schedules/edges-default",
+        "timezone": "Europe/London",
+        "user": "https://api.calendly.com/users/edges"
+      }
+    },
+    {
+      "event_type": "https://api.calendly.com/event_types/edges-6",
+      "availability_setting": "host",
+      "availability_rule": {
+        "uri": "https://api.calendly.com/user_availability_schedules/edges-default",
+        "timezone": "Europe/London",
+        "user": "https://api.calendly.com/users/edges"
+      }
+    }
+  ],
+  "pagination": {
+    "count": 6,
+    "next_page": null,
+    "previous_page": null,
+    "next_page_token": null,
+    "previous_page_token": null
+  }
+}

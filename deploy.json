@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "project": "just-every/dial",
+  "compatibilityDate": "2026-09-08",
+  "compatibilityFlags": [
+    "nodejs_compat"
+  ],
+  "d1": [
+    {
+      "binding": "DB"
+    }
+  ],
+  "originVar": "APP_URL",
+  "vars": {
+    "ENVIRONMENT": "production",
+    "MAIL_PROVIDER": "sendgrid"
+  },
+  "secrets": [
+    {
+      "binding": "OWNER_EMAIL",
+      "environment": "OWNER_EMAIL"
+    },
+    {
+      "binding": "SESSION_SECRET",
+      "environment": "SESSION_SECRET"
+    },
+    {
+      "binding": "SETUP_TOKEN",
+      "environment": "SETUP_TOKEN"
+    },
+    {
+      "binding": "MAIL_API_KEY",
+      "environment": "SENDGRID_API_KEY"
+    },
+    {
+      "binding": "MAIL_FROM",
+      "environment": "MAIL_FROM"
+    },
+    {
+      "binding": "MAIL_WEBHOOK_KEY",
+      "environment": "MAIL_WEBHOOK_KEY"
+    }
+  ],
+  "queues": [
+    {
+      "binding": "JOBS",
+      "consumer": {
+        "batch_size": 10,
+        "max_retries": 3
+      },
+      "deadLetterQueue": "JOBS_DEAD"
+    },
+    {
+      "binding": "JOBS_DEAD"
+    }
+  ],
+  "crons": [
+    "* * * * *"
+  ],
+  "r2": [
+    {
+      "binding": "FILES"
+    }
+  ],
+  "durableObjects": [
+    {
+      "binding": "BOOKING_COORDINATOR",
+      "className": "BookingCoordinator",
+      "storage": "sqlite"
+    }
+  ]
+}

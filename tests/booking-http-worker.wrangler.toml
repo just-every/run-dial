@@ -1,0 +1,9 @@
+name = "dial-booking-http-test"
+main = "booking-http-worker.ts"
+compatibility_date = "2026-09-04"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-booking-http-test"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../migrations/core"

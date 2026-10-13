@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "capturedAt": "2026-02-05T00:00:00.000Z",
+  "files": [
+    {
+      "name": "user-1.json",
+      "resource": "user",
+      "page": 1,
+      "size": 339,
+      "sha256": "b41acfb2f15299586c8d218abe6c9a330b113dae455537ede453b532640f18aa",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "schedules-1.json",
+      "resource": "schedules",
+      "page": 1,
+      "size": 1124,
+      "sha256": "6af4ce4c22bedac9ae10f69d6d85ed416ee1e1197e624b28e7dc92ce64f83ec2",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "event_types-1.json",
+      "resource": "event_types",
+      "page": 1,
+      "size": 1176,
+      "sha256": "11a1f14c9a1b629a726d16c00778b6bde4326d5f8c970a48f577dbcad6a475bb",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "event_availability-1.json",
+      "resource": "event_availability",
+      "page": 1,
+      "size": 466,
+      "sha256": "7099432937401347185d57f3d1f0f04e90a489bf030e00319419bfc9b9ff2da5",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "scheduled_events-1.json",
+      "resource": "scheduled_events",
+      "page": 1,
+      "size": 4185,
+      "sha256": "f6b6ef10c0e1097e54615f6757096ae4f50dc8e546f18e05b5206661fa2224d8",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-1.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 796,
+      "sha256": "09516587958aec2913fff8414e16949d22def940495af844693126a0f0930e2b",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-2.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 798,
+      "sha256": "2420ce201786af33f8edb97df19498027c86f0ba8f9dd436433a18a38a295f96",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-3.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 857,
+      "sha256": "729487ee5ebae9445b761d01dccda292812f9048e91056de0108dec36167c983",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-4.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 856,
+      "sha256": "78ff9cfa364af2d1f3546824353d43337471390d4922f91ee999345216cf6a03",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    },
+    {
+      "name": "invitees-5.json",
+      "resource": "invitees",
+      "page": 1,
+      "size": 798,
+      "sha256": "37fab3df962b1ddff12dcd43383126c8adb4a8a405ccd43a6a1cbc8f1637eb76",
+      "capturedAt": "2026-02-05T00:00:00.000Z"
+    }
+  ]
+}

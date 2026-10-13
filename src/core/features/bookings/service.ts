@@ -1,0 +1,526 @@
+import { createOperatorBooking, recoverOperatorBooking, type OperatorBookingCreateResult } from "./operator-creation";
+import type { OperatorCreationPayload } from "./operator-creation-receipts";
+export type { OperatorBookingCreateResult } from "./operator-creation";
+import type { AvailabilityService } from "../availability";
+import { toPublicEventType, type EventTypeRecord, type EventTypesService } from "../event-types";
+import { toPublicProfile, type HostProfileService, type ProfileRecord } from "../host-profile";
+import { createOpaqueToken, deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
+import { createId, nowIso } from "../../shared/ids";
+import { isCanonicalIanaTimeZone } from "../../shared/scheduling";
+import type { RuntimeEnvironment } from "../../shared/runtime-env";
+import { hostDateForInstant } from "../availability";
+import { BookingsRepository } from "./repository";
+import { reconcileCalendarChange, type CalendarReconciliationChange } from "./calendar-reconciliation";
+import { ManageCapabilityService } from "./manage-capability";
+import type { BookingConfirmation, BookingEmail, BookingNonce, BookingRecord } from "./types";
+import { validateInvitee } from "./types";
+import { bookingIcs, initialBookingIcs } from "./calendar-file";
+import { reconcileDeletionProbe, type DeletionReconciliationDependencies } from "./deletion-reconciliation";
+import { bookingCancellationMail, bookingChangeHtml, bookingConfirmationMail, formatTimeRange } from "../delivery/mail";
+
+const nonceLifetimeMs = 30 * 60 * 1000;
+const manageTokenLifetimeMs = 90 * 24 * 60 * 60 * 1000;
+
+export type BookingSelectionResult =
+  | { kind: "issued"; nonce: BookingNonce }
+  | { kind: "not_found" | "slot_invalid" | "calendar_unavailable" | "invalid_timezone" };
+export type BookingConfirmationResult =
+  | { kind: "created"; booking: BookingConfirmation }
+  | { kind: "replayed"; booking: BookingConfirmation }
+  | { kind: "invalid_nonce" | "expired_nonce" | "slot_invalid" | "calendar_unavailable" | "invalid_answers" | "payload_mismatch" | "slot_taken" | "blocked" };
+export type PublicSelectionLookupResult =
+  | {
+    kind: "found";
+    selection: {
+      nonce: string;
+      expiresAt: string;
+      selection: { startAt: string; endAt: string; hostTimezone: string; inviteeTimezone: string };
+      event: ReturnType<typeof toPublicEventType>;
+      host: ReturnType<typeof toPublicProfile>;
+    };
+  }
+  | { kind: "not_found" | "expired" };
+
+export class BookingsService {
+  constructor(
+    private readonly repository: BookingsRepository,
+    private readonly availability: AvailabilityService,
+    private readonly profiles: HostProfileService,
+    private readonly eventTypes: EventTypesService,
+    private readonly runtime: RuntimeEnvironment,
+    private readonly deletions: Pick<DeletionReconciliationDependencies, "inspect" | "probes">,
+  ) {}
+
+  async issuePublicSelection(handle: string, slug: string, startAt: string, inviteeTimezone: string): Promise<BookingSelectionResult> {
+    if (!isCanonicalIanaTimeZone(inviteeTimezone) || !isIsoInstant(startAt)) return { kind: "invalid_timezone" };
+    const verified = await this.availability.verifyPublicSelection(handle, slug, startAt);
+    if (verified.kind !== "valid") return verified;
+    const rawNonce = createOpaqueToken();
+    const now = nowIso();
+    const expiresAt = new Date(Date.now() + nonceLifetimeMs).toISOString();
+    await this.repository.createNonce({
+      nonceHash: await hashToken(rawNonce, this.runtime.SESSION_SECRET),
+      purpose: "confirm",
+      eventTypeId: verified.event.id,
+      selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone },
+      expiresAt,
+      now,
+    });
+    return { kind: "issued", nonce: { nonce: rawNonce, expiresAt, selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone } } };
+  }
+
+  async getPublicSelection(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string }): Promise<PublicSelectionLookupResult> {
+    if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "not_found" };
+    const nonce = await this.repository.getNonce(await hashToken(input.nonce, this.runtime.SESSION_SECRET));
+    if (!nonce || nonce.purpose !== "confirm") return { kind: "not_found" };
+    if (nonce.consumedAt || nonce.expiresAt <= nowIso()) return { kind: "expired" };
+    if (nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "not_found" };
+    const [profile, event] = await Promise.all([
+      this.profiles.getPublicProfile(input.handle),
+      this.eventTypes.getEventType(nonce.eventTypeId),
+    ]);
+    if (!profile || !event || event.status !== "published" || event.slug !== input.slug) return { kind: "not_found" };
+    return {
+      kind: "found",
+      selection: {
+        nonce: input.nonce,
+        expiresAt: nonce.expiresAt,
+        selection: { startAt: nonce.selectionStartAt, endAt: nonce.selectionEndAt, hostTimezone: profile.timezone, inviteeTimezone: nonce.inviteeTimezone },
+        event: toPublicEventType(event),
+        host: toPublicProfile(profile),
+      },
+    };
+  }
+
+  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown }): Promise<BookingConfirmationResult> {
+    if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
+    const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
+    const nonce = await this.repository.getNonce(nonceHash);
+    const now = nowIso();
+    if (!nonce) return { kind: "invalid_nonce" };
+    if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
+    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers });
+    const profile = await this.profiles.getPublicProfile(input.handle);
+    if (!profile) return { kind: "invalid_nonce" };
+    const event = await this.eventTypes.getEventType(nonce.eventTypeId);
+    if (!event || event.slug !== input.slug) return { kind: "invalid_nonce" };
+    if (nonce.consumedAt) {
+      if (nonce.payloadHash !== payloadHash) return { kind: "payload_mismatch" };
+      const booking = await this.repository.getByConsumedNonce(nonce);
+      if (!booking) return { kind: "invalid_nonce" };
+      return { kind: "replayed", booking: this.toConfirmation(booking, profile, await this.managedTokenFromNonce(input.nonce)) };
+    }
+    if (nonce.purpose !== "confirm" || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" };
+    if (event.status !== "published") return { kind: "slot_invalid" };
+    const invitee = validateInvitee(event, { name: input.name, email: input.email, answers: input.answers });
+    if (!invitee) return { kind: "invalid_answers" };
+    if (await this.repository.isBlocked(invitee.email)) return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: "blocked" };
+    const selection = await this.availability.verifyPublicSelection(profile.handle, event.slug, input.startAt, new Date());
+    if (selection.kind !== "valid") {
+      if (selection.kind === "calendar_unavailable") return { kind: "calendar_unavailable" };
+      const occupiedStart = new Date(Date.parse(input.startAt) - event.beforeBufferMinutes * 60_000).toISOString();
+      const occupiedEnd = new Date(Date.parse(nonce.selectionEndAt) + event.afterBufferMinutes * 60_000).toISOString();
+      if ((await this.repository.listInternalClaims(occupiedStart, occupiedEnd)).length) return { kind: "slot_taken" };
+      return { kind: "slot_invalid" };
+    }
+    if (selection.event.id !== event.id || selection.slot.endAt !== nonce.selectionEndAt) return { kind: "slot_invalid" };
+    const bookingId = createId();
+    const occurrenceId = createId();
+    const manageTokenId = createId();
+    const manageToken = await this.managedTokenFromNonce(input.nonce);
+    const hostDate = hostDateForInstant(selection.slot.startAt, profile.timezone);
+    const manageTokenHash = await hashToken(manageToken, this.runtime.SESSION_SECRET);
+    const expiresAt = new Date(Date.parse(selection.slot.startAt) + manageTokenLifetimeMs).toISOString();
+    const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId });
+    const claim = await this.repository.claim({
+      bookingId,
+      occurrenceId,
+      nonceId: nonce.id,
+      nonceHash,
+      payloadHash,
+      manageTokenId,
+      manageTokenHash,
+      manageTokenExpiresAt: expiresAt,
+      event,
+      invitee,
+      selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone },
+      hostTimezone: profile.timezone,
+      hostDate,
+      occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
+      occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
+      now,
+      calendarPayload: { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType },
+      emails,
+    });
+    if (claim === "blocked" || claim === "slot_taken") {
+      return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: claim };
+    }
+    const booking = await this.repository.getById(bookingId);
+    return booking ? { kind: "created", booking: this.toConfirmation(booking, profile, manageToken) } : { kind: "slot_taken" };
+  }
+
+  async getManageBooking(token: string) {
+    const result = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
+    if (!result) return { kind: "not_found" as const };
+    if (result.status !== "active") return { kind: "expired" as const };
+    const profile = await this.profiles.getProfile();
+    return profile ? { kind: "found" as const, booking: this.toConfirmation(result.booking, profile, token) } : { kind: "not_found" as const };
+  }
+
+  async getRescheduleAvailability(token: string, week?: string, inviteeTimezone?: string) {
+    const access = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
+    if (!access) return { kind: "not_found" as const };
+    if (access.status !== "active") return { kind: "expired" as const };
+    if (access.booking.state === "cancelled" || Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
+    if (!access.booking.eventTypeId) return { kind: "not_found" as const };
+    const availability = await this.availability.listRescheduleWeek(access.booking.eventTypeId, access.booking.id, week, inviteeTimezone);
+    return availability ? { kind: "found" as const, availability } : { kind: "not_found" as const };
+  }
+
+  /** A receipt URL is bound to the public host and event route, not just its capability. */
+  async getPublicConfirmation(input: { handle: string; slug: string; token: string }) {
+    const result = await this.repository.findManageToken(await hashToken(input.token, this.runtime.SESSION_SECRET), nowIso());
+    if (!result) return { kind: "not_found" as const };
+    if (result.status !== "active") return { kind: "expired" as const };
+    const profile = await this.profiles.getPublicProfile(input.handle);
+    if (!profile || result.booking.eventSlug !== input.slug) return { kind: "not_found" as const };
+    return { kind: "found" as const, booking: this.toConfirmation(result.booking, profile, input.token) };
+  }
+
+  recoverOperatorCreation(input: OperatorCreationPayload) {
+    return recoverOperatorBooking({ repository: this.repository, runtime: this.runtime }, input);
+  }
+
+  createForOperator(input: OperatorCreationPayload): Promise<OperatorBookingCreateResult> {
+    return createOperatorBooking({ repository: this.repository, availability: this.availability, runtime: this.runtime, confirmationEmails: (email) => this.confirmationEmails(email) }, input);
+  }
+
+  async listForOperator(filters: Parameters<BookingsRepository["listForOperator"]>[0]) {
+    return this.repository.listForOperator(filters, nowIso());
+  }
+
+  async listForOperatorWithCount(filters: Parameters<BookingsRepository["listForOperator"]>[0]) {
+    const now = nowIso();
+    const [bookings, totalCount] = await Promise.all([
+      this.repository.listForOperator(filters, now),
+      this.repository.countForOperator(filters, now),
+    ]);
+    return { bookings, totalCount };
+  }
+
+  getForOperator(id: string) {
+    return this.repository.getById(id);
+  }
+
+  async cancelForOperator(id: string, operatorId: string, reason?: string) {
+    const booking = await this.repository.getById(id);
+    const profile = await this.profiles.getProfile();
+    if (!booking || !profile) return undefined;
+    const emails = await this.changeEmails(profile, booking, "booking_cancelled", reason, { actor: "an operator" });
+    return this.repository.cancel(booking, { type: "operator", id: operatorId }, reason?.trim() || undefined, nowIso(), booking.imported ? emails.filter(email => email.recipientRole === "invitee") : emails);
+  }
+
+  /** Release an imported booking the source already cancelled: frees its time and buffers and records
+   * the operator and reason in history, but sends no email, because the source already told the invitee. */
+  async releaseImported(id: string, operatorId: string, reason: string) {
+    const booking = await this.repository.getById(id);
+    if (!booking || !booking.imported) return undefined;
+    return this.repository.cancel(booking, { type: "operator", id: operatorId }, reason, nowIso(), []);
+  }
+
+  async rescheduleForOperator(input: { id: string; operatorId: string; startAt: string; inviteeTimezone: string; reason?: string; overridePublishedAvailability: boolean }) {
+    if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_timezone" as const };
+    const booking = await this.repository.getById(input.id);
+    if (!booking || !booking.eventTypeId) return { kind: "not_found" as const };
+    const selection = await this.availability.verifyOperatorSelection(booking.eventTypeId, input.startAt, { overrideNoticeAndHorizon: input.overridePublishedAvailability, overridePublishedAvailability: input.overridePublishedAvailability }, new Date(), booking.id);
+    if (selection.kind !== "valid") return selection;
+    // An unsent capability has only a hash (for example after move-in). Issue its
+    // first deliverable replacement together with the occurrence, never before it.
+    const previousTokenId = await this.repository.getActiveManageTokenId(booking.id);
+    const storedManageUrl = await this.repository.storedManageUrl(booking.id);
+    const token = storedManageUrl ? undefined : createOpaqueToken();
+    const manageCapability = token ? { previousTokenId, id: createId(), hash: await hashToken(token, this.runtime.SESSION_SECRET) } : undefined;
+    const manageUrl = storedManageUrl ?? new URL(`/manage/${token}`, this.runtime.APP_URL).toString();
+    const outcome = await this.repository.rescheduleForOperator({
+      manageCapability,
+      booking,
+      operatorId: input.operatorId,
+      reason: input.reason?.trim() || undefined,
+      selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone },
+      hostDate: hostDateForInstant(selection.slot.startAt, selection.profile.timezone),
+      occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
+      occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
+      now: nowIso(),
+      calendarPayload: { bookingId: booking.id, icalUid: booking.icalUid, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, invitee: { name: booking.inviteeName, email: booking.inviteeEmail }, location: selection.event.locationValue, locationType: selection.event.locationType },
+      emails: await this.changeEmails(selection.profile, booking, "booking_changed", input.reason, { actor: "an operator", newStartAt: selection.slot.startAt, newEndAt: selection.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl }),
+    });
+    if (outcome === "slot_taken") return { kind: "slot_taken" as const };
+    const updated = await this.repository.getById(booking.id);
+    return updated ? { kind: "rescheduled" as const, booking: updated } : { kind: "slot_taken" as const };
+  }
+
+  async markAttendance(id: string, operatorId: string, status: "attended" | "no_show", note: string) {
+    const booking = await this.repository.getById(id);
+    if (!booking) return { kind: "not_found" as const };
+    if (Date.parse(booking.occurrence.endAt) > Date.now()) return { kind: "not_ended" as const };
+    await this.repository.markAttendance(booking, operatorId, status, note, nowIso());
+    return { kind: "marked" as const, booking: await this.repository.getById(id) };
+  }
+
+  async reconcileCalendarChange(change: CalendarReconciliationChange): Promise<void> {
+    await reconcileCalendarChange({
+      repository: this.repository,
+      probes: this.deletions.probes,
+      profiles: this.profiles,
+      cancellationEmails: (profile, booking) => this.changeEmails(profile, booking, "booking_cancelled", "deleted_in_google_calendar", { actor: "the connected calendar" }),
+      reconcileUntimedDeletion: async (booking, providerEventId) => {
+        await this.deletions.probes.stage(booking.id, providerEventId, booking.occurrence.id, nowIso());
+        await this.reconcileDeletionProbe(booking.id, providerEventId);
+      },
+    }, change);
+  }
+
+  async reconcileDeletionProbe(bookingId: string, providerEventId: string) {
+    await reconcileDeletionProbe({ ...this.deletions, repository: this.repository, reconcilePresent: (event) => this.reconcileCalendarChange(event), cancel: async (booking, eventId) => {
+      const profile = await this.profiles.getProfile();
+      if (!profile) throw new Error("Host profile is required to notify a managed-event deletion");
+      await this.repository.cancel(booking, { type: "calendar_provider", id: eventId }, "deleted_in_google_calendar", nowIso(),
+        await this.changeEmails(profile, booking, "booking_cancelled", "deleted_in_google_calendar", { actor: "the connected calendar" }));
+    } }, bookingId, providerEventId);
+  }
+
+  async calendarDeletionStatus(bookingId: string) {
+    if (!await this.repository.getById(bookingId)) return undefined;
+    return this.deletions.probes.list(bookingId);
+  }
+
+  async retryCalendarDeletion(bookingId: string, providerEventId: string) {
+    if (!await this.repository.getById(bookingId)) return "booking_not_found" as const;
+    if (!await this.deletions.probes.retry(bookingId, providerEventId, nowIso())) return "probe_not_failed" as const;
+    await this.reconcileDeletionProbe(bookingId, providerEventId);
+    return "retried" as const;
+  }
+
+  async rotateManageTokenForOperator(id: string) {
+    const booking = await this.repository.getById(id);
+    if (!booking) return undefined;
+    return new ManageCapabilityService(this.repository, this.runtime).rotate(booking);
+  }
+
+  async restoreCalendarConflictForOperator(bookingId: string, conflictId: string) {
+    const booking = await this.repository.getById(bookingId);
+    if (!booking) return "booking_not_found" as const;
+    if (booking.state === "cancelled") return "booking_cancelled" as const;
+    const conflict = booking.calendarConflicts.find((entry) => entry.id === conflictId);
+    if (!conflict) return "calendar_conflict_not_found" as const;
+    if (conflict.occurrenceId !== booking.occurrence.id) return "calendar_conflict_not_current" as const;
+    if (conflict.state === "restored") return "restored" as const;
+    if (conflict.state !== "open") return "calendar_conflict_not_open" as const;
+    return (await this.repository.restoreCalendarConflict(booking, conflictId, nowIso())) ? "restored" as const : "conflict_not_found" as const;
+  }
+
+  /** A confirmation nonce already holds 256 CSPRNG bits; deriving preserves a replayable token without storing raw capability material. */
+  private managedTokenFromNonce(nonce: string) {
+    return deriveOpaqueToken(nonce, this.runtime.SESSION_SECRET, "booking-manage.v1");
+  }
+
+  async getCalendarFile(token: string) {
+    const result = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
+    if (!result) return { kind: "not_found" as const };
+    if (result.status !== "active") return { kind: "expired" as const };
+    return { kind: "found" as const, ics: bookingIcs(result.booking) };
+  }
+
+  async cancelByManageToken(token: string, reason?: string) {
+    const result = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
+    if (!result) return { kind: "not_found" as const };
+    if (result.status !== "active") return { kind: "expired" as const };
+    if (result.booking.state !== "cancelled" && Date.parse(result.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
+    const profile = await this.profiles.getProfile();
+    if (!profile) return { kind: "not_found" as const };
+    const emails = await this.changeEmails(profile, result.booking, "booking_cancelled", reason, { actor: "the invitee" });
+    const booking = await this.repository.cancel(result.booking, { type: "invitee" }, reason?.trim() || undefined, nowIso(), emails);
+    return booking ? { kind: "cancelled" as const, booking: this.toConfirmation(booking, profile, token) } : { kind: "not_found" as const };
+  }
+
+  async issueRescheduleSelection(token: string, startAt: string, inviteeTimezone: string): Promise<BookingSelectionResult | { kind: "expired" }> {
+    if (!isIsoInstant(startAt) || !isCanonicalIanaTimeZone(inviteeTimezone)) return { kind: "invalid_timezone" };
+    const access = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
+    if (!access) return { kind: "not_found" };
+    if (access.status !== "active") return { kind: "expired" };
+    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "slot_invalid" };
+    const [profile, event] = await Promise.all([this.profiles.getProfile(), access.booking.eventTypeId ? this.eventTypes.getEventType(access.booking.eventTypeId) : undefined]);
+    if (!profile || !event || event.status !== "published") return { kind: "slot_invalid" };
+    const verified = await this.availability.verifyPublicSelection(profile.handle, event.slug, startAt, new Date(), access.booking.id);
+    if (verified.kind !== "valid") return verified;
+    const rawNonce = createOpaqueToken();
+    const now = nowIso();
+    const expiresAt = new Date(Date.now() + nonceLifetimeMs).toISOString();
+    await this.repository.createNonce({ nonceHash: await hashToken(rawNonce, this.runtime.SESSION_SECRET), purpose: "reschedule", eventTypeId: event.id, bookingId: access.booking.id, selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone }, expiresAt, now });
+    return { kind: "issued", nonce: { nonce: rawNonce, expiresAt, selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone } } };
+  }
+
+  async rescheduleByManageToken(input: { token: string; nonce: string; startAt: string; inviteeTimezone: string; reason?: string }) {
+    if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_nonce" as const };
+    const access = await this.repository.findManageToken(await hashToken(input.token, this.runtime.SESSION_SECRET), nowIso());
+    if (!access) return { kind: "not_found" as const };
+    if (access.status !== "active") return { kind: "expired" as const };
+    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
+    const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
+    const nonce = await this.repository.getNonce(nonceHash);
+    const now = nowIso();
+    if (!nonce) return { kind: "invalid_nonce" as const };
+    if (nonce.purpose !== "reschedule" || nonce.bookingId !== access.booking.id || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" as const };
+    if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" as const };
+    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: "", email: "", answers: { reason: input.reason?.trim() ?? "" } });
+    const profile = await this.profiles.getProfile();
+    if (!profile) return { kind: "not_found" as const };
+    if (nonce.consumedAt) {
+      if (nonce.payloadHash !== payloadHash) return { kind: "payload_mismatch" as const };
+      const booking = await this.repository.getByConsumedNonce(nonce);
+      return booking ? { kind: "replayed" as const, booking: this.toConfirmation(booking, profile, input.token) } : { kind: "invalid_nonce" as const };
+    }
+    const event = access.booking.eventTypeId ? await this.eventTypes.getEventType(access.booking.eventTypeId) : undefined;
+    if (!event || event.status !== "published") return { kind: "slot_invalid" as const };
+    const verified = await this.availability.verifyPublicSelection(profile.handle, event.slug, input.startAt, new Date(), access.booking.id);
+    if (verified.kind !== "valid" || verified.slot.endAt !== nonce.selectionEndAt) return verified.kind === "calendar_unavailable" ? { kind: "calendar_unavailable" as const } : { kind: "slot_invalid" as const };
+    const emails = await this.changeEmails(profile, access.booking, "booking_changed", input.reason, { actor: "the invitee", newStartAt: verified.slot.startAt, newEndAt: verified.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl: new URL(`/manage/${input.token}`, this.runtime.APP_URL).toString() });
+    const outcome = await this.repository.reschedule({
+      booking: access.booking, nonceId: nonce.id, nonceHash, payloadHash, reason: input.reason?.trim() || undefined,
+      selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone: input.inviteeTimezone },
+      hostDate: hostDateForInstant(verified.slot.startAt, profile.timezone),
+      occupiedStartAt: new Date(Date.parse(verified.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
+      occupiedEndAt: new Date(Date.parse(verified.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
+      now,
+      calendarPayload: { bookingId: access.booking.id, icalUid: access.booking.icalUid, eventTitle: event.title, startAt: verified.slot.startAt, endAt: verified.slot.endAt, hostTimezone: profile.timezone, invitee: { name: access.booking.inviteeName, email: access.booking.inviteeEmail }, location: event.locationValue, locationType: event.locationType },
+      emails,
+    });
+    if (outcome === "slot_taken") return { kind: "slot_taken" as const };
+    const booking = await this.repository.getById(access.booking.id);
+    return booking ? { kind: "rescheduled" as const, booking: this.toConfirmation(booking, profile, input.token) } : { kind: "slot_taken" as const };
+  }
+
+  private async confirmationReplay(nonceHash: string, payloadHash: string, profile: ProfileRecord, nonce: string) {
+    const consumed = await this.repository.getNonce(nonceHash);
+    if (!consumed?.consumedAt || consumed.payloadHash !== payloadHash) return undefined;
+    const stored = await this.repository.getByConsumedNonce(consumed);
+    return stored ? { kind: "replayed" as const, booking: this.toConfirmation(stored, profile, await this.managedTokenFromNonce(nonce)) } : undefined;
+  }
+
+  private toConfirmation(booking: BookingRecord, profile: ProfileRecord, manageToken: string): BookingConfirmation {
+    const locationValue = booking.locationType === "google_meet" ? booking.meetingUrl ?? undefined : booking.locationValue;
+    const locationState = locationValue ? "ready" as const : "pending" as const;
+    const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
+    return {
+      event: { eventTitle: booking.eventTitle, durationMinutes: booking.durationMinutes },
+      host: { name: profile.name, timezone: booking.hostTimezone, avatarKey: profile.avatarKey },
+      occurrence: { startAt: booking.occurrence.startAt, endAt: booking.occurrence.endAt },
+      inviteeTimezone: booking.inviteeTimezone,
+      location: { label: booking.locationLabel, state: locationState, ...(locationValue ? { value: locationValue } : {}) },
+      calendarState: booking.calendarState,
+      meetingState: booking.meetingState,
+      manageUrl,
+      icsUrl: new URL(`/api/public/manage/${manageToken}/calendar.ics`, this.runtime.APP_URL).toString(),
+      state: booking.state,
+    };
+  }
+
+  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; manageToken: string; bookingId: string }): Promise<BookingEmail[]> {
+    const { profile, event, invitee, startAt, endAt, inviteeTimezone, manageToken, bookingId } = input;
+    const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
+    const location = event.locationType === "google_meet" ? "Google Meet link pending" : event.locationValue;
+    const answerDetails = event.questions.flatMap((question) => {
+      const answer = question.key ? invitee.answers[question.key] : undefined;
+      return answer === undefined ? [] : [{ label: question.label, value: Array.isArray(answer) ? answer.join(", ") : answer }];
+    });
+    const attachment = { filename: "booking.ics", contentBase64: base64(initialBookingIcs({ bookingId, eventTitle: event.title, startAt, endAt, location, createdAt: nowIso() })), contentType: "text/calendar" } as const;
+    const operators = await this.repository.listOperatorRecipients();
+    const details = {
+      hostName: profile.name, eventTitle: event.title, startAt, endAt, durationMinutes: (Date.parse(endAt) - Date.parse(startAt)) / 60_000,
+      inviteeTimezone, hostTimezone: profile.timezone, locationType: event.locationType, locationLabel: event.locationLabel,
+      locationValue: event.locationValue, calendarState: "pending",
+      inviteeName: invitee.name, inviteeEmail: invitee.email, answers: answerDetails,
+    };
+    return [
+      { to: invitee.email, recipientRole: "invitee", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), attachments: [attachment] },
+      ...operators.map(({ email: to, id, generation }) => ({ to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `New booking: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "operator" }) })),
+    ];
+  }
+
+  private async changeEmails(profile: ProfileRecord, booking: BookingRecord, template: "booking_changed" | "booking_cancelled", reason?: string, change: { actor: string; newStartAt?: string; newEndAt?: string; newInviteeTimezone?: string; manageUrl?: string } = { actor: "the invitee" }): Promise<BookingEmail[]> {
+    const changed = template === "booking_cancelled";
+    const normalizedReason = reason?.trim() || undefined;
+    const inviteeManageUrl = changed ? undefined : change.manageUrl ?? await this.repository.storedManageUrl(booking.id);
+    if (!changed && !inviteeManageUrl) throw new Error("Missing invitee manage capability for reschedule notification");
+    const startAt = change.newStartAt ?? booking.occurrence.startAt;
+    const endAt = change.newEndAt ?? booking.occurrence.endAt;
+    const mailDetails = {
+      hostName: profile.name,
+      eventTitle: booking.eventTitle,
+      startAt,
+      endAt,
+      durationMinutes: (Date.parse(endAt) - Date.parse(startAt)) / 60_000,
+      inviteeTimezone: change.newInviteeTimezone ?? booking.inviteeTimezone,
+      hostTimezone: booking.hostTimezone,
+      locationType: booking.locationType,
+      locationLabel: booking.locationLabel,
+      locationValue: booking.locationValue,
+      meetingUrl: booking.meetingUrl,
+      calendarState: "pending",
+      actor: change.actor,
+      previousInviteeTime: renderTimeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone),
+      previousHostTime: renderTimeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.hostTimezone),
+      reason: normalizedReason,
+      inviteeName: booking.inviteeName,
+      inviteeEmail: booking.inviteeEmail,
+    };
+    if (changed) {
+      const template = { kind: "booking-cancellation" as const, hostName: profile.name, actor: change.actor, ...(normalizedReason ? { reason: normalizedReason } : {}) };
+      const inviteeMail = bookingCancellationMail({ ...mailDetails, calendarState: "pending", actor: template.actor, reason: template.reason, recipientRole: "invitee", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
+      return [
+        { to: booking.inviteeEmail, recipientRole: "invitee" as const, subject: inviteeMail.subject, text: inviteeMail.text, html: inviteeMail.html, mailTemplate: template },
+        ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
+          const operatorMail = bookingCancellationMail({ ...mailDetails, calendarState: "pending", actor: template.actor, reason: template.reason, recipientRole: "operator", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
+          return { to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: operatorMail.subject, text: operatorMail.text, html: operatorMail.html, mailTemplate: template };
+        }),
+      ];
+    }
+    const inviteeMail = bookingChangeHtml({ ...mailDetails, recipientRole: "invitee", ...(inviteeManageUrl ? { manageUrl: inviteeManageUrl } : {}) });
+    return [
+      { to: booking.inviteeEmail, recipientRole: "invitee", subject: `Rescheduled: ${booking.eventTitle}`, text: inviteeMail.text, ...(inviteeManageUrl ? { manageUrl: inviteeManageUrl } : {}), html: inviteeMail.html },
+      ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
+        const operatorMail = bookingChangeHtml({ ...mailDetails, recipientRole: "operator" });
+        return { to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `Rescheduled: ${booking.eventTitle}`, text: operatorMail.text, html: operatorMail.html };
+      }),
+    ];
+  }
+}
+
+function isIsoInstant(value: string) {
+  return Number.isFinite(Date.parse(value)) && value.endsWith("Z");
+}
+
+async function hashPayload(payload: { startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown }) {
+  const source = new TextEncoder().encode(stableJson(payload));
+  const digest = await crypto.subtle.digest("SHA-256", source);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+}
+
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (typeof value === "object" && value !== null) {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function base64(value: string) {
+  let encoded = "";
+  for (const byte of new TextEncoder().encode(value)) encoded += String.fromCharCode(byte);
+  return btoa(encoded);
+}
+
+function renderTimeRange(startAt: string, endAt: string, timeZone: string) {
+  return formatTimeRange(startAt, endAt, timeZone);
+}

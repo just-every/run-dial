@@ -1,0 +1,7 @@
+const primary = ['SQLITE_OK','SQLITE_ERROR','SQLITE_INTERNAL','SQLITE_PERM','SQLITE_ABORT','SQLITE_BUSY','SQLITE_LOCKED','SQLITE_NOMEM','SQLITE_READONLY','SQLITE_INTERRUPT','SQLITE_IOERR','SQLITE_CORRUPT','SQLITE_NOTFOUND','SQLITE_FULL','SQLITE_CANTOPEN','SQLITE_PROTOCOL','SQLITE_EMPTY','SQLITE_SCHEMA','SQLITE_TOOBIG','SQLITE_CONSTRAINT','SQLITE_MISMATCH','SQLITE_MISUSE','SQLITE_NOLFS','SQLITE_AUTH','SQLITE_FORMAT','SQLITE_RANGE','SQLITE_NOTADB','SQLITE_NOTICE','SQLITE_WARNING'];
+const constraints = ['CHECK','COMMITHOOK','FOREIGNKEY','FUNCTION','NOTNULL','PRIMARYKEY','TRIGGER','UNIQUE','VTAB','ROWID','PINNED','DATATYPE'];
+export function sqliteError(cause) {
+ const code = cause.errcode ?? 1, base = primary[code & 255] ?? 'SQLITE_ERROR';
+ const extended = (code & 255) === 19 && code > 255 ? constraints[(code >> 8) - 1] : undefined;
+ return `D1_ERROR: ${cause.message}: ${base}${extended ? ` (extended: SQLITE_CONSTRAINT_${extended})` : ''}`;
+}

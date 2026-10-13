@@ -1,0 +1,20 @@
+{
+ "asOf":"2027-01-01T00:00:00.000Z",
+ "existing":{"slug":"example-1","busyStart":"2027-01-05T15:00:00.000Z","busyEnd":"2027-01-05T15:30:00.000Z"},
+ "profile":{"name":"Zoë <script> שלום","handle":"edges","timezone":"America/New_York"},
+ "eventTypes":{"count":2,"slugs":["example-1-2","example-2"],"statuses":["draft","draft"]},
+ "questions":{"count":4,"kinds":["text","textarea","single_choice","multiple_choice"]},
+ "availability":{"windows":0,"overrides":0},
+ "bookings":{"confirmed":1,"overlapping":2,"skippedEvent":1},
+ "bookingCounts":{"read":4,"toImport":1,"past":0,"cancelled":0,"severalInvitees":0,"skippedEvent":1,"overlapping":2,"invalid":0,"movedAtSource":0},
+ "counts":{
+  "profile":{"read":1,"imported":1,"changed":0,"skipped":0,"rejected":0},
+  "eventTypes":{"read":6,"imported":0,"changed":2,"skipped":4,"rejected":0},
+  "questions":{"read":5,"imported":3,"changed":1,"skipped":1,"rejected":0},
+  "locations":{"read":7,"imported":1,"changed":0,"skipped":6,"rejected":0},
+  "availability":{"read":6,"imported":0,"changed":0,"skipped":6,"rejected":0},
+  "overrides":{"read":12,"imported":0,"changed":0,"skipped":12,"rejected":0},
+  "settings":{"read":12,"imported":0,"changed":12,"skipped":0,"rejected":0},
+  "bookings":{"read":4,"imported":1,"changed":0,"skipped":1,"rejected":2}
+ }
+}
