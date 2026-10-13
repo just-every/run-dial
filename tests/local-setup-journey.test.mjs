@@ -9,7 +9,9 @@ import { browserJourney } from './local-setup/browser.mjs';
 import { devIdentityJourney } from './local-setup/dev-identity.mjs';
 import { openGateFromLink } from './dev-key.mjs';
 import { hostedExportJourney } from './local-setup/hosted-export.mjs';
+import { hostedRecords } from './local-setup/hosted-records.mjs';
 import { nativeSignIn } from './local-setup/native-signin.mjs';
+import { safeBrowserFailure } from './local-setup/evidence-safety.mjs';
 
 contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs in before hydration, resets and round-trips complete local data', async () => {
  for (const width of [1440, 390]) {
@@ -85,15 +87,46 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
 });
 
 contract('DATA-001', 'native hosted export imports through the ordinary CLI into an independent empty installation with equivalent assets and authority', async () => {
- const directory = await freshCopy(); let server;
+ const directory = await freshCopy(); let server, browser;
  try {
   await runRer(directory, ['install'], { timeout: 300_000 });
   await runRer(directory, ['setup', '--owner-email', 'hosted-owner@example.test', '--port', '15750', '--non-interactive'], { timeout: 300_000 });
   const values = await variables(directory), privateBytes = await readFile(join(directory, '.dev.vars'));
   server = await start(directory, 'preview', values.APP_URL);
+  let records;
   await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width: 1440, openUrl: server.openUrl, issuedSignInUrl: server.signInUrl, onSignedIn: async page => {
-   await hostedExportJourney(page, { origin: values.APP_URL, privateBytes, values });
+   records = await hostedRecords(page, values.APP_URL);
   } });
-  await runRer(directory, ['preview', '--stop']); await server.owned.stop(); server = undefined;
- } finally { await server?.owned.stop(); await removeCopy(directory); }
+  // Complete the source browser checks before a separate session exports and
+  // stops it. Restoration must never depend on the source coming back online.
+  browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  try {
+   await openGateFromLink(context, server.openUrl);
+   const page = await context.newPage();
+   try {
+    await page.goto(values.APP_URL + '/signin');
+    await page.locator('main[data-signin-ready="true"]').waitFor();
+    await page.getByLabel('Email address', { exact: true }).fill(values.OWNER_EMAIL);
+    const accepted = page.waitForResponse(response => response.url() === values.APP_URL + '/api/auth/magic-links' && response.request().method() === 'POST');
+    await page.getByRole('button', { name: 'Send magic link', exact: true }).click();
+    assert.equal((await accepted).status(), 202);
+    await page.getByRole('link', { name: 'Open local outbox', exact: true }).click();
+    const message = page.locator('article').filter({ has: page.getByRole('heading', { level: 2, name: 'Your sign-in link for Dial', exact: true }) }).first();
+    await message.getByRole('link', { name: 'Read message', exact: true }).click();
+    await page.getByRole('link', { name: 'Open this link', exact: true }).click();
+    await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+    await page.waitForURL(values.APP_URL + '/app');
+    assert.equal((await page.request.get(values.APP_URL + '/api/app/session')).status(), 200);
+   } catch { throw Error('Hosted export owner sign-in failed; private diagnostics omitted.'); }
+   await hostedExportJourney(page, { origin: values.APP_URL, privateBytes, values, records, stopSource: async () => {
+    await runRer(directory, ['preview', '--stop']);
+    await server.owned.stop(); server = undefined;
+   } });
+  } catch (error) { throw safeBrowserFailure('signed-in callback', 1440, error); }
+  finally { await context.close(); }
+ } finally {
+  try { await browser?.close(); }
+  finally { try { await server?.owned.stop(); } finally { await removeCopy(directory); } }
+ }
 });

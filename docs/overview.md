@@ -1,6 +1,6 @@
 # Overview
 
-Dial is a self-hosted scheduler for one business or one independent host. Clients pick a time on your booking page, and Dial puts it on your calendar, emails everyone and gives the client a private link to move or cancel it. It runs on your own Cloudflare account. Bookings are stored there, and Dial sends booking details to your own SendGrid and Google accounts, not to a service Dial's authors run. Think of it as a Calendly alternative that you own.
+Dial is a self-hosted scheduler for one business or one independent host. Clients pick a time on your booking page, and Dial records the booking, emails everyone and gives the client a private link to move or cancel it. If you connect Google Calendar, Dial also creates a calendar event. It runs on your own Cloudflare account. Bookings are stored there, and Dial sends booking details to your own SendGrid account and, when connected, Google account, not to a service Dial's authors run. Think of it as a Calendly alternative that you own.
 
 ## Who it is for
 
@@ -24,9 +24,9 @@ If nothing suits them, they can send you a request with other dates and times in
 
 **You:**
 
-1. Set up your profile, connect Google Calendar and mail, and publish an event type.
+1. Set up your profile, mail and availability, and publish an event type. Google Calendar is optional for fixed links, phone calls and in-person bookings; Google Meet requires it.
 2. Share the booking link, or embed the booking flow on your own site.
-3. When someone books, Dial checks the time against your live calendar one last time, creates the calendar event and emails you and your client.
+3. When someone books, Dial rechecks your saved schedule and existing Dial bookings, then records the booking and emails you and your client. With a connected calendar, it also rechecks live busy times and creates a calendar event; if the calendar cannot be checked, confirmation stops.
 4. Manage bookings and requests from the operator app. You can reschedule, cancel, mark attendance or create a booking for someone yourself. Filter bookings by lifecycle state, future or past start, event type, date range or failed external delivery, then search invitee names and email addresses. Add private annotations to event types, bookings and requests.
 
 Read [Your booking page](booking-page.md) for every setting, and [Calendar and email](calendar-and-email.md) for what Dial sends and reads.

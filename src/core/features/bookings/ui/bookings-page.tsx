@@ -62,7 +62,7 @@ export function BookingsPage() {
   const lastVisible = Math.min(page * bookingPageSize, totalCount);
 
   return <div className="grid gap-7">
-    <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review calendar-backed bookings, delivery state, and attendance." actions={<Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link>} />
+    <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review bookings, delivery state, and attendance." actions={<Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link>} />
     {notice ? <p role="status" aria-label="Booking update" className={noticeClassName("success", "font-semibold")}>{notice}</p> : null}
     {listError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{listError}</p> : null}
     {eventTypesError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{eventTypesError}</p> : null}

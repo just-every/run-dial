@@ -9,7 +9,7 @@ import { exported, excluded } from '../../scripts/archive/policy.mjs';
 import { spawnOwned } from '../native-process/lifecycle.mjs';
 import { openGateFromLink } from '../dev-key.mjs';
 import { anotherHostedOwner } from './hosted-authority.mjs';
-import { hostedRecords, answer } from './hosted-records.mjs';
+import { answer } from './hosted-records.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
 
 async function inspect(path) {
@@ -19,12 +19,10 @@ async function inspect(path) {
 }
 /** Ordinary native application upload/session, hosted HTTP transport and public
  * CLI import in an independent empty checkout. No fake application endpoints. */
-export async function hostedExportJourney(page, { origin, privateBytes, values }) {
+export async function hostedExportJourney(page, { origin, privateBytes, values, records, stopSource }) {
  const directory = await freshCopy(); let destination, context;
- let records;
  const evidence = { source: 'real-local-hosted-standin', liveProviderCalls: false };
  try {
-  records = await hostedRecords(page, origin);
   await runRer(directory, ['install'], { timeout: 300_000 });
   await writeFile(join(directory, '.dev.vars'), privateBytes, { mode: 0o600 });
   const cookies = await page.context().cookies(origin);
@@ -83,6 +81,10 @@ export async function hostedExportJourney(page, { origin, privateBytes, values }
    source = publishedSource;
    Object.assign(evidence, { publishedCliExecuted: true, publishedPackage: packageInfo.name, publishedVersion: packageInfo.version });
   }
+  assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 200, 'successful CLI cleanup reopens source');
+  await stopSource();
+  await assert.rejects(fetch(origin + '/health'), 'source is unavailable before restoration');
+  evidence.sourceStoppedBeforeImport = true;
   const input = evidence.publishedCliExecuted ? 'exports/published.rer' : 'exports/hosted.rer';
   // Continuity is enforced before publishing to the empty target.
   await writeFile(join(directory, '.dev.vars'), privateBytes.toString().replace(values.SESSION_SECRET, 'different-private-owner-salt-for-refusal'), { mode: 0o600 });
@@ -119,7 +121,7 @@ export async function hostedExportJourney(page, { origin, privateBytes, values }
   await context.close(); context = undefined;
   await runRer(directory, ['preview', '--stop']); await destination.owned.stop(); destination = undefined;
 
-  assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 200, 'successful CLI cleanup reopens source');
+  await assert.rejects(fetch(origin + '/health'), 'source remains unavailable after target proof');
   Object.assign(evidence, { passed: true, completeTableCoverage: true, tables: source.manifest.tables.length, objects: source.manifest.objects.length, contentHash: source.closing.contentHash, sourceArchiveSha256: createHash('sha256').update(source.bytes).digest('hex'), independentEmptyDestination: true, saltMismatchRefused: true, sessionAndOriginRefused: true, otherNativeOwnerRefused: true, remoteImportNotExposed: true, bytesAndMetadataEquivalent: true, publicBookingAndAnswer: true, freshRuntimeRestoredBooking: true, oldSessionRefused: true, nonemptyRestoreRefused: true, originalOwnerClaimPreserved: true });
  } finally {
   await context?.close(); await destination?.owned.stop();

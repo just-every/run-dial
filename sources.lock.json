@@ -1087,11 +1087,11 @@
       "executable": false
     },
     "docs/backups.md": {
-      "sha256": "18b639dfb2ef70f4b300f628f4e346397565ec53a60b900d9d0790a5d3226c7e",
+      "sha256": "852d2139e69db1d21369863f8ec899f572f6b1ebf1aeb049eb16f06818d88e46",
       "executable": false
     },
     "docs/booking-page.md": {
-      "sha256": "fe1003722a7c0242170d247453acfc60b618804c19bc7d4e1688cf50d1ab84ca",
+      "sha256": "59421c9e0484c0e0b90354c5b94f2091e41dce615d5f10daa7329c7c08d71e23",
       "executable": false
     },
     "docs/calendar-and-email.md": {
@@ -1103,11 +1103,11 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "05014ee86ca9b61dd85642388e57e834884045ea187ddc4547558b26dd535818",
+      "sha256": "493466cc0f3dea4d7774db8d023b14b647778f390cbd0070ed3fb4b686984de9",
       "executable": false
     },
     "docs/overview.md": {
-      "sha256": "d0ae35c81726e16420fd0fe013212edab36394694737b04514d77161cd8602fb",
+      "sha256": "d853d9bba9de4e2f3da4405003eec37d96234b6ee216f1504370a886e1a59e85",
       "executable": false
     },
     "docs/site.json": {
@@ -5679,7 +5679,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/bookings-page.tsx": {
-      "sha256": "b4f3a5c03e1e331f5bd7becaaa89b8e186cc7bb35d8cc8d9b5022dd76cbd99b9",
+      "sha256": "57da40213b222bd4b9158d7a6144656c909ec35adcab6358d0847e5278d29e9e",
       "executable": false
     },
     "src/core/features/bookings/ui/create-booking-page.tsx": {
@@ -6347,7 +6347,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/choose-time.tsx": {
-      "sha256": "345f00ac59fdd0cf0dd7f78a4ef41be658c2e26534455c4c2dee9d517d8c99e4",
+      "sha256": "d4405bc5e926ed531f7a89c05ebdfe1d19c89729735fb2dce7db5b876c645230",
       "executable": false
     },
     "src/core/features/public-booking/ui/confirmation-attempt.ts": {
@@ -7851,7 +7851,7 @@
       "executable": false
     },
     "tests/local-setup-journey.test.mjs": {
-      "sha256": "4bcb6f6a4fac509d41645cd4441b77723d353749d534ec9a1e88dd86f84f64ca",
+      "sha256": "d7179bb132531f11faf5069fdcc8eefeda9690eb8679428e82126b02eb513589",
       "executable": false
     },
     "tests/local-setup/browser-diagnostics.mjs": {
@@ -7883,7 +7883,7 @@
       "executable": false
     },
     "tests/local-setup/hosted-export.mjs": {
-      "sha256": "f2c5aa85e85730d308e9ee86e85bd686416576f0befd85652f78148ad4fba348",
+      "sha256": "5e70c6e66e15c8c93d01281d0fb5d1bf1065e86914a9f05a945056e26df5a086",
       "executable": false
     },
     "tests/local-setup/hosted-records.mjs": {

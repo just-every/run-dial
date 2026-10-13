@@ -101,7 +101,7 @@ An archive in the older format that earlier versions of Dial wrote cannot be imp
 A restore brings your data back, not your live connections. Expect to do these:
 
 - **Sign in again.** Your operators are all there, but sessions and links are not. Each operator requests a fresh magic link. The first owner is already claimed, so it cannot be claimed a second time.
-- **Reconnect Google Calendar.** Open **Settings** and connect again. The calendar shows as needing attention until you do, and event types cannot be published or offer times in the meantime. Your chosen calendars are remembered.
+- **Reconnect Google Calendar if it was configured.** A saved calendar connection is restored without credentials and needs reauthorization in **Settings** before event types can be published or offer times. Your chosen calendars are remembered. Fixed-link, phone and in-person events restored from a calendar-free install can offer times from their saved schedule and existing Dial bookings once mail is checked; Google Meet still requires a connected Google Calendar.
 - **Check mail.** Run **Check sender** in **Settings**. Mail health is reset until you do.
 - **Old manage links stop working.** Restore never recreates them. Clients can no longer use the private links from earlier emails. If a client needs to change a booking, you can reschedule or cancel it for them from **Bookings**.
 - **Nothing is replayed.** Emails and calendar changes that were pending at backup time come back marked as failed, with the reason that they are historical. Restore sends no mail and touches no calendar.
