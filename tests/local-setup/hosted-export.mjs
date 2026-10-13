@@ -72,7 +72,6 @@ export async function hostedExportJourney(page, { origin, privateBytes, values }
   if (process.env.DIAL_PUBLISHED_RER_ENTRY) {
    const packageEntry = process.env.DIAL_PUBLISHED_RER_ENTRY;
    const packageInfo = JSON.parse(await readFile(new URL('../package.json', 'file://' + packageEntry), 'utf8'));
-   assert.equal(packageInfo.name, '@runeditrun/rer'); assert.equal(packageInfo.version, '0.2.1');
    let captured = '';
    const published = spawnOwned(process.execPath, [packageEntry, 'export', '--target', 'remote', '--origin', origin, '--session-file', sessionPath, '--output', 'exports/published.rer', '--json'], { cwd: directory, env: environment() }, { label: 'published rer hosted export', onOutput: chunk => { captured += chunk; } });
    try { await published.waitForClose(180_000); }

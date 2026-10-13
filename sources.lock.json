@@ -7883,7 +7883,7 @@
       "executable": false
     },
     "tests/local-setup/hosted-export.mjs": {
-      "sha256": "972b3c05395bf074f0d57044503134f1dee737e4017789bb3eb9806cc371e6b0",
+      "sha256": "f2c5aa85e85730d308e9ee86e85bd686416576f0befd85652f78148ad4fba348",
       "executable": false
     },
     "tests/local-setup/hosted-records.mjs": {
