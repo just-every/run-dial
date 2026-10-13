@@ -25,7 +25,7 @@ export async function sitePages({ styles }: SiteContext): Promise<SiteBuild> {
       <DocsPage page={page} sections={sections} repository={repository} version={version} variant="site" />) };
   }));
   return { pages: [
-    { path: "/", html: document("Dial · Pick a time. That’s it.", "100% free, open source alternative to Calendly, Acuity Scheduling and SavvyCal. Dial is an open-source booking page you run on your own Cloudflare account. It checks your live calendar, speaks every timezone and never asks invitees to sign up.", <Landing variant="site" />) },
+    { path: "/", html: document("Dial · Pick a time. That’s it.", "100% free, open source alternative to Calendly, Acuity Scheduling and SavvyCal. Dial is an open-source booking page. It checks your live calendar, speaks every timezone and never asks invitees to sign up.", <Landing variant="site" />) },
     { path: "/run", html: runPageHtml(siteIdentity, run) }, ...docs,
     { path: "/404", html: siteNotFoundHtml(siteIdentity, run) },
   ], assets: ["rer-theme.css", "rer-mark.svg", "fonts", "brand"] };
