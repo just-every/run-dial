@@ -7991,7 +7991,7 @@
       "executable": false
     },
     "tests/move-in-catch-up.test.mjs": {
-      "sha256": "5d3d0cd7bd4746685d12a2fc6aeda21e988dc0dce07e3a7a95e49978767f5da9",
+      "sha256": "d47afbd5946cf076945889ed9768c463b716ddb47d1d6f546199c9b20fb42109",
       "executable": false
     },
     "tests/move-in-download.test.mjs": {

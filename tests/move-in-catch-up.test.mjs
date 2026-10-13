@@ -157,7 +157,12 @@ contract('DATA-003', 'the switch-over checklist states links, the safe close dat
     let state = await rt.data('/api/app/move-in/switch-over');
     assert.equal(state.imported, true);
     assert.deepEqual(state.eventTypes.map(event => event.oldLink).sort(), ['https://schedule.example.test/solo/example-1', 'https://schedule.example.test/solo/example-2', 'https://schedule.example.test/solo/example-3', 'https://schedule.example.test/solo/example-4']);
-    assert.ok(state.eventTypes.every(event => event.status === 'blocked' && event.reasons.some(reason => reason.code === 'destination_calendar')));
+    for (const event of state.eventTypes) {
+      const [imported] = await rows('SELECT location_type AS locationType FROM event_types WHERE id=?', event.id);
+      const requiresMeet = imported.locationType === 'google_meet';
+      assert.equal(event.status, requiresMeet ? 'blocked' : 'draft');
+      assert.deepEqual(event.reasons.map(reason => reason.code), requiresMeet ? ['google_meet_capability'] : []);
+    }
     assert.deepEqual(state.open, ['eventTypes', 'bookings', 'providers'], 'no catch-up yet, so no differences row is open');
     assert.equal(state.lastCapture.capturedAt, first);
     const future = await rows("SELECT o.end_at AS endAt FROM bookings b JOIN booking_occurrences o ON o.id=b.current_occurrence_id WHERE b.imported=1 AND b.state IN ('confirmed','rescheduled') ORDER BY o.end_at");
