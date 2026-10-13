@@ -7719,7 +7719,7 @@
       "executable": false
     },
     "tests/local-setup-journey.test.mjs": {
-      "sha256": "a96e172346b5cbeaf3378437f6bfbccf341ba736d07fd24269ef8a0ce1c8e4ff",
+      "sha256": "a4c64b71362d88fd664c052ff59a38bc6328b0db317644e5aa04f307efe9a097",
       "executable": false
     },
     "tests/local-setup/browser-diagnostics.mjs": {
@@ -7727,7 +7727,7 @@
       "executable": false
     },
     "tests/local-setup/browser.mjs": {
-      "sha256": "9d7bb271f1703e8611cb8786b4ae4df1d6c017887e4d976d9af5b68812f8768b",
+      "sha256": "cabc0a4f41f923538d8d84afc35772b68f63ac41fc60aa30793b8139de2b89b4",
       "executable": false
     },
     "tests/local-setup/command-diagnostics.mjs": {

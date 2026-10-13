@@ -90,8 +90,13 @@ export async function browserJourney(origin, { setupToken, email, name, review =
         const where = async () => { diagnostics.page = { path: new URL(page.url()).pathname, heading: (await page.locator("h1").first().textContent({ timeout: 1000 }).catch(() => null)) ?? null }; };
         diagnostics.outbox = await page.locator("article h2").allTextContents();
         phase = "outbox message open";
+        // The outbox is newest first; recovery mail can precede the newest sign-in mail.
+        const signInMessages = page.locator("article").filter({ has: page.getByRole("heading", { level: 2, name: "Your sign-in link for Dial", exact: true }) });
+        const signInMessage = signInMessages.first();
+        diagnostics.outboxSelection = { subject: await signInMessage.getByRole("heading", { level: 2 }).textContent(), matchingMessages: await signInMessages.count() };
+        console.info(`Local sign-in outbox selection: ${JSON.stringify({ subjects: diagnostics.outbox, ...diagnostics.outboxSelection })}`);
         // Exercise the actual mail and link privately: no screenshot, trace or HTML artifact.
-        await page.getByRole("link", { name: "Read message", exact: true }).first().click();
+        await signInMessage.getByRole("link", { name: "Read message", exact: true }).click();
         await where();
         await scan(page);
         phase = "outbox sign-in link";
