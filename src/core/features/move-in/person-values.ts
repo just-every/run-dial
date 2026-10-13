@@ -4,7 +4,7 @@ import { readonlyChecks } from '../../../../modules/import-kit/src/d1/database.t
 import type { SourceRecord } from '../../../../modules/import-kit/src/types.ts';
 import { importContext } from './service';
 import { stableId, type NativeValue } from './model';
-import { foldEmail, emailFoldSql } from '../erasure/identity';
+import { foldEmail, emailFoldSql } from '../erasure';
 import type { SessionRecord } from '../operators';
 
 type Invitee = { email?: unknown; uri?: unknown };

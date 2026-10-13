@@ -1,5 +1,4 @@
-import { importPersonValues } from "../move-in/person-values";
-import { erasePersonSourceCustody, finishPersonCustody } from "../move-in/erasure";
+import { importPersonValues, erasePersonSourceCustody, finishPersonCustody } from "../move-in";
 import { admitErasure, erasureAuthority, requireErasureSession } from "./admission";
 import { foldEmail, mailRecipientMatches, emailFoldSql, personalRecords, operatorOverlap, operatorOverlapSql } from "./identity";
 import { mailGraph } from "./graphs";

@@ -2,13 +2,11 @@ import { retireD1ImportCustody, type D1Sql } from '../../../../modules/import-ki
 import { readonlyChecks } from '../../../../modules/import-kit/src/d1/database.ts';
 import { retirementScope, headerAbsence } from '../../../../modules/import-kit/src/d1/retirement-scope.ts';
 import type { SessionRecord } from '../operators';
-import { ErasureRepository } from '../erasure';
-import { erasurePortability } from '../erasure/portability';
+import { ErasureRepository, erasurePortability, erasureAuthority } from '../erasure';
 import { ErasureError, toD1Sql } from '../../../modules/erasure/index.mjs';
 import { importContext } from './service';
 import { importPersonValues, personInvitees } from './person-values';
 import { stableId } from './model';
-import { erasureAuthority } from '../erasure/admission';
 
 /** Personal deletion, custody changes and the real restore checkpoint commit together. */
 export async function eraseImportedBooking(db: D1Database, id: string, session: SessionRecord, secret: string) {
