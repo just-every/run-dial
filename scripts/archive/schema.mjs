@@ -2,14 +2,12 @@ import { foldBookingSearch } from '../../src/core/features/bookings/search/case-
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
-import { exported, assertCoverage, internal } from './policy.mjs';
+import { exported, assertCoverage } from './policy.mjs';
 import { validateCustomFields } from './custom-fields.mjs';
 import { validSqlValue } from './json-values.mjs';
-export const quote = name => `"${name.replaceAll('"', '""')}"`;
+import { quote, tableQuery, catalogQuery, applicationCatalog } from './catalog.mjs';
+export { quote, tableQuery, catalogQuery, applicationCatalog } from './catalog.mjs';
 export const hash = value => createHash('sha256').update(value).digest('hex');
-export const tableQuery = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
-export const catalogQuery = "SELECT type,name,tbl_name,sql FROM sqlite_master WHERE sql IS NOT NULL AND type IN ('table','index','trigger') ORDER BY type,name";
-export function applicationCatalog(rows) { return rows.filter(row => !Object.hasOwn(internal, row.tbl_name) && !row.tbl_name.startsWith("rer_portability_")).map(row => ({ type: row.type, name: row.name, tbl_name: row.tbl_name, sql: row.sql })); }
 export async function schemaModel() {
   const db = new DatabaseSync(':memory:');
   const migrations = [];

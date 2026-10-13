@@ -21,7 +21,7 @@ Whichever way you take an update, keep your own changes and every authored recor
 ## Update safely
 
 1. **Read the notes.** Open the changelog and `RELEASE.json`. Look for `breaking` changes and for new migrations since your version. Note anything that asks operators to sign in again.
-2. **Back up first.** On your computer, stop `pnpm run dev` and take a fresh archive with the commands in [Backups and export](backups.md), then check that the file exists. A migration cannot be undone by deploying the old code, so the archive is your way back. Dial cannot export a deployed install yet, so for Cloudflare keep a private copy of your deploy record, `.rer/deploy/production.json`, before you deploy.
+2. **Back up first.** On your computer, stop `pnpm run dev` and take a fresh archive with the commands in [Backups and export](backups.md), then check that the file exists. A migration cannot be undone by deploying the old code, so the archive is your way back. For a hosted install, use the authenticated hosted export in [Backups and export](backups.md) and rehearse an empty local restore. Retain `.rer/deploy/production.json`, the exact source revision and original private settings separately; a deployment receipt is not a data backup.
 3. **Bring the new source in.** Let your agent merge it with your changes, then run the project's checks. They run lint, types, the tests, a replay of the migrations on a local database, the build and accessibility checks on the booking pages. They need a Chromium for Playwright, installed by the first command, and they listen on fixed local ports: free every port that `fixturePortRanges` lists in [scripts/ci-runtime-ports.mjs](../scripts/ci-runtime-ports.mjs) first.
 
    ```bash

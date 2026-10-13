@@ -221,7 +221,7 @@ Reset is local-only. It does not remove Cloudflare resources, revoke external
 provider credentials, or replace a deployed installation. Export data first
 if it must survive a reset.
 
-## Local export and restore
+## Export and local restore
 
 Stop dev and preview before transfer. Export writes a new owner-only JSON-lines
 archive under exports/; the destination file must not already exist:
@@ -264,8 +264,45 @@ Export again and compare the semantic contentHash to check round-trip
 equivalence. D1 and R2 cannot commit together: if an import fails or is
 interrupted, leave the destination unpublished, preserve the archive, and
 recover there only after inspection or use another clean destination.
---target remote is unsupported and exits with a safety refusal before
-provider calls.
+Hosted export uses the same schema proof, exhaustive exclusions, canonicalization,
+asset scans and salt continuity through the published Base authenticated HTTP
+handler/client. From a stopped local checkout of the exact deployed revision:
+
+    node scripts/rer.mjs export --target remote --origin https://dial.example --session-file .rer/local/hosted-owner.cookie --output exports/hosted.rer
+
+The mode-0600 session file holds one native owner cookie, never a URL or provider
+credential. The runtime exposes only `/api/portability/exports`; remote imports
+remain refused. Base enforces Origin and per-owner job ownership. Expired,
+revoked, review and development sessions cannot export. No Cloudflare account
+API is called by this command.
+
+Hosted source admission covers Worker fetch, server functions, Queue, Cron,
+BookingCoordinator fetch and alarms, including waitUntil work. The lease is
+acquired only when all durable writer receipts have drained; it spans schema and
+secret discovery, D1 snapshot and every R2 read. New application work receives
+503, queue deliveries retry, and alarm checks are deferred. A five-minute lease
+is renewed by each transfer operation. Expiry reopens the application but makes
+the old export permanently unusable, so a delayed request cannot publish a mixed
+snapshot. The client aborts its source job after success or failure. If cleanup
+fails, retain the private `.transfer.json` and use the published client to abort:
+
+    node scripts/base-cli/modules/portability/cli.mjs abort --origin https://dial.example --session-file /absolute/private/native-cookie --resume JOB_ID
+
+Do not operate D1/R2 directly or run deployments/migrations during capture; these
+owner-account actions bypass application admission. A killed application worker
+can leave a writer receipt. Such a receipt blocks export, not normal use: do not
+expire or delete it while any old request can still execute. Quiesce the source
+and its Queue/Cron/DO activity, prove all old workers have stopped, then clear
+only `kind='writer'` rows from `dial_portability_admission` through the owner
+account before restarting. This is an explicit owner recovery operation, never
+a timed guess. A busy source otherwise refuses with `archive_maintenance`.
+
+D1/R2 archive equivalence covers durable product state. Queue messages and
+coordinator retry/watch alarms are intentionally excluded execution state;
+restored provider commands remain inert and fresh connection checks recreate
+watch scheduling. The source erasure journal continues invalidating snapshots;
+a pending erasure refuses export and restore. Local hosted-stand-in proof does
+not claim live Cloudflare deployment or provider recovery.
 
 Legacy dial-export.v2 archives are not read by the current transfer path.
 Restore one with its original revision into an isolated installation, then

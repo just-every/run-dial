@@ -27,14 +27,16 @@ export async function nativeSignIn(page, { origin, email, width, privateValues =
   evidence.form = { method: await form.getAttribute('method'), action: await form.getAttribute('action'), enabled: true, visible: true };
 
   phase = 'cross-origin link request';
+  const outboxBefore = await readOutboxListing(page, origin);
   const denied = await page.request.post(origin + '/auth/magic-link', {
    headers: { origin: 'https://cross-origin.invalid' }, form: { email, returnTo: '/setup' }, maxRedirects: 0,
   });
-  assert.equal(denied.status(), 303);
-  const deniedLocation = new URL(denied.headers().location, origin);
-  assert.equal(deniedLocation.pathname, '/signin');
-  assert.equal(deniedLocation.searchParams.get('notice'), 'invalid_origin');
-  evidence.crossOriginRequest = 'invalid_origin';
+  // Dial's Hono Origin guard answers before Base's native form handler, so
+  // this public door returns the API refusal rather than a form-notice redirect.
+  await expectOriginRefusal(denied);
+  assert.equal(await readOutboxListing(page, origin), outboxBefore, 'a denied request creates no mail');
+  assert.equal((await page.request.get(origin + '/api/app/session')).status(), 401);
+  evidence.crossOriginRequest = { status: 403, code: 'origin_not_allowed', outboxUnchanged: true, session: 401 };
 
   phase = 'native link request';
   await input.fill(email);
@@ -46,6 +48,7 @@ export async function nativeSignIn(page, { origin, email, width, privateValues =
   assert.match(accepted.request().headers()['content-type'], /^application\/x-www-form-urlencoded\b/i);
   evidence.request = { method: 'POST', path: '/auth/magic-link', status: accepted.status(), resourceType: 'document' };
   await page.waitForURL(origin + '/__dev/outbox');
+  assert.notEqual(await readOutboxListing(page, origin), outboxBefore, 'the native request creates a new sign-in message');
 
   phase = 'outbox sign-in message';
   const messages = page.locator('article').filter({ has: page.getByRole('heading', { level: 2, name: 'Your sign-in link for Dial', exact: true }) });
@@ -59,8 +62,9 @@ export async function nativeSignIn(page, { origin, email, width, privateValues =
 
   phase = 'cross-origin confirmation';
   const crossOrigin = await page.request.post(origin + '/auth/confirm', { headers: { origin: 'https://cross-origin.invalid' }, form: { token }, maxRedirects: 0 });
-  assert.equal(crossOrigin.status(), 403);
-  evidence.crossOriginConfirmation = crossOrigin.status();
+  await expectOriginRefusal(crossOrigin);
+  assert.equal((await page.request.get(origin + '/api/app/session')).status(), 401, 'a denied confirmation does not authenticate');
+  evidence.crossOriginConfirmation = { status: 403, code: 'origin_not_allowed', session: 401 };
 
   phase = 'native confirmation';
   const setupResponse = page.waitForResponse(response => response.url() === origin + '/setup' && response.request().resourceType() === 'document');
@@ -79,6 +83,8 @@ export async function nativeSignIn(page, { origin, email, width, privateValues =
   phase = 'one-use confirmation';
   const replay = await page.request.post(origin + '/auth/confirm', { headers: { origin }, form: { token }, maxRedirects: 0 });
   assert.equal(replay.status(), 400);
+  assert.equal((await replay.json()).error, 'invalid_or_expired');
+  assert.equal(replay.headers()['set-cookie'], undefined);
   evidence.replay = replay.status();
   evidence.passed = true;
   console.info(`Native pre-hydration sign-in: ${JSON.stringify(evidence)}`);
@@ -89,4 +95,18 @@ export async function nativeSignIn(page, { origin, email, width, privateValues =
  } finally {
   await writeFile(evidencePath(`native-signin-${width}.json`), JSON.stringify({ ...evidence, phase }, null, 2), { mode: 0o600 });
  }
+}
+
+async function expectOriginRefusal(response) {
+ assert.equal(response.status(), 403);
+ assert.equal((await response.json()).error?.code, 'origin_not_allowed');
+ assert.equal(response.headers().location, undefined);
+ assert.equal(response.headers()['set-cookie'], undefined);
+}
+
+async function readOutboxListing(page, origin) {
+ const response = await page.request.get(origin + '/__dev/outbox');
+ assert.equal(response.status(), 200);
+ // Compare only in memory; mail metadata and links never enter the evidence.
+ return response.text();
 }

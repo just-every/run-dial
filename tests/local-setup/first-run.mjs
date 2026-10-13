@@ -67,12 +67,24 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), origin + "/book/preserved-host/first-request");
   onPhase("first-run completion checklist");
   await page.getByRole("link", { name: "Dial setup", exact: true }).click();
-  await expect(page.locator('[data-step="calendar"]')).toContainText("To do");
-  await expect(page.locator('[data-step="availability"]')).toContainText("To do");
+  const checklistResponse = await page.request.get(origin + "/api/app/host-setup");
+  assert.equal(checklistResponse.status(), 200);
+  const checklist = await checklistResponse.json();
+  assert.equal(checklist.calendar.state, "disconnected");
+  assert.equal(checklist.steps.find(step => step.id === "calendar").optional, true);
+  assert.equal(checklist.availabilityReady, false, "Open requests has no availability windows");
+  assert.equal(checklist.steps.find(step => step.id === "availability").done, false);
+  await expect(page.locator('[data-step="availability"]')).toBeVisible();
+  await expect(page.getByRole("button", { name: "Finish setup", exact: true })).toBeEnabled();
   onPhase("first-run finish setup");
-  await page.getByRole("button", { name: "Finish setup", exact: true }).click(); await page.waitForURL(origin + "/app");
+  const completed = page.waitForResponse(response => new URL(response.url()).pathname === "/api/app/host-setup/complete" && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Finish setup", exact: true }).click();
+  assert.equal((await completed).status(), 200, "request-only setup completes without a calendar or availability");
+  await page.waitForURL(origin + "/app");
   onPhase("first-run completion persistence");
   const state = await (await page.request.get(origin + "/api/app/host-setup")).json(); assert.ok(state.completedAt);
+  assert.equal(state.calendar.state, "disconnected");
+  assert.equal(state.availabilityReady, false);
   await page.goto(origin + "/setup"); await page.waitForURL(origin + "/app");
   return profile;
 }

@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { docsSite } from "./src/core/features/public-site/docs/build/plugin.ts";
 import { readRepository } from "./src/core/features/public-site/docs/build/site.ts";
+import { archiveSchema } from "./scripts/archive/schema-plugin";
 import { buildAssets } from "./scripts/build-assets";
 import { retireLocalObservability } from "./scripts/local/observability.mjs";
 import { archiveOutputGuard } from "./scripts/base-onboarding/archive-output.mjs";
@@ -19,6 +20,10 @@ const cloudflareEnv = process.env.CLOUDFLARE_ENV ?? "";
 // Erasure imports the maintained portability runtime. Admit its exact SSR graph,
 // keeping the CLI, other scripts and private repository files outside this allowlist.
 const portabilityRuntimeFiles = [
+  "scripts/archive/catalog.mjs", "scripts/archive/policy.mjs", "scripts/archive/import-policy.mjs",
+  "scripts/archive/redaction.mjs", "scripts/archive/private-links.mjs", "scripts/archive/json-values.mjs",
+  "scripts/archive/environment-secrets.mjs", "scripts/archive/export-policy.mjs", "scripts/archive/guarded-bucket.mjs",
+  "scripts/archive/secret-scanner.mjs", "scripts/archive/json-secret-scanner.mjs",
   "scripts/base-cli/modules/portability/bridge.mjs",
   "scripts/base-cli/modules/portability/catalogue.mjs",
   "scripts/base-cli/modules/portability/copies.mjs",
@@ -75,6 +80,6 @@ export default defineConfig(async ({ command }) => {
     // Workerd requests SSR imports through Vite too; allow the imported shared modules
     // and the public capacity manifest without exposing the repository root.
     server: { fs: { strict: true, allow: ["src", "public", "node_modules", "modules/editor", "modules/operator-auth", "modules/owner-claim", "modules/mail", "modules/local-signin", "modules/import-kit", "seed.json", "deploy-site.json", ...portabilityRuntimeFiles], deny: ["**/.rer/**", "**/.seed/**", "**/exports/**", "**/*.rer"] } },
-    plugins: [cloudflare({ config: command === "serve" ? (config) => ({ ...(process.env.RER_DEV_ORIGIN ? { vars: { ...config.vars, APP_URL: process.env.RER_DEV_ORIGIN, ...devKey } } : {}), ...(devKey ? { main: devEntry } : {}), assets: { ...config.assets, run_worker_first: ["/*", "!/@*", "!/src/*", "!/node_modules/*", "!/modules/editor/*"] } }) : undefined, configPath: wranglerConfig, persistState, inspectorPort, viteEnvironment: { name: "ssr" } }), docsSite(), tanstackStart({ prerender: { enabled: false } }), react(), tailwindcss(), buildAssets(), archiveOutputGuard()],
+    plugins: [cloudflare({ config: command === "serve" ? (config) => ({ ...(process.env.RER_DEV_ORIGIN ? { vars: { ...config.vars, APP_URL: process.env.RER_DEV_ORIGIN, ...devKey } } : {}), ...(devKey ? { main: devEntry } : {}), assets: { ...config.assets, run_worker_first: ["/*", "!/@*", "!/src/*", "!/node_modules/*", "!/modules/editor/*"] } }) : undefined, configPath: wranglerConfig, persistState, inspectorPort, viteEnvironment: { name: "ssr" } }), docsSite(), tanstackStart({ prerender: { enabled: false } }), react(), tailwindcss(), archiveSchema(), buildAssets(), archiveOutputGuard()],
   };
 });

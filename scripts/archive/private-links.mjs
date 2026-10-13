@@ -1,4 +1,8 @@
-import { createHash } from 'node:crypto';
+import { StreamHash, utf8 } from '../base-cli/modules/portability/hash.mjs';
+function tokenHash(value) {
+ const hash = new StreamHash(); hash.update(utf8(value));
+ return btoa(String.fromCharCode(...hash.digest().match(/../g).map(byte => parseInt(byte, 16)))).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
+}
 // Match candidate URLs, then inspect their route and credential material. A
 // documentation path named /manage or /auth/confirm is not itself authority.
 const candidates = /https?:\/\/[^\s<>"']+|\/[^\s<>"']+/g;
@@ -17,7 +21,7 @@ export function privateLinks(text, { known = [], hashes = new Set(), trusted = f
       if (!manage && !authentication && !url.pathname.endsWith('/confirmed')) continue;
       // A supplied token parameter on an authentication route is explicit
       // credential material. Known/persisted manage tokens have no size cutoff.
-      const persisted = manage && known.some(salt => hashes.has(createHash('sha256').update(`${salt}:${token}`).digest('base64url')));
+      const persisted = manage && known.some(salt => hashes.has(tokenHash(`${salt}:${token}`)));
       if (!trusted && !authentication && !opaque.test(token) && !known.includes(token) && !persisted) continue;
       links.push({ link, token, index: match.index });
     } catch { /* malformed URLs carry no parsed capability; known bytes still scan */ }

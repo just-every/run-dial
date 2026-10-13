@@ -143,7 +143,7 @@
         "scripts/installer/local.mjs",
         "rer-setup.json"
       ],
-      "effects": "Export complete local Dial data through the reviewed portability policy. Remote unsupported."
+      "effects": "Export complete local or native-owner authenticated hosted Dial data through the reviewed portability policy. Remote restore is not exposed."
     },
     "import": {
       "argv": [

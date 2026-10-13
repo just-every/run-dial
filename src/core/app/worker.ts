@@ -1,3 +1,5 @@
+import { enterApplication, withApplication, ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
+import { hostedExport } from "../features/portability/routes";
 import { staticAssetResponse } from "../../base/static-assets";
 import { setupStateResponse, claimedWhen } from "../../base/setup-state";
 import { lobbyResponse } from "../../base/lobby";
@@ -26,7 +28,7 @@ export function createWorker(servicesFactory?: (env: AppBindings) => AppServices
 const servicesFor = servicesFactory ?? ((env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { files: env.FILES, calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) }));
 const app = createApp({ fetch: async (request) => start.fetch(request) }, servicesFor);
 
-return {
+const worker = {
   async fetch(request: Request, env: AppBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     // Setup reaches this Worker directly. Reject private namespaces before the
@@ -67,6 +69,28 @@ return {
     await runScheduledWork(env, servicesFor(env));
   },
 } satisfies ExportedHandler<AppBindings>;
+return {
+ ...worker,
+ async fetch(request: Request, env: AppBindings, context: ExecutionContext) {
+  if (new URL(request.url).pathname.startsWith("/api/portability/")) return hostedExport(request, env, servicesFor(env).operators);
+  let leave: (() => Promise<void>) | undefined;
+  const pending: Promise<unknown>[] = [];
+  try {
+   leave = await enterApplication(env.DB);
+   return await worker.fetch(request, env, { waitUntil(work: Promise<unknown>) { pending.push(work); }, passThroughOnException() { context.passThroughOnException(); } } as ExecutionContext);
+  } catch (error) { if (error instanceof ArchiveMaintenance) return maintenanceResponse(); throw error; }
+  finally { if (leave) { await Promise.allSettled(pending); await leave(); } }
+ },
+ async queue(batch: MessageBatch<unknown>, env: AppBindings) {
+  try { await withApplication(env.DB, () => worker.queue(batch, env)); }
+  catch (error) { if (error instanceof ArchiveMaintenance) { batch.retryAll({ delaySeconds: 30 }); return; } throw error; }
+ },
+ async scheduled(controller: ScheduledController, env: AppBindings) {
+  try { await withApplication(env.DB, () => worker.scheduled(controller, env)); }
+  catch (error) { if (!(error instanceof ArchiveMaintenance)) throw error; }
+ },
+} satisfies ExportedHandler<AppBindings>;
+
 }
 
 export default createWorker();

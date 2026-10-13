@@ -1,3 +1,4 @@
+import { withApplication, ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
 import { coordinatedCalendarChanges } from "./booking-coordination";
 import { DurableObject } from "cloudflare:workers";
 import { createApp } from "./hono";
@@ -32,7 +33,13 @@ export class BookingCoordinator extends DurableObject<AppBindings> {
   }
 
   async fetch(request: Request): Promise<Response> {
-    return this.ctx.blockConcurrencyWhile(async () => {
+    try { return await withApplication(this.env.DB, () => this.admittedFetch(request)); }
+    catch (error) { if (error instanceof ArchiveMaintenance) return maintenanceResponse(); throw error; }
+  }
+
+  private async admittedFetch(request: Request): Promise<Response> {
+    const pending: Promise<unknown>[] = [];
+    try { return await this.ctx.blockConcurrencyWhile(async () => {
       const path = new URL(request.url).pathname;
       if (path.startsWith("/__operator-notifications/") && request.method === "POST") {
         if (this.ctx.id.toString() !== this.env.BOOKING_COORDINATOR.idFromName(operatorNotificationBoundary).toString()) return new Response("Wrong coordinator", { status: 400 });
@@ -70,8 +77,8 @@ export class BookingCoordinator extends DurableObject<AppBindings> {
         await this.coordinatedServices(this.env).bookings.reconcileDeletionProbe(parsed.data.bookingId, parsed.data.providerEventId);
         return new Response(null, { status: 204 });
       }
-      return createApp(undefined, (env) => this.coordinatedServices(env)).fetch(request, this.env, { waitUntil: (promise) => this.ctx.waitUntil(promise), passThroughOnException() {} } as ExecutionContext);
-    });
+      return createApp(undefined, (env) => this.coordinatedServices(env)).fetch(request, this.env, { waitUntil: (promise: Promise<unknown>) => { pending.push(promise); }, passThroughOnException() {} } as ExecutionContext);
+    }); } finally { await Promise.allSettled(pending); }
   }
 
   /**
@@ -80,6 +87,14 @@ export class BookingCoordinator extends DurableObject<AppBindings> {
    * probe makes the health check's two provider reads, and a failure it sees starts an incident.
    */
   async alarm() {
+    try { await withApplication(this.env.DB, () => this.admittedAlarm()); }
+    catch (error) {
+      if (!(error instanceof ArchiveMaintenance)) throw error;
+      await this.ctx.storage.setAlarm(Date.now() + 30_000);
+    }
+  }
+
+  private async admittedAlarm() {
     const schedule = new ConnectionWatchSchedule(this.ctx.storage);
     const due = await schedule.due();
     const services = this.services(this.env);

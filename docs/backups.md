@@ -1,9 +1,9 @@
 # Backups and export
 
-Dial can write all the data of an install on your computer to one private archive file, and restore that file into a fresh, empty install. Use it for backups and before every update. The data is yours, and it leaves in a plain, documented format.
+Dial can write the durable data of a local or hosted install to one private archive file, and restore that file into a fresh, empty local install. Use it for backups and before every update. The data is yours, and it leaves in a plain, documented format.
 
 > [!NOTE]
-> This version exports and restores local installs only. Exporting from or restoring into a deployed install is not supported yet: those commands stop with exit code 4 before contacting Cloudflare. The local round trip is covered by automated tests, so rehearse your first restore before you need it.
+> Hosted export uses your running Dial application and a native owner session. Hosted restore is not exposed. Rehearse restoration into an empty local installation; no live Cloudflare deployment or provider recovery is implied by the local hosted-stand-in tests.
 
 ## Two commands
 
@@ -16,9 +16,26 @@ pnpm run import -- \
 
 Use `pnpm run import`, not `pnpm import`. Plain `pnpm import` is a different built-in pnpm command that converts another package manager's lockfile. The extra `run` selects Dial's restore command.
 
-Stop `pnpm run dev` or `pnpm run preview` before you export or import. Archives live in the `exports/` folder of your Dial checkout, which git ignores and reset keeps. Give each new export a `.rer` name inside it so the CLI can verify that the dev server will not serve it. Dial refuses paths outside this folder.
+Stop `pnpm run dev` or `pnpm run preview` before you export or import. Archives live in the `exports/` folder of your Dial checkout, which git ignores and reset keeps. Give each new export a `.rer` name inside it so the CLI can verify that the dev server will not serve it. An absolute output path outside the checkout is also accepted; served and tracked paths are refused.
 
 Export writes a new file that only you can read, and it refuses to overwrite an existing one, so give each archive its own name. Keep the archive private: it contains your clients' names, emails and answers. Add `--json` to either command to see the archive's `contentHash`, which identifies its contents.
+
+## Export from a hosted install
+
+Sign in as an owner through the normal email link. Privately save just the native session cookie as `name=value` in `.rer/local/hosted-owner.cookie` inside the stopped checkout with permissions `0600`. Do not paste the cookie into a command, log, issue or archive. From a stopped local checkout of the same Dial revision:
+
+```bash
+node scripts/rer.mjs export --target remote \
+  --origin https://your-dial.example \
+  --session-file .rer/local/hosted-owner.cookie \
+  --output exports/hosted-dial.rer
+```
+
+The client talks only to the supplied Dial origin. It does not need a Cloudflare API token. The same native owner must own every export job; cross-origin mutations, development/review sessions and remote imports are refused.
+
+Export briefly puts the source in maintenance after existing request and background work has drained. Requests receive 503, queues retry and the connection watch delays its next check. If the source is busy, the command refuses; try again when it is quiet. The command removes the snapshot and releases maintenance after download. An interrupted client leaves a private `.transfer.json` job checkpoint; the maintenance lease expires after five minutes and the old job cannot be downloaded or resumed. Start a new export to a new path. See OPERATIONS.md for cleanup and a source whose terminated writer prevents export.
+
+The archive captures durable D1 records and all FILES bytes and metadata. Queue messages and coordinator alarms are execution state, not transferable authority: pending deliveries are made historical and provider checks must be re-established after restore. Privately retain the original `SESSION_SECRET`, configuration and exact source revision separately. The hosted archive imports with the ordinary local command below.
 
 ## What the archive contains
 

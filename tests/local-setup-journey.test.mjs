@@ -8,6 +8,7 @@ import { completeFirstRun } from './local-setup/first-run.mjs';
 import { browserJourney } from './local-setup/browser.mjs';
 import { devIdentityJourney } from './local-setup/dev-identity.mjs';
 import { openGateFromLink } from './dev-key.mjs';
+import { hostedExportJourney } from './local-setup/hosted-export.mjs';
 import { nativeSignIn } from './local-setup/native-signin.mjs';
 
 contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs in before hydration, resets and round-trips complete local data', async () => {
@@ -81,4 +82,18 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
    await runRer(directory, ['dev', '--stop']); await server.owned.stop(); server = undefined;
   } finally { await browser?.close(); await server?.owned.stop(); await removeCopy(directory); }
  }
+});
+
+contract('DATA-001', 'native hosted export imports through the ordinary CLI into an independent empty installation with equivalent assets and authority', async () => {
+ const directory = await freshCopy(); let server;
+ try {
+  await runRer(directory, ['install'], { timeout: 300_000 });
+  await runRer(directory, ['setup', '--owner-email', 'hosted-owner@example.test', '--port', '15750', '--non-interactive'], { timeout: 300_000 });
+  const values = await variables(directory), privateBytes = await readFile(join(directory, '.dev.vars'));
+  server = await start(directory, 'preview', values.APP_URL);
+  await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width: 1440, openUrl: server.openUrl, issuedSignInUrl: server.signInUrl, onSignedIn: async page => {
+   await hostedExportJourney(page, { origin: values.APP_URL, privateBytes, values });
+  } });
+  await runRer(directory, ['preview', '--stop']); await server.owned.stop(); server = undefined;
+ } finally { await server?.owned.stop(); await removeCopy(directory); }
 });
