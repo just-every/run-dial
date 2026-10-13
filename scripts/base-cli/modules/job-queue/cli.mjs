@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createQueue } from './index.mjs';
+import { waitingMessage } from './waiting.mjs';
 import { fileURLToPath } from 'node:url';
 import { realpathSync } from 'node:fs';
 
@@ -26,7 +27,7 @@ export function parse(args) {
 
 function render(view) {
   const elapsed = job => Math.floor((Date.now() - (job.startedAt ?? job.enqueuedAt)) / 1000);
-  return [`Load ${view.resources.load.toFixed(2)}; free memory ${(view.resources.freeMemoryBytes / 1024 ** 3).toFixed(2)} GiB; slots ${view.running.length}/${view.config.slots}`,
+  return [`Load ${view.resources.load.toFixed(2)}; available memory ${(view.resources.availableMemoryBytes / 1024 ** 3).toFixed(2)} GiB (raw free ${(view.resources.freeMemoryBytes / 1024 ** 3).toFixed(2)} GiB) against a floor of ${(view.config.minFreeMemoryBytes / 1024 ** 3).toFixed(2)} GiB; slots ${view.running.length}/${view.config.slots}`,
     ...view.running.map(job => `Running: ${job.label} | ${job.repository} | ${elapsed(job)}s`),
     ...view.queued.map((job, index) => `Queued ${index + 1}: ${job.label} (${job.priority}) | ${job.repository} | ${elapsed(job)}s`),
     `Admission: ${view.admissionReason}`].join('\n');
@@ -45,7 +46,7 @@ async function main() {
     if (verb === 'run') {
       const statusCommand = [process.execPath, fileURLToPath(import.meta.url), 'status', '--json'].map(shellQuote).join(' ');
       result = await queue.run(command, { ...options, onWaiting: (reason, details) => {
-        if (!options.json) console.error(`Queued (${details.position}/${details.queued}): ${reason}. Inspect the queue with: ${statusCommand}`);
+        if (!options.json) console.error(`${waitingMessage(details)}\nInspect the queue with: ${statusCommand}`);
       } });
       if (result.timedOut) console.error(`Job queue max-wait expired: ${result.reason} (exit ${result.code})`);
       if (result.error) console.error(result.error);

@@ -1,7 +1,7 @@
 """Public-tree and message hygiene; findings never include matched values."""
 from collections import Counter
 import re
-from github_refs import REPOSITORY_HOSTS, references
+from github_refs import REPOSITORY_HOSTS, reference_sets
 from destination import RULE as PENDING_DESTINATION
 from hygiene_text import decoded_text
 from provenance import provenance_text
@@ -25,10 +25,33 @@ def private_emails(text, config):
     # URL paths, queries and fragments remain visible to email inspection.
     email_text = URI_AUTHORITY.sub(email_userinfo, without_required_notices(text))
     email_text = re.sub(r'(?i)\b(?a:git@github\.com:)(?=[A-Za-z0-9])', '', email_text)
-    version = r'(?:v?[0-9]+(?:\.[0-9]+)*(?:-[A-Za-z0-9-]+)?|[a-f0-9]{40})(?![A-Za-z0-9_.-])'
+    # A package manager's patch file is named name@version.patch.
+    version = r'(?:v?[0-9]+(?:\.[0-9]+)*(?:-[A-Za-z0-9-]+)?|[a-f0-9]{40})(?:\.patch)?(?![A-Za-z0-9_.-])'
     email_text = re.sub(r'(?m)^\s*-?\s*uses:\s*[\"\']?[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[^\s\"\']+', '', email_text)
     email_text = re.sub(r'(?<![A-Za-z0-9])(?:@[A-Za-z0-9_.-]+/)?[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@' + version, '', email_text)
     return [match.group() for match in EMAIL.finditer(email_text) if not public_email(match.group(), config)]
+
+
+# A stored host name is lower case, upper case or capitalised, label by label.
+# Bytes that merely decode to text, such as compressed pixels, rarely are.
+HOST_LABEL = re.compile(r'(?:[a-z0-9-]+|[A-Z0-9-]+|[A-Z][a-z0-9-]*)')
+
+
+# Control bytes that no text encoding uses (tab, newline, form feed and carriage
+# return are text). Legacy 8-bit text such as latin-1 or Windows-1252 has none,
+# while compressed or packed data is about one byte in nine.
+NON_TEXT = re.compile(rb'[\x01-\x08\x0b\x0e-\x1f\x7f]')
+BINARY_SHARE = 0.05
+
+
+def binary(data):
+    # NULs are not counted: UTF-16 and UTF-32 text carries them between letters.
+    text = data.replace(b'\0', b'')
+    return bool(text) and len(NON_TEXT.findall(text)) / len(text) > BINARY_SHARE
+
+
+def stored_host(address):
+    return all(HOST_LABEL.fullmatch(label) for label in address.rsplit('@', 1)[1].split('.'))
 
 
 def certificate_metadata(data, bundle, emails, config):
@@ -62,15 +85,23 @@ def inspect_text(data, path, config, resolver):
         emails = private_emails(text, config)
         bundle = config.get('trustBundles', {}).get(path)
         if emails and not (bundle and certificate_metadata(data, bundle, emails, config)):
-            rules.add('hygiene.email')
+            # Inside binary data a mailbox is judged by its own shape: a host
+            # name with mixed-case letters inside a label is not one.
+            if not binary(data) or any(stored_host(email) for email in emails):
+                rules.add('hygiene.email')
     ref_text, provenance = provenance_text(text, path, config.get('declaredSources', frozenset()))
-    for repository in references(ref_text, path, config.get('localPaths', frozenset()), config.get('projectIdentity')):
+    stated, ambiguous = reference_sets(ref_text, path, config.get('localPaths', frozenset()), config.get('projectIdentity'))
+    for repository in sorted(stated | ambiguous):
         # A future source identity does not assert current GitHub visibility.
         # Explicit release destinations still take the strict visibility path.
         if (repository in config.get('intendedPublicRepositories', frozenset()) and
                 repository != config.get('pendingDestination')):
             continue
         state = resolver.resolve(repository)
+        # A bare word/word with no GitHub context names a repository only when
+        # one exists privately; that no repository answers to it proves nothing.
+        if state == 'missing' and repository in ambiguous and repository != config.get('pendingDestination'):
+            continue
         if state == 'missing' and repository == config.get('pendingDestination'):
             rules.add(PENDING_DESTINATION)
         elif state in ('private', 'missing'):

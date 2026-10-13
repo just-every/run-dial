@@ -5,14 +5,18 @@ import { refuse } from './errors.mjs';
 import { viteServesArchive } from './archive-vite.mjs';
 
 const message = 'Save the archive at a normalized path inside this checkout\'s exports/ (exports/x.rer, ./exports/x.rer or an absolute path there), or at an absolute path outside this checkout. Traversal (..), unsafe symlinks and paths served by the app are refused.';
-export async function exportPath(root, file) {
+// Static refusals (shape, location, links) run here and touch nothing. `unserved()` then asks the seed's
+// real Vite configuration whether the app would serve the path; the caller runs it after prepareData, because
+// that configuration may need a file only prepareData generates (a checkout that never built has none yet).
+export async function locateExport(root, file) {
  const checkout = await realpath(root);
+ const located = destination => ({ path: destination, unserved: () => requireUnserved(checkout, destination) });
  if ((!isAbsolute(file) && file.includes('\\')) || file.split(/[\\/]/).includes('..')) throw refuse(message);
  if (!isAbsolute(file)) {
-  return insideExports(checkout, relative(checkout, resolve(checkout, file)));
+  return located(await insideExports(checkout, relative(checkout, resolve(checkout, file))));
  }
  let destination = resolve(file); const within = relative(checkout, destination);
- if (inside(within)) return insideExports(checkout, within);
+ if (inside(within)) return located(await insideExports(checkout, within));
  // Resolve existing ancestors, including platform temporary-directory aliases.
  // A link outside the checkout must not put the export back inside it.
  let current = parse(destination).root;
@@ -24,26 +28,25 @@ export async function exportPath(root, file) {
   const actual = await realpath(current), name = relative(checkout, actual);
   // Parent aliases (such as macOS /var) can lead to the real checkout root.
   // Once there, validate the remaining path without resolving its symlinks.
-  if (!name && !status.isSymbolicLink()) return insideExports(checkout, parts.slice(index + 1).join(sep));
+  if (!name && !status.isSymbolicLink()) return located(await insideExports(checkout, parts.slice(index + 1).join(sep)));
   if (inside(name)) throw refuse(message);
   if (index === parts.length - 1 && status.isSymbolicLink()) throw refuse(message);
   current = actual;
   destination = resolve(current, ...parts.slice(index + 1));
  }
- await requireUnserved(checkout, destination); return destination;
+ return located(destination);
 }
 const inside = path => !path || (!isAbsolute(path) && path !== '..' && !path.startsWith('..' + sep));
 async function insideExports(checkout, path) {
  if (!path.startsWith('exports' + sep) || !inside(path)) throw refuse(message);
- const destination = await contained(checkout, path, { optional: true });
- await requireUnserved(checkout, destination); return destination;
+ return contained(checkout, path, { optional: true });
 }
 async function requireUnserved(root, destination) {
  try { if (await viteServesArchive(root, destination)) throw Error('Served destination'); }
  catch { throw refuse(message); }
 }
-export async function importPath(root, file) {
- if (!isAbsolute(file)) return contained(root, file, { privateFile: true });
- const path = await exportPath(root, file);
- return contained(dirname(path), basename(path), { privateFile: true });
+export async function locateImport(root, file) {
+ if (!isAbsolute(file)) return { path: await contained(root, file, { privateFile: true }), unserved: async () => {} };
+ const { path, unserved } = await locateExport(root, file);
+ return { path: await contained(dirname(path), basename(path), { privateFile: true }), unserved };
 }

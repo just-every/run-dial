@@ -49,7 +49,7 @@ contract("PUBLIC-001", "headless axe covers all seven public pages, original ope
 contract("AVAIL-005", "native browser timezone search, privacy, invalid input and day/zone history persist", gate);
 contract("BOOK-007", "native Brisbane reschedule picker, one confirm and held old slot work from a New York browser", gate);
 contract("BOOK-008", "cancellation asks confirmation and cancelled bookings expose no change controls", gate);
-contract("HOME-001", "the landing a new install serves passes axe at desktop and mobile and leaves browser storage empty after a scroll and reload", gate);
+contract("HOME-001", "the installed Lobby passes axe at desktop and mobile and leaves browser storage empty after reload", gate);
 contract("DOCS-001", "every published docs page passes axe at desktop and mobile, and docs navigation leaves browser storage empty", gate);
 
 contract("AUTH-001", "both unclaimed setup widths precede the native claim; fresh sessionless reloads hide setup and refuse replay", gate);

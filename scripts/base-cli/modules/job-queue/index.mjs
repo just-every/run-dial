@@ -74,7 +74,9 @@ export async function createQueue(options = {}) {
             reasonCodes.push('queue_order');
           }
           if (admission) { blockers.push(admission.reason); reasonCodes.push(admission.code); }
-          if (blockers.length) return { reason: blockers.join('; '), blockers, reasonCodes, position,
+          const ahead = [...state.running.map(item => ({ state: 'running', label: item.label, repository: item.repository })),
+            ...waiting.slice(0, Math.max(0, position - 1)).map(item => ({ state: 'queued', label: item.label, repository: item.repository }))];
+          if (blockers.length) return { reason: blockers.join('; '), blockers, reasonCodes, position, ahead,
             queued: waiting.length, running: state.running.length, resources,
             limits: { slots: config.slots, loadThreshold: config.loadThreshold, minFreeMemoryBytes: config.minFreeMemoryBytes } };
           if (opts.maxWait > 0 && performance.now() - start >= opts.maxWait * 1000)

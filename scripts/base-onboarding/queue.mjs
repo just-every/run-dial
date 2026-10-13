@@ -22,13 +22,14 @@ function shellQuote(value) {
  return `'${String(value).replaceAll("'", "'\\''")}'`;
 }
 
-function waitingText(wait) {
- return `Waiting for heavy-job admission: ${wait.reason} (queue position ${wait.position}/${wait.queued}; ${wait.running} running). Run from the project root. Inspect the queue with: ${wait.statusCommandText}`;
+function waitingText(wait, waitingMessage) {
+ return `${waitingMessage(wait)}\nRun from the project root. Inspect the queue with: ${wait.statusCommandText}`;
 }
 
 export async function queuedCommand(command, args, options) {
  const { createQueue } = await import(new URL('index.mjs', queueURL));
  const { liveMembership } = await import(new URL('membership.mjs', queueURL));
+ const { waitingMessage } = await import(new URL('waiting.mjs', queueURL));
  const statusCommand = [process.execPath, fileURLToPath(new URL('cli.mjs', queueURL)), 'status', '--json'];
  // An inherited credential-shaped PWD can redact an absolute project prefix.
  // Keep the human recipe relative while retaining the executable argv for tools.
@@ -41,7 +42,7 @@ export async function queuedCommand(command, args, options) {
    onWaiting: (reason, detail) => {
     const wait = { ...(detail ?? { reason }), statusCommand, statusCommandText };
     if (typeof options.onWaiting === 'function') return options.onWaiting(wait);
-    return options.report?.(waitingText(wait));
+    return options.report?.(waitingText(wait, waitingMessage));
    },
    onStarted: () => options.report(`Heavy job admitted: ${options.label}`) });
   if (result.supervisorEnded) options.report?.(result.error);

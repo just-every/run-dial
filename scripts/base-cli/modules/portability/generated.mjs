@@ -4,7 +4,7 @@ import { quote, insist } from './storage.mjs';
 // original SQL, retaining quoted tokens and balanced expressions verbatim.
 // Copies deliberately omit constraints: FK cycles and normalized duplicate
 // keys must reach the existing atomic destination validation, not fail staging.
-function tokens(sql) {
+export function tokens(sql) {
  const result=[];
  for(let i=0;i<sql.length;) {
   const start=i,c=sql[i];
@@ -23,13 +23,13 @@ function tokens(sql) {
  return result;
 }
 const word=(token,value)=>token&&!token.quoted&&folded(token.text)===value.toLowerCase();
-const identifier=token=>{
+export const identifier=token=>{
  if(!token.quoted)return token.text;
  const value=token.text.slice(1,-1),delimiter=token.text[0];
  // Bracket quoting has no doubled-delimiter escape; opening brackets are literal.
  return delimiter==='['?value:value.replaceAll(delimiter+delimiter,delimiter);
 };
-const folded=value=>value.replace(/[A-Z]/g,letter=>letter.toLowerCase());
+export const folded=value=>value.replace(/[A-Z]/g,letter=>letter.toLowerCase());
 function definitions(sql) {
  const list=tokens(sql),start=list.findIndex(token=>token.text==='(');let depth=0,part=[],result=[];
  for(const token of list.slice(start+1)) {

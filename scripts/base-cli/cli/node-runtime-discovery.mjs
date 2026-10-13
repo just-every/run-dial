@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { delimiter, join, resolve, sep } from 'node:path';
 import { invalid, missing } from './errors.mjs';
-import { cachedRuntime, nodeCache } from './node-runtime-cache.mjs';
+import { cachedRuntime, nodeCache, tidyRuntime } from './node-runtime-cache.mjs';
 
 const exact = value => typeof value === 'string' && /^v?\d+\.\d+\.\d+$/.test(value);
 // Read project-owned declarations, never import an adapter under the wrong Node.
@@ -34,7 +34,7 @@ export async function installedRuntime(version) {
  const home = homedir(), name = process.platform === 'win32' ? 'node.exe' : 'node';
  let cached, cacheError;
  try { cached = await cachedRuntime(version); } catch (error) { cacheError = error; }
- if (cached && matchesRuntime(cached, version)) return cached;
+ if (cached && matchesRuntime(cached, version)) { await tidyRuntime(version); return cached; }
  const candidates = [
   join(home, '.nvm', 'versions', 'node', `v${version}`, 'bin', name),
   ...(process.env.NVM_DIR ? [join(process.env.NVM_DIR, 'versions', 'node', `v${version}`, 'bin', name)] : []),

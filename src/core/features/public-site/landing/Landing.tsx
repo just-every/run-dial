@@ -6,19 +6,17 @@ import { Essentials } from "./sections/Essentials";
 import { Hero } from "./sections/Hero";
 import { Invitees } from "./sections/Invitees";
 import { YoursToRun } from "./sections/YoursToRun";
-import { useHomeProfile } from "./useHomeProfile";
+import type { SiteVariant } from "../chrome/context";
 import "./styles";
 
 /**
- * HOME-001. The public landing at `/`: what Dial is, for invitees and for hosts, in the public site's header and footer, with a
- * link to the host's booking profile when one is configured. It reads only that public profile, sets no cookie and loads only
- * same-origin resources; every drawing is inline and decorative, and the page reads the same without script or motion.
+ * HOME-001 adoption. The run site's approved marketing page, with public navigation and no installation data.
+ * Resources stay same-origin; every drawing is inline and decorative, and the page reads the same without script or motion.
  */
-export function Landing() {
-  const profile = useHomeProfile();
-  return <SiteFrame page="landing" className="dial-landing dial-art" skipTo="landing-content">
+export function Landing({ variant = "site" }: { variant?: SiteVariant }) {
+  return <SiteFrame variant={variant} page="landing" className="dial-landing dial-art" skipTo="landing-content">
     <main id="landing-content" tabIndex={-1}>
-      <Hero profile={profile} />
+      <Hero />
       <Invitees />
       <CheckedForYou />
       <div className="columns">

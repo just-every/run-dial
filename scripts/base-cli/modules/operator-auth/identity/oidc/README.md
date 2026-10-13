@@ -100,7 +100,7 @@ Metadata; JSON or a native form with `returnTo`, at most 4096 bytes) sends
 `response_type=code`, `response_mode=query`, the preset's scope, independent
 256-bit state and nonce, and mandatory S256 PKCE to the pinned authorization
 endpoint, with a per-state browser-binding cookie (`__Host-oa_oidc_<state>`, or
-`oa_oidc_local_<state>` on a loopback origin). State is keyed to its provider:
+`oa_oidc_local_<port>_<state>` on a loopback origin). State is keyed to its provider:
 an authorization response for one provider presented at another provider's
 redirect URI finds no transaction and is refused (the mix-up defence), and no
 code reaches the wrong token endpoint.

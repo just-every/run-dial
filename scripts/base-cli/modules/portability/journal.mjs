@@ -8,6 +8,11 @@ export async function erasureStatements(db,table,primaryKey) {
     db.prepare('UPDATE rer_portability_state SET epoch=epoch+1 WHERE id=1'),
     statement(db,'INSERT INTO rer_portability_epochs SELECT source_identity,epoch FROM rer_portability_state WHERE id=1 ON CONFLICT(source) DO UPDATE SET epoch=MAX(epoch,excluded.epoch)')];
 }
+/** Redaction keeps a value-free row portable. Fence the source checkpoint instead
+ * of banning that retained primary key from every future archive. */
+export async function redactionStatements(db) {
+  return erasureStatements(db,'rer_portability_state',{id:1});
+}
 export async function invalidateTransfersStatements(db) {
   const tables=await all(db,"SELECT name FROM sqlite_master WHERE type='table' AND (name GLOB 'rer_portability_snap_*' OR name GLOB 'rer_portability_stage_*')");
   return [...tables.map(x=>db.prepare(`DROP TABLE ${quote(x.name)}`)),db.prepare('DELETE FROM rer_portability_segments'),db.prepare('DELETE FROM rer_portability_parts'),
@@ -23,6 +28,10 @@ export async function fence(db,manifest,copies,later) {
   if(later) insist(later.sourceIdentity===manifest.sourceIdentity && Number.isSafeInteger(later.epoch) && later.epoch>=manifest.epoch && Array.isArray(later.journal),'later_journal');
   const hashes=new Set([...manifest.journal,...await journal(db,manifest.sourceIdentity),...(later?.journal??[])]);
   insist([...hashes].every(x=>/^[a-f0-9]{64}$/.test(x)),'invalid_journal');
+  // A later trusted redaction checkpoint refuses the entire older archive; an
+  // archive made after redaction still carries its anonymous attribution rows.
+  const checkpoint=await tombstone(manifest.sourceIdentity,'rer_portability_state',{id:1});
+  if(later && hashes.has(checkpoint)) insist(manifest.epoch>=later.epoch,'erasure_epoch');
   for(const table of manifest.tables) {
     for(let offset=0;offset<table.count;offset+=500) {
       const rows=await all(db,`SELECT rer_portability_tombstone FROM ${quote(sidecar(copies[table.name]))} ORDER BY rer_portability_row_order LIMIT 500 OFFSET ?`,offset);

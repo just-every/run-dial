@@ -15,7 +15,7 @@ export function createCopy(db,table,copy,snapshot=false) {
   const columns=writableColumns(table).map(c=>quote(c.name)).join(',');
   const product=table.columns.some(c=>c.generated)
     ?[db.prepare(generatedCopySQL(table,copy)),...(snapshot?[db.prepare(`INSERT INTO ${quote(copy)} SELECT ${columns} FROM ${quote(table.name)} ORDER BY ${ordering}`)]:[])]
-    :[db.prepare(`CREATE TABLE ${quote(copy)} AS SELECT * FROM ${quote(table.name)} ${snapshot?'ORDER BY '+ordering:'WHERE 0'}`)];
+    :[db.prepare(`CREATE TABLE ${quote(copy)} AS SELECT ${table.added?columns:'*'} FROM ${quote(table.name)} ${snapshot?'ORDER BY '+ordering:'WHERE 0'}`)];
   return [...product,
     db.prepare(`CREATE TABLE ${meta}(rer_portability_row_order INTEGER PRIMARY KEY,rer_portability_copy_rowid INTEGER NOT NULL UNIQUE,rer_portability_source_rowid INTEGER,rer_portability_tombstone TEXT)`),
     ...(snapshot?[db.prepare(`INSERT INTO ${meta} SELECT ROW_NUMBER() OVER(ORDER BY ${ordering})-1,ROW_NUMBER() OVER(ORDER BY ${ordering}),${table.rowidAlias?quote(table.rowidAlias):'NULL'},NULL FROM ${quote(table.name)}`)]:[])];
@@ -54,13 +54,15 @@ export function restoreCopy(db,table,copy) {
   const from=`FROM ${quote(copy)} s JOIN ${meta} m ON s.${copyRowid(table)}=m.rer_portability_copy_rowid ORDER BY m.rer_portability_row_order`;
   // SQLite's implicit insert list contains only writable columns. Keeping it
   // implicit also avoids repeating long column names within D1's SQL limit.
-  if(!table.rowidAlias)return [db.prepare(`INSERT INTO ${quote(table.name)} SELECT ${projection} ${from}`)];
+  // A bridged table names its archived columns so later ones take defaults.
+  const into=quote(table.name)+(table.added?` (${names})`:'');
+  if(!table.rowidAlias)return [db.prepare(`INSERT INTO ${into} SELECT ${projection} ${from}`)];
   if(columns.length<100&&!table.columns.some(c=>c.generated))return [db.prepare(`INSERT INTO ${quote(table.name)} (${names},${quote(table.rowidAlias)}) SELECT ${projection},m.rer_portability_source_rowid ${from}`)];
   // Avoid selecting 101 columns or repeating generated-table base column names.
   // Restore rowids in the same atomic batch using temporary negative ids below
   // both the destination and source ranges.
   const alias=quote(table.rowidAlias),base=`(SELECT MIN(0,MIN(rer_portability_source_rowid))-COUNT(*) FROM ${meta})`;
-  return [db.prepare(`INSERT INTO ${quote(table.name)} SELECT ${projection} ${from}`),
+  return [db.prepare(`INSERT INTO ${into} SELECT ${projection} ${from}`),
     db.prepare(`UPDATE ${quote(table.name)} SET ${alias}=${base}-${alias}`),
     db.prepare(`UPDATE ${quote(table.name)} AS t SET ${alias}=(SELECT rer_portability_source_rowid FROM ${meta} WHERE rer_portability_row_order=${base}-t.${alias}-1)`)];
 }

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { lstat, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { missing } from './errors.mjs';
@@ -44,4 +44,25 @@ export async function cachedRuntime(version) {
 }
 export async function recordRuntime(directory, version, releaseSha256) {
  await writeFile(join(directory, '.rer-verified.json'), JSON.stringify({ version, releaseSha256, binarySha256: await binaryDigest(runtimeBinary(directory)) }) + '\n', { flag: 'wx', mode: 0o600 });
+}
+
+// Housekeeping for a runtime whose receipt and binary have just verified. Its
+// quarantined predecessors (renamed aside by the recovery message below) are
+// stale, and Node's C++ headers in include/ are read by nothing rer runs: the
+// seeds' lockfiles hold no package that builds native code. Both cost disk on
+// every Node pin, so they go. A failure here never blocks the command; doctor
+// reports whatever is left.
+export const quarantinePrefix = version => runtimeName(version) + '.quarantine-';
+export async function tidyRuntime(version) {
+ const directory = join(nodeCache(), runtimeName(version));
+ const removable = async path => {
+  const info = await lstat(path).catch(() => undefined);
+  return info?.isDirectory() && !info.isSymbolicLink() && (!process.getuid || info.uid === process.getuid());
+ };
+ try {
+  for (const entry of await readdir(nodeCache())) {
+   if (entry.startsWith(quarantinePrefix(version)) && await removable(join(nodeCache(), entry))) await rm(join(nodeCache(), entry), { recursive: true, force: true });
+  }
+  if (await removable(join(directory, 'include'))) await rm(join(directory, 'include'), { recursive: true, force: true });
+ } catch {}
 }

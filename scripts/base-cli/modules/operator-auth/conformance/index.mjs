@@ -233,7 +233,7 @@ export function registerOperatorAuthConformance({ test, adapter }) {
     assertStatus(issued, 303);
     equal(issued.headers.get('location'), '/app/review', 'review session safe returnTo');
     const reviewCookie = cookie(issued);
-    if (!reviewCookie.startsWith('operator_session_local=')) throw new Error('Local review must use the local-only cookie name.');
+    if (!reviewCookie.startsWith(`operator_session_local_${new URL(config.origin).port}=`)) throw new Error('Local review must use the local-only cookie name for its own port.');
     const reviewSession = await json(await runtime.call('/auth/session', { cookie: reviewCookie }));
     equal(reviewSession.kind, 'review', 'review session kind');
     assertStatus(await runtime.privateRequest(reviewCookie), 200);

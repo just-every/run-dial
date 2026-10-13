@@ -55,9 +55,11 @@ default verification succeeds. Keep capacity, maximum-size memory and load cases
 in that release-only script. Both dry runs and releases require it to pass;
 `gates.verify.release` records its result. Routine CI and default verification
 do not invoke it.
-Child logs are suppressed to avoid credential disclosure; the receipt retains
-exit status and numeric final summaries from Node's spec/TAP reporters and
-Playwright's text reporters. Counts add across suites: `tests`, `passed`,
+A passing step's receipt retains exit status and numeric final summaries from
+Node's spec/TAP reporters and Playwright's text reporters. A failing install,
+`verify` or `verify:release` step also keeps `output`: the last 40 lines (at most
+8 KB) of that child's output, after the command store's credential redaction.
+The output stays in the receipt and is left out of the site preview. Counts add across suites: `tests`, `passed`,
 `failed`, `skipped` and `flaky`; nonzero `cancelled`, `todo`, `interrupted` and
 `notRun` counts are retained when reported. Playwright's total includes each
 outcome once, with flaky tests counted separately from passed tests. Node's

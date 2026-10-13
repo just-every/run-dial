@@ -4,6 +4,7 @@ import { shared } from '../../cli/shared.mjs';
 import { execFileSync, spawn } from 'node:child_process';
 import { realpathSync, existsSync, lstatSync, mkdirSync } from 'node:fs';
 import { resolve, dirname, relative, isAbsolute } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import { testSummary } from './test-summary.mjs';
 
 export function git(repo, ...args) {
@@ -56,16 +57,26 @@ export function newOutput(repo, output) {
   return output;
 }
 
-// Keep child diagnostics private: arbitrary verify scripts can print credential
-// values. Only exit status and numeric test summaries leave this boundary.
+// Child output is redacted by the command store before it is kept. A failing
+// step's receipt carries the last 40 lines of it, at most 8 KB; a passing step
+// carries only its exit status and numeric test summaries.
+const TAIL_LINES = 40, TAIL_BYTES = 8192;
+function failureTail(logs) {
+  const lines = stripVTControlCharacters(logs.join('\n')).split('\n');
+  while (lines.length && lines.at(-1).trim() === '') lines.pop();
+  const bytes = Buffer.from(lines.slice(-TAIL_LINES).join('\n'));
+  return bytes.subarray(Math.max(0, bytes.length - TAIL_BYTES)).toString('utf8').replace(/^\uFFFD+/, '');
+}
+
 export async function command(command, args, cwd) {
  const {createCommands}=await shared('commands.mjs');
  const directory=await mkdtemp(resolve(tmpdir(),'rer-release-'));
- const store=await createCommands(directory,{logs:[]},{terminal:()=>{},queue:{verb:'release'}});
+ const state={logs:[]};
+ const store=await createCommands(directory,state,{terminal:()=>{},queue:{verb:'release'}});
  const summary=testSummary(),env={...process.env,FORCE_COLOR:'0'};delete env.NODE_TEST_CONTEXT;
  try {
   await store.run('Release verification',command,args,{cwd,env,onChild:child=>child.stdout.on('data',bytes=>summary.write(bytes))});
   return {status:'PASS',exitCode:0,...summary.finish()};
- }catch(error){return {status:'FAIL',exitCode:error.childExitCode??null,...summary.finish()};}
+ }catch(error){return {status:'FAIL',exitCode:error.childExitCode??null,...summary.finish(),output:failureTail(state.logs)};}
  finally{await store.closeCommands();await rm(directory,{recursive:true,force:true});}
 }

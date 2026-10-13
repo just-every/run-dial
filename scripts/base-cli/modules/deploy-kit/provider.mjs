@@ -12,13 +12,15 @@ export function cloudflare({ accountId, token, fetch: request = globalThis.fetch
   assert(hexId(accountId), 'invalid-cloudflare-account-id');
   assert(typeof token === 'string' && token.trim() && !/[\r\n]/.test(token), 'invalid-cloudflare-api-token');
   let requests = 0;
-  async function envelope(path, { method = 'GET', body, assetToken } = {}) {
+  // `zone` scope: the zone-level API (/zones/...), for a run site's zone lookup and redirect rule.
+  async function envelope(path, { method = 'GET', body, assetToken, zone = false } = {}) {
     assert(typeof path === 'string' && /^\/[a-z0-9/_?=&.,%-]+$/i.test(path) && !path.includes('..') && !path.split('?')[0].includes('%'), 'invalid-provider-path');
+    assert(!zone || /^\/zones(?:[/?]|$)/.test(path), 'invalid-provider-path');
     assert(++requests <= maxRequests, 'provider-request-budget');
     assert(!assetToken || path === '/workers/assets/upload?base64=true', 'invalid-asset-auth-target');
     const signal = AbortSignal.timeout(timeoutMs);
     let response;
-    try { response = await request(`https://api.cloudflare.com/client/v4/accounts/${accountId}${path}`, {
+    try { response = await request(zone ? `https://api.cloudflare.com/client/v4${path}` : `https://api.cloudflare.com/client/v4/accounts/${accountId}${path}`, {
       method, redirect: 'error', signal, headers: { Authorization: `Bearer ${assetToken ?? token}`, ...(body && !(body instanceof FormData) ? { 'Content-Type':'application/json' } : {}) },
       ...(body === undefined ? {} : { body: body instanceof FormData ? body : JSON.stringify(body) }),
     }); } catch { throw new Error('provider-transport-failed'); }
@@ -95,5 +97,6 @@ export function cloudflare({ accountId, token, fetch: request = globalThis.fetch
     }
     throw new Error('provider-pagination-limit');
   }
-  return { accountId, envelope, list, async request(path, options) { return (await envelope(path, options)).result; } };
+  return { accountId, envelope, list, async request(path, options) { return (await envelope(path, options)).result; },
+    async zoneRequest(path, options = {}) { return (await envelope(path, { ...options, zone: true })).result; } };
 }

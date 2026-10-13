@@ -1,9 +1,10 @@
-import { MailValidationError, fail } from '../core/errors.mjs';
+import { MailValidationError, DevelopmentOutboxError, fail } from '../core/errors.mjs';
 import { validateConfig, validateMessage } from '../core/validation.mjs';
 import { sendResult } from '../core/transport.mjs';
 
 export { createD1DevelopmentOutbox } from './outbox.mjs';
 export { createDevelopmentOutboxHandler } from './viewer.mjs';
+export { DevelopmentOutboxError } from '../core/errors.mjs';
 
 function validate(operation, errorCode) {
   try {
@@ -27,8 +28,10 @@ export async function sendDevelopment(config, message, dependencies = {}) {
 
   try {
     await dependencies.outbox.put(snapshot);
-  } catch {
-    fail('development_outbox_failed');
+  } catch (error) {
+    // Input the outbox itself refuses stays permanent; a storage failure is worth a retry.
+    if (error instanceof MailValidationError) throw error;
+    throw new DevelopmentOutboxError();
   }
 
   return sendResult('development', 'development', null);

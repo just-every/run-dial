@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { ClosingArt } from "../drawings/ClosingArt";
 
 /** The closing call: the headline, both actions again, and the dial at rest. */
@@ -9,8 +8,8 @@ export function Closing() {
       <p>Open source, built for real calendars, and yours to run on your own Cloudflare account.</p>
     </div>
     <div className="actions closing-actions">
-      <Link className="pill pill--lg" to="/docs/$slug" params={{ slug: "install" }}>Deploy your own</Link>
-      <Link className="text-link" to="/docs">Read the docs</Link>
+      <a className="pill pill--lg" href="/run">Run Dial</a>
+      <a className="text-link" href="/docs">Read the docs</a>
     </div>
     <ClosingArt />
   </section>;

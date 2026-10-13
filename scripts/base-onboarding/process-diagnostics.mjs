@@ -37,6 +37,22 @@ export async function listeners(pids){
 async function linuxPids(){return (await readdir('/proc')).filter(name=>/^\d+$/.test(name)).map(Number);}
 async function descriptors(pid){return Promise.all((await readdir(`/proc/${pid}/fd`).catch(()=>[])).map(fd=>readlink(`/proc/${pid}/fd/${fd}`).catch(()=>'')));}
 
+const portOf=name=>Number(/:(\d+)$/.exec(name)?.[1]);
+export async function processCwd(pid){
+ if(process.platform==='linux')return readlink(`/proc/${pid}/cwd`).catch(()=>undefined);
+ return records(await run(lsof,['-a','-p',String(pid),'-d','cwd','-Fpn'])).flatMap(row=>row.names)[0];
+}
+// Every TCP port some process listens on, on any address: a wildcard listener
+// does not stop a bind to 127.0.0.1, yet it still serves that port's traffic.
+export async function listeningPorts(){return new Set((await listeners()).flatMap(row=>row.names.map(portOf)).filter(Number.isInteger));}
+// The process that listens on a port on the given host's address or on every
+// address, with its command and working directory.
+export async function portListener(port,host){
+ const bare=host?.replace(/^\[|\]$/g,''),serves=name=>{const address=name.slice(0,name.lastIndexOf(':')).replace(/^\[|\]$/g,'');return portOf(name)===port&&(!host||address==='*'||address===bare);};
+ const row=(await listeners()).find(item=>item.names.some(serves));
+ return row&&{pid:row.pid,command:await processName(row.pid),cwd:await processCwd(row.pid)};
+}
+
 export async function listenerPorts(pid){
  // Include child processes: pnpm commonly delegates the actual Vite listener.
  const rows=(await run('/bin/ps',['-axo','pid=,ppid='])).trim().split('\n').map(line=>line.trim().split(/\s+/).map(Number));
@@ -59,7 +75,10 @@ export async function localProcessConflict(root,savedOrigin){
   if(lineage.has(row.pid))continue;
   const onSavedPort=port&&row.names.some(name=>Number(/:(\d+)$/.exec(name)?.[1])===port);
   const cwd=process.platform==='linux'?[await readlink(`/proc/${row.pid}/cwd`).catch(()=>undefined)].filter(Boolean):cwdRecords.filter(item=>item.pid===row.pid).flatMap(item=>item.names);
-  const inCheckout=(await Promise.all(cwd.map(path=>realpath(path).catch(()=>undefined)))).includes(root);
+  const places=(await Promise.all(cwd.map(path=>realpath(path).catch(()=>undefined)))).filter(Boolean),inCheckout=places.includes(root);
+  // A listener running somewhere else is another program's or another checkout's
+  // server: it does not use this checkout's state, so it only blocks the port.
+  if(onSavedPort&&places.length&&!places.some(place=>place===root||place.startsWith(root+'/')))continue;
   if(onSavedPort||inCheckout)return {pid:row.pid,command:await processName(row.pid),reason:onSavedPort?`saved local port ${port}`:'this checkout'};
  }
  // A process may hold the canonical database without listening. Inspect only

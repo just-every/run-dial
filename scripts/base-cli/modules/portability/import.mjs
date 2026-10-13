@@ -8,27 +8,33 @@ import { fence, mergeJournal, tombstone } from './journal.mjs';
 import { writeObject } from './payloads.mjs';
 import { createCopy,sidecar,readCopy,restoreCopy } from './copies.mjs';
 import { excludedDependentGuards } from './restore-safety.mjs';
+import { additiveBridge, sameSchemaMigrations } from './bridge.mjs';
 import { legacyEmptyGuards, legacyAuditStatements, requireLegacyEmpty } from './legacy-safety.mjs';
 export async function createImport(context,manifest,actor='direct',legacyRecovery) {
   const {db,config,buckets}=context;await checkManifest(manifest);await state(db);
   insist(manifest.product===config.product,'wrong_product');
   const cat=await catalogue(db,config),upgrade=config.acceptedSchemas[manifest.schema];
-  insist(manifest.schema===cat.identity || upgrade,'schema_mismatch');
-  insist(canonicalJson(manifest.tables.map(x=>x.name))===canonicalJson(cat.tables.map(x=>x.name)),'table_inventory');
-  if(!upgrade)for(const table of manifest.tables) {
+  const same=manifest.schema===cat.identity;
+  const bridge=same || upgrade?undefined:await additiveBridge(db,manifest,cat,context.migrations);
+  if(same && !upgrade)await sameSchemaMigrations(db,manifest,cat,context.migrations);
+  if(!bridge)insist(canonicalJson(manifest.tables.map(x=>x.name))===canonicalJson(cat.tables.map(x=>x.name)),'table_inventory');
+  if(!upgrade && !bridge)for(const table of manifest.tables) {
     const target=cat.tables.find(t=>t.name===table.name);
     insist(canonicalJson(table.columns)===canonicalJson(target.columns) && canonicalJson(table.dependencies)===canonicalJson(target.dependencies),'column_inventory');
   }
+  // Bridged tables stage and restore only the archived columns; the destination
+  // supplies defaults for later columns and leaves later tables empty.
+  const targets=cat.tables.map(t=>bridge?.columns[t.name]?{...t,columns:manifest.tables.find(x=>x.name===t.name).columns,added:bridge.columns[t.name]}:t);
   insist(canonicalJson(manifest.excludedColumns)===canonicalJson(config.secretColumns),'secret_inventory');
   insist(canonicalJson(manifest.requiredConfiguration)===canonicalJson(config.requiredConfiguration),'configuration_inventory');
   for(const o of manifest.objects) insist(buckets[o.bucket] && config.buckets[o.bucket] && o.key.startsWith(config.buckets[o.bucket].prefix??''),'bucket_inventory');
   insist(canonicalJson(manifest.payloads.map(x=>x.name))===canonicalJson(Object.keys(config.extraPayloads).sort()),'payload_inventory');
-  const id=crypto.randomUUID(),copies=Object.fromEntries(cat.tables.map((t,i)=>[t.name,'rer_portability_stage_'+id.replaceAll('-','')+'_'+i]));
-  const row={id,kind:'import',actor,phase:'staging',completed:0,metadata:{manifest,copies,targets:cat.tables,triggers:cat.triggers,...(legacyRecovery?{legacyRecovery}: {})}};
+  const id=crypto.randomUUID(),copies=Object.fromEntries(targets.map((t,i)=>[t.name,'rer_portability_stage_'+id.replaceAll('-','')+'_'+i]));
+  const row={id,kind:'import',actor,phase:'staging',completed:0,metadata:{manifest,copies,targets,triggers:cat.triggers,...(bridge?{bridge}:{}),...(legacyRecovery?{legacyRecovery}: {})}};
   try {
     await db.batch([guard(db,'(SELECT import_job FROM rer_portability_state WHERE id=1) IS NULL'),
       statement(db,'UPDATE rer_portability_state SET import_job=? WHERE id=1',id),
-      ...cat.tables.flatMap(t=>createCopy(db,t,copies[t.name])),
+      ...targets.flatMap(t=>createCopy(db,t,copies[t.name])),
       statement(db,'INSERT INTO rer_portability_jobs(id,kind,actor,phase,metadata) VALUES(?,?,?,?,?)',id,'import',actor,row.phase,canonicalJson(row.metadata)),db.prepare('DELETE FROM rer_portability_guard')]);
   }catch(e){if((await state(db)).import_job)throw new (await import('./storage.mjs')).PortabilityError('import_running',409);throw e;}
   return id;
@@ -127,15 +133,15 @@ export async function finalizeImport(context,id,{contentHash,archiveHash,laterJo
   }
   const digest=verifier.digest();if(contentHash!==undefined)insist(contentHash===digest,'content_checksum');
   insist(archiveHash===archive.digest(),'archive_checksum',409);
-  if(row.metadata.legacyRecovery)await requireLegacyEmpty(context,row.metadata.legacyRecovery.emptyTables);
+  const checked=await fence(db,manifest,row.metadata.copies,laterJournal);
+  if(row.metadata.legacyRecovery)await requireLegacyEmpty(context,row.metadata.legacyRecovery);
   for(const table of row.metadata.targets) if(!config.replaceableTables.includes(table.name))insist(!(await statement(db,`SELECT 1 FROM ${quote(table.name)} LIMIT 1`).first()),'target_not_empty:'+table.name,409);
   const dependentGuards=await excludedDependentGuards(db,row.metadata.targets,config.replaceableTables);
   await bucketsEmpty(context,row);
-  const checked=await fence(db,manifest,row.metadata.copies,laterJournal);
   await refuseDevData(db,row.metadata.copies,row.metadata.targets);
   await refuseProviderData(db,row.metadata.copies,row.metadata.targets);
   if(config.validateStaged) {
-    const read=async table=>{insist(row.metadata.copies[table],'staged_table');const target=row.metadata.targets.find(t=>t.name===table);return (await readCopy(db,target,row.metadata.copies[table],0,row.metadata.manifest.tables.find(t=>t.name===table).count)).map(x=>x.row);};
+    const read=async table=>{insist(row.metadata.copies[table],'staged_table');const target=row.metadata.targets.find(t=>t.name===table);return (await readCopy(db,target,row.metadata.copies[table],0,row.metadata.manifest.tables.find(t=>t.name===table)?.count??0)).map(x=>x.row);};
     insist(await config.validateStaged({db,tables:{...row.metadata.copies},read,manifest})!==false,'staged_validation');
   }
   row.phase='applying';
@@ -169,7 +175,7 @@ export async function finalizeImport(context,id,{contentHash,archiveHash,laterJo
 }
 export async function importStatus(context,id) {
   const row=await job(context.db,id,'import');return {id,kind:'import',phase:row.phase,completed:row.completed,total:row.metadata.manifest.partCount,
-    contentHash:row.metadata.contentHash??null,requiredConfiguration:row.phase==='complete'?row.metadata.manifest.requiredConfiguration:[]};
+    contentHash:row.metadata.contentHash??null,requiredConfiguration:row.phase==='complete'?row.metadata.manifest.requiredConfiguration:[],...(row.metadata.bridge?{bridged:row.metadata.bridge}:{})};
 }
 export async function abortImport(context,id) {
   const row=await job(context.db,id,'import');insist(row.phase!=='complete','import_complete',409);

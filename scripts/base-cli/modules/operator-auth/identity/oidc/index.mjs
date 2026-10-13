@@ -3,7 +3,7 @@
 // has its own start and callback route; its output is a verified principal,
 // which the accounts layer admits through the admission it is given.
 import { safeReturnTo } from '../../policy.mjs';
-import { securityHeaders, requireLoopback } from '../../http.mjs';
+import { securityHeaders, requireLoopback, localCookieName } from '../../http.mjs';
 import { configure } from './config.mjs';
 import { check, OidcError } from './errors.mjs';
 import { random, isRandom, digest, keyedHash, seal, unseal } from './crypto.mjs';
@@ -18,7 +18,7 @@ export { PRESETS, MINIMUM_PROVIDER_VERSION } from './presets.mjs';
 export const HIDE_AFTER_MS = 5 * 60000;
 const PROBE_EVERY_MS = 60000;
 
-function cookieName(config, state) { return `${config.local ? 'oa_oidc_local_' : '__Host-oa_oidc_'}${state}`; }
+function cookieName(config, state) { return config.local ? `${localCookieName('oa_oidc_local', config.origin)}_${state}` : `__Host-oa_oidc_${state}`; }
 function cookie(config, state, value, age = config.transactionSeconds) {
   return `${cookieName(config, state)}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${config.secure ? '; Secure' : ''}`;
 }

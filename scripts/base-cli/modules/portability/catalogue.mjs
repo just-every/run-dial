@@ -23,15 +23,22 @@ export function policy(input) {
 }
 const identifier=value=>value.replace(/[A-Z]/g,letter=>letter.toLowerCase());
 const matches=(table,pattern)=>pattern.endsWith('%') ? identifier(table).startsWith(identifier(pattern.slice(0,-1))) : identifier(table)===identifier(pattern);
-export async function catalogue(db,config) {
+async function archived(db,config) {
   const objects=await all(db,"SELECT name,sql,type,tbl_name FROM sqlite_master WHERE sql IS NOT NULL ORDER BY name");
   const kinds=await all(db,'PRAGMA table_list');
   const derived=config.derivedTables;
   const excluded=objects.filter(x=>x.type==='table' && !config.includeTables.includes(x.name) &&
     (config.excludeTables.some(p=>matches(x.name,p)) || derived.some(p=>x.name===p || (kinds.find(k=>k.name===x.name)?.type==='shadow' && x.name.startsWith(p+'_')))));
   objects.sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0);
+  return {objects,kinds,excluded,entries:objects.filter(x=>x.type==='table' && !excluded.some(y=>y.name===x.name))};
+}
+const identityOf=tables=>sha256(canonicalJson(tables.map(({name,sql})=>({name,sql}))));
+// The archive schema identity alone, for databases that need not satisfy the policy.
+export async function schemaIdentity(db,config) { return identityOf((await archived(db,config)).entries); }
+export async function catalogue(db,config) {
+  const {objects,kinds,excluded,entries}=await archived(db,config);
   const tables=[];
-  for(const entry of objects.filter(x=>x.type==='table' && !excluded.some(y=>y.name===x.name))) {
+  for(const entry of entries) {
     insist(!/^CREATE\s+VIRTUAL\s+TABLE/i.test(entry.sql) && kinds.find(x=>x.name===entry.name)?.type!=='shadow','virtual_table:'+entry.name);
     const columns=(await all(db,`PRAGMA table_xinfo(${quote(entry.name)})`)).map(c=>({name:c.name,type:c.type,notnull:c.notnull,pk:c.pk,hidden:c.hidden}));
     insist(columns.every(c=>[0,2,3].includes(c.hidden) && !c.name.startsWith('rer_portability_')),'unsupported_column:'+entry.name);
@@ -56,7 +63,7 @@ export async function catalogue(db,config) {
     insist(tables.find(x=>x.name===table)?.columns.some(c=>c.name===keyColumn),'reference_column_missing');
     insist(!config.secretColumns[table]?.includes(keyColumn),'reference_column_excluded');
   }
-  const identity=await sha256(canonicalJson(tables.map(({name,sql})=>({name,sql}))));
+  const identity=await identityOf(tables);
   return {identity,tables,excludedTables:excluded.map(x=>x.name).sort(),triggers:objects.filter(x=>x.type==='trigger' && tables.some(t=>t.name===x.tbl_name))};
 }
 export function affinity(type) {

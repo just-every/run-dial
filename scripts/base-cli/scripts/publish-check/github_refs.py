@@ -30,10 +30,12 @@ SERVICE_URL = re.compile(r'(?i)' + URL_BOUNDARY + r'(?a:https?://|(?<!:)//)' + U
 SPONSORS_URL = re.compile(URL_BOUNDARY + r'(?a:https?://|(?<!:)//)' + USERINFO +
                           r'(?a:(?:www\.)?github\.com)' + PORT +
                           r'''/(?-i:sponsors)/(?a:[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)/?(?=[?#\s"'`<>)]|$)''', re.I)
-FILE_SUFFIX = re.compile(r'(?i)\.(?:xml|json|ya?ml|toml|[cm]?[jt]sx?|md|txt|html|css|sql|png|jpe?g|svg|zip|csv|pdf|docx|xlsx)$')
+FILE_SUFFIX = re.compile(r'(?i)\.(?:xml|json|ya?ml|toml|[cm]?[jt]sx?|md|txt|html|css|sql|png|jpe?g|svg|zip|csv|pdf|docx|xlsx|rer)$')
 DEPENDENCY = re.compile(r'(?i)\bgithub:(' + PAIR + r')(?![A-Za-z0-9_./-])')
 ACTION = re.compile(r'''(?im)^\s*(?:-\s*)?uses\s*:\s*["']?(''' + PAIR + r''')(?:/[A-Za-z0-9_./-]+)?@[^\s"']+''')
 REPOSITORY_FIELD = re.compile(r'''(?im)(?<![\w$])["'`]?(?:repository|repo|github|sourceRepository)["'`]?\s*[:=]\s*["'`]?(''' + PAIR + r''')(?![A-Za-z0-9_./-])''')
+# A code span such as `dist/client` names a path in the project, not an owner/repo.
+LOCAL_DIRECTORIES = frozenset({'dist', 'src', 'scripts', 'public', 'tests', 'docs', 'exports', 'node_modules', '.rer', '.seed'})
 SOURCE = re.compile(r'(?i)\.[cm]?[jt]sx?$')
 TYPED_REPOSITORY = re.compile(r'''(?im)(?<![\w$])(?:repository|repo|github|sourceRepository)\s*:\s*string\s*=\s*["'`](''' + PAIR + r''')["'`]''')
 DECLARED_SHORTHAND = re.compile(r'''(?im)(?<![\w$])["'`]?(?:url|fullURL)["'`]?\s*[:=]\s*["'`](''' + PAIR + r''')["'`]''')
@@ -49,6 +51,10 @@ CONTEXT_URL = re.compile(r'(?i)(?<![A-Za-z])(?:' + REPOSITORY_CONTEXT + r')'
                          + r'''[`*_~\[\]\s"']*(?:''' + URL.pattern.replace('(?i)', '') + ')')
 LINK_URL = re.compile(r'(?i)\[(?P<label>[^]\n]+)\]\(\s*(?P<url>' + URL.pattern.replace('(?i)', '') + ')')
 REPOSITORY_LABEL = re.compile(r'(?i)\b(?:' + REPOSITORY_CONTEXT + r')\b')
+# Words that make a nearby `owner/name` a repository rather than an identifier.
+# A bare "source" is not one: "source commit/tree" is ordinary prose.
+NEARBY_CONTEXT = re.compile(r'(?i)\b(?:github|repositor(?:y|ies)|repos?|forks?|forked|clones?|cloned|upstream|downstream|origin|submodules?)\b')
+CONTEXT_WINDOW = 60
 
 
 def explicit_references(text, path):
@@ -74,6 +80,20 @@ class RepositoryObject(dict):
 
 
 def references(text, path, local_paths=frozenset(), project_identity=None):
+    stated, ambiguous = reference_sets(text, path, local_paths, project_identity)
+    return stated | ambiguous
+
+
+def reference_sets(text, path, local_paths=frozenset(), project_identity=None):
+    """Split `owner/name` tokens into stated repositories and ambiguous ones.
+
+    A stated reference has GitHub context: a URL, a repository field, a labelled
+    or commanded mention, a repository route. An ambiguous token is a bare
+    word/word in prose (`commit/tree`, `rer-delegation/1`, `dmsans/v17`): it is
+    a repository only if one answers to that name privately, never because none
+    does.
+    """
+    ambiguous = set()
     repository_text = SERVICE_URL.sub('', text)
     found = {normalize(m.group(1)) for m in URL.finditer(repository_text)
              if not SPONSORS_URL.match(repository_text, m.start())}
@@ -98,13 +118,22 @@ def references(text, path, local_paths=frozenset(), project_identity=None):
                 value = value[:-len(emphasis.group())]
             repository = '/'.join(value.split('/')[:2])
             suffix = value[len(repository):]
-            if not explicit and (value in local_paths or repository in local_paths or FILE_SUFFIX.search(repository)):
+            if not explicit and (value in local_paths or repository in local_paths or FILE_SUFFIX.search(repository)
+                                 or repository.split('/')[0] in LOCAL_DIRECTORIES):
                 continue
             # A plain multi-segment path is ambiguous; GitHub's repository
             # routes, a labeled field or a GitHub command disambiguate it.
             labeled = explicit and (re.search(r'[:=|]', match['separator']) or re.match(r'(?i)github|gh\s', match['label']))
-            if not suffix or REPOSITORY_ROUTE.match(suffix) or labeled:
+            if REPOSITORY_ROUTE.match(suffix) or labeled:
                 found.add(normalize(repository))
+            elif not suffix:
+                if explicit:
+                    weak = re.fullmatch(r'(?i)source', match['label']) and not re.search(r'(?i)repository|repo', markdown[match.start():match.start('reference')])
+                else:
+                    line_start = markdown.rfind('\n', 0, match.start()) + 1
+                    around = markdown[max(line_start, match.start() - CONTEXT_WINDOW):match.end() + CONTEXT_WINDOW].split('\n', 1)[0]
+                    weak = not NEARBY_CONTEXT.search(around)
+                (ambiguous if weak else found).add(normalize(repository))
     elif METADATA.search(path) or SOURCE.search(path):
         if path.lower().endswith('.json'):
             try:
@@ -143,7 +172,7 @@ def references(text, path, local_paths=frozenset(), project_identity=None):
             found.update(normalize(m.group(1)) for m in TYPED_REPOSITORY.finditer(text))
             for declaration in declarations(text):
                 found.update(normalize(m.group(1)) for m in DECLARED_SHORTHAND.finditer(declaration))
-    return found
+    return found, ambiguous - found
 
 
 def local_dependencies(data, path):

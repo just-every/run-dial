@@ -18,8 +18,11 @@ export async function operatorPrerequisites(root,email){
    db=new DatabaseSync(join(directory,file.name),{readOnly:true});
    const applied=new Set(db.prepare('SELECT name FROM d1_migrations').all().map(row=>row.name));
    const claimed=db.prepare('SELECT COUNT(*) AS count FROM oa_bootstrap').get().count;
-   const owner=db.prepare("SELECT COUNT(*) AS count FROM oa_operators WHERE email=? AND role='owner' AND status='active'").get(email).count;
-   if(claimed===1&&owner===1&&migrations.every(name=>applied.has(name)))return true;
+   // Setup claimed this saved owner, and an active owner remains: after that
+   // owner has left, dev signs in as the remaining owner (dev identity's owner persona).
+   const saved=db.prepare('SELECT COUNT(*) AS count FROM oa_operators WHERE email=?').get(email).count;
+   const owners=db.prepare("SELECT COUNT(*) AS count FROM oa_operators WHERE role='owner' AND status='active'").get().count;
+   if(claimed===1&&saved===1&&owners>0&&migrations.every(name=>applied.has(name)))return true;
   }catch{/* A missing/corrupt/unrelated database cannot prove prior setup. */}
   finally{db?.close();}
  }

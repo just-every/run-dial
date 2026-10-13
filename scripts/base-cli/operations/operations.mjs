@@ -1,5 +1,5 @@
 import { readFile, access } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -136,8 +136,17 @@ async function checkSummary(result, descriptor, root) {
   return lines.join('\n');
 }
 
+// A first-party checkout's rer: its vendored scripts/rer.mjs, or the
+// @runeditrun/rer package it pins.
+function checkoutRer(root) {
+  const vendored = resolve(root, 'scripts/rer.mjs'), pinned = resolve(root, 'node_modules/@runeditrun/rer/bin/rer.mjs');
+  if (existsSync(vendored)) return vendored;
+  try { const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')); if ((pkg.devDependencies?.['@runeditrun/rer'] ?? pkg.dependencies?.['@runeditrun/rer']) && existsSync(pinned)) return pinned; } catch {}
+  return vendored;
+}
+
 export async function main(args = process.argv.slice(2), root = process.cwd()) {
-  const rer = resolve(root, 'scripts/rer.mjs');
+  const rer = checkoutRer(root);
   if (!['describe', 'check'].includes(args[0]) || (args.length !== 1 && !existsSync(rer))) throw new Error('Unsupported operations command.');
   // First-party projects describe and check through their RER command.
   if (existsSync(rer)) {

@@ -9,7 +9,7 @@ import { RerError, refuse } from './errors.mjs';
 // Seeds declare their real bindings and data policy. The shared module owns the
 // archive format and atomic restore; the shared runner owns its native children.
 export function localPortability({ database, binding = 'DB', buckets = {}, policy, transient = [] }) {
- async function run({ root, path, store, signal, operationToken, platform, legacyRecovery }, direction) {
+ async function run({ root, path, journal, store, signal, operationToken, platform, legacyRecovery }, direction) {
   if (direction === 'export') {
    if (await lstat(path).catch(error => { if (error.code === 'ENOENT') return null; throw error; })) throw refuse('Export requires a new archive path.');
   }
@@ -17,7 +17,10 @@ export function localPortability({ database, binding = 'DB', buckets = {}, polic
   if (direction === 'import') {
    // Refuse damaged or unverifiable archives before migrations open the
    // destination database. Worker and finalization verify again before publish.
-   try { for await (const record of fileRecords(path,legacyRecovery?readLegacyArchive:readArchive)) {} }
+   try {
+    for await (const record of fileRecords(path,legacyRecovery?readLegacyArchive:readArchive)) {}
+    if(journal)for await(const record of fileRecords(journal)) {}
+   }
    catch (error) {
     if (!(error instanceof PortabilityError)) throw error;
     const message = error.code === 'legacy_archive_unverifiable'
@@ -28,8 +31,8 @@ export function localPortability({ database, binding = 'DB', buckets = {}, polic
    }
   }
   if(legacyRecovery)store.report('Legacy v1 recovery: manifest metadata is unverified. Restored data will be audited and exported to a new v2 backup.');
-  if(platform==='container') return (await import('./container-transfer.mjs')).containerTransfer({root,path,store,signal,direction,binding,buckets,policy,transient});
-  const input={ root, path, binding, buckets, policy, transient, legacyRecovery };
+  if(platform==='container') return (await import('./container-transfer.mjs')).containerTransfer({root,path,journal,store,signal,direction,binding,buckets,policy,transient});
+  const input={ root, path, journal, binding, buckets, policy, transient, legacyRecovery };
   // Do not apply pending product migrations to a populated recovery target.
   // Check real existing bindings first; finalize repeats this under the lock.
   if(legacyRecovery)await nativeWorker(store,'legacy-preflight',input,signal);
@@ -56,6 +59,7 @@ async function nativeWorker(store,direction,input,signal) {
   let receipt; try { receipt = JSON.parse(output.trim().split('\n').at(-1)); } catch { throw new RerError('transfer_failed', 'Local portability did not return a complete receipt.', 1); }
   if (status.code !== 0 || !receipt.ok) throw new RerError(receipt.code ?? 'transfer_failed', receipt.reason==='legacy_restored_export_failed'
    ? 'Legacy data was restored and audited, but its v2 export failed. Preserve this installation, resolve the output problem, then run rer export --output FILE. Do not reset it to retry recovery.'
+   : receipt.migration ? `Restore refused (schema_mismatch:migration_data): migration ${receipt.migration} changed data after this archive was made, so its rows would skip that change. Restore an archive made after it.`
    : `The portability module refused or failed the archive operation (${receipt.reason ?? 'incomplete'}).`, receipt.exitCode ?? 1);
   delete receipt.ok;
   return receipt;

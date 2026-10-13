@@ -1,3 +1,4 @@
+import { appFetch } from './app-fetch.mjs';
 // Setup opens app-local approvals before native bootstrap. Existing owners must
 // prove their email afresh through the local outbox, just like owner controls.
 export async function approveSetupDependencies(context, post, messages) {
@@ -5,7 +6,7 @@ export async function approveSetupDependencies(context, post, messages) {
  if(!selected.length)return;
  const failure=()=>Error('Application dependency approval failed. Complete fresh app-owner approval before linking.');
  let cookie;
- const current=await fetch(new URL('/auth/dependencies/status',context.origin),{signal:context.signal}).then(response=>response.ok?response.json():null);
+ const current=await appFetch(new URL('/auth/dependencies/status',context.origin),{signal:context.signal}).then(response=>response.ok?response.json():null);
  const files=process.env.RER_LINK_TOKEN_FILES?JSON.parse(process.env.RER_LINK_TOKEN_FILES):{};
  for(const dependency of selected) {
   const body={interface:dependency.interface,issuer:context.input[dependency.address]};
@@ -21,7 +22,7 @@ export async function approveSetupDependencies(context, post, messages) {
    let id;
    for(let attempt=0;attempt<50 && !id;attempt++) {id=(await messages(context,path,email)).find(value=>!before.has(value));if(!id)await new Promise(resolve=>setTimeout(resolve,200));}
    if(!id)throw failure();
-   const response=await fetch(new URL(path+'?message='+encodeURIComponent(id),context.origin),{signal:context.signal,headers:context.devKey?{'x-rer-dev-key':context.devKey}:{}});
+   const response=await appFetch(new URL(path+'?message='+encodeURIComponent(id),context.origin),{signal:context.signal,headers:context.devKey?{'x-rer-dev-key':context.devKey}:{}});
    if(!response.ok)throw failure();
    const html=await response.text(),href=/<a\b[^>]*class="open"[^>]*href="([^"]+)"/.exec(html)?.[1];
    if(!href)throw failure();
@@ -30,7 +31,7 @@ export async function approveSetupDependencies(context, post, messages) {
    if(confirmed.status!==303)throw failure();cookie=confirmed.headers.get('set-cookie')?.split(';')[0];await confirmed.body?.cancel();
    if(!cookie)throw failure();context.store.addSecrets?.([cookie]);
   }
-  const approved=await fetch(new URL('/auth/dependencies/relink',context.origin),{method:'POST',redirect:'manual',signal:context.signal,headers:{Origin:context.origin,'Content-Type':'application/json',Cookie:cookie},body:JSON.stringify(body)});
+  const approved=await appFetch(new URL('/auth/dependencies/relink',context.origin),{method:'POST',redirect:'manual',signal:context.signal,headers:{Origin:context.origin,'Content-Type':'application/json',Cookie:cookie},body:JSON.stringify(body)});
   if(!approved.ok)throw failure();await approved.body?.cancel();
  }
 }

@@ -1,9 +1,7 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { parseJsonc } from './jsonc.mjs';
+import { declaredCronSources } from './deploy-config.mjs';
 
-// `rer dev` runs the project's declared Cron Triggers (wrangler `triggers.crons`)
-// on their schedule by calling the local runtime's scheduled test endpoint, so
+// `rer dev` runs the project's declared Cron Triggers (wrangler `triggers.crons`, from wrangler.jsonc, wrangler.toml or a deploy template)
+// on their schedule by calling the local runtime's scheduled test endpoint (the Vite plugin's under dev, Miniflare's own under preview), so
 // alerts, retries and checks behave on the owner's computer as they do deployed.
 
 const fields = [[0, 59], [0, 23], [1, 31], [1, 12], [1, 7]];
@@ -37,27 +35,22 @@ export function cronMatches(cron, date) {
  return parsed.minute.has(date.getUTCMinutes()) && parsed.hour.has(date.getUTCHours()) && parsed.month.has(date.getUTCMonth() + 1) && days;
 }
 
-// The Cron Triggers a project declares in wrangler.jsonc or wrangler.json.
-export async function declaredCrons(root) {
- for (const name of ['wrangler.jsonc', 'wrangler.json']) {
-  let text;
-  try { text = await readFile(join(root, name), 'utf8'); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }
-  let config;
-  try { config = parseJsonc(text); }
-  catch (error) {
-   throw new Error(`${name}: ${error.message}`, { cause: error });
-  }
-  const crons = config.triggers?.crons ?? [];
-  if (!Array.isArray(crons) || crons.some(cron => typeof cron !== 'string')) throw new Error(`${name} triggers.crons must be a list of cron expressions.`);
-  for (const cron of crons) parseCron(cron);
-  return crons;
- }
- return [];
+// The Cron Triggers a project declares, read from the same files `rer check` reads
+// for the deployed Worker (deploy-config.mjs). Two files that both declare
+// triggers.crons must declare the same ones: otherwise `rer dev` would run a
+// schedule the deployed Worker does not have.
+export async function declaredCrons(root, adapter) {
+ const sources = await declaredCronSources(root, adapter);
+ for (const { path, crons } of sources) for (const cron of crons) parseCron(cron);
+ const [first, ...others] = sources;
+ const clash = others.find(({ crons }) => crons.length !== first.crons.length || crons.some(cron => !first.crons.includes(cron)));
+ if (clash) throw new Error(`${first.path} declares ${JSON.stringify(first.crons)} but ${clash.path} declares ${JSON.stringify(clash.crons)}; make them the same.`);
+ return first?.crons ?? [];
 }
 
 // Fire each matching cron at the start of its minute until `signal` aborts.
 // `report` receives one record per run: { cron, ok, status?, ms, error? }.
-export function runScheduled({ crons, url, signal, report, now = () => new Date(), fetchImpl = fetch, runTimeout = 300000 }) {
+export function runScheduled({ crons, url, path = '/cdn-cgi/handler/scheduled', signal, report, now = () => new Date(), fetchImpl = fetch, runTimeout = 300000 }) {
  const parsed = crons.map(cron => [cron, parseCron(cron)]), running = new Set();
  let timer;
  const settled = new Promise(resolve => {
@@ -75,7 +68,7 @@ export function runScheduled({ crons, url, signal, report, now = () => new Date(
    running.add(cron);
    const started = Date.now();
    try {
-    const response = await fetchImpl(`${url}/cdn-cgi/handler/scheduled?cron=${encodeURIComponent(cron)}`, { signal: AbortSignal.any([signal, AbortSignal.timeout(runTimeout)]) });
+    const response = await fetchImpl(`${url}${path}?cron=${encodeURIComponent(cron)}`, { signal: AbortSignal.any([signal, AbortSignal.timeout(runTimeout)]) });
     await response.body?.cancel();
     report({ cron, ok: response.ok, status: response.status, ms: Date.now() - started });
    } catch (error) {

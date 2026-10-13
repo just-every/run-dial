@@ -1,4 +1,9 @@
 import { parseEnv } from 'node:util'
+import { basename, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+// The shared loopback predicate, beside this copy in Base or in a seed's scripts/.
+const portable = basename(dirname(dirname(fileURLToPath(import.meta.url)))) === 'base-onboarding'
+const { isLocalhostName } = await import(new URL(portable ? '../../base-cli/modules/operator-auth/loopback.mjs' : '../../modules/operator-auth/loopback.mjs', import.meta.url))
 
 export function localVariables(text) {
   // Node's dotenv parser can consume the next assignment after an unquoted
@@ -23,8 +28,8 @@ export const secretValues = (vars) => Object.entries(vars).filter(([key]) => /SE
 export function localOrigin(vars) {
   let url
   try { url = new URL(vars.AUTH_ORIGIN) } catch { /* Use a fixed, non-secret diagnostic. */ }
-  if (vars.AUTH_LOCAL !== 'true' || !url || url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.origin !== vars.AUTH_ORIGIN || url.username || url.password) {
-    throw new Error('Invalid local origin in .dev.vars: AUTH_ORIGIN must be http://127.0.0.1:PORT with AUTH_LOCAL=true. Run node scripts/rer.mjs setup to save a valid one. If you changed AUTH_ORIGIN yourself, put back the http://127.0.0.1:PORT origin setup saved, or pick a port with node scripts/rer.mjs setup --port PORT.')
+  if (vars.AUTH_LOCAL !== 'true' || !url || url.protocol !== 'http:' || (url.hostname !== '127.0.0.1' && !isLocalhostName(url.hostname)) || url.origin !== vars.AUTH_ORIGIN || url.username || url.password) {
+    throw new Error('Invalid local origin in .dev.vars: AUTH_ORIGIN must be http://127.0.0.1:PORT (or a front-door http://NAME.localhost:PORT) with AUTH_LOCAL=true. Run rer setup to save a valid one. If you changed AUTH_ORIGIN yourself, put back the http://127.0.0.1:PORT origin setup saved, or pick a port with rer setup --port PORT.')
   }
   return url
 }

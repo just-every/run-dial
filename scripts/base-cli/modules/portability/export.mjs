@@ -4,6 +4,7 @@ import { createCopy,readCopy,normalizeCopy } from './copies.mjs';
 import { canonicalJson, utf8, base64, StreamHash } from './hash.mjs';
 import { FORMAT, makePart, checkPart, ContentVerifier, ArchiveVerifier } from './format.mjs';
 import { journal } from './journal.mjs';
+import { appliedMigrations } from './bridge.mjs';
 import { capturePayload, payloadRange } from './payloads.mjs';
 import { dropProviderData } from './provider-data.mjs';
 import { dropDevData } from './dev-data.mjs';
@@ -20,7 +21,8 @@ export async function createExport(context,actor='direct') {
   }
   objects.sort((a,b)=>a.bucket<b.bucket?-1:a.bucket>b.bucket?1:a.key<b.key?-1:a.key>b.key?1:0);
   const copies=Object.fromEntries(cat.tables.map((t,i)=>[t.name,'rer_portability_snap_'+id.replaceAll('-','')+'_'+i]));
-  const manifest={kind:'manifest',format:FORMAT,version:2,product:config.product,exportedAt:new Date().toISOString(),sourceIdentity:s.source_identity,schema:cat.identity,tables:cat.tables,objects,payloads:[],excludedTables:cat.excludedTables,excludedColumns:config.secretColumns,requiredConfiguration:config.requiredConfiguration,partCount:0,epoch:s.epoch,journal:await journal(db,s.source_identity)};
+  const migrations=await appliedMigrations(db);
+  const manifest={kind:'manifest',format:FORMAT,version:2,product:config.product,exportedAt:new Date().toISOString(),sourceIdentity:s.source_identity,schema:cat.identity,tables:cat.tables,objects,payloads:[],excludedTables:cat.excludedTables,excludedColumns:config.secretColumns,requiredConfiguration:config.requiredConfiguration,partCount:0,epoch:s.epoch,journal:await journal(db,s.source_identity),...(migrations?{migrations}:{})};
   const row={id,kind:'export',actor,phase:'building',completed:0,metadata:{manifest,copies,cursor:{table:0,row:0,binary:0,offset:0},partBytes:config.partBytes}};
   await db.batch([guard(db,'EXISTS(SELECT 1 FROM rer_portability_state WHERE id=1 AND applying=0 AND source_identity=? AND epoch=?)',s.source_identity,s.epoch),
     ...cat.tables.flatMap(t=>createCopy(db,t,copies[t.name],true)),statement(db,'INSERT INTO rer_portability_jobs(id,kind,actor,phase,metadata) VALUES(?,?,?,?,?)',id,'export',actor,row.phase,canonicalJson(row.metadata)),db.prepare('DELETE FROM rer_portability_guard')]);

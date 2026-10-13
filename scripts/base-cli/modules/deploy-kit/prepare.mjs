@@ -3,7 +3,7 @@ import { mkdir, writeFile, readdir, rm } from 'node:fs/promises';
 import { resolve, join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { assert, hash, localPath } from './validation.mjs';
-import { collectFiles, regularBytes, validateArtifact, MAX_ARTIFACT } from './artifact.mjs';
+import { assetsIgnore, collectFiles, regularBytes, validateArtifact, MAX_ARTIFACT } from './artifact.mjs';
 import { collectBuildModules } from './build-modules.mjs';
 import { refuseLocalModels } from './local-only.mjs';
 
@@ -24,7 +24,8 @@ export async function packageBuild({root,source,runIdentity,productDirectory = '
   const config = JSON.parse(await regularBytes(join(build,'wrangler.json'),1024*1024));
   const main = localPath(relative(build,resolve(build,config.main)));
   const modules = await collectBuildModules(build,config,main);
-  const assets = await collectFiles(join(product,'dist/client'));
+  const ignored = assetsIgnore(await regularBytes(join(product,'dist/client/.assetsignore'),65536).then(String,error => { if (error.code === 'ENOENT') return ''; throw error; }));
+  const assets = (await collectFiles(join(product,'dist/client'))).filter(file => !ignored(file.path));
   const migrations = [];
   for (const name of (await readdir(join(product,'migrations/core'))).sort()) {
     assert(/^[0-9]+_[a-zA-Z0-9_-]+\.sql$/.test(name),'unexpected-migration-file');

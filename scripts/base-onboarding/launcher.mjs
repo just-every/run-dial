@@ -5,7 +5,7 @@ import { readAnswers, readSecrets } from './prefill.mjs';
 import { startInstaller } from './server.mjs';
 export async function launch(root,seed){
 refuseLegacySetup(seed);
-if(process.argv.includes('--help')){console.log(`Launch the standalone ${seed.product} installer before installing app dependencies.\nCommand-line setup instead: node scripts/rer.mjs install, then node scripts/rer.mjs setup.\nUsage: node ${relative(process.cwd(),process.argv[1])} [--port <local-port>] [--no-open] [--agent] [--no-prefill | --resume] [--answers answers.json] [--secrets-stdin]`);process.exit(0)}
+if(process.argv.includes('--help')){console.log(`Launch the standalone ${seed.product} installer before installing app dependencies.\nCommand-line setup instead: rer install, then rer setup.\nUsage: node ${relative(process.cwd(),process.argv[1])} [--port <local-port>] [--no-open] [--agent] [--no-prefill | --resume] [--answers answers.json] [--secrets-stdin]`);process.exit(0)}
 let noOpen=false,port=0,answersPath,secrets=false,noPrefill=false,resume=false,agent=false;
 const args=process.argv.slice(2);
 for(let index=0;index<args.length;index++){

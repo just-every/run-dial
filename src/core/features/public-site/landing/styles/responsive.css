@@ -49,9 +49,6 @@
   .dial-landing .closing-copy, .dial-landing .closing-actions, .dial-landing .closing-art { grid-column: 1; grid-row: auto; }
   .dial-landing .closing-art { justify-self: center; }
 }
-@media (max-width: 560px) {
-  .dial-landing .host-chip { row-gap: 0; margin-bottom: 24px; padding: 0 16px 0 14px; border-radius: 20px; }
-}
 @media (max-width: 480px) {
   .dial-landing .hero-title { font-size: clamp(46px, 14vw, 56px); }
   .dial-landing .pill--lg { min-height: 56px; padding: 0 28px; font-size: 18px; }

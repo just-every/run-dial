@@ -23,12 +23,16 @@ export async function queuedEntrypoint(url,verb='verify') {
  }finally{await store?.closeCommands();await rm(directory,{recursive:true,force:true});}
 }
 
-if(process.argv[1] && pathToFileURL(resolve(process.argv[1])).href===import.meta.url){
- const [verb,separator,command,...args]=process.argv.slice(2);
- if(separator!=='--'||!command)throw Error('Usage: queued-entry VERB -- COMMAND ARGS');
+// `node queued-entry.mjs VERB -- COMMAND ARGS` (a vendored copy) and
+// `rer queue VERB -- COMMAND ARGS` (a pinned package): run COMMAND once the
+// machine job queue admits it, and return its exit status.
+export async function queuedCommandLine([verb,separator,command,...args]){
+ if(!verb||separator!=='--'||!command)throw Error('Usage: queued-entry VERB -- COMMAND ARGS');
  const directory=await mkdtemp(join(tmpdir(),'rer-heavy-'));
  const store=await createCommands(directory,{logs:[]},{terminal:text=>process.stdout.write(text),queue:{verb}});
- try{await store.run(verb,command,args,{cwd:process.cwd()});}
- catch(error){process.exitCode=error.childExitCode??1;}
+ try{await store.run(verb,command,args,{cwd:process.cwd()});return 0;}
+ catch(error){return error.childExitCode??1;}
  finally{await store.closeCommands();await rm(directory,{recursive:true,force:true});}
 }
+
+if(process.argv[1] && pathToFileURL(resolve(process.argv[1])).href===import.meta.url)process.exitCode=await queuedCommandLine(process.argv.slice(2));

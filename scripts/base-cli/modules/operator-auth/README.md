@@ -213,7 +213,9 @@ The standalone module's default conformance still requires no font resources.
 Opaque 256-bit credentials are HMAC-SHA256 hashed with domain separation at rest.
 Cookies are host-only, Path=/, HttpOnly, SameSite=Lax; production uses Secure and
 `__Host-operator_session`. Explicit `local:true` allows only literal localhost,
-127.0.0.1 or [::1] and uses `operator_session_local`. Session expiry defaults to
+127.0.0.1 or [::1] and uses `operator_session_local_<port>` (for example
+`operator_session_local_8787`): browsers keep cookies per host, not per port, so
+checkouts side by side on one loopback host each keep their own session. Session expiry defaults to
 7 days (maximum 30), links to 15 minutes (maximum 60); no silent sliding renewal.
 `returnTo` must be a local absolute path; unsafe values become `/app`. It is stored
 with the token, and cannot be replaced on confirmation. Auth methods never return
@@ -431,7 +433,7 @@ local reverse proxy makes remote requests look local (forwarded requests carry
 a loopback URL and Host, and `CF-Connecting-IP` is whatever the caller sent), so
 the gate is the key, not the network. `devGate({key, origin, local})` returns
 null unless the key is present and the origin is an explicit loopback origin in
-local mode. `admits(request)` accepts the `rer_dev_gate` cookie (an HMAC of the
+local mode. `admits(request)` accepts the `rer_dev_gate_<port>` cookie (an HMAC of the
 key, so a reset key refuses old cookies) or the key in `x-rer-dev-key` (the rer
 CLI and test harnesses). `exchange(request)` serves `GET /__dev/key` and trades
 the key from the URL fragment, through a same-origin POST, for a host-only

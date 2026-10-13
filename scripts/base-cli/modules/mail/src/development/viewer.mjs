@@ -1,11 +1,18 @@
 import { detail, document, listing, style, themedStyle } from './viewer-html.mjs';
 
+// The mail module runs as its own module root (in workerd too), so it cannot
+// import operator-auth's shared predicate (modules/operator-auth/loopback.mjs);
+// this is the same rule: the loopback hosts, 127/8, or a name under .localhost
+// (the front door's http://NAME.localhost:PORT).
+const localhostName = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost$/;
+const isLoopbackHost = hostname => hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || (hostname.length <= 253 && localhostName.test(hostname));
+
 function localOrigin(origin) {
   if (typeof origin !== 'string') return null;
   try {
     const url = new URL(origin);
     const ipv4 = url.hostname.split('.');
-    const loopback = url.hostname === 'localhost' || url.hostname === '[::1]' ||
+    const loopback = isLoopbackHost(url.hostname) ||
       (ipv4.length === 4 && ipv4[0] === '127' && ipv4.every(part => /^(0|[1-9]\d{0,2})$/.test(part) && Number(part) <= 255));
     return loopback && ['http:', 'https:'].includes(url.protocol) && url.origin === origin ? url : null;
   } catch { return null; }

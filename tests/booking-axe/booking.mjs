@@ -6,7 +6,7 @@ export async function bookingJourney(browser, origin, scans, errors, widths = [1
     const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 1024 }, locale: "de-DE", timezoneId: "America/New_York" });
     try {
       const page = await context.newPage(); trackPage(page, errors); const audit = auditor(page, width, scans);
-      await page.goto(origin + "/"); await page.locator(".host-chip-link").waitFor(); await linkContrast(page.locator(".host-chip-link")); await audit("home");
+      await page.goto(origin + "/"); await page.locator(".door-card .btn").waitFor(); await audit("home");
       await page.goto(origin + "/book/dial-host"); await page.locator(".pb-event-card").first().waitFor(); await audit("profile");
       await page.goto(origin + "/book/dial-host/intro"); await page.locator(".pb-slot-button").first().waitFor();
       if (width === 390) { const menu = page.getByRole("button", { name: "Menu", exact: true }); await menu.click(); await page.keyboard.press("Escape"); assert.equal(await menu.getAttribute("aria-expanded"), "false"); assert.ok(await menu.evaluate(el => el === globalThis.document.activeElement)); }

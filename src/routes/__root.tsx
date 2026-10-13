@@ -1,3 +1,5 @@
+import { clientMount } from "../core/app/public-mount";
+import { SiteDeploymentContext } from "../core/features/public-site/chrome/context";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import { withEditorLeaf } from "../core/features/editor/editor-leaf";
 import { loadDocument } from "../core/app/loaders";
@@ -15,4 +17,4 @@ export const Route = createRootRoute({
   component: Root,
 });
 const DocumentRecovery = withEditorLeaf(() => <PublicRecoveryPage kind="booking" />);
-function Root() { const result = Route.useLoaderData(); const data = { renderInstant: result.renderInstant, status: result.status, payload: result.payloadJson ? JSON.parse(result.payloadJson) : null }; return <html lang="en"><head><HeadContent /></head><body><div id="root"><DocumentData.Provider value={data}>{data.status >= 400 ? <DocumentRecovery /> : <Outlet />}</DocumentData.Provider></div><Scripts /></body></html>; }
+function Root() { const result = Route.useLoaderData(); const data = { renderInstant: result.renderInstant, status: result.status, payload: result.payloadJson ? JSON.parse(result.payloadJson) : null }; return <html lang="en"><head><HeadContent /></head><body><div id="root"><SiteDeploymentContext.Provider value={clientMount.deploymentConfig}><DocumentData.Provider value={data}>{data.status >= 400 ? <DocumentRecovery /> : <Outlet />}</DocumentData.Provider></SiteDeploymentContext.Provider></div><Scripts /></body></html>; }

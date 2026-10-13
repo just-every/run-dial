@@ -19,6 +19,7 @@ const cloudflareEnv = process.env.CLOUDFLARE_ENV ?? "";
 // Erasure imports the maintained portability runtime. Admit its exact SSR graph,
 // keeping the CLI, other scripts and private repository files outside this allowlist.
 const portabilityRuntimeFiles = [
+  "scripts/base-cli/modules/portability/bridge.mjs",
   "scripts/base-cli/modules/portability/catalogue.mjs",
   "scripts/base-cli/modules/portability/copies.mjs",
   "scripts/base-cli/modules/portability/dev-data.mjs",
@@ -32,6 +33,7 @@ const portabilityRuntimeFiles = [
   "scripts/base-cli/modules/portability/journal.mjs",
   "scripts/base-cli/modules/portability/legacy-safety.mjs",
   "scripts/base-cli/modules/portability/lines.mjs",
+  "scripts/base-cli/modules/portability/migration-statements.mjs",
   "scripts/base-cli/modules/portability/payloads.mjs",
   "scripts/base-cli/modules/portability/provider-data.mjs",
   "scripts/base-cli/modules/portability/restore-safety.mjs",
@@ -72,7 +74,7 @@ export default defineConfig(async ({ command }) => {
     define: { __DIAL_SOURCE_URL__: JSON.stringify(readRepository(process.cwd()).url) },
     // Workerd requests SSR imports through Vite too; allow the imported shared modules
     // and the public capacity manifest without exposing the repository root.
-    server: { fs: { strict: true, allow: ["src", "public", "node_modules", "modules/editor", "modules/operator-auth", "modules/owner-claim", "modules/mail", "modules/local-signin", "modules/import-kit", "seed.json", ...portabilityRuntimeFiles], deny: ["**/.rer/**", "**/.seed/**", "**/exports/**", "**/*.rer"] } },
+    server: { fs: { strict: true, allow: ["src", "public", "node_modules", "modules/editor", "modules/operator-auth", "modules/owner-claim", "modules/mail", "modules/local-signin", "modules/import-kit", "seed.json", "deploy-site.json", ...portabilityRuntimeFiles], deny: ["**/.rer/**", "**/.seed/**", "**/exports/**", "**/*.rer"] } },
     plugins: [cloudflare({ config: command === "serve" ? (config) => ({ ...(process.env.RER_DEV_ORIGIN ? { vars: { ...config.vars, APP_URL: process.env.RER_DEV_ORIGIN, ...devKey } } : {}), ...(devKey ? { main: devEntry } : {}), assets: { ...config.assets, run_worker_first: ["/*", "!/@*", "!/src/*", "!/node_modules/*", "!/modules/editor/*"] } }) : undefined, configPath: wranglerConfig, persistState, inspectorPort, viteEnvironment: { name: "ssr" } }), docsSite(), tanstackStart({ prerender: { enabled: false } }), react(), tailwindcss(), buildAssets(), archiveOutputGuard()],
   };
 });

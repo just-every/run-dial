@@ -46,17 +46,20 @@ export async function exportArchive(service, path, transient) {
   if (id) await service.exports.abort(id);
  }
 }
-export async function importArchive(service, path, transient) {
+export async function importArchive(service, path, transient, journal) {
  let id, manifest, closing, complete = false;
  try {
-  // Validate all parts and the closing hash before creating any restore state.
-  for await (const record of fileRecords(path)) {}
+  // Validate both complete archives before creating any restore state.
+  let later;
+  for (const file of [path, journal].filter(Boolean)) for await (const record of fileRecords(file)) {
+   if (file === journal && record.kind === 'manifest') later = { sourceIdentity: record.sourceIdentity, epoch: record.epoch, journal: record.journal };
+  }
   for await (const record of fileRecords(path)) {
    if (record.kind === 'manifest') { manifest = record; id = await service.imports.create(manifest); }
    else if (record.kind === 'part') await service.imports.uploadPart(id, record.index, record);
    else closing = record;
   }
-  await service.imports.finalize(id, { contentHash: closing.contentHash, archiveHash: closing.archiveHash }); complete = true;
-  return receipt(manifest, closing, transient);
+  const status = await service.imports.finalize(id, { contentHash: closing.contentHash, archiveHash: closing.archiveHash, ...(later ? { laterJournal: later } : {}) }); complete = true;
+  return { ...receipt(manifest, closing, transient), ...(status.bridged ? { bridged: status.bridged } : {}) };
  } finally { if (id && !complete) await service.imports.abort(id); }
 }

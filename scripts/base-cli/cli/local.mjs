@@ -6,7 +6,10 @@ import { contained } from './project.mjs';
 import { shared } from './shared.mjs';
 import { origin, loopback } from './parse.mjs';
 import { refuse } from './errors.mjs';
+import { defaultPort, firstFreePort, busyPortMessage } from './port.mjs';
 import { localSettingKeys } from './settings.mjs';
+import { doorSite } from './door.mjs';
+import { selectDoor } from './door-mode.mjs';
 
 export async function selectedOrigin(project, options, { setup = false } = {}) {
  const { readSettings } = await shared('adapter-settings.mjs');
@@ -17,23 +20,36 @@ export async function selectedOrigin(project, options, { setup = false } = {}) {
   try { previous = new URL(vars[originKey]); } catch { throw refuse('Saved origin is malformed. Restore private settings or use confirmed reset.'); }
   if (previous.origin !== vars[originKey] || previous.protocol !== 'http:' || !loopback(previous.hostname.replace(/^\[|\]$/g, ''))) throw refuse('Saved origin is unsafe. Restore private settings or use confirmed reset.');
  }
- const host = options.host ?? previous?.hostname.replace(/^\[|\]$/g, '') ?? '127.0.0.1';
- const port = options.port ?? Number(previous?.port || (previous ? 80 : 8787));
+ // A front-door origin (saved, or --door on a fresh setup) serves through the door.
+ const door = await selectDoor(project, options, previous, { vars, savedOrigin: previous?.origin });
+ if (door) return door;
+ const host = options.host ?? (previous && !doorSite(previous.origin) ? previous.hostname.replace(/^\[|\]$/g, '') : '127.0.0.1');
+ const savedPort = previous && !doorSite(previous.origin) ? Number(previous.port || 80) : undefined;
+ // A first setup with no port asked for takes the first free one, never a busy one.
+ let port = options.port ?? savedPort, taken;
+ if (port === undefined && setup) { port = await firstFreePort(host); taken = port !== defaultPort; }
+ port ??= defaultPort;
  const url = origin(host, port);
- if (setup && previous && previous.origin !== url) throw refuse('Setup origin conflicts with the saved installation. Reuse its origin or back up data and run rer reset --yes.');
- return { url, host, port, vars, savedOrigin: previous?.origin };
+ // Setup on a saved checkout moves it to another port; the host stays.
+ let moved;
+ if (setup && previous && previous.origin !== url) {
+  if (previous.hostname.replace(/^\[|\]$/g, '') !== host) throw refuse('Setup origin conflicts with the saved installation. Reuse its origin or back up data and run rer reset --yes.');
+  moved = { from: savedPort, to: port };
+ }
+ return { url, host, port, vars, savedOrigin: previous?.origin, moved, explicitPort: options.port !== undefined, ...(taken ? { skipped: defaultPort } : {}) };
 }
 
-export async function availablePort(host, port) {
+export async function availablePort(host, port, { root, saved = false } = {}) {
  const socket = createServer();
  try { await new Promise((resolve, reject) => { socket.once('error', reject); socket.listen(port, host, resolve); }); }
- catch {
-  const {listeners,processName}=await shared('process-diagnostics.mjs');
-  const owner=(await listeners()).find(row=>row.names.some(name=>Number(/:(\d+)$/.exec(name)?.[1])===port));
-  const detail=owner?` PID ${owner.pid} (${await processName(owner.pid)}) owns its listener. Stop it with kill -TERM ${owner.pid}.`:'';
-  throw refuse(`Requested port ${port} is unavailable.${detail} Stop its owner or choose an explicit free port; rer does not drift.`);
+ catch (error) {
+  if (error.code !== 'EADDRINUSE') throw refuse(`Port ${port} cannot be used on ${host}: ${error.code ?? error.message}.`);
+  throw refuse(await busyPortMessage({ port, host, root, saved }));
  }
  finally { if (socket.listening) await new Promise(resolve => socket.close(resolve)); }
+ // A server on every address (*:port) lets a bind to 127.0.0.1 succeed.
+ const { portListener } = await shared('process-diagnostics.mjs');
+ if (await portListener(port, host)) throw refuse(await busyPortMessage({ port, host, root, saved }));
 }
 
 export {setupInput} from './setup-input.mjs';
@@ -84,6 +100,7 @@ export async function refuseLegacyProcess(project,{reset=false}={}) {
  // Confirmed reset can recover malformed settings; checkout/state custody is
  // still checked even when there is no usable saved origin.
  const {localProcessConflict}=await shared('process-diagnostics.mjs');
- const conflict=await localProcessConflict(project.root,selected?.savedOrigin);
+ // The front door holds a door origin's port, not this checkout.
+ const conflict=await localProcessConflict(project.root,selected?.door?undefined:selected?.savedOrigin);
  if(conflict)throw refuse(`A local process holds ${conflict.reason}: PID ${conflict.pid} (${conflict.command}). Stop it with kill -TERM ${conflict.pid}, then retry. Use rer dev --stop or rer preview --stop for a registered server.`);
 }

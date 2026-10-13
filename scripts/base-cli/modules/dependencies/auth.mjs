@@ -32,7 +32,9 @@ export function linkedProviders(options) {
   async logout(request){return backchannelLogout({...options,request});},
   async list(){const p=await current();return p===staticProviders?(p?.list()??[]):[...await staticProviders?.list()??[],...await p?.list()??[]];},
   async links(){const p=await current();const links=[...await staticProviders?.links()??[],...(p!==staticProviders?await p?.links()??[]:[])];return [...new Map(links.map(link=>[link.id,link])).values()];},
-  async relink(){throw new Error('Use the dependency link with fresh local owner proof');},
-  async unlink(){throw new Error('Use the dependency unlink with fresh local owner proof');},
+  // The Auth dependency is linked and unlinked through its own approval routes;
+  // a static provider keeps its own pin controls.
+  async relink(id){if(id==='auth')throw new Error('Use the dependency link with fresh local owner proof');return staticProviders.relink(id);},
+  async unlink(id){if(id==='auth')throw new Error('Use the dependency unlink with fresh local owner proof');return staticProviders.unlink(id);},
  };
 }

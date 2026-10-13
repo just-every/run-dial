@@ -32,6 +32,8 @@ async function checkManifestFields(m) {
   insist(typeof m.product==='string' && typeof m.sourceIdentity==='string' && typeof m.exportedAt==='string','manifest_identity');
   insist(Number.isSafeInteger(m.partCount) && m.partCount>=0 && Number.isSafeInteger(m.epoch) && m.epoch>=0,'manifest_counts');
   insist(Array.isArray(m.tables) && Array.isArray(m.objects) && Array.isArray(m.payloads) && Array.isArray(m.journal) && Array.isArray(m.requiredConfiguration),'manifest_inventory');
+  // Applied product migrations, recorded by archives since additive restore.
+  insist(m.migrations===undefined || (Array.isArray(m.migrations) && m.migrations.every(x=>typeof x==='string')),'manifest_inventory');
   insist(m.schema===await sha256(canonicalJson(m.tables.map(({name,sql})=>({name,sql})))),'schema_checksum');
   insist(m.tables.every((t,i)=>typeof t.name==='string' && typeof t.sql==='string' && Array.isArray(t.columns) && Array.isArray(t.dependencies) && Number.isSafeInteger(t.count) && t.count>=0 && (!i || m.tables[i-1].name<t.name)),'table_inventory');
   for(const collection of [m.objects,m.payloads]) {

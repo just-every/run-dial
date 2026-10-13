@@ -18,7 +18,7 @@ const segment = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const STATE_KIND = 'rer-deploy-owner-state';
 const KINDS = ['d1','r2','kv','queues'];
 const DECLARATION_KEYS = ['version','project','compatibilityDate','compatibilityFlags','d1','r2','kv','queues','durableObjects','secrets','crons','vars','originVar','services','workersDev','platforms','container'];
-const ENTRY_KEYS = {d1:['binding'],r2:['binding','locationHint'],kv:['binding'],queues:['binding','consumer','deadLetterQueue'],durableObjects:['binding','className','storage'],secrets:['binding','environment'],services:['binding','project','entrypoint','allowedHosts','grant']};
+const ENTRY_KEYS = {d1:['binding'],r2:['binding','locationHint'],kv:['binding'],queues:['binding','consumer','deadLetterQueue'],durableObjects:['binding','className','storage'],secrets:['binding','environment','verifyStandIn'],services:['binding','project','entrypoint','allowedHosts','grant']};
 
 function refuse(code, kind, name) { const error = new Error(code); error.resource = `${kind}:${name}`; return error; }
 
@@ -110,7 +110,8 @@ export function ownerPlan(target, declaration, artifact, { localOnlyKeys = [] } 
     ...(kv.length ? {kv} : {}),
     queues:queues.map(item => ({...item,name:name(item.binding),...(item.deadLetterQueue === undefined ? {} : {deadLetterQueue:name(item.deadLetterQueue)})})),
     durableObjects:entries(declaration,'durableObjects').map(item => ({...item})),
-    secrets:entries(declaration,'secrets').map(item => ({...item})),
+    // verifyStandIn is only `rer verify`'s hosted-check value: never planned, sent or stored.
+    secrets:entries(declaration,'secrets').map(({verifyStandIn,...item}) => { assert(verifyStandIn === undefined || typeof verifyStandIn === 'string' && verifyStandIn.length > 0 && verifyStandIn.length <= 1024, 'invalid-verify-stand-in'); return item; }),
     crons:[...(declaration.crons ?? [])],vars,
     // Only declarations using these add the keys, so earlier plans and fingerprints are unchanged.
     ...(services.length ? {services} : {}),...(declaration.workersDev === false ? {workersDev:false} : {})});
@@ -182,7 +183,7 @@ async function checkSavedResourceIdentities(api, state) {
 async function checkServiceWorkers(api, plan) {
   for (const {service} of plan.services ?? []) if (await workerSettings(api, service) === null) throw refuse('service-worker-missing','service',service);
 }
-async function workerSettings(api, worker) {
+export async function workerSettings(api, worker) {
   try { return await api.request(`/workers/scripts/${worker}/settings`); }
   catch (error) { if (error.status === 404) return null; throw error; }
 }
@@ -220,7 +221,7 @@ async function checkOwnedWorker(api, plan, artifact, state) {
 }
 
 /** One deploy at a time per state file: an exclusive lock file for the whole run. */
-async function withStateLock(path, run) {
+export async function withStateLock(path, run) {
   await mkdir(dirname(path),{recursive:true,mode:0o700});
   const lock = `${path}.lock`;
   let handle;
@@ -281,10 +282,6 @@ async function deployLocked({api, target, plan, artifact, statePath, env, fetch,
   }};
   const receipt = await deploy({api:observed, plan, artifact, artifactSha256:hash(artifact), previousReceipt:state.receipt ?? undefined,
     createResources:false, uploadWithoutReceipt:true, env, fetch, healthOptions, readiness,
-    onActivated: async active => {
-      state.pendingUpload.provider = {versionId:active.versionId,deploymentId:active.deploymentId,etag:active.etag};
-      await save();
-    },
     onReceipt: async candidate => { if (candidate.changed || !state.receipt) { state.receipt = candidate; delete state.pendingUpload; await save(); } },
     // Keep each first-health attempt beside the identity it belongs to.
     onHealth: async candidate => { if (candidate.changed) { state.receipt = candidate; await save(); } }});

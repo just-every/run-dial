@@ -17,9 +17,13 @@ export function base64(bytes) {
   for (let i = 0; i < bytes.length; i += 8192) result += String.fromCharCode(...bytes.subarray(i, i + 8192));
   return btoa(result);
 }
+// Canonical base64 only: a plain character-class scan (no group repetition, so no regex stack) and
+// the padding rule by arithmetic, in time linear in the input however large an original is.
 export function unbase64(value) {
-  if (typeof value !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) throw new Error('invalid_base64');
-  return Uint8Array.from(atob(value), c => c.charCodeAt(0));
+  if (typeof value !== 'string' || value.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw new Error('invalid_base64');
+  const text = atob(value), bytes = new Uint8Array(text.length);
+  for (let i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);
+  return bytes;
 }
 
 // Incremental SHA-256 for semantic JSON and objects. SubtleCrypto has no streaming

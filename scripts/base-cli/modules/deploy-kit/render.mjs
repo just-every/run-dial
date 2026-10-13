@@ -1,7 +1,11 @@
 import { assert, stable } from './validation.mjs';
+/** Every request reaches the Worker first, so its routing, origin admission and private-path
+ * refusals decide what is served; the Worker serves built files from env.ASSETS itself.
+ * `rer verify` serves the local build with this same setting (cli/hosted-output.mjs). */
+export const RUN_WORKER_FIRST = true;
 export function renderConfig(plan, resources, accountId, sourceSha, fingerprint, main, hasAssets = false) {
   return { name:plan.worker, account_id:accountId, main, compatibility_date:plan.compatibilityDate, compatibility_flags:plan.compatibilityFlags ?? [], workers_dev:plan.workersDev !== false,
-    ...(hasAssets ? {assets:{directory:'__static',binding:'ASSETS',run_worker_first:true}} : {}),
+    ...(hasAssets ? {assets:{directory:'__static',binding:'ASSETS',run_worker_first:RUN_WORKER_FIRST}} : {}),
     vars:{...plan.vars,RER_DEPLOY_SOURCE:sourceSha,RER_DEPLOY_FINGERPRINT:fingerprint}, version_metadata:{binding:'RER_VERSION'},
     d1_databases:resources.d1.map(x => ({binding:x.binding,database_name:x.name,database_id:x.id})), r2_buckets:resources.r2.map(x => ({binding:x.binding,bucket_name:x.name})),
     queues:{producers:resources.queues.map(x => ({binding:x.binding,queue:x.name})), consumers:plan.queues.filter(x => x.consumer).map(x => ({queue:x.name,...(x.deadLetterQueue ? {dead_letter_queue:x.deadLetterQueue} : {}),max_batch_size:x.consumer.batch_size,max_retries:x.consumer.max_retries,...(x.consumer.max_wait_time_ms === undefined ? {} : {max_batch_timeout:x.consumer.max_wait_time_ms/1000}),...(x.consumer.max_concurrency === undefined ? {} : {max_concurrency:x.consumer.max_concurrency}),...(x.consumer.retry_delay === undefined ? {} : {retry_delay:x.consumer.retry_delay})}))},

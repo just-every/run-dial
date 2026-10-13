@@ -1,9 +1,15 @@
 import { resolve } from 'node:path';
-import { commonFlags, verbs } from './contract.mjs';
+import { commonFlags, serverDefaults, verbs } from './contract.mjs';
 import { invalid, refuse } from './errors.mjs';
-const booleans = new Set(['--help', '--json', '--non-interactive', '--yes', '--dry-run', '--open', '--stop', '--no-queue', '--login', '--legacy-v1', '--acknowledge-unverified-metadata']);
+import { isLoopbackHost } from '../modules/operator-auth/loopback.mjs';
+const booleans = new Set(['--help', '--json', '--non-interactive', '--yes', '--dry-run', '--open', '--stop', '--no-queue', '--login', '--legacy-v1', '--acknowledge-unverified-metadata', '--door', '--direct', '--site']);
 export const mailbox = value => typeof value === 'string' && value.length <= 254 && /^[a-zA-Z0-9.!+_%\-]+@[a-zA-Z0-9\-]+(?:\.[a-zA-Z0-9\-]+)+$/.test(value);
-export const loopback = host => ['127.0.0.1', 'localhost', '::1'].includes(host);
+// A loopback host: the shared predicate (including `*.localhost` door names),
+// plus `::1` as --host and a bracket-stripped hostname spell it.
+export const loopback = host => host === '::1' || isLoopbackHost(host);
+// The addresses rer binds directly. A `*.localhost` name is reached through the
+// front door; binding one would give a `::1`-only listener on macOS.
+export const listenHost = host => ['127.0.0.1', 'localhost', '::1'].includes(host);
 export const origin = (host, port) => `http://${host === '::1' ? '[::1]' : host}:${port}`;
 
 export function parse(argv, cwd = process.cwd(), { independent = false, deferTail = false } = {}) {
@@ -39,12 +45,15 @@ export function parse(argv, cwd = process.cwd(), { independent = false, deferTai
  }
  if (options.help) return options;
  if (deferTail) { options.cwd=resolve(cwd,options.cwd);return options; }
- if(options.stop && ['--port','--host','--idle-timeout','--no-queue','--as','--login','--models','--models-service'].some(flag=>options.supplied.has(flag)))throw invalid('--stop cannot be combined with start-only flags.');
+ if(options.stop && ['--port','--host','--idle-timeout','--no-queue','--as','--login','--models','--models-service','--door','--direct'].some(flag=>options.supplied.has(flag)))throw invalid('--stop cannot be combined with start-only flags.');
+ // --port and --host always mean direct mode; --door and --direct pick a mode.
+ if(options.door&&options.direct)throw invalid('Choose one of --door and --direct.');
+ if(options.door&&['--port','--host'].some(flag=>options.supplied.has(flag)))throw invalid('--door cannot be combined with --port or --host, which always serve directly.');
  if(options.models!==undefined && !['fake','live'].includes(options.models))throw invalid('--models takes fake or live.');
  if(options.modelsService!==undefined && options.models!=='live')throw invalid('--models-service requires --models live.');
  if(options.as!==undefined && (options.login || !/^[a-z][a-z0-9-]{0,39}$/.test(options.as)))throw invalid(options.login?'--as and --login cannot be combined.':'--as takes a persona name such as owner, signed-out or admin.');
  if(['dev','preview'].includes(verb) && !options.stop){
-  const value=options.idleTimeout??process.env.RER_SERVER_IDLE_SECONDS??'1800';
+  const value=options.idleTimeout??process.env.RER_SERVER_IDLE_SECONDS??String(serverDefaults.idleSeconds);
   if(!/^[1-9][0-9]*$/.test(value)||!Number.isSafeInteger(Number(value)))throw invalid('Idle timeout must be positive integer seconds.');
   options.idleTimeout=Number(value);
  }
@@ -53,9 +62,10 @@ export function parse(argv, cwd = process.cwd(), { independent = false, deferTai
   options.port = Number(options.port);
  }
  for(const key of ['httpPort','httpsPort'])if(options[key]!==undefined){if(!/^[0-9]+$/.test(options[key])||Number(options[key])<1||Number(options[key])>65535)throw invalid('Ingress port must be an integer from 1 to 65535.');options[key]=Number(options[key]);}
+ if(options.site&&['platform','image','bindAddress','httpPort','httpsPort','envFile','host'].some(key=>options[key]!==undefined))throw invalid('--site takes no platform, container or host flags: the run site is static files on an assets-only Worker.');
  if(['image','bindAddress','httpPort','httpsPort'].some(key=>options[key]!==undefined)&&options.platform!=='container')throw invalid('Container image and ingress flags require --platform container.');
  if(options.platform !== undefined && !['workers','container'].includes(options.platform))throw invalid('Platform must be workers or container.');
- if (options.host !== undefined && !(verb === 'deploy' && options.platform === 'container') && !loopback(options.host)) throw refuse('Host must be exactly 127.0.0.1, localhost or ::1.');
+ if (options.host !== undefined && !(verb === 'deploy' && options.platform === 'container') && !listenHost(options.host)) throw refuse('Host must be exactly 127.0.0.1, localhost or ::1.');
  if (options.ownerEmail !== undefined) { if (!mailbox(options.ownerEmail)) throw invalid('Provide a valid plain owner mailbox.'); options.ownerEmail = options.ownerEmail.toLowerCase(); }
  if (options.ownerName !== undefined && (options.ownerName.length > 200 || /[\p{Cc}\p{Cf}]/u.test(options.ownerName))) throw invalid('Provide a valid owner name.');
  if (options.target !== undefined && !['local', 'remote'].includes(options.target)) throw invalid('Target must be local or remote.');

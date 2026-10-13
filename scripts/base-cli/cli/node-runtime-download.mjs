@@ -6,7 +6,7 @@ import { Transform } from 'node:stream';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { matchesRuntime } from './node-runtime-discovery.mjs';
-import { prepareNodeCache, runtimeBinary, runtimeName, recordRuntime, cachedRuntime } from './node-runtime-cache.mjs';
+import { prepareNodeCache, runtimeBinary, runtimeName, recordRuntime, cachedRuntime, tidyRuntime } from './node-runtime-cache.mjs';
 
 async function download(url, destination, limit, signal) {
  const response = await fetch(url, { signal, redirect: 'error' });
@@ -18,8 +18,8 @@ async function download(url, destination, limit, signal) {
  await pipeline(response.body, bounded, createWriteStream(destination, { flags: 'wx', mode: 0o600 }), { signal });
 }
 
-async function extract(archive, directory, signal) {
- const child = spawn('tar', ['-xzf', archive, '-C', directory], { stdio: 'ignore', signal });
+async function extract(archive, directory, name, signal) {
+ const child = spawn('tar', ['-xzf', archive, '-C', directory, '--exclude', name + '/include'], { stdio: 'ignore', signal });
  await new Promise((resolve, reject) => {
   let failure;
   child.once('error', error => { failure = error; });
@@ -43,7 +43,7 @@ export async function downloadRuntime(version, cancellation) {
   for await (const chunk of createReadStream(archive)) hash.update(chunk);
   if (hash.digest('hex') !== expected) throw Error('Official Node release checksum verification failed; nothing was extracted or executed.');
   // This is the first point at which any downloaded content can be executed.
-  await extract(archive, temporary, signal);
+  await extract(archive, temporary, name, signal);
   const extracted = join(temporary, name), binary = runtimeBinary(extracted);
   if (!matchesRuntime(binary, version)) throw Error('Verified Node release did not report the project pin.');
   await chmod(extracted, 0o700);
@@ -53,6 +53,7 @@ export async function downloadRuntime(version, cancellation) {
   catch (error) {
    if (!['EEXIST', 'ENOTEMPTY'].includes(error.code) || !(await cachedRuntime(version))) throw error;
   }
+  await tidyRuntime(version);
   return runtimeBinary(destination);
  } finally { await rm(temporary, { recursive: true, force: true }); }
 }

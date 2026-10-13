@@ -27,12 +27,15 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
 
   const output = captureOutput(server);
   await waitForHealth(server, output);
-  await context.test(contractTitle("HOME-001", "a fresh install without a host profile serves the landing at /, with no cookie and no booking link"), async () => {
+  await context.test(contractTitle("HOME-001", "a fresh installation serves the unclaimed Lobby and setup state without a session"), async () => {
     const fresh = await fetch(`${origin}/`);
-    assert.equal(fresh.status, 200, "the landing renders without a host profile instead of the recovery page");
-    assert.equal(fresh.headers.get("set-cookie"), null, "the landing sets no cookie");
+    assert.equal(fresh.status, 200, "the installed front door renders without a host profile");
+    assert.equal(fresh.headers.get("set-cookie"), null, "the Lobby sets no cookie");
     const html = await fresh.text();
-    assert.equal(html.match(/<h1[\s>]/g)?.length, 1, "the landing has one h1");
+    assert.equal(html.match(/<h1[\s>]/g)?.length, 1, "the Lobby has one h1");
+    assert.match(html, /data-state="unclaimed"/);
+    assert.match(html, /href="\/setup"/);
+    assert.deepEqual(await (await fetch(`${origin}/setup/state`)).json(), { state: "unclaimed" });
     assert.doesNotMatch(html, /pb-recovery/, "the recovery page is not served at /");
     assert.doesNotMatch(html, /href="\/book\//, "no booking-profile link without a profile");
   });
@@ -232,11 +235,11 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
   const home = await fetch(`${origin}/api/public/home/profile`);
   assert.equal(home.status, 200);
   assert.ok(!(await home.json()).eventTypes.some((entry) => entry.slug === slug), "only published and listed events appear on the public home profile route");
-  await context.test(contractTitle("HOME-001", "with a host profile, / links to the host's booking profile and sets no cookie"), async () => {
+  await context.test(contractTitle("HOME-001", "a saved host profile alone cannot claim the installed Lobby"), async () => {
     const homeSurface = await fetch(`${origin}/`);
-    assert.equal(homeSurface.status, 200, "the owner landing is a Worker-first public surface");
-    assert.equal(homeSurface.headers.get("set-cookie"), null, "the landing sets no cookie");
-    assert.match(await homeSurface.text(), /href="\/book\/maya-chen"/, "the landing links to the configured host's booking profile");
+    assert.equal(homeSurface.status, 200, "the Lobby is a Worker-first public surface");
+    assert.equal(homeSurface.headers.get("set-cookie"), null, "the Lobby sets no cookie");
+    assert.match(await homeSurface.text(), /data-state="unclaimed"/, "only durable setup completion claims the Lobby");
   });
 
   const privacySurface = await fetch(`${origin}/privacy`);

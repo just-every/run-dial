@@ -1,3 +1,4 @@
+import {randomBytes} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {createInterface} from 'node:readline/promises';
 import {Writable} from 'node:stream';
@@ -8,7 +9,12 @@ import {mailbox} from './parse.mjs';
 import {invalid,missing,refuse} from './errors.mjs';
 import {savedSetupAnswers} from './setup-answers.mjs';
 
-export async function setupInput(project, options, vars, signal) {
+// RER_SETUP_LOCAL_DEFAULTS=1 is set only by the zero-setup `rer dev` launch for
+// its own setup run: it fills each empty active field that declares a
+// localDefault. Explicit setup and deploy never read it.
+export const localDefaultsVariable = 'RER_SETUP_LOCAL_DEFAULTS';
+
+export async function setupInput(project, options, vars, signal, { origin } = {}) {
  let answers = {};
  const { loadInstallerSeed } = await shared('setup-manifest.mjs');
  let seed;
@@ -41,6 +47,7 @@ export async function setupInput(project, options, vars, signal) {
  const savedEmail = vars[names.email];
  if (!answers[names.email] && savedEmail) answers[names.email] = savedEmail;
  if (hasOwnerName) answers[names.name] ??= seed.model.fields[names.name].default ?? 'Owner';
+ if(process.env[localDefaultsVariable]==='1')applyLocalDefaults(seed,answers,vars,origin);
  const entered=seed.manifest.fields.filter(field=>field.kind==='secret'&&field.input==='entered');
  for(const field of entered)if(!answers[field.name]&&!vars[field.name]&&process.env[field.name])answers[field.name]=process.env[field.name];
  const known={secretReadiness:Object.fromEntries(seed.manifest.fields.filter(field=>field.kind==='secret').map(field=>[field.name,Boolean(vars[field.name])]))};
@@ -93,4 +100,14 @@ async function question(label,privateValue,signal){
  prompt.on('SIGINT',()=>process.kill(process.pid,'SIGINT'));
  const closed=new Promise((_,reject)=>prompt.once('close',()=>reject(missing('Terminal input closed before setup answers were complete. Use rer setup --answers answers.json --non-interactive.'))));
  try{const pending=prompt.question(label+'\n',{signal});muted=privateValue;return await Promise.race([pending,closed]);}finally{prompt.close();muted=false;output.end();if(privateValue)process.stderr.write('\n');}
+}
+
+// A generated value goes only into the answers, which setup writes to the
+// checkout's 0600 private settings and registers for redaction.
+function applyLocalDefaults(seed,answers,vars,origin){
+ for(const field of seed.manifest.fields){
+  const value=field.localDefault;
+  if(value===undefined||answers[field.name]||vars[field.name]||!seed.model.fieldVisible(field.name,answers))continue;
+  answers[field.name]=typeof value==='string'?value:value.generate?randomBytes(32).toString(value.generate):origin;
+ }
 }

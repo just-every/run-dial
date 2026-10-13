@@ -10,7 +10,7 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-1. Clone the source with `git clone https://github.com/just-every/run-dial.git` and
+1. Clone the source with `git clone https://github.com/just-every/run-dial.git dial` and
    `cd dial`. Use Node **22.20.0** and pnpm **10.12.4**. Install the locked dependencies:
    `node scripts/rer.mjs install`. `pnpm install --frozen-lockfile` is the
    equivalent package-manager command. Dependency builds are limited to esbuild

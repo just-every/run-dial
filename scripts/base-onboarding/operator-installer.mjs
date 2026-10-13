@@ -4,6 +4,8 @@ import { localInstaller } from './adapter.mjs';
 import { selectLocalState, LocalStateSafetyError } from './local/state.mjs';
 import {operatorPrerequisites} from './operator-prerequisites.mjs';
 import { installOperator } from './operator-install.mjs';
+import { projectViteBinary } from './project-vite.mjs';
+import { join, delimiter } from 'node:path';
 
 export function operatorInstaller({ database, features, prepare, prepareData }) {
  const lifecycle=localInstaller({
@@ -32,6 +34,6 @@ export function operatorInstaller({ database, features, prepare, prepareData }) 
 const devBindings = (devKey, devLogin) => devKey ? { RER_DEV_KEY: devKey, RER_DEV_IDENTITY: devLogin ? 'off' : 'on' } : {};
 const internalPort = port => { if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('A local runtime requires the traffic proxy internal port.'); return String(port); };
 const developmentEnvironment = () => { const { RER_MODELS_SERVICE, RER_MODELS_KEY, ...env } = process.env; return env; };
-export const developmentTarget = ({ origin, runtimePort, devKey, devLogin, modelsLive }) => ['pnpm', ['exec', 'vite', 'dev', '--host', '127.0.0.1', '--port', internalPort(runtimePort), '--strictPort'], { env: { ...developmentEnvironment(), RER_DEV_ORIGIN: origin, WRANGLER_SEND_METRICS: 'false', X_LOCAL_EXPLORER: 'false', ...devBindings(devKey, devLogin), ...(modelsLive ? { RER_MODELS_SERVICE: modelsLive.baseUrl, RER_MODELS_KEY: modelsLive.apiKey } : {}) } }];
+export const developmentTarget = ({ root, origin, runtimePort, devKey, devLogin, modelsLive }) => [process.execPath, [projectViteBinary(root), 'dev', '--host', '127.0.0.1', '--port', internalPort(runtimePort), '--strictPort'], { env: { ...developmentEnvironment(), PATH: join(root, 'node_modules', '.bin') + delimiter + (process.env.PATH ?? ''), RER_DEV_ORIGIN: origin, WRANGLER_SEND_METRICS: 'false', X_LOCAL_EXPLORER: 'false', ...devBindings(devKey, devLogin), ...(modelsLive ? { RER_MODELS_SERVICE: modelsLive.baseUrl, RER_MODELS_KEY: modelsLive.apiKey } : {}) } }];
 
-export const previewTarget = ({ origin, runtimePort, devKey }) => [process.execPath, [fileURLToPath(new URL('./production-runtime.mjs', import.meta.url))], { env: { ...process.env, RER_DEV_ORIGIN: origin, RER_RUNTIME_HOST: '127.0.0.1', RER_RUNTIME_PORT: internalPort(runtimePort), WRANGLER_SEND_METRICS: 'false', CLOUDFLARE_INCLUDE_PROCESS_ENV: 'false', X_LOCAL_EXPLORER: 'false', ...(devKey ? { RER_DEV_KEY: devKey } : {}) } }];
+export const previewTarget = ({ origin, runtimePort, devKey, scheduled }) => [process.execPath, [fileURLToPath(new URL('./production-runtime.mjs', import.meta.url))], { env: { ...process.env, RER_DEV_ORIGIN: origin, RER_RUNTIME_HOST: '127.0.0.1', RER_RUNTIME_PORT: internalPort(runtimePort), WRANGLER_SEND_METRICS: 'false', CLOUDFLARE_INCLUDE_PROCESS_ENV: 'false', X_LOCAL_EXPLORER: 'false', RER_RUNTIME_TRIGGERS: scheduled ? '1' : '0', ...(devKey ? { RER_DEV_KEY: devKey } : {}) } }];

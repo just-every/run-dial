@@ -8,6 +8,9 @@ import { publicationScan, validatePublicationDestination } from './publication-s
 import { publicDestination, requirePublicDestination, remotePublicHead, publicChild, assertPublicTree } from './public-child.mjs';
 import { writePublishHandoff } from './publish-handoff.mjs';
 
+// Failure output belongs to the private receipt, not the site preview.
+const withoutOutput = gates => JSON.parse(JSON.stringify(gates, (key, value) => key === 'output' ? undefined : value));
+
 export async function release({ repo, ref = 'HEAD', output, project, repository, dryRun = false, tag = false, cleanHistory: clean = false, envFile, onto }) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(project ?? '')) throw Error('--project must be publisher/name');
   if (!/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+(?:\.git)?$/i.test(repository ?? '')) throw Error('--repository must be a credential-free GitHub repository URL');
@@ -37,7 +40,7 @@ export async function release({ repo, ref = 'HEAD', output, project, repository,
     // Honour the seed's committed install policy. Base's native-build settings
     // are not interchangeable with pnpm 8's locked onlyBuiltDependencies.
     const install = await command('pnpm', ['install', '--frozen-lockfile'], checkout);
-    const verify = install.status === 'PASS' ? await command('pnpm', ['run', 'verify'], checkout) : { status: 'FAIL', reason: 'frozen-install-failed', tests: 0, passed: 0, failed: 0 };
+    const verify = install.status === 'PASS' ? await command('pnpm', ['run', 'verify'], checkout) : { status: 'FAIL', reason: 'frozen-install-failed', tests: 0, passed: 0, failed: 0, output: install.output };
     // Release-only scale and capacity cases stay outside routine CI. The
     // committed seed script is an additional gate in previews and releases.
     if (verify.status === 'PASS' && JSON.parse(source.bytes('package.json')).scripts['verify:release']) {
@@ -101,7 +104,7 @@ export async function release({ repo, ref = 'HEAD', output, project, repository,
     // A blocked preview may prepare the site metadata/docs for local review.
     // Its provenance explicitly records blocked gates; it is never a release.
     const publicSource = exported ? { ...source, commit: exported.commit, publicTagStaged: Boolean(destination && tag) } : source;
-    if (passed || preview) receipt.siteRelease = writeCatalogue(publicSource, output, catalogue(publicSource, project, repository, gates, preview));
+    if (passed || preview) receipt.siteRelease = writeCatalogue(publicSource, output, catalogue(publicSource, project, repository, withoutOutput(gates), preview));
     if (passed) {
       if (tag) {
         receipt.publicExport = publicExport(source, temporary, output);

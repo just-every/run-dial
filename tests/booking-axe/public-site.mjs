@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { auditor, trackPage } from "./audit.mjs";
 
-// HOME-001, DOCS-001 and BASE-PUBLIC-003: the landing as a new install serves it (no host profile yet) and every published
+// HOME-001, DOCS-001 and BASE-PUBLIC-003: the Lobby a new install serves and every published
 // docs page pass the axe audit at desktop and phone width, and a visit leaves nothing in browser storage.
 const { sections } = JSON.parse(await readFile(new URL("../../docs/site.json", import.meta.url), "utf8"));
 const docsPaths = sections.flatMap(section => section.pages).map(page => page.slug ? `/docs/${page.slug}` : "/docs");
@@ -19,11 +19,11 @@ export async function publicSiteJourney(browser, origin, scans, errors, widths =
     try {
       const page = await context.newPage(); trackPage(page, errors); const audit = auditor(page, width, scans);
       await page.goto(origin + "/"); await page.locator("h1").waitFor();
-      assert.equal(await page.locator(".host-chip-link").count(), 0, "a new install's landing has no booking-profile link");
-      await audit("landing-without-profile");
-      await page.mouse.wheel(0, 1600); await page.waitForFunction(() => globalThis.scrollY > 0);
+      assert.equal(await page.locator(".host-chip-link").count(), 0, "the Lobby has no booking-profile link");
+      await audit("lobby-unclaimed");
+      await page.mouse.wheel(0, 1600);
       await page.reload(); await page.locator("h1").waitFor();
-      await assertNoStorage(page, "the landing after a scroll and a reload");
+      await assertNoStorage(page, "the Lobby after an attempted scroll and a reload");
       for (const path of docsPaths) {
         await page.goto(origin + path); await page.locator(".docs-prose").waitFor();
         await audit(`docs${path.slice(5).replaceAll("/", "-") || "-home"}`);

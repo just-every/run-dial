@@ -7,7 +7,8 @@ import { packageBuild } from '../modules/deploy-kit/prepare.mjs';
 import { refuseLocalModels } from '../modules/deploy-kit/local-only.mjs';
 
 export function ownerDeploy(declarationPath, lifecycle) {
- return async ({ root, options, store, signal, operationToken, localOnlyKeys = [], checkBuild = async () => {} }) => {
+ // rer verify serves the build with this declaration's vars and secrets.
+ return Object.assign(async ({ root, options, store, signal, operationToken, localOnlyKeys = [], checkBuild = async () => {} }) => {
   try { await refuseLocalModels(root); } catch { throw refuse('Deploy refuses the local-only key file .rer/local/models.json. Remove live-dev credentials before deployment.'); }
   const path = await contained(root, declarationPath);
   let declaration; try { declaration = JSON.parse(await readFile(path, 'utf8')); } catch { throw invalid('Malformed owner-account deploy declaration.'); }
@@ -29,8 +30,8 @@ export function ownerDeploy(declarationPath, lifecycle) {
   if (names.some(name => !process.env[name]?.trim())) throw missing('CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN are required. See the deploy-kit owner-account instructions.');
   const { main } = await import('../modules/deploy-kit/owner-cli.mjs');
   const argv = ['deploy', '--declaration', declarationPath, '--environment', environment];
-  const result = await main(argv, process.env, { cwd: root, localOnlyKeys });
+  const result = await main(argv, process.env, { cwd: root, localOnlyKeys, notice: line => store.report(line) });
   await main(['health', ...argv.slice(1)], process.env, { cwd: root, localOnlyKeys });
   return { deployed: true, origin: result.origin };
- };
+ }, { declaration: declarationPath });
 }

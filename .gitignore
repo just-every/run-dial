@@ -28,3 +28,6 @@ exports/
 # Generated managed-delivery payloads
 delivery-artifact/
 rer-package/
+
+# Static run-site output
+dist/site/

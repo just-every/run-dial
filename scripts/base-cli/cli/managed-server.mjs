@@ -1,5 +1,6 @@
 import { prepareLiveModels } from './ai-local.mjs';
 import {fileURLToPath} from 'node:url';
+import {join} from 'node:path';
 import { serverRegistry } from './server-registry.mjs';
 import { activityClock } from './server-activity.mjs';
 import { runtimeFrontDoor } from './runtime-front-door.mjs';
@@ -13,24 +14,29 @@ import { invalid,missing,refuse,RerError,lifecycleError } from './errors.mjs';
 import { processInfo } from '../modules/job-queue/processes.mjs';
 import { declaredCrons,runScheduled } from './scheduled.mjs';
 import { readDevKey,requireDevKey,refuseManagedInstallation,resolvePersona,openUrl,DEV_KEY_HEADER } from './dev-identity.mjs';
+import { announceDoorRoute,claimSavedName,moveCheckout,routeRunning,verifyDoorFor } from './door-mode.mjs';
 
 // Seeds without devIdentity keep the outbox sign-in unchanged. With it, dev
 // opens signed in (RER_SIGNED_IN, RER_OPEN); --login and preview keep the
 // outbox, reached through RER_OPEN's one-time key exchange. A runtime that
 // serves no outbox (a seed's preview without one) is not pointed at it.
-export function ready(out,url,dev,json=false,outbox=true){
+// A seed that declares a run site also gets RER_SITE: its static run site
+// (homepage, /run, docs) served locally on its own port, after the ready lines.
+export function ready(out,url,dev,json=false,outbox=true,siteUrl){
  const signInUrl=url+'/__dev/outbox',open=dev&&(dev.identity||outbox);
- if(json){out.event('ready',{url,...(outbox?{signInUrl}:{}),...(dev?{signedInAs:dev.signedInAs??null,...(open?{openUrl:dev.openUrl}:{})}:{})});return;}
+ if(json){out.event('ready',{url,...(outbox?{signInUrl}:{}),...(dev?{signedInAs:dev.signedInAs??null,...(open?{openUrl:dev.openUrl}:{})}:{}),...(siteUrl?{siteUrl}:{})});return;}
  out.human(`RER_READY ${url}`);
- if(dev?.identity){if(dev.signedInAs)out.human(`RER_SIGNED_IN ${dev.signedInAs}`);out.human(`RER_OPEN ${dev.openUrl}`);out.human('Open that link on this computer. Its fragment holds this checkout\'s dev key, which the page keeps only as a cookie; never share the link.');return;}
- if(!outbox)return;
- out.human(`RER_SIGN_IN ${signInUrl}`);
- if(dev)out.human(`RER_OPEN ${dev.openUrl}`);
- out.human(`Open ${dev?'the last link on this computer (it carries the dev key; never share it)':'the outbox'}, choose the newest sign-in message and follow its link. No email was sent.`);
+ if(dev?.identity){if(dev.signedInAs)out.human(`RER_SIGNED_IN ${dev.signedInAs}`);else if(dev.ownerLeft)out.human('No active owner remains in this app, so rer dev cannot sign in as one. Use rer dev --login with another operator, or rer reset --yes and rer setup for a new owner.');out.human(`RER_OPEN ${dev.openUrl}`);out.human('Open that link on this computer. Its fragment holds this checkout\'s dev key, which the page keeps only as a cookie; never share the link.');}
+ else if(outbox){
+  out.human(`RER_SIGN_IN ${signInUrl}`);
+  if(dev)out.human(`RER_OPEN ${dev.openUrl}`);
+  out.human(`Open ${dev?'the last link on this computer (it carries the dev key; never share it)':'the outbox'}, choose the newest sign-in message and follow its link. No email was sent.`);
+ }
+ if(siteUrl)out.human(`RER_SITE ${siteUrl}`);
 }
 export async function managedServer(project,options,out,{clock={}}={}){
  const registry=await serverRegistry(project.root),controller=new AbortController();
- let store,operation,proxy,activity,app,termination,reason,cleanupPromise,finished,selected,cleaned;
+ let store,operation,proxy,activity,app,termination,reason,cleanupPromise,finished,selected,cleaned,site;
  const scheduling=new AbortController();
  let activityWrites=Promise.resolve(),pendingActivity,activityWriting=false,infrastructureFailure;
  function recordActivity(fields){
@@ -39,13 +45,14 @@ export async function managedServer(project,options,out,{clock={}}={}){
  }
  const stopped=new Promise(resolve=>{finished=resolve;});
  const cleanupDone=new Promise(resolve=>{cleaned=resolve;});
- const cleanup=()=>cleanupPromise??=(async()=>{scheduling.abort();activity?.close();await store?.closeCommands();await proxy?.close();await operation?.release();})();
+ const cleanup=()=>cleanupPromise??=(async()=>{scheduling.abort();activity?.close();await site?.close();await store?.closeCommands();await proxy?.close();await operation?.release();})();
  const stop=async why=>{reason??=why;controller.abort();finished();await cleanupDone;return {};};
  const handlers=new Map(['SIGINT','SIGTERM'].map(name=>[name,()=>{termination=name;void stop(name);} ]));
  for(const [name,handler]of handlers)process.on(name,handler);
  try{
   if(options.stop){await registry.stop(options.verb,options);return {};}
   controller.signal.throwIfAborted();
+  if(options.door||options.direct)await moveCheckout(project,options,out,registry);
   const devIdentity=project.adapter.devIdentity;
   if(options.as!==undefined&&!(devIdentity&&options.verb==='dev'))throw invalid('--as needs a seed that declares devIdentity.');
   let devKey=devIdentity?await readDevKey(project.root):null;
@@ -62,13 +69,20 @@ export async function managedServer(project,options,out,{clock={}}={}){
    if(options.verb==='dev' && (running.models??'fake')!==(options.models??'fake'))throw refuse('Stop the running dev server before changing --models mode.');
    if(options.modelsService)throw refuse('Stop the running dev server before saving live-dev credentials.');
    if(options.verb==='dev'&&Boolean(running.login)!==Boolean(options.login))throw refuse(`The running dev server ${running.login?'uses':'does not use'} --login. Stop it with rer dev --stop to change sign-in mode.`);
-   const response=await fetch(running.url+'/health',{headers:{'x-rer-probe':running.probe},signal:AbortSignal.timeout(5000)});
+   // A door-mode server is probed on its own proxy, never through the door.
+   await claimSavedName(project,running.url);
+   await routeRunning(running);
+   const {appFetch}=await shared('app-fetch.mjs');
+   const response=await appFetch(running.url+'/health',{headers:{'x-rer-probe':running.probe},signal:AbortSignal.timeout(5000)});
    if(!response.ok || (await response.json()).status!=='ok')throw refuse('Registered application failed health verification. Stop it before retrying.');
    if(devIdentity)devKey=await requireDevKey(project.root);
-   emitReady(out,options,running.url,devIdentity&&await devReady(running.url,devKey,options,controller.signal));return {reused:true};
+   // A key is sent (or printed) for a door origin only once the door proves it is ours.
+   if(devIdentity)await verifyDoorFor(running.url);
+   const dev=devIdentity&&await devReady(running.url,devKey,options,controller.signal);
+   await emitReady(out,options,project.root,running.url,dev,true,running.siteUrl);return {reused:true};
   }
   await registry.serve(async action=>{
-   if(action==='status')return {...activity?.snapshot(),url:selected?.url,probe:proxy?.probe};
+   if(action==='status')return {...activity?.snapshot(),url:selected?.url,probe:proxy?.probe,siteUrl:site?.url};
    if(action==='stop')return stop('explicit stop');
    throw Error('Unknown management operation');
   });
@@ -81,7 +95,7 @@ export async function managedServer(project,options,out,{clock={}}={}){
   const seed=project.adapter.setup?await loadInstallerSeed(project.root,project.adapter):undefined;project.setupManifest=seed?.manifest;
   const keys=localSettingKeys(project);
   selected=await selectedOrigin(project,options);
-  await availablePort(selected.host,selected.port);
+  if(!selected.door)await availablePort(selected.host,selected.port,{root:project.root,saved:!selected.explicitPort&&selected.savedOrigin!==undefined});
   if(!selected.vars[keys.email])throw missing('Private owner settings are missing. Run rer setup first.');
   if(devIdentity&&!devKey)devKey=await requireDevKey(project.root);
   if(devIdentity&&options.verb==='dev'&&!options.login)refuseManagedInstallation(selected.vars,process.env);
@@ -96,10 +110,11 @@ export async function managedServer(project,options,out,{clock={}}={}){
   store.setupManifest=seed?.manifest;if(devKey)store.addSecrets([devKey]);
   await tools(project.root,store,controller.signal);
   activity=activityClock({...clock,seconds:options.idleTimeout,onIdle:()=>void stop('idle timeout'),onChange:recordActivity});
-  const crons=options.verb==='dev'&&project.adapter.scheduled!==false?await declaredCrons(project.root).catch(error=>{throw refuse(`The declared scheduled triggers cannot run locally: ${error.message}`);}):[];
-  proxy=await runtimeFrontDoor({host:selected.host,port:selected.port,activity});const internal=proxy.runtimePort;
+  const crons=project.adapter.scheduled!==false?await declaredCrons(project.root,project.adapter).catch(error=>{throw refuse(`The declared scheduled triggers cannot run locally: ${error.message}`);}):[];
+  proxy=await runtimeFrontDoor({host:selected.host,port:selected.port,activity,door:selected.door,devKey:devKey??undefined,origin:selected.url});const internal=proxy.runtimePort;
+  if(selected.door)await announceDoorRoute(selected,proxy,registry);
   const modelsLive = options.verb==='dev' ? await prepareLiveModels(project.root,options,store,controller.signal) : undefined;
-  const adapterOptions={modelsLive,selectedOrigin:selected.url,operationToken:operation.token,privateSettings:project.adapter.settings,runtimePort:internal,devKey:devKey??undefined,devLogin:Boolean(options.login)};
+  const adapterOptions={modelsLive,selectedOrigin:selected.url,operationToken:operation.token,privateSettings:project.adapter.settings,runtimePort:internal,devKey:devKey??undefined,devLogin:Boolean(options.login),scheduled:crons.length>0};
   const input={[keys.email]:selected.vars[keys.email]};
   if(options.verb==='preview')await productionBuild(project,()=>store.run('Building fixed production output',process.execPath,[fileURLToPath(new URL('../bin/rer.mjs',import.meta.url)),'build','--cwd',project.root,'--json'],{cwd:project.root,phase:'build',signal:controller.signal,env:{...process.env,RER_LOCAL_OPERATION:operation.token},afterCommand:()=>recoverInterrupted(project.root,operation)}),text=>store.report(text));
   await serverResources(project.root);
@@ -110,12 +125,19 @@ export async function managedServer(project,options,out,{clock={}}={}){
    if(!identity)throw Error('Runtime exited before custody registration.');
    await registry.update({runtimeProcess:{pid:identity.pid,start:identity.start}});
   },controller.signal,{...adapterOptions,verb:options.verb,dev:project.adapter.dev,preview:project.adapter.preview});
+  // A key is sent (or printed) for a door origin only once the door proves it is ours.
+  if(devKey)await verifyDoorFor(selected.url);
   const dev=devIdentity&&await devReady(selected.url,devKey,options,controller.signal);
   const outbox=await outboxServed(selected.url,devKey,controller.signal);
-  activity.ready();emitReady(out,options,selected.url,dev,outbox);
+  if(options.verb==='dev'&&project.adapter.site){
+   const {devSite}=await import('./site.mjs');
+   site=await devSite(project,store,controller.signal,{host:selected.host,port:selected.port});
+   await registry.update({siteUrl:site.url});
+  }
+  activity.ready();await emitReady(out,options,project.root,selected.url,dev,outbox,site?.url);
   if(crons.length){
    out.progress(`Running ${crons.length===1?'the scheduled trigger':'the scheduled triggers'} locally: ${crons.join(' | ')}\n`);
-   void runScheduled({crons,url:`http://127.0.0.1:${internal}`,signal:scheduling.signal,report:run=>reportScheduled(out,options,run)});
+   void runScheduled({crons,url:`http://127.0.0.1:${internal}`,path:options.verb==='preview'?'/cdn-cgi/local/scheduled':undefined,signal:scheduling.signal,report:run=>reportScheduled(out,options,run)});
   }
   const result=await stopped;
   if(termination)throw new RerError('cancelled',`Stopped by ${termination} after owned children were stopped.`,termination==='SIGINT'?130:143);
@@ -130,14 +152,26 @@ function reportScheduled(out,options,run){
 }
 // GET, not HEAD: a seed's outbox route need not answer HEAD. The body is never read.
 async function outboxServed(url,devKey,signal){
- const response=await fetch(url+'/__dev/outbox',{headers:devKey?{[DEV_KEY_HEADER]:devKey}:{},signal});
+ const {appFetch}=await shared('app-fetch.mjs');
+ const response=await appFetch(url+'/__dev/outbox',{headers:devKey?{[DEV_KEY_HEADER]:devKey}:{},signal});
  await response.body?.cancel();
  return response.ok;
 }
-function emitReady(out,options,url,dev,outbox){ready(out,url,dev||undefined,options.json,outbox);}
+// dev also keeps its RER_OPEN link in owner-only .rer/local/open-url (0600),
+// which reset removes with the rest of .rer/local, for a person or agent that
+// did not keep the terminal output.
+async function emitReady(out,options,root,url,dev,outbox,siteUrl){
+ if(options.verb==='dev'&&dev?.openUrl){
+  const {privateDirectory,writePrivateFile}=await shared('private-files.mjs');
+  await writePrivateFile(join(await privateDirectory(root,['.rer','local']),'open-url'),dev.openUrl+'\n');
+ }
+ ready(out,url,dev||undefined,options.json,outbox,siteUrl);
+}
 async function devReady(url,key,options,signal){
  if(options.verb==='preview')return {openUrl:openUrl(url,key,{path:'/__dev/key',next:'/__dev/outbox'})};
  if(options.login)return {openUrl:openUrl(url,key,{next:'/__dev/outbox'})};
  const as=options.as??'owner',persona=await resolvePersona(url,key,as,signal);
- return {identity:true,signedInAs:persona.email??null,openUrl:openUrl(url,key,{path:'/__dev/key',as})};
+ // The owner persona names the owner the session will actually have (the
+ // remaining owner once the setup owner has left), or none when none is left.
+ return {identity:true,signedInAs:persona.email??null,ownerLeft:as==='owner'&&!persona.email,openUrl:openUrl(url,key,{path:'/__dev/key',as})};
 }

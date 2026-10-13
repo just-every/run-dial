@@ -2,8 +2,8 @@
 
 First-party seeds expose public operations through the RER dispatcher. From a
 runnable seed checkout, the supported local sequence begins with
-`node scripts/rer.mjs install`, `node scripts/rer.mjs setup` and
-`node scripts/rer.mjs dev`; owner sign-in uses the printed local outbox. The
+`rer install`, `rer setup` and
+`rer dev`; owner sign-in uses the printed local outbox. The
 command contract and flags are documented in the runnable checkout's root
 `RUN-LOCALLY.md`.
 
@@ -20,7 +20,7 @@ A first-party adapter in `scripts/installer/local.mjs` exports `commandAdapter`
 and its setup hooks. The command adapter selects one root `rer-setup.json`
 manifest and declares real targets and policy for dependencies, build,
 migrations, development, preview, verification, deployment and portability.
-Package scripts for public verbs dispatch to `node scripts/rer.mjs VERB`;
+Package scripts for public verbs run the vendored `scripts/rer.mjs` with the verb;
 internal targets use different names so the CLI cannot call its own alias
 recursively.
 

@@ -4,8 +4,8 @@ First-party seeds expose inspection through their portable RER command. From the
 seed root:
 
 ```sh
-node scripts/rer.mjs describe --json
-node scripts/rer.mjs check --profile first-party --json
+rer describe --json
+rer check --profile first-party --json
 ```
 
 `describe` returns the command contract: profile, declared Node and pnpm pins,
@@ -28,7 +28,7 @@ These commands require Node but no installed packages. They do not run setup,
 deployment, verification, configuration validators, environment readiness checks
 or network requests. Structural success does not establish installed tool
 versions, configured local inputs, provider access, remote health or product
-acceptance. `node scripts/rer.mjs doctor --json` separately diagnoses installed
+acceptance. `rer doctor --json` separately diagnoses installed
 tools and local inputs through the manifest inspector.
 
 ## Internal manifest tooling
@@ -41,7 +41,7 @@ resolves declared command inputs. `describeOperations` returns the operations
 manifest after checking command availability; it is distinct from RER's public
 command descriptor.
 Run directly in a project that has `scripts/rer.mjs`, `operations.mjs describe`
-and `check` forward to `node scripts/rer.mjs describe` and `check`. In an
+and `check` forward to that `scripts/rer.mjs` with `describe` and `check`. In an
 independent project without RER they print the inspector's own JSON and advice,
 naming the script by the path it was run from.
 

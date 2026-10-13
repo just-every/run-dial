@@ -118,12 +118,69 @@ authenticate it. If the original installation is unavailable, use the explicit
 [backup-only v1 recovery](#backup-only-v1-recovery) below. Normal import still
 requires version 2 integrity.
 
+## Archives across later additive migrations
+
+An archive restores into an installation whose schema differs only by migrations
+applied after the archive was made, when those migrations are additive: new
+tables, new columns that are nullable or have a default, and indexes. The
+archive's tables restore with their archived columns, later columns take their
+defaults, and later tables stay empty (they must be empty, like every restored
+table). This applies to normal v2 import and to backup-only v1 recovery.
+
+The Base CLI runners (local Workers and container) pass `createPortability` a
+`migrations` replayer (`migration-history.mjs`, Node only) built from the
+destination's applied migration ledger and migration files. Import replays them
+into a scratch database to find the archive's place in that history:
+
+- Archives record the applied migration names in `manifest.migrations` (since
+  additive restore). Every recorded migration must be applied here, and
+  replaying exactly those must give the archive's schema identity.
+- Older v2 and all v1 archives do not record them; the latest prefix of the
+  applied migrations that gives the archive's schema identity is used. Migrations
+  that change no archived table (indexes, excluded tables) cannot be told apart
+  there and are reported as later.
+
+Restored rows never pass through the later migrations, so each of them may
+contain only `CREATE TABLE` (not `AS SELECT`), `CREATE INDEX` and
+`ALTER TABLE ... ADD COLUMN` (SQLite allows only constant defaults there) on the
+restorable tables. A later migration with any other statement that names a
+restorable table, such as an `INSERT`, `UPDATE` or `DELETE` that purges or
+backfills rows or a trigger, is refused with `schema_mismatch`; statements that
+touch only excluded tables are allowed. For archives without a migration record,
+every migration after the earliest prefix that gives the archive's schema is
+checked, since the archive may predate any of them.
+
+The same check runs when the archive's schema identity equals the destination's:
+a later migration that only purges or backfills rows leaves the schema unchanged,
+yet the archive's rows never passed through it. Such an archive is refused with
+`schema_mismatch:migration_data:<migration>` (local `rer import` exit 4, naming
+the migration) before any staging or import job; one whose later migrations only
+add indexes or touch excluded tables restores as usual. Without a replayer, an
+archive whose recorded migrations the destination's ledger has outgrown is
+refused with `schema_mismatch:migrations`, since those migrations cannot be read;
+an archive with no migration record cannot be placed there and restores as before.
+
+Then each archived table must still exist with the same leading columns, types,
+keys and constraints; its definition may differ only by added column definitions,
+as `ALTER TABLE ADD COLUMN` writes them. Anything else, including a dropped,
+renamed or retyped table or column and a migration the archive has but this
+installation lacks, is refused with `schema_mismatch` (local `rer import` exit 4)
+before any staging or audit write. Without a replayer (the HTTP handler, direct
+bindings), only identical schemas and `acceptedSchemas` restore.
+
+The import status and CLI receipt carry `bridged`: `migrations` (the later
+migrations bridged), `tables` (later tables left empty), `columns` (later columns
+per table that took defaults), `fromSchema` and `toSchema`. The import job keeps it
+and v1 recovery adds it to its audit record. `archiveHash`, `contentHash`,
+the erasure fence and v1's own checks are unchanged.
+
 ## Backup-only v1 recovery
 
 When your only backup is a version 1 archive and the original installation is
 gone, the Base local Workers CLI provides an explicitly acknowledged recovery.
-Use a separate, empty installation with the same product schema and portability
-policy. Keep its writers stopped. Do not run setup or claim an owner first:
+Use a separate, empty installation with the same product schema, or one that
+differs only by [later additive migrations](#archives-across-later-additive-migrations),
+and the same portability policy. Keep its writers stopped. Do not run setup or claim an owner first:
 recovery also refuses populated identity, excluded and normally replaceable
 tables, and any objects in the declared buckets. It does not merge or overwrite
 existing installation data. Remote and container recovery are not supported.
@@ -136,7 +193,7 @@ existing installation data. Remote and container recovery are not supported.
 2. Read the verification limits below, then run from that empty checkout:
 
    ```sh
-   node scripts/rer.mjs import --input exports/backup-v1.rer --legacy-v1 --yes \
+   rer import --input exports/backup-v1.rer --legacy-v1 --yes \
      --acknowledge-unverified-metadata --output exports/recovered-v2.rer
    ```
 
@@ -159,6 +216,14 @@ closing content hash and completeness. It validates the carried erasure journal
 and refuses rows matching its tombstones or any destination erasure fence.
 Product validation, foreign keys and normal restore safeguards still apply.
 Any mismatch refuses recovery; this mode does not repair damaged archives.
+
+Recovery needs a new installation. SQLite, migration and transfer bookkeeping, the
+storage tables of FTS5 indexes (`<index>_data|idx|content|docsize|config`; the index
+itself is still checked through its own SELECT) and the rows the destination's own
+migrations seed may exist; the seed rows are compared with a scratch replay of the
+applied migrations (Node runners) and must be unchanged. Any other row refuses with
+`legacy_target_not_empty`, before staging and again inside the restore batch. A table
+the policy lists in `replaceableTables` is replaced by the restore as usual.
 
 V1 cannot authenticate the complete manifest: source identity, export time,
 erasure epoch/journal, rowids and other metadata lack the v2 archive binding.
@@ -280,6 +345,15 @@ Include `await service.erasureStatements(table,primaryKey)` in the product's own
 deletion batch. Keys are objects of primary-key columns; a keyless table uses
 `{rowid:integer}`. Tombstones are opaque hashes bound to source identity, table
 and canonical key. Journals grow and epochs prevent older source restoration.
+For rows deliberately kept with all personal values replaced, include
+`await service.redactionStatements()` in that same transaction instead of
+permanently tombstoning their retained primary keys. It fences the source's
+checkpoint using the private portability state row and advances the epoch.
+A destination or trusted later journal with that checkpoint refuses the whole
+older archive; a post-redaction archive remains restorable with anonymous rows.
+This stricter checkpoint is necessary when preserved identities still appear in
+new archives. It does not change offline transfer's need for a trusted later journal.
+
 Archives, separately supplied later journals and destination journals all fence
 restore. Commit adopts source identity so subsequent erasures keep matching.
 
@@ -317,6 +391,8 @@ modules/portability/dev-data.mjs
 modules/portability/provider-data.mjs
 modules/portability/generated.mjs
 modules/portability/restore-safety.mjs
+modules/portability/bridge.mjs
+modules/portability/migration-statements.mjs
 modules/portability/legacy-safety.mjs
 modules/portability/export.mjs
 modules/portability/import.mjs

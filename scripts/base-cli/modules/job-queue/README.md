@@ -32,13 +32,13 @@ producers can keep it waiting indefinitely.
 
 Heavy work starts only when its request heads the ordered queue, occupied heavy
 slots are below the configured count, the one-minute OS load is at or below the
-threshold, and OS free memory is strictly above the floor. Defaults:
+threshold when one is set, and available memory is strictly above the floor. Defaults:
 
 | Setting in config.json | Default | Environment override |
 | --- | --- | --- |
 | slots | max(1, min(3, floor(CPUs / 4), floor(RAM / 8 GiB))) | RER_JOBS_SLOTS |
-| loadThreshold | 36 | RER_JOBS_LOAD_THRESHOLD |
-| minFreeMemoryBytes | 4 GiB | RER_JOBS_MIN_FREE_MEMORY_BYTES |
+| loadThreshold | none: a fleet sets one in its own environment | RER_JOBS_LOAD_THRESHOLD |
+| minFreeMemoryBytes | 2 GiB | RER_JOBS_MIN_FREE_MEMORY_BYTES |
 | pollMs | 3000 | RER_JOBS_POLL_MS |
 | nice | 15 | RER_JOBS_NICE |
 | killGraceMs | 1000 | RER_JOBS_KILL_GRACE_MS |
@@ -46,11 +46,18 @@ threshold, and OS free memory is strictly above the floor. Defaults:
 Put numeric settings in `$RER_JOBS_DIR/config.json` (or `~/.rer/jobs/config.json`).
 Environment overrides take precedence. All clients should use the same policy;
 central config avoids differing limits between sessions. Resource settings are
-read when a client is created. `status` prints its effective policy, current load
-and free memory, running labels/repositories/elapsed times, ordered waiting jobs,
-and the head's admission reason. `os.freemem()` reports actual OS free memory,
-not an estimate of reclaimable caches or compressed memory. On memory-constrained
-machines set an owner-reviewed floor in central config.
+read when a client is created. `status` prints its effective policy, current load,
+available and raw free memory, running labels/repositories/elapsed times, ordered
+waiting jobs, and the head's admission reason. Available memory is what the OS
+can reclaim: on macOS the free, inactive, speculative and purgeable pages from
+`vm_stat` (macOS keeps little memory "free" on purpose, so `os.freemem()` reads
+0.1 to 4 GiB on an idle Mac with tens of GiB reclaimable); on Linux
+`MemAvailable`. The 2 GiB floor is below what a normal idle Mac with 16 GiB or
+more has available, and above the point where the compressor and swap start
+working hard. A waiting job reports its queue position, the jobs ahead of it
+with their repository paths, and available memory against the floor; set
+`RER_JOBS_MIN_FREE_MEMORY_BYTES` (bytes, 0 for no floor) to change it. Fleets
+that need a stricter floor set it in their own environment.
 
 FIFO is the sequence assigned at atomic enqueue. Priority classes are `owner`,
 `normal` (default), then `background`; FIFO holds within each class. Owner work
@@ -140,7 +147,7 @@ finite preparation holds a heavy-job slot; no persistent server may outlive a
 released job as its descendant. Avoid spawning independent unsupervised
 servers around this wrapper. No `rer` verbs are changed by this module.
 
-Tests inject `sampler: () => ({ load, freeMemoryBytes })` through the library;
+Tests inject `sampler: () => ({ load, availableMemoryBytes })` through the library;
 the CLI always uses actual OS samples. Library config overrides are also useful
 for isolated test directories. Call `close()` only after all operations finish.
 `pnpm verify:job-queue` runs the focused suite with file concurrency one. Its

@@ -69,7 +69,7 @@ cheap model allow-list. Models enforces those limits; the client does not invent
 a local budget or claim that the key prefix proves a cap. Pipe its key on stdin:
 
 ```sh
-your-secret-reader | node scripts/rer.mjs dev --models live --models-service https://models.example
+your-secret-reader | rer dev --models live --models-service https://models.example
 ```
 
 The key is saved in `.rer/local/models.json` (0600, directories 0700), never in

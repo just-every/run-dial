@@ -1,3 +1,5 @@
 import type { Plugin } from 'vite';
-export function assertArchiveFree(directory: string): Promise<void>;
-export function archiveOutputGuard(): Plugin;
+/** `formats`: the seed's own archive formats, matched against a leading JSON object's `payload.format`. */
+export interface ArchiveFormats { formats?: string[] }
+export function assertArchiveFree(directory: string, options?: ArchiveFormats): Promise<void>;
+export function archiveOutputGuard(options?: ArchiveFormats): Plugin;

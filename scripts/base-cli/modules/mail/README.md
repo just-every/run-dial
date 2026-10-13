@@ -149,7 +149,7 @@ Network loss, redirects, HTTP 408 and 5xx are conservatively `uncertain`; 429 is
 
 ## Development and unsubscribe
 
-Development requires all three: `provider:'development'`, `mode:'development'`, and explicit `dependencies.outbox.put`. It captures the prepared message with its raw attachment bytes and returns `development`, never remote acceptance. Configure storage only in your development host; no route is mounted automatically and no network replay is provided. Treat captured messages and sign-in links as sensitive local data.
+Development requires all three: `provider:'development'`, `mode:'development'`, and explicit `dependencies.outbox.put`. It captures the prepared message with its raw attachment bytes and returns `development`, never remote acceptance. A storage failure throws `DevelopmentOutboxError` (`code: 'development_outbox_failed'`, `retryable: true`): the message is valid, so a queue consumer retries it. Invalid input throws `MailValidationError`, which is permanent and is dropped. Configure storage only in your development host; no route is mounted automatically and no network replay is provided. Treat captured messages and sign-in links as sensitive local data.
 
 ### Adopting the local outbox
 
@@ -231,7 +231,7 @@ HTML or attachment content. All viewer responses, including errors, carry
 no-store, noindex, nosniff and a strict CSP with an exact static-style hash and
 scripts disabled. The layout wraps long content on a 390px viewport.
 
-First-party seeds route local setup through `node scripts/rer.mjs setup` and
+First-party seeds route local setup through `rer setup` and
 declare their actual mail, auth, database and migration behavior in the RER
 adapter. Base's default seed is the reference for loopback development mail and
 the private local outbox. Follow the runnable checkout's root

@@ -10,6 +10,7 @@ import { credentialValues } from './redaction.mjs';
 import { labels } from './adapter-labels.mjs';
 import { chooseOrigin, prepareSettings, readSettings } from './adapter-settings.mjs';
 import {listenerPorts} from './process-diagnostics.mjs';
+import { appFetch } from './app-fetch.mjs';
 import { owner, signIn } from './adapter-auth.mjs';
 import { installerDevKey } from './dev-identity.mjs';
 import { assertArchiveFree } from './archive-output.mjs';
@@ -180,7 +181,7 @@ async function build(context, hooks) {
 // Health is the application's own /health: HTTP 200 with JSON status "ok"
 // unless the seed supplies another check. Each probe honours its signal.
 export async function defaultHealth(url, signal) {
- const response = await fetch(url, { signal });
+ const response = await appFetch(url, { signal });
  if (!response.ok) {
   await response.body?.cancel();
   return { ready: false, message: `HTTP ${response.status}` };

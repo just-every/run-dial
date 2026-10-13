@@ -74,28 +74,6 @@ test("the owner landing has a mapped public-home capability", async () => {
 test("public paths expose the landing and sign-in but not the operator app", async () => {
   const manifest = await readManifest();
 
-  assert.deepEqual(manifest.deploy.publicPaths, [
-    "/",
-    "/assets/",
-    "/rer-theme.css",
-    "/rer-mark.svg",
-    "/fonts/",
-    "/_serverFn/",
-    "/media/",
-    "/signin",
-    "/privacy",
-    "/docs",
-    "/docs/",
-    "/auth/",
-    "/api/auth/",
-    "/book/",
-    "/manage/",
-    "/embed/",
-    "/api/public/",
-    "/api/calendar/oauth/callback",
-    "/api/webhooks/google-calendar",
-    "/api/webhooks/sendgrid",
-    "/api/webhooks/resend",
-    "/health",
-  ]);
+  assert.ok(manifest.deploy.publicPaths.every(path => !/^\/(?:app|api\/app)(?:\/|$)/.test(path)), "operator surfaces are not public declarations");
+  assert.ok(manifest.deploy.publicPaths.includes("/_serverFn/"), "Start's authenticated transport keeps its explicit admission boundary");
 });

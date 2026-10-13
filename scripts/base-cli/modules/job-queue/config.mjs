@@ -15,12 +15,12 @@ export async function configuration({ env = process.env, ...overrides } = {}) {
   try { disk = JSON.parse(await readFile(resolve(directory, 'config.json'), 'utf8')); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   const config = { slots: Math.max(1, Math.min(3, Math.floor(cpus().length / 4),
-    Math.floor(totalmem() / (8 * GIB)))), loadThreshold: 36,
-  minFreeMemoryBytes: 4 * GIB, pollMs: 3000, nice: 15, killGraceMs: 1000, ...disk };
+    Math.floor(totalmem() / (8 * GIB)))), loadThreshold: Infinity,
+  minFreeMemoryBytes: 2 * GIB, pollMs: 3000, nice: 15, killGraceMs: 1000, ...disk };
   for (const [key, suffix] of Object.entries(names)) {
     if (env[`RER_JOBS_${suffix}`] !== undefined) config[key] = Number(env[`RER_JOBS_${suffix}`]);
     if (overrides[key] !== undefined) config[key] = overrides[key];
-    if (!Number.isFinite(config[key]) || config[key] < 0) throw Error(`Invalid job queue ${key}`);
+    if (!(Number.isFinite(config[key]) || key === 'loadThreshold' && config[key] === Infinity) || config[key] < 0) throw Error(`Invalid job queue ${key}`);
   }
   if (!Number.isInteger(config.slots) || config.slots < 1 || config.pollMs < 10
     || !Number.isInteger(config.nice) || config.nice > 19) throw Error('Invalid slots, pollMs or nice');
@@ -31,14 +31,15 @@ export function ordered(jobs) {
   return [...jobs].sort((a, b) => priorities[a.priority] - priorities[b.priority] || a.sequence - b.sequence);
 }
 
+// Each reason says what is running, what the limit is and how to change it.
 export function admissionDetails(running, config, sample) {
-  if (running >= config.slots) return { code: 'slots', reason: `slots occupied (${running}/${config.slots})` };
-  if (!Number.isFinite(sample.load) || !Number.isFinite(sample.freeMemoryBytes))
-    return { code: 'resources_unavailable', reason: 'resource sample unavailable' };
+  if (running >= config.slots) return { code: 'slots', reason: `all job slots are in use (${running} of ${config.slots}; change with RER_JOBS_SLOTS)` };
+  if (!Number.isFinite(sample.load) || !Number.isFinite(sample.availableMemoryBytes))
+    return { code: 'resources_unavailable', reason: 'this computer\'s load or available memory could not be read' };
   if (sample.load > config.loadThreshold) return { code: 'load',
-    reason: `load ${sample.load.toFixed(2)} above threshold ${config.loadThreshold.toFixed(2)}` };
-  if (sample.freeMemoryBytes <= config.minFreeMemoryBytes) return { code: 'free_memory',
-    reason: `free memory ${(sample.freeMemoryBytes / GIB).toFixed(2)} GiB (${sample.freeMemoryBytes} bytes) at or below floor ${(config.minFreeMemoryBytes / GIB).toFixed(2)} GiB (${config.minFreeMemoryBytes} bytes)` };
+    reason: `the 1-minute load is ${sample.load.toFixed(1)} and jobs start at ${config.loadThreshold} or below (change with RER_JOBS_LOAD_THRESHOLD)` };
+  if (sample.availableMemoryBytes <= config.minFreeMemoryBytes) return { code: 'free_memory',
+    reason: `available memory is at or below the floor (change with RER_JOBS_MIN_FREE_MEMORY_BYTES)` };
   return null;
 }
 

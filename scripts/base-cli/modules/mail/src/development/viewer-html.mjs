@@ -1,4 +1,4 @@
-export const style = `*{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#17212e;font:16px/1.6 system-ui,sans-serif}main{max-width:52rem;margin:0 auto;padding:24px 16px}h1{font-size:1.75rem;line-height:1.2}article{margin:20px 0;padding:20px;background:white;border:1px solid #cad2dc;border-radius:12px}h2{font-size:1.2rem}h1,h2,p,a,pre{overflow-wrap:anywhere;word-break:normal}pre{white-space:pre-wrap;font:inherit}a{color:#174fb5}a.open{display:block;padding:16px;margin:20px 0;border-radius:8px;background:#174fb5;color:white;font-weight:700;text-align:center;text-decoration:none;min-height:56px}small{color:#465569}`;
+export const style = `*{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#17212e;font:16px/1.6 system-ui,sans-serif}main{max-width:52rem;margin:0 auto;padding:24px 16px}h1{font-size:1.75rem;line-height:1.2}article{margin:20px 0;padding:20px;background:white;border:1px solid #cad2dc;border-radius:12px}h2{font-size:1.2rem}h1,h2,p,a,pre{overflow-wrap:anywhere;word-break:normal}pre{white-space:pre-wrap;font:inherit}a{color:#174fb5}a.open{display:block;padding:16px;margin:20px 0;border-radius:8px;background:#174fb5;color:white;font-weight:700;text-align:center;text-decoration:none;min-height:56px}a.nav{display:inline-block;padding:4px 0}small{color:#465569}`;
 
 // Added only when the seed declares a theme: its linked rer-theme.css supplies the
 // --rer-* tokens. Each falls back to the plain sheet's value, and the focus ring is
@@ -33,10 +33,10 @@ export function document(body, theme) {
 }
 
 export function listing(rows, path) {
-  return rows.length ? rows.map(row => `<article>${metadata(row)}<p><a href="${escape(`${path}?message=${encodeURIComponent(row.id)}`)}">Read message</a></p></article>`).join('') : '<p>No messages yet.</p>';
+  return rows.length ? rows.map(row => `<article>${metadata(row)}<p><a href="${escape(`${path}?message=${encodeURIComponent(row.id)}`)}" class="nav">Read message</a></p></article>`).join('') : '<p>No messages yet.</p>';
 }
 
 export function detail(row, path) {
   const link = firstLink(row.message);
-  return `<p><a href="${escape(path)}">All messages</a></p><article>${metadata(row)}${link ? `<a class="open" href="${escape(link)}" rel="noreferrer noopener">Open this link</a>` : ''}<h2>Message text</h2><pre>${escape(row.message.text || row.message.html || '')}</pre>${row.message.attachments?.length ? `<p>${row.message.attachments.length} attachment(s) stored with this message.</p>` : ''}</article>`;
+  return `<p><a href="${escape(path)}" class="nav">All messages</a></p><article>${metadata(row)}${link ? `<a class="open" href="${escape(link)}" rel="noreferrer noopener">Open this link</a>` : ''}<h2>Message text</h2><pre>${escape(row.message.text || row.message.html || '')}</pre>${row.message.attachments?.length ? `<p>${row.message.attachments.length} attachment(s) stored with this message.</p>` : ''}</article>`;
 }

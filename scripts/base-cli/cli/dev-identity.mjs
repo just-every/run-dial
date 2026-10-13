@@ -58,7 +58,8 @@ export function refuseManagedInstallation(...sources) {
 
 // The persona list the running app declares, read with the key header.
 export async function resolvePersona(url, key, as, signal) {
- const response = await fetch(url + '/__dev/personas', { headers: { [DEV_KEY_HEADER]: key }, signal: AbortSignal.any([signal, AbortSignal.timeout(10000)].filter(Boolean)) });
+ const { appFetch } = await shared('app-fetch.mjs');
+ const response = await appFetch(url + '/__dev/personas', { headers: { [DEV_KEY_HEADER]: key }, signal: AbortSignal.any([signal, AbortSignal.timeout(10000)].filter(Boolean)) });
  if (!response.ok) { await response.body?.cancel(); throw refuse(`The application did not serve dev identity (HTTP ${response.status}). Check its local-only entry.`); }
  const personas = await response.json(), persona = personas.find(entry => entry.as === as);
  if (!persona) throw invalid(`Unknown dev persona ${as}. This app declares: ${personas.map(entry => entry.as).join(', ')}.`);
