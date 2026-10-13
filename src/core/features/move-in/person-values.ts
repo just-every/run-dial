@@ -26,7 +26,7 @@ export async function importPersonValues(db: D1Database, email: string, session:
     for (const row of requests) add(values, row.invitee_email);
   }
   const context = importContext(db, session);
-  const jobs = (await db.prepare("SELECT * FROM ik_jobs WHERE destination='dial'").all<Record<string, any>>()).results;
+  const jobs = (await db.prepare("SELECT * FROM ik_jobs WHERE destination='dial'").all<{ id: string; plan_json: string }>()).results;
   const plans = await loadPlans(jobs, db, context.storage.targets.planCodec);
   for (const job of jobs) {
     const plan = plans.get(job.id)!;
