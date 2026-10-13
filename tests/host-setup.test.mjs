@@ -35,7 +35,7 @@ contract("BASE-OPS-002", "copy-report migration preserves prior records and inva
 
 contract("EVENT-006", "seven setup steps remain truthful for empty, request-only and fully configured installs", async t => {
   const f = await fixture(t), unchecked = { state: "disconnected", checkedAt: null, reason: "disconnected" }, healthy = { state: "healthy", checkedAt: new Date().toISOString(), reason: null };
-  assert.deepEqual(core.setupSteps(await f.setup.read(), unchecked, unchecked).map(s => s.done), Array(7).fill(false));
+  assert.deepEqual(core.setupSteps(await f.setup.read(), unchecked, unchecked).map(s => s.done), [false, false, true, false, false, false, false]);
   await f.profiles.saveProfile(profileInput);
   const event = await f.create();
   await f.repository.replaceRecurringAvailability(event.id, []); f.health.calendar = false;
@@ -44,7 +44,7 @@ contract("EVENT-006", "seven setup steps remain truthful for empty, request-only
   assert.equal(state.links[0].url, origin + "/book/host-test/intro");
   assert.equal(state.links[0].requestOnly, true);
   assert.equal((await f.setup.reportCopy(event.id, state.links[0].url)).kind, "recorded");
-  assert.deepEqual(core.setupSteps(await f.setup.read(), unchecked, healthy).map(s => s.done), [true, true, false, false, true, true, true]);
+  assert.deepEqual(core.setupSteps(await f.setup.read(), unchecked, healthy).map(s => s.done), [true, true, true, false, true, true, true]);
   await f.repository.replaceRecurringAvailability(event.id, [{ weekday: 1, startMinute: 540, endMinute: 1020 }]); f.health.calendar = true;
   assert.equal((await f.events.publishEventType(event.id)).kind, "published");
   await f.setup.reportCopy(event.id, state.links[0].url);

@@ -131,7 +131,7 @@ export class BookingsService {
     const hostDate = hostDateForInstant(selection.slot.startAt, profile.timezone);
     const manageTokenHash = await hashToken(manageToken, this.runtime.SESSION_SECRET);
     const expiresAt = new Date(Date.parse(selection.slot.startAt) + manageTokenLifetimeMs).toISOString();
-    const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId });
+    const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired });
     const claim = await this.repository.claim({
       bookingId,
       occurrenceId,
@@ -149,7 +149,7 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
       now,
-      calendarPayload: { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType },
+      calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
       emails,
     });
     if (claim === "blocked" || claim === "slot_taken") {
@@ -234,6 +234,7 @@ export class BookingsService {
     if (!booking || !booking.eventTypeId) return { kind: "not_found" as const };
     const selection = await this.availability.verifyOperatorSelection(booking.eventTypeId, input.startAt, { overrideNoticeAndHorizon: input.overridePublishedAvailability, overridePublishedAvailability: input.overridePublishedAvailability }, new Date(), booking.id);
     if (selection.kind !== "valid") return selection;
+    if (booking.calendarState !== "not_required" && selection.calendarRequired === false) return { kind: "calendar_unavailable" as const };
     // An unsent capability has only a hash (for example after move-in). Issue its
     // first deliverable replacement together with the occurrence, never before it.
     const previousTokenId = await this.repository.getActiveManageTokenId(booking.id);
@@ -251,8 +252,8 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
       now: nowIso(),
-      calendarPayload: { bookingId: booking.id, icalUid: booking.icalUid, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, invitee: { name: booking.inviteeName, email: booking.inviteeEmail }, location: selection.event.locationValue, locationType: selection.event.locationType },
-      emails: await this.changeEmails(selection.profile, booking, "booking_changed", input.reason, { actor: "an operator", newStartAt: selection.slot.startAt, newEndAt: selection.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl }),
+      calendarPayload: selection.calendarRequired !== false ? { bookingId: booking.id, icalUid: booking.icalUid, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, invitee: { name: booking.inviteeName, email: booking.inviteeEmail }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
+      emails: await this.changeEmails(selection.profile, booking, "booking_changed", input.reason, { actor: "an operator", newStartAt: selection.slot.startAt, newEndAt: selection.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl, calendarRequired: selection.calendarRequired }),
     });
     if (outcome === "slot_taken") return { kind: "slot_taken" as const };
     const updated = await this.repository.getById(booking.id);
@@ -384,7 +385,8 @@ export class BookingsService {
     if (!event || event.status !== "published") return { kind: "slot_invalid" as const };
     const verified = await this.availability.verifyPublicSelection(profile.handle, event.slug, input.startAt, new Date(), access.booking.id);
     if (verified.kind !== "valid" || verified.slot.endAt !== nonce.selectionEndAt) return verified.kind === "calendar_unavailable" ? { kind: "calendar_unavailable" as const } : { kind: "slot_invalid" as const };
-    const emails = await this.changeEmails(profile, access.booking, "booking_changed", input.reason, { actor: "the invitee", newStartAt: verified.slot.startAt, newEndAt: verified.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl: new URL(`/manage/${input.token}`, this.runtime.APP_URL).toString() });
+    if (access.booking.calendarState !== "not_required" && verified.calendarRequired === false) return { kind: "calendar_unavailable" as const };
+    const emails = await this.changeEmails(profile, access.booking, "booking_changed", input.reason, { actor: "the invitee", newStartAt: verified.slot.startAt, newEndAt: verified.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl: new URL(`/manage/${input.token}`, this.runtime.APP_URL).toString(), calendarRequired: verified.calendarRequired });
     const outcome = await this.repository.reschedule({
       booking: access.booking, nonceId: nonce.id, nonceHash, payloadHash, reason: input.reason?.trim() || undefined,
       selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone: input.inviteeTimezone },
@@ -392,7 +394,7 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(verified.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(verified.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
       now,
-      calendarPayload: { bookingId: access.booking.id, icalUid: access.booking.icalUid, eventTitle: event.title, startAt: verified.slot.startAt, endAt: verified.slot.endAt, hostTimezone: profile.timezone, invitee: { name: access.booking.inviteeName, email: access.booking.inviteeEmail }, location: event.locationValue, locationType: event.locationType },
+      calendarPayload: verified.calendarRequired !== false ? { bookingId: access.booking.id, icalUid: access.booking.icalUid, eventTitle: event.title, startAt: verified.slot.startAt, endAt: verified.slot.endAt, hostTimezone: profile.timezone, invitee: { name: access.booking.inviteeName, email: access.booking.inviteeEmail }, location: event.locationValue, locationType: event.locationType } : undefined,
       emails,
     });
     if (outcome === "slot_taken") return { kind: "slot_taken" as const };
@@ -425,7 +427,7 @@ export class BookingsService {
     };
   }
 
-  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; manageToken: string; bookingId: string }): Promise<BookingEmail[]> {
+  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; manageToken: string; bookingId: string; calendarRequired?: boolean }): Promise<BookingEmail[]> {
     const { profile, event, invitee, startAt, endAt, inviteeTimezone, manageToken, bookingId } = input;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     const location = event.locationType === "google_meet" ? "Google Meet link pending" : event.locationValue;
@@ -438,7 +440,7 @@ export class BookingsService {
     const details = {
       hostName: profile.name, eventTitle: event.title, startAt, endAt, durationMinutes: (Date.parse(endAt) - Date.parse(startAt)) / 60_000,
       inviteeTimezone, hostTimezone: profile.timezone, locationType: event.locationType, locationLabel: event.locationLabel,
-      locationValue: event.locationValue, calendarState: "pending",
+      locationValue: event.locationValue, calendarState: input.calendarRequired === false ? "not_required" : "pending",
       inviteeName: invitee.name, inviteeEmail: invitee.email, answers: answerDetails,
     };
     return [
@@ -447,7 +449,7 @@ export class BookingsService {
     ];
   }
 
-  private async changeEmails(profile: ProfileRecord, booking: BookingRecord, template: "booking_changed" | "booking_cancelled", reason?: string, change: { actor: string; newStartAt?: string; newEndAt?: string; newInviteeTimezone?: string; manageUrl?: string } = { actor: "the invitee" }): Promise<BookingEmail[]> {
+  private async changeEmails(profile: ProfileRecord, booking: BookingRecord, template: "booking_changed" | "booking_cancelled", reason?: string, change: { actor: string; newStartAt?: string; newEndAt?: string; newInviteeTimezone?: string; manageUrl?: string; calendarRequired?: boolean } = { actor: "the invitee" }): Promise<BookingEmail[]> {
     const changed = template === "booking_cancelled";
     const normalizedReason = reason?.trim() || undefined;
     const inviteeManageUrl = changed ? undefined : change.manageUrl ?? await this.repository.storedManageUrl(booking.id);
@@ -466,7 +468,7 @@ export class BookingsService {
       locationLabel: booking.locationLabel,
       locationValue: booking.locationValue,
       meetingUrl: booking.meetingUrl,
-      calendarState: "pending",
+      calendarState: (change.calendarRequired ?? (booking.calendarState !== "not_required")) ? "pending" : "not_required",
       actor: change.actor,
       previousInviteeTime: renderTimeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone),
       previousHostTime: renderTimeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.hostTimezone),
@@ -476,11 +478,11 @@ export class BookingsService {
     };
     if (changed) {
       const template = { kind: "booking-cancellation" as const, hostName: profile.name, actor: change.actor, ...(normalizedReason ? { reason: normalizedReason } : {}) };
-      const inviteeMail = bookingCancellationMail({ ...mailDetails, calendarState: "pending", actor: template.actor, reason: template.reason, recipientRole: "invitee", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
+      const inviteeMail = bookingCancellationMail({ ...mailDetails, calendarState: (change.calendarRequired ?? (booking.calendarState !== "not_required")) ? "pending" : "not_required", actor: template.actor, reason: template.reason, recipientRole: "invitee", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
       return [
         { to: booking.inviteeEmail, recipientRole: "invitee" as const, subject: inviteeMail.subject, text: inviteeMail.text, html: inviteeMail.html, mailTemplate: template },
         ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
-          const operatorMail = bookingCancellationMail({ ...mailDetails, calendarState: "pending", actor: template.actor, reason: template.reason, recipientRole: "operator", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
+          const operatorMail = bookingCancellationMail({ ...mailDetails, calendarState: (change.calendarRequired ?? (booking.calendarState !== "not_required")) ? "pending" : "not_required", actor: template.actor, reason: template.reason, recipientRole: "operator", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
           return { to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: operatorMail.subject, text: operatorMail.text, html: operatorMail.html, mailTemplate: template };
         }),
       ];

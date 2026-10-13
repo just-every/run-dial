@@ -11,7 +11,7 @@ export function setupSteps(state: HostSetupState, calendar: ConnectionStatus, ma
   return [
     { id: "profile", label: "Host profile", done: state.profileReady, href: "/app/profile" },
     { id: "mail", label: "Mail check", done: checkedHealthy(mail), href: "/app/settings#mail-connection" },
-    { id: "calendar", label: "Google Calendar connection", done: checkedHealthy(calendar), href: "/app/settings#calendar-connection" },
+    { id: "calendar", label: "Google Calendar (optional)", done: checkedHealthy(calendar) || calendar.state === "disconnected", optional: calendar.state === "disconnected", href: "/app/settings#calendar-connection" },
     { id: "availability", label: "An availability window", done: state.availabilityReady, href: state.eventTypeId ? `${eventHref}/availability` : "/app/event-types/new" },
     { id: "event", label: "An event type", done: state.eventTypeId !== null, href: eventHref },
     { id: "publication", label: "Publish or Open requests", done: state.links.length > 0, href: eventHref },

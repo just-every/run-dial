@@ -119,11 +119,12 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
 
   async checkConnection() {
     const connection = await this.repository.get();
+    if (!connection || connection.status === "disconnected") return { kind: "unavailable" as const, code: "not_connected" };
     if (connection?.unhealthyCode === "reauthorization_required") return { kind: "unavailable" as const, code: "reauthorization_required" };
     const destination = connection?.selection.find((entry) => entry.purpose === "destination");
     const conflicts = connection?.selection.filter((entry) => entry.purpose === "conflict") ?? [];
-    if (!connection || connection.status === "disconnected" || !destination || conflicts.length === 0) {
-      if (connection && connection.status !== "disconnected") await this.repository.markUnhealthy("selection_required");
+    if (!destination || conflicts.length === 0) {
+      await this.repository.markUnhealthy("selection_required");
       return { kind: "unavailable" as const, code: "selection_required" };
     }
     try {

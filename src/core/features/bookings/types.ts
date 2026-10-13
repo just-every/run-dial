@@ -70,7 +70,7 @@ export type BookingRecord = {
   inviteeTimezone: string;
   state: BookingState;
   icalUid: string;
-  calendarState: DeliveryState;
+  calendarState: DeliveryState | "not_required";
   meetingState: DeliveryState | "not_required";
   meetingUrl: string | null;
   calendarProviderEventId: string | null;
@@ -96,7 +96,7 @@ export type BookingConfirmation = {
   occurrence: Pick<BookingOccurrence, "startAt" | "endAt">;
   inviteeTimezone: string;
   location: { label: string; value?: string; state: "ready" | "pending" };
-  calendarState: DeliveryState;
+  calendarState: DeliveryState | "not_required";
   meetingState: DeliveryState | "not_required";
   manageUrl: string;
   icsUrl: string;
@@ -133,7 +133,7 @@ export type BookingClaim = {
   occupiedStartAt: string;
   occupiedEndAt: string;
   now: string;
-  calendarPayload: Record<string, unknown>;
+  calendarPayload: Record<string, unknown> | undefined;
   emails: BookingEmail[];
 };
 

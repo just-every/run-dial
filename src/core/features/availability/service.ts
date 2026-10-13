@@ -8,7 +8,7 @@ import { AvailabilityRepository } from "./repository";
 import { diagnoseAvailability } from "./diagnostics";
 
 export type CalendarBusyRead =
-  | { kind: "ok"; observedAt: string; intervals: BusyInterval[] }
+  | { kind: "ok"; calendarRequired?: boolean; observedAt: string; intervals: BusyInterval[] }
   | { kind: "unavailable"; code: string };
 
 /** This is deliberately the only calendar capability availability receives. */
@@ -17,7 +17,7 @@ export type CalendarBusyReader = {
 };
 
 export type AvailabilityResult =
-  | { state: "available"; week: string; slots: AvailableSlot[]; recommendations: Array<AvailableSlot & { reason: string }>; rankedSlots: Array<AvailableSlot & { reason: string }> }
+  | { state: "available"; calendarRequired: boolean; week: string; slots: AvailableSlot[]; recommendations: Array<AvailableSlot & { reason: string }>; rankedSlots: Array<AvailableSlot & { reason: string }> }
   | { state: "temporarily_unavailable"; provider: "calendar_provider_unavailable"; slots: [] };
 
 export class AvailabilityService {
@@ -48,7 +48,7 @@ export class AvailabilityService {
     const selected = await this.listEventWeek(event, profile.timezone, hostDate, undefined, now, "fresh", excludedBookingId, { overrideNoticeAndHorizon: false, includeRecommendations: false }, 1);
     if (selected.state === "temporarily_unavailable") return { kind: "calendar_unavailable" as const };
     const slot = selected.slots.find((candidate) => candidate.startAt === startAt);
-    return slot ? { kind: "valid" as const, profile, event, slot } : { kind: "slot_invalid" as const };
+    return slot ? { kind: "valid" as const, profile, event, slot, calendarRequired: selected.calendarRequired } : { kind: "slot_invalid" as const };
   }
 
   /** The booking service resolves both IDs from a validated manage capability. */
@@ -75,7 +75,7 @@ export class AvailabilityService {
     const loaded = await this.loadInput(event, profile.timezone, hostDate, 1, now, "fresh", options, excludedBookingId);
     if (!loaded) return { kind: "calendar_unavailable" as const };
     const slot = listAvailableSlots(loaded.input).find((candidate) => Date.parse(candidate.startAt) === Date.parse(startAt));
-    return slot ? { kind: "valid" as const, profile, event, slot }
+    return slot ? { kind: "valid" as const, profile, event, slot, calendarRequired: loaded.calendarRequired }
       : { kind: "slot_invalid" as const, exclusions: diagnoseAvailability(loaded.input, startAt, now).exclusions };
   }
 
@@ -104,7 +104,7 @@ export class AvailabilityService {
     const slots = listAvailableSlots(input);
     const rankedSlots = slots.length && operatorOverride.includeRecommendations !== false
       ? rankSlots(slots, buildRecommendationContext(input, range, inviteeTimeZone), slots.length) : [];
-    return { state: "available", week: firstDate, slots, recommendations: rankedSlots.slice(0, 5), rankedSlots };
+    return { state: "available", calendarRequired: loaded.calendarRequired, week: firstDate, slots, recommendations: rankedSlots.slice(0, 5), rankedSlots };
   }
   private loadInput(event: EventTypeRecord, zone: string, date: string, days: number, now: Date, freshness: "cached" | "fresh", options: OperatorAvailabilityOptions, excludedBookingId?: string) {
     return loadAvailabilityInput({ repository: this.repository, calendar: this.calendar, eventTypes: this.eventTypes }, event, zone, date, days, now, freshness, options, excludedBookingId);

@@ -178,7 +178,7 @@ export class ProviderDeliveryService {
         ...bookingCancellationMail({
           ...snapshot,
           hostName: template.hostName,
-          calendarState: "pending",
+          calendarState: snapshot.calendarState,
           actor: template.actor,
           reason: template.reason,
           recipientRole: payload.recipientRole,

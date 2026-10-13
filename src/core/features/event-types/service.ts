@@ -127,7 +127,7 @@ export class EventTypesService {
     ];
     if (!providers) return { ready: false, missing: [...missing, "transactional_mail", "destination_calendar", ...(eventType.locationType === "google_meet" ? ["google_meet_capability"] : [])] };
     const { calendar, mail } = providers;
-    if (calendar.kind !== "healthy") missing.push("destination_calendar");
+    if (calendar.kind !== "healthy" && calendar.code !== "not_connected") missing.push("destination_calendar");
     if (mail.kind !== "healthy") missing.push("transactional_mail");
     if (eventType.locationType === "google_meet" && (calendar.kind !== "healthy" || !calendar.conferenceCapable)) missing.push("google_meet_capability");
     return { ready: missing.length === 0, missing };

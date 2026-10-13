@@ -25,7 +25,7 @@ export async function loadAvailabilityInput(
     dependencies.repository.listInternalClaims(busyStart, busyEnd, excludedBookingId, event.hostDayBookingLimit === null ? [] : Array.from({ length: days }, (_, day) => datePlus(firstDate, day))),
     dependencies.eventTypes.listDateAvailabilityOverrides(event.id),
   ]);
-  if (busy.kind !== "ok" || !overrides) return undefined;
+  if (busy.kind !== "ok" || !overrides || (event.locationType === "google_meet" && busy.calendarRequired === false)) return undefined;
   const ownEvents = await dependencies.repository.listOwnCalendarEvents(busyStart, busyEnd, busy.observedAt);
   const input: SlotEngineInput = {
     hostTimeZone,
@@ -50,6 +50,6 @@ export async function loadAvailabilityInput(
     // internal claims hold live bookings, and a cancelled or moved booking's old event must not keep its time blocked.
     calendarBusy: withoutIntervals(busy.intervals, ownEvents),
   };
-  return { input, range: { start: rangeStart.getTime(), end: rangeEnd.getTime() } };
+  return { input, calendarRequired: busy.calendarRequired !== false, range: { start: rangeStart.getTime(), end: rangeEnd.getTime() } };
 }
 const allDayWindows = Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 }));

@@ -12,7 +12,7 @@ export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onEr
     <dl className="mt-6 grid gap-x-6 gap-y-4 border-y border-line-soft py-5 sm:grid-cols-2">
       <Fact label="Host time" value={timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.hostTimezone)} />
       <Fact label="Invitee time" value={timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone)} />
-      <Fact label="Location" value={booking.meetingUrl || booking.locationValue || booking.locationLabel} /><Fact label="Calendar delivery" value={booking.imported ? "Original calendar entry retained" : booking.calendarState} /><Fact label="Meeting" value={booking.meetingState} />
+      <Fact label="Location" value={booking.meetingUrl || booking.locationValue || booking.locationLabel} /><Fact label="Calendar delivery" value={booking.imported ? "Original calendar entry retained" : booking.calendarState === "not_required" ? "No connected calendar" : booking.calendarState} /><Fact label="Meeting" value={booking.meetingState} />
       {booking.answers.length ? <div className="sm:col-span-2"><dt className="text-[13px] font-[650] text-muted">Answers</dt><dd className="mt-2 grid gap-2">{booking.answers.map((answer) => <span className="break-words rounded-xl bg-row px-3.5 py-3 text-[15px]" key={answer.key}><strong>{answer.label}: </strong>{Array.isArray(answer.value) ? answer.value.join(", ") : answer.value}</span>)}</dd></div> : null}
     </dl>
     <ExtensionSlot id="booking.detail.sidebar.after.v1" entityId={booking.id} />

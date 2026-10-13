@@ -6,7 +6,7 @@ const cacheLifetimeMs = 5 * 60 * 1_000;
 
 export type CalendarAvailabilityReader = {
   readBusy(input: { startAt: string; endAt: string; freshness: "cached" | "fresh" }): Promise<
-    | { kind: "ok"; observedAt: string; intervals: Array<{ startAt: string; endAt: string }> }
+    | { kind: "ok"; calendarRequired?: boolean; observedAt: string; intervals: Array<{ startAt: string; endAt: string }> }
     | { kind: "unavailable"; code: string }
   >;
 };
@@ -22,7 +22,9 @@ export class CalendarBusyReader implements CalendarAvailabilityReader {
 
   async readBusy(input: { startAt: string; endAt: string; freshness: "cached" | "fresh" }) {
     let connection = await this.repository.get();
-    if (!connection || connection.status === "disconnected") return { kind: "unavailable" as const, code: "calendar_unavailable" };
+    // Absence is an explicit scheduling mode. An unhealthy or incomplete connection
+    // always continues through the provider checks below and fails closed.
+    if (!connection || connection.status === "disconnected") return { kind: "ok" as const, calendarRequired: false, observedAt: new Date().toISOString(), intervals: [] };
     let requiresFreshRead = input.freshness === "fresh";
     if (connection.status !== "healthy") {
       const recovered = await this.recoverConnection();

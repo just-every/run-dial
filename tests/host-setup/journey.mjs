@@ -6,6 +6,7 @@ import { clipboardJourney, securityJourney } from "./sharing.mjs";
 import { activityJourney } from "./activity.mjs";
 import { overviewHealth } from "./health.mjs";
 import { deletedEventRecovery } from "./readiness.mjs";
+import { calendarOptionalJourney } from "./calendar-optional.mjs";
 import { localSignIn } from "./local-signin.mjs";
 
 const safeRequestPath = url => new URL(url).pathname.replace(/(\/(?:manage|review|alternative-time)\/)[^/]+/g, "$1[redacted]");
@@ -15,7 +16,7 @@ export async function hostJourneys(origin, scenario) {
   let scans = 0;
   try {
     {
-      const { width, requestsOnly } = scenario;
+      const { width, requestsOnly, calendarOptional } = scenario;
       assert.equal((await fetch(origin + "/__host/reset", { method: "POST" })).status, 204);
       const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, locale: "de-DE", timezoneId: "America/New_York", permissions: ["clipboard-read", "clipboard-write"] });
       const page = await context.newPage();
@@ -40,7 +41,7 @@ export async function hostJourneys(origin, scenario) {
         assert.deepEqual(results.violations.filter(v => ["serious", "critical"].includes(v.impact)).map(v => v.id), [], name);
         assert.equal(await page.evaluate(() => globalThis.document.documentElement.scrollWidth > globalThis.innerWidth), false, name + " overflow");
         await page.evaluate(() => globalThis.scrollTo(0, 0));
-        await page.screenshot({ path: evidencePath(`host-${requestsOnly ? "requests" : "published"}-${width}-${name}.png`), fullPage: true, caret: "initial" }); scans++;
+        await page.screenshot({ path: evidencePath(`host-${calendarOptional ? "calendar-optional" : requestsOnly ? "requests" : "published"}-${width}-${name}.png`), fullPage: true, caret: "initial" }); scans++;
       };
       try {
         await page.goto(origin + "/"); assert.equal(await page.locator('a[href^="/book/"]').count(), 0);
@@ -70,14 +71,14 @@ export async function hostJourneys(origin, scenario) {
         await page.getByRole("link", { name: "Host profile", exact: true }).click();
         await page.getByLabel("Name", { exact: true }).fill("Fresh Host"); await page.getByLabel("Title", { exact: true }).fill("Advisor"); await page.getByLabel("Public handle", { exact: true }).fill("fresh-host"); await page.getByRole("textbox", { name: /^Host timezone/ }).fill("UTC"); await page.getByLabel("Biography", { exact: true }).fill("An independently configured host."); await page.getByRole("button", { name: "Save profile", exact: true }).click(); await expect(page.getByRole("button", { name: "Save profile", exact: true })).toBeEnabled();
         step = "connection settings"; await page.goto(origin + "/setup/settings#mail-connection"); await page.getByRole("button", { name: "Check sender", exact: true }).click(); await expect(page.getByText("Mail sender verified.", { exact: true })).toBeVisible();
-        if (!requestsOnly) {
+        if (!requestsOnly && !calendarOptional) {
           await page.getByRole("button", { name: "Connect Google Calendar", exact: true }).click();
           await expect(page.getByRole("combobox", { name: "Destination calendar", exact: true })).toBeVisible();
           await page.getByRole("combobox", { name: "Destination calendar", exact: true }).selectOption("synthetic-calendar"); await page.getByRole("checkbox", { name: "synthetic-calendar (primary) owner", exact: true }).check();
           await page.getByRole("button", { name: "Save calendar selection", exact: true }).click(); await expect(page.getByText("Calendar selection saved. Check the connection to verify it.", { exact: true })).toBeVisible();
           await page.getByRole("button", { name: "Check connection", exact: true }).click(); await expect(page.getByText("Calendar check passed.", { exact: true })).toBeVisible(); await scan("connected-settings");
         }
-        await page.goto(origin + "/setup"); await expect(page.locator('[data-step="mail"]')).toContainText("Done"); if (requestsOnly) { await expect(page.locator('[data-step="calendar"]')).toContainText("To do"); await overviewHealth(page, origin, { calendar: "disconnected", mail: "healthy" }); await scan("mail-without-calendar"); }
+        await page.goto(origin + "/setup"); await expect(page.locator('[data-step="mail"]')).toContainText("Done"); if (requestsOnly) { await expect(page.locator('[data-step="calendar"]')).toContainText("Optional"); await overviewHealth(page, origin, { calendar: "disconnected", mail: "healthy" }); await scan("mail-without-calendar"); }
         step = "event editor"; await page.getByRole("link", { name: "New event type", exact: true }).first().click();
         const more = page.locator("details").filter({ has: page.locator("summary", { hasText: "More options" }) }); await expect(more).not.toHaveAttribute("open");
         await page.getByLabel("Event name", { exact: true }).fill("First event"); await page.getByLabel("Duration (minutes)", { exact: true }).fill("30");
@@ -108,8 +109,8 @@ export async function hostJourneys(origin, scenario) {
         step = "clipboard and embeds"; await clipboardJourney({ browser, page, context, origin, eventId, requestsOnly, scan });
         step = "completed setup"; await page.goto(origin + "/setup");
         const state = await (await page.request.get(origin + "/api/app/host-setup")).json(); assert.equal(state.steps.find(step => step.id === "copy").done, true);
-        if (requestsOnly) { await page.getByText(/Booking configuration/).click(); await expect(page.locator('[data-step="calendar"]')).toContainText("To do"); await expect(page.locator('[data-step="availability"]')).toContainText("To do"); }
-        else { assert.ok(state.steps.every(step => step.done), "published host completes every returned setup step"); await expect(page.getByRole("list", { name: "Booking configuration" })).toBeHidden(); step = "activity"; await activityJourney(page, origin, eventId, scan); }
+        if (requestsOnly) { await page.getByText(/Booking configuration/).click(); await expect(page.locator('[data-step="calendar"]')).toContainText("Optional"); await expect(page.locator('[data-step="availability"]')).toContainText("To do"); }
+        else { assert.ok(state.steps.every(step => step.done), "published host completes every returned setup step"); await expect(page.getByRole("list", { name: "Booking configuration" })).toBeHidden(); step = "activity"; if (calendarOptional) await calendarOptionalJourney(browser, page, origin, eventId, width, scan); else await activityJourney(page, origin, eventId, scan); }
         await scan("complete"); assert.deepEqual(errors, []);
       } finally { await context.close(); }
     }

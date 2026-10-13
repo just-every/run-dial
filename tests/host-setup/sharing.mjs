@@ -118,7 +118,7 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
           await expect(identity).toBeVisible();
           if (requestsOnly) {
             await expect(frame.getByText("Requests only", { exact: true })).toBeVisible();
-            await expect(frame.getByText("Automatic booking is not open. Calendar availability has not been verified for this event. Your request goes to the host for review; it does not reserve a time or create a booking.", { exact: true })).toBeVisible();
+            await expect(frame.getByText("Automatic booking is not open. The host is accepting time requests for this event. Your request goes to the host for review; it does not reserve a time or create a booking.", { exact: true })).toBeVisible();
             assert.equal(await frame.locator(".pb-slot-button").count(), 0);
             await expect(frame.getByRole("link", { name: "Send another request", exact: true })).toHaveAttribute("href", `/embed/fresh-host/first-event/request?parent=${encodeURIComponent(hostOrigin)}#dial-parent=${encodeURIComponent(hostOrigin)}`);
           }

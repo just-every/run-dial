@@ -117,3 +117,7 @@ These checks must pass on the final integrated candidate before acceptance is re
 
 
 The adjacent-main launcher integration was checked on `5cb7574799d02d898ce1feb35e5d035536220963`: 17/17 native HTTP/private-file checks, the affected AVAIL-009 journey (1/1), typecheck and lint of 21 changed source files passed. Product, schema and production Vite configuration were unchanged from the corrected 11-test implementation above. Root restored the inherited-key isolation and bounded audit/capacity dispatch before this check. This narrow local integration receipt was followed by completed disconnected archive receipts on `b272` and `7157875`; consult the maintainers' private verification notes (not published) for the actual final docs-bearing-head archive result.
+
+## Calendar-optional booking candidate
+
+The existing `tests/host-setup-journey.test.mjs` adds a calendar-optional cold-host scenario at 1440px and 390px. It publishes real saved availability with no connected calendar, completes first run, books through the signed-out public UI, reloads the receipt and host list, checks occupied time is removed, and races independent nonces for one remaining slot. It requires one persisted winner, a 409 loser, `not_required` calendar state, no calendar outbox commands and a refused Google Meet publication. Existing connected-provider journeys remain required. Runtime receipts for the final integrated candidate must be recorded before claiming acceptance; no live provider acceptance is implied.

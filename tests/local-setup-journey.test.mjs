@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import { readFile, stat, writeFile, mkdir, access } from 'node:fs/promises';
 import { join } from 'node:path';
-import { chromium, expect } from '@playwright/test';
+import { chromium } from '@playwright/test';
 import { contract } from './contract.mjs';
 import { freshCopy, runRer, start, variables, removeCopy, assertPrivateBuild } from './local-setup/runtime.mjs';
 import { completeFirstRun } from './local-setup/first-run.mjs';
 import { browserJourney } from './local-setup/browser.mjs';
 import { devIdentityJourney } from './local-setup/dev-identity.mjs';
 import { openGateFromLink } from './dev-key.mjs';
+import { nativeSignIn } from './local-setup/native-signin.mjs';
 
 contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs in before hydration, resets and round-trips complete local data', async () => {
  for (const width of [1440, 390]) {
@@ -33,32 +34,7 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width, height: 900 } });
    await openGateFromLink(context, server.openUrl);
    const page = await context.newPage();
-   try {
-   await page.goto(values.APP_URL + '/signin');
-   await page.getByLabel('Email address', { exact: true }).fill(values.OWNER_EMAIL);
-   await page.getByRole('button', { name: 'Send magic link', exact: true }).click();
-   await page.waitForURL(values.APP_URL + '/__dev/outbox');
-   // The outbox is newest first; recovery mail can precede the newest sign-in mail.
-   const signInMessages = page.locator('article').filter({ has: page.getByRole('heading', { level: 2, name: 'Your sign-in link for Dial', exact: true }) });
-   const signInMessage = signInMessages.first();
-   const selection = { subjects: await page.locator('article h2').allTextContents(), subject: await signInMessage.getByRole('heading', { level: 2 }).textContent(), matchingMessages: await signInMessages.count() };
-   console.info(`Pre-hydration sign-in outbox selection: ${JSON.stringify(selection)}`);
-   await signInMessage.getByRole('link', { name: 'Read message', exact: true }).click();
-   await page.getByRole('link', { name: 'Open this link', exact: true }).click();
-   const token = new URL(page.url()).searchParams.get('token');
-   const setupResponse = page.waitForResponse(response => response.url() === values.APP_URL + '/setup' && response.request().resourceType() === 'document');
-   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
-   await page.waitForURL(values.APP_URL + '/setup');
-   const setupDocument = await setupResponse;
-   assert.equal(setupDocument.status(), 200);
-   assert.match(setupDocument.headers()['content-type'], /^text\/html\b/i);
-   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-   const guarded = await page.request.get(values.APP_URL + '/app/bookings', { maxRedirects: 0 });
-   assert.equal(guarded.headers().location, '/setup');
-   assert.equal((await page.request.get(values.APP_URL + '/api/app/profile')).status(), 200);
-   const replay = await page.request.post(values.APP_URL + '/auth/confirm', { headers: { origin: values.APP_URL }, form: { token }, maxRedirects: 0 });
-   assert.equal(replay.status(), 400);
-   } catch { throw Error('Native pre-hydration sign-in or one-use confirmation failed; credential-bearing diagnostics suppressed.'); }
+   await nativeSignIn(page, { origin: values.APP_URL, email: values.OWNER_EMAIL, width, privateValues: [values.SESSION_SECRET, values.SETUP_TOKEN, values.RER_DEV_KEY] });
    await browser.close(); browser = undefined;
    let savedProfile;
    await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width, openUrl: server.openUrl, onSignedIn: async (page, onPhase) => {

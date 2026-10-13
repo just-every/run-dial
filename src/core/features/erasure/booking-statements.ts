@@ -9,7 +9,7 @@ export function bookingErasureCapture(id: string, operatorId: string): ErasureSt
     { sql: "INSERT INTO anonymized_audit (id, entity_kind, action, actor_type, actor_id, happened_at, erased_at) SELECT lower(hex(randomblob(16))), 'booking', action, actor_type, CASE WHEN actor_type = 'operator' THEN actor_id ELSE NULL END, created_at, ? FROM booking_history WHERE booking_id = ?", params: [now, id] },
     { sql: "INSERT INTO anonymized_audit (id, entity_kind, action, actor_type, actor_id, happened_at, erased_at) SELECT ?, 'booking', 'erased', 'operator', ?, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)", params: [createId(), operatorId, now, now, id] },
     { sql: `INSERT INTO erased_calendar_targets (booking_id, created_at, receipt_id)
-      SELECT b.id, ?, (SELECT receipt_id FROM person_erasure_locks WHERE email=b.invitee_email_folded) FROM bookings b WHERE b.id = ? AND (b.imported = 0 OR b.calendar_provider_event_id IS NOT NULL
+      SELECT b.id, ?, (SELECT receipt_id FROM person_erasure_locks WHERE email=b.invitee_email_folded) FROM bookings b WHERE b.id = ? AND b.calendar_required = 1 AND (b.imported = 0 OR b.calendar_provider_event_id IS NOT NULL
         OR EXISTS (SELECT 1 FROM delivery_outbox d WHERE d.booking_id = b.id AND d.kind = 'calendar_upsert'
           AND CASE WHEN json_valid(d.payload_json) THEN json_extract(d.payload_json, '$.archiveHistorical') END IS NOT 1))
       ON CONFLICT(booking_id) DO NOTHING`, params: [now, id] },

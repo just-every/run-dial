@@ -2,6 +2,28 @@
   "schemaVersion": 1,
   "copies": [
     {
+      "path": "RUN-LOCALLY.md",
+      "originPath": "export/RUN-LOCALLY.md",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "RUN-LOCALLY.md": "b0baa2140ffd6b4304e77d4127cfa66efbc8430f701cf027913d43f401abda25"
+      },
+      "modes": {
+        "RUN-LOCALLY.md": "100644"
+      }
+    },
+    {
+      "path": "SEED-COMMAND-CONTRACT.md",
+      "originPath": "export/SEED-COMMAND-CONTRACT.md",
+      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
+      "files": {
+        "SEED-COMMAND-CONTRACT.md": "eddce909762f4660ce8f8727c85c1fc9c042cc9deaef505cde26589e7256ab53"
+      },
+      "modes": {
+        "SEED-COMMAND-CONTRACT.md": "100644"
+      }
+    },
+    {
       "path": "migrations/core/0020_base_development_outbox.sql",
       "originPath": "default-seed/migrations/core/0004_development_outbox.sql",
       "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
@@ -554,19 +576,100 @@
       }
     },
     {
-      "path": "modules/mail",
-      "originPath": "modules/mail",
+      "path": "modules/mail/.gitignore",
+      "originPath": "modules/mail/.gitignore",
       "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
       "files": {
-        "modules/mail/.gitignore": "bac5cb305c3cbf6aa42e50e7f2c0f5331a71d70dac15f239b8ec6746afed0db5",
-        "modules/mail/doctor.mjs": "861a2be20c051247d590cc14d173037f648666fc28ac39f826d69e38e5e2f5d9",
-        "modules/mail/index.mjs": "c8d1c9cf36186c9e16a9c6a92ca01228cce91eab9f7395e0a01d3c9dd229c5d6",
-        "modules/mail/LICENSE": "2f5076ef027045b9e0e72df8aa61ca8551e54b1877d531656d6e7985b2c32324",
+        "modules/mail/.gitignore": "bac5cb305c3cbf6aa42e50e7f2c0f5331a71d70dac15f239b8ec6746afed0db5"
+      },
+      "modes": {
+        "modules/mail/.gitignore": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/LICENSE",
+      "originPath": "modules/mail/LICENSE",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/mail/LICENSE": "2f5076ef027045b9e0e72df8aa61ca8551e54b1877d531656d6e7985b2c32324"
+      },
+      "modes": {
+        "modules/mail/LICENSE": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/README.md",
+      "originPath": "modules/mail/README.md",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/mail/README.md": "eb190b5cf222c2a90c800825f9a087601d8b377c93376e458a7fc536a02553bb"
+      },
+      "modes": {
+        "modules/mail/README.md": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/doctor.mjs",
+      "originPath": "modules/mail/doctor.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/mail/doctor.mjs": "861a2be20c051247d590cc14d173037f648666fc28ac39f826d69e38e5e2f5d9"
+      },
+      "modes": {
+        "modules/mail/doctor.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/index.mjs",
+      "originPath": "modules/mail/index.mjs",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/mail/index.mjs": "c8d1c9cf36186c9e16a9c6a92ca01228cce91eab9f7395e0a01d3c9dd229c5d6"
+      },
+      "modes": {
+        "modules/mail/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/live-proof",
+      "originPath": "modules/mail/live-proof",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
         "modules/mail/live-proof/README.md": "2f6cf1d376a9356b24291765361930b502f8644a0dde4019650d5dddc7478a59",
-        "modules/mail/live-proof/run.mjs": "e0c9a4838d6e3ab467f98a7c5be3a74f874267ced6ec025e4de26e906fb45a04",
-        "modules/mail/package.json": "fb97ece867a3c13b9b1ad70c1ceb855e6547a49b30c2d8d265980f1759fe58f6",
-        "modules/mail/pnpm-lock.yaml": "9e2b9946e854b4e4aa2c32b9a5436971ee8e505561baa224bb83001877b0a6c7",
-        "modules/mail/README.md": "eb190b5cf222c2a90c800825f9a087601d8b377c93376e458a7fc536a02553bb",
+        "modules/mail/live-proof/run.mjs": "e0c9a4838d6e3ab467f98a7c5be3a74f874267ced6ec025e4de26e906fb45a04"
+      },
+      "modes": {
+        "modules/mail/live-proof/README.md": "100644",
+        "modules/mail/live-proof/run.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/package.json",
+      "originPath": "modules/mail/package.json",
+      "revision": "1edb1547ecead0220fb7b9473fdd54ac7a70d884",
+      "files": {
+        "modules/mail/package.json": "b099b75f009c5cfd41c42cccd748c8530fb6f1caf8444d3de82fbc42241e7dfe"
+      },
+      "modes": {
+        "modules/mail/package.json": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/pnpm-lock.yaml",
+      "originPath": "modules/mail/pnpm-lock.yaml",
+      "revision": "1edb1547ecead0220fb7b9473fdd54ac7a70d884",
+      "files": {
+        "modules/mail/pnpm-lock.yaml": "c87e27684086028e3ca9e088e5c14f786069a4cecf0e33467577cb91dfba42e8"
+      },
+      "modes": {
+        "modules/mail/pnpm-lock.yaml": "100644"
+      }
+    },
+    {
+      "path": "modules/mail/src",
+      "originPath": "modules/mail/src",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
         "modules/mail/src/adapters/cloudflare/headers.mjs": "6bee46c1edb6228b9d3df8b26ca1acbb163c36d94ecbd8e28ace1a6811095f23",
         "modules/mail/src/adapters/cloudflare/index.mjs": "377e4a322ac7803a1c56986ac909c35c1328896cff07c0610abbad5e8f8c3f86",
         "modules/mail/src/adapters/cloudflare/README.md": "80531ce460180b853b7db0480b4ff3d4f919fa5ccc119f71255fb1ac13485c5a",
@@ -615,15 +718,6 @@
         "modules/mail/src/unsubscribe/index.mjs": "4cd7c05a3a885d4d16cfcb50e623fdc201fe6c6bb8d9418502b0837161e55295"
       },
       "modes": {
-        "modules/mail/.gitignore": "100644",
-        "modules/mail/doctor.mjs": "100644",
-        "modules/mail/index.mjs": "100644",
-        "modules/mail/LICENSE": "100644",
-        "modules/mail/live-proof/README.md": "100644",
-        "modules/mail/live-proof/run.mjs": "100644",
-        "modules/mail/package.json": "100644",
-        "modules/mail/pnpm-lock.yaml": "100644",
-        "modules/mail/README.md": "100644",
         "modules/mail/src/adapters/cloudflare/headers.mjs": "100644",
         "modules/mail/src/adapters/cloudflare/index.mjs": "100644",
         "modules/mail/src/adapters/cloudflare/README.md": "100644",
@@ -670,6 +764,17 @@
         "modules/mail/src/sendgrid-email/index.d.mts": "100644",
         "modules/mail/src/sendgrid-email/index.mjs": "100644",
         "modules/mail/src/unsubscribe/index.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/README.md",
+      "originPath": "modules/operator-auth/README.md",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "modules/operator-auth/README.md": "d10c23ecc9adc92ddfdd81c3558d6fa9a28f00fae0b637d6ca73fe8051503e58"
+      },
+      "modes": {
+        "modules/operator-auth/README.md": "100644"
       }
     },
     {
@@ -986,17 +1091,6 @@
       }
     },
     {
-      "path": "modules/operator-auth/README.md",
-      "originPath": "modules/operator-auth/README.md",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
-      "files": {
-        "modules/operator-auth/README.md": "d10c23ecc9adc92ddfdd81c3558d6fa9a28f00fae0b637d6ca73fe8051503e58"
-      },
-      "modes": {
-        "modules/operator-auth/README.md": "100644"
-      }
-    },
-    {
       "path": "modules/operator-auth/routes.mjs",
       "originPath": "modules/operator-auth/routes.mjs",
       "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
@@ -1050,17 +1144,6 @@
       "modes": {
         "operations/operations.mjs": "100644",
         "operations/project-operations.mjs": "100644"
-      }
-    },
-    {
-      "path": "RUN-LOCALLY.md",
-      "originPath": "export/RUN-LOCALLY.md",
-      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
-      "files": {
-        "RUN-LOCALLY.md": "b0baa2140ffd6b4304e77d4127cfa66efbc8430f701cf027913d43f401abda25"
-      },
-      "modes": {
-        "RUN-LOCALLY.md": "100644"
       }
     },
     {
@@ -2033,6 +2116,17 @@
       }
     },
     {
+      "path": "scripts/base-cli/scripts/publish-check/README.md",
+      "originPath": "scripts/publish-check/README.md",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/README.md": "6538febbfa0497943376734ef9131d8d18a1531879d9a82f3c526e960733ee41"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/README.md": "100644"
+      }
+    },
+    {
       "path": "scripts/base-cli/scripts/publish-check/checksum_maps.py",
       "originPath": "scripts/publish-check/checksum_maps.py",
       "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
@@ -2308,17 +2402,6 @@
       }
     },
     {
-      "path": "scripts/base-cli/scripts/publish-check/provenance_pins.py",
-      "originPath": "scripts/publish-check/provenance_pins.py",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
-      "files": {
-        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "54a757808e4f7797a8b5b36c514123b76ec07c37d5ab3d2fcea3cc116c4a4abe"
-      },
-      "modes": {
-        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "100644"
-      }
-    },
-    {
       "path": "scripts/base-cli/scripts/publish-check/provenance.py",
       "originPath": "scripts/publish-check/provenance.py",
       "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
@@ -2327,6 +2410,17 @@
       },
       "modes": {
         "scripts/base-cli/scripts/publish-check/provenance.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/provenance_pins.py",
+      "originPath": "scripts/publish-check/provenance_pins.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "54a757808e4f7797a8b5b36c514123b76ec07c37d5ab3d2fcea3cc116c4a4abe"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "100644"
       }
     },
     {
@@ -2352,17 +2446,6 @@
       }
     },
     {
-      "path": "scripts/base-cli/scripts/publish-check/publication_config.py",
-      "originPath": "scripts/publish-check/publication_config.py",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
-      "files": {
-        "scripts/base-cli/scripts/publish-check/publication_config.py": "95f27857b529622706969fdd5d15da02f166adeba3d502884f28c0bac9bed732"
-      },
-      "modes": {
-        "scripts/base-cli/scripts/publish-check/publication_config.py": "100644"
-      }
-    },
-    {
       "path": "scripts/base-cli/scripts/publish-check/publication-config.json",
       "originPath": "scripts/publish-check/publication-config.json",
       "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
@@ -2374,14 +2457,14 @@
       }
     },
     {
-      "path": "scripts/base-cli/scripts/publish-check/README.md",
-      "originPath": "scripts/publish-check/README.md",
+      "path": "scripts/base-cli/scripts/publish-check/publication_config.py",
+      "originPath": "scripts/publish-check/publication_config.py",
       "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
       "files": {
-        "scripts/base-cli/scripts/publish-check/README.md": "6538febbfa0497943376734ef9131d8d18a1531879d9a82f3c526e960733ee41"
+        "scripts/base-cli/scripts/publish-check/publication_config.py": "95f27857b529622706969fdd5d15da02f166adeba3d502884f28c0bac9bed732"
       },
       "modes": {
-        "scripts/base-cli/scripts/publish-check/README.md": "100644"
+        "scripts/base-cli/scripts/publish-check/publication_config.py": "100644"
       }
     },
     {
@@ -2775,6 +2858,17 @@
       }
     },
     {
+      "path": "scripts/delivery/base/schema/SETUP.schema.json",
+      "originPath": "schema/SETUP.schema.json",
+      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "files": {
+        "scripts/delivery/base/schema/SETUP.schema.json": "29e51a7dd7bf1070f31de43417198135d41fa9ea36c2327d525f646e2133179b"
+      },
+      "modes": {
+        "scripts/delivery/base/schema/SETUP.schema.json": "100644"
+      }
+    },
+    {
       "path": "scripts/delivery/base/schema/json-schema.mjs",
       "originPath": "schema/json-schema.mjs",
       "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
@@ -2794,17 +2888,6 @@
       },
       "modes": {
         "scripts/delivery/base/schema/setup-validation.mjs": "100644"
-      }
-    },
-    {
-      "path": "scripts/delivery/base/schema/SETUP.schema.json",
-      "originPath": "schema/SETUP.schema.json",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
-      "files": {
-        "scripts/delivery/base/schema/SETUP.schema.json": "29e51a7dd7bf1070f31de43417198135d41fa9ea36c2327d525f646e2133179b"
-      },
-      "modes": {
-        "scripts/delivery/base/schema/SETUP.schema.json": "100644"
       }
     },
     {
@@ -2845,17 +2928,6 @@
         "scripts/edition-authoring/release.mjs": "100644",
         "scripts/edition-authoring/sources.mjs": "100644",
         "scripts/edition-authoring/updates.mjs": "100644"
-      }
-    },
-    {
-      "path": "SEED-COMMAND-CONTRACT.md",
-      "originPath": "export/SEED-COMMAND-CONTRACT.md",
-      "revision": "59a75eacbaef4a93a19601643a1d47828497f631",
-      "files": {
-        "SEED-COMMAND-CONTRACT.md": "eddce909762f4660ce8f8727c85c1fc9c042cc9deaef505cde26589e7256ab53"
-      },
-      "modes": {
-        "SEED-COMMAND-CONTRACT.md": "100644"
       }
     },
     {

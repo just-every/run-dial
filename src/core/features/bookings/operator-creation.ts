@@ -17,7 +17,7 @@ export type OperatorBookingCreateResult =
   | { kind: "slot_invalid"; exclusions: SlotExclusion[] };
 type CreationDependencies = {
   repository: BookingsRepository; availability: AvailabilityService; runtime: RuntimeEnvironment;
-  confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: ValidatedInvitee; startAt: string; endAt: string; inviteeTimezone: string; manageToken: string; bookingId: string }): Promise<BookingEmail[]>;
+  confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: ValidatedInvitee; startAt: string; endAt: string; inviteeTimezone: string; manageToken: string; bookingId: string; calendarRequired?: boolean }): Promise<BookingEmail[]>;
 };
 const manageTokenLifetimeMs = 90 * 24 * 60 * 60 * 1000;
 
@@ -65,8 +65,8 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
     occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
     occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
     now,
-    calendarPayload: { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, invitee: { name: invitee.name, email: invitee.email }, location: selection.event.locationValue, locationType: selection.event.locationType },
-    emails: await dependencies.confirmationEmails({ profile: selection.profile, event: selection.event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId }),
+    calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, invitee: { name: invitee.name, email: invitee.email }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
+    emails: await dependencies.confirmationEmails({ profile: selection.profile, event: selection.event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired }),
   }, input.operatorId);
   if (claim !== "claimed") return await recoverOperatorBooking(dependencies, input) ?? { kind: claim };
   const booking = await dependencies.repository.getById(bookingId);
