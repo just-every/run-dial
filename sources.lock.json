@@ -6191,7 +6191,7 @@
       "executable": false
     },
     "src/core/features/move-in/targets.ts": {
-      "sha256": "fcd616b02ecf08b1fb15352889c76c165738352f973c63c8d448d618deabbd8b",
+      "sha256": "ed54aacee582a5f77ec1f2fd42a9a9f4eb0f4028a689a3c9473335474a00bd0f",
       "executable": false
     },
     "src/core/features/move-in/ui/differences-list.tsx": {
@@ -7459,7 +7459,7 @@
       "executable": false
     },
     "tests/booking-wire/journey.mjs": {
-      "sha256": "940b923fa9184085b358a48f4f4878914f2258d7936e02ebf20d9973213352a7",
+      "sha256": "fd5002494aae20b788ebfc0900ca1244b35d66803a88e2730049fc4cd9ed01aa",
       "executable": false
     },
     "tests/booking-wire/lifecycle.wrangler.toml": {
@@ -7767,7 +7767,7 @@
       "executable": false
     },
     "tests/fresh-selection-range.test.mjs": {
-      "sha256": "d9cb9276f4db866c43004889a31b484b6492014f7acbd94a02499f96796f9b10",
+      "sha256": "7879a2bd2938eb4b4169549d0c18f2a0f6ea5f312df0c5550960e9448e9ce5d5",
       "executable": false
     },
     "tests/google-setup-guide.test.mjs": {
@@ -8727,7 +8727,7 @@
       "executable": false
     },
     "tests/request-only-identity.test.mjs": {
-      "sha256": "45745a62f7d0518bb137a7d20e6c78e1ad47966f07c4a196d6736b23e56a91aa",
+      "sha256": "629660a3ccfbe7c0e0cff88da43e26d1b4359b3e7901eac3e5cee7adc200c5fa",
       "executable": false
     },
     "tests/request-only-identity/render.mjs": {

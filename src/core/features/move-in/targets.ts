@@ -1,5 +1,6 @@
 import type { D1TargetAdapter, D1Database, D1Sql, TargetRow, D1UndoEffect, D1UndoDependency } from '../../../../modules/import-kit/src/d1/index.ts';
 import { insertJsonRows } from '../../../../modules/import-kit/src/d1/sets.ts';
+import { canonicalJson, sha256 } from '../../../../modules/import-kit/src/provenance/identity.ts';
 import { json, type NativeValue, type Row } from './model';
 import { conjunction } from './native-predicates';
 const groups:Record<string,Record<string,string>>={
@@ -18,18 +19,36 @@ function sourceRows(table:string,rows:Row[]){
  return rows;
 }
 function value(row:TargetRow){return row.value as unknown as NativeValue;}
+// Migration 0042 gives historical bookings a calendar obligation of 1. Recover
+// the old representation only when its COMPLETE value matches retained custody;
+// explicitly authored 0/1 and every later native edit keep their actual values.
+function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
+ if(tables.bookings?.some(row=>row.calendar_required===1)){
+  const legacy={tables:{...tables,bookings:tables.bookings.map(row=>{const source={...row};if(source.calendar_required===1)delete source.calendar_required;return source;})}};
+  if(sha256(canonicalJson(json(legacy)))===appliedHash)return json(legacy);
+ }
+ return json({tables});
+}
+type Marker={kind:string;id:string;revision:string;valueHash:string|null};
+const markersSql=`SELECT m.kind,m.id,m.revision,json_extract(p.record_json,'$.valueHash') AS valueHash FROM move_in_targets m LEFT JOIN ik_provenance p ON p.destination=? AND p.target_kind=m.kind AND p.target_id=m.id AND p.reversed=0 AND json_extract(p.record_json,'$.appliedRevision')=m.revision`;
 function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
  const columns=[...new Set(rows.flatMap(row=>Object.keys(row)))];if(columns.some(key=>!/^\w+$/u.test(key)))throw new Error('Invalid native column.');
  const predicates=columns.map(key=>`actual.${key} IS json_extract(wanted.value,'$.${key}')`);
+ // Missing means the historical default, never an unguarded column. Keep the
+ // predicate per row so mixed old and explicit snapshots have exact semantics.
+ if(table==='bookings'){
+  const index=columns.indexOf('calendar_required');if(index!==-1)predicates.splice(index,1);
+  predicates.push(`actual.calendar_required IS CASE WHEN json_type(wanted.value,'$.calendar_required') IS NULL THEN 1 ELSE json_extract(wanted.value,'$.calendar_required') END`);
+ }
  if(table==='host_profiles')for(const key of ['avatar_key','avatar_content_type'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
  return {sql:`(SELECT count(*) FROM ${table} WHERE ${where})=? AND NOT EXISTS(SELECT 1 FROM json_each(?) wanted WHERE NOT EXISTS(SELECT 1 FROM ${table} actual WHERE ${conjunction(predicates)}))`,params:[id,rows.length,JSON.stringify(rows)]};
 }
 export const importTargets:D1TargetAdapter={
  async read(db,destination,kind,id){
-  const marker=await db.prepare('SELECT revision FROM move_in_targets WHERE kind=? AND id=?').bind(kind,id).first<{revision:string}>();
+  const marker=await db.prepare(`${markersSql} WHERE m.kind=? AND m.id=?`).bind(destination,kind,id).first<Marker>();
   if(!marker)return undefined;
   const tables:NativeValue['tables']={};for(const table of Object.keys(groups[kind]??{})){const {results}=await db.prepare(`SELECT * FROM ${table} WHERE ${scope(kind,table)} ORDER BY rowid`).bind(id).all<Row>();if(table!=='ext_custom_field_values'||results.length)tables[table]=sourceRows(table,results);}
-  return {destination,targetKind:kind,targetId:id,value:json({tables}),revision:marker.revision};
+  return {destination,targetKind:kind,targetId:id,value:snapshot(tables,marker.valueHash),revision:marker.revision};
  },
  matches(row,destination,kind,id){const parts=this.matchesParts!(row,destination,kind,id);return {sql:conjunction(parts.map(part=>part.sql)),params:parts.flatMap(part=>part.params??[])};},
  matchesParts(row,_destination,kind,id){
@@ -57,13 +76,13 @@ export const importTargets:D1TargetAdapter={
  },
  remove(_destination,kind,id){return [{sql:`DELETE FROM ${Object.keys(groups[kind])[0]} WHERE id=?`,params:[id]},{sql:'DELETE FROM move_in_targets WHERE kind=? AND id=?',params:[kind,id]}];},
  async list(db,destination){
-  const markers=(await db.prepare('SELECT kind,id,revision FROM move_in_targets ORDER BY kind,id').all<{kind:string;id:string;revision:string}>()).results;
+  const markers=(await db.prepare(`${markersSql} ORDER BY m.kind,m.id`).bind(destination).all<Marker>()).results;
   const sets=new Map<string,Row[]>();
   for(const [kind,tables]of Object.entries(groups))for(const [table,key]of Object.entries(tables)){
    const where=key.includes(' IN ')?`override_id IN(SELECT id FROM availability_date_overrides WHERE event_type_id IN(SELECT id FROM move_in_targets WHERE kind='event'))`:`${key} IN(SELECT id FROM move_in_targets WHERE kind='${kind}')`;
    sets.set(`${kind}:${table}`,sourceRows(table,(await db.prepare(`SELECT * FROM ${table} WHERE ${where} ORDER BY rowid`).all<Row>()).results));
   }
-  return markers.map(marker=>{const tables:NativeValue['tables']={};for(const [table,key]of Object.entries(groups[marker.kind])){const rows=(sets.get(`${marker.kind}:${table}`)??[]).filter(row=>key.includes(' IN ')?(sets.get(`${marker.kind}:availability_date_overrides`)??[]).some(o=>o.id===row.override_id&&o.event_type_id===marker.id):row[key]===marker.id);if(table!=='ext_custom_field_values'||rows.length)tables[table]=rows;}return {destination,targetKind:marker.kind,targetId:marker.id,revision:marker.revision,value:json({tables})};});
+  return markers.map(marker=>{const tables:NativeValue['tables']={};for(const [table,key]of Object.entries(groups[marker.kind])){const rows=(sets.get(`${marker.kind}:${table}`)??[]).filter(row=>key.includes(' IN ')?(sets.get(`${marker.kind}:availability_date_overrides`)??[]).some(o=>o.id===row.override_id&&o.event_type_id===marker.id):row[key]===marker.id);if(table!=='ext_custom_field_values'||rows.length)tables[table]=rows;}return {destination,targetKind:marker.kind,targetId:marker.id,revision:marker.revision,value:snapshot(tables,marker.valueHash)};});
  },
  matchesCount(count){return {sql:'(SELECT count(*) FROM move_in_targets)=?',params:[count]};},
  async preparePreservedUndo(db:D1Database,destination:string,effects:D1UndoEffect[]){

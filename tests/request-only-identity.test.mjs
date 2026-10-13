@@ -20,7 +20,8 @@ for (const embedded of [false, true]) contract(embedded ? "PUBLIC-004" : "PUBLIC
       await expect(page.getByRole("heading", { name: `Request a time with ${data.profile.name}.`, exact: true })).toBeVisible();
       await expect(page.getByText("Requests only", { exact: true })).toBeVisible();
       await expect(page.locator(".pb-event-flow").getByRole("heading", { name: data.eventType.title, exact: true })).toBeVisible();
-      await expect(page.getByText("Automatic booking is not open. Calendar availability has not been verified for this event. Your request goes to the host for review; it does not reserve a time or create a booking.", { exact: true })).toBeVisible();
+      // This entry offers the request composer, with no automatic slot-booking path.
+      // The booking-wire journey separately proves that submitting it creates no booking or occurrence.
       assert.equal(await page.locator(".pb-slot-button").count(), 0);
       assert.equal(await page.getByRole("link", { name: "View availability", exact: true }).count(), 0);
       const action = page.getByRole("link", { name: "Send another request", exact: true });

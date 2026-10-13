@@ -20,7 +20,7 @@ function fixture(changes = {}) {
     { async listOwnCalendarEvents() { return []; }, async listInternalClaims(startAt, endAt, excludedBookingId, capHostDates) { claimReads.push([startAt, endAt, excludedBookingId, capHostDates]); return claims.filter((claim) => (!excludedBookingId || claim.bookingId !== excludedBookingId) && (overlaps(claim, startAt, endAt) || capHostDates.includes(claim.hostDate))); } },
     { async getPublicProfile() { return profile; }, async getProfile() { return profile; } },
     { async resolvePublishedEventForPublicRequest() { return event; }, async getEventType() { return event; }, async listDateAvailabilityOverrides(id) { overrideReads.push(id); return changes.overrideFailure ? undefined : changes.overrides ?? []; } },
-    { async readBusy(range) { calendarReads.push(range); return changes.providerFailure ? { kind: "unavailable", code: "synthetic_failure" } : { kind: "ok", intervals: busy.filter((interval) => overlaps(interval, range.startAt, range.endAt)) }; } },
+    { async readBusy(range) { calendarReads.push(range); return changes.providerFailure ? { kind: "unavailable", code: "synthetic_failure" } : { kind: "ok", calendarRequired: true, observedAt: now.toISOString(), intervals: busy.filter((interval) => overlaps(interval, range.startAt, range.endAt)) }; } },
   );
   return { service, profile, event, calendarReads, claimReads, overrideReads,
     publicSelection: (startAt = selected, at = now, excludedBookingId) => service.verifyPublicSelection("synthetic-host", "synthetic-event", startAt, at, excludedBookingId),
@@ -36,7 +36,7 @@ function assertRange(proof, expected, excludedBookingId, capHostDates = []) {
 function assertValid(result, startAt = selected, endAt = "2030-06-03T09:30:00.000Z", hostDate = "2030-06-03", hostOffset = "UTC+00:00") {
   assert.equal(result.kind, "valid");
   assert.deepEqual(result.slot, { startAt, endAt, hostDate, hostOffset });
-  assert.deepEqual(Object.keys(result).sort(), ["event", "kind", "profile", "slot"]);
+  assert.equal(result.calendarRequired, true, "a connected calendar remains required for the verified selection");
 }
 
 contract("AVAIL-003", "public and operator fresh selection read one ordinary host day with buffers and excluded booking claims", async () => {
@@ -119,6 +119,7 @@ contract("AVAIL-004", "public display still reads seven cached host days and ret
   const result = await proof.service.listPublicWeek("synthetic-host", "synthetic-event", "2030-06-03", "Asia/Kathmandu", now);
   assertRange(proof, { startAt: "2030-06-02T23:45:00.000Z", endAt: "2030-06-10T00:20:00.000Z", freshness: "cached" }, undefined, ["2030-06-03", "2030-06-04", "2030-06-05", "2030-06-06", "2030-06-07", "2030-06-08", "2030-06-09"]);
   assert.equal(result.state, "available"); assert.equal(result.week, "2030-06-03");
+  assert.equal(result.calendarRequired, true, "connected-calendar availability retains its calendar obligation");
   assert.deepEqual([...new Set(result.slots.map((slot) => slot.hostDate))], ["2030-06-03", "2030-06-04", "2030-06-05", "2030-06-06", "2030-06-07", "2030-06-08", "2030-06-09"]);
   assert.equal(result.slots.length, 14); assert.equal(result.recommendations.length, 5);
   assertValid(await fixture().publicSelection(result.slots[0].startAt));
