@@ -41,7 +41,7 @@ export function canonicalRow(name, source, secrets = []) {
   }
   if (name === 'calendar_connections') {
     for (const key of ['access_token_ciphertext', 'refresh_token_ciphertext', 'access_token_expires_at', 'channel_id', 'channel_resource_id', 'channel_expires_at']) row[key] = null;
-    row.status = 'unhealthy'; row.unhealthy_code = 'reauthorization_required';
+    if (row.status !== 'disconnected') { row.status = 'unhealthy'; row.unhealthy_code = 'reauthorization_required'; }
   }
   if (name === 'provider_connection_health') { row.status = 'unhealthy'; row.unhealthy_code = row.provider === 'google_calendar' ? 'reauthorization_required' : 'mail_check_required'; row.alert_state = 'unhealthy_announced'; }
   // Dev personas (<as>@dev.localhost) never travel active: Base suspends their auth rows in the archive, so the product's mirror row

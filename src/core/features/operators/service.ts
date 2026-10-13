@@ -1,3 +1,4 @@
+import { createAuthHandler as createSetupAuthHandler, createOperatorAuth as createSetupAuth } from "../../../../scripts/base-cli/modules/operator-auth/index.mjs";
 import { signedOwnerClaimConfigured } from "./owner-claim.server";
 import { operatorRateCorrelation } from "./rate-correlation";
 import { createAuthHandler, createOperatorAuth, AuthError, isLoopbackHost, type OperatorAuth, type PolicyInput } from "../../../../modules/operator-auth/index.mjs";
@@ -46,6 +47,13 @@ export class OperatorsService {
   async handle(request: Request) {
     // Operator mutations pass through Dial's notification coordination boundary.
     const path = new URL(request.url).pathname;
+    // Only CLI setup completion uses the maintained Base handler already shipped
+    // with the CLI. Dial's email auth and notification coordination stay on their
+    // current integration; no other new Base auth route is exposed here.
+    if (path === "/auth/setup-complete") return createSetupAuthHandler(createSetupAuth({
+      db: this.binding, config: operatorAuthConfig(this.runtime),
+      clientIp: () => "loopback",
+    }))(request);
     if (["/auth/invite", "/auth/invite/cancel", "/auth/operator/status", "/auth/operator/role"].includes(path)) return new Response("Not found", { status: 404 });
     // A hosted claim deployment must never expose its hidden bootstrap token path.
     // Partial configuration also closes this door; local installs without these bindings keep native setup.

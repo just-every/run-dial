@@ -49,6 +49,11 @@ contract("AUTH-001", "local sign-in captures real Base mail and viewer is loopba
   try {
     const operators = new OperatorsService(db, local);
     assert.equal((await operators.handle(request("/auth/bootstrap", { token: local.SETUP_TOKEN, displayName: "Own name" }))).status, 303);
+    const incomplete = sqlite.prepare('SELECT first_setup FROM oa_auth_settings').get().first_setup;
+    const refused = await operators.handle(request('/auth/setup-complete', {}));
+    const proof = await hashToken(local.SESSION_SECRET, 'local-cli', 'sign-in');
+    const completed = await operators.handle(request('/auth/setup-complete', {}, { 'x-rer-local-cli': proof }));
+    assert.deepEqual([incomplete, refused.status, completed.status, await completed.json(), sqlite.prepare('SELECT first_setup FROM oa_auth_settings').get().first_setup], [1, 403, 200, { complete: true }, 0]);
     for (const table of ["host_profiles", "event_types"]) assert.equal(sqlite.prepare(`SELECT count(*) AS n FROM ${table}`).get().n, 0);
     const unknown = await operators.requestMagicLink(request("/api/auth/magic-links", {}), "unknown@example.test");
     assert.equal((await createD1DevelopmentOutbox({ db }).list()).length, 0);

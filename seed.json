@@ -326,6 +326,12 @@
       "secret": true,
       "required": false,
       "why": "Authenticates mail.sender.v1 Resend delivery and bounce callback signatures."
+    },
+    {
+      "name": "IDENTITY_PROVIDER",
+      "required": false,
+      "secret": false,
+      "why": "Optional Auth installation URL for the oidc-provider@1 setup dependency. Empty keeps email-link sign-in through mail.sender.v1."
     }
   ],
   "deploy": {
@@ -346,6 +352,7 @@
       "/docs",
       "/docs/",
       "/auth/",
+      "/auth/setup-complete",
       "/api/auth/",
       "/book/",
       "/manage/",

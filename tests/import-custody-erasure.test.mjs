@@ -20,7 +20,9 @@ contract('DATA-002', 'person HTTP erasure preserves safe undo and refuses unsupp
       assert.ok(Object.values(counts.custody).some(row => row.personalRows > 0));
       const response = await rt.api('/api/app/privacy/erase', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({email:cancelled.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt}) });
       assert.equal(response.status, 503);
-      assert.equal((await response.json()).error.code, 'erasure_import_shared_source');
+      const refusal = await response.json();
+      assert.equal(refusal.error.code, 'erasure_import_shared_source');
+      context.diagnostic(JSON.stringify({ sharedSourceRefusal: refusal.error }));
       const after = await snapshot(rt.db);
       for (const table of Object.keys(before).filter(name => /^(ik_|rer_portability_|move_in_|bookings$|booking_|person_erasure_)/u.test(name))) assert.deepEqual(after[table], before[table], `${table}: unsupported erasure changes no custody, native data or receipt`);
       assert.deepEqual(await custodyEvidence(rt, cancelled), counts);

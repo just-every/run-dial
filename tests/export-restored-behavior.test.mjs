@@ -9,7 +9,7 @@ async function load(path) {
   const result = await build({ entryPoints: [new URL(path, import.meta.url).pathname], bundle: true, write: false, platform: 'node', format: 'esm' });
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text + `\n//# sourceURL=dial-test-bundle:${path}\n`).toString('base64')}`);
 }
-contract('CAL-006', 'restored Calendar shows reauthorization and cached public availability fails closed until an actual reconnect', async () => {
+contract('CAL-006', 'restored Calendar requires reauthorization for a connected source and preserves a disconnected source', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
     const destination = testPlatform(target.db); await restoreArchive(destination, await createArchive(testPlatform(source.db)));
@@ -34,6 +34,13 @@ contract('CAL-006', 'restored Calendar shows reauthorization and cached public a
     assert.deepEqual(await calendar.listCalendars(), { kind: 'ok', calendars: [] });
     assert.equal(calls, 2);
     assert.notEqual((await calendar.connectionHealth()).reason, 'reauthorization_required');
+    const disconnected = await schemaModel();
+    try {
+      source.db.exec("UPDATE calendar_connections SET status='disconnected',unhealthy_code='disconnected'");
+      await restoreArchive(testPlatform(disconnected.db), await createArchive(testPlatform(source.db)));
+      const row = disconnected.db.prepare('SELECT status,access_token_ciphertext,refresh_token_ciphertext,access_token_expires_at,channel_id,channel_resource_id,channel_expires_at FROM calendar_connections').get();
+      assert.deepEqual(Object.values(row), ['disconnected', null, null, null, null, null, null]);
+    } finally { disconnected.db.close(); }
   } finally { source.db.close(); target.db.close(); }
 });
 contract('BASE-OPS-003', 'restored outbox, retries, deletion probes and erasure reconciliation cannot recreate historical provider effects', async () => {

@@ -2860,9 +2860,9 @@
     {
       "path": "scripts/delivery/base/schema/SETUP.schema.json",
       "originPath": "schema/SETUP.schema.json",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
       "files": {
-        "scripts/delivery/base/schema/SETUP.schema.json": "29e51a7dd7bf1070f31de43417198135d41fa9ea36c2327d525f646e2133179b"
+        "scripts/delivery/base/schema/SETUP.schema.json": "a6af219fb0fb3ea80ad5673883644a7f765ece93c67a4e85bd7053d67b427067"
       },
       "modes": {
         "scripts/delivery/base/schema/SETUP.schema.json": "100644"

@@ -82,6 +82,7 @@ export const applicationTables = [
   "move_in_captures",
   "move_in_source_links",
   "move_in_differences",
+  "oa_auth_settings",
   "oa_bootstrap",
   "oa_dev_credentials",
   "oa_external_identities",

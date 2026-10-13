@@ -40,6 +40,7 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  oa_auth_settings: 'Local identity-provider setup and admission state; the destination keeps its own setup authority',
   dial_portability_admission: "Source runtime admission receipts and temporary hosted export lease; never restore execution authority",
   ...importExcluded,
   person_erasure_locks: 'Private pending erasure admission; resume erasure before export',
