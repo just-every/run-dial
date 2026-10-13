@@ -38,7 +38,12 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
    await page.getByLabel('Email address', { exact: true }).fill(values.OWNER_EMAIL);
    await page.getByRole('button', { name: 'Send magic link', exact: true }).click();
    await page.waitForURL(values.APP_URL + '/__dev/outbox');
-   await page.getByRole('link', { name: 'Read message', exact: true }).first().click();
+   // The outbox is newest first; recovery mail can precede the newest sign-in mail.
+   const signInMessages = page.locator('article').filter({ has: page.getByRole('heading', { level: 2, name: 'Your sign-in link for Dial', exact: true }) });
+   const signInMessage = signInMessages.first();
+   const selection = { subjects: await page.locator('article h2').allTextContents(), subject: await signInMessage.getByRole('heading', { level: 2 }).textContent(), matchingMessages: await signInMessages.count() };
+   console.info(`Pre-hydration sign-in outbox selection: ${JSON.stringify(selection)}`);
+   await signInMessage.getByRole('link', { name: 'Read message', exact: true }).click();
    await page.getByRole('link', { name: 'Open this link', exact: true }).click();
    const token = new URL(page.url()).searchParams.get('token');
    const setupResponse = page.waitForResponse(response => response.url() === values.APP_URL + '/setup' && response.request().resourceType() === 'document');

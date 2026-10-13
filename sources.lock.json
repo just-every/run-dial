@@ -1006,6 +1006,10 @@
       "sha256": "41c2c300a6c92566fd8d60414d15fd3208ecbea25313fa6f13a918b8cff812cf",
       "executable": false
     },
+    ".github/workflows/run-site-probe.yml": {
+      "sha256": "5e5bbb26ec3f99ef04d35ba5be07c0383ca7ffef2886e002be8d7b89afb7cda5",
+      "executable": false
+    },
     ".github/workflows/verify.yml": {
       "sha256": "5ce7038169c04bc812b43a9ed5e8a4dbf594a05c0db59d97f107ae6ec8666355",
       "executable": false
@@ -7771,7 +7775,7 @@
       "executable": false
     },
     "tests/local-setup-journey.test.mjs": {
-      "sha256": "a96e172346b5cbeaf3378437f6bfbccf341ba736d07fd24269ef8a0ce1c8e4ff",
+      "sha256": "a4c64b71362d88fd664c052ff59a38bc6328b0db317644e5aa04f307efe9a097",
       "executable": false
     },
     "tests/local-setup/browser-diagnostics.mjs": {
@@ -7779,7 +7783,7 @@
       "executable": false
     },
     "tests/local-setup/browser.mjs": {
-      "sha256": "9d7bb271f1703e8611cb8786b4ae4df1d6c017887e4d976d9af5b68812f8768b",
+      "sha256": "cabc0a4f41f923538d8d84afc35772b68f63ac41fc60aa30793b8139de2b89b4",
       "executable": false
     },
     "tests/local-setup/command-diagnostics.mjs": {
