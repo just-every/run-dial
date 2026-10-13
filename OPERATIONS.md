@@ -281,7 +281,9 @@ BookingCoordinator fetch and alarms, including waitUntil work. The lease is
 acquired only when all durable writer receipts have drained; it spans schema and
 secret discovery, D1 snapshot and every R2 read. New application work receives
 503, queue deliveries retry, and alarm checks are deferred. A five-minute lease
-is renewed by each transfer operation. Expiry reopens the application but makes
+is renewed by snapshot creation, advancement and download. Status and abort do
+not renew it and remain available to the job's native owner after expiry, even
+if snapshot preflight no longer passes. Expiry reopens the application but makes
 the old export permanently unusable, so a delayed request cannot publish a mixed
 snapshot. The client aborts its source job after success or failure. If cleanup
 fails, retain the private `.transfer.json` and use the published client to abort:

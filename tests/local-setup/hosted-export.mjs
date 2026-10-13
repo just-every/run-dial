@@ -11,6 +11,7 @@ import { openGateFromLink } from '../dev-key.mjs';
 import { anotherHostedOwner } from './hosted-authority.mjs';
 import { answer } from './hosted-records.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
+import { expiredCheckpoint } from './hosted-checkpoint.mjs';
 
 async function inspect(path) {
  const bytes = await readFile(path), records = [];
@@ -19,7 +20,7 @@ async function inspect(path) {
 }
 /** Ordinary native application upload/session, hosted HTTP transport and public
  * CLI import in an independent empty checkout. No fake application endpoints. */
-export async function hostedExportJourney(page, { origin, privateBytes, values, records, stopSource }) {
+export async function hostedExportJourney(page, { origin, privateBytes, values, records, stopSource, checkpointState }) {
  const directory = await freshCopy(); let destination, context;
  const evidence = { source: 'real-local-hosted-standin', liveProviderCalls: false };
  try {
@@ -47,14 +48,14 @@ export async function hostedExportJourney(page, { origin, privateBytes, values, 
   assert.equal((await fetch(origin + api, { method: 'POST', headers: { Origin: 'https://other.invalid', Cookie: cookie } })).status, 403);
   assert.equal((await fetch(origin + '/api/portability/imports', { method: 'POST', headers: { Origin: origin, Cookie: cookie } })).status, 404);
   assert.equal((await fetch(origin + api + '/unknown-job', { headers: { Cookie: cookie } })).status, 404);
-  // A held source snapshot excludes ordinary requests and can be explicitly
-  // aborted through the published handler without touching product data.
+  // A held snapshot excludes ordinary requests. After expiry the published
+  // client must still clean it up, even when snapshot preflight no longer passes.
   const created = await fetch(origin + api, { method: 'POST', headers: { Origin: origin, Cookie: cookie, 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(created.status, 201); const job = await created.json();
   assert.equal((await fetch(origin + api + '/' + job.id, { headers: { Cookie: otherCookie } })).status, 404, 'another native owner cannot read this job');
   assert.equal((await fetch(origin + api + '/' + job.id + '/abort', { method: 'POST', headers: { Origin: origin, Cookie: otherCookie } })).status, 404, 'another native owner cannot abort this job');
   assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 503);
-  assert.equal((await fetch(origin + api + '/' + job.id + '/abort', { method: 'POST', headers: { Origin: origin, Cookie: cookie } })).status, 200);
+  Object.assign(evidence, await expiredCheckpoint({ origin, cookie, otherCookie, id: job.id, directory, sessionFile, checkpointState }));
   assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 200);
   await runRer(directory, ['export', '--target', 'remote', '--origin', origin, '--session-file', sessionPath, '--output', 'exports/hosted.rer']);
   let source = await inspect(join(directory, 'exports/hosted.rer'));

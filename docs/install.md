@@ -137,7 +137,7 @@ Until you finish setup, signing in opens the setup workspace at `/setup`, and an
 
 You need not finish every step. **Finish setup** asks for a saved host profile and a copied link to an event that is published, or open for requests. **Open requests** needs a working mail sender, but no Google Calendar or availability windows. Publishing for bookable times needs saved availability and verified mail, including the local outbox in local mode. A calendar is optional for fixed locations; connected calendars must pass their checks, and Google Meet requires a connected calendar that supports Meet. Finishing checks the current readiness again, then opens the operator app at `/app`.
 
-Setup stays finished. Later connection problems show in Settings and on Overview, where the same steps appear under "Booking configuration", and they never send you back to setup. The Mail and Google steps count only a check that passed in the last 24 hours, so they return to "To do" until you run the check again.
+Setup stays finished. Later connection problems show in Settings and on Overview, where the same steps appear under "Booking configuration", and they never send you back to setup. The Mail step and, when connected, the Google step count only a check that passed in the last 24 hours, so they return to "To do" until you run the check again; without a Google connection, that step shows "Optional" and counts as done.
 
 ## Reference: deploy inputs
 

@@ -1,5 +1,6 @@
 import schema from "virtual:dial-archive-schema";
 import { createPortabilityHandler } from "../../../../scripts/base-cli/modules/portability/index.mjs";
+import { exportStatus, abortExport } from "../../../../scripts/base-cli/modules/portability/export.mjs";
 import { applicationCatalog, catalogQuery } from "../../../../scripts/archive/catalog.mjs";
 import { exportPolicy } from "../../../../scripts/archive/export-policy.mjs";
 import { guardedBucket } from "../../../../scripts/archive/guarded-bucket.mjs";
@@ -8,8 +9,7 @@ import type { AppBindings } from "../../app/bindings";
 import type { OperatorsService } from "../operators";
 
 const reply = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
-/** Export only. Native authority is checked before even constructing Base's
- * handler, and Base repeats actor and Origin checks for every job operation. */
+/** Export only. Native authority, Origin and job ownership guard every operation. */
 export async function hostedExport(request: Request, env: AppBindings, operators: OperatorsService) {
  const url = new URL(request.url), origin = new URL(env.APP_URL).origin;
  if (url.origin !== origin || request.headers.has("host") && request.headers.get("host") !== new URL(origin).host) return reply("not_found", 404);
@@ -22,8 +22,15 @@ export async function hostedExport(request: Request, env: AppBindings, operators
  const creating = !jobId && request.method === "POST";
  let lease = jobId ?? crypto.randomUUID(), held = false;
  try {
+  // Base's client reads status before aborting. These metadata/cleanup operations
+  // must survive expiry and snapshot preflight failure without renewing a lease.
+  if (jobId && (request.method === "GET" && !action || request.method === "POST" && action === "abort")) {
+   const result = action === "abort" ? await abortExport({ db: env.DB }, jobId) : await exportStatus({ db: env.DB }, jobId);
+   if (action === "abort") await releaseExport(env.DB, jobId);
+   return Response.json(result, { headers: { "Cache-Control": "no-store" } });
+  }
   if (creating) await acquireExport(env.DB, lease);
-  else if (action !== "abort") await renewExport(env.DB, lease);
+  else await renewExport(env.DB, lease);
   held = true;
   const catalogue = applicationCatalog((await env.DB.prepare(catalogQuery).all()).results);
   if (JSON.stringify(catalogue) !== JSON.stringify(schema.catalog)) return reply("archive_schema_mismatch", 409);
@@ -46,13 +53,12 @@ export async function hostedExport(request: Request, env: AppBindings, operators
   if (!response) return reply("not_found", 404);
   if (!response.ok) { if (creating) await releaseExport(env.DB, lease); return response; }
   // If a request outlasted its lease it can never publish/download a snapshot.
-  if (action !== "abort") await renewExport(env.DB, lease);
+  await renewExport(env.DB, lease);
   if (creating) {
    const result = await response.clone().json() as { id: string };
    await env.DB.prepare("UPDATE dial_portability_admission SET id=? WHERE id=? AND kind='export'").bind(result.id, lease).run();
    lease = result.id;
   }
-  if (action === "abort") await releaseExport(env.DB, lease);
   return response;
  } catch (error) {
   if (creating && held) await releaseExport(env.DB, lease);

@@ -12,6 +12,7 @@ import { hostedExportJourney } from './local-setup/hosted-export.mjs';
 import { hostedRecords } from './local-setup/hosted-records.mjs';
 import { nativeSignIn } from './local-setup/native-signin.mjs';
 import { safeBrowserFailure } from './local-setup/evidence-safety.mjs';
+import { checkpointState } from './local-setup/hosted-checkpoint.mjs';
 
 contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs in before hydration, resets and round-trips complete local data', async () => {
  for (const width of [1440, 390]) {
@@ -119,7 +120,7 @@ contract('DATA-001', 'native hosted export imports through the ordinary CLI into
     await page.waitForURL(values.APP_URL + '/app');
     assert.equal((await page.request.get(values.APP_URL + '/api/app/session')).status(), 200);
    } catch { throw Error('Hosted export owner sign-in failed; private diagnostics omitted.'); }
-   await hostedExportJourney(page, { origin: values.APP_URL, privateBytes, values, records, stopSource: async () => {
+   await hostedExportJourney(page, { origin: values.APP_URL, privateBytes, values, records, checkpointState: (id, operation) => checkpointState(directory, id, operation), stopSource: async () => {
     await runRer(directory, ['preview', '--stop']);
     await server.owned.stop(); server = undefined;
    } });

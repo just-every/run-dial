@@ -1103,7 +1103,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "493466cc0f3dea4d7774db8d023b14b647778f390cbd0070ed3fb4b686984de9",
+      "sha256": "ace0f56a2da3f70f546a23215311f9a96b51a4ca05a239176b05b0ab00407d76",
       "executable": false
     },
     "docs/overview.md": {
@@ -2583,7 +2583,7 @@
       "executable": false
     },
     "OPERATIONS.md": {
-      "sha256": "167ffa7d378aff583321ea744a4981f4ace25014b6b845e80fadc0256fb8bb10",
+      "sha256": "ffc5cbf1d1218d848ade401fd0f7ae5b1136299b10e90fe6d20da810cbea9c2c",
       "executable": false
     },
     "operations/operations.mjs": {
@@ -6298,8 +6298,12 @@
       "sha256": "0b06dd4854f4ff98fab44508ceb04b0a3ed8eeeca88253253e365df0591a547a",
       "executable": false
     },
+    "src/core/features/portability/base-checkpoint.d.ts": {
+      "sha256": "e1001c7659e0b589b12f1f594e10da92b158d35fdede184d743ef001bd38b158",
+      "executable": false
+    },
     "src/core/features/portability/routes.ts": {
-      "sha256": "4109ee5d40cfd595aaba0661ab54b39b58ab834ffb1f3513e4e0618af7940285",
+      "sha256": "9d396cb9c709a424ebf5215becda89cb4c933ad470bd76482f2c4c0104bd36e5",
       "executable": false
     },
     "src/core/features/portability/schema.d.ts": {
@@ -7851,7 +7855,7 @@
       "executable": false
     },
     "tests/local-setup-journey.test.mjs": {
-      "sha256": "d7179bb132531f11faf5069fdcc8eefeda9690eb8679428e82126b02eb513589",
+      "sha256": "3838a8ea57e356d5140dcce9a2fe0242eac28a6e18b2a869e395cc24f53f2fa4",
       "executable": false
     },
     "tests/local-setup/browser-diagnostics.mjs": {
@@ -7882,8 +7886,12 @@
       "sha256": "73f1a003d5b8f2f0ac3e51d4ff27fcdc99f17b681124886e0a35cf57b07810c0",
       "executable": false
     },
+    "tests/local-setup/hosted-checkpoint.mjs": {
+      "sha256": "e158004625debe51086365e25c82a63d9e2f41edd005530642080e6847f687e9",
+      "executable": false
+    },
     "tests/local-setup/hosted-export.mjs": {
-      "sha256": "5e70c6e66e15c8c93d01281d0fb5d1bf1065e86914a9f05a945056e26df5a086",
+      "sha256": "abeb44ca5403f2dc26fdd0277bdb64820cdcc5dd9e82befca5ef3c48e0e6bb04",
       "executable": false
     },
     "tests/local-setup/hosted-records.mjs": {
