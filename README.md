@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://justevery.com/#vol-dial">
+  <a href="https://run-dial.com">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.webp">
       <source media="(prefers-color-scheme: light)" srcset=".github/assets/banner-light.webp">
@@ -8,7 +8,31 @@
   </a>
 </p>
 
-<p align="center"><a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
+<p align="center"><a href="https://run-dial.com">run-dial.com</a> · <a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
+
+<p align="center">
+  <a href="https://justevery.com/#vol-dial"><img src=".github/assets/media/preview.gif" width="800" alt="Dial: Priya picks three dates and a window in her own zone, reviews the request and sends it"></a>
+</p>
+<p align="center"><a href="https://justevery.com/#vol-dial"><b>Watch the full demo</b></a> · 44 seconds</p>
+
+<p align="center">
+  <img src=".github/assets/media/flow.webp" width="800" alt="Priya picks three dates for her request, and the host sees her window in her zone, Europe/London, and his own, America/New_York">
+</p>
+
+<p align="center">
+  <img src=".github/assets/media/screen-1.webp" width="800" alt="Maya Chen's public Dial page: her focus areas and the Product kickoff session, 30 minutes on Google Meet, with View session"><br>
+  <sub>A public booking page for each host: no account needed to book or ask.</sub>
+</p>
+
+<p align="center">
+  <img src=".github/assets/media/screen-2.webp" width="800" alt="Maya's Requests inbox: Priya Shah's request with each window shown in Priya's Europe/London time and Maya's America/New_York time"><br>
+  <sub>The host sees every requested window in both time zones.</sub>
+</p>
+
+<p align="center">
+  <img src=".github/assets/media/screen-3.webp" width="800" alt="Dial's Bookings list after a Calendly move-in: six confirmed bookings marked Imported, and Sofia Martinez's booking in host and invitee time"><br>
+  <sub>Moving from Calendly brings your bookings with you.</sub>
+</p>
 
 # Dial
 
