@@ -35,12 +35,17 @@ contract('DATA-003','[DATA-002] native CLI carries erasure fences and refuses ol
   const authorEmail='erased-policy-author@example.test';
   const invitedAuthor=await rt.api('/api/app/operators',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:authorEmail})});assert.equal(invitedAuthor.status,201);const author=(await invitedAuthor.json()).operator;
   await rt.db.prepare('INSERT INTO oa_domain_rules(domain,provider_id,created_by,created_at) VALUES(?,?,?,?)').bind('retained-policy.example.test','historical-provider',author.id,1234).run();
+  const headerEmail='archive-header-person@example.test';
+  const headerResponse=await rt.api('/__fixtures/import-header',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:headerEmail})});assert.equal(headerResponse.status,200);await headerResponse.arrayBuffer();
   await rt.offline(()=>run(source,['export','--target','local','--output','exports/before-erasure.rer']));
   assert.equal((await rt.api(`/api/app/operators/${author.id}/remove`,{method:'POST'})).status,204);
   const authorReference=await rt.db.prepare('SELECT * FROM oa_operators WHERE id=?').bind(author.id).first();assert.equal(authorReference.status,'inactive');assert.equal(authorReference.email,'erased:'+author.id);
 
+  const privacyPreview=await rt.api('/api/app/privacy/preview',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:headerEmail})});assert.equal(privacyPreview.status,200);const privacy=await privacyPreview.json();
+  const retiredHeader=await rt.api('/api/app/privacy/erase',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:headerEmail,confirmation:privacy.confirmation,expiresAt:privacy.expiresAt})});assert.equal(retiredHeader.status,200);await retiredHeader.arrayBuffer();
+  assert.ok((await rt.db.prepare('SELECT count(*) AS n FROM ik_d1_retirements').first()).n>0);
   const erase=await rt.db.prepare('SELECT id FROM bookings WHERE invitee_email=?').bind(erasedEmail).first();assert.equal((await rt.api(`/api/app/bookings/${erase.id}`,{method:'DELETE'})).status,202);
-  const tables=['bookings','booking_occurrences','booking_answers','booking_history','event_types','move_in_targets','move_in_captures','move_in_source_links','move_in_differences','ik_d1_erased_sources','ik_d1_erased_targets','oa_operators','operators','oa_domain_rules'];
+  const tables=['bookings','booking_occurrences','booking_answers','booking_history','event_types','move_in_targets','move_in_captures','move_in_source_links','move_in_differences','ik_d1_erased_sources','ik_d1_erased_targets','ik_d1_erasure_journal','ik_d1_retirements','oa_operators','operators','oa_domain_rules'];
   const original=Object.fromEntries(await Promise.all(tables.map(async table=>[table,(await rt.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results])));assert.equal(original.bookings.length,11);
   assert.equal(original.move_in_captures.length,2);assert.equal(original.move_in_differences.length,9,'the erased booking took its difference row with it');
   assert.ok(original.booking_history.some(row=>row.booking_id===released&&row.action==='cancelled'&&row.actor_type==='operator'));
@@ -51,7 +56,7 @@ contract('DATA-003','[DATA-002] native CLI carries erasure fences and refuses ol
   const oldAuthority=await proxy.signIn();
   await proxy.dispose();proxy=undefined;
   await run(source,['export','--target','local','--output','exports/imported.rer']);await cp(join(source,'exports/imported.rer'),join(target,'exports/imported.rer'));
-  await scanArchive(join(source,'exports/imported.rer'),[erasedEmail,erasedText,authorEmail]);
+  await scanArchive(join(source,'exports/imported.rer'),[erasedEmail,erasedText,authorEmail,headerEmail]);
   await cp(join(source,'exports/before-erasure.rer'),join(target,'exports/before-erasure.rer'));
   await run(target,['import','--target','local','--input','exports/imported.rer','--yes']);
   proxy=await openInstall(target);

@@ -1,3 +1,5 @@
+import { importPersonValues } from "../move-in/person-values";
+import { erasePersonSourceCustody, finishPersonCustody } from "../move-in/erasure";
 import { admitErasure, erasureAuthority, requireErasureSession } from "./admission";
 import { foldEmail, mailRecipientMatches, emailFoldSql, personalRecords, operatorOverlap, operatorOverlapSql } from "./identity";
 import { mailGraph } from "./graphs";
@@ -51,6 +53,8 @@ export class PersonErasure {
     if(!pending?.receipt_id)throw new ErasureError("erasure_incomplete",503);
     const id=pending.receipt_id;
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
+    const custody = await importPersonValues(this.db, email, session);
+    await erasePersonSourceCustody(this.db, email, custody.custodyOnly, custody.values, session);
     for (const booking of records.bookings) await eraseEntity("bookings",booking);
     for (const request of records.requests) await eraseEntity("availability-requests",request);
     const remaining=await this.records(email);
@@ -66,7 +70,7 @@ export class PersonErasure {
       {sql:"UPDATE erased_calendar_targets SET receipt_id=? WHERE booking_id IN(SELECT value FROM json_each(?))",params:[id,JSON.stringify(records.bookings)]},
       erasureAuthority(session),
     ];
-    await this.db.batch(statements.map(statement=>this.db.prepare(statement.sql).bind(...statement.params)));
+    await finishPersonCustody(this.db, custody.values, statements, session);
     return this.receipt(id);
   }
   async receipt(id: string) {

@@ -1,3 +1,4 @@
+import { headerFixture } from '../erasure/header-fixture';
 import worker from '../booking-wire/worker';
 export { BookingCoordinator } from '../booking-wire/worker';
 import { createServices } from '../../src/core/app/services';
@@ -13,6 +14,10 @@ let queueCalls = 0;
 export default {
   async fetch(request: Request, env: AppBindings & { PROVIDER_DB?: D1Database }, ctx: ExecutionContext) {
     const url = new URL(request.url), path = url.pathname;
+    if (path === '/__fixtures/import-header' && request.method === 'POST') {
+      const { email } = await request.json<{ email: string }>();
+      return Response.json(await headerFixture(env.DB, email));
+    }
     if (path === '/__edge/start') {
       const { id, outboxId, point, responseStatus } = await request.json<{ id: string; outboxId: string; point: 'upsert' | 'lookup'; responseStatus?: number }>();
       if (deliveries.has(id)) throw new Error('Duplicate held delivery');

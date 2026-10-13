@@ -8,7 +8,10 @@ const choicesSchema=z.object({skipEvents:z.array(z.string()).max(100).optional()
 const input=z.object({choices:choicesSchema,asOf:z.string().datetime(),fingerprint:z.string().optional(),acknowledged:z.boolean().optional(),uploadIdentity:z.string().max(32768).optional()}).strict();
 export const moveInRoutes=new Hono<AppEnvironment>()
  .use('/api/app/move-in/*',bodyLimit({maxSize:importLimits.maxBytes+1024*1024,onError:c=>c.json({error:{message:'Upload exceeds 8 MiB.'}},413)}))
- .onError((error,c)=>c.json({error:{code:'move_in_refused',message:error.message.length<350?error.message:'The import was refused. Review the saved files and current session.'}},400))
+ .onError((error,c)=>{
+  if(error.message==='IMPORT_JOB_RETIRED'||error.message==='IMPORT_STREAM_RETIRED')return c.json({error:{code:'import_retired',message:'This import was retired by a privacy erasure and can no longer be read, resumed or undone.',receiptId:(error as Error & {receiptId?:string}).receiptId}},410);
+  return c.json({error:{code:'move_in_refused',message:error.message.length<350?error.message:'The import was refused. Review the saved files and current session.'}},400);
+ })
  .use('/api/app/move-in/*',async(c,next)=>{c.header('Cache-Control','no-store');await next();})
  .post('/api/app/move-in/:action',async c=>{
   const action=c.req.param('action');if(!['preview','apply'].includes(action))return c.notFound();

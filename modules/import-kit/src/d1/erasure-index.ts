@@ -23,9 +23,11 @@ export function erasedIndexGuards(plan:ImportPlan):D1Sql[]{
   if(!plan.entries.some(entry=>entry.erased))return [];
   return jsonChunks(planIndex(plan,'').filter(row=>plan.entries[row.ordinal].erased)).map(body=>guard(sql("NOT EXISTS(SELECT 1 FROM json_each(?) e WHERE NOT EXISTS(SELECT 1 FROM ik_d1_erased_sources s WHERE s.destination=? AND s.identity=json_extract(e.value,'$.source_identity')) OR NOT EXISTS(SELECT 1 FROM ik_d1_erased_targets t WHERE t.destination=? AND t.identity=json_extract(e.value,'$.target_identity')))",body,plan.destination,plan.destination)));
 }
+export function planIndexRows(plan: ImportPlan, id: string): D1Sql[] {
+  return jsonChunks(planIndex(plan, id), 1500000).map(chunk => sql("INSERT INTO ik_d1_plan_index(job_id,ordinal,source_identity,target_identity) SELECT json_extract(value,'$.job_id'),json_extract(value,'$.ordinal'),json_extract(value,'$.source_identity'),json_extract(value,'$.target_identity') FROM json_each(?)", chunk));
+}
 export function retainPlanIndex(plan: ImportPlan, id: string): D1Sql[] {
-  return [...jsonChunks(planIndex(plan, id), 1500000).map(chunk => sql("INSERT INTO ik_d1_plan_index(job_id,ordinal,source_identity,target_identity) SELECT json_extract(value,'$.job_id'),json_extract(value,'$.ordinal'),json_extract(value,'$.source_identity'),json_extract(value,'$.target_identity') FROM json_each(?)", chunk)),
-    sql('INSERT INTO ik_d1_indexed_jobs(job_id,fingerprint) VALUES(?,?)', id, plan.fingerprint)];
+  return [...planIndexRows(plan, id), sql('INSERT INTO ik_d1_indexed_jobs(job_id,fingerprint) VALUES(?,?)', id, plan.fingerprint)];
 }
 export const unindexedJobs = 'SELECT j.id FROM ik_jobs j LEFT JOIN ik_d1_indexed_jobs i ON i.job_id=j.id WHERE j.destination=? AND (i.job_id IS NULL OR i.fingerprint<>j.fingerprint)';
 

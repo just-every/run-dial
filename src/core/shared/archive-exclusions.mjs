@@ -1,5 +1,7 @@
 // Shared by native restore admission and erasure. These rows never travel in an archive.
 export const importExcluded = {
+  "ik_d1_reversal_fences": "Local undo verification; no replay authority travels in archives",
+  "ik_d1_erasure_tally": "Transaction-local private row images; every successful erasure empties this table",
   "ik_batches": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_assertions": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_creation_plans": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",

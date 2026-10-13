@@ -1,14 +1,49 @@
-import { eraseD1ImportTarget } from '../../../../modules/import-kit/src/d1/index.ts';
+import { retireD1ImportCustody, type D1Sql } from '../../../../modules/import-kit/src/d1/index.ts';
+import { readonlyChecks } from '../../../../modules/import-kit/src/d1/database.ts';
+import { retirementScope, headerAbsence } from '../../../../modules/import-kit/src/d1/retirement-scope.ts';
 import type { SessionRecord } from '../operators';
 import { ErasureRepository } from '../erasure';
+import { erasurePortability } from '../erasure/portability';
+import { toD1Sql } from '../../../modules/erasure/index.mjs';
 import { importContext } from './service';
+import { importPersonValues, personInvitees } from './person-values';
+import { stableId } from './model';
+import { erasureAuthority } from '../erasure/admission';
 
-/** Personal deletion and native cleanup commit with kit tombstones and undo custody. */
+/** Personal deletion, custody changes and the real restore checkpoint commit together. */
 export async function eraseImportedBooking(db: D1Database, id: string, session: SessionRecord, secret: string) {
-  const marker = await db.prepare("SELECT id FROM move_in_targets WHERE kind='booking' AND id=?").bind(id).first();
+  const marker = await db.prepare("SELECT b.invitee_email AS email FROM move_in_targets m JOIN bookings b ON b.id=m.id WHERE m.kind='booking' AND m.id=?").bind(id).first<{ email: string }>();
   if (!marker) return undefined;
+  const person = await importPersonValues(db, marker.email, session, id);
   const context = { ...importContext(db, session), originalErasurePolicy: 'withdraw-all-job-artifacts' as const };
   return new ErasureRepository(db, secret).booking(id, session, async statements => {
-    await eraseD1ImportTarget('booking', id, statements, context);
+    const fence = await erasurePortability(db);
+    await retireD1ImportCustody({ target: { kind: 'booking', id }, values: person.values }, statements, context, (await fence.redactionStatements()).map(toD1Sql));
   });
+}
+
+/** Rejected, past and undone sources still belong to the person even without a
+ * live native booking. The stable booking identity is the importer's identity. */
+export async function erasePersonSourceCustody(db: D1Database, email: string, sources: string[], values: string[], session: SessionRecord) {
+  const context = { ...importContext(db, session), originalErasurePolicy: 'withdraw-all-job-artifacts' as const };
+  for (const sourceId of sources) {
+    const fence = await erasurePortability(db);
+    await retireD1ImportCustody({ target: { kind: 'booking', id: stableId(sourceId) }, values,
+      related: { source: source => source.sourceId === sourceId && personInvitees(source, email).length > 0 } }, [], context, (await fence.redactionStatements()).map(toD1Sql));
+  }
+}
+
+/** A person can exist only in a header. No artificial target is invented: the
+ * kit retires that header's closure with the final native receipt writes. If
+ * there is no such custody, absence guards keep those writes fail-closed. */
+export async function finishPersonCustody(db: D1Database, values: string[], statements: D1Sql[], session: SessionRecord) {
+  const context = importContext(db, session), scope = await retirementScope(db, context.destination, values);
+  if (scope.jobs.length || scope.streams.length || scope.stages.length || scope.anchors.length) {
+    const fence = await erasurePortability(db), checkpoint = (await fence.redactionStatements()).map(toD1Sql);
+    await retireD1ImportCustody({ values }, statements, context, checkpoint);
+  } else {
+    const guards = readonlyChecks(headerAbsence(context.destination, values));
+    const writes: D1Sql[] = [...guards, ...statements, ...guards, erasureAuthority(session)];
+    await db.batch(writes.map(statement => db.prepare(statement.sql).bind(...statement.params ?? [])));
+  }
 }

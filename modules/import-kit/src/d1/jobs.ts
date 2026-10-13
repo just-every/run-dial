@@ -13,6 +13,7 @@ import { atomic, readAtomic, authorize, guard, sql } from './database.ts';
 import { custodyGuards, inventoryGuards } from './integrity.ts';
 import { guardErasedSources } from './erasure-claims.ts';
 import { readOriginals } from './originals.ts';
+import { retiredError } from './retirement.ts';
 import { attachReversal, loadReversalState, reversalGuards, reversalState } from './undo-state.ts';
 
 export function decode(row: any): ImportJob {
@@ -25,7 +26,7 @@ export async function stored(id: string, context: D1ImportContext, action: Impor
   const bounded = context.maxBatchBytes !== undefined;
   const query = `SELECT j.*${bounded?',r.revision AS custody_revision':''},${needsStreamOrigin('j.id')} AS stream_origin_required,(SELECT stream_id FROM ik_d1_stream_origins WHERE job_id=j.id) AS origin_stream_id,(SELECT stream_id FROM ik_d1_stream_pages WHERE job_id=j.id) AS page_stream_id FROM ik_jobs j${bounded?' LEFT JOIN ik_d1_custody_revisions r ON r.job_id=j.id':''} WHERE j.id=?`;
   const row = await context.storage.database.prepare(query).bind(id).first();
-  if (!row) throw new Error('IMPORT_JOB_NOT_FOUND');
+  if (!row) throw await retiredError(context.storage.database, id, 'job') ?? new Error('IMPORT_JOB_NOT_FOUND');
   const job = decode(row), plan = (await loadPlans([row], context.storage.database, context.storage.targets.planCodec)).get(id)!;
   if (job.destination !== context.destination || job.namespace !== context.namespace || job.mappingVersion !== context.mappingVersion || job.principalId !== context.authorization.principalId) throw new Error('JOB_BINDING_MISMATCH');
   if (context.reviewedFingerprint !== undefined && context.reviewedFingerprint !== job.fingerprint) throw new Error('REVIEW_FINGERPRINT_MISMATCH');

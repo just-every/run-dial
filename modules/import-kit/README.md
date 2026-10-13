@@ -259,3 +259,61 @@ and omitted-policy jobs remain strict. The adapter supplies exact native
 ownership/dependency snapshots; retained edits keep their original attribution.
 See [D1 evolution 0001 and adoption instructions](./src/d1/README.md#adopting-preserved-conflict-undo-evolution-0001)
 before updating a deployed D1 schema or adapter.
+
+### Erasing fields in retained shared records
+
+Use `retireD1ImportCustody` from `src/d1/index.ts` to erase a person and journal
+the change atomically with native erasure and portability's redaction checkpoint.
+Its `person.related.fields` accepts `D1FieldRedaction[]`:
+
+```ts
+await retireD1ImportCustody({
+  target: { kind: 'person', id: personId },
+  values: [email],
+  related: {
+    fields: [{ path: ['reactions', '*', 'users', '*'], value: sourceUserId }],
+  },
+}, nativeStatements, context, checkpoint);
+```
+
+Paths start at a source payload or effect/native value, and also apply to
+retained reversal before-images. String segments name object properties, numeric
+segments select array indexes, and `*` visits array items. Only an exact string
+leaf equal to `value` is removed: an array item is omitted or an object property
+is deleted. For example `{ count: 2, users: ['A', 'B'] }` becomes
+`{ count: 2, users: ['B'] }`; the aggregate count and peer record remain. Supply
+both paths when the source and mapped values use different nesting. The default
+seed demonstrates `['details', 'reactions', '*', 'users', '*']`, resolving
+references from the native person ID and their optional `details.sourceUserId`.
+
+The kit rebinds payload/effect hashes, source claims, entry decisions, active and
+historical provenance, before-images and plan/reversal fingerprints. Peer source
+identities, applied revisions, counts and sequential checkpoints stay intact.
+Resume uses sanitized pending effects; undo restores sanitized before-images.
+Other native edits still produce the existing undo conflict. The adapter's
+`list` must enumerate its complete imported native set and supply exact full-set
+guards (`matchesMany` or `matchesCount` with individual snapshot predicates).
+The kit writes sanitized native values through that adapter in the same batch.
+Caller statements must not separately change those retained peer targets; such
+changes fail their snapshot guards. The product handles personal data outside
+the adapter's set and outside the selected fields.
+
+Affected originals are withdrawn whole under `originalErasurePolicy` (the
+journal API defaults to `withdraw-affected-artifacts`), never rewritten as an
+apparently original archive. Use `related.original` for additional byte artifacts
+the product recognizes. Field erasure cancels private preparations in that
+destination because incomplete staged data cannot be safely field-rewritten.
+Public peer jobs remain usable; cancelled preparations must be reviewed again
+from sanitized input. Preserve the journal and portability checkpoint in exports:
+a pre-erasure archive is refused when the current or supplied later journal
+fences it. This does not authorize importing new unsanitized source exports;
+the product must filter erased identities when accepting new input.
+
+This additive API uses the existing D1 erasure/retirement schemas; no new
+migration is needed for an installation already using them. Like related-record
+erasure, field selection scans destination custody and is available only without
+`maxBatchBytes`; admission/budget failures leave the atomic batch unpublished.
+`eraseD1ImportTarget` also accepts `related.fields`, but seeds need the journal
+API and restore checkpoint for their complete person-erasure flow. Existing
+`related.source` still tombstones whole records; do not select a peer record with
+it when that peer must remain resumable and reversible.

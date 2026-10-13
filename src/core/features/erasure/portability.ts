@@ -12,12 +12,13 @@ export async function assertErasureCensus(db: D1Database) {
 }
 
 /** Only the maintained portability service writes the trusted archive fence. */
-export async function erasurePortability(db: D1Database): Promise<PortabilityFence> {
+export async function erasurePortability(db: D1Database): Promise<PortabilityFence & { redactionStatements(): Promise<D1PreparedStatement[]> }> {
   await assertErasureCensus(db);
   const service = await createPortability({ db, policy: { product: "just-every/dial", excludeTables: [...applicationTables] } });
   // Never copy private admission keys into the durable journal. Native restore
   // excludes these tables, while the same batch still invalidates every transfer.
   return {
+    redactionStatements: () => service.redactionStatements(),
     erasureStatements: (table, key) => Object.hasOwn(excluded, table) ? Promise.resolve([]) : service.erasureStatements(table, key),
     invalidateTransfersStatements: () => service.invalidateTransfersStatements(),
   };

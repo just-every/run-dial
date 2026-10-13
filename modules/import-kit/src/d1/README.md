@@ -8,7 +8,7 @@ provenance and inert-effect policy through an asynchronous native SQL port.
 
 Apply `d1Schema`, `d1ErasureSchema`, `d1StreamOriginSchema`,
 `d1LegacyStreamReceiptUpgrade`, `d1StagingSchema`,
-`d1NativeStagingSchema`, `d1CustodyStateSchema` and `d1PreparationSchema` in product-owned numbered migrations, or call
+`d1NativeStagingSchema`, `d1CustodyStateSchema`, `d1PreparationSchema`, `d1ReversalFenceSchema` and `d1RetirementSchema` in product-owned numbered migrations, or call
 `initializeD1ImportStorage(database)` during setup. The schema includes the common
 kit tables and D1 ownership/assertion tables. Do not mix the synchronous engine
 and D1 engine for the same jobs: each engine owns its checkpoint protocol.
@@ -30,6 +30,13 @@ a cached boolean or constant SQL permission defeats this contract. The engine
 evaluates the expression at both ends of every atomic mutation batch. A false
 predicate raises `IMPORT_ATOMIC_GUARD` and rolls back every native and kit write.
 Read operations also require current authority. Jobs remain bound to their actor.
+The plan and its fingerprint carry that `principalId`, so a job can never be rebound
+to another one, and an archive carries the jobs but not the operators who created
+them: after an export, reset, import and setup the owner is a new operator row. A
+product that wants restored jobs to stay usable passes a principal that survives a
+restore, such as the operator's role (`'role:' + role`), and lets `predicate` check
+that the acting operator is still active in that role. A product that passes the
+operator's row id keeps its jobs bound to that operator for good.
 
 `readD1ImportJob`, `readD1ImportOriginals`, `readD1PersistedImport` and
 `readD1ImportUndoReport` execute SELECT-only SQL, including their initial authority
@@ -164,6 +171,23 @@ inside the batch produces `IMPORT_ATOMIC_GUARD`; an edit visible at preflight
 produces `NATIVE_EDIT_CONFLICT`. Both preserve the edit. Resume dispatches to the
 persisted reversal mode. Completed reversal is idempotent. Originals and all
 provenance, including reversed before images, remain durable.
+
+Strict reversal without a transport policy (`maxBatchBytes` omitted) verifies the
+complete inventory, originals and plan in the intent transaction or in the first
+batch it runs, then records in `ik_d1_reversal_fences` the job's
+`ik_d1_custody_states` revision after that batch's own writes. While the job's
+revision, fence and binding still equal that row, later batches and later requests
+read only their own provenance rows, native targets and predecessors, and fence
+the revision instead, so a batch costs the same in a large import as in a small
+one. Any change to the job's custody, plan, originals, decisions, claims, history,
+journal or indexed tombstones advances the revision, and the next request verifies
+the complete inventory again before it writes. Jobs that reuse another job's
+entries, jobs without a current erasure index, preserved-conflict undo and bounded
+transport keep the complete per-batch verification. A fenced batch releases only
+its own sources' claims; the final batch releases the job's remaining claims,
+including sources with zero effects. Install the additive `d1ReversalFenceSchema`
+(the fence table and indexes on provenance by job and by source, history by
+source and claims by job) in a new numbered migration after `d1CustodyStateSchema`.
 
 `readD1ImportJob`, `readD1ImportOriginals`, and `readD1PersistedImport` expose status,
 digest-checked original bytes and native/provenance readback. Custody is also
@@ -306,6 +330,24 @@ Scope personal diagnostic text to its source
 kind and ID or source location so the same erasure removes it. Do not place personal
 record data in unscoped diagnostics or other records' metadata.
 
+### Related copies of the erased person
+
+`eraseD1ImportTarget(kind, id, nativeStatements, context, related)` also erases
+retained copies the product recognizes outside the target's own lineage.
+`related.source(record)` is asked about every unerased source record in the
+destination, including rejected rows and records that map to other targets;
+`related.original(bytes, { name, sha256 })` is asked about every retained original
+artifact. Matching records are erased like the target's own sources, bound to the
+erased target's identity, with their effects severed: their provenance and
+before-images are deleted, so undo leaves the native rows they produced in place.
+`nativeStatements` must redact those rows in the same batch. Matching originals
+are withdrawn under the selected `originalErasurePolicy`, which is required. The
+exact destination job set and fingerprints read by the scan are fenced, so a job
+created or changed before the batch aborts it with `IMPORT_ATOMIC_GUARD`. The scan
+reads every retained plan and original in the destination; bounded erasure
+(`maxBatchBytes`) refuses `related` with `IMPORT_RELATED_ERASURE_UNBOUNDED_ONLY`.
+Matchers receive decoded personal data: they must be pure and must not log it.
+
 Erasure replaces the record with an explicit zero-effect tombstone, keeps source
 identity and ordinal, and rehashes the plan, source claims and committed decisions.
 The changed plan fingerprint fences any apply or reversal prepared before erasure.
@@ -336,14 +378,94 @@ exempt. A stale or corrupted private plan can never use a missing index row to
 resurrect a tombstoned source.
 
 
+## Erasing a person from import custody
+
+`eraseD1ImportTarget` removes a person's records but leaves any header the
+product filled from that person: a job or stream namespace, an operation key,
+an original's name, a private stage's header. `retireD1ImportCustody(person,
+nativeStatements, context, checkpoint)` erases the person from all of import
+custody and writes one erasure journal row, in a single D1 batch with the
+supplied native statements, the restore checkpoint and current `erase`
+authority at both ends.
+
+```ts
+const native = await erasure.nativeStatements('person', { id });   // modules/erasure
+const checkpoint = (await portability.redactionStatements()).map(toD1Sql);
+const entry = await retireD1ImportCustody(
+  { target: { kind: 'person', id }, values: [person.email] }, native.statements, context, checkpoint);
+await erasure.deleteBlobs(native.operationId);
+```
+
+Matching uses exact identifiers only, never substrings. `target` names the
+native entity the person's records were imported into; those records become
+zero-effect tombstones in every job exactly as `eraseD1ImportTarget` makes them,
+so other people's records in the same job still resume and undo. `values` are
+exact strings, typically the person's email: every job, stream, stream origin,
+revision anchor, private stage and original whose header cell equals one of
+them is found. Such a job cannot be renamed without changing the source
+identities that undo and resume rely on, so its whole custody is retired: plans,
+originals, provenance, history, reversal reports, entries, sources, stages,
+indexes and the job row are deleted, and `ik_d1_retirements` keeps a plain row
+(job or stream id, destination, receipt id, time). Retirement closes over every
+stream the job belongs to, jobs whose entries reuse its sources and preserved
+history in both directions, and the commit refuses if that closure changed after
+it was read. Native rows a retired job already wrote stay; it can no longer be
+resumed or undone, and `readD1ImportJob`, `resumeD1Import` and `undoD1Import`
+throw `IMPORT_JOB_RETIRED` (streams: `IMPORT_STREAM_RETIRED`) carrying the
+`receiptId`. A retired stream's revision anchor keeps its counters and layout
+fields and drops its namespace and operation key, so its id can never be reused.
+The batch then proves that no header cell in the destination still equals a
+named value. Originals holding the person are withdrawn under
+`context.originalErasurePolicy`, which defaults to `withdraw-affected-artifacts`
+here. Pass `related` as for `eraseD1ImportTarget` to sever other records that
+mention the person; a name is not an identifier, so do not pass one as a value.
+
+Rewriting a job into tombstones keeps its row keys, so per-row restore
+tombstones cannot fence it, and an archive made before the erasure may hold the
+person only in import custody (still pending, or only in a header). `checkpoint`
+is the product's restore checkpoint for rewritten rows: portability's
+`redactionStatements()`, as `D1Sql`. The batch carries it whenever it has a
+`target` or retires anything, so `rer import --journal LATER_ARCHIVE` refuses any
+older archive whole; it is required then (`IMPORT_RETIREMENT_CHECKPOINT_REQUIRED`).
+A batch without it (nothing matched, so nothing is fenced) must also carry no
+`nativeStatements`: `IMPORT_RETIREMENT_NATIVE_REQUIRES_CHECKPOINT` refuses before any
+write, because SQL the kit cannot fence could rewrite a row it does not count, such as
+another import's job. With the checkpoint, and nothing else to do, it must leave every
+row of the retired scope unchanged, or it aborts.
+
+The journal (`ik_d1_erasure_journal`) and `ik_d1_retirements` are append-only:
+database triggers refuse updates, deletes and any insert over an existing key,
+so `INSERT OR REPLACE` cannot rewrite a row. Each row holds the receipt id, destination, time, the number
+of records erased, jobs and streams retired, and per store the number of rows
+the erasure deleted or overwrote (`stores`). Counts come from row images taken
+and compared inside the same transaction in `ik_d1_erasure_tally`, which is
+empty again before the batch commits; bookkeeping counters, tombstones and the
+journal itself are not counted. It holds no erased value. Read it with
+`readD1ErasureJournal(context)`; the function returns the row it wrote.
+
+Apply `d1RetirementSchema` as a new numbered migration after the other kit
+schemas (existing applied migrations stay unchanged); `initializeD1ImportStorage`
+applies it too. It adds the three tables and replaces the stream revision update
+trigger with one that also admits the retirement transition. A store that
+already applied an earlier `d1RetirementSchema` applies `d1RetirementAppendOnly`
+(the two insert triggers) as its next numbered migration. Keep the journal and
+retirements in archives. Restoring an archive made before the erasure brings
+nothing back: the native rows are fenced by the erasure module's
+`nativeStatements`, and import custody by the checkpoint. The path is
+unbounded (one batch), so `maxBatchBytes` is refused with
+`IMPORT_RETIREMENT_UNBOUNDED_ONLY`.
+
+
 ## Normalized paged imports
 
 `planD1ImportStream(source, mapping, context)` supports normalized sources with
 unique record identities, unavailable original bytes, no attachments and no
 unscoped source diagnostics. Other sources continue to use `planD1Import`.
 Input records may be an array-compatible lazy view. Mapping runs once per record;
-normalization uses the shared planner, then partitions at 100 records and about
-512 KiB of normalized source/effect content. Partitioning counts shared literals
+normalization uses the shared planner, then partitions at 100 records, 100
+native units (one per effect, at least one per record) and about 512 KiB of
+normalized source/effect content. Undo cost grows with a child's units, so many
+tiny effects split into more children. Partitioning counts shared literals
 once, including short statements and small dictionaries, so repeated immutable
 metadata does not multiply a dictionary across pages. An individual native entity remains
 atomic. Distinct source identities with equal values remain distinct records.

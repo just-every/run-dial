@@ -53,6 +53,24 @@ export interface D1TargetAdapter extends Partial<D1PreservedUndoAdapter> {
   remove(destination: string, kind: string, id: string): D1Sql[];
   list(db: D1Database, destination: string): Promise<TargetRow[]>;
 }
+/** Product recognition of an erased person's data outside the erased target's own
+ * sources: another record's mapped values, a rejected row, or an original's bytes.
+ * Called with decoded retained content only; must be pure and must not log it. */
+export interface D1RelatedErasure {
+  /** True when this retained source record holds the erased person's data. */
+  source?(record: import('../types.ts').SourceRecord): boolean;
+  /** True when this retained original's exact bytes hold the erased person's data. */
+  original?(bytes: Uint8Array, original: { name: string; sha256: string }): boolean;
+  /** Remove exact string values at named paths in retained source payloads,
+   * effect/native values and reversal before-images. `*` visits array items.
+   * Matching array items are removed; matching object properties are deleted.
+   * Peer records and explicit aggregate counts remain. */
+  fields?: readonly D1FieldRedaction[];
+}
+export interface D1FieldRedaction {
+  path: readonly (string | number)[];
+  value: string;
+}
 export interface D1ImportContext extends Pick<ImportContext, 'destination' | 'namespace' | 'mappingVersion' | 'reviewedFingerprint' | 'operationKey' | 'batchSize' | 'maxBatches'> {
   /** Selected at creation. Omission on later calls uses the durable policy;
    * an explicit different policy is an error. Legacy jobs remain strict. */
@@ -75,3 +93,29 @@ export interface D1ImportContext extends Pick<ImportContext, 'destination' | 'na
 
 /** The predecessor marker stays in successor audit JSON even after reversal. */
 export interface D1ProvenanceRow extends ProvenanceRow { predecessorId?: string }
+/** A person named for erasure from import custody, by exact identifiers only.
+ * `target` is the native entity their records were imported into; `values` are
+ * exact strings (an email, a label the product built from the person) that may
+ * sit whole in a job or stream header, an original's name or a private stage.
+ * Nothing is ever matched as a substring. */
+export interface D1ImportPerson {
+  target?: { kind: string; id: string };
+  values?: string[];
+  related?: D1RelatedErasure;
+}
+/** One erasure journal row: what was erased and where, never the values. */
+export interface D1ErasureJournalEntry {
+  receiptId: string;
+  destination: string;
+  recordedAt: string;
+  recordsErased: number;
+  jobsRetired: number;
+  streamsRetired: number;
+  stores: { store: string; rows: number }[];
+}
+export interface D1CustodyRetirement extends D1ErasureJournalEntry {
+  /** Jobs and streams whose whole custody was retired: no undo or resume. */
+  retiredJobs: string[];
+  retiredStreams: string[];
+  nativeResults: unknown[];
+}

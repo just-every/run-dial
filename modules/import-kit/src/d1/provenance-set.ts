@@ -1,5 +1,4 @@
 import type { InventorySnapshot } from './inventory-snapshot.ts';
-import type { ImportPlan, ProvenanceRow } from '../types.ts';
 import { planFingerprint } from '../plan/index.ts';
 import { canonicalJson, sha256, attachmentHash } from '../provenance/identity.ts';
 import { decodeProvenance, effectIdentity } from '../storage/provenance.ts';

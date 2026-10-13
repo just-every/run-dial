@@ -2019,7 +2019,7 @@
     },
     "scripts/publish-check/public_hygiene.py": {
       "source": "scripts/publish-check/public_hygiene.py",
-      "sha256": "ddae167e54e1deb0bcec88da03d793e83189a157c1cee9df1b42d53767001e92"
+      "sha256": "bad119762ac075ab6e9c0b8a91419115f5dd291ced2d0c2efd93061fe5f24373"
     },
     "scripts/publish-check/publication-config.json": {
       "source": "scripts/publish-check/publication-config.json",

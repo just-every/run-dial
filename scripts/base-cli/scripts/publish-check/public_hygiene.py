@@ -9,6 +9,29 @@ from hygiene_config import EMAIL, LOCAL_PATH, public_email
 from font_licence import without_required_notices
 from trust_bundle import anchor_values
 URI_AUTHORITY = re.compile(r'''(?i)(?a:(?P<scheme>[a-z][a-z0-9+.-]*:))?//(?P<authority>[^/?#\s<>"']+)''')
+# Match raw, complete commit trailer lines; decoded or embedded prose cannot
+# acquire trailer privileges. Only the address span is omitted from email checks.
+COAUTHOR = re.compile(
+    rb'^Co-Authored-By:[ \t]+[^<>\r\n]*[^<>\s][ \t]+<(?P<address>'
+    rb'noreply@(?:anthropic|github)\.com|'
+    rb'[0-9]+\+[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,38}@users\.noreply\.github\.com'
+    rb')>[ \t]*\r?$', re.I | re.M)
+
+
+def without_public_coauthor_addresses(data):
+    # A trailer block is the final paragraph and contains only trailer lines.
+    # A quoted attribution followed by ordinary prose stays ordinary body text.
+    tail = data.rstrip(b' \t\r\n')
+    block = re.split(rb'\r?\n[ \t]*\r?\n', tail)[-1]
+    if not all(re.fullmatch(rb'[A-Za-z0-9-]+:[ \t]+[^\r\n]+\r?', line)
+               for line in block.split(b'\n')):
+        return data
+    offset = len(tail) - len(block)
+    result = bytearray(data)
+    for match in COAUTHOR.finditer(block):
+        start, end = match.span('address')
+        result[offset + start:offset + end] = b' ' * (end - start)
+    return bytes(result)
 
 
 def email_userinfo(match):
@@ -25,7 +48,7 @@ def private_emails(text, config):
     # URL paths, queries and fragments remain visible to email inspection.
     email_text = URI_AUTHORITY.sub(email_userinfo, without_required_notices(text))
     email_text = re.sub(r'(?i)\b(?a:git@github\.com:)(?=[A-Za-z0-9])', '', email_text)
-    # A package manager's patch file is named name@version.patch.
+    # A package manager's patch filename joins the name and version with an at sign.
     version = r'(?:v?[0-9]+(?:\.[0-9]+)*(?:-[A-Za-z0-9-]+)?|[a-f0-9]{40})(?:\.patch)?(?![A-Za-z0-9_.-])'
     email_text = re.sub(r'(?m)^\s*-?\s*uses:\s*[\"\']?[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[^\s\"\']+', '', email_text)
     email_text = re.sub(r'(?<![A-Za-z0-9])(?:@[A-Za-z0-9_.-]+/)?[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@' + version, '', email_text)
@@ -69,11 +92,11 @@ def certificate_metadata(data, bundle, emails, config):
     return not Counter(emails) - inside
 
 
-def inspect(data, path, config, resolver):
-    return inspect_text(data, path, config, resolver)
+def inspect(data, path, config, resolver, *, commit_message=False):
+    return inspect_text(data, path, config, resolver, commit_message=commit_message)
 
 
-def inspect_text(data, path, config, resolver):
+def inspect_text(data, path, config, resolver, *, commit_message=False):
     # NUL removal covers UTF-16/32 ASCII content, matching the secret scanner.
     text = decoded_text(data)
     rules = set()
@@ -82,7 +105,8 @@ def inspect_text(data, path, config, resolver):
     if any(pattern.search(text) for pattern in config['internalReferencePatterns']):
         rules.add('hygiene.internal-reference')
     if '@' in text:
-        emails = private_emails(text, config)
+        email_text = decoded_text(without_public_coauthor_addresses(data)) if commit_message else text
+        emails = private_emails(email_text, config)
         bundle = config.get('trustBundles', {}).get(path)
         if emails and not (bundle and certificate_metadata(data, bundle, emails, config)):
             # Inside binary data a mailbox is judged by its own shape: a host

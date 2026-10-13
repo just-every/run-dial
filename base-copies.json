@@ -186,9 +186,9 @@
     {
       "path": "modules/import-kit/CONTRACT.md",
       "originPath": "modules/import-kit/CONTRACT.md",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "10e569948863b7050e6645b7219b56007953b232",
       "files": {
-        "modules/import-kit/CONTRACT.md": "a9aae186f79952d1942e7a6cb04bda8e1eff8558b858440f9dde0ec1439713d7"
+        "modules/import-kit/CONTRACT.md": "eab60ff3766461dc41c5253fd88dd5845539eb8dca2f38189c96bdf3f857ea87"
       },
       "modes": {
         "modules/import-kit/CONTRACT.md": "100644"
@@ -197,7 +197,7 @@
     {
       "path": "modules/import-kit/FIXTURES.md",
       "originPath": "modules/import-kit/FIXTURES.md",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "10e569948863b7050e6645b7219b56007953b232",
       "files": {
         "modules/import-kit/FIXTURES.md": "2f193cf36fce01f7497721f577e4d6aca6dfaeb3cc5615c96be8c847cd6be5f3"
       },
@@ -208,9 +208,9 @@
     {
       "path": "modules/import-kit/README.md",
       "originPath": "modules/import-kit/README.md",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "10e569948863b7050e6645b7219b56007953b232",
       "files": {
-        "modules/import-kit/README.md": "cb59cbda077f66159ddc3d9d8aec56a9c60226c9aa3cd7911c800b32846d2c05"
+        "modules/import-kit/README.md": "135e842e338cd40001f149dd30e46fab1e6c05aaa91a542ed163c7bffcc14f19"
       },
       "modes": {
         "modules/import-kit/README.md": "100644"
@@ -219,7 +219,7 @@
     {
       "path": "modules/import-kit/schema",
       "originPath": "modules/import-kit/schema",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "10e569948863b7050e6645b7219b56007953b232",
       "files": {
         "modules/import-kit/schema/importer-verification-receipt.schema.json": "710740a418fbd1fda5dd7a9017c247040c2bef98a6eadbec2a59220a5afa0ae7",
         "modules/import-kit/schema/importers.schema.json": "70ffac46763ab493388cad8fb0bc40946be819b8e8036274a7bff30cf3b4d9c3"
@@ -232,39 +232,41 @@
     {
       "path": "modules/import-kit/src",
       "originPath": "modules/import-kit/src",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "10e569948863b7050e6645b7219b56007953b232",
       "files": {
         "modules/import-kit/src/d1/apply.ts": "97190e9e8924fd0751d5f31c94f2a227705a6c5f3edda8672b70168fac2f6d8e",
         "modules/import-kit/src/d1/budget.ts": "15a85719224332a015d653d2619ed5c60c8b230fe197573159b5209a2fd603bd",
         "modules/import-kit/src/d1/compressed-plan.ts": "b96a798a51902178361933ac2509a7ccb549c932a778a7c3662b604f3b7a1430",
         "modules/import-kit/src/d1/creation.ts": "06ed88e62a1afedbc47e1bbe8edac1f4cb434a3ccce5ddd1b3c9a3ea70fe91cf",
         "modules/import-kit/src/d1/custody-state-schema.ts": "abd95460b9d732ec47f806c94c559c77a2e8b9967ef3286d7f0bc97c61b25966",
-        "modules/import-kit/src/d1/database.ts": "c9d57e3d1c67bac36a99beae42e0face3f65d044ce6eafae579487e6c0e3e03a",
-        "modules/import-kit/src/d1/erased-artifacts.ts": "685a9b9441166d8452ae792d672a328b83e0394df7d8601d7e7635473dda384c",
+        "modules/import-kit/src/d1/database.ts": "a0da0005d37f51c693e5101dbb736135345706d31d09af9ce4fd82dfaa7e5763",
+        "modules/import-kit/src/d1/erased-artifacts.ts": "e2766643f0653bef87672698295be3aecf9fd221f0455bba629de9c9503878bd",
         "modules/import-kit/src/d1/erased-custody.ts": "3b32fc2de77dc7ada815466f31645bc1322d8ef7a70bf357ddef3dc39455e51d",
-        "modules/import-kit/src/d1/erased-plan.ts": "964fd91f64201c2f4e7366f4137058beffb678e5a8e58acf46687c4944f8e9f5",
+        "modules/import-kit/src/d1/erased-plan.ts": "ef235b404003131e87af2eb07e8e39c3423c500a28dd9b2fee4b6f2d0eb24248",
         "modules/import-kit/src/d1/erased-reversal.ts": "1e451448d65086e2eb1d20df5c4f9190f7f04aec55d187bcf6adbe66068c61ec",
         "modules/import-kit/src/d1/erasure-bounded.ts": "53a19e61fbce0fe8b3066a45e08486a795d7450a6496980d4ebb7d1f5e488f06",
         "modules/import-kit/src/d1/erasure-claims.ts": "5254f570c850da5fefb213f74a44df73ec5ac5ca0ea3eae3972e60c55a48b022",
         "modules/import-kit/src/d1/erasure-compiler.ts": "1d9d948ede9b3d5428db7ddc0c9e125b61bbe4cb24c2c5415abf6ad1003537c7",
         "modules/import-kit/src/d1/erasure-disposition.ts": "d6edd39b94d4c063845d92f11ff435dd4f76898588f2d386b2d383e0df0cf045",
         "modules/import-kit/src/d1/erasure-fragments.ts": "46d299b1a2efa8017e010fd17c500ce062e64126d7334605d1844e9085e24ed4",
-        "modules/import-kit/src/d1/erasure-index.ts": "9faab99ff8f7c1049859424af29187fd7fc57180e3876899234fe69e7add37d2",
+        "modules/import-kit/src/d1/erasure-index.ts": "995f8641fff4a7f2060a145be38fc13c7852b8093ea392d1f197936743e16cb4",
         "modules/import-kit/src/d1/erasure-pages.ts": "0224a40b3466a1b61f5b226ae614f7db8d160bbecfad9470c900de88c706f698",
+        "modules/import-kit/src/d1/erasure-related.ts": "8b93d188b968fe8d41728ead3d7ff9001165d87b79901ac2f29d1da7f9d9464c",
         "modules/import-kit/src/d1/erasure-report.ts": "2a8bdb6cab8a13100d2a351f61ff24d0b16aadc6d34fcf79ecad087241d81348",
         "modules/import-kit/src/d1/erasure-schema.ts": "582dadabb6c8c010560fb8e5e46521766c72fdf743a3784cd08deb7b63988eef",
         "modules/import-kit/src/d1/erasure-snapshot.ts": "5a16b9a9bf9ac22c9d22624314218e0f901d3ac511e3f642df11970bb2732244",
         "modules/import-kit/src/d1/erasure-values.ts": "93b18362f5deb0ef80933b8f24f03ac4fa56e7015986ea993ba12b9ddff40e09",
-        "modules/import-kit/src/d1/erasure-writes.ts": "756b5efa1537f1e9286f2c85eeaf284d0fb1ec2abc51a06542220360706a306b",
-        "modules/import-kit/src/d1/erasure.ts": "f4cb07681ba5218e3eb80fe3d92f4f4719e08780a3611902cd6255eff406f851",
+        "modules/import-kit/src/d1/erasure-writes.ts": "0782c50143ab1e4feae218ce2baac4db425ad2b53699ad9d63e392ac82ac07a9",
+        "modules/import-kit/src/d1/erasure.ts": "54e8bfa4f4dc5c00509c4b7dfae8aaefcb01655d51a83dd4df96a7b8d5074949",
         "modules/import-kit/src/d1/evolutions/0001-preserved-undo.ts": "8def72f17f375aeddfc3fabd4c3756fc26f4e1fed492cd70cf821d48847e0fe1",
         "modules/import-kit/src/d1/expected-state.ts": "bd5b5bc97ee20b910646161186717418951da673a4c294e09e75653c98892df0",
+        "modules/import-kit/src/d1/field-redaction.ts": "c6424f47549e0f8abcdfa3b1b2f28fa5d0831ff39e036a9ef29edc6d0cf59d43",
         "modules/import-kit/src/d1/guards.ts": "7f8c7d43a1d5f41d88017a24435d88f9c7b5cb58140ca8d9d0a343697ec09e44",
-        "modules/import-kit/src/d1/history.ts": "233fbd8e69298ba97804180a6e73308f3e09b2dbc95acd8a6bbad46a751960f1",
-        "modules/import-kit/src/d1/index.ts": "519b531216177eed7cbcdb2f3250a2a7876b5dc8fec301bd390c78c7b90760be",
+        "modules/import-kit/src/d1/history.ts": "004b6b72a3c33b33de05196ccaa7ee09777c9a3253bac8128f3cf4ebeb66aea9",
+        "modules/import-kit/src/d1/index.ts": "9499496195c309d340b7580ff9519144956e6f67e5046411edf9d3aeeab8ba56",
         "modules/import-kit/src/d1/integrity.ts": "bca91ca3bf5d9a1b868a8f53a9989dee12ddfa69c1b6edee10a9ee84d51c6b14",
         "modules/import-kit/src/d1/inventory-snapshot.ts": "687f41c9ef55f372e4af0e1c63a70945a9808036d118acfe97978f9c6ec04d6f",
-        "modules/import-kit/src/d1/jobs.ts": "f7684d339f14b37362f8be7914850b56be088d0abe5cef1d2c62b4b88af66f37",
+        "modules/import-kit/src/d1/jobs.ts": "130ea5c7f62c149a961f458e7c68a5f4cf25f785cf9241d4ce6c9ed0b2f1c733",
         "modules/import-kit/src/d1/native-staging-admission.ts": "64d798314f2271d6af590ec2797c5e3395ca6e529aa221b2935c4c7b1b0a6ee3",
         "modules/import-kit/src/d1/native-staging-context.ts": "726735c573ba08a308dfb89d50c5be63eb88dfb98e027be180db54032337535d",
         "modules/import-kit/src/d1/native-staging-lifecycle.ts": "f404f3fd618e11ae9f37de7ead2f80ed70fbc6d4ce97af62ce0176ba2a154591",
@@ -285,15 +287,22 @@
         "modules/import-kit/src/d1/preparation-state.ts": "a46c501d435902eb66b06d89b2708d084ed5eca666822cde48873e0dfc2b5f12",
         "modules/import-kit/src/d1/preparations.ts": "a29c90ca353d527b3aab5238307bcb0613614d8afb58f74f1eb4cf7459fd8aec",
         "modules/import-kit/src/d1/preserved-reverse.ts": "8283befaf15dc5edf67f091808f1f182f1eb2038f4bf8f28351e0240ce3aebe4",
-        "modules/import-kit/src/d1/provenance-set.ts": "7ca32ce20a01711297cddb832ec92b4ba05fd65813fc5e1ea9f51592cf12ef3c",
+        "modules/import-kit/src/d1/provenance-set.ts": "f005f774ddfa60342430db3cc4ae0e988570832f10be7e97be2876ec050c5a67",
         "modules/import-kit/src/d1/publication-fence.ts": "b8fd1857119e520bec5cf10d07b3c81a2fbc1caf066b05c774394a8f2ba2c14a",
         "modules/import-kit/src/d1/publication-receipt-schema.ts": "a8562507cad8506e7c3ceaade0161b6de82a202f5bad368ea322187c62be1929",
         "modules/import-kit/src/d1/published-stream.ts": "8e672ca3c1921fce0dc2fe37fa4470a5ada1dd38924a9b39db0cb5a97060a222",
         "modules/import-kit/src/d1/read-fence.ts": "e77cf651e56af1d6d37c78ac68ae339b7a5e98049dad2e3f501b602b01b203b3",
         "modules/import-kit/src/d1/read-results.ts": "75fe5cb009f41c2aa850941e8db21bfe77261baeccf5a0203505871d4ef66e2d",
-        "modules/import-kit/src/d1/README.md": "3c529303b9de9b3a7eab9ac0b72dc7df8aeba074490d0022d5136811bb443c61",
+        "modules/import-kit/src/d1/README.md": "4be048736ffaff8e8e5f9e29fc89f71e80f5e79eeeb010a49ef0d0a421540cfd",
+        "modules/import-kit/src/d1/redacted-custody.ts": "e6dd3619ace00c17bf2febc45a26cdf15da134cfb2a858d8580fb33bc1c5e0b8",
         "modules/import-kit/src/d1/retained-values.ts": "d864ad9edcfe335507dcc64c478bb6133a3633ea5e91040887381bf8e8f2d889",
-        "modules/import-kit/src/d1/reverse.ts": "5ee10cb52dd653a95ba3fa195b690480c33c25bff4f85efc6705998241e888e0",
+        "modules/import-kit/src/d1/retirement-schema.ts": "a32fef20e32a595cdca12f4914d39cfe32013072454c3429dc9e72fe144ce789",
+        "modules/import-kit/src/d1/retirement-scope.ts": "7bbe5d54f1813768d2b020d3f3d00f7ed49238694dd047b9d890e59d5c50ced5",
+        "modules/import-kit/src/d1/retirement-tally.ts": "e2530e05d0108a5b6eee28b506b67cc4cabadde7d4e0d4f498c326630917b753",
+        "modules/import-kit/src/d1/retirement.ts": "daa9358adcf85cb9eec112bd0d86896c321cbcf59c5586cc468d0fe91dd67739",
+        "modules/import-kit/src/d1/reversal-fence-schema.ts": "85850e6eee015c05355769fd4b933b8d8c2175711ca11081e46157bf58ad3cdb",
+        "modules/import-kit/src/d1/reversal-fence.ts": "5b0b3c50b29b55f016d7c46e83bc8c1eec6ef34bb5de2c05a5b7bea35cb7946e",
+        "modules/import-kit/src/d1/reverse.ts": "d20b6dc0d043c57922e1793a6d0808795992f88faa797f158370ea394173ed7c",
         "modules/import-kit/src/d1/reviewed-source.ts": "fa3d5a6847476721b0d1d4a0ff3546e394f8d2ab6ecf4ce63a4598a131014b84",
         "modules/import-kit/src/d1/sets.ts": "f1a6572f8a5701fd3d72cf5793dcb0302dc05e7ef6f33c941636562291d179bd",
         "modules/import-kit/src/d1/staging-admission.ts": "dcf561f9098294c33b0d85c52d3a85d7737f203c5cd09d502db6244a2300b343",
@@ -313,9 +322,9 @@
         "modules/import-kit/src/d1/stream-layout.ts": "9b1771a447233e39609e28a27c034270127ca9628d1045786066a7cc5f03f31c",
         "modules/import-kit/src/d1/stream-origin.ts": "8c593ea5d256102b6027edc6759c4d2accff520fbb586391bb4240d11e84b1f1",
         "modules/import-kit/src/d1/stream-page-integrity.ts": "b81cc04000f7733f537b3817a3513433abb5a5922d3590a506169888a91c035d",
-        "modules/import-kit/src/d1/stream-partition.ts": "d9afe61feb35a5b8e9b8d64364adef79879488e2afa4bfc9e85d29da728433cd",
+        "modules/import-kit/src/d1/stream-partition.ts": "598ea0594c789fcd98496fbf668df5ec21ef25a0d0888b94f633c320ffbe8375",
         "modules/import-kit/src/d1/stream-plan.ts": "096c2fa2b586b29e0ab277baeaf2db6f74bb65661539d1586d8d3e92a35f665c",
-        "modules/import-kit/src/d1/stream-receipt.ts": "0705e0833a5d105ea07c835bfcc41355a421cab4064c8c57caae372ee3c67365",
+        "modules/import-kit/src/d1/stream-receipt.ts": "5ef1aa79f546b7bfba98c2b291bf15bd32f5c4c71f76c3d8522ba39a47cb6f6d",
         "modules/import-kit/src/d1/stream-revision-schema.ts": "33954cf1d174b0a8589e685cc0a77a6b5c07fbc64719e8e87d49384a461d150a",
         "modules/import-kit/src/d1/stream-snapshot.ts": "82c8c6c698d7548bc781c776c6ad00a6c7293b21b2d2cd58bf75a85fa3d6ee4b",
         "modules/import-kit/src/d1/stream-stage.ts": "9c18c0ffe72ad26a42d84b452fedebbc2885c09dae1a348ce98e8cc697b02c1b",
@@ -325,7 +334,7 @@
         "modules/import-kit/src/d1/target-guards.ts": "0109367eda7594ab16f0a449cdbfab93627e3c8f8fb3f74a4123383ba60bb716",
         "modules/import-kit/src/d1/target-identities.ts": "6bea9b8ae58cc3e9fa5006918ce5649a6fa2967788a4c5459971ea89297846ec",
         "modules/import-kit/src/d1/transport.ts": "8db08ec77553f58f816bc0e3325a20e63552e38a99604237a58e8843de7819bf",
-        "modules/import-kit/src/d1/types.ts": "b94748352b7dbbcd777445fe9dc43548bbe6a6367cab3a4e184fcce4bd225f24",
+        "modules/import-kit/src/d1/types.ts": "d1598f0154c98fcc027e30ea569dc376c77524e9116c0f620758a475ed8ada0f",
         "modules/import-kit/src/d1/undo-observations.ts": "aa5c7eac0fd202244fe7a5518a95dcab377809b9eda12c52b610fe03b00f9958",
         "modules/import-kit/src/d1/undo-report.ts": "10776e6240f7090e59023aa2e9ed212ead66b37c2c696ec0d44dba424be34b71",
         "modules/import-kit/src/d1/undo-snapshot.ts": "e92301721da9d72c37213a99a308701c94c882657d2fe0a263ad95614d3928d2",
@@ -392,6 +401,7 @@
         "modules/import-kit/src/d1/erasure-fragments.ts": "100644",
         "modules/import-kit/src/d1/erasure-index.ts": "100644",
         "modules/import-kit/src/d1/erasure-pages.ts": "100644",
+        "modules/import-kit/src/d1/erasure-related.ts": "100644",
         "modules/import-kit/src/d1/erasure-report.ts": "100644",
         "modules/import-kit/src/d1/erasure-schema.ts": "100644",
         "modules/import-kit/src/d1/erasure-snapshot.ts": "100644",
@@ -400,6 +410,7 @@
         "modules/import-kit/src/d1/erasure.ts": "100644",
         "modules/import-kit/src/d1/evolutions/0001-preserved-undo.ts": "100644",
         "modules/import-kit/src/d1/expected-state.ts": "100644",
+        "modules/import-kit/src/d1/field-redaction.ts": "100644",
         "modules/import-kit/src/d1/guards.ts": "100644",
         "modules/import-kit/src/d1/history.ts": "100644",
         "modules/import-kit/src/d1/index.ts": "100644",
@@ -433,7 +444,14 @@
         "modules/import-kit/src/d1/read-fence.ts": "100644",
         "modules/import-kit/src/d1/read-results.ts": "100644",
         "modules/import-kit/src/d1/README.md": "100644",
+        "modules/import-kit/src/d1/redacted-custody.ts": "100644",
         "modules/import-kit/src/d1/retained-values.ts": "100644",
+        "modules/import-kit/src/d1/retirement-schema.ts": "100644",
+        "modules/import-kit/src/d1/retirement-scope.ts": "100644",
+        "modules/import-kit/src/d1/retirement-tally.ts": "100644",
+        "modules/import-kit/src/d1/retirement.ts": "100644",
+        "modules/import-kit/src/d1/reversal-fence-schema.ts": "100644",
+        "modules/import-kit/src/d1/reversal-fence.ts": "100644",
         "modules/import-kit/src/d1/reverse.ts": "100644",
         "modules/import-kit/src/d1/reviewed-source.ts": "100644",
         "modules/import-kit/src/d1/sets.ts": "100644",
@@ -2004,93 +2022,6 @@
       }
     },
     {
-      "path": "scripts/base-cli/scripts/publish-check",
-      "originPath": "scripts/publish-check",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
-      "files": {
-        "scripts/base-cli/scripts/publish-check/checksum_maps.py": "7e844ce56f885bd1ff2e1f8cea821c73ee3775013580ea63c585948c14bdd77f",
-        "scripts/base-cli/scripts/publish-check/cli.py": "988f950254beecce3584b192f28200f8827a377c410a6215248db2ff5ec575ea",
-        "scripts/base-cli/scripts/publish-check/command_arguments.py": "33de13be68f16d1cff4232b17706717ea904004d5896288f32901cdb328e7834",
-        "scripts/base-cli/scripts/publish-check/command_shell_quotes.py": "b94e325bfaf696efa2d10ac35c5c0dbe6dd834a81d64a07e41d4ef74ba9f1d6a",
-        "scripts/base-cli/scripts/publish-check/command_source_quotes.py": "bdbac63186cbf1fc32d0dea316928fcba7b81b6298164fe81cb5ce278aed0732",
-        "scripts/base-cli/scripts/publish-check/content_identities.py": "c29796b3daf95b24b22fdfd545924e4192ea14b3653e70680bd816c60672eba3",
-        "scripts/base-cli/scripts/publish-check/copy_identities.py": "9b2e620930bf9756939d0f013effb2eb3208dfcb8ad470d8face849359a40961",
-        "scripts/base-cli/scripts/publish-check/der.py": "1debcbeec1caa149c979e06979c8f34885264e61e21f0cccf25728674ccfc3d8",
-        "scripts/base-cli/scripts/publish-check/destination.py": "3020b0d197f3e757749eccdbb1db37abf168ed7622d79bab353138d56fed5b8d",
-        "scripts/base-cli/scripts/publish-check/env_values.py": "a2cbbe311d8e43db4bf7cc530d314fa5f7154c99f5d33ea072c24de4353aa1a4",
-        "scripts/base-cli/scripts/publish-check/font_licence.py": "95688834bd02187d508cd9d2da45fc8519cad3abcf24fe7d710ee3d4f82bce51",
-        "scripts/base-cli/scripts/publish-check/git_history.py": "e030b91f4c2d5ad967cf52d51916321ad51a37f96ad4e024e5b48339f6f71805",
-        "scripts/base-cli/scripts/publish-check/github_refs.py": "4aac2eab5789f7a3bb190550b788903316775217699a5838582e9c1ff0adbb90",
-        "scripts/base-cli/scripts/publish-check/gitleaks.py": "72281597b995796912339e18e0072e052566df0a30bd52fe1a68c91c9f59ecf5",
-        "scripts/base-cli/scripts/publish-check/gitleaks.toml": "1f07ccaadfd4ce6cd7056a44e5464b262cb908bd3124cd2f5b3eeeb0eac2081a",
-        "scripts/base-cli/scripts/publish-check/history_scan.py": "335a9334bf16c96afddaea7a245163e68e44e4655de85ef1c94ad2f18dd49501",
-        "scripts/base-cli/scripts/publish-check/hit_location.py": "adcd3403de1f3a3abaf57518acb14273ae06ace5a17d5136192fadfc2d5f194d",
-        "scripts/base-cli/scripts/publish-check/hygiene_config.py": "9beda373434b63499651a583b81d89aa5926126ebe02003145b3ad8d28f88920",
-        "scripts/base-cli/scripts/publish-check/hygiene_text.py": "fc40e2bee209781daedeef87c570b56a04af8c044ed121905ef1c2f43bdf10f8",
-        "scripts/base-cli/scripts/publish-check/identity-recipe.mjs": "3340971aebf0f97adaa1969f925f52bd3bb5629c08225fd216b4b06c715fb98c",
-        "scripts/base-cli/scripts/publish-check/json_identity.py": "6da083788a0a5c67b1b7fbe7d17f8eb1e19c89e3c66f180f5f35d2b91bf4b9d3",
-        "scripts/base-cli/scripts/publish-check/license-exceptions.json": "fe0216169f28b7171ced0f3139a467452eb44e8793c778e17c23e75dea989db3",
-        "scripts/base-cli/scripts/publish-check/licenses.py": "5dc4d9ff275c880295d8b2429c8589f9ecb1b4043afc2af2386697fe532c3853",
-        "scripts/base-cli/scripts/publish-check/policy.py": "02166aca1594dcd590cdfdfc402c46af9792d38298eda3d224ca19cd162457bb",
-        "scripts/base-cli/scripts/publish-check/project_identity.py": "69c66600a94565a8956459c425cf185e4fcf0d48ecddac1a7d7443521f9a2b8e",
-        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "54a757808e4f7797a8b5b36c514123b76ec07c37d5ab3d2fcea3cc116c4a4abe",
-        "scripts/base-cli/scripts/publish-check/provenance.py": "e53399a9ebd67945498d88f509a9f7b110127fb45144025cf46a21eb7f439205",
-        "scripts/base-cli/scripts/publish-check/public_base.py": "534c76c74393677c095afc201e431831d8344cc322534ee4327b3fec50847c94",
-        "scripts/base-cli/scripts/publish-check/public_hygiene.py": "ddae167e54e1deb0bcec88da03d793e83189a157c1cee9df1b42d53767001e92",
-        "scripts/base-cli/scripts/publish-check/publication_config.py": "95f27857b529622706969fdd5d15da02f166adeba3d502884f28c0bac9bed732",
-        "scripts/base-cli/scripts/publish-check/publication-config.json": "d8563d28286e91bf0660e596dc6fb456188c08b1e47cc8c472732b522286a0d3",
-        "scripts/base-cli/scripts/publish-check/README.md": "6538febbfa0497943376734ef9131d8d18a1531879d9a82f3c526e960733ee41",
-        "scripts/base-cli/scripts/publish-check/report.py": "e0fe3ae6977862c38f3e5ce019ec8fd0e750e0c2333f7a42bc578048e337c3a4",
-        "scripts/base-cli/scripts/publish-check/repository_commands.py": "757a216ca35ccb8267f756072e7de0e8a1524ce29ad1d3f49b65a08e119b6d03",
-        "scripts/base-cli/scripts/publish-check/repository_intent.py": "cd51f0fed01eab9ac94d93f14eb2fc6ddd0d1a942a37b642611c483f9c04105d",
-        "scripts/base-cli/scripts/publish-check/reviewed.py": "fb6676f8eff7098da50ccf165366305fb08afc5e24c6b733425c4ad3cb8de28e",
-        "scripts/base-cli/scripts/publish-check/source_hashes.mjs": "3b0f7090ada00c7570e6ddbd7096f69c15116261a6c823086c85ddec59df928e",
-        "scripts/base-cli/scripts/publish-check/tree_scan.py": "4c5cc73e89fc1cefb0eff65872abf535f0713c478721a8d180360659123a9991",
-        "scripts/base-cli/scripts/publish-check/trust_bundle.py": "5b13b2d51b89cbcfc8a6d9667b1af911f23ee6befbafd60afc9f5ebb7e24e871"
-      },
-      "modes": {
-        "scripts/base-cli/scripts/publish-check/checksum_maps.py": "100644",
-        "scripts/base-cli/scripts/publish-check/cli.py": "100644",
-        "scripts/base-cli/scripts/publish-check/command_arguments.py": "100644",
-        "scripts/base-cli/scripts/publish-check/command_shell_quotes.py": "100644",
-        "scripts/base-cli/scripts/publish-check/command_source_quotes.py": "100644",
-        "scripts/base-cli/scripts/publish-check/content_identities.py": "100644",
-        "scripts/base-cli/scripts/publish-check/copy_identities.py": "100644",
-        "scripts/base-cli/scripts/publish-check/der.py": "100644",
-        "scripts/base-cli/scripts/publish-check/destination.py": "100644",
-        "scripts/base-cli/scripts/publish-check/env_values.py": "100644",
-        "scripts/base-cli/scripts/publish-check/font_licence.py": "100644",
-        "scripts/base-cli/scripts/publish-check/git_history.py": "100644",
-        "scripts/base-cli/scripts/publish-check/github_refs.py": "100644",
-        "scripts/base-cli/scripts/publish-check/gitleaks.py": "100644",
-        "scripts/base-cli/scripts/publish-check/gitleaks.toml": "100644",
-        "scripts/base-cli/scripts/publish-check/history_scan.py": "100644",
-        "scripts/base-cli/scripts/publish-check/hit_location.py": "100644",
-        "scripts/base-cli/scripts/publish-check/hygiene_config.py": "100644",
-        "scripts/base-cli/scripts/publish-check/hygiene_text.py": "100644",
-        "scripts/base-cli/scripts/publish-check/identity-recipe.mjs": "100644",
-        "scripts/base-cli/scripts/publish-check/json_identity.py": "100644",
-        "scripts/base-cli/scripts/publish-check/license-exceptions.json": "100644",
-        "scripts/base-cli/scripts/publish-check/licenses.py": "100644",
-        "scripts/base-cli/scripts/publish-check/policy.py": "100644",
-        "scripts/base-cli/scripts/publish-check/project_identity.py": "100644",
-        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "100644",
-        "scripts/base-cli/scripts/publish-check/provenance.py": "100644",
-        "scripts/base-cli/scripts/publish-check/public_base.py": "100644",
-        "scripts/base-cli/scripts/publish-check/public_hygiene.py": "100644",
-        "scripts/base-cli/scripts/publish-check/publication_config.py": "100644",
-        "scripts/base-cli/scripts/publish-check/publication-config.json": "100644",
-        "scripts/base-cli/scripts/publish-check/README.md": "100644",
-        "scripts/base-cli/scripts/publish-check/report.py": "100644",
-        "scripts/base-cli/scripts/publish-check/repository_commands.py": "100644",
-        "scripts/base-cli/scripts/publish-check/repository_intent.py": "100644",
-        "scripts/base-cli/scripts/publish-check/reviewed.py": "100644",
-        "scripts/base-cli/scripts/publish-check/source_hashes.mjs": "100644",
-        "scripts/base-cli/scripts/publish-check/tree_scan.py": "100644",
-        "scripts/base-cli/scripts/publish-check/trust_bundle.py": "100644"
-      }
-    },
-    {
       "path": "scripts/base-cli/scripts/publish-check.mjs",
       "originPath": "scripts/publish-check.mjs",
       "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
@@ -2099,6 +2030,435 @@
       },
       "modes": {
         "scripts/base-cli/scripts/publish-check.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/checksum_maps.py",
+      "originPath": "scripts/publish-check/checksum_maps.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/checksum_maps.py": "7e844ce56f885bd1ff2e1f8cea821c73ee3775013580ea63c585948c14bdd77f"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/checksum_maps.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/cli.py",
+      "originPath": "scripts/publish-check/cli.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/cli.py": "988f950254beecce3584b192f28200f8827a377c410a6215248db2ff5ec575ea"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/cli.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/command_arguments.py",
+      "originPath": "scripts/publish-check/command_arguments.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/command_arguments.py": "33de13be68f16d1cff4232b17706717ea904004d5896288f32901cdb328e7834"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/command_arguments.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/command_shell_quotes.py",
+      "originPath": "scripts/publish-check/command_shell_quotes.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/command_shell_quotes.py": "b94e325bfaf696efa2d10ac35c5c0dbe6dd834a81d64a07e41d4ef74ba9f1d6a"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/command_shell_quotes.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/command_source_quotes.py",
+      "originPath": "scripts/publish-check/command_source_quotes.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/command_source_quotes.py": "bdbac63186cbf1fc32d0dea316928fcba7b81b6298164fe81cb5ce278aed0732"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/command_source_quotes.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/content_identities.py",
+      "originPath": "scripts/publish-check/content_identities.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/content_identities.py": "c29796b3daf95b24b22fdfd545924e4192ea14b3653e70680bd816c60672eba3"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/content_identities.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/copy_identities.py",
+      "originPath": "scripts/publish-check/copy_identities.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/copy_identities.py": "9b2e620930bf9756939d0f013effb2eb3208dfcb8ad470d8face849359a40961"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/copy_identities.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/der.py",
+      "originPath": "scripts/publish-check/der.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/der.py": "1debcbeec1caa149c979e06979c8f34885264e61e21f0cccf25728674ccfc3d8"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/der.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/destination.py",
+      "originPath": "scripts/publish-check/destination.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/destination.py": "3020b0d197f3e757749eccdbb1db37abf168ed7622d79bab353138d56fed5b8d"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/destination.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/env_values.py",
+      "originPath": "scripts/publish-check/env_values.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/env_values.py": "a2cbbe311d8e43db4bf7cc530d314fa5f7154c99f5d33ea072c24de4353aa1a4"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/env_values.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/font_licence.py",
+      "originPath": "scripts/publish-check/font_licence.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/font_licence.py": "95688834bd02187d508cd9d2da45fc8519cad3abcf24fe7d710ee3d4f82bce51"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/font_licence.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/git_history.py",
+      "originPath": "scripts/publish-check/git_history.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/git_history.py": "e030b91f4c2d5ad967cf52d51916321ad51a37f96ad4e024e5b48339f6f71805"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/git_history.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/github_refs.py",
+      "originPath": "scripts/publish-check/github_refs.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/github_refs.py": "4aac2eab5789f7a3bb190550b788903316775217699a5838582e9c1ff0adbb90"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/github_refs.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/gitleaks.py",
+      "originPath": "scripts/publish-check/gitleaks.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/gitleaks.py": "72281597b995796912339e18e0072e052566df0a30bd52fe1a68c91c9f59ecf5"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/gitleaks.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/gitleaks.toml",
+      "originPath": "scripts/publish-check/gitleaks.toml",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/gitleaks.toml": "1f07ccaadfd4ce6cd7056a44e5464b262cb908bd3124cd2f5b3eeeb0eac2081a"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/gitleaks.toml": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/history_scan.py",
+      "originPath": "scripts/publish-check/history_scan.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/history_scan.py": "335a9334bf16c96afddaea7a245163e68e44e4655de85ef1c94ad2f18dd49501"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/history_scan.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/hit_location.py",
+      "originPath": "scripts/publish-check/hit_location.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/hit_location.py": "adcd3403de1f3a3abaf57518acb14273ae06ace5a17d5136192fadfc2d5f194d"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/hit_location.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/hygiene_config.py",
+      "originPath": "scripts/publish-check/hygiene_config.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/hygiene_config.py": "9beda373434b63499651a583b81d89aa5926126ebe02003145b3ad8d28f88920"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/hygiene_config.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/hygiene_text.py",
+      "originPath": "scripts/publish-check/hygiene_text.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/hygiene_text.py": "fc40e2bee209781daedeef87c570b56a04af8c044ed121905ef1c2f43bdf10f8"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/hygiene_text.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/identity-recipe.mjs",
+      "originPath": "scripts/publish-check/identity-recipe.mjs",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/identity-recipe.mjs": "3340971aebf0f97adaa1969f925f52bd3bb5629c08225fd216b4b06c715fb98c"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/identity-recipe.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/json_identity.py",
+      "originPath": "scripts/publish-check/json_identity.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/json_identity.py": "6da083788a0a5c67b1b7fbe7d17f8eb1e19c89e3c66f180f5f35d2b91bf4b9d3"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/json_identity.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/license-exceptions.json",
+      "originPath": "scripts/publish-check/license-exceptions.json",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/license-exceptions.json": "fe0216169f28b7171ced0f3139a467452eb44e8793c778e17c23e75dea989db3"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/license-exceptions.json": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/licenses.py",
+      "originPath": "scripts/publish-check/licenses.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/licenses.py": "5dc4d9ff275c880295d8b2429c8589f9ecb1b4043afc2af2386697fe532c3853"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/licenses.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/policy.py",
+      "originPath": "scripts/publish-check/policy.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/policy.py": "02166aca1594dcd590cdfdfc402c46af9792d38298eda3d224ca19cd162457bb"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/policy.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/project_identity.py",
+      "originPath": "scripts/publish-check/project_identity.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/project_identity.py": "69c66600a94565a8956459c425cf185e4fcf0d48ecddac1a7d7443521f9a2b8e"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/project_identity.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/provenance_pins.py",
+      "originPath": "scripts/publish-check/provenance_pins.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "54a757808e4f7797a8b5b36c514123b76ec07c37d5ab3d2fcea3cc116c4a4abe"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/provenance_pins.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/provenance.py",
+      "originPath": "scripts/publish-check/provenance.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/provenance.py": "e53399a9ebd67945498d88f509a9f7b110127fb45144025cf46a21eb7f439205"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/provenance.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/public_base.py",
+      "originPath": "scripts/publish-check/public_base.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/public_base.py": "534c76c74393677c095afc201e431831d8344cc322534ee4327b3fec50847c94"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/public_base.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/public_hygiene.py",
+      "originPath": "scripts/publish-check/public_hygiene.py",
+      "revision": "10e569948863b7050e6645b7219b56007953b232",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/public_hygiene.py": "bad119762ac075ab6e9c0b8a91419115f5dd291ced2d0c2efd93061fe5f24373"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/public_hygiene.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/publication_config.py",
+      "originPath": "scripts/publish-check/publication_config.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/publication_config.py": "95f27857b529622706969fdd5d15da02f166adeba3d502884f28c0bac9bed732"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/publication_config.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/publication-config.json",
+      "originPath": "scripts/publish-check/publication-config.json",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/publication-config.json": "d8563d28286e91bf0660e596dc6fb456188c08b1e47cc8c472732b522286a0d3"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/publication-config.json": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/README.md",
+      "originPath": "scripts/publish-check/README.md",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/README.md": "6538febbfa0497943376734ef9131d8d18a1531879d9a82f3c526e960733ee41"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/README.md": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/report.py",
+      "originPath": "scripts/publish-check/report.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/report.py": "e0fe3ae6977862c38f3e5ce019ec8fd0e750e0c2333f7a42bc578048e337c3a4"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/report.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/repository_commands.py",
+      "originPath": "scripts/publish-check/repository_commands.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/repository_commands.py": "757a216ca35ccb8267f756072e7de0e8a1524ce29ad1d3f49b65a08e119b6d03"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/repository_commands.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/repository_intent.py",
+      "originPath": "scripts/publish-check/repository_intent.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/repository_intent.py": "cd51f0fed01eab9ac94d93f14eb2fc6ddd0d1a942a37b642611c483f9c04105d"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/repository_intent.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/reviewed.py",
+      "originPath": "scripts/publish-check/reviewed.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/reviewed.py": "fb6676f8eff7098da50ccf165366305fb08afc5e24c6b733425c4ad3cb8de28e"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/reviewed.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/source_hashes.mjs",
+      "originPath": "scripts/publish-check/source_hashes.mjs",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/source_hashes.mjs": "3b0f7090ada00c7570e6ddbd7096f69c15116261a6c823086c85ddec59df928e"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/source_hashes.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/tree_scan.py",
+      "originPath": "scripts/publish-check/tree_scan.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/tree_scan.py": "4c5cc73e89fc1cefb0eff65872abf535f0713c478721a8d180360659123a9991"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/tree_scan.py": "100644"
+      }
+    },
+    {
+      "path": "scripts/base-cli/scripts/publish-check/trust_bundle.py",
+      "originPath": "scripts/publish-check/trust_bundle.py",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "scripts/base-cli/scripts/publish-check/trust_bundle.py": "5b13b2d51b89cbcfc8a6d9667b1af911f23ee6befbafd60afc9f5ebb7e24e871"
+      },
+      "modes": {
+        "scripts/base-cli/scripts/publish-check/trust_bundle.py": "100644"
       }
     },
     {

@@ -42,7 +42,7 @@ export async function startLifecycleRuntime() {
     }
     if (!(await fetch(`${origin}/wire/init`, { method: "POST" })).ok) throw new Error("wire provider state did not initialise");
     const crons = await declaredCrons(root);
-    if (crons.length === 0) throw new Error("wrangler.jsonc declares no Cron Triggers for rer dev to run");
+    if (crons.length === 0) throw new Error("The deployment template declares no Cron Triggers for rer dev to run");
     schedule = runScheduled({ crons, url: origin, signal: scheduler.signal, report: run => {
       passes.push({ at: new Date().toISOString(), ...run });
       console.log(`RER_SCHEDULED ${new Date().toISOString().slice(0, 19)}Z "${run.cron}" ${run.ok ? "ok" : run.error ?? `status ${run.status}`} ${run.ms ?? 0}ms`);

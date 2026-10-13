@@ -19,6 +19,8 @@ export { planD1Import, createD1ImportJob, readD1ImportJob } from './jobs.ts';
 export { applyD1ImportBatches } from './apply.ts';
 export { undoD1Import, rollbackD1Import } from './reverse.ts';
 export { eraseD1ImportTarget } from './erasure.ts';
+export { retireD1ImportCustody, readD1ErasureJournal } from './retirement.ts';
+export { d1RetirementSchema, d1RetirementAppendOnly } from './retirement-schema.ts';
 export { readD1ImportOriginals } from './originals.ts';
 export { canonicalJson, sha256 } from '../provenance/identity.ts';
 export { PLAN_BYTES_LIMIT, PlanTooLargeError, planContentBytes } from '../plan/size.ts';
@@ -31,7 +33,10 @@ import { applyD1ImportBatches } from './apply.ts';
 import { undoD1Import, rollbackD1Import } from './reverse.ts';
 export async function resumeD1Import(id: string, context: D1ImportContext) {
   context = requestContext(context);
-  const job = await readD1ImportJob(id, context);
+  // Reversal verifies its own authority and custody; reading the whole job
+  // first would make every reversal request cost the full job again.
+  const reversing = await context.storage.database.prepare("SELECT state FROM ik_jobs WHERE id=? AND state IN ('undoing','rolling_back')").bind(id).first();
+  const job = reversing ?? await readD1ImportJob(id, context);
   if (job.state === 'undoing' || job.state === 'undone') return undoD1Import(id, context);
   if (job.state === 'rolling_back' || job.state === 'rolled_back') return rollbackD1Import(id, context);
   return applyD1ImportBatches(id, context);
@@ -66,5 +71,6 @@ export { d1NativeStagingSchema } from './native-staging-schema.ts';
 export { retainedSql } from './retained-values.ts';
 export { cancelD1NativeStaging, cancelD1ErasureStaging } from './native-staging-lifecycle.ts';
 export { d1CustodyStateSchema } from './custody-state-schema.ts';
+export { d1ReversalFenceSchema } from './reversal-fence-schema.ts';
 
 export { d1StreamOriginSchema } from './stream-origin.ts';
