@@ -34,12 +34,13 @@ export function keyboardControls(page, width, checks) {
   async function type(target, text, label) { await focus(target, label); await page.keyboard.press("ControlOrMeta+A"); await page.keyboard.type(text); }
   async function select(target, value, label) {
     await focus(target, label);
-    const values = await target.locator("option").evaluateAll(options => options.map(option => option.value));
-    const index = values.indexOf(value); assert.ok(index >= 0, `${label}: option exists`);
-    await page.keyboard.press("Space");
-    for (let i = 0; i < values.length; i++) await page.keyboard.press("ArrowUp");
-    for (let i = 0; i < index; i++) await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("Enter");
+    const option = await target.locator("option").evaluateAll((options, value) => options.find(option => option.value === value)?.label, value);
+    assert.ok(option, `${label}: option exists`);
+    // Native select type-ahead changes the closed control. OS menu key handling
+    // is distinct from page keyboard dispatch in headless macOS Chromium.
+    await page.keyboard.type(option);
+    await page.keyboard.press("Tab");
+    await page.waitForFunction(({ element, value }) => element.value === value, { element: await target.elementHandle(), value });
     assert.equal(await target.inputValue(), value, `${label}: native keyboard selection committed`);
   }
   async function screenshot(stage) { const path = evidencePath(`keyboard-${width}-${++sequence}-${stage}.png`); await page.screenshot({ path, fullPage: true, caret: "initial" }); const dimensions = await page.evaluate(() => ({ viewport: globalThis.document.documentElement.clientWidth, document: globalThis.document.documentElement.scrollWidth, body: globalThis.document.body.scrollWidth })); checks.push({ width, stage, screenshot: path, dimensions, passed: dimensions.document <= dimensions.viewport + 1 && dimensions.body <= dimensions.viewport + 1 }); }
