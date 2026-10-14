@@ -1,6 +1,6 @@
 import { createMiddleware } from "@tanstack/react-start";
 
-/** Start otherwise accepts an admission JSON refusal as successful loader data. */
+/** Give transport refusals a known load error before Start throws the untyped JSON payload. */
 export const pageLoadTransport = createMiddleware({ type: "function" }).client(({ next }) => next({
   fetch: async (input, init) => {
     const response = await fetch(input, init);
