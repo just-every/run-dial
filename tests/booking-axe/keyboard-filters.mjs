@@ -4,7 +4,13 @@ import { button, field, get } from "./keyboard-controls.mjs";
 export async function bookingFilterKeyboardJourney(page, origin, width, keys, checks, booking) {
   const search = field(page, "Search invitee name or email");
   await keys.type(search, booking.inviteeEmail, "Search booking email");
-  await page.waitForFunction(email => new URL(globalThis.location.href).searchParams.get("query") === email, booking.inviteeEmail);
+  try { await page.waitForFunction(email => new URL(globalThis.location.href).searchParams.get("query") === email, booking.inviteeEmail); }
+  catch (error) {
+    const state = { expected: booking.inviteeEmail, input: await search.inputValue(), query: new URL(page.url()).searchParams.get("query"), focused: await search.evaluate(el => el === globalThis.document.activeElement) };
+    checks.push({ width, check: "Search keyboard input and URL agree", passed: false, state });
+    await keys.screenshot("search-input-failure");
+    throw new Error(`${error.message}: ${JSON.stringify(state)}`);
+  }
   await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
   const state = page.getByRole("radiogroup", { name: "Lifecycle state", exact: true });
   await keys.focus(state.getByRole("radio", { name: "All states", exact: true }), "Booking lifecycle radio group");
