@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { contract } from "./contract.mjs";
+import { stripComments } from "./html-text.mjs";
 import { render } from "./signin-setup/render.mjs";
 
 const privateValues = {
@@ -42,7 +43,7 @@ for (const mode of modes) {
     assert.equal(result.options.setup, true);
     assert.equal(result.html.includes("Set up the first operator"), true);
     assert.equal(result.html.includes(result.options.setupInstructions), true, "retain the published Base instructions");
-    const instructions = result.html.match(/<details\b[^>]*>.*?<p\b[^>]*>(.*?)<\/p>/s)?.[1].replace(/<!--.*?-->/gs, "");
+    const instructions = stripComments(result.html.match(/<details\b[^>]*>.*?<p\b[^>]*>(.*?)<\/p>/s)?.[1] ?? "");
     assert.ok(instructions?.includes("SETUP_TOKEN"), "displayed setup instructions must name SETUP_TOKEN");
     if (mode.local) assert.ok(instructions.includes(".dev.vars"), "local setup must identify .dev.vars");
     else {

@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { build } from "esbuild";
 import { contract } from "./contract.mjs";
+import { stripComments } from "./html-text.mjs";
 
 // HOME-001 adoption. The static marketing landing and the installed public chrome use their real renderers.
 const sourceUrl = "https://github.com/just-every/run-dial";
@@ -30,7 +31,7 @@ const bundle = await build({
   banner: { js: `import {createRequire} from "node:module"; const require = createRequire(${JSON.stringify(process.cwd() + "/package.json")});` },
 });
 const { render, renderFooter, clientMount } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString("base64")}`);
-const text = (html) => html.replace(/<!--[\s\S]*?-->/g, "").replace(/<[^>]+>/g, " ").replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, " ");
+const text = (html) => stripComments(html).replace(/<[^>]+>/g, " ").replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, " ");
 const hrefs = (html) => [...html.matchAll(/<a\b[^>]*\bhref="([^"]*)"/g)].map((match) => match[1]);
 
 const sectionsOf = (html) => [...html.matchAll(/<section\b[^>]*\baria-labelledby="([^"]+)"[^>]*>([\s\S]*?)<\/section>/g)].map((match) => ({ labelledby: match[1], html: match[2] }));
@@ -61,7 +62,7 @@ contract("HOME-001", "the installed public chrome footer shows a configured owne
   t.after(() => { clientMount.deploymentConfig = configured; });
   const footerOf = (html) => text(html.match(/<footer[\s\S]*<\/footer>/)[0]);
   const mentions = (html, name) => footerOf(html).split(name).length - 1;
-  const credit = (html) => hrefs(html).includes("https://runeditrun.com");
+  const credit = (html) => hrefs(html).some((href) => href === "https://runeditrun.com");
   clientMount.deploymentConfig = { ...configured, owner: { name: "Chen Consulting" }, description: "Advice for small studios.", showPoweredBy: true };
   const credited = await renderFooter();
   assert.ok(footerOf(credited).includes("Chen Consulting") && footerOf(credited).includes("Advice for small studios."), "the configured owner and description are shown");

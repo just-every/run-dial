@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { before, after } from "node:test";
 import { contract } from "./contract.mjs";
+import { stripComments } from "./html-text.mjs";
 import { call, data, origin, read, start, stop } from "./embed-document-authorization/runtime.mjs";
 
 const parent = "https://allowed.example.test";
@@ -38,7 +39,7 @@ async function allowed(path, expectedText) {
   assert.ok(response.headers.get("content-security-policy")?.includes(`frame-ancestors ${parent}`), "authorized document frames only its allowed parent");
   assert.equal(response.headers.get("set-cookie"), null);
   const html = await response.text();
-  assert.ok(html.replace(/<!--[\s\S]*?-->/g, "").includes(expectedText), "authorized SSR retains its actual booking content");
+  assert.ok(stripComments(html).includes(expectedText), "authorized SSR retains its actual booking content");
   return payload(result);
 }
 

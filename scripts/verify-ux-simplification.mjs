@@ -1,11 +1,12 @@
 import { evidencePath } from "./evidence-path.mjs";
+import { stripScripts } from "../tests/html-text.mjs";
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { add, authenticate, call, data, neutral, origin, remove, sideEffects, snapshot } from "../tests/ux-simplification/helpers.mjs";
 
 const checks = [], receipts = [];
 const mark = (check) => { checks.push(check); console.log(`PASS ${check}`); };
-const visible = (html) => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+const visible = stripScripts;
 const text = (html) => visible(html).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 async function document(path, expected = 200) {
   const response = await call(path, undefined, expected);
@@ -39,7 +40,7 @@ try {
   const parent = "https://synthetic-parent.example.test";
   await call("/api/app/embed-settings", { allowedOrigins: [parent] }, 200, true, "PUT");
   const embeddedChooseResponse = await call(`/embed/dial-host/intro?parent=${encodeURIComponent(parent)}`);
-  assert.ok(embeddedChooseResponse.headers.get("content-security-policy").includes(parent));
+  assert.ok(embeddedChooseResponse.headers.get("content-security-policy").split(/[\s;]+/).some((source) => source === parent));
   const embeddedChoose = visible(await embeddedChooseResponse.text()); progress(embeddedChoose, "Choose time");
   const requestLink = embeddedChoose.match(/href="([^"]+)"[^>]*>None of these work\?/); assert.ok(requestLink);
   const requestUrl = new URL(requestLink[1].replaceAll("&amp;", "&"), origin);

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { contract } from "./contract.mjs";
+import { decodeAttribute } from "./html-text.mjs";
 import { brandedMailSamples } from "./branded-mail-samples.mjs";
 
 function luminance(hex) {
@@ -21,7 +22,7 @@ function assertMailLayout(html, kind) {
 }
 
 function assertActionLinksMatchText(html, text, kind, layout) {
-  const htmlLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/giu)].map((match) => match[1].replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&#39;", "'"));
+  const htmlLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/giu)].map((match) => decodeAttribute(match[1]));
   for (const href of htmlLinks) assert.ok(text.includes(href), `${kind} text includes HTML action URL ${href}`);
   const textActions = [...text.matchAll(/^(?:Join session|Manage this booking|Add to calendar): (https?:\/\/\S+)$/gmu)].map((match) => match[1]);
   for (const href of textActions) assert.ok(html.includes(`href="${layout.escapeHtml(href)}"`), `${kind} HTML includes text action URL ${href}`);

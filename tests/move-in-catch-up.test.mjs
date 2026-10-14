@@ -185,7 +185,8 @@ contract('DATA-003', 'the switch-over checklist states links, the safe close dat
     assert.equal(csv.status, 200); assert.match(csv.headers.get('content-type'), /^text\/csv/u);
     const lines = (await csv.text()).trim().split('\r\n');
     assert.equal(lines.length, 6);
-    assert.ok(lines.some(line => line.includes('https://schedule.example.test/solo/example-5') && line.includes('/book/dial-host/example-5')));
+    const cells = lines.map(line => line.split(',').map(cell => cell.replace(/^"(.*)"$/u, '$1')));
+    assert.ok(cells.some(row => row.some(cell => cell === 'https://schedule.example.test/solo/example-5') && row.some(cell => cell.endsWith('/book/dial-host/example-5'))));
 
     // Deciding every difference clears that row; nothing here contacts the source.
     for (const email of ['guest-4@example.test', 'guest-6@example.test', 'guest-7@example.test', 'guest-8@example.test', 'guest-9@example.test', 'guest-10@example.test']) await rt.data(`/api/app/move-in/differences/${await bookingFor(email)}/keep`, {});

@@ -2,6 +2,7 @@ import { evidencePath as outputPath } from "./evidence-path.mjs";
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { authenticate, call, data, origin, productRecords, snapshot } from "../tests/availability-diagnostics/helpers.mjs";
+import { stripScripts } from "../tests/html-text.mjs";
 
 const evidencePath = outputPath("selection-refresh-native.json"), checks = [];
 const mark = (message) => { checks.push(message); console.log(`PASS ${message}`); };
@@ -14,7 +15,7 @@ const query = (body, changes = {}) => new URLSearchParams({ nonce: body.nonce, s
 const selectionPath = (event, body, changes) => `/api/public/book/dial-host/${event.slug}/selection?${query(body, changes)}`;
 const detailsPath = (event, body, changes) => `/book/dial-host/${event.slug}/details?${query(body, changes)}`;
 const confirm = (event, body, status) => data(`/api/public/book/dial-host/${event.slug}/confirm`, body, status);
-const visible = (html) => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+const visible = stripScripts;
 async function unchanged(action) { const before = productRecords(await snapshot()); const result = await action(); assert.deepEqual(productRecords(await snapshot()), before, "refresh/refusal must not mutate product data or consume the selection nonce"); return result; }
 function publicOnly(result, eventId, privateLocation) {
   const bytes = JSON.stringify(result); assert.ok(!bytes.includes(eventId)); assert.ok(!bytes.includes(privateLocation));

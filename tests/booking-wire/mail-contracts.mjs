@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { decodeAttribute, hasHref } from "../html-text.mjs";
 
 export const wireMail = snapshot => snapshot.wire_calls.filter(row => new URL(row.url).pathname === "/v3/mail/send").map(row => JSON.parse(row.body));
 export function bookingMail(snapshot, bookingId) {
@@ -30,7 +31,7 @@ export function assertTimeRange(body, html, range, prefix = "", atStart = false,
   assert.ok(html.includes(match[1]), "HTML mail contains the identical plain-text occurrence range");
 }
 export function assertActionParity(body, html) {
-  const htmlLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/giu)].map(match => match[1].replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&#39;", "'"));
+  const htmlLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/giu)].map(match => decodeAttribute(match[1]));
   for (const href of htmlLinks) assert.ok(body.includes(href), "text/plain contains each HTML action URL");
   const actionLinks = [...body.matchAll(/^(?:Join session|Manage this booking|Add to calendar): (https?:\/\/\S+)$/gmu)].map(match => match[1]);
   for (const href of actionLinks) assert.ok(html.includes(`href="${href.replaceAll("&", "&amp;")}"`), "text/html contains each plain-text action URL");
@@ -147,7 +148,7 @@ export function assertLinkReady(snapshot, email, expected = 1) {
     const calendarUrl = new URL(manageUrl);
     calendarUrl.pathname = calendarUrl.pathname.replace(/^\/manage\//u, "/api/public/manage/") + "/calendar.ics";
     assert.ok(body.includes(`Add to calendar: ${calendarUrl.toString()}`));
-    assert.ok(html.includes("https://meet.google.com/aaa-bbbb-ccc"));
+    assert.ok(hasHref(html, "https://meet.google.com/aaa-bbbb-ccc"));
     assert.ok(html.includes("Join session")); assert.ok(html.includes("Manage booking"));
     assert.ok(html.includes("Add to calendar"));
     assertTimeRange(body, html, timeRange(occurrence.start_at, occurrence.end_at, booking.invitee_timezone));

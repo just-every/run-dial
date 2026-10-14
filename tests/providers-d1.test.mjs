@@ -4,6 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { contract } from "./contract.mjs";
+import { hasHref } from "./html-text.mjs";
 
 function assertExactKeys(value, expected, label) {
   assert.ok(value && typeof value === "object" && !Array.isArray(value), `${label} is an object`);
@@ -55,7 +56,7 @@ contract("CAL-003", "a durable calendar command persists Meet readiness and the 
   assert.ok(result.link.payload.html.includes("UTC"));
   assert.ok(result.link.payload.html.includes("Australia/Brisbane"));
   assert.ok(result.link.payload.html.includes("30 minutes"));
-  assert.ok(result.link.payload.html.includes("https://meet.google.com/provider-test"));
+  assert.ok(hasHref(result.link.payload.html, "https://meet.google.com/provider-test"));
   assert.ok(result.link.payload.html.includes("Join session"));
   assert.ok(result.link.payload.html.includes("Manage booking"));
   assert.ok(result.link.payload.html.includes("Add to calendar"));
