@@ -32,6 +32,16 @@ export function keyboardControls(page, width, checks) {
   }
   async function activate(target, label, key = "Enter") { await focus(target, label); await page.keyboard.press(key); }
   async function type(target, text, label) { await focus(target, label); await page.keyboard.press("ControlOrMeta+A"); await page.keyboard.type(text); }
+  async function select(target, value, label) {
+    await focus(target, label);
+    const values = await target.locator("option").evaluateAll(options => options.map(option => option.value));
+    const index = values.indexOf(value); assert.ok(index >= 0, `${label}: option exists`);
+    await page.keyboard.press("Space");
+    for (let i = 0; i < values.length; i++) await page.keyboard.press("ArrowUp");
+    for (let i = 0; i < index; i++) await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    assert.equal(await target.inputValue(), value, `${label}: native keyboard selection committed`);
+  }
   async function screenshot(stage) { const path = evidencePath(`keyboard-${width}-${++sequence}-${stage}.png`); await page.screenshot({ path, fullPage: true, caret: "initial" }); const dimensions = await page.evaluate(() => ({ viewport: globalThis.document.documentElement.clientWidth, document: globalThis.document.documentElement.scrollWidth, body: globalThis.document.body.scrollWidth })); checks.push({ width, stage, screenshot: path, dimensions, passed: dimensions.document <= dimensions.viewport + 1 && dimensions.body <= dimensions.viewport + 1 }); }
   async function restored(target, label) { checks.push({ width, check: `${label}: focus restored to opener`, passed: await target.evaluate(el => el === globalThis.document.activeElement) }); await focus(target, label); }
   async function native(target, label, type, accept, value) {
@@ -57,7 +67,7 @@ export function keyboardControls(page, width, checks) {
     await page.getByRole("heading", { name, exact: true, level: 1 }).waitFor();
     checks.push({ width, check: `${name} navigation leaves logical focus`, passed: await page.evaluate(() => globalThis.document.activeElement !== globalThis.document.body) });
   }
-  return { focus, activate, type, screenshot, restored, native, navigate };
+  return { focus, activate, type, select, screenshot, restored, native, navigate };
 }
 export async function get(page, origin, path) { const response = await page.request.get(origin + path); assert.equal(response.status(), 200, `GET ${path}`); return response.json(); }
 export async function mutation(page, path, action, expected = 200) {

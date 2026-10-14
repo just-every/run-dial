@@ -22,14 +22,12 @@ export async function bookingFilterKeyboardJourney(page, origin, width, keys, ch
   for (let i = 0; i < 2; i++) await page.keyboard.press("ArrowLeft");
   await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
   assert.equal(new URL(page.url()).searchParams.get("state"), "confirmed");
-  await keys.focus(field(page, "Start time"), "Booking temporal filter");
-  await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown"); await page.keyboard.press("Tab");
+  await keys.select(field(page, "Start time"), "past", "Booking temporal filter");
   await page.waitForFunction(() => new URL(globalThis.location.href).searchParams.get("time") === "past");
   await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
   const rows = await get(page, origin, `/api/app/bookings?query=${encodeURIComponent(booking.inviteeEmail)}&state=confirmed&time=past`);
   assert.deepEqual(rows.map(row => row.id), [booking.id]);
-  await keys.focus(field(page, "Event type"), "Booking event filter");
-  await page.keyboard.press("ArrowDown"); await page.keyboard.press("Tab");
+  await keys.select(field(page, "Event type"), booking.eventTypeId, "Booking event filter");
   await page.waitForFunction(id => new URL(globalThis.location.href).searchParams.get("eventTypeId") === id, booking.eventTypeId);
   await keys.screenshot("booking-filters");
   await keys.activate(button(page, "Clear filters"), "Clear booking filters");

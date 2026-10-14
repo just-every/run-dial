@@ -46,8 +46,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks) {
   for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowLeft");
   for (const key of ["ArrowUp", "ArrowRight", "ArrowUp", "ArrowRight", "ArrowUp", "Tab"]) await page.keyboard.press(key);
   const date = await hostDate.inputValue(); assert.match(date, /^\d{4}-\d{2}-\d{2}$/);
-  await keys.focus(field(page, "Schedule for this date"), "Date override mode");
-  await page.keyboard.press("ArrowDown"); await page.keyboard.press("Tab");
+  await keys.select(field(page, "Schedule for this date"), "open", "Date override mode");
   const overrideForm = hostDate.locator("xpath=ancestor::form");
   await keys.activate(button(overrideForm, "Add window"), "Add date-specific open window");
   await mutation(page, `/api/app/event-types/${event.id}/availability-overrides/${date}`, () => keys.activate(button(page, "Save date override"), "Save date override"));

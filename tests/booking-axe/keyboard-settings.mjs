@@ -5,13 +5,11 @@ export async function settingsKeyboardJourney(page, origin, width, keys, checks,
   await keys.navigate("Settings");
   await button(page, "Invite operator").waitFor();
   const destination = field(page, "Destination calendar");
-  await keys.focus(destination, "Calendar destination select");
-  await page.keyboard.press("ArrowUp"); await page.keyboard.press("Tab");
+  await keys.select(destination, "", "Calendar destination select");
   assert.equal(await destination.inputValue(), "");
   await keys.activate(button(page, "Save calendar selection"), "Validate missing calendar destination");
   await page.getByRole("alert").filter({ hasText: "Choose one writable destination" }).waitFor();
-  await keys.focus(destination, "Recover calendar destination");
-  await page.keyboard.press("ArrowDown"); await page.keyboard.press("Tab");
+  await keys.select(destination, "synthetic-calendar", "Recover calendar destination");
   const conflict = page.getByRole("group", { name: "Conflict calendars", exact: true }).getByRole("checkbox");
   await keys.activate(conflict, "Remove conflict calendar selection", "Space");
   await keys.activate(button(page, "Save calendar selection"), "Validate empty conflict selection");
