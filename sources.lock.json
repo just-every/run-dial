@@ -754,7 +754,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "c0c828b8523663e5029aee9e44195140b7eaa2c77380875d1629b5937a4fd280",
+      "sha256": "be9de94288439e78e523ec1cbc3fff2404ab25e4bec25339bf04af34404af872",
       "executable": false
     },
     "BASELINE.md": {
@@ -1898,7 +1898,7 @@
       "executable": false
     },
     "modules/mail/src/core/validation.mjs": {
-      "sha256": "c1f54ba93abdead716f8e647aa5ac05af0b47bafa2055e67682393d16791e89d",
+      "sha256": "1ac9f215ba382b97b487205ae1bc48f82f80cdb30994776234552bc356411344",
       "executable": false
     },
     "modules/mail/src/development/index.d.mts": {
@@ -1978,7 +1978,7 @@
       "executable": false
     },
     "modules/mail/src/inbound/headers.mjs": {
-      "sha256": "79673d562647f4e15e7fe10ca3b13241acd5b2cc25a651a32918cee45e02235c",
+      "sha256": "bad913c85efcb66288b46db6af76a4922fef59b5a0dc21bdccf063533e3e14d2",
       "executable": false
     },
     "modules/mail/src/inbound/index.mjs": {
