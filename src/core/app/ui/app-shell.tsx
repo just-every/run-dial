@@ -69,7 +69,7 @@ export function AppShell() {
         <Button ref={menuButton} variant="secondary" className="min-h-9! px-4" type="button" aria-expanded={menuOpen} aria-controls="operator-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
           Menu
         </Button>
-        {menuOpen ? <div id="operator-mobile-navigation" className="absolute inset-x-4 top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[20px] bg-card p-3 shadow-panel"><SidebarContent bookingLink={setup.state?.links[0]} pathname={pathname} profile={profile} profileError={profileError} onSignOut={signOut} onNavigate={() => setMenuOpen(false)} compact /></div> : null}
+        {menuOpen ? <div id="operator-mobile-navigation" className="absolute inset-x-4 top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[20px] bg-card p-3 shadow-panel"><SidebarContent bookingLink={setup.state?.links[0]} pathname={pathname} profile={profile} profileError={profileError} onSignOut={signOut} onNavigate={() => { setMenuOpen(false); menuButton.current?.focus(); }} compact /></div> : null}
       </header>
       <main className="mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10"><Outlet /></main>
     </div>

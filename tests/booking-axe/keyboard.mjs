@@ -1,10 +1,14 @@
+import { setTimeout as delay } from "node:timers/promises";
 import assert from "node:assert/strict";
 import { timezoneKeyboardJourney } from "./keyboard-timezone.mjs";
 import { trackPage } from "./audit.mjs";
 import { operatorKeyboardJourney } from "./keyboard-operator.mjs";
 import { keyboardControls, button, get } from "./keyboard-controls.mjs";
 export async function keyboardJourney(browser, origin, errors, storageState, checks = []) {
-  if (storageState) await operatorKeyboardJourney(browser, origin, storageState, checks, errors);
+  if (storageState) {
+    await operatorKeyboardJourney(browser, origin, storageState, checks, errors);
+    console.log("Waiting one native admission minute between operator and public keyboard journeys."); await delay(60_000);
+  }
   const owner = storageState ? await browser.newContext({ storageState }) : undefined;
   try {
   for (const width of [1440, 390]) {

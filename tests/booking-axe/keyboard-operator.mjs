@@ -1,3 +1,4 @@
+import { setTimeout as delay } from "node:timers/promises";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { button, keyboardControls, get } from "./keyboard-controls.mjs";
@@ -9,6 +10,7 @@ import { trackPage } from "./audit.mjs";
 
 export async function operatorKeyboardJourney(browser, origin, storageState, checks, errors) {
   for (const width of [1440, 390]) {
+    if (width === 390) { console.log("Waiting one native admission minute between independent operator keyboard viewports."); await delay(60_000); }
     const context = await browser.newContext({ storageState, viewport: { width, height: width === 390 ? 844 : 900 }, locale: "en-US", timezoneId: "UTC" });
     const page = await context.newPage(); trackPage(page, errors);
     const keys = keyboardControls(page, width, checks);

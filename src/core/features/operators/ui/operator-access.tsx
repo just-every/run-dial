@@ -5,6 +5,8 @@ import { SectionHeading } from "../../../app/ui/page-header";
 
 type Operator = { id: string; email: string; setupOperator: boolean; status: "active" | "invited" | "inactive" };
 export function OperatorAccessCard() {
+  const inviteButton = useRef<HTMLButtonElement>(null);
+  const focusAfterRemoval = useRef(false);
   const removalOpener = useRef<HTMLButtonElement | null>(null);
   const [operators, setOperators] = useState<Operator[]>();
   const [currentId, setCurrentId] = useState("");
@@ -13,6 +15,7 @@ export function OperatorAccessCard() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [removing, setRemoving] = useState<Operator>();
+  useEffect(() => { if (!working && focusAfterRemoval.current) { inviteButton.current?.focus(); focusAfterRemoval.current = false; } }, [working]);
   async function load() {
     const response = await api.api.app.operators.$get();
     if (!response.ok) throw new Error(await errorMessage(response));
@@ -41,7 +44,7 @@ export function OperatorAccessCard() {
       const response = await api.api.app.operators[":id"].remove.$post({ param: { id: removing.id } });
       if (!response.ok) throw new Error(await errorMessage(response));
       if (removing.id === currentId) { window.location.assign("/signin"); return; }
-      setRemoving(undefined); setNotice("Operator identity and local mail erased. Authored records are preserved anonymously."); await load();
+      setRemoving(undefined); setNotice("Operator identity and local mail erased. Authored records are preserved anonymously."); await load(); focusAfterRemoval.current = true;
     } catch (reason) { setError(reason instanceof Error ? reason.message : "The result could not be received. Reload operators before retrying."); }
     finally { setWorking(false); }
   }
@@ -60,7 +63,7 @@ export function OperatorAccessCard() {
     {removing ? <div className="mt-5 rounded-[14px] border border-danger-line bg-danger-wash p-4 text-ink"><p className="break-words text-sm font-semibold">Remove access for {removing.email}?</p><p className="mt-2 text-sm">Their identity and local mail will be erased, and their sessions and unused sign-in links will stop working.</p><div className="mt-3 flex flex-wrap gap-3"><Button type="button" variant="danger" disabled={working} onClick={() => void remove()}>Confirm removal</Button><Button type="button" variant="secondary" disabled={working} onClick={() => { setRemoving(undefined); removalOpener.current?.focus(); }}>Keep access</Button></div></div> : null}
     <form className="mt-6 grid gap-3 border-t border-line-soft pt-5 sm:grid-cols-[1fr_auto]" onSubmit={(event) => void invite(event)}>
       <label className="grid gap-2 text-sm font-[650]">Operator email<Input type="email" autoComplete="email" maxLength={320} required value={email} onChange={(event) => setEmail(event.target.value)} disabled={working || !operators} /></label>
-      <Button type="submit" className="self-end" disabled={working || !operators}>{working ? "Saving…" : "Invite operator"}</Button>
+      <Button ref={inviteButton} type="submit" className="self-end" disabled={working || !operators}>{working ? "Saving…" : "Invite operator"}</Button>
     </form>
   </Card>;
 }
