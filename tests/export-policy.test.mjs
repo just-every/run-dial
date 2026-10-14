@@ -116,3 +116,8 @@ contract('DATA-001', 'a dev persona never travels active: its product row is exp
   const real = { ...persona, id: 'r', email: 'owner@example.test', normalized_email: 'owner@example.test' };
   assert.deepEqual(canonicalRow('operators', real), real, 'a real operator is exported as it is');
 });
+
+contract('DATA-001', 'hosted export command retains bounded HTTP/archive and connection causes without exposing source text or credentials', async () => {
+  const { hostedDiagnostics } = await import('./local-setup/hosted-diagnostics.mjs');
+  await hostedDiagnostics();
+});

@@ -1,81 +1,105 @@
 # Install
 
-Dial runs as one Cloudflare Worker with a D1 database, an R2 bucket, queues, a Durable Object and a schedule that runs every minute. This page takes you from the source to a signed-in Dial, first on your computer and then on your own Cloudflare account.
+Dial runs as one Cloudflare Worker with a D1 database, an R2 bucket, queues, a Durable Object and a schedule that runs every minute. This page takes you from a fresh source clone to a signed-in local Dial, then explains deployment to your own Cloudflare account.
 
 ## What you need
 
-- **The source.** Clone it with git, or use your own copy of it:
-
-  ```bash
-  git clone \
-    https://github.com/just-every/run-dial
-  ```
-
-- **Node 22.20.0 and pnpm 10.12.4.** Select these versions yourself before you run anything. Dial checks them and never changes your global tools.
+- **Node 22 or later, npm, and Git.** `rer` needs Node 22 or later to install
+  and run. It selects the exact Node and pnpm versions pinned by Dial when
+  needed.
 - **A Cloudflare account on the Workers Paid plan,** with a workers.dev subdomain and an API token for that account. [Deploy to Cloudflare](#deploy-to-cloudflare) lists the permissions.
 - **A SendGrid account** with an API key and a verified `noreply@` or `no-reply@` sender. See [Calendar and email](calendar-and-email.md#send-mail-with-sendgrid).
 - **A Google Cloud project** is optional, for Google Calendar integration and Google Meet. See [Calendar and email](calendar-and-email.md#connect-google-calendar).
 
-You need none of the accounts to try Dial on your computer. A deployed Dial lives on a `workers.dev` address; deploy accepts no custom domain. For cost and limits, see [the overview](overview.md#cost-and-limits).
-
-> [!NOTE]
-> Run Dial's commands with `pnpm run`, as written on this page. Plain `pnpm setup`, `pnpm deploy` and `pnpm import` are different built-in pnpm commands.
+You need none of the provider accounts to try Dial on your computer. A deployed Dial lives on a `workers.dev` address; deploy accepts no custom domain. For cost and limits, see [the overview](overview.md#cost-and-limits).
 
 ## Run it on your computer
 
-1. In the Dial source folder, install the exact locked dependencies. This is the same as `pnpm install --frozen-lockfile`.
+1. Install `rer` 0.2.2 globally. Use Node 22 or later with npm:
 
    ```bash
-   pnpm run deps
+   npm install -g @runeditrun/rer@0.2.2
    ```
 
-2. Set yourself up as the first owner, using your own address. Setup builds Dial, applies the migrations, writes private settings to `.dev.vars`, makes you the first owner, puts a sign-in message in the local outbox and then stops.
+2. Clone the source and enter the checkout:
 
    ```bash
-   pnpm run setup -- \
-     --owner-email you@example.com
+   git clone https://github.com/just-every/run-dial.git dial
+   cd dial
    ```
 
-3. Start Dial. When it is ready it prints a `RER_READY` line with its address, `http://127.0.0.1:8787` unless you chose another port, and a `RER_SIGN_IN` line with the address of the local outbox.
+3. Start Dial:
 
    ```bash
-   pnpm run dev
+   rer dev
    ```
 
-4. Open the outbox, choose the newest message, then choose **Open this link** and **Confirm**. No email is sent. Your first sign-in opens the setup workspace; see [Finish setup](#finish-setup).
+On a fresh checkout, `rer dev` selects Dial's pinned Node **22.20.0** and pnpm
+**10.12.4**, fetching either into its own cache when needed. It installs the
+locked dependencies and prepares a local development owner automatically. You
+do not need to select those versions or run `rer install` or `rer setup` first.
+Allow network access for the initial downloads. When ready it prints
+`RER_READY`, `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`. Open `RER_OPEN` on this
+computer to start signed in at the local `/setup` workspace. The generated owner
+is local to this checkout. The URL's fragment carries its local development key;
+treat it as a credential and do not share it.
 
-Each sign-in link works once. While Dial is running, this prints the outbox address again:
-
-```bash
-pnpm run outbox
-```
-
-And this puts a fresh sign-in message there:
-
-```bash
-pnpm run outbox -- \
-  --owner-email you@example.com
-```
-
-`pnpm run dev` reloads the app as you edit the source. Stop it with Ctrl-C or with the command below, and it also stops by itself after 30 minutes with no activity.
+If a local workflow needs a chosen owner address, run explicit setup on a fresh
+checkout before its first `rer dev` launch:
 
 ```bash
-pnpm run dev -- --stop
+rer setup --owner-email you@example.com
+rer dev
 ```
 
-`pnpm run preview` serves the production build of the same install instead. Run one of the two at a time, and stop dev with `pnpm run dev -- --stop` before `pnpm run build`: the build refuses while dev owns the local state.
+Setup applies migrations, writes private settings to `.dev.vars`, prepares the
+owner, requests a local sign-in message and then exits. It keeps the saved owner,
+data and settings when repeated, and refuses a conflicting owner or origin. A
+normal fresh-checkout `rer dev` already does this preparation with its local
+development owner. Once the default owner has been created, keep using it on
+later runs; choose a custom owner before the first launch.
 
-`pnpm run doctor` confirms that your Node and pnpm versions match the pinned ones. It reads the process environment, not `.dev.vars`, so on a working local install it still lists `ENVIRONMENT`, `APP_URL` and `SESSION_SECRET` as missing and exits 3; those names matter when you deploy.
+To exercise Dial's email-link sign-in instead of the automatic development
+identity, start it with `--login`:
 
-Running setup again keeps your owner, your data and your private settings exactly as they are, and applies any new migrations. It refuses a different owner email or address rather than replace them, and there is no option to force it. On the first run, `--port 8788` picks another port and `--owner-name` sets your display name.
+```bash
+rer dev --login
+```
+
+Open the `RER_SIGN_IN` outbox, choose the newest message, then choose **Open this
+link** and **Confirm**. No email is sent. Each sign-in link works once. While
+Dial is running, `rer outbox --owner-email EMAIL` requests a fresh link for that
+owner and prints the outbox address again.
+
+`rer dev` reloads the app as you edit the source. Stop it with Ctrl-C or with
+the command below:
+
+```bash
+rer dev --stop
+```
+
+`rer preview` serves the production build of the same install instead. Run one
+of the two at a time, and stop dev with `rer dev --stop` before `rer build`:
+the build refuses while dev owns the local state.
+
+`rer doctor` confirms that your Node and pnpm versions match the pinned ones. It
+reads the process environment, not `.dev.vars`, so on a working local install it
+still lists `ENVIRONMENT`, `APP_URL` and `SESSION_SECRET` as missing and exits 3;
+those names matter when you deploy.
+
+On a manual setup, `--port 8788` picks another port and `--owner-name` sets the
+display name.
 
 To start over, export anything you want to keep (see [Backups and export](backups.md)), then reset:
 
 ```bash
-pnpm run reset -- --yes
+rer reset --yes
 ```
 
-Reset prints exactly what it removes: your local data, the owner, the generated settings and setup's own records. It keeps the source, the dependencies, your archives in `exports/` and your deploy records in `.rer/deploy`. The next setup makes a fresh, empty Dial whose owner starts setup again.
+Reset prints exactly what it removes: your local data, the owner, the generated
+settings and setup's own records. It keeps the source, the dependencies, your
+archives in `exports/` and your deploy records in `.rer/deploy`. The next
+`rer dev` prepares a fresh, empty Dial whose owner starts setup again.
 
 Local setup does not connect Google Calendar. Choosing **Publish event type** turns on automatic bookings for fixed-link, phone and in-person event types using saved weekly availability, existing Dial bookings and the local outbox. Without a connected calendar, external calendar conflicts are not checked. Google Meet requires a healthy connected Google Calendar that supports Meet. To explore calendar integration, run the review demo, which uses a synthetic calendar and mail at `http://127.0.0.1:15702`. Sign in as `operator@dial.test` through its local outbox. Never use it for real bookings.
 
@@ -83,12 +107,15 @@ Local setup does not connect Google Calendar. Choosing **Publish event type** tu
 pnpm run review
 ```
 
+The review demo is an optional package script that needs pnpm 10.12.4 on your
+`PATH`; it is not part of the normal `rer dev` path.
+
 > [!WARNING]
 > Local mode is for one person on one machine. The local outbox shows sign-in links in plain view, so any process or user on your computer that can reach it can sign in as the owner. Keep `.dev.vars`, `.wrangler`, `.seed` and `exports/` private, and out of git.
 
 ## Deploy to Cloudflare
 
-One command, `pnpm run deploy`, builds your committed source, creates what Dial needs in your own Cloudflare account, applies the migrations in order, uploads the Worker and checks its health. Prepare these first:
+One command, `rer deploy`, builds your committed source, creates what Dial needs in your own Cloudflare account, applies the migrations in order, uploads the Worker and checks its health. Prepare these first:
 
 1. **A workers.dev subdomain.** In the Cloudflare dashboard, open Workers & Pages and choose your account's workers.dev subdomain. Without one, deploy stops with `workers-subdomain-missing` before it creates anything.
 2. **An API token.** Create an account API token for that one account with these account permissions: Workers Scripts Edit, D1 Edit, Workers R2 Storage Edit and Queues Edit. If one is missing, deploy names it, for example `token-scope-missing-d1`.
@@ -101,13 +128,13 @@ Then deploy:
 1. Check the deploy on your computer first. This builds Dial and checks the deploy declaration in `deploy.json`. Nothing is deployed and nothing is sent to Cloudflare.
 
    ```bash
-   pnpm run deploy -- --dry-run
+   rer deploy --dry-run
    ```
 
 2. Set the environment variables listed in [Reference: deploy inputs](#reference-deploy-inputs), then deploy. This creates the Worker `dial-production`, the D1 database `dial-production-db`, the R2 bucket `dial-production-files`, the queues `dial-production-jobs` and `dial-production-jobs-dead`, the booking Durable Object and the one-minute schedule, then checks health.
 
    ```bash
-   pnpm run deploy
+   rer deploy
    ```
 
 Deploy records what it created in `.rer/deploy/production.json`, a private file in your checkout. Keep it, and keep a copy somewhere private outside the checkout after each deploy: it is the only proof of which resources are yours. Without it, a later deploy refuses with `resource-name-collision` rather than take over resources it cannot prove it made. Deploy from the same checkout each time, one run at a time.
@@ -115,8 +142,7 @@ Deploy records what it created in `.rer/deploy/production.json`, a private file 
 The default environment is `production`. To deploy a separate install with its own resources and address, name another environment. This one is named `dial-staging`:
 
 ```bash
-pnpm run deploy -- \
-  --environment staging
+rer deploy --environment staging
 ```
 
 Then open `/signin` on your new address, choose **Set up the first operator**, and enter your name and your setup token once. The operator email is the owner email you deployed with. Dial then opens the setup workspace: work through [Finish setup](#finish-setup), and [Calendar and email](calendar-and-email.md) for the connections.
@@ -141,7 +167,7 @@ Setup stays finished. Later connection problems show in Settings and on Overview
 
 ## Reference: deploy inputs
 
-Each input is an environment variable that `pnpm run deploy` reads.
+Each input is an environment variable that `rer deploy` reads.
 
 Every deploy needs:
 

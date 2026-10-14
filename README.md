@@ -46,40 +46,50 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-1. Clone the source with `git clone https://github.com/just-every/run-dial.git dial` and
-   `cd dial`. Use Node **22.20.0** and pnpm **10.12.4**. Install the locked dependencies:
-   `rer install`. `pnpm install --frozen-lockfile` is the
-   equivalent package-manager command. Dependency builds are limited to esbuild
-   and workerd.
-2. Check this first-party declaration with
-   `rer check --profile first-party`.
-3. Set up the real owner using
-   `rer setup --owner-email you@example.com`, or run
-   `rer setup` and answer the owner prompt. Use an address you
-   can access. For automation, supply the owner explicitly and add
-   `--non-interactive`.
-4. Start `rer dev`. After health checks it prints
-   `RER_READY`, `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`. Open that URL on this
-   computer and Dial opens signed in as the owner, in the authenticated `/setup`
-   workspace on a fresh install. `RER_OPEN` carries this checkout's local dev
-   key in its fragment, which the page trades for a cookie: treat the line as a
-   credential and do not share it. `dev --as co-host` starts as the dev
-   co-host (a second operator, `co-host@dev.localhost`) and `dev --as
-   signed-out` starts as a visitor; the badge on every page switches between
-   them. `dev --login` turns dev identity off and prints `RER_SIGN_IN` and
-   `RER_OPEN` for the real email-link path: open the outbox, choose the newest
-   sign-in message, and follow its link. No email is sent. Sign-in forms work
-   before JavaScript hydration. To request a fresh one-use link while the app is
-   running, use `rer outbox --owner-email EMAIL`.
-5. Stop dev with `rer dev --stop` (or Ctrl-C) before
-   `rer verify`. Stop preview with
-   `rer preview --stop` before changing modes, building,
-   verifying, resetting, or moving data.
+Install `rer` 0.2.2 with Node 22 or later and Git, then clone Dial and start it:
 
-Setup builds and migrates the app, prepares its real first owner, requests an
-ordinary sign-in message, then exits with no app running. Repeating setup keeps
-the saved owner, domain data, and private settings; a conflicting owner or
-origin is refused. There is no automatic owner or secret rotation.
+```sh
+npm install -g @runeditrun/rer@0.2.2
+git clone https://github.com/just-every/run-dial.git dial
+cd dial
+rer dev
+```
+
+On a fresh checkout, `rer dev` selects Dial's pinned Node **22.20.0** and pnpm
+**10.12.4**, fetching either into its own cache when needed. It installs the
+locked dependencies and creates a local development owner automatically; you do
+not need to select those versions or run `rer install` or `rer setup` first.
+Allow network access for the first launch. After health checks it prints
+`RER_READY`, `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`. Open `RER_OPEN` on this
+computer to start signed in at the authenticated `/setup` workspace. The
+automatically created owner is local to this checkout. `RER_OPEN` carries this
+checkout's local dev key in its fragment, which the page trades for a cookie:
+treat the line as a credential and do not share it.
+
+If your local workflow needs a chosen owner address, run explicit setup on the
+fresh checkout before its first dev launch, then start dev:
+
+```sh
+rer setup --owner-email you@example.com
+rer dev
+```
+
+Setup builds and migrates the app, writes private settings, prepares the owner
+and exits. It keeps the saved owner, domain data and private settings on repeat
+runs, and refuses a conflicting owner or origin. The ordinary fresh-checkout
+`rer dev` path needs no separate setup command.
+
+`rer dev --as co-host` starts as the dev co-host (a second operator,
+`co-host@dev.localhost`) and `rer dev --as signed-out` starts as a visitor; the
+badge on every page switches between them. `rer dev --login` turns dev identity
+off and prints `RER_SIGN_IN` and `RER_OPEN` for the local email-link path: open
+the outbox, choose the newest sign-in message, and follow its link. No email is
+sent. Sign-in forms work before JavaScript hydration. To request a fresh one-use
+link while the app is running, use `rer outbox --owner-email EMAIL`.
+
+Stop dev with `rer dev --stop` (or Ctrl-C) before
+`rer verify`. Stop preview with `rer preview --stop` before changing modes,
+building, verifying, resetting, or moving data.
 
 ## First-run workspace setup
 
@@ -224,8 +234,8 @@ commands, flags, aliases, pins, and effects. Check validates the declared
 contract; doctor inspects local tools and configuration. Neither proves app
 acceptance, remote deployment, or live provider health.
 
-For package-script forwarding, use `pnpm run VERB -- FLAGS`; in particular,
-`pnpm run deploy -- --dry-run` selects Dial's deploy command. `pnpm deploy` is
-pnpm's built-in dependency command.
+Use the `rer` verbs directly for supported Dial commands. For package scripts,
+use `pnpm run SCRIPT -- FLAGS`; `pnpm deploy` is pnpm's built-in dependency
+command.
 
 Move an existing schedule with the [saved-data importing guide](docs/importing.md).

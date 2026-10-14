@@ -8,7 +8,8 @@ import { acquireExport, renewExport, releaseExport, ArchiveMaintenance, maintena
 import type { AppBindings } from "../../app/bindings";
 import type { OperatorsService } from "../operators";
 
-const reply = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
+const reply = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store", "X-Dial-Archive-Error": error } });
+const archiveFailures = new Set(["archive-migration-history-mismatch", "archive-owner-salt-required", "archive-erasure-incomplete", "archive-unclassified-schema", "archive-object-changed", "archive-object-contains-credential"]);
 /** Export only. Native authority, Origin and job ownership guard every operation. */
 export async function hostedExport(request: Request, env: AppBindings, operators: OperatorsService) {
  const url = new URL(request.url), origin = new URL(env.APP_URL).origin;
@@ -62,7 +63,7 @@ export async function hostedExport(request: Request, env: AppBindings, operators
   return response;
  } catch (error) {
   if (creating && held) await releaseExport(env.DB, lease);
-  return error instanceof ArchiveMaintenance ? maintenanceResponse() : reply("archive_export_refused", 409);
+  return error instanceof ArchiveMaintenance ? maintenanceResponse() : reply(error instanceof Error && archiveFailures.has(error.message) ? error.message : "archive_export_refused", 409);
  } finally {
   // A failed preflight must not retain a lock without a created job.
   if (creating && lease.length && !await env.DB.prepare("SELECT 1 FROM rer_portability_jobs WHERE id=?").bind(lease).first()) await releaseExport(env.DB, lease);
