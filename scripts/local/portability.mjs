@@ -1,5 +1,5 @@
 import { lstat } from 'node:fs/promises';
-import { RerError, refuse, missing } from '../base-cli/cli/errors.mjs';
+import { RerError, refuse, missing } from '@runeditrun/rer/errors';
 // Base's CLI accepts only unserved locations (exports/ or an absolute path outside the checkout) before this hook runs.
 async function transfer({ root, path, journal, store, signal, operationToken, target, origin, sessionFile }, direction) {
  if (target === 'remote' && direction !== 'export') throw refuse('Remote restore is not exposed. Import the hosted archive into an empty local installation.');

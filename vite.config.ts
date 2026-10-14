@@ -10,7 +10,7 @@ import { readRepository } from "./src/core/features/public-site/docs/build/site.
 import { archiveSchema } from "./scripts/archive/schema-plugin";
 import { buildAssets } from "./scripts/build-assets";
 import { retireLocalObservability } from "./scripts/local/observability.mjs";
-import { archiveOutputGuard } from "./scripts/base-onboarding/archive-output.mjs";
+import { archiveOutputGuard } from "@runeditrun/rer/archive-output";
 
 const persistState = process.env.DIAL_PERSIST_STATE_DIR ? { path: process.env.DIAL_PERSIST_STATE_DIR } : true;
 const wranglerConfig = process.env.DIAL_WRANGLER_CONFIG_PATH ?? "wrangler.toml";
@@ -24,25 +24,25 @@ const portabilityRuntimeFiles = [
   "scripts/archive/redaction.mjs", "scripts/archive/private-links.mjs", "scripts/archive/json-values.mjs",
   "scripts/archive/environment-secrets.mjs", "scripts/archive/export-policy.mjs", "scripts/archive/guarded-bucket.mjs",
   "scripts/archive/secret-scanner.mjs", "scripts/archive/json-secret-scanner.mjs",
-  "scripts/base-cli/modules/portability/bridge.mjs",
-  "scripts/base-cli/modules/portability/catalogue.mjs",
-  "scripts/base-cli/modules/portability/copies.mjs",
-  "scripts/base-cli/modules/portability/dev-data.mjs",
-  "scripts/base-cli/modules/portability/export.mjs",
-  "scripts/base-cli/modules/portability/format.mjs",
-  "scripts/base-cli/modules/portability/generated.mjs",
-  "scripts/base-cli/modules/portability/hash.mjs",
-  "scripts/base-cli/modules/portability/http.mjs",
-  "scripts/base-cli/modules/portability/import.mjs",
-  "scripts/base-cli/modules/portability/index.mjs",
-  "scripts/base-cli/modules/portability/journal.mjs",
-  "scripts/base-cli/modules/portability/legacy-safety.mjs",
-  "scripts/base-cli/modules/portability/lines.mjs",
-  "scripts/base-cli/modules/portability/migration-statements.mjs",
-  "scripts/base-cli/modules/portability/payloads.mjs",
-  "scripts/base-cli/modules/portability/provider-data.mjs",
-  "scripts/base-cli/modules/portability/restore-safety.mjs",
-  "scripts/base-cli/modules/portability/storage.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/bridge.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/catalogue.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/copies.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/dev-data.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/export.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/format.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/generated.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/hash.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/http.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/import.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/index.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/journal.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/legacy-safety.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/lines.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/migration-statements.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/payloads.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/provider-data.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/restore-safety.mjs",
+  "node_modules/@runeditrun/rer/modules/portability/storage.mjs",
 ];
 
 // `rer dev` hands the checkout's dev key to `vite dev` alone, which then loads the local-only entry (the dev identity layer). A

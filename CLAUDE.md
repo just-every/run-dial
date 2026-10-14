@@ -3,9 +3,9 @@
 From this checkout root, use Node 22.20.0 and pnpm 10.12.4:
 
 ```sh
-node scripts/rer.mjs install
-node scripts/rer.mjs setup --owner-email you@example.com
-node scripts/rer.mjs dev
+rer install
+rer setup --owner-email you@example.com
+rer dev
 ```
 
 `dev` prints `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`: open that URL on this
@@ -14,16 +14,16 @@ computer and Dial opens signed in as the owner (treat the line as a credential;
 the outbox email link instead, and no external email is sent). A fresh owner's
 first sign-in opens
 authenticated `/setup`; see `OPERATIONS.md` for completion. Stop dev with
-`node scripts/rer.mjs dev --stop` or Ctrl-C before running:
+`rer dev --stop` or Ctrl-C before running:
 
 ```sh
-node scripts/rer.mjs verify
-node scripts/rer.mjs export --output exports/dial.rer
-node scripts/rer.mjs reset --yes
-node scripts/rer.mjs import --input exports/dial.rer --yes
-node scripts/rer.mjs setup --owner-email you@example.com
-node scripts/rer.mjs deploy --dry-run
-node scripts/rer.mjs describe
+rer verify
+rer export --output exports/dial.rer
+rer reset --yes
+rer import --input exports/dial.rer --yes
+rer setup --owner-email you@example.com
+rer deploy --dry-run
+rer describe
 ```
 
 Save private settings securely before reset and restore them, including the

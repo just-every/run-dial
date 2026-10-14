@@ -1,7 +1,7 @@
 import { excluded } from "../../shared/archive-exclusions.mjs";
 import { applicationTables } from "./census";
 import { ErasureError, type PortabilityFence } from "../../../modules/erasure/index.mjs";
-import { createPortability } from "../../../../scripts/base-cli/modules/portability/index.mjs";
+import { createPortability } from "@runeditrun/rer/modules/portability";
 
 const internal = /^(sqlite_(sequence|stat1|stat4)|_cf_METADATA|_cf_KV|d1_migrations|_rer_deploy_migrations|rer_portability_(state|jobs|parts|segments|journal|epochs|guard|owned|snap_[a-zA-Z0-9_]+|stage_[a-zA-Z0-9_]+))$/;
 export async function assertErasureCensus(db: D1Database) {

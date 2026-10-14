@@ -1,3 +1,4 @@
+import { useHydrated } from "../use-hydrated";
 import { OwnerEditorShell } from "../../features/editor/owner-editor";
 import { useHostSetup } from "../../features/host-setup/ui/use-host-setup";
 import { CopyBookingLink } from "../../features/host-setup/ui/copy-booking-link";
@@ -23,6 +24,7 @@ const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
 type ProfileSummary = { name: string; title: string; handle: string };
 
 export function AppShell() {
+  const hydrated = useHydrated();
   const setup = useHostSetup();
   const menuButton = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -55,7 +57,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div data-operator-ready={hydrated} className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
       {initial.editorConfigured ? <OwnerEditorShell /> : null}
       <div className="hidden border-r border-line bg-sidebar lg:block">
         <aside className="sticky top-0 flex h-screen flex-col overflow-y-auto px-5 py-6">
@@ -67,7 +69,7 @@ export function AppShell() {
         <Button ref={menuButton} variant="secondary" className="min-h-9! px-4" type="button" aria-expanded={menuOpen} aria-controls="operator-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
           Menu
         </Button>
-        {menuOpen ? <div id="operator-mobile-navigation" className="absolute inset-x-4 top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[20px] bg-card p-3 shadow-panel"><SidebarContent bookingLink={setup.state?.links[0]} pathname={pathname} profile={profile} profileError={profileError} onSignOut={signOut} onNavigate={() => setMenuOpen(false)} compact /></div> : null}
+        {menuOpen ? <div id="operator-mobile-navigation" className="absolute inset-x-4 top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[20px] bg-card p-3 shadow-panel"><SidebarContent bookingLink={setup.state?.links[0]} pathname={pathname} profile={profile} profileError={profileError} onSignOut={signOut} onNavigate={() => { setMenuOpen(false); menuButton.current?.focus(); }} compact /></div> : null}
       </header>
       <main className="mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10"><Outlet /></main>
     </div>

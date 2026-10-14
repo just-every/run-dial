@@ -1,10 +1,12 @@
-import { localInstaller } from '../base-onboarding/adapter.mjs';
-import { commandAdapter as createCommandAdapter } from '../base-cli/cli/adapter.mjs';
-import { ownerDeploy } from '../base-cli/cli/deploy.mjs';
-import { operatorPrerequisites } from '../base-onboarding/operator-prerequisites.mjs';
+import { localInstaller } from '@runeditrun/rer/local-installer';
+import { commandAdapter as createCommandAdapter } from '@runeditrun/rer/adapter';
+import { ownerDeploy } from '@runeditrun/rer/deploy';
+import { operatorPrerequisites } from '@runeditrun/rer/operator-prerequisites';
 import { prepare, development, preview, temporary } from '../local/targets.mjs';
 import { portability } from '../local/portability.mjs';
 import { features } from './ui/seed.mjs';
+import { assertLegacyStateRecovered } from '../local/legacy-state.mjs';
+import { refuse } from '@runeditrun/rer/errors';
 
 export const lifecycle = localInstaller({
  features, node: '22.20.0', tools: ['node', 'pnpm'], prepare, prepareData: prepare,
@@ -17,6 +19,11 @@ export const lifecycle = localInstaller({
 });
 export const { install } = lifecycle;
 export const commandAdapter = createCommandAdapter(lifecycle, {
+ // @runeditrun/rer 0.2.2's pnpm patch awaits this before its reset inventory.
+ async resetPreflight({ root }) {
+  try { await assertLegacyStateRecovered(root); }
+  catch { throw refuse('Legacy Dial build/setup storage remains or cannot be inspected. Stop the old runtime and recover its original .dev.vars and data before removing the empty legacy directory; no data was changed.'); }
+ },
  site: { entry: "src/site/pages.tsx", output: "dist/site", declaration: "deploy-site.json", config: "vite.site.config.ts" },
  dev: development, preview, verify: ['pnpm', ['run', 'verify:app']], deploy: ownerDeploy('deploy.json', lifecycle), portability,
  localPrerequisites: async ({ root, vars, email }) => vars.ENVIRONMENT === 'development' && vars.MAIL_PROVIDER === 'development' && Boolean(vars.SESSION_SECRET) && await operatorPrerequisites(root, email),

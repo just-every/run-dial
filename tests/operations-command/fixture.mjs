@@ -1,3 +1,4 @@
+import { rerEntry } from '../rer-command.mjs';
 import assert from 'node:assert/strict';
 import { after } from 'node:test';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -32,7 +33,7 @@ after(() => { if (checkout) rmSync(checkout, { recursive: true, force: true }); 
 export function cliRepresentable(env) {
   return Object.values(env).every(value => value === undefined || typeof value === 'string' && !value.includes('\0'));
 }
-export function operationsCommand(env, command = 'doctor', { entry = 'scripts/rer.mjs' } = {}) {
+export function operationsCommand(env, command = 'doctor', { entry = rerEntry } = {}) {
   assert.ok(cliRepresentable(env), 'CLI inputs must be representable by a real OS environment');
   const result = spawnSync(process.execPath, [entry, command, '--json'], {
     cwd: operationsCheckout(), encoding: 'utf8',

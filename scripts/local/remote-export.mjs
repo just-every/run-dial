@@ -1,8 +1,8 @@
 import { readFile, unlink, lstat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
-import { main as transferClient } from '../base-cli/modules/portability/cli.mjs';
-import { readArchive } from '../base-cli/modules/portability/index.mjs';
+import { main as transferClient } from '@runeditrun/rer/modules/portability/cli';
+import { readArchive } from '@runeditrun/rer/modules/portability';
 // The published authenticated HTTP client owns transport, record verification,
 // private output and atomic promotion. Dial cleans its completed source snapshot.
 export async function remoteExport(origin, sessionFile, path) {

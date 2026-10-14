@@ -1,3 +1,4 @@
+import { rerEntry, rerArguments } from '../rer-command.mjs';
 import { cp, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { spawnOwned } from '../native-process/lifecycle.mjs';
@@ -25,7 +26,7 @@ export async function checkout(root) {
 
 export async function run(root, args) {
   let output = '', failed = false, cleanupFailed = false;
-  const owned = spawnOwned(process.execPath, ['scripts/rer.mjs', ...args, '--non-interactive', '--json'],
+  const owned = spawnOwned(process.execPath, rerArguments([rerEntry, ...args, '--non-interactive', '--json']),
     { cwd: root, env: environment() }, { label: 'archive CLI', onOutput: chunk => { output += chunk; } });
   try { await owned.waitForClose(180_000); }
   catch { failed = true; }

@@ -184,8 +184,8 @@
   "externals": [
     {
       "id": "google-calendar",
-      "required": true,
-      "why": "A scheduler must read the host's real busy time and place accepted bookings on the calendar people already use; Cloudflare has no calendar primitive. EVENT-006 blocks normal bookable publication without a healthy destination-calendar connection; its explicit request-only exception offers proposals without bookable slots, and AVAIL-004 fails booking closed without a readable calendar.",
+      "required": false,
+      "why": "A connected calendar supplies busy-time checks and destination events. An explicitly not_connected host can still publish from saved availability with a non-Meet location; a configured but unhealthy connection remains fail-closed, and Google Meet requires a healthy conference-capable calendar. The maintained setup journey covers the calendar-optional case at 1440 and 390 pixels.",
       "data": [
         "host OAuth identity",
         "calendar identifiers",
@@ -212,7 +212,7 @@
     {
       "id": "sendgrid",
       "required": true,
-      "why": "Cloudflare does not provide transactional email delivery. The setup configures SendGrid through mail.sender.v1 for operator sign-in and transactional messages; EVENT-006 blocks normal or request-only publication while the configured mail-provider connection check is unhealthy.",
+      "why": "Dial setup selects SendGrid through mail.sender.v1 for operator sign-in and transactional messages; Dial does not configure an alternate Cloudflare Email Sending adapter. EVENT-006 blocks normal or request-only publication while the configured mail-provider connection check is unhealthy.",
       "data": [
         "operator and invitee email",
         "booking or request content",
@@ -307,19 +307,19 @@
       "name": "GOOGLE_OAUTH_CLIENT_ID",
       "secret": false,
       "required": false,
-      "why": "Identifies the calendar.provider.v2 Google OAuth client. Without a configured and connected calendar, Dial offers no verified availability; provider setup and live OAuth proof require separate acceptance."
+      "why": "Identifies the calendar.provider.v2 Google OAuth client. Without OAuth client configuration, the host cannot connect Google Calendar; an explicitly not_connected host can still publish from saved availability with a non-Meet location. A configured but unhealthy connection remains fail-closed; live OAuth acceptance is separate."
     },
     {
       "name": "GOOGLE_OAUTH_CLIENT_SECRET",
       "secret": true,
       "required": false,
-      "why": "Authenticates the calendar.provider.v2 Google OAuth client during authorisation and token refresh; missing configuration leaves calendar availability fail-closed."
+      "why": "Authenticates the calendar.provider.v2 Google OAuth client during authorisation and token refresh. Missing OAuth credentials prevent a healthy connected-calendar setup; explicit not_connected publication remains available from saved availability with a non-Meet location, while a configured but unhealthy connection fails closed. Google Meet requires a healthy conference-capable calendar."
     },
     {
       "name": "CALENDAR_WEBHOOK_SECRET",
       "secret": true,
       "required": false,
-      "why": "Authenticates calendar.provider.v2 push callbacks together with the registered channel identity; without it, callbacks are rejected and provider health is not established."
+      "why": "Authenticates calendar.provider.v2 push callbacks when a Google Calendar is connected. Without it, callbacks are rejected and connected-calendar health checks cannot succeed; this does not block the explicit not_connected saved-availability/non-Meet publication path. Live callback behavior requires separate acceptance."
     },
     {
       "name": "RESEND_WEBHOOK_SECRET",
@@ -461,15 +461,16 @@
   },
   "operatingCost": {
     "status": "estimated",
-    "estimatedAt": "2026-08-31",
+    "estimatedAt": "2026-10-14",
     "currency": "USD",
-    "basis": "One host, one operator, 1,000 bookings per month, the default two reminders when both offsets apply, four to six transactional emails per unchanged booking, and usage inside Google Calendar's standard quota.",
-    "lowMonthly": 20,
-    "typicalMonthly": 25,
-    "notes": "These figures retain the prior Resend-compatible estimate: Resend Pro is the $20 low case and adding Cloudflare Workers Paid gives the $25 typical case. setup defaults to SendGrid, whose account tier and price have not been estimated here; the Resend figures do not estimate a SendGrid deployment. Smaller Resend-compatible deployments can fit both free allowances. More operators, changes, requests, or retries increase mail volume. Google Calendar standard use currently has no additional charge below its quota, but Google states over-quota billing is planned later in 2026.",
+    "basis": "One host and operator, 1,000 unchanged bookings per month, four to six transactional emails per booking including the default reminders when both offsets apply (4,000–6,000 sends/month), with Google Calendar and Cloudflare usage inside the stated allowances.",
+    "lowMonthly": 19.95,
+    "typicalMonthly": 24.95,
+    "notes": "Twilio SendGrid Essentials 50k was $19.95/month on 2026-10-14; 4,000–6,000 sends use 8–12% of its 50,000 monthly allowance. The low estimate assumes the full Cloudflare runtime fits available free allowances. The typical estimate adds $5/month for Cloudflare Workers Paid, conditional on all metered use staying within included allowances; an owner already paying for that Cloudflare account may incur no additional $5 for Dial. Google Calendar standard use and first-tier R2 usage are assumed within their published free allowances. Estimates exclude overages, domains, taxes, optional tools and paid Google Workspace. The SendGrid trial is limited to 60 days and 100 emails/day, so it is not recurring free service. Extra operators, sign-ins, requests, changes, late Meet links, retries and alerts increase mail volume.",
     "sources": [
+      "https://www.twilio.com/en-us/products/email-api/pricing",
       "https://developers.cloudflare.com/workers/platform/pricing/",
-      "https://resend.com/pricing",
+      "https://developers.cloudflare.com/r2/pricing/",
       "https://developers.google.com/workspace/calendar/api/guides/quota"
     ]
   }

@@ -2,7 +2,7 @@
 // Base service performs every snapshot, encoding, checksum and restore operation.
 import { writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { createPortability, readArchive } from '../../scripts/base-cli/modules/portability/index.mjs';
+import { createPortability, readArchive } from '@runeditrun/rer/modules/portability';
 import { dialPolicy, guardedBucket } from '../../scripts/local/archive-policy.mjs';
 const archives = new WeakMap();
 const vars = { SESSION_SECRET: 'synthetic-test-owner-held-salt' };

@@ -6,7 +6,7 @@ import { personalSource } from './erasure/personal-source.mjs';
 import { snapshot, scan } from './erasure/scan.mjs';
 import { hashToken } from '../modules/operator-auth/crypto.mjs';
 import { dialPolicy, guardedBucket } from '../scripts/local/archive-policy.mjs';
-import { createPortability } from '../scripts/base-cli/modules/portability/index.mjs';
+import { createPortability } from '@runeditrun/rer/modules/portability';
 
 contract('DATA-002', 'native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person', async (context) => {
   const rt = await bookingRuntime({ developmentMail: true });

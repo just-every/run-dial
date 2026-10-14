@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { Button, Card, Input, noticeClassName } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
@@ -7,6 +7,8 @@ type Preview = { bookings: number; requests: number; pending: boolean; operatorI
 type Receipt = { operatorIdentityRetained: boolean; id: string; bookings: number; requests: number; completedAt: string | null; localComplete: boolean; calendarCleanup: string; calendarFailures: (string | null)[] };
 
 export function PersonErasureCard() {
+  const errorId = useId();
+  const [invalidEmail, setInvalidEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [preview, setPreview] = useState<Preview>();
   const [receipt, setReceipt] = useState<Receipt>();
@@ -17,10 +19,10 @@ export function PersonErasureCard() {
   useEffect(() => { if (receipt) receiptElement.current?.focus(); }, [receipt]);
 
   async function inspect(event: FormEvent) {
-    event.preventDefault(); setWorking(true); setError(""); setReceipt(undefined);
+    event.preventDefault(); setInvalidEmail(false); setWorking(true); setError(""); setReceipt(undefined);
     try {
       const response = await api.api.app.privacy.preview.$post({ json: { email } });
-      if (!response.ok) throw Error(await errorMessage(response));
+      if (!response.ok) { setInvalidEmail(response.status === 400); throw Error(await errorMessage(response)); }
       setPreview(await response.json());
     } catch (e) { setError(e instanceof Error ? e.message : "Preview unavailable."); }
     finally { setWorking(false); }
@@ -52,10 +54,10 @@ export function PersonErasureCard() {
   return <Card className="p-5 sm:p-6 xl:col-span-2">
     <SectionHeading icon="people" title="Erase personal data" />
     <p className="mt-3 text-sm leading-6 text-soft">Preview every booking and availability request for an email, then permanently erase their answers, notes, private links, annotations and local mail. Calendar cleanup is tracked separately.</p>
-    {error ? <p role="alert" className={noticeClassName("error", "mt-3")}>{error}</p> : null}
+    {error ? <p id={errorId} role="alert" className={noticeClassName("error", "mt-3")}>{error}</p> : null}
     <form onSubmit={inspect} aria-busy={working} className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
       <label className="grid gap-2 text-sm font-[650]">Person’s email
-        <Input type="text" inputMode="email" autoComplete="email" required maxLength={320} value={email} disabled={working} onChange={event => { setEmail(event.target.value); setPreview(undefined); }} />
+        <Input aria-invalid={invalidEmail} aria-describedby={invalidEmail ? errorId : undefined} type="text" inputMode="email" autoComplete="email" required maxLength={320} value={email} disabled={working} onChange={event => { setEmail(event.target.value); setPreview(undefined); if (invalidEmail) { setInvalidEmail(false); setError(""); } }} />
       </label>
       <Button ref={previewButton} type="submit" variant="secondary" className="self-end" disabled={working}>Preview erasure</Button>
     </form>

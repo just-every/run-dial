@@ -3,7 +3,7 @@
 ## Command path
 
 Run commands from the checkout root. The first-party entry point is
-node scripts/rer.mjs; its command and flag contract is
+rer; its command and flag contract is
 [SEED-COMMAND-CONTRACT.md](SEED-COMMAND-CONTRACT.md). Public package aliases
 delegate to the same CLI. With pnpm, forward flags as
 pnpm run VERB -- FLAGS; use pnpm run deploy -- --dry-run for Dial's deploy
@@ -24,19 +24,19 @@ declaration, and archive policy.
 
 These inspection commands have separate scopes:
 
-- node scripts/rer.mjs check --profile first-party validates the declared
+- rer check --profile first-party validates the declared
   command and operations contract without credentials or app acceptance.
 - node scripts/operations.mjs check and describe forward to the corresponding
   RER commands. Check validates source declarations; a passing check does not
   establish that configuration or providers are ready.
-- node scripts/rer.mjs doctor inspects the process environment through Dial's
+- rer doctor inspects the process environment through Dial's
   configuration validator and required loops, the private local settings,
   canonical state location, and installed Node/pnpm versions. It reports
   aggregate local readiness, missing input names and their declared sources;
   it does not expose input values or contact providers. A failure with no
   missing names can mean invalid supplied configuration or an unmet local
   prerequisite. Review the configuration and tool requirements below.
-- node scripts/rer.mjs describe reports the commands, aliases, flags, pins,
+- rer describe reports the commands, aliases, flags, pins,
   effects, and local state this checkout actually supports.
 
 None of them proves deployment health or live provider access.
@@ -44,7 +44,7 @@ None of them proves deployment health or live provider access.
 ## Local installation and sign-in
 
 Use Node 22.20.0 and pnpm 10.12.4. Install frozen dependencies with
-node scripts/rer.mjs install; pnpm install --frozen-lockfile is the
+rer install; pnpm install --frozen-lockfile is the
 equivalent package-manager operation.
 
 Setup takes the actual first owner's email through an interactive prompt or
@@ -53,8 +53,8 @@ answers for automation; --non-interactive never guesses an owner. Secrets are
 generated or read through the installer and private settings, never accepted as
 CLI values.
 
-node scripts/rer.mjs setup --owner-email you@example.com
-node scripts/rer.mjs dev
+rer setup --owner-email you@example.com
+rer dev
 
 Setup builds the app, applies local migrations, records the first owner, requests
 an ordinary local sign-in message, checks that it reached the outbox, and exits
@@ -87,8 +87,8 @@ follow its link. No email is sent.
 
 The local outbox is at /__dev/outbox; it is guarded to the selected loopback
 origin, is never mounted remotely, and retains up to 100 messages for seven
-days. node scripts/rer.mjs outbox prints the running outbox URL.
-node scripts/rer.mjs outbox --owner-email EMAIL requests a fresh one-use
+days. rer outbox prints the running outbox URL.
+rer outbox --owner-email EMAIL requests a fresh one-use
 sign-in message. Keep the outbox private: any local user or process with access
 to the account can read it.
 
@@ -99,8 +99,8 @@ Setup records the selected loopback origin there. The installer uses the declare
 rer-setup.json fields; it does not introduce a second setup schema.
 
 Dev and preview remain in the foreground. Stop one with
-node scripts/rer.mjs dev --stop or
-node scripts/rer.mjs preview --stop, or with Ctrl-C. The stop command is
+rer dev --stop or
+rer preview --stop, or with Ctrl-C. The stop command is
 idempotent if no server exists. The default idle timeout is 1800 seconds;
 --idle-timeout SECONDS overrides it. A compatible repeated start reuses a
 healthy registered server. Conflicting modes, hosts, ports, or timeouts refuse
@@ -182,7 +182,7 @@ its own incident.
 ## Verification
 
 Run the product's complete local check with
-node scripts/rer.mjs verify after stopping dev and preview. It executes the
+rer verify after stopping dev and preview. It executes the
 declared Dial verification target, including its contract, type, build,
 schema, migration, product, and browser checks. The browser suite includes a
 fresh local clone of the public CLI journey at 1440 and 390 pixels. Generated
@@ -192,9 +192,9 @@ checkout and provider fixtures it exercised; it is not remote health, email
 delivery, production installation, or complete accessibility and capacity
 acceptance. Record remaining evidence separately in [HANDOVER.md](HANDOVER.md).
 
-node scripts/rer.mjs build creates the production Worker and assets. Private
+rer build creates the production Worker and assets. Private
 settings are excluded from build output and restored after the build. Use
-node scripts/rer.mjs preview to serve that fixed output locally; stop it
+rer preview to serve that fixed output locally; stop it
 before building or changing modes.
 
 ## Reset and recovery
@@ -202,7 +202,7 @@ before building or changing modes.
 Reset is destructive local cleanup. Stop dev, preview, and other local
 operations, then review the exact inventory with:
 
-    node scripts/rer.mjs reset --yes
+    rer reset --yes
 
 Reset removes only .wrangler/state, .rer/local, .seed/installer, and the
 declared generated private settings such as .dev.vars and
@@ -226,7 +226,7 @@ if it must survive a reset.
 Stop dev and preview before transfer. Export writes a new owner-only JSON-lines
 archive under exports/; the destination file must not already exist:
 
-    node scripts/rer.mjs export --target local --output exports/dial.rer
+    rer export --target local --output exports/dial.rer
 
 The complete policy covers supported Dial records in D1 and original R2 bytes
 and metadata. It preserves durable owner identity, cancellation guards,
@@ -249,8 +249,8 @@ SESSION_SECRET; do not run setup first. Then import and run setup with the
 original owner email to reissue a fresh local sign-in link. After restore,
 reconnect Google Calendar and run the mail connection check.
 
-    node scripts/rer.mjs import --target local --input exports/dial.rer --yes
-    node scripts/rer.mjs setup --owner-email you@example.com
+    rer import --target local --input exports/dial.rer --yes
+    rer setup --owner-email you@example.com
 
 Archives are format version 2, which binds the manifest and every part. Import
 refuses a version 1 archive (written before Dial adopted Base `59a75ea`) as
@@ -268,7 +268,7 @@ Hosted export uses the same schema proof, exhaustive exclusions, canonicalizatio
 asset scans and salt continuity through the published Base authenticated HTTP
 handler/client. From a stopped local checkout of the exact deployed revision:
 
-    node scripts/rer.mjs export --target remote --origin https://dial.example --session-file .rer/local/hosted-owner.cookie --output exports/hosted.rer
+    rer export --target remote --origin https://dial.example --session-file .rer/local/hosted-owner.cookie --output exports/hosted.rer
 
 The mode-0600 session file holds one native owner cookie, never a URL or provider
 credential. The runtime exposes only `/api/portability/exports`; remote imports
@@ -288,7 +288,7 @@ the old export permanently unusable, so a delayed request cannot publish a mixed
 snapshot. The client aborts its source job after success or failure. If cleanup
 fails, retain the private `.transfer.json` and use the published client to abort:
 
-    node scripts/base-cli/modules/portability/cli.mjs abort --origin https://dial.example --session-file /absolute/private/native-cookie --resume JOB_ID
+    node node_modules/@runeditrun/rer/modules/portability/cli.mjs abort --origin https://dial.example --session-file /absolute/private/native-cookie --resume JOB_ID
 
 Do not operate D1/R2 directly or run deployments/migrations during capture; these
 owner-account actions bypass application admission. A killed application worker
@@ -328,20 +328,20 @@ conditional health; this guide does not claim that boundary is resolved.
 
 A dry run makes no provider requests:
 
-    node scripts/rer.mjs deploy --dry-run
+    rer deploy --dry-run
 
 A real deployment requires CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN,
 the declared production settings, and provider secrets. The owner-account
 command form is:
 
-    node scripts/rer.mjs deploy --environment production
+    rer deploy --environment production
 
 A deployment receipt identifies resources and migrations; it is not by itself
 proof of healthy product use. Provider connection checks, a real first-owner
 sign-in, booking acceptance, and remote health require separate evidence. No
 live deployment or provider acceptance is claimed by this guide.
 
-node scripts/rer.mjs release --repo PATH --output PATH uses Base's release
+rer release --repo PATH --output PATH uses Base's release
 producer and writes its local receipt. It does not push, publish, tag, or
 deploy. Review the actual artifact and receipt before any separately authorized
 publication.
@@ -351,7 +351,7 @@ publication.
 Managed delivery uses the canonical root `rer-setup.json` and source policy in
 `scripts/delivery/base/packaging.json`. Before supplying live account or provider
 credentials, run `node scripts/projects/integrations.mjs check` and, with the
-chosen local runtime inputs, `node scripts/rer.mjs doctor`. The former is a
+chosen local runtime inputs, `rer doctor`. The former is a
 credential-free source check; doctor additionally requires the pinned local
 tools, saved private owner settings and valid process-environment configuration.
 Neither command makes a provider call. Missing or invalid configuration refuses

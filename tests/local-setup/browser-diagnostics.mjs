@@ -7,7 +7,17 @@ const require = createRequire(import.meta.url);
 const axe = createRequire(require.resolve("@axe-core/playwright"))("axe-core");
 const ruleIds = new Set(axe.getRules().map(rule => rule.ruleId).filter(id => typeof id === "string" && /^[a-z][a-z0-9-]*$/.test(id)));
 const impacts = new Set(["serious", "critical"]);
-const checks = new Set(["navigation", "accessibility", "horizontal_overflow"]);
+const checks = new Set([
+  "navigation", "accessibility", "horizontal_overflow",
+  "hosted_profile_write", "hosted_mail_check", "hosted_event_create", "hosted_event_publish",
+  "hosted_link_copy", "hosted_setup_complete", "hosted_public_availability", "hosted_public_selection",
+  "hosted_public_confirm", "hosted_booking_count", "hosted_booking_detail", "hosted_calendar_state",
+  "hosted_answer_preserved", "hosted_management_url",
+]);
+const httpChecks = new Set([
+  "hosted_profile_write", "hosted_mail_check", "hosted_event_create", "hosted_event_publish",
+  "hosted_link_copy", "hosted_setup_complete", "hosted_public_selection", "hosted_public_confirm",
+]);
 const resourceTypes = new Set(["document", "stylesheet", "image", "media", "font", "script", "texttrack", "xhr", "fetch", "eventsource", "websocket", "manifest", "other"]);
 const failures = new WeakMap();
 
@@ -36,7 +46,10 @@ export async function browserCheck(check, action) {
   try { return await action(); }
   catch (error) {
     if (error instanceof Error && !failures.has(error)) {
-      failures.set(error, { check: checks.has(check) ? check : "unclassified", kind: failureKind(error) });
+      const isStatus = value => Number.isInteger(value) && value >= 100 && value <= 599;
+      const status = httpChecks.has(check) && error instanceof AssertionError && isStatus(error.actual) && isStatus(error.expected)
+        ? { actualStatus: error.actual, expectedStatus: error.expected } : {};
+      failures.set(error, { check: checks.has(check) ? check : "unclassified", kind: failureKind(error), ...status });
     }
     throw error;
   }

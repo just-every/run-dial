@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { confirmAuthLink } from '../auth-client.mjs';
 import { snapshot, scan, containsPersonal } from './scan.mjs';
 import { dialPolicy, guardedBucket } from '../../scripts/local/archive-policy.mjs';
-import { createPortability, readArchive } from '../../scripts/base-cli/modules/portability/index.mjs';
+import { createPortability, readArchive } from '@runeditrun/rer/modules/portability';
 
 /** Existing DATA-002 journey: genuine native accounts retain authority while
  * one email confirmation erases their independent invitee facts and capabilities. */

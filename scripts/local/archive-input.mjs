@@ -1,7 +1,7 @@
 import { constants } from 'node:fs';
 import { open, mkdtemp, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { privateFile } from '../base-cli/modules/portability/cli-options.mjs';
+import { privateFile } from '@runeditrun/rer/modules/portability/cli-options';
 // Hold a private immutable copy before validation; a caller replacing or editing
 // the original archive cannot change the records used during restoration.
 export async function snapshotInput(path, root) {

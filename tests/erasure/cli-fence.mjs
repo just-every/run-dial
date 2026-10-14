@@ -1,3 +1,4 @@
+import { rerEntry, rerArguments } from '../rer-command.mjs';
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -7,7 +8,7 @@ import { archiveDiagnostic } from '../archive/command-diagnostics.mjs';
 import { spawnOwned } from '../native-process/lifecycle.mjs';
 import { environment } from '../local-setup/runtime.mjs';
 import { exported, excluded } from '../../scripts/archive/policy.mjs';
-import { readArchive } from '../../scripts/base-cli/modules/portability/index.mjs';
+import { readArchive } from '@runeditrun/rer/modules/portability';
 import { containsPersonal } from './scan.mjs';
 
 const trustTables = ['rer_portability_state', 'rer_portability_epochs', 'rer_portability_journal'];
@@ -56,7 +57,7 @@ export async function resetRetainingJournal(root) {
 export async function refuseOldArchive(root, input) {
   const before = await emptyDestinationTrust(root);
   let output = '', cleanupFailed = false;
-  const process = spawnOwned(globalThis.process.execPath, ['scripts/rer.mjs', 'import', '--target', 'local', '--input', input, '--yes', '--non-interactive', '--json'], { cwd: root, env: environment() }, { label: 'protected old archive import', onOutput: chunk => { output += chunk; } });
+  const process = spawnOwned(globalThis.process.execPath, rerArguments([rerEntry, 'import', '--target', 'local', '--input', input, '--yes', '--non-interactive', '--json']), { cwd: root, env: environment() }, { label: 'protected old archive import', onOutput: chunk => { output += chunk; } });
   try {
     try { await process.waitForClose(180000); } catch { /* expected command refusal; inspect exact reason below */ }
   } finally {

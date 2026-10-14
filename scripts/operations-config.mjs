@@ -46,7 +46,7 @@ export function invalidConfigurationNames(env) {
   const sender = env[senderName];
   if (sender && (!runtimeEnvironmentSchema.shape[senderName].safeParse(sender).success || !/^no-?reply@/i.test(sender))) {
     invalid.push(senderName);
-    console.error(`Set ${senderName} to a verified noreply@ or no-reply@ sender address, then run node scripts/rer.mjs doctor again.`);
+    console.error(`Set ${senderName} to a verified noreply@ or no-reply@ sender address, then run pnpm exec rer doctor again.`);
   }
   return Object.keys(runtimeEnvironmentSchema.shape).filter(name => invalid.includes(name));
 }

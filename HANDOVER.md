@@ -1,47 +1,36 @@
 # Dial handover
 
-## Latest changes (12 Oct 2026)
+## Latest changes (14 Oct 2026)
 
-- Move-in catch-up, source differences and the switch-over checklist extend
-  `DATA-003`; release of an imported booking cancelled at the source is the one
-  stated exception to `NOTIFY-004` (DIVERGENCE.md). Capture facts live in
-  migration 0040's native tables; a catch-up plan keeps only an extract of the
-  records it reviews. Still synthetic-only: no real Calendly export has been
-  checked (see docs/importing.md).
-- `DATA-002`'s authentication rate boundary is closed by Base `dd81be2`'s
-  correlation hook (migrations 0037–0039). `modules/operator-auth/service.mjs`,
-  `accounts/store.mjs` and `index.d.mts` are Dial adaptations outside the Base
-  copy record; carry the `rateCorrelation` hook forward when refreshing them.
-- `NOTIFY-007`: the `connection-watch` coordinator (Durable Object alarm,
-  `src/core/app/connection-watch.ts`) probes the calendar 30 s after each
-  healthy health check, from the moment a connection reads healthy, with the
-  health check's own reads (destination lookup and free/busy over the conflict
-  calendars). A request, the scheduled pass or a probe that sees a healthy
-  connection fail starts an incident, re-checked 10 s and confirmed 20 s later;
-  only the confirmation alerts, and only when the connection stayed unhealthy
-  since the sighting, so a failure no request sees alerts within about 50 s of
-  its onset and an error that clears within the window sends nothing.
-- `rer dev` cannot connect Google Calendar locally, so the switch-over
-  checklist's provider row stays open in a fresh local install; the browser
-  journey proves the fully clear state with the fixture providers.
+- Public `main` was `550f530daa9d5c7eb3b143685e94decb675ac496` at the evidence snapshot. [Verify 38483935052](https://github.com/just-every/run-dial/actions/runs/38483935052) succeeded on that exact SHA: 603 TAP entries passed, with zero failed, cancelled or skipped. The count includes nested entries and is not a count of independent requirements. [Run site 38483935136](https://github.com/just-every/run-dial/actions/runs/38483935136) succeeded on the same SHA; its deploy job ran `rer deploy --site`, then read back `/run` as HTTP 200 and `www` root as HTTP 301 to the canonical domain. This is the pre-round recorded baseline; it certifies only that public SHA.
+- The repository was publicly visible and MIT licensed at the snapshot. Source publication and the site workflow's deployment/readback are observed; tags/releases, live operator installation and real provider use are not established.
+- `DATA-002`'s native authentication rate-attribution blocker is closed by the maintained `rateCorrelation` hook. Known-operator counters and their correlation rows commit in the same D1 batch; migration 0039 retires pre-hook counters. The valid-link operator-removal test verifies that counter and its correlation are removed while an unrelated control survives. Preserve Dial's hook adaptations when refreshing Base copies.
+- The current schema census is 116 application tables, eight static portability tables and `sqlite_sequence` (125 total), after replaying 44 core migrations. `ERASURE.md` lists each table and its erasure/archive classification.
+- Verify 38483935052 on `550f530` includes the maintained OPER-001 `tests/local-setup-journey.test.mjs` path: README public CLI with explicit `--owner-email` at 1440/390, pre-hydration sign-in, repeat setup preserving private configuration, reset refusal/safety, and an archive round-trip restoring local state. It does not exercise a Git-configured email default or interactive prompt; no separate Git-email journey is evidenced.
+- The `connection-watch` coordinator probes a healthy calendar 30 seconds after each successful health check, then confirms a new failure at 10 and 20 seconds. It alerts only if the connection remains unhealthy; brief failures send neither an alert nor a recovery message.
+- Move-in review remains synthetic: no real Calendly export has been checked. Current capacity measurements are tied to their recorded local workload/source; production capacity at manifest limits stays unqualified until the release cut.
+- The keys13 keyboard run completed on source `110b58c13c6ea01b59c28f7c30b4dc71d79991b3` (remote job `20261014T005138829190Z-sd-dial-r6-keys13-30966956`): 344 checks passed, including 214 painted-focus observations and 28 screenshots, with zero failed records or browser errors. It covers main operator and public journeys at 1440/390. Native DOM dialog Tab/Shift+Tab containment, Escape and opener-focus restoration were tested; JavaScript `confirm`/`prompt` used Playwright accept/dismiss, so literal OS key input remains unverified (`AXIsProcessTrusted=false`). A later review added two public-reschedule completion-focus assertions outside this receipt; the final report must state keyboard verification for the exact frozen head. Full manual screen-reader review and the WCAG 2.2 AA target remain open.
+- The exact upstream CLI pin is 0.2.2, which has no adapter reset preflight. Its documented narrow pnpm patch wires in awaited `resetPreflight`, preserves Dial's legacy build/setup storage and credential safety check during local reset, and accepts compatible `patch_hash` values. Package commit `3947e94` passed eight refusal cases with configuration and data preserved; a fresh exported consumer passed frozen install and `rer check`, and integration typecheck passed. The final report must state Verify's disposition for the exact landed head; the pre-round baseline does not certify later changes.
+- SendGrid's published Essentials 50k price was $19.95/month on 14 Oct 2026. At 1,000 bookings and four to six transactional emails each, the estimated 4,000–6,000 sends use 8–12% of that allowance. The $24.95 typical estimate adds Cloudflare Workers Paid at $5; runtime usage remains conditional on included allowances, and taxes, domains, overages, optional tools and paid Google Workspace are excluded. The 60-day, 100-email/day SendGrid trial is not recurring free service.
 
 ## Current implementation boundary
 
-The checkout's public command path is the first-party RER CLI in
-scripts/rer.mjs. Node 22.20.0 and pnpm 10.12.4 are declared and checked.
-OPERATIONS.json version 2 opts into command contract 1 and declares the native
-Dial setup, worker, and sign-in-mail requirements.
+The public command path is supplied by the exact `@runeditrun/rer` 0.2.2
+package pin. `package.json` declares the pin and maps
+`patches/@runeditrun__rer@0.2.2.patch`; `pnpm-lock.yaml` records its frozen
+resolution. The patch adds the awaited adapter `resetPreflight` hook and
+accepts pnpm's patched-version lock suffix. `scripts/installer/local.mjs`
+binds Dial's setup UI, owner inputs,
+deployment declaration, native provider bindings, legacy-reset guard and
+archive policy. OPERATIONS.json version 2 opts into command contract 1 and
+declares Dial's native setup, worker and sign-in-mail requirements. Node
+22.20.0 and pnpm 10.12.4 are declared and checked. The shared package owns
+command parsing, local state coordination, lifecycle and cleanup, and
+portability execution; Dial's adapter supplies its product-specific behavior.
 
-The copied CLI and onboarding sources are pinned and recorded by edition.json,
-base-copies.json, sources.lock.json, and the export inventory. Dial's adapter
-owns its local owner inputs, deployment declaration, native provider bindings,
-legacy-state safety check, and exhaustive archive policy. The shared CLI owns
-argument parsing, local state coordination, lifecycle and cleanup, and
-portability execution.
-
-Local export and import use Base's D1/R2 portability engine with Dial's
-complete table classification and credential policy. Current transfer supports
-local targets only. Remote transfer refuses before provider calls. The archive
+Local export and import use the pinned package's D1/R2 portability engine with
+Dial's complete table classification and credential policy. Current transfer
+supports local targets only. Remote transfer refuses before provider calls. The archive
 preserves durable owner and booking facts and original uploaded object bytes;
 it excludes credentials, sessions, sign-in and invitation links, booking
 capabilities, OAuth credentials, webhook authority, development mail, and
@@ -66,7 +55,8 @@ setup pending.
 ## Move-in evidence boundary
 
 Saved-source import validation remains synthetic-only; no real account export
-has been supplied. The product manifest declares no incumbent replacement.
+has been supplied. The manifest names Calendly, Acuity Scheduling and SavvyCal as
+incumbent products; no real Calendly export has been checked.
 The import guide and source download naming identify the supported saved format.
 The first preview captures its as-of instant when uploaded; repeated previews,
 choice changes, applying and resuming retain that instant. Reselecting files
@@ -90,15 +80,14 @@ The landing at `/` (HOME-001) and the docs at `/docs` (DOCS-001) are covered by
 checks in `tests/runtime.test.mjs` and the public-site journey of the booking
 axe gate, which audits the landing without a host profile and every published
 docs page at 1440 and 390 pixels and checks that a visit leaves browser storage
-empty. The maintained local browser audit passed 7/7 journeys and recorded 68
-actual axe scans in 72 evidence records (four picker diagnostics), with zero
-serious or critical findings and no browser errors. The final bounded run
-passed 203 checks across 83 axe scans, with zero serious or critical findings
-and no browser errors. It includes 33 reflow scans at 320 pixels without
-horizontal overflow, 239 screenshots and 180 keyboard receipts. Playwright
-dismissed the native settings-deletion confirmation; no literal OS Escape
-keypress was exercised. These bounded
-results do not prove complete WCAG conformance or manual screen-reader behavior.
+empty. Earlier local browser receipts passed 7/7 journeys with 68 axe scans in
+72 evidence records (four picker diagnostics), then 203 checks across 83 axe
+scans, 33 reflow scans at 320 pixels without horizontal overflow, 239
+screenshots and 180 keyboard receipts. Those runs recorded zero serious or
+critical findings and no browser errors; their settings-deletion confirmation
+used Playwright dismissal and they did not exercise literal OS Escape. The
+later keys13 keyboard run above is bounded to its exact source. These receipts
+do not prove complete WCAG conformance or manual screen-reader behavior.
 The gate waits one admission minute after the public-site journey. An earlier
 run got its confirmation refused with 429 because that journey shared the
 loopback client's 120-a-minute public budget with the booking journey.
@@ -117,121 +106,15 @@ from using Node globals at type-check time, and a review has to catch it.
 Every Source, Edit-on-GitHub and rewritten GitHub link comes from
 `package.json` `repository.url` (`https://github.com/just-every/run-dial`, the
 source repository `rer-project.json` declares), and the clone command in the
-install guide names the same repository. That is the public repository for
-release 0.1.0; a fork points `repository.url` at its own repository.
+install guide names the same repository. At the current evidence snapshot it
+was public and MIT licensed; tags and releases were not inspected. A fork
+points `repository.url` at its own repository.
 
 ## Acceptance and evidence boundary
 
-The lifecycle clause ledger in [ACCEPTANCE.md](ACCEPTANCE.md#lifecycle-clause-ledger) is the one evidence table for CAL-001, CAL-003 to CAL-008, BOOK-001 to BOOK-003, BOOK-007, BOOK-008, NOTIFY-001 to NOTIFY-003, NOTIFY-005 and NOTIFY-007: which are proven locally by `node scripts/verify-lifecycle-journey.mjs` and named tests, and which only a live Google or SendGrid session can prove.
+The lifecycle clause ledger in [ACCEPTANCE.md](ACCEPTANCE.md#lifecycle-clause-ledger) is the single table for local versus live-only CAL, BOOK and NOTIFY behavior. The exact-SHA public Verify and Run site receipts above are green on `550f530`; earlier failures on `cd10e2e`, `526fd05`, `b272` and `7157875` are historical source-specific results. The recorded run's TAP count is not a count of independent product requirements.
 
-The tests-only archive fixture repair was checked at `526fd05477c705c5ba385917ef547919972e52ab` plus four helper changes. Root's own rerun passed the complete native archive-fence journey, populated migration upgrade and both custom-field journeys (4/4, no skips/cancellations), plus four native origin/privacy checks, typecheck, touched lint, boundaries and manifest validation. The fixture saves its actual ready loopback origin; native reset still refuses an active fixture and succeeds after disposal. Both refused old archives leave application and authority tables empty, no active import, and trusted source identity/epochs/journal unchanged. CLI errors expose only fixed categories and numeric status. No production rule or applied migration changed; no permanent test case was added or removed.
-
-Exact-head Verify `38153546113` on `526fd05477c705c5ba385917ef547919972e52ab` failed with 592/593 passed; its target re-export failure remains unexplained because the old helper discarded output. The separate local default-port reset defect and parser correction are not claimed as that CI cause. The fourth fresh disconnected receipt on `526fd05477c705c5ba385917ef547919972e52ab` passed, including root's empty strict diff and complete cleanup. These source-specific results do not qualify the next integrated head: its actual main SHA, full CI disposition and latest fresh archive receipt are recorded in the maintainers' private verification notes (not published). Full DATA-002 and the release hold remain open at the maintained auth rate-write boundary.
-
-Repository test coverage exercises product and local portability paths with
-native storage and synthetic providers. Those tests do not prove real Google
-Calendar or Meet access, OAuth token longevity, external mail delivery,
-provider webhooks, a deployed installation, or hosted health.
-
-Avatar upload, OPER-003 filters and Unicode search, and private custom-field
-annotations have bounded local evidence. The original focused native run
-passed 9/9 on its recorded implementation revision; a later corrected
-integration passed 11/11 focused native tests, 40 avatar/privacy HTTP boundary
-checks, typecheck and a 430-module client privacy scan. The maintained browser
-audit passed 7/7 journeys; its bounded audit passed 203 checks across 83 axe
-scans with zero serious or critical findings. The local capacity and timing
-receipts are recorded below and in [ACCEPTANCE.md](ACCEPTANCE.md). These
-receipts cover their named local sources and workloads, not full verification
-of the current integrated candidate or production behavior.
-
-The local D1 filter/search timings and follow-up review are recorded in
-[ACCEPTANCE.md](ACCEPTANCE.md); they do not establish production capacity or a
-latency promise.
-The browser-free native capacity receipt covered 100 event types, 1,000 date
-overrides, 20 one-week availability requests (p50 81.80 ms, p95 88.76 ms,
-maximum 93.32 ms), 50 simultaneous operator claims (one winner, 49 clean 409
-refusals), and cancellation release in 121.79 ms. Configurable reminder
-offsets, external-calendar and conference behavior, complete WCAG conformance,
-production capacity at declared limits and timing at those limits remain
-unproved. The person-record and SDK custody repair gate is Done on exact source
-`c86785fc5c886c63dc655c258fb20749722e6042`; full `DATA-002` remains open on the
-separate native rate-attribution key. The cold-host fix
-`c480758c0750e689c0238fe887812241331f0de6` was integrated by main code
-head `b272d047e5f11a284ec0a8e6fa8c88cd1580d065`. Its fresh scoped gate
-and root rerun are qualified on exact prior source
-`7b6576a702e11201b80ad350942f8fd1388b011b`, not `b272`: published 390 px
-passed 1/1 with nine axe scans, `[AUTH-001]` 1/1, three native health-lifecycle
-scenarios and six anonymous/revoked-cookie 401 checks passed, and typecheck,
-targeted lint and assertions were unchanged. Root's scoped rerun passed the
-same health scenarios and 401 checks, targeted tests 2/2 with zero
-failure/skip/cancel and nine axe scans, and typecheck. The initial concurrent-
-docs `/signin` navigation returned `ERR_ABORTED` before bootstrap or sign-out;
-Markdown HMR is plausible but direct causation and the triggering frame were
-not captured. After docs writes were held, the unchanged ordinary journey
-passed. See the maintainers' private verification notes (not published).
-
-Before this documentation integration, `main` was at
-`7157875bc8c8c41c956d49a5dad8589ce45a3be9`, and the repair source was
-`d32ccb74c5f21a2f2b7470c85dd02b63551cfad6`. This is pre-integration provenance
-only; the final main status is read from the repository's Verify runs.
-Part 6's disconnected archive/restore/re-export and setup/dev/preview no-key
-closure passed on code head `b272d047e5f11a284ec0a8e6fa8c88cd1580d065` and again
-on documentation head `7157875bc8c8c41c956d49a5dad8589ce45a3be9`. The receipts
-are the maintainers' private verification notes (not published); both strict comparators and
-root's independent reruns exited 0 with empty output, and their exact disposable
-state and owned processes were cleaned up. Three earlier failed iterations
-exposed an evidence-helper lookup gap and importer staging-name normalization;
-all are preserved, and the final comparators normalized only documented
-generated staging names. Verify runs `38139915110` (`b272`) and `38141489719`
-(`7157875`) both completed **FAIL**, each with 571/593 passed, 22 failed and
-zero skipped/cancelled. They predate the final source and test repairs now on
-`d32ccb74c5f21a2f2b7470c85dd02b63551cfad6`. The bounded exact-`d32` compatibility gate
-is Done: the six existing CI families passed 18/18 and the person-erasure
-integration passed 2/2 (20/20 total); independent H4/H5/H7 passed 3/3; typecheck
-and touched-file lint passed, with no new correctness or destructive-data
-finding. Root independently reran the exact `d32` candidate: the same seven
-native test files passed 20/20, H4/H5/H7 passed 3/3, and typecheck plus
-touched-file lint exited 0. See the maintainers' private verification notes (not published). These bounded
-checks do not establish whole Verify or full release acceptance. Consult
-the maintainers' private verification notes (not published) for the actual final docs-bearing SHA, full
-Verify disposition and latest archive receipt. See
-[ACCEPTANCE.md](ACCEPTANCE.md), the maintainers' private verification notes (not published) for the current boundary.
-
-The delayed operator-recipient repair on `d32ccb7` changes five production files:
-each connection-alert, booking confirmation/reminder/cancellation and
-alternative-request producer rechecks live native and product authority in the
-same `INSERT ... SELECT` that stores recipient mail. ID, access generation,
-normalized email, active status, and nonremoved/nonerased product state must
-still match. A stale operator command is omitted after removal and fresh
-invitation; the surrounding booking/request and eligible invitee commands still
-commit. The bounded worker evidence records before counts of 1 connection alert,
-3 booking/reminder rows, 1 cancellation and 1 alternative-request notice, then
-zero for each after the fix, and 12/12 TAP entries including the parent. The
-separate root pre-fix reproduction did not run because its queue depth was nine;
-the before counts are from the scoped worker evidence only. Recovery insertion
-was audited and remains unchanged because it selects from the live source row.
-No migration changed. See the maintainers' private verification notes (not published).
-
-Four CI compatibility commits followed the two failing historical Verify
-runs: `c050bc1` repaired durable-source mail fixtures (17/17), fresh held-out
-fixtures (8/8) and the invoking case; `e46b97c` aligned the documentation
-manifest's 25 source files with 7 published and 18 GitHub-only files (6/6 plus
-root's rerun); `1ff6c5c` isolated provider/control tables in `PROVIDER_DB`
-without changing the application schema (writer 4/4); and `453dfee` covered
-ordinary removal, fresh native identity and protected-owner holds (writer 2/2).
-The independent `d32` compatibility review covered the complete 20-path diff,
-including five production mail-admission files and 15 test/fixture paths. It
-also ran the existing person-erasure journey 2/2, held-out H4/H5/H7 3/3,
-typecheck, touched-file lint, and light syntax/whitespace checks; the report
-records no gaps. Root's separate rerun passed the same native journeys and
-focused checks. Neither bounded result replaces full Verify. See
-the maintainers' private verification notes (not published).
-
-No production deployment, live provider acceptance, source publication, tag,
-or public release is claimed here. A dry-run command or local fixture is not
-remote acceptance. Release metadata, local artifacts, deployment receipts,
-provider verification, and owner-observed production use are separate evidence
-surfaces.
+Source publication and the site workflow's deploy/readback are observed. They do not prove live Google Calendar/Meet or SendGrid behavior, an owner-account operator installation, hosted recovery, a live booking, package publication or a tagged release. The latest disconnected archive receipts qualify older heads; a fresh exact-candidate archive qualification remains open. See [ACCEPTANCE.md](ACCEPTANCE.md) for the release gate and open obligations.
 
 ## Bounded local acceptance: parts 1–4
 
@@ -276,128 +159,22 @@ Values stay out of public documents and mail. The registry is source
 composition; no runtime package loader is claimed. The full extension
 consumption table and accepted look details below remain intact.
 
-The native 9/9 run and original root benchmark used implementation revision
-`11e44e12b4b4757844bd2e46200876f256cf9c26`. Boundary and manifest checks
-passed on product integration `2eb3326`, and typecheck exited 0. The final
-browser auditor source was `c4393dc`; the later commits in that audit lane
-changed helpers only, not product source. Root subsequently added additive
-auth migration `0031_auth_domain_rules_step_up.sql` and moved the byte-identical
-avatar, search and sidecar migrations to 0032–0034. The root gate then passed
-typecheck, five focused tests and a native held-out avatar check. These
-source-specific checks do not determine final integrated verification; consult
-the maintainers' private verification notes (not published) for its actual final-head disposition.
+These are historical, source-specific measurements: the initial native run and benchmark used `11e44e12b4b4757844bd2e46200876f256cf9c26`, later product integration checks used `2eb3326`, and the bounded avatar/privacy correction at `efdc6f2655da2791ad1b674f11c9e078f8c66407` passed 11/11 focused tests, 40 HTTP boundary checks and typecheck. The latter review found no orphan R2 bytes during the reproduced D1-write outage or after healthy retry, and its emitted-module scan covered 430 browser modules. These receipts retain only their recorded scope; the exact-SHA public Verify disposition is listed above.
 
-The corrected integrated implementation `efdc6f2655da2791ad1b674f11c9e078f8c66407` subsequently passed the root's own 11/11 focused native rerun, 40 HTTP boundary checks and typecheck, together with a fresh native review. The avatar failure/recovery proof now preserves the prior pointer and has no orphan R2 bytes during the continuing D1-write outage or after healthy retry. The emitted-module privacy scan covered 430 modules. These later bounded receipts supersede the earlier five-test summary above; they do not claim final-head archive, erasure or production acceptance.
+## Open work before the release cut
 
-## Inherited authentication verification boundary
+The rate-attribution implementation gap is closed on the current source baseline. `modules/operator-auth/service.mjs` supplies `rateCorrelation`; `accounts/store.mjs` batches correlation statements with authentication counters; `src/core/features/erasure/operator-graph.ts` declares the rate edges removed with an operator; migration `0039_retire_uncorrelated_rate_rows.sql` retires counters created before correlation. `tests/operator-removal-mail.test.mjs` covers a valid-link confirmation, removal of its counter and index entry, and preservation of an unrelated control. The old native run that left a valid-confirmation counter is pre-hook historical evidence, not current behavior.
 
-The authentication predecessor at ab52675 includes migration 0030; CI run
-38120226998 succeeded with 583/583 reported tests. The final OPER-001 m1
-full verification after its stop fix remains unproven: the earlier final run
-required cleanup after a SIGKILL and also hit an unrelated process timeout
-under load 50. This handover carries the predecessor's CI result only; it does
-not claim that final local full verification or repeat it.
+Invitee-only person erasure intentionally retains the associated operator identity; self/setup/last-owner removals remain held. Reachable local SDK observability rows have bounded logical-retirement evidence, while physical SQLite page sanitization and external provider/mail logs are not established. Already delivered mail and independent provider records cannot be recalled by the installation.
 
-The new Base hooks `beforeMagicLink` and `afterConfirm` do not provide an
-atomic rate-write hook. Keep the narrow authentication rate-write requirement
-in Part 5 open; adding migration `0031_auth_domain_rules_step_up.sql` does not
-close that erasure boundary. A real native valid-link confirmation run leaves
-one attributable confirmation-rate key after ordinary operator removal; the
-invitation key is gone and an unrelated control rate row remains. The result is
-recorded in the maintainers' private verification notes (not published). No global purge, auth fork, or
-unmaintained SQL interception was introduced.
+Before a release cut:
 
-The erasure design memo is approved. Dial adopted its 11-file runtime helper at
-Base `4eed99c6a4ca708a9db70d4b5759f5678053cdf5` and retained the whole CLI
-source origin `3d643dda1d203d36e3fa57e8e5ba14e414bba6f9`. The helper adoption is
-not evidence of a green current Base aggregate gate: the newer aggregate
-recorded 14/24 passing stages, with failures also present on the inherited
-baseline. Do not report it as green.
-
-The independent erasure review found that an operator-email overlap hold also
-blocked the person-level invitee erasure journey. Both that correction and the
-SDK custody correction are integrated in exact source
-`c86785fc5c886c63dc655c258fb20749722e6042`; its source-scoped gate remains
-qualified on that SHA. The fresh
-scoped gate in the maintainers' private verification notes (not published) is Done with no new correctness or
-requirement gaps in those two repairs. Ordinary co-host and protected self
-each had two bookings and one request; one confirmation erased all matching
-invitee records and truthfully reported `operatorIdentityRetained: true`. The
-native identity, credentials, sessions and setup state remained unchanged
-until a separate authorized operator-removal operation. Self/setup/last-owner
-identity-removal holds remain in force.
-
-The scoped gate passed 12/12 touched native tests, typecheck and lint. Its
-actual product observability preparation retired 2,644 reachable SDK rows,
-including two positive canaries, to zero, created no new rows and left nine
-D1 and seven R2 control files byte-identical. Seven actual SDK lifecycle fault
-cases and hydrated Settings checks at 390/320 px also passed with truthful
-disclosure, settled keyboard focus, reflow, zero axe violations and no page or
-console errors. Root independently reran eight SDK fault cases and 2/2 native
-person-erasure journeys (zero fail/skip/cancel) plus typecheck; it also
-confirmed same-store retirement and control-file preservation. These receipts
-prove logical reachable-row retirement only, not physical page sanitization
-or external-log deletion. Gate-created processes, faults and scratch state were
-removed; no owned process or remote job remains. The independent native
-valid-confirmation rate key still survives ordinary removal, so this does not
-complete `DATA-002`.
-
-The current census in `ERASURE.md` covers 105 application tables, eight static
-portability tables and `sqlite_sequence` (114 readable SQLite tables total).
-The earlier person-record correction receipt is
-the maintainers' private verification notes (not published); the scoped integrated correction gate
-is the maintainers' private verification notes (not published), with root rerun in
-the maintainers' private verification notes (not published). The source lock and offline copy check
-on `c86785f` covered 274 Base CLI/onboarding files plus 11 erasure helper files
-with zero drift and zero unrecorded copies (the maintainers' private verification notes (not published)).
-This does not qualify the full Base aggregate or close the separate rate
-boundary.
-
-## Final-head evidence and remaining acceptance
-
-1. The code-head Verify on `b272d047e5f11a284ec0a8e6fa8c88cd1580d065` was run
-   `38139915110`; the documentation-head Verify on
-   `7157875bc8c8c41c956d49a5dad8589ce45a3be9` was run `38141489719`. Both
-   finished **FAIL**, 571/593 passed, 22 failed and zero skipped/cancelled.
-   The earlier `38134122328` run finished **FAIL**,
-   588/589 passed, one failed and zero skipped/cancelled, on
-   `cd10e2e49db6e408d8bbdea4fb9217e516132ab5`; it fixed the original profile,
-   SSR-build and restore-notice failures but left the cold-host failure. The
-   all-source repair is now committed at `d32ccb74c5f21a2f2b7470c85dd02b63551cfad6`.
-   Its bounded exact-head compatibility gate passed as described in
-   the maintainers' private verification notes (not published); root's independent exact-source rerun
-   also passed, as recorded in the maintainers' private verification notes (not published). These scoped
-   checks do not establish whole Verify. Consult
-   the maintainers' private verification notes (not published) for the actual final docs-bearing SHA and
-   full Verify disposition. Migrations `0035_person_erasure.sql` and
-   `0036_person_record_erasure.sql` are additive; earlier applied migration
-   bytes remain unchanged.
-2. Part 6's disconnected fresh-clone setup/avatar/custom-fields/booking/erased-
-   person export, import and re-export passed on exact code head `b272` and the
-   later exact documentation head `7157875`. Both comparators and root reruns
-   exited 0 with zero output; each receipt also proved no-key closure under
-   `rer setup`, `rer dev` and `rer preview`, plus dev archive-path refusal. See
-   the maintainers' private verification notes (not published) for the two completed receipts.
-3. The `d32ccb7` delayed-recipient repair has bounded native evidence in
-   the maintainers' private verification notes (not published): outbox inserts
-   now atomically validate the selected native/product identity and no longer
-   retain the erased operator's row after genuine removal and reenrollment;
-   the ordinary booking/request commands and invitee mail still commit. Root's
-   independent pre-fix reproduction did not execute at queue depth nine. This
-   bounded source proof does not establish whole Verify; consult
-   the maintainers' private verification notes (not published) for the final docs-bearing-head disposition.
-4. Close the separate rate-attribution boundary with a maintained atomic
-   rate-write hook, correlated identity admission, a narrowly scoped legacy
-   ephemeral-window retirement, and populated-upgrade/valid-link/alias/
-   late-write proof. The one valid-confirmation key remains after ordinary
-   removal; full `DATA-002` is still open.
-5. The final OPER-001 m1 journey remains unproved and was not duplicated.
-
-The repository already sets `RER_SERVER_JOURNEY=1` for
-`tests/local-setup/runtime.mjs`; `onboarding/fill.mjs` is absent and the
-foundation branding-prepare guard does not apply. Whole WCAG conformance,
-production capacity, live Google Calendar/owner-gated acceptance, external provider
-receipts, publication and release remain separate owner gates.
+1. The final report must identify the exact landed SHA and its Verify disposition. The `550f530` result is the pre-round public baseline and certifies no later edits.
+2. Obtain a fresh disconnected setup/archive/restore/re-export receipt for the exact release candidate. Existing `b272` and `7157875` receipts qualify only those earlier heads.
+3. The keys13 keyboard receipt covers main operator/public journeys at 1440/390 and native DOM dialog Tab/Shift+Tab, Escape and opener-focus restoration. JavaScript `confirm`/`prompt` used Playwright accept/dismiss; literal OS key input remains unverified because `AXIsProcessTrusted=false`. The two later public-reschedule completion-focus assertions are outside that receipt; the final report must state their result on the exact frozen head. Full manual screen-reader review and the WCAG 2.2 AA target remain open.
+4. Recheck the exact 0.2.2 CLI patch in the integrated exact-head gate. The bounded package proof is complete: awaited adapter reset preflight with the legacy reset safety check preserved, eight refusal cases retaining configuration/data, and fresh exported-consumer frozen install plus `rer check`.
+5. Keep capacity at declared limits unqualified until the release cut; retain the dates, source heads, workload sizes and actual timings of the historical local measurements above.
+6. Complete owner-account deployment, live Google Calendar/OAuth/Meet, SendGrid delivery/callback, hosted recovery, and real operator booking acceptance. Keep the Git-configured email default/prompt path unqualified; the explicit `--owner-email` flow is covered only by the recorded baseline above.
 
 ## Deployment migration exception
 
@@ -484,4 +261,4 @@ Every manifest extension ID is accounted for below. “No registry consumer” d
 Local lane verification: `nice -n 15 node --test --test-concurrency=1 tests/custom-fields.test.mjs tests/export-base-adoption.test.mjs tests/export-json-numbers.test.mjs tests/export-restored-behavior.test.mjs` passed 9/9 on Node 22.20.0. The native custom-field route cases use real workerd/D1 and the current native session implementation; existing profile and event public reads return 200 without the planted annotation, and a production cancellation mail delivered to the native development outbox contains none. The populated prior-schema migration preserves every preexisting application table, and the actual shared archive exports/restores/reexports the route-written annotations equivalently. This does not establish the outer `createWorker` document envelope or browser fidelity; the central Dial 7 audit owns screenshots at 1440/390 and source-bundle/public-document checks. The initial proof harness used archive fixture IDs that core routes correctly rejected; its identities now use valid ULIDs throughout. A second fixture correction uses the product-required no-reply sender for real cancellation delivery. No production rule or test expectation was relaxed.
 
 
-The adjacent-main launcher integration was checked on `5cb7574799d02d898ce1feb35e5d035536220963`: 17/17 native HTTP/private-file checks, the affected AVAIL-009 journey (1/1), typecheck and lint of 21 changed source files passed. Product, schema and production Vite configuration were unchanged from the corrected 11-test implementation above. Root restored the inherited-key isolation and bounded audit/capacity dispatch before this check. This narrow receipt was followed by completed disconnected archive receipts on `b272` and `7157875`; consult the maintainers' private verification notes (not published) for the actual final docs-bearing-head archive result.
+The adjacent-main launcher integration was checked on `5cb7574799d02d898ce1feb35e5d035536220963`: 17/17 native HTTP/private-file checks, the affected AVAIL-009 journey (1/1), typecheck and lint of 21 changed source files passed. Product, schema and production Vite configuration were unchanged from the corrected implementation. This narrow receipt and the later disconnected archive receipts on `b272` and `7157875` qualify only their recorded heads.

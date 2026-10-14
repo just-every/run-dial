@@ -2,9 +2,9 @@ import { open, unlink } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { Readable } from 'node:stream';
 import { resolve } from 'node:path';
-import { createPortability, readArchive, PortabilityError } from '../base-cli/modules/portability/index.mjs';
-import { absent, privateFile, promote } from '../base-cli/modules/portability/cli-options.mjs';
-import { readSettings } from '../base-onboarding/adapter-settings.mjs';
+import { createPortability, readArchive, PortabilityError } from '@runeditrun/rer/modules/portability';
+import { absent, privateFile, promote } from '@runeditrun/rer/modules/portability/cli-options';
+import { readSettings } from '@runeditrun/rer/adapter-settings';
 import { snapshotInput } from './archive-input.mjs';
 import { dialPolicy, guardedBucket } from './archive-policy.mjs';
 async function* records(path) {

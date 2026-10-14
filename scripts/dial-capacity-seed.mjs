@@ -20,7 +20,7 @@ try {
     const result = await runIsolatedCapacityBenchmark(runs);
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {
-    throw new Error("Usage: stop the local app with `node scripts/rer.mjs dev --stop`, then run `node scripts/dial-capacity-seed.mjs seed`; restart the app and run `node scripts/dial-capacity-seed.mjs bench --origin <loopback-origin> [--runs 20]`. For an isolated synthetic local D1 HTTP benchmark, run `node scripts/dial-capacity-seed.mjs local-bench [--runs 20]`.");
+    throw new Error("Usage: stop the local app with `pnpm exec rer dev --stop`, then run `node scripts/dial-capacity-seed.mjs seed`; restart the app and run `node scripts/dial-capacity-seed.mjs bench --origin <loopback-origin> [--runs 20]`. For an isolated synthetic local D1 HTTP benchmark, run `node scripts/dial-capacity-seed.mjs local-bench [--runs 20]`.");
   }
 } catch (error) {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);

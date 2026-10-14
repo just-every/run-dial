@@ -48,17 +48,17 @@ Licensed under the [MIT License](LICENSE).
 
 1. Clone the source with `git clone https://github.com/just-every/run-dial.git dial` and
    `cd dial`. Use Node **22.20.0** and pnpm **10.12.4**. Install the locked dependencies:
-   `node scripts/rer.mjs install`. `pnpm install --frozen-lockfile` is the
+   `rer install`. `pnpm install --frozen-lockfile` is the
    equivalent package-manager command. Dependency builds are limited to esbuild
    and workerd.
 2. Check this first-party declaration with
-   `node scripts/rer.mjs check --profile first-party`.
+   `rer check --profile first-party`.
 3. Set up the real owner using
-   `node scripts/rer.mjs setup --owner-email you@example.com`, or run
-   `node scripts/rer.mjs setup` and answer the owner prompt. Use an address you
+   `rer setup --owner-email you@example.com`, or run
+   `rer setup` and answer the owner prompt. Use an address you
    can access. For automation, supply the owner explicitly and add
    `--non-interactive`.
-4. Start `node scripts/rer.mjs dev`. After health checks it prints
+4. Start `rer dev`. After health checks it prints
    `RER_READY`, `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`. Open that URL on this
    computer and Dial opens signed in as the owner, in the authenticated `/setup`
    workspace on a fresh install. `RER_OPEN` carries this checkout's local dev
@@ -70,10 +70,10 @@ Licensed under the [MIT License](LICENSE).
    `RER_OPEN` for the real email-link path: open the outbox, choose the newest
    sign-in message, and follow its link. No email is sent. Sign-in forms work
    before JavaScript hydration. To request a fresh one-use link while the app is
-   running, use `node scripts/rer.mjs outbox --owner-email EMAIL`.
-5. Stop dev with `node scripts/rer.mjs dev --stop` (or Ctrl-C) before
-   `node scripts/rer.mjs verify`. Stop preview with
-   `node scripts/rer.mjs preview --stop` before changing modes, building,
+   running, use `rer outbox --owner-email EMAIL`.
+5. Stop dev with `rer dev --stop` (or Ctrl-C) before
+   `rer verify`. Stop preview with
+   `rer preview --stop` before changing modes, building,
    verifying, resetting, or moving data.
 
 Setup builds and migrates the app, prepares its real first owner, requests an
@@ -97,7 +97,7 @@ metadata, not as evidence that historical setup actions occurred.
 
 ## Local runtime and data
 
-Dev serves source edits through Vite HMR. Run `node scripts/rer.mjs preview`
+Dev serves source edits through Vite HMR. Run `rer preview`
 to serve the fixed production Worker and assets. Both are managed foreground
 servers on loopback, share the same owner and durable data, and print readiness
 only after health and outbox checks pass. Compatible repeat starts reuse the
@@ -132,7 +132,7 @@ local proxy that forwards to the loopback port gets 404. The outbox retains up t
 Dev sessions and personas never reach a deployment or an export: `rer build`
 refuses output that bundles the dev layer and `rer deploy` refuses the key.
 
-`node scripts/rer.mjs reset --yes` removes only the inventoried local runtime
+`rer reset --yes` removes only the inventoried local runtime
 state, CLI bookkeeping, installer state, and generated private settings. Stop
 all RER processes first. Reset refuses active operations and unsafe or
 ambiguous state; it preserves source, dependencies, `exports/` archives, and
@@ -146,7 +146,7 @@ Stop dev or preview before data movement. Export to a new archive path under
 `exports/`:
 
 ```sh
-node scripts/rer.mjs export --output exports/dial.rer
+rer export --output exports/dial.rer
 ```
 
 The owner-only JSON-lines archive includes Dial's durable database records and
@@ -164,8 +164,8 @@ with the same `SESSION_SECRET` before importing. Do not run setup first, because
 that creates an owner and makes the destination nonempty:
 
 ```sh
-node scripts/rer.mjs import --input exports/dial.rer --yes
-node scripts/rer.mjs setup --owner-email you@example.com
+rer import --input exports/dial.rer --yes
+rer setup --owner-email you@example.com
 ```
 
 Import applies the local migrations, validates the complete archive and schema,
@@ -181,14 +181,14 @@ files are preserved byte for byte.
 
 ## Deploy and release
 
-`node scripts/rer.mjs deploy --dry-run` builds and validates locally without
+`rer deploy --dry-run` builds and validates locally without
 provider requests. A real deployment is a separate owner-account operation:
-`node scripts/rer.mjs deploy --environment production`. It requires the
+`rer deploy --environment production`. It requires the
 configured Cloudflare account and production secrets. Local checks and the dry
 run do not establish remote health, email delivery, Google Calendar access, or
 production acceptance.
 
-`node scripts/rer.mjs release --repo PATH --output PATH` creates the declared
+`rer release --repo PATH --output PATH` creates the declared
 local release artifact and receipt. It does not push, publish, or deploy. No
 tag, public publication, or production deployment is claimed here.
 
@@ -215,7 +215,7 @@ checkout by default, and the run checks that tracked inputs were not changed.
 Synthetic providers are confined to tests and the separate review runtime;
 these checks do not prove live provider access or deployment acceptance.
 
-Useful read-only commands are `node scripts/rer.mjs describe`, `doctor`, and
+Useful read-only commands are `rer describe`, `doctor`, and
 `check --profile first-party`. Describe reports the current checkout's actual
 commands, flags, aliases, pins, and effects. Check validates the declared
 contract; doctor inspects local tools and configuration. Neither proves app

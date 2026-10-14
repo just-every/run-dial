@@ -25,7 +25,7 @@ Export writes a new file that only you can read, and it refuses to overwrite an 
 Sign in as an owner through the normal email link. Privately save just the native session cookie as `name=value` in `.rer/local/hosted-owner.cookie` inside the stopped checkout with permissions `0600`. Do not paste the cookie into a command, log, issue or archive. From a stopped local checkout of the same Dial revision:
 
 ```bash
-node scripts/rer.mjs export --target remote \
+rer export --target remote \
   --origin https://your-dial.example \
   --session-file .rer/local/hosted-owner.cookie \
   --output exports/hosted-dial.rer
