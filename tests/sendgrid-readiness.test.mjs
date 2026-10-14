@@ -7,7 +7,7 @@ const compiled = await build({ entryPoints: [new URL("../src/core/platform/mail/
 const { BaseMailSender } = await import(`data:text/javascript,${encodeURIComponent(compiled.outputFiles[0].text)}`);
 const senderUrl = "https://api.sendgrid.com/v3/verified_senders";
 const domainUrl = (offset = 0) => `https://api.sendgrid.com/v3/whitelabel/domains?limit=100&offset=${offset}`;
-const config = { MAIL_PROVIDER: "sendgrid", MAIL_API_KEY: "synthetic-readiness-key", MAIL_FROM: "noreply@business.example", MAIL_WEBHOOK_KEY: "synthetic-verification-key" };
+const config = { MAIL_PROVIDER: "sendgrid", MAIL_API_KEY: "synthetic-readiness-key", MAIL_FROM: "noreply@business.example" };
 const validDomain = { domain: "business.example", valid: true };
 const fullPage = Array.from({ length: 100 }, (_, index) => ({ domain: `unrelated-${index}.example`, valid: true }));
 
@@ -84,7 +84,7 @@ test("NOTIFY-006 malformed Single Sender responses never fall through to domain 
 });
 
 test("NOTIFY-006 missing configuration and non-no-reply addresses fail before provider calls", async () => {
-  for (const overrides of [{ MAIL_API_KEY: undefined }, { MAIL_FROM: undefined }, { MAIL_WEBHOOK_KEY: undefined }, { MAIL_FROM: "person@business.example" }, { MAIL_FROM: "noreply@a@business.example" }]) {
+  for (const overrides of [{ MAIL_API_KEY: undefined }, { MAIL_FROM: undefined }, { MAIL_FROM: "person@business.example" }, { MAIL_FROM: "noreply@a@business.example" }]) {
     const { sender, calls } = probe([], overrides);
     await assert.rejects(sender.checkConnection(), fails(overrides.MAIL_FROM ? "invalid_delivery_payload" : "missing_configuration"));
     assert.deepEqual(calls, []);

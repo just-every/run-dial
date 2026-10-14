@@ -134,6 +134,15 @@ export/import must cover every supported resource. Remote transfer is optional
 and requires complete resource coverage; an unsupported remote target fails
 with exit 4 and names the missing capability.
 
+Dial enables authenticated hosted export with its native owner session, covering
+all classified durable tables and every FILES object, with declared credential
+exclusions. Hosted archive import is not exposed. Its local restore requires an
+empty destination, the original owner salt and the exact source migration/schema
+proof; it preserves destination migration bookkeeping and rejects changed hashes
+or unfinished migration claims. The hosted deploy adapter uses the pinned
+package’s D1 `importSql` transport for deployment migrations, independently of
+archive restore.
+
 Independent projects without an adapter use `OPERATIONS.json` v2 `commands.NAME.argv`, `inputs`, effects, environmentSources and loops. Execute argv directly with shell false in the checkout, forwarding explicit arguments after `--` unchanged; never translate them into Cloudflare/pnpm/Base behavior. Common wrapper flags are consumed before the separator. No declared verb means exit 4, not an inferred command/fallback. Existing v1 inspection remains supported. Do not infer runnable commands from the platform registration descriptor's shell strings. No global pins, aliases, installer, outbox, state layout or required verb set is imposed on independent projects; runtime requirements remain project-owned. Independent check still validates the actual declaration and refuses missing/outside-checkout inputs.
 
 ## Acceptance clauses

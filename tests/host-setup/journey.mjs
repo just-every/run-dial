@@ -62,7 +62,7 @@ export async function hostJourneys(origin, scenario) {
           assert.deepEqual(await response.json(), [], "fresh native activity lists are empty");
         }
         assert.equal((await (await page.request.get(origin + "/api/app/host-setup")).json()).completedAt, null);
-        step = "fresh setup"; await overviewHealth(page, origin, { calendar: "disconnected", mail: "unhealthy" }); await scan("fresh");
+        step = "fresh setup"; await overviewHealth(page, origin, { calendar: "disconnected", mail: "unchecked" }); await scan("fresh");
         step = "private redirect and reload"; await page.goto(origin + "/app/bookings"); await page.waitForURL(origin + "/setup"); await page.reload(); await expect(page.getByRole("list", { name: "First-run checklist" })).toBeVisible();
         step = "sign out"; await page.getByRole("button", { name: "Sign out", exact: true }).filter({ visible: true }).click(); await page.waitForURL(origin + "/signin");
         // Native local outbox/Confirm flow; never persist a capability URL or screenshot it.

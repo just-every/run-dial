@@ -46,7 +46,7 @@ Everything durable:
 - Alternative requests, delivery attempts, settings and the audit trail.
 - Calendar connection details and sync state, without the credentials.
 
-Each part of the archive is checked before restore, and an archive whose tables do not match this version of Dial is refused.
+Each part of the archive is checked before restore. Use the exact source revision that made the archive: unknown tables or indexes, changed migration hashes, missing entries in the migration ledger, and unfinished hosted migration claims are refused. Local Wrangler history and hosted installer history have different bookkeeping columns; those differences do not change your application schema. Restore keeps the destination’s migration ledger.
 
 ## What it leaves out
 

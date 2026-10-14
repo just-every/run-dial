@@ -36,10 +36,6 @@
       "binding": "MAIL_FROM",
       "environment": "MAIL_FROM",
       "verifyStandIn": "noreply@dial.test"
-    },
-    {
-      "binding": "MAIL_WEBHOOK_KEY",
-      "environment": "MAIL_WEBHOOK_KEY"
     }
   ],
   "queues": [

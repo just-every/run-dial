@@ -57,7 +57,7 @@ This is version 0.1.0. The scheduling and request workflows work and are covered
 - How long a Google sign-in lasts before you must reconnect.
 - A deploy with `pnpm run deploy` to a real Cloudflare account. Its tests use a stand-in for Cloudflare's API.
 
-Export and restore work for an install on your computer. A deployed install cannot be exported or restored yet.
+Export supports local installs and a hosted install through its native owner session. Restore goes into an empty local installation; hosted restore is not exposed. See [Backups and export](backups.md) for the commands and private settings to keep. Live provider recovery remains unverified.
 
 The local browser review does not establish full WCAG 2.2 AA conformance, and local timing measurements do not prove production capacity. Complete data erasure and the final disconnected export-and-restore receipt are still in progress.
 
@@ -78,7 +78,7 @@ These figures are the author's estimates, not measured or load-tested. For one h
 1. [Install](install.md) takes you from the source to a working Dial, on your computer or on Cloudflare.
 2. [Your booking page](booking-page.md) covers your profile, event types, availability and the client experience.
 3. [Calendar and email](calendar-and-email.md) connects Google Calendar and SendGrid.
-4. [Backups and export](backups.md) saves a private copy of a local install's data and restores it.
+4. [Backups and export](backups.md) saves a private copy of local or hosted data and restores it into an empty local install.
 5. [Updating](updating.md) shows how to take a new version safely.
 
 The [changelog](../CHANGELOG.md) lists what is in each version. Dial is MIT licensed; the licence is in [LICENSE](../LICENSE).

@@ -122,7 +122,7 @@ The adjacent-main launcher integration on `5cb7574799d02d898ce1feb35e5d035536220
 
 ## Calendar-optional booking
 
-`tests/host-setup-journey.test.mjs` includes the calendar-optional published setup at 1440 and 390 pixels. This exercises the explicit `not_connected` cold-host case with saved availability and a non-Meet location. Connected-calendar failure and recovery remain separate; Google Meet still requires a healthy conference-capable connection.
+`tests/host-setup-journey.test.mjs` includes the calendar-optional published setup at 1440 and 390 pixels. This exercises the explicit `not_connected` cold-host case with saved availability and a non-Meet location. Publishing is the explicit action that enables real bookings; setup and the publication controls disclose that disconnected bookings do not check external calendar conflicts. The maintained journey covers a signed-out booking, receipt and reload, competing claims, reschedule and cancellation without calendar jobs or provider calls, then connects a calendar and verifies selection and confirmation fail closed during a provider outage with no booking or delivery side effects. Google Meet still requires a healthy conference-capable connection. These are local synthetic-provider assertions; the final candidate run must supply the receipt, and live Google acceptance remains open.
 
 ## Hosted export
 

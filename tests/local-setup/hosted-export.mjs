@@ -11,6 +11,7 @@ import { openGateFromLink } from '../dev-key.mjs';
 import { anotherHostedOwner } from './hosted-authority.mjs';
 import { answer } from './hosted-records.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
+import { publishedPackage } from './published-package.mjs';
 import { expiredCheckpoint } from './hosted-checkpoint.mjs';
 
 async function inspect(path) {
@@ -20,7 +21,8 @@ async function inspect(path) {
 }
 /** Ordinary native application upload/session, hosted HTTP transport and public
  * CLI import in an independent empty checkout. No fake application endpoints. */
-export async function hostedExportJourney(page, { origin, privateBytes, values, records, stopSource, checkpointState }) {
+export async function hostedExportJourney(page, { hostedMigrations, origin, privateBytes, values, records, stopSource, checkpointState }) {
+ const publishedProof = await publishedPackage();
  const directory = await freshCopy(); let destination, context;
  const evidence = { source: 'real-local-hosted-standin', liveProviderCalls: false };
  try {
@@ -59,6 +61,7 @@ export async function hostedExportJourney(page, { origin, privateBytes, values, 
   assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 200);
   await runRer(directory, ['export', '--target', 'remote', '--origin', origin, '--session-file', sessionPath, '--output', 'exports/hosted.rer']);
   let source = await inspect(join(directory, 'exports/hosted.rer'));
+  assert.deepEqual(source.manifest.migrations, hostedMigrations, 'hosted applied migration history travels in the Base manifest');
   assert.equal((await stat(join(directory, 'exports/hosted.rer'))).mode & 0o077, 0);
   assert.deepEqual(source.manifest.tables.map(table => table.name).sort(), exported);
   for (const name of Object.keys(excluded)) assert.ok(source.manifest.excludedTables.includes(name));
@@ -68,9 +71,8 @@ export async function hostedExportJourney(page, { origin, privateBytes, values, 
   assert.equal(asset.sha256, createHash('sha256').update(png).digest('hex'));
   const bytes = Buffer.concat(source.records.filter(record => record.kind === 'part').flatMap(record => record.items.filter(item => item.kind === 'object' && item.key === profile.avatarKey).map(item => Buffer.from(item.data, 'base64'))));
   assert.deepEqual(bytes, png);
-  if (process.env.DIAL_PUBLISHED_RER_ENTRY) {
-   const packageEntry = process.env.DIAL_PUBLISHED_RER_ENTRY;
-   const packageInfo = JSON.parse(await readFile(new URL('../package.json', 'file://' + packageEntry), 'utf8'));
+  if (publishedProof) {
+   const packageEntry = publishedProof.entry;
    let captured = '';
    const published = spawnOwned(process.execPath, [packageEntry, 'export', '--target', 'remote', '--origin', origin, '--session-file', sessionPath, '--output', 'exports/published.rer', '--json'], { cwd: directory, env: environment() }, { label: 'published rer hosted export', onOutput: chunk => { captured += chunk; } });
    try { await published.waitForClose(180_000); }
@@ -80,7 +82,7 @@ export async function hostedExportJourney(page, { origin, privateBytes, values, 
    const publishedSource = await inspect(join(directory, 'exports/published.rer'));
    assert.equal(publishedSource.closing.contentHash, source.closing.contentHash);
    source = publishedSource;
-   Object.assign(evidence, { publishedCliExecuted: true, publishedPackage: packageInfo.name, publishedVersion: packageInfo.version });
+   Object.assign(evidence, publishedProof.receipt);
   }
   assert.equal((await fetch(origin + '/api/app/profile', { headers: { Cookie: cookie } })).status, 200, 'successful CLI cleanup reopens source');
   await stopSource();
@@ -123,7 +125,7 @@ export async function hostedExportJourney(page, { origin, privateBytes, values, 
   await runRer(directory, ['preview', '--stop']); await destination.owned.stop(); destination = undefined;
 
   await assert.rejects(fetch(origin + '/health'), 'source remains unavailable after target proof');
-  Object.assign(evidence, { passed: true, completeTableCoverage: true, tables: source.manifest.tables.length, objects: source.manifest.objects.length, contentHash: source.closing.contentHash, sourceArchiveSha256: createHash('sha256').update(source.bytes).digest('hex'), independentEmptyDestination: true, saltMismatchRefused: true, sessionAndOriginRefused: true, otherNativeOwnerRefused: true, remoteImportNotExposed: true, bytesAndMetadataEquivalent: true, publicBookingAndAnswer: true, freshRuntimeRestoredBooking: true, oldSessionRefused: true, nonemptyRestoreRefused: true, originalOwnerClaimPreserved: true });
+  Object.assign(evidence, { passed: true, completeTableCoverage: true, hostedTrackedLedgerToLocalRestore: true, tables: source.manifest.tables.length, objects: source.manifest.objects.length, contentHash: source.closing.contentHash, sourceArchiveSha256: createHash('sha256').update(source.bytes).digest('hex'), independentEmptyDestination: true, saltMismatchRefused: true, sessionAndOriginRefused: true, otherNativeOwnerRefused: true, remoteImportNotExposed: true, bytesAndMetadataEquivalent: true, publicBookingAndAnswer: true, freshRuntimeRestoredBooking: true, oldSessionRefused: true, nonemptyRestoreRefused: true, originalOwnerClaimPreserved: true });
  } finally {
   await context?.close(); await destination?.owned.stop();
   await writeFile(evidencePath('hosted-export-roundtrip.json'), JSON.stringify(evidence, null, 2), { mode: 0o600 });

@@ -56,11 +56,35 @@ To stop booking mail for yourself, tick **Mute booking mail for me** under **You
 1. Choose a sender starting with `noreply@` or `no-reply@`. Dial refuses to send from anything else.
 2. In SendGrid, verify that exact address as a Single Sender, or authenticate its exact domain.
 3. Create an API key with Mail Send (`mail.send`) permission and read access to verified senders and authenticated domains.
-4. In SendGrid, enable the Event Webhook with your Dial address followed by `/api/webhooks/sendgrid`, so bounces reach Dial. Your address is known before you deploy; see [Deploy to Cloudflare](install.md#deploy-to-cloudflare). Turn on its signed requests option (Signature Verification) to reveal the public verification key.
-5. Give all three to your first deploy: the sender as `MAIL_FROM`, the API key as `SENDGRID_API_KEY` and the verification key as `MAIL_WEBHOOK_KEY`, as in [Reference: deploy inputs](install.md#reference-deploy-inputs). Deploy stores them as Worker secrets.
-6. After you deploy, choose **Check sender** under **Transactional mail** in **Settings**. It reads your SendGrid account and sends no test email.
+4. Give the sender as `MAIL_FROM` and the API key as `SENDGRID_API_KEY` to your first deploy, as in [Reference: deploy inputs](install.md#reference-deploy-inputs). Deploy stores them as Worker secrets.
+5. After you deploy, choose **Check sender** under **Transactional mail** in **Settings**. It reads your SendGrid account and sends no test email. A successful actual check is required before publishing or opening requests.
 
-The first deploy stops before it creates anything if any of the three is missing. Later deploys keep the stored values and do not replace them when you change the variables. Without the verification key the sender check fails, and no event type can be published or opened for requests.
+The first deploy stops before it creates anything if the API key or sender is missing. Later deploys keep the stored values and do not replace them when you change the variables. Before the first sender check, Settings says **Not yet checked**; a missing-configuration result is only reported after a check finds missing required inputs.
+
+### Optional delivery and bounce tracking
+
+Mail can be sent and events can be published without `MAIL_WEBHOOK_KEY`. Settings shows that delivery and bounce tracking is off. Dial still rejects unsigned callbacks; disabling tracking never accepts unverified events.
+
+To turn tracking on:
+
+1. In SendGrid, enable the Event Webhook with your deployed Dial address followed by `/api/webhooks/sendgrid`. Enable Signature Verification and copy its public verification key.
+2. In your own checkout, add this entry to the `secrets` array in `deploy.json` (keep the existing entries):
+
+   ```json
+   { "binding": "MAIL_WEBHOOK_KEY", "environment": "MAIL_WEBHOOK_KEY" }
+   ```
+
+3. Put `MAIL_WEBHOOK_KEY=your-public-verification-key` in a private, owner-readable `0600` environment file outside the repository. With your usual Cloudflare deployment credentials available, run from the checkout that deployed Dial:
+
+   ```sh
+   pnpm exec rer deploy --environment production --set-secret MAIL_WEBHOOK_KEY --env-file /absolute/private/mail-tracking.env
+   ```
+
+4. Reload Dial Settings. Tracking shows as on; callbacks must still have a valid signature. Repeated provider events remain idempotent.
+
+This opt-in declaration is needed because the current `rer` deployment tool only provisions declared secrets; it has no optional-secret field. For a first deploy with tracking already enabled, add the declaration first and supply the key alongside your other deploy inputs. Without this opt-in, no webhook key is required. Subsequent deploys retain stored Worker secrets.
+
+Use `rer` for the secret change: it records the Worker's new version in the deployment receipt. Editing the secret directly in the provider dashboard would leave that receipt stale and can block later deployments. To turn tracking off, keep the declaration and run `pnpm exec rer deploy --environment production --unset-secret MAIL_WEBHOOK_KEY`; rer records the removal so later deploys do not require the retired secret. Set it again with the command above to resume tracking.
 
 ## The local outbox
 

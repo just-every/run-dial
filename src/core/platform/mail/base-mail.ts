@@ -32,7 +32,6 @@ export function createAuthenticationMail(db: D1Database, runtime: RuntimeEnviron
 export class BaseMailSender implements MailSender {
   constructor(private readonly db: D1Database | undefined, private readonly runtime: MailRuntime, private readonly request: typeof fetch = fetch) {}
   async checkConnection() {
-    if (this.runtime.MAIL_PROVIDER === "sendgrid" && !this.runtime.MAIL_WEBHOOK_KEY) throw new ProviderFailure("missing_configuration", false);
     const config = mailConfiguration(this.runtime);
     if (config.provider === "development") {
       if (!this.db) throw new ProviderFailure("missing_configuration", false);

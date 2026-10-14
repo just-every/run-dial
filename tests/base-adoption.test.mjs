@@ -100,13 +100,6 @@ test("NOTIFY-005 SendGrid nullable acceptance and unknown outcomes remain durabl
   const config = { MAIL_PROVIDER: "sendgrid", MAIL_API_KEY: "test-only", MAIL_FROM: "no-reply@business.example" };
   let calls = 0;
   const accepted = new BaseMailSender(db, config, async () => { calls++; return new Response(null, { status: 202 }); });
-  await assert.rejects(accepted.checkConnection(), (error) => error.code === "missing_configuration" && !error.retryable);
-  assert.equal(calls, 0, "publication readiness needs callback verification configuration without making a send");
-  const probe = new BaseMailSender(db, { ...config, MAIL_WEBHOOK_KEY: "test-verification-key" }, async (url) => {
-    assert.equal(url, "https://api.sendgrid.com/v3/verified_senders");
-    return Response.json({ results: [{ from_email: config.MAIL_FROM, verified: true }] });
-  });
-  assert.ok((await probe.checkConnection()).checkedAt);
   const message = { to: "private@person.example", subject: "Private subject", text: "Private body", idempotencyKey: "accepted-id" };
   await admitMailSource(db, repository, message);
   assert.deepEqual(await accepted.send(message), { providerMessageId: null });

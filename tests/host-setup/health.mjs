@@ -6,7 +6,13 @@ export async function overviewHealth(page, origin, { calendar, mail }) {
   for (const [key, title, expected] of [["calendar", "Google Calendar", calendar], ["mail", "Transactional mail", mail]]) {
     const connection = page.getByRole("heading", { name: title, exact: true }).locator("../..");
     assert.equal(state[key].state, expected);
-    await expect(connection).toContainText(expected);
+    await expect(connection).toContainText(expected === "unchecked" ? "Not yet checked" : expected);
+    if (expected === "unchecked") {
+      assert.equal(state[key].reason, null);
+      assert.equal(state[key].checkedAt, null);
+      await expect(connection).not.toContainText("missing configuration");
+      await expect(connection).not.toContainText("unhealthy");
+    }
     if (state[key].checkedAt === null) await expect(connection).toContainText("Not yet checked");
     else {
       assert.ok(Number.isFinite(Date.parse(state[key].checkedAt)));

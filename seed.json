@@ -289,7 +289,7 @@
       "name": "MAIL_WEBHOOK_KEY",
       "secret": false,
       "required": false,
-      "why": "Optional mail.sender.v1 SendGrid Event Webhook ECDSA P-256 public verification key for authenticated bounce callbacks. It is not needed for first-operator bootstrap or sign-in; the SendGrid connection check requires it for NOTIFY-005 bounce reconciliation before event types can be published."
+      "why": "Optional mail.sender.v1 SendGrid Event Webhook ECDSA P-256 public verification key for authenticated bounce callbacks. Absent means delivery and bounce tracking is off; unsigned callbacks remain rejected. Sender verification and event publication require the API key and verified sender, not this optional tracking key. Opt in to its deploy declaration and use rer deploy --set-secret to enable signed callback processing."
     },
     {
       "name": "RESEND_API_KEY",

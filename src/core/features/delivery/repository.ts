@@ -24,7 +24,7 @@ export type DeliveryOutboxRecord = {
 export class DeliveryRepository {
   private readonly db;
 
-  constructor(private readonly binding: D1Database, readonly mailProvider: "resend" | "sendgrid" | "development" = "resend") {
+  constructor(private readonly binding: D1Database, readonly mailProvider: "resend" | "sendgrid" | "development" = "resend", private readonly webhookConfigured = false) {
     this.db = createDatabase(binding);
   }
 
@@ -113,7 +113,8 @@ export class DeliveryRepository {
 
   async mailHealth() {
     const [record] = await this.db.select().from(providerConnectionHealth).where(eq(providerConnectionHealth.provider, this.mailProvider));
-    return record ? { state: record.status, checkedAt: record.lastCheckedAt, reason: record.unhealthyCode } : { state: "unhealthy" as const, checkedAt: null, reason: "missing_configuration" };
+    const health = record ? { state: record.status, checkedAt: record.lastCheckedAt, reason: record.unhealthyCode } : { state: "unchecked" as const, checkedAt: null, reason: null };
+    return { ...health, provider: this.mailProvider, eventTracking: this.mailProvider === "development" ? "not_applicable" as const : this.webhookConfigured ? "on" as const : "off" as const };
   }
 
   async setMailHealth(status: "healthy" | "unhealthy", reason: string | null) {

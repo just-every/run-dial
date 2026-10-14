@@ -155,4 +155,5 @@ The first deploy also needs the values it stores as Worker secrets. It stops bef
 - `SETUP_TOKEN`: random, at least 32 characters, used once to set up the first operator.
 - `SENDGRID_API_KEY`: your SendGrid API key, stored as `MAIL_API_KEY`.
 - `MAIL_FROM`: your verified `noreply@` or `no-reply@` sender.
-- `MAIL_WEBHOOK_KEY`: the public verification key of SendGrid's signed Event Webhook.
+
+`MAIL_WEBHOOK_KEY` is optional. Without it, sending and sender verification work but delivery and bounce tracking is off. To enable tracking, opt in to its deploy declaration and set the signed Event Webhook public verification key through `rer deploy --set-secret MAIL_WEBHOOK_KEY`. See [Optional delivery and bounce tracking](calendar-and-email.md#optional-delivery-and-bounce-tracking). The guide includes the declaration and exact command needed by the current deploy tool; existing Worker secrets are retained on later deploys.

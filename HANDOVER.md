@@ -30,12 +30,31 @@ portability execution; Dial's adapter supplies its product-specific behavior.
 
 Local export and import use the pinned package's D1/R2 portability engine with
 Dial's complete table classification and credential policy. Current transfer
-supports local targets only. Remote transfer refuses before provider calls. The archive
+supports local export/import and authenticated hosted export (`rer export --target remote`).
+Hosted restore is not exposed; restore into an empty local installation of the
+same source revision. The archive
 preserves durable owner and booking facts and original uploaded object bytes;
 it excludes credentials, sessions, sign-in and invitation links, booking
 capabilities, OAuth credentials, webhook authority, development mail, and
 ephemeral admission state. The original SESSION_SECRET stays outside the
 archive and is needed to preserve retry and erasure guards after restore.
+
+The hosted deployment adapter is `ownerDeploy` from the pinned package. Its
+provider already supplies `importSql` to the published migration runner via the
+D1 import API; it does not mean a remote archive-restore endpoint. The archive
+policy validates installed migration names and, when recorded, exact hashes and
+applied states. Destination installer history stays in place. Unknown application
+schema, altered SQL hashes and interrupted migration claims refuse transfer.
+
+The retained deployed-ledger tests use the published migration runner's
+`importSql` transport and restore from its tracked `d1_migrations` ledger into a
+Wrangler-style destination. The native hosted journey separately models that
+tracked ledger on its disposable source, stops the source before import, and
+reads the restored booking and avatar in an independent runtime. An optional
+qualification input runs an independent npm package's `bin/rer.mjs` directly,
+verifies its tarball against the npm manifest integrity, and compares every
+executed package file with that tarball. Qualification requires an actual passing
+receipt for the candidate; presence of the test alone is not proof.
 
 ## First-run setup behavior
 

@@ -144,9 +144,14 @@ does not fall back to local mail when hosted credentials are missing or a
 provider request fails. The current deployment declaration selects SendGrid.
 It maps the owner-supplied SENDGRID_API_KEY to the private MAIL_API_KEY
 binding and requires a verified MAIL_FROM sender. The SendGrid
-MAIL_WEBHOOK_KEY is its webhook verification key; connection readiness for
-bounce reconciliation requires it even though local owner setup and sign-in do
-not. The MAIL_FROM sender must be a verified noreply@ or no-reply@ address.
+MAIL_WEBHOOK_KEY is an optional webhook verification key. Without it, delivery
+and bounce tracking is off and callbacks return 401 without changes; sender
+readiness still checks the API key and verified sender before publication.
+Opt in to its declaration in deploy.json, then use rer deploy --set-secret
+MAIL_WEBHOOK_KEY to add it while retaining deployment receipt custody. See
+docs/calendar-and-email.md for the private input file and exact command.
+Later deploys retain existing Worker secrets. An absent health row is unchecked,
+not evidence of missing configuration. The MAIL_FROM sender must be a verified noreply@ or no-reply@ address.
 The read-only SendGrid connection check accepts an exact verified Single Sender
 or an exact authenticated domain marked valid. Matching ignores case but does
 not extend to parent domains or subdomains; the check sends no test message.
