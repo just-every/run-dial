@@ -60,6 +60,7 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   await keys.restored(cancel, "Cancelled booking cancellation");
   await mutation(page, `/api/app/bookings/${booking.id}/cancel`, () => keys.native(cancel, "Confirm booking cancellation", "prompt", true, "Keyboard cancellation note"));
   await page.getByRole("status", { name: "Booking update" }).filter({ hasText: "Booking cancelled" }).waitFor();
+  await page.getByText("Loading bookings…", { exact: true }).waitFor({ state: "hidden" });
   checks.push({ width, check: "Booking cancellation focuses its result after its action disappears", passed: await page.getByRole("status", { name: "Booking update" }).evaluate(el => el === globalThis.document.activeElement) });
   const cancelled = await get(page, origin, `/api/app/bookings/${booking.id}`);
   assert.equal(cancelled.state, "cancelled"); assert.ok(cancelled.history.some(entry => entry.action === "cancelled" && entry.reason === "Keyboard cancellation note"));

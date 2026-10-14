@@ -14,6 +14,11 @@ database_name = "dial-booking-axe-test"
 database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "../../migrations/core"
 
+[[d1_databases]]
+binding = "PROVIDER_DB"
+database_name = "dial-booking-axe-provider-fixtures"
+database_id = "00000000-0000-0000-0000-000000000001"
+
 [[r2_buckets]]
 binding = "FILES"
 bucket_name = "dial-booking-axe-files"

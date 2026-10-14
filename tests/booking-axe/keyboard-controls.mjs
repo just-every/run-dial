@@ -23,6 +23,7 @@ export function keyboardControls(page, width, checks) {
     // Move away using the keyboard when a browser/React restoration already
     // focuses this control, so the before/after paint comparison is meaningful.
     if (await target.evaluate(el => el === globalThis.document.activeElement)) await page.keyboard.press("Shift+Tab");
+    await target.evaluate(async el => { await Promise.all(el.getAnimations().map(a => a.finished.catch(() => undefined))); });
     const before = await target.evaluate(paint);
     await keyboardFocus(page, target);
     await target.evaluate(async el => { await Promise.all(el.getAnimations().map(a => a.finished.catch(() => undefined))); });
