@@ -52,7 +52,13 @@ export async function hostedExport(request: Request, env: AppBindings, operators
    } });
   const response = await handle(request);
   if (!response) return reply("not_found", 404);
-  if (!response.ok) { if (creating) await releaseExport(env.DB, lease); return response; }
+  if (!response.ok) {
+   if (creating) await releaseExport(env.DB, lease);
+   // Base catches typed bucket refusals inside handle(). Expose only our finite
+   // vocabulary to the client that deliberately ignores HTTP response bodies.
+   const failure = await response.clone().json().catch(() => null) as { error?: unknown } | null;
+   return typeof failure?.error === "string" && archiveFailures.has(failure.error) ? reply(failure.error, response.status) : response;
+  }
   // If a request outlasted its lease it can never publish/download a snapshot.
   await renewExport(env.DB, lease);
   if (creating) {

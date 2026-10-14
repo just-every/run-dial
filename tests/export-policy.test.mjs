@@ -121,3 +121,8 @@ contract('DATA-001', 'hosted export command retains bounded HTTP/archive and con
   const { hostedDiagnostics } = await import('./local-setup/hosted-diagnostics.mjs');
   await hostedDiagnostics();
 });
+
+contract('BASE-SECRET-001', 'hosted object refusals survive the published HTTP handler and real export command with safe causes and cleanup', async () => {
+  const { hostedObjectRefusal } = await import('./archive/hosted-refusal.mjs');
+  await hostedObjectRefusal();
+});
