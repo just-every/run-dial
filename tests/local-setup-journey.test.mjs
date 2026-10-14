@@ -13,6 +13,7 @@ import { hostedRecords } from './local-setup/hosted-records.mjs';
 import { nativeSignIn } from './local-setup/native-signin.mjs';
 import { safeBrowserFailure } from './local-setup/evidence-safety.mjs';
 import { checkpointState } from './local-setup/hosted-checkpoint.mjs';
+import { legacyResetRefusal } from './local-setup/legacy-reset.mjs';
 
 contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs in before hydration, resets and round-trips complete local data', async () => {
  for (const width of [1440, 390]) {
@@ -48,6 +49,7 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
    await runRer(directory, ['dev', '--stop']); await server.owned.stop(); server = undefined;
    await runRer(directory, ['export', '--output', 'exports/first.rer']);
    await runRer(directory, ['import', '--input', 'exports/first.rer', '--yes'], { expected: 4 });
+   await legacyResetRefusal(directory);
    await runRer(directory, ['reset', '--non-interactive'], { expected: 4 });
    await mkdir(join(directory, '.rer/deploy'), { recursive: true });
    await writeFile(join(directory, '.rer/deploy/preserved.json'), '{"ownerReceipt":true}');

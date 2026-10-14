@@ -1,6 +1,6 @@
 import { lstat, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { LocalStateSafetyError } from '../base-onboarding/local/state.mjs';
+import { LocalStateSafetyError } from '@runeditrun/rer/local/state';
 
 // Pure preflight: old Dial wrappers could hide original credentials and state
 // anywhere beneath these directories. Never infer safety from a filename.

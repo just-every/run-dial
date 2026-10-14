@@ -1,4 +1,4 @@
-import { sha256 } from '../base-cli/modules/portability/hash.mjs';
+import { sha256 } from '@runeditrun/rer/internal/modules/portability/hash.mjs';
 import { canonicalRow, collectSecrets, exported, excluded, internal, assertCoverage } from './policy.mjs';
 import { environmentSecrets } from './environment-secrets.mjs';
 const quote = name => '"' + name.replaceAll('"', '""') + '"';

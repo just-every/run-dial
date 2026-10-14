@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { declaredCrons, runScheduled } from "../base-cli/cli/scheduled.mjs";
+import { declaredCrons, runScheduled } from "@runeditrun/rer/scheduled";
 
 // The lifecycle runtime: Dial's production services, Google adapter and Base SendGrid sender on native D1, Durable Objects
 // and Queues, with only provider HTTP synthetic (tests/booking-wire). rer's own scheduler drives it from the Cron schedule

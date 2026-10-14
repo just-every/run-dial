@@ -42,7 +42,7 @@ First setup requires an owner email explicitly, through the manifest answers fil
 Missing-answer errors name the missing manifest fields. An answers file is a
 private mode-0600 JSON object keyed by those names, for example
 `{"OWNER_EMAIL":"owner@example.com"}`, passed with
-`node scripts/rer.mjs setup --answers PATH --non-interactive`. Keep secret
+`rer setup --answers PATH --non-interactive`. Keep secret
 values in declared private inputs.
 
 Local setting names come from the seed's existing declarations: `commandAdapter.hooks.secrets.originKey` selects the saved origin, and the setup manifest's `owner-claim.emailField` selects the owner mailbox. Without an owner-claim step, `commandAdapter.input.names.email` selects the mailbox. Undeclared names default to `AUTH_ORIGIN` and `OWNER_EMAIL`. Setup preflight, dev/preview/outbox prerequisites and sign-in input, and doctor all use these same keys and the adapter's declared settings file/format. Native-auth seeds retain their own setting names; do not add duplicate aliases or redeclare the manifest's owner field in the adapter.
@@ -101,15 +101,15 @@ First-run completion is stored durably; a setup rerun does not clear it.
 
 ## Seed theme
 
-A first-party seed may declare one theme so the shared installer, sign-in confirmation, `/setup` and development outbox pages wear its look: a CSS file at the root of its served static directory (conventionally `public/rer-theme.css`) holding only `:root` `--rer-*` tokens (page, surface, text, muted, border, focus, optional accent pair, link, font stacks, radius, logo) and `@font-face` rules for font files the app serves. The app serves it at `/rer-theme.css` (a Worker that admits only listed static paths lists it). The installer seed descriptor names it as `theme: 'public/rer-theme.css'`; the Worker passes `/rer-theme.css` to operator-auth `branding.theme`, to `firstRunResponse(..., { theme })` and to the development outbox's `createDevelopmentOutboxHandler({ ..., theme })`. The installer refuses a theme outside that grammar, naming a file the app does not serve, or whose declared colours fail contrast (4.5:1 for text pairs, 3:1 for focus and borders). Without a theme the pages are unchanged. The token table and wiring are in `scripts/base-onboarding/README.md`.
+A first-party seed may declare one theme so the shared installer, sign-in confirmation, `/setup` and development outbox pages wear its look: a CSS file at the root of its served static directory (conventionally `public/rer-theme.css`) holding only `:root` `--rer-*` tokens (page, surface, text, muted, border, focus, optional accent pair, link, font stacks, radius, logo) and `@font-face` rules for font files the app serves. The app serves it at `/rer-theme.css` (a Worker that admits only listed static paths lists it). The installer seed descriptor names it as `theme: 'public/rer-theme.css'`; the Worker passes `/rer-theme.css` to operator-auth `branding.theme`, to `firstRunResponse(..., { theme })` and to the development outbox's `createDevelopmentOutboxHandler({ ..., theme })`. The installer refuses a theme outside that grammar, naming a file the app does not serve, or whose declared colours fail contrast (4.5:1 for text pairs, 3:1 for focus and borders). Without a theme the pages are unchanged. The package exposes its installer integration through `@runeditrun/rer/operator-installer`.
 
 ## Pins, aliases and responsibility
 
 Required first-party pins: `.node-version` is `22.20.0`; `package.json.engines.node` is `22.20.0`; `packageManager` is `pnpm@10.12.4`. Keep any `.nvmrc`, CI/bootstrap and documentation declarations consistent. These are today's tested Base cloud-bootstrap/foundation pins, not a requirement for independent projects. Commands that execute project work select the exact Node pin, using an exact matching installed runtime or a checksum-verified user-cache copy at `~/.rer/node/node-vVERSION-PLATFORM-ARCH/`; when needed on supported platforms, the runner retrieves the official release and verifies its SHA-256 against `SHASUMS256.txt`. The runner never changes global Node installations. `RER_NODE_AUTO=0` opts out; a failure reports the repair invocation `npm exec --yes --package=node@VERSION -- node SCRIPT VERB --cwd PROJECT`. Help, check, describe, doctor and stop do not select or acquire Node. Refresh lockfiles legitimately for pnpm 10 and retain the reviewed native-build allowlist (esbuild/workerd where needed).
 
-Ship a byte-exact pinned Base CLI export at `scripts/base-cli/`, with thin `scripts/rer.mjs` dispatching it. It includes its transitive portable command/release sources and export inventory; it never reaches a neighboring Base checkout. Do not duplicate a second onboarding tree: import the seed's existing byte-exact `scripts/base-onboarding/` through the documented export boundary. Base itself retains `bin/rer.mjs` as a thin dispatcher.
+Pin `@runeditrun/rer` exactly in devDependencies and retain its frozen lockfile and pnpm patch. Package aliases use the installed `rer` dispatcher; no vendored CLI, onboarding tree or wrapper remains. Dial's 0.2.2 patch awaits the adapter's legacy-state reset preflight before inventory/removal and recognizes pnpm patched lock entries. Preserve that patch when upgrading until the package supplies these behaviors.
 
-Package scripts for `setup dev preview build verify reset deploy export import release outbox doctor describe check` are exactly `node scripts/rer.mjs VERB`. Invoke them as `pnpm run VERB -- FLAGS`; in particular use `pnpm run deploy`, not pnpm's built-in deploy. Never define a package `install` lifecycle script to launch `rer install`; `pnpm install --frozen-lockfile` is the equivalent dependency action. Provide `"deps":"node scripts/rer.mjs install"` and `"rer":"node scripts/rer.mjs"`. Internal adapter targets use distinct names/files (for example, a verify suite entrypoint) to prevent alias recursion.
+Package scripts for `setup dev preview build verify reset deploy export import release outbox doctor describe check` use the package dispatcher: each value is the OPERATIONS argv (`["rer",VERB]`) joined by single spaces. Invoke them as `pnpm run VERB -- FLAGS`; use `pnpm run deploy`, not pnpm's built-in deploy. Never define a package `install` lifecycle script to launch `rer install`; `pnpm install --frozen-lockfile` is the dependency action. Provide `deps` (the same dispatcher with `install`) and `rer` (the dispatcher alone). Internal adapter targets use distinct names/files to prevent alias recursion.
 
 Use OPERATIONS v2, preserving environmentSources and loops. Its `commands` declares every required verb with real argv, inputs and effects; inspector/CLI verbs still perform only their documented inspection. Opt in to the first-party profile with `seedContract:{version:1,profile:"first-party",adapter:"scripts/installer/local.mjs"}`. This is a small operations extension, not another configuration file or a second setup schema. An explicit `rer check --profile first-party` must enforce the profile even if its marker has been deleted; this flag is additional to check's common flags. References and generation tests must also require the marker. No package/edition presence alone makes an independent project first-party.
 
@@ -142,7 +142,7 @@ Independent projects without an adapter use `OPERATIONS.json` v2 `commands.NAME.
 - SC-02: exact pins and public aliases, no lifecycle/built-in collision or recursion.
 - SC-03: real manifest-driven setup, private custody, idempotent owner and failure recovery. Validate the selected dependency graph before effects; claim the native owner then pull-link selected dependencies. Declared idp claim mode completes the atomic provider owner grant before readiness. Blank optional dependencies preserve standalone email-link setup; unchanged links need no new approval. Link approvals are private, exact-origin and callback-set, one-use files, deleted after successful use. Multiple interfaces use the private `RER_LINK_TOKEN_FILES` interface-to-file map; each approval is validated before effects.
 - SC-04: managed foreground development/HMR and fixed production preview, requested origin, health/outbox-gated ready output, intact public-input/output build reuse and descendant cleanup.
-- SC-05: Base outbox and ordinary one-use sign-in with pre-hydration POST; no `/cdn-cgi/*` route or private checkout folder answering on the public listener; for a `devIdentity` seed, the per-checkout key gate on every local sign-in surface, real key-gated dev sessions and personas, a local-only entry whose layer `rer build` refuses in output, refused local-only deploy keys, dev data kept out of archives, and one end-to-end email-link test. `rer check --profile first-party` enforces the entry, the build exclusion and the declared email-link test (`SC-05.dev-identity.*`); it reads the deployed main from `devIdentity.deployConfig` when declared, else from `wrangler.jsonc`, `wrangler.json` or `wrangler.toml` (skipping any the adapter lists in `generatedOutputs`), else from a deploy template such as `deploy/wrangler.template.toml`. Copies of Base's operator-auth layers that the seed records (`base-copies.json`, `composition.lock.json` or `foundation.lock.json`) stay byte-exact to the Base revision they pin, in two groups checked on their own: the application, runtime and schema copies (every copy outside `scripts/base-cli/`, including operator-auth migrations) share one pinned revision (`SC-05.auth-copy.pin`), and the CLI's bundled tooling copy under `scripts/base-cli/` has one pinned revision of its own (`SC-05.auth-copy.cli-pin`), so a seed can refresh the CLI to a newer Base revision while its application auth stays at an older reviewed one. Two revisions inside one group fail that group's pin, and `rer check` names each drifted, missing or unrecorded file in either group (`SC-05.auth-copy.*`).
+- SC-05: Base outbox and ordinary one-use sign-in with pre-hydration POST; no `/cdn-cgi/*` route or private checkout folder answering on the public listener; for a `devIdentity` seed, the per-checkout key gate on every local sign-in surface, real key-gated dev sessions and personas, a local-only entry whose layer `rer build` refuses in output, refused local-only deploy keys, dev data kept out of archives, and one end-to-end email-link test. `rer check --profile first-party` enforces the entry, the build exclusion and the declared email-link test (`SC-05.dev-identity.*`); it reads the deployed main from `devIdentity.deployConfig` when declared, else from `wrangler.jsonc`, `wrangler.json` or `wrangler.toml` (skipping any the adapter lists in `generatedOutputs`), else from a deploy template such as `deploy/wrangler.template.toml`. Copies of Base's operator-auth layers that the seed records (`base-copies.json`, `composition.lock.json` or `foundation.lock.json`) stay byte-exact to their pinned Base revision and share one application, runtime and schema pin (`SC-05.auth-copy.pin`). `rer check` names each drifted, missing or unrecorded file (`SC-05.auth-copy.*`).
 - SC-06: confirmed, contained, local-only reset and clean subsequent setup.
 - SC-07: real build/verify and production preview, owner-account deploy/dry-run and unchanged release producer/receipt/exits; bounded expensive execution joins the shared queue. After deployment readiness, link selected dependencies to the real deployed origin using its own approval. Dry-run has no link effect; no additional public verb is introduced.
 - SC-08: complete local export/import, integrity, empty-destination/confirmation and credential exclusions.
@@ -207,8 +207,7 @@ Labels identify the declared project, initiating verb/phase and safe checkout
 identity without credential remotes or secrets. Status/waits are human progress,
 valid JSON events or redacted stderr. Human queue waits report immediately with
 a reason and numeric one-based position, then refresh about every 15 seconds.
-From the runnable project root, inspect the live queue with
-`node scripts/base-cli/modules/job-queue/cli.mjs status`.
+Package mode has no queue status command; a waiting command reports its live position.
 Nested commands share only validated live
 owned membership, never a boolean bypass; slots=1 works. Queue cancellation
 removes pending work; admitted cancellation stops owned children and restores
@@ -232,9 +231,9 @@ section for the checkout it governs. From a runnable edition root, show the
 current command sequence:
 
 ```sh
-node scripts/rer.mjs install
-node scripts/rer.mjs setup --owner-email you@example.com
-node scripts/rer.mjs dev
+rer install
+rer setup --owner-email you@example.com
+rer dev
 ```
 
 Explain how to enter the real owner mailbox through the setup prompt or an
@@ -243,18 +242,18 @@ approved flag, then open the app: a `devIdentity` seed's `dev` prints
 change that); other seeds sign in through the local outbox URL printed by
 `dev`, using the newest ordinary sign-in message. State whether external mail is sent
 and preserve the actual local auth and data requirements. Stop `dev` with
-`node scripts/rer.mjs dev --stop` or Ctrl-C, and stop `preview` with
-`node scripts/rer.mjs preview --stop` before build or verification. The opening
+`rer dev --stop` or Ctrl-C, and stop `preview` with
+`rer preview --stop` before build or verification. The opening
 section also shows the current verification, reset, transfer, deployment and
 description commands:
 
 ```sh
-node scripts/rer.mjs verify
-node scripts/rer.mjs reset --yes
-node scripts/rer.mjs export --output exports/installation.rer
-node scripts/rer.mjs import --input exports/installation.rer --yes
-node scripts/rer.mjs deploy
-node scripts/rer.mjs describe
+rer verify
+rer reset --yes
+rer export --output exports/installation.rer
+rer import --input exports/installation.rer --yes
+rer deploy
+rer describe
 ```
 
 Document the actual flags, effects and cautions for each operation.

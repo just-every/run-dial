@@ -1,0 +1,24 @@
+diff --git a/cli/local.mjs b/cli/local.mjs
+--- a/cli/local.mjs
++++ b/cli/local.mjs
+@@ -69,6 +69,8 @@
+ }
+ 
+ export async function reset(project, options, out) {
++ // Seed recovery requirements must finish before any reset inspection or removal.
++ await project.adapter.resetPreflight?.({ root: project.root, options });
+  await stateSafety(project);
+  await refuseLegacyProcess(project,{reset:true});
+  const { strandedOriginals } = await shared('local/recovery.mjs');
+diff --git a/cli/package-mode.mjs b/cli/package-mode.mjs
+--- a/cli/package-mode.mjs
++++ b/cli/package-mode.mjs
+@@ -39,6 +39,8 @@
+   const entries = block(...own, `${group}:`, 4), entry = entries && block(...entries, `'${packageName}':`, 6);
+   if (!entry) continue;
+   const fields = Object.fromEntries(lines.slice(...entry).map(line => /^\s+(specifier|version):\s*'?([^'\s]*)'?\s*$/.exec(line)).filter(Boolean).map(match => [match[1], match[2]]));
++  // pnpm resolves patched importers against the original package integrity.
++  if (fields.version) fields.version = fields.version.replace(/\(patch_hash=[a-zA-Z0-9]+\)$/, '');
+   const packages = block(0, lines.length, 'packages:', 0), resolved = packages && block(...packages, `'${packageName}@${fields.version}':`, 2);
+   return { group, specifier: fields.specifier, version: fields.version, locked: Boolean(resolved && lines.slice(...resolved).some(line => /^\s+resolution: \{integrity: sha512-/.test(line))) };
+  }

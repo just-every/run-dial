@@ -1,3 +1,4 @@
+import { rerEntry, rerArguments } from '../rer-command.mjs';
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
@@ -23,7 +24,7 @@ export function environment() {
 export async function runRer(directory, args, { expected = 0, timeout = 180_000 } = {}) {
   let output = "";
   const verb = args[0], label = `rer ${verb}`;
-  const owned = spawnOwned(process.execPath, ["scripts/rer.mjs", ...args, "--json"], { cwd: directory, env: environment() }, { label, onOutput: chunk => { output += chunk; } });
+  const owned = spawnOwned(process.execPath, rerArguments([rerEntry, ...args, "--json"]), { cwd: directory, env: environment() }, { label, onOutput: chunk => { output += chunk; } });
   try {
     try { await owned.waitForClose(timeout); } catch (error) { if (expected === 0) throw error; }
     assert.equal(owned.state.code, expected, `${label} exit status`);
@@ -36,7 +37,7 @@ export async function runRer(directory, args, { expected = 0, timeout = 180_000 
 // gate still protects, so they print RER_SIGN_IN and the RER_OPEN link that opens it.
 export async function start(directory, command, origin, flags = []) {
   let output = "";
-  const owned = spawnOwned(process.execPath, ["scripts/rer.mjs", command, ...flags], { cwd: directory, env: environment() }, { label: `rer ${command}`, onOutput: chunk => { output += chunk; } });
+  const owned = spawnOwned(process.execPath, rerArguments([rerEntry, command, ...flags]), { cwd: directory, env: environment() }, { label: `rer ${command}`, onOutput: chunk => { output += chunk; } });
   const outbox = command === "preview" || flags.includes("--login");
   try {
     for (let attempt = 0; attempt < 2400; attempt++) {

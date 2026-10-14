@@ -34,7 +34,10 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
     const count = await dialog.locator("button").count();
     for (let i = 0; i < count + 2; i++) {
       await page.keyboard.press(key);
-      assert.ok(await dialog.evaluate(el => el.contains(globalThis.document.activeElement)), `native DOM dialog contains ${key} focus`);
+      const focus = await dialog.evaluate(el => ({ contained: el.contains(globalThis.document.activeElement), tag: globalThis.document.activeElement?.tagName, label: globalThis.document.activeElement?.getAttribute("aria-label") || globalThis.document.activeElement?.textContent?.slice(0, 80) }));
+      checks.push({ width, check: `Native DOM dialog ${key} containment ${i + 1}`, passed: focus.contained, focus });
+      if (!focus.contained) await keys.screenshot("dialog-focus-escaped");
+      assert.ok(focus.contained, `native DOM dialog contains ${key} focus: ${JSON.stringify(focus)}`);
     }
   }
   await keys.focus(button(dialog, "Restore booking time"), "Dialog restore action");
@@ -47,6 +50,7 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   await keys.restored(opener, "Native DOM dialog Close");
   await mutation(page, `/api/app/bookings/${booking.id}/attendance`, () => keys.native(button(page, "Mark attended"), "Confirm attendance", "prompt", true, "Keyboard attendance note"));
   await page.getByText("Attendance: attended", { exact: true }).waitFor();
+  checks.push({ width, check: "Attendance confirmation leaves logical focus on its result", passed: await page.getByRole("status", { name: "Booking update" }).evaluate(el => el === globalThis.document.activeElement) });
   const attended = await get(page, origin, `/api/app/bookings/${booking.id}`);
   assert.equal(attended.attendance.status, "attended"); assert.equal(attended.attendance.note, "Keyboard attendance note");
   const cancel = button(page, "Cancel booking");
@@ -56,6 +60,7 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   await keys.restored(cancel, "Cancelled booking cancellation");
   await mutation(page, `/api/app/bookings/${booking.id}/cancel`, () => keys.native(cancel, "Confirm booking cancellation", "prompt", true, "Keyboard cancellation note"));
   await page.getByRole("status", { name: "Booking update" }).filter({ hasText: "Booking cancelled" }).waitFor();
+  checks.push({ width, check: "Booking cancellation focuses its result after its action disappears", passed: await page.getByRole("status", { name: "Booking update" }).evaluate(el => el === globalThis.document.activeElement) });
   const cancelled = await get(page, origin, `/api/app/bookings/${booking.id}`);
   assert.equal(cancelled.state, "cancelled"); assert.ok(cancelled.history.some(entry => entry.action === "cancelled" && entry.reason === "Keyboard cancellation note"));
   await keys.screenshot("booking-cancelled");

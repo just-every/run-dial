@@ -3,7 +3,7 @@ import { readFile, writeFile, stat, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { freshCopy, runRer, removeCopy, start, environment, variables } from './runtime.mjs';
-import { readArchive } from '../../scripts/base-cli/modules/portability/index.mjs';
+import { readArchive } from '@runeditrun/rer/modules/portability';
 import { assertNoSecretValues } from '../../scripts/owner-session/export-proof.mjs';
 import { exported, excluded } from '../../scripts/archive/policy.mjs';
 import { spawnOwned } from '../native-process/lifecycle.mjs';

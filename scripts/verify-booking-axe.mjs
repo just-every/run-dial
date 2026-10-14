@@ -59,7 +59,7 @@ try {
   const audited = scans.filter(scan => "violations" in scan).length;
   assert.equal(audited, process.env.DIAL_KEYBOARD_ONLY ? 0 : process.env.DIAL_PICKER_ONLY ? 4 : process.env.DIAL_INVITEE_ONLY ? 28 : 52 + publicSiteAudits, "every expected desktop and mobile document receives its axe audit");
   const journey = process.env.DIAL_KEYBOARD_ONLY ? "focused operator and public keyboard journey at 1440 and 390; no axe scan or screen-reader conformance claim" : process.env.DIAL_PICKER_ONLY ? "day-first picker with 24-hour and 9-to-5 availability at 1440×900 and 390×844; exact native ranking, slot union, first viewport and height checks included" : process.env.DIAL_INVITEE_ONLY ? "focused public picker/timezone/history/booking/reschedule/keyboard diagnosis; operator/request matrix requires the full52 gate" : "unclaimed Lobby and every docs page, with browser storage left empty; hydrated home/profile/event/details/confirmation/manage with shared picker, request compose/review/receipt, sign-in, empty app and expanded Google setup at 1440 and 390; keyboard and overflow checks included";
-  console.log(`${audited} full-document axe scans; zero serious or critical violations; ${journey}.`);
+  console.log(audited ? `${audited} full-document axe scans; zero serious or critical violations; ${journey}.` : `${journey}.`);
 } finally {
   await writeFile(evidencePath("booking-axe.json"), JSON.stringify({ scans, errors, keyboardChecks, scope: "Headless Chromium; production hydrated UI with test-only provider fixtures; no live Google" }, null, 2));
   await browser.close();

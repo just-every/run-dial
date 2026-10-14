@@ -11,14 +11,14 @@ export async function keyboardJourney(browser, origin, errors, storageState, che
     try {
       const page = await context.newPage(); trackPage(page, errors);
       const keys = keyboardControls(page, width, checks);
-      const keyboardActivate = async (_page, target) => keys.activate(target, (await target.getAttribute("aria-label")) || (await target.innerText()));
-      const typeField = async (_page, target, value) => keys.type(target, value, (await target.getAttribute("aria-label")) || "Public booking field");
+      const keyboardActivate = async (target) => keys.activate(target, (await target.getAttribute("aria-label")) || (await target.innerText()));
+      const typeField = async (target, value) => keys.type(target, value, (await target.getAttribute("aria-label")) || "Public booking field");
       await page.goto(origin + "/book/dial-host/intro"); await page.locator(".pb-slot-button").first().waitFor();
-      await keyboardActivate(page, page.getByRole("button", { name: "Next week", exact: true })); await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
-      await keyboardActivate(page, page.locator(".pb-slot-button").first()); await page.getByRole("button", { name: "Confirm booking", exact: true }).waitFor();
+      await keyboardActivate(page.getByRole("button", { name: "Next week", exact: true })); await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
+      await keyboardActivate(page.locator(".pb-slot-button").first()); await page.getByRole("button", { name: "Confirm booking", exact: true }).waitFor();
       // The details fieldset is disabled and aria-busy until the page hydrates; typing before then is lost.
       await page.locator('.pb-request-fields[aria-busy="false"]').waitFor();
-      await keyboardActivate(page, button(page, "Confirm booking"));
+      await keyboardActivate(button(page, "Confirm booking"));
       await page.getByRole("alert").waitFor();
       for (const name of ["Name", "Email"]) {
         const input = page.getByLabel(name, { exact: true });
@@ -26,13 +26,13 @@ export async function keyboardJourney(browser, origin, errors, storageState, che
         assert.ok(await input.getAttribute("aria-describedby"));
       }
       await keys.screenshot("public-validation");
-      await typeField(page, page.getByLabel("Name", { exact: true }), `Keyboard ${width}`); await typeField(page, page.getByLabel("Email", { exact: true }), `keyboard${width}@dial.test`); await typeField(page, page.getByLabel("What would you like to discuss?", { exact: true }), "Keyboard booking and rescheduling");
-      await keyboardActivate(page, page.getByRole("button", { name: "Confirm booking", exact: true })); await page.getByRole("heading", { name: "Booking confirmed.", exact: true }).waitFor();
-      await keyboardActivate(page, page.getByRole("link", { name: "Manage booking", exact: true })); await page.locator("main[aria-busy=false]").waitFor();
-      await keyboardActivate(page, page.getByRole("button", { name: "Reschedule booking", exact: true })); await page.locator(".pb-slot-button").first().waitFor();
-      await keyboardActivate(page, page.getByRole("button", { name: "Next week", exact: true })); await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
-      await keyboardActivate(page, page.locator(".pb-slot-button").nth(1)); await page.getByRole("button", { name: "Confirm reschedule", exact: true }).waitFor();
-      await keyboardActivate(page, page.getByRole("button", { name: "Confirm reschedule", exact: true })); await page.getByText("Your booking has been rescheduled.", { exact: true }).waitFor();
+      await typeField(page.getByLabel("Name", { exact: true }), `Keyboard ${width}`); await typeField(page.getByLabel("Email", { exact: true }), `keyboard${width}@dial.test`); await typeField(page.getByLabel("What would you like to discuss?", { exact: true }), "Keyboard booking and rescheduling");
+      await keyboardActivate(page.getByRole("button", { name: "Confirm booking", exact: true })); await page.getByRole("heading", { name: "Booking confirmed.", exact: true }).waitFor();
+      await keyboardActivate(page.getByRole("link", { name: "Manage booking", exact: true })); await page.locator("main[aria-busy=false]").waitFor();
+      await keyboardActivate(page.getByRole("button", { name: "Reschedule booking", exact: true })); await page.locator(".pb-slot-button").first().waitFor();
+      await keyboardActivate(page.getByRole("button", { name: "Next week", exact: true })); await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
+      await keyboardActivate(page.locator(".pb-slot-button").nth(1)); await page.getByRole("button", { name: "Confirm reschedule", exact: true }).waitFor();
+      await keyboardActivate(page.getByRole("button", { name: "Confirm reschedule", exact: true })); await page.getByText("Your booking has been rescheduled.", { exact: true }).waitFor();
       assert.ok(await page.getByText(/Currently:/).isVisible(), "keyboard reschedule reaches the verified current booking");
       const readback = async () => (await get(owner ?? page, origin, `/api/app/bookings?query=keyboard${width}%40dial.test`)).find(row => row.inviteeEmail === `keyboard${width}@dial.test`);
       if (owner) { const saved = await readback(); assert.equal(saved.state, "rescheduled"); assert.ok(saved.history.some(row => row.action === "created")); }
@@ -44,6 +44,7 @@ export async function keyboardJourney(browser, origin, errors, storageState, che
       await keys.native(cancel, "Confirm public cancellation", "confirm", true);
       await page.getByRole("status").filter({ hasText: "This booking has been cancelled." }).waitFor();
       if (owner) assert.equal((await readback()).state, "cancelled");
+      checks.push({ width, check: "Public cancellation focuses its result after controls disappear", passed: await page.getByRole("status").filter({ hasText: "This booking has been cancelled." }).evaluate(el => el === globalThis.document.activeElement) });
       await keys.screenshot("public-cancelled");
       checks.push({ width, flow: "Public validation, booking, reschedule, native cancellation dismiss/confirm and API readback", passed: true });
     } finally { await context.close(); }

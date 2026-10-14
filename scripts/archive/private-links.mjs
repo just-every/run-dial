@@ -1,4 +1,4 @@
-import { StreamHash, utf8 } from '../base-cli/modules/portability/hash.mjs';
+import { StreamHash, utf8 } from '@runeditrun/rer/internal/modules/portability/hash.mjs';
 function tokenHash(value) {
  const hash = new StreamHash(); hash.update(utf8(value));
  return btoa(String.fromCharCode(...hash.digest().match(/../g).map(byte => parseInt(byte, 16)))).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');

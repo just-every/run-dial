@@ -26,6 +26,8 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks) {
   await keys.type(field(page, "Event name"), `Keyboard edited ${width}`, "Edit saved event name");
   await mutation(page, `/api/app/event-types/${event.id}/details`, () => keys.activate(button(page, "Save changes"), "Save event edit"));
   assert.equal((await get(page, origin, `/api/app/event-types/${event.id}`)).title, `Keyboard edited ${width}`);
+  await mutation(page, `/api/app/event-types/${event.id}/publish`, () => keys.activate(button(page, "Publish event type"), "Publish event type"));
+  assert.equal((await get(page, origin, `/api/app/event-types/${event.id}`)).status, "published");
   await keys.navigate("Availability");
   const card = page.locator("section").filter({ has: page.getByRole("heading", { name: `Keyboard edited ${width}`, exact: true }) });
   await keys.activate(card.getByRole("link", { name: "Edit availability", exact: true }), "Open event from Availability");
@@ -56,6 +58,8 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks) {
   assert.deepEqual(await get(page, origin, `/api/app/event-types/${event.id}/availability-overrides`), []);
   await keys.restored(addOverride, "Date override removal completion");
   await keys.activate(page.getByRole("link", { name: "Back to event", exact: true }), "Return to event");
+  await mutation(page, `/api/app/event-types/${event.id}/disable`, () => keys.activate(button(page, "Disable event type"), "Disable event type"));
+  assert.equal((await get(page, origin, `/api/app/event-types/${event.id}`)).status, "disabled");
   const remove = button(page, "Delete event type");
   const before = await get(page, origin, `/api/app/event-types/${event.id}`);
   await keys.native(remove, "Cancel event deletion", "confirm", false);
