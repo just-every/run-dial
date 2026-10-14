@@ -1,0 +1,31 @@
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { button, keyboardControls, get } from "./keyboard-controls.mjs";
+import { trackPage } from "./audit.mjs";
+
+export async function operatorKeyboardJourney(browser, origin, storageState, checks, errors) {
+  for (const width of [1440, 390]) {
+    const context = await browser.newContext({ storageState, viewport: { width, height: width === 390 ? 844 : 900 }, locale: "en-US", timezoneId: "UTC" });
+    try {
+      const page = await context.newPage(); trackPage(page, errors);
+      const keys = keyboardControls(page, width, checks);
+      const fixture = await (await context.request.post(origin + "/__fixtures/setup")).json();
+      const event = await get(page, origin, `/api/app/event-types/${fixture.eventId}`);
+      const date = new Date(Date.now() + (width === 390 ? 30 : 20) * 86400000).toISOString().slice(0, 10);
+      const available = await get(page, origin, `/api/public/book/dial-host/intro/availability?week=${date}`);
+      const response = await context.request.post(origin + "/api/app/bookings", { headers: { Origin: origin }, data: { idempotencyKey: randomUUID(), eventTypeId: event.id, startAt: available.slots[0].startAt, inviteeTimezone: "UTC", name: `Keyboard operator ${width}`, email: `keyboard-operator-${width}@dial.test`, answers: Object.fromEntries(event.questions.map(q => [q.key, "Keyboard accessibility"])), overrideNoticeAndHorizon: false } });
+      assert.equal(response.status(), 201); const booking = await response.json();
+      await page.goto(origin + "/app/bookings?query=" + encodeURIComponent(booking.inviteeEmail));
+      const attendance = button(page, "Mark attended"); await attendance.waitFor();
+      const before = await get(page, origin, `/api/app/bookings/${booking.id}`);
+      await keys.native(attendance, "Cancel attendance prompt", "prompt", false);
+      // Let the UI finish its handler and any issued mutation before readback.
+      await page.waitForLoadState("networkidle");
+      const after = await get(page, origin, `/api/app/bookings/${booking.id}`);
+      assert.deepEqual(after.attendance, before.attendance, "Cancelling attendance prompt does not mark attendance");
+      assert.deepEqual(after.history, before.history, "Cancelling attendance prompt adds no history");
+      await keys.restored(attendance, "Cancelled attendance");
+      await keys.screenshot("attendance-cancelled");
+    } finally { await context.close(); }
+  }
+}
