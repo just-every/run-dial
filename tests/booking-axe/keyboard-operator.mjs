@@ -39,7 +39,7 @@ export async function operatorKeyboardJourney(browser, origin, storageState, che
       await keys.restored(attendance, "Cancelled attendance");
       await keys.screenshot("attendance-cancelled");
       await bookingKeyboardJourney(page, origin, width, keys, checks, booking);
-      await eventKeyboardJourney(page, origin, width, keys, checks);
+      await eventKeyboardJourney(page, origin, width, keys, checks, errors);
       await settingsKeyboardJourney(page, origin, width, keys, checks, booking, errors);
     } catch (error) {
       checks.push({ width, passed: false, error: error.message, accessibilitySnapshot: await page.locator("body").ariaSnapshot() });

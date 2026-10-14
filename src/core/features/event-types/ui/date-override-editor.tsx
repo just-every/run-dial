@@ -11,12 +11,21 @@ const blankOverride = (): OverrideDraft => ({ hostDate: "", mode: "closed", wind
 
 export function DateOverrideEditor({ eventId, timezone }: { eventId: string; timezone?: string }) {
   const hydrated = useHydrated();
+  const addButton = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const restoreFocus = useRef(false);
   const inFlight = useRef(false);
   const loadEpoch = useRef(0);
   const [overrides, setOverrides] = useState<DateAvailabilityOverrideRecord[]>();
   const [draft, setDraft] = useState<OverrideDraft>();
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    if (!draft && !saving && restoreFocus.current) {
+      (opener.current?.isConnected ? opener.current : addButton.current)?.focus();
+      restoreFocus.current = false;
+    }
+  }, [draft, saving]);
 
   const load = useCallback(async () => {
     const epoch = ++loadEpoch.current;
@@ -62,10 +71,10 @@ export function DateOverrideEditor({ eventId, timezone }: { eventId: string; tim
 
   return (
     <Card className="p-5 sm:p-6">
-      <SectionHeading icon="overrides" title="Date-specific overrides" description={`An override replaces recurring windows for one host date. ${timezone ? `Dates use ${timezone}.` : "Loading the host timezone…"}`} action={!draft ? <Button type="button" variant="secondary" disabled={!hydrated || saving || !overrides} onClick={() => setDraft(blankOverride())}>Add date override</Button> : undefined} />
+      <SectionHeading icon="overrides" title="Date-specific overrides" description={`An override replaces recurring windows for one host date. ${timezone ? `Dates use ${timezone}.` : "Loading the host timezone…"}`} action={!draft ? <Button ref={addButton} type="button" variant="secondary" disabled={!hydrated || saving || !overrides} onClick={(event) => { opener.current = event.currentTarget; setDraft(blankOverride()); }}>Add date override</Button> : undefined} />
       {error ? <p role="alert" className="mt-4 rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{error}</p> : null}
-      {draft ? <OverrideForm draft={draft} saving={!hydrated || saving} onChange={update} onCancel={() => setDraft(undefined)} onSave={save} /> : null}
-      {overrides === undefined ? error ? <Button type="button" className="mt-5" variant="secondary" disabled={!hydrated} onClick={() => void load()}>Reload date overrides</Button> : <p role="status" className="mt-5 text-sm text-muted">Loading date overrides…</p> : overrides.length === 0 ? <p className="mt-5 rounded-2xl bg-row px-4 py-3.5 text-sm text-soft">No date overrides are configured. Recurring windows apply on every date.</p> : <div className="mt-5 grid gap-2.5">{overrides.map((override) => <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-row px-4 py-3.5" key={override.id}><div><h3 className="font-bold">{override.hostDate}</h3><p className="mt-1.5 text-sm text-soft">{override.mode === "closed" ? <Badge tone="warning">{describeOverride(override)}</Badge> : describeOverride(override)}</p></div><div className="flex gap-2"><Button type="button" variant="quiet" disabled={!hydrated || saving} onClick={() => setDraft({ hostDate: override.hostDate, mode: override.mode, windows: override.windows })}>Edit {override.hostDate}</Button><Button type="button" variant="quiet" disabled={!hydrated || saving} aria-label={`Remove override for ${override.hostDate}`} onClick={() => void remove(override.hostDate)}>Remove</Button></div></div>)}</div>}
+      {draft ? <OverrideForm draft={draft} saving={!hydrated || saving} onChange={update} onCancel={() => { restoreFocus.current = true; setDraft(undefined); }} onSave={save} /> : null}
+      {overrides === undefined ? error ? <Button type="button" className="mt-5" variant="secondary" disabled={!hydrated} onClick={() => void load()}>Reload date overrides</Button> : <p role="status" className="mt-5 text-sm text-muted">Loading date overrides…</p> : overrides.length === 0 ? <p className="mt-5 rounded-2xl bg-row px-4 py-3.5 text-sm text-soft">No date overrides are configured. Recurring windows apply on every date.</p> : <div className="mt-5 grid gap-2.5">{overrides.map((override) => <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-row px-4 py-3.5" key={override.id}><div><h3 className="font-bold">{override.hostDate}</h3><p className="mt-1.5 text-sm text-soft">{override.mode === "closed" ? <Badge tone="warning">{describeOverride(override)}</Badge> : describeOverride(override)}</p></div><div className="flex gap-2"><Button type="button" variant="quiet" disabled={!hydrated || saving} onClick={(event) => { opener.current = event.currentTarget; setDraft({ hostDate: override.hostDate, mode: override.mode, windows: override.windows }); }}>Edit {override.hostDate}</Button><Button type="button" variant="quiet" disabled={!hydrated || saving} aria-label={`Remove override for ${override.hostDate}`} onClick={() => void remove(override.hostDate)}>Remove</Button></div></div>)}</div>}
     </Card>
   );
 }

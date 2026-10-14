@@ -1,3 +1,4 @@
+import { useHydrated } from "../use-hydrated";
 import { OwnerEditorShell } from "../../features/editor/owner-editor";
 import { useHostSetup } from "../../features/host-setup/ui/use-host-setup";
 import { CopyBookingLink } from "../../features/host-setup/ui/copy-booking-link";
@@ -23,6 +24,7 @@ const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
 type ProfileSummary = { name: string; title: string; handle: string };
 
 export function AppShell() {
+  const hydrated = useHydrated();
   const setup = useHostSetup();
   const menuButton = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -55,7 +57,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div data-operator-ready={hydrated} className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
       {initial.editorConfigured ? <OwnerEditorShell /> : null}
       <div className="hidden border-r border-line bg-sidebar lg:block">
         <aside className="sticky top-0 flex h-screen flex-col overflow-y-auto px-5 py-6">
