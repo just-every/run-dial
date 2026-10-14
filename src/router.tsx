@@ -1,3 +1,4 @@
+import { RouteLoadError } from "./core/app/ui/route-load-error";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { installCompiledLiveEdits, setLiveEditsReady } from "../modules/editor/index";
@@ -19,6 +20,6 @@ export function getRouter() {
     setLiveEditsReady(false);
     installCompiledLiveEdits(visualEdits);
   }
-  return createRouter({ routeTree, scrollRestoration });
+  return createRouter({ routeTree, scrollRestoration, defaultErrorComponent: RouteLoadError });
 }
 declare module "@tanstack/react-router" { interface Register { router: ReturnType<typeof getRouter>; } }
