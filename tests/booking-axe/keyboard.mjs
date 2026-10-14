@@ -39,6 +39,10 @@ export async function keyboardJourney(browser, origin, errors, storageState, che
       await keyboardActivate(page.getByRole("button", { name: "Next week", exact: true })); await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
       await keyboardActivate(page.locator(".pb-slot-button").nth(1)); await page.getByRole("button", { name: "Confirm reschedule", exact: true }).waitFor();
       await keyboardActivate(page.getByRole("button", { name: "Confirm reschedule", exact: true })); await page.getByText("Your booking has been rescheduled.", { exact: true }).waitFor();
+      const rescheduledStatus = page.getByRole("status").filter({ hasText: "Your booking has been rescheduled." });
+      const rescheduleFocused = await rescheduledStatus.evaluate(el => el === globalThis.document.activeElement);
+      checks.push({ width, check: "Public reschedule focuses its result after confirmation disappears", passed: rescheduleFocused });
+      assert.ok(rescheduleFocused, "public reschedule focuses its announced result");
       assert.ok(await page.getByText(/Currently:/).isVisible(), "keyboard reschedule reaches the verified current booking");
       const readback = async () => (await get(owner ?? page, origin, `/api/app/bookings?query=keyboard${width}%40dial.test`)).find(row => row.inviteeEmail === `keyboard${width}@dial.test`);
       if (owner) { const saved = await readback(); assert.equal(saved.state, "rescheduled"); assert.ok(saved.history.some(row => row.action === "created")); }
