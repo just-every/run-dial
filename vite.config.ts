@@ -23,6 +23,7 @@ const portabilityRuntimeFiles = [
   "scripts/archive/catalog.mjs", "scripts/archive/policy.mjs", "scripts/archive/import-policy.mjs",
   "scripts/archive/redaction.mjs", "scripts/archive/private-links.mjs", "scripts/archive/json-values.mjs",
   "scripts/archive/environment-secrets.mjs", "scripts/archive/export-policy.mjs", "scripts/archive/guarded-bucket.mjs",
+  "scripts/archive/migration-ledger.mjs",
   "scripts/archive/secret-scanner.mjs", "scripts/archive/json-secret-scanner.mjs",
   "node_modules/@runeditrun/rer/modules/portability/bridge.mjs",
   "node_modules/@runeditrun/rer/modules/portability/catalogue.mjs",
