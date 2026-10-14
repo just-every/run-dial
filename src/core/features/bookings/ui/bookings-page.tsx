@@ -49,7 +49,8 @@ export function BookingsPage() {
   }
 
   async function attendance(id: string, status: "attended" | "no_show") {
-    const note = window.prompt(status === "attended" ? "Attendance note" : "No-show note") ?? "";
+    const note = window.prompt(status === "attended" ? "Attendance note" : "No-show note");
+    if (note === null) return;
     const response = await api.api.app.bookings[":id"].attendance.$post({ param: { id }, json: { status, note } });
     if (!response.ok) { setNotice(await errorMessage(response)); return; }
     setNotice("Attendance recorded."); await load();

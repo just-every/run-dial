@@ -1,5 +1,4 @@
 import { completeEmptyWorkspace } from "../tests/booking-axe/first-run-fixture.mjs";
-import { operatorKeyboardJourney } from "../tests/booking-axe/keyboard-operator.mjs";
 import { bookingJourney } from "../tests/booking-axe/booking.mjs";
 import { timezoneJourney } from "../tests/booking-axe/timezone.mjs";
 import { keyboardJourney } from "../tests/booking-axe/keyboard.mjs";
@@ -53,8 +52,8 @@ try {
     // request and booking-mutation windows elapse; the hourly alternative limit remains.
     if (!process.env.DIAL_KEYBOARD_ONLY) console.log("Waiting one native admission minute before the independent keyboard journey.");
     if (!process.env.DIAL_KEYBOARD_ONLY) await delay(60_000);
-    if (storageState) await operatorKeyboardJourney(browser, origin, storageState, keyboardChecks, errors);
-    await keyboardJourney(browser, origin, errors);
+    await keyboardJourney(browser, origin, errors, storageState, keyboardChecks);
+    assert.deepEqual(keyboardChecks.filter(check => check.passed === false), [], "Every keyboard outcome passes");
   }
   assert.deepEqual(errors, []);
   const audited = scans.filter(scan => "violations" in scan).length;

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { button, keyboardControls, get } from "./keyboard-controls.mjs";
+import { eventKeyboardJourney } from "./keyboard-events.mjs";
+import { settingsKeyboardJourney } from "./keyboard-settings.mjs";
+import { seedConflict, bookingKeyboardJourney } from "./keyboard-bookings.mjs";
 import { trackPage } from "./audit.mjs";
 
 export async function operatorKeyboardJourney(browser, origin, storageState, checks, errors) {
@@ -15,6 +18,7 @@ export async function operatorKeyboardJourney(browser, origin, storageState, che
       const available = await get(page, origin, `/api/public/book/dial-host/intro/availability?week=${date}`);
       const response = await context.request.post(origin + "/api/app/bookings", { headers: { Origin: origin }, data: { idempotencyKey: randomUUID(), eventTypeId: event.id, startAt: available.slots[0].startAt, inviteeTimezone: "UTC", name: `Keyboard operator ${width}`, email: `keyboard-operator-${width}@dial.test`, answers: Object.fromEntries(event.questions.map(q => [q.key, "Keyboard accessibility"])), overrideNoticeAndHorizon: false } });
       assert.equal(response.status(), 201); const booking = await response.json();
+      await seedConflict(page, origin, booking);
       assert.equal((await context.request.post(origin + "/__fixtures/booking-ended", { data: { id: booking.id } })).status(), 204);
       await page.goto(origin + "/app/bookings?query=" + encodeURIComponent(booking.inviteeEmail));
       const attendance = button(page, "Mark attended"); await attendance.waitFor();
@@ -31,6 +35,9 @@ export async function operatorKeyboardJourney(browser, origin, storageState, che
       assert.deepEqual(after.history, before.history, "Cancelling attendance prompt adds no history");
       await keys.restored(attendance, "Cancelled attendance");
       await keys.screenshot("attendance-cancelled");
+      await bookingKeyboardJourney(page, origin, width, keys, checks, booking);
+      await eventKeyboardJourney(page, origin, width, keys, checks);
+      await settingsKeyboardJourney(page, origin, width, keys, checks, booking, errors);
     } finally { await context.close(); }
   }
 }

@@ -29,7 +29,7 @@ export function keyboardControls(page, width, checks) {
   async function activate(target, label, key = "Enter") { await focus(target, label); await page.keyboard.press(key); }
   async function type(target, text, label) { await focus(target, label); await page.keyboard.press("ControlOrMeta+A"); await page.keyboard.type(text); }
   async function screenshot(stage) { const path = evidencePath(`keyboard-${width}-${++sequence}-${stage}.png`); await page.screenshot({ path, fullPage: true, caret: "initial" }); checks.push({ width, stage, screenshot: path, passed: true }); }
-  async function restored(target, label) { assert.ok(await target.evaluate(el => el === globalThis.document.activeElement), `${label}: focus restored to opener`); await focus(target, label); }
+  async function restored(target, label) { checks.push({ width, check: `${label}: focus restored to opener`, passed: await target.evaluate(el => el === globalThis.document.activeElement) }); await focus(target, label); }
   async function native(target, label, type, accept, value) {
     await focus(target, label);
     const dialog = page.waitForEvent("dialog");
@@ -45,6 +45,7 @@ export function keyboardControls(page, width, checks) {
     if (await menu.isVisible()) await activate(menu, "Open operator navigation");
     await activate(page.getByRole("navigation", { name: "Operator navigation" }).filter({ visible: true }).getByRole("link", { name, exact: true }), `Navigate ${name}`);
     await page.getByRole("heading", { name, exact: true, level: 1 }).waitFor();
+    checks.push({ width, check: `${name} navigation leaves logical focus`, passed: await page.evaluate(() => globalThis.document.activeElement !== globalThis.document.body) });
   }
   return { focus, activate, type, screenshot, restored, native, navigate };
 }
