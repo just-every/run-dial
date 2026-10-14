@@ -2235,7 +2235,7 @@
       "executable": false
     },
     "modules/mail/src/development/viewer.mjs": {
-      "sha256": "8c8c7575c2364151501d1725515b90fa662be039422837643d89f6668f241627",
+      "sha256": "423acdb06c31a351b14ae5a42469a65c07aede807e4438a3724b86ce426996a2",
       "executable": false
     },
     "modules/mail/src/doctor/common.mjs": {
@@ -3751,7 +3751,7 @@
       "executable": false
     },
     "scripts/base-cli/modules/mail/src/development/viewer.mjs": {
-      "sha256": "dba10b05bfa58d30e64eae0a5afcf894e33984a7989db11b45e4676950e655f2",
+      "sha256": "46313682a3254298ed30165ad154941f19b898d55e550e52c8265e5c0e1e748f",
       "executable": false
     },
     "scripts/base-cli/modules/mail/src/doctor/common.mjs": {
