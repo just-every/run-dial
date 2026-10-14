@@ -1,3 +1,4 @@
+import { useHydrated } from "../../../app/use-hydrated";
 import type { EventTypeRecord } from "../../event-types";
 import { Button, Card, Input, Segmented, Select } from "../../../app/ui/primitives";
 import { hasBookingFilters, type BookingFilters } from "./booking-filters";
@@ -17,9 +18,10 @@ export function BookingsFilterBar({
   onChange: (change: Partial<BookingFilters>) => void;
   onClear: () => void;
 }) {
+  const hydrated = useHydrated();
   const deliverySelection = filters.deliveryFailed === "true" ? "failed" : filters.deliveryFailed === "false" ? "clear" : "any";
 
-  return <Card className="grid gap-5 p-4 sm:p-5">
+  return <Card className="p-4 sm:p-5"><fieldset disabled={!hydrated} aria-busy={!hydrated} className="grid min-w-0 gap-5 border-0 p-0">
     <Segmented<LifecycleState> stacked label="Lifecycle state" name="booking-lifecycle-state" value={filters.state ?? "all"} options={stateOptions} onChange={(state) => onChange({ state: state === "all" ? undefined : state })} />
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <label className={`${fieldLabel} sm:col-span-2 xl:col-span-1`}>
@@ -61,5 +63,5 @@ export function BookingsFilterBar({
         <Button type="button" variant="quiet" onClick={onClear} disabled={!hasBookingFilters(filters)}>Clear filters</Button>
       </div>
     </div>
-  </Card>;
+  </fieldset></Card>;
 }

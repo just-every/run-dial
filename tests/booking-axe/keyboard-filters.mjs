@@ -3,6 +3,7 @@ import { button, field, get } from "./keyboard-controls.mjs";
 
 export async function bookingFilterKeyboardJourney(page, origin, width, keys, checks, booking) {
   const search = field(page, "Search invitee name or email");
+  await page.locator('fieldset[aria-busy="false"]').filter({ has: search }).waitFor();
   await keys.type(search, booking.inviteeEmail, "Search booking email");
   try { await page.waitForFunction(email => new URL(globalThis.location.href).searchParams.get("query") === email, booking.inviteeEmail); }
   catch (error) {
