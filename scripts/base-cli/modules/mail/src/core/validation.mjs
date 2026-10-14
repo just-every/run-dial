@@ -47,7 +47,7 @@ export function validateConfig(config, dependencies = {}) {
 
 export function parseAddress(value) {
   bounded(value, 998, 'invalid_address');
-  const match = value.trim().match(/^(?:(.*?)\s*<([^<>]+)>|([^<>]+))$/u);
+  const match = value.trim().match(/^(?:([^]*)<([^<>]+)>|([^<>]+))$/u);
   const email = (match?.[2] ?? match?.[3] ?? '').trim();
   // Conservative mailbox subset; never serialize multiple mailboxes as one.
   const parts = email.split('@');
@@ -56,7 +56,7 @@ export function parseAddress(value) {
       !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(parts[1])) fail('invalid_address');
   let name = match?.[1]?.trim();
   if (name?.startsWith('"') && name.endsWith('"')) name = name.slice(1, -1);
-  if (name && /[<>"\\]/.test(name)) fail('invalid_address');
+  if (name && /[<>"\\\r\n\u2028\u2029]/.test(name)) fail('invalid_address');
   return name ? { email, name } : { email };
 }
 

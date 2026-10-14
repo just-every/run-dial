@@ -1259,7 +1259,7 @@
     },
     "modules/mail/src/core/validation.mjs": {
       "source": "modules/mail/src/core/validation.mjs",
-      "sha256": "6a08d0f42f795b8e16520a3f7ea2a1accef17c91584f13f9be791c2d3e6f4f56"
+      "sha256": "19550bab804e3b801b9c947b3c5aaf77e402e2f60a91f528d8cc9706e6983744"
     },
     "modules/mail/src/development/index.d.mts": {
       "source": "modules/mail/src/development/index.d.mts",
@@ -1351,7 +1351,7 @@
     },
     "modules/mail/src/inbound/headers.mjs": {
       "source": "modules/mail/src/inbound/headers.mjs",
-      "sha256": "79673d562647f4e15e7fe10ca3b13241acd5b2cc25a651a32918cee45e02235c"
+      "sha256": "bad913c85efcb66288b46db6af76a4922fef59b5a0dc21bdccf063533e3e14d2"
     },
     "modules/mail/src/inbound/index.mjs": {
       "source": "modules/mail/src/inbound/index.mjs",
