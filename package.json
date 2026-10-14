@@ -53,7 +53,7 @@
     "@cloudflare/workers-types": "5.20260908.1",
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.57.0",
-    "@runeditrun/rer": "0.2.2",
+    "@runeditrun/rer": "0.2.6",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "22.19.17",
     "@types/react": "^19.2.18",
@@ -100,9 +100,6 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "workerd"
-    ],
-    "patchedDependencies": {
-      "@runeditrun/rer@0.2.2": "patches/@runeditrun__rer@0.2.2.patch"
-    }
+    ]
   }
 }

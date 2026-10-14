@@ -19,7 +19,7 @@ export const lifecycle = localInstaller({
 });
 export const { install } = lifecycle;
 export const commandAdapter = createCommandAdapter(lifecycle, {
- // @runeditrun/rer 0.2.2's pnpm patch awaits this before its reset inventory.
+ // @runeditrun/rer awaits this before reset inventory or removal.
  async resetPreflight({ root }) {
   try { await assertLegacyStateRecovered(root); }
   catch { throw refuse('Legacy Dial build/setup storage remains or cannot be inspected. Stop the old runtime and recover its original .dev.vars and data before removing the empty legacy directory; no data was changed.'); }

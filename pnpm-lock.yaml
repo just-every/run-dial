@@ -12,11 +12,6 @@ overrides:
   source-map-js: 1.2.2
   undici: 7.29.1
 
-patchedDependencies:
-  '@runeditrun/rer@0.2.2':
-    hash: c2d1575b8471eea32dc4d54e6fdbe8fbbea00442a9ce3bb65a60f556c74241eb
-    path: patches/@runeditrun__rer@0.2.2.patch
-
 importers:
 
   .:
@@ -65,8 +60,8 @@ importers:
         specifier: ^1.57.0
         version: 1.63.0
       '@runeditrun/rer':
-        specifier: 0.2.2
-        version: 0.2.2(patch_hash=c2d1575b8471eea32dc4d54e6fdbe8fbbea00442a9ce3bb65a60f556c74241eb)
+        specifier: 0.2.6
+        version: 0.2.6
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.2.2(@types/node@22.19.17)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))
@@ -1097,8 +1092,8 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@runeditrun/rer@0.2.2':
-    resolution: {integrity: sha512-PP1PCu/8CaU3T6D/T+6hOLTkf06S+7fEaUim0yk+Rzek5I9M4YHuVH/JqnaDkRwKOMaecmhOY2gZpUkhcB5sXg==}
+  '@runeditrun/rer@0.2.6':
+    resolution: {integrity: sha512-VupJq53gg5mRMR+GGkLjK4xs28/8NT6kMv8S1XsBJbbPhqVe0Md/rryMcHJUSlrIHJOr0CnGo6cTV+4A0f0MOQ==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -3772,7 +3767,7 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@runeditrun/rer@0.2.2(patch_hash=c2d1575b8471eea32dc4d54e6fdbe8fbbea00442a9ce3bb65a60f556c74241eb)': {}
+  '@runeditrun/rer@0.2.6': {}
 
   '@sindresorhus/is@7.2.0': {}
 
