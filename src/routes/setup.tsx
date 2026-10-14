@@ -6,7 +6,7 @@ import { BrandMark } from "../core/features/public-booking";
 
 const setupLink = "inline-flex min-h-11 items-center text-[15px] font-semibold text-ink decoration-[1.5px] underline-offset-[7px] hover:underline hover:decoration-gold-deep aria-[current=page]:underline aria-[current=page]:decoration-gold-deep";
 
-export const Route = createFileRoute('/setup')({ beforeLoad: async () => ({ shell: await loadSetupShell() }), component: SetupShell });
+export const Route = createFileRoute('/setup')({ codeSplitGroupings: [], beforeLoad: async () => ({ shell: await loadSetupShell() }), component: SetupShell });
 function SetupShell() {
   async function signOut() {
     // Stop the private health check before native sign-out revokes its session.

@@ -10,7 +10,7 @@ import { MailPreferencesCard } from "../core/features/delivery/ui/mail-preferenc
 import { ArchiveStatusCard } from "../core/features/portability/status-card";
 
 
-export const Route = createFileRoute('/app/settings' )({ component: withEditorLeaf(SettingsRoute) });
+export const Route = createFileRoute('/app/settings' )({ codeSplitGroupings: [], component: withEditorLeaf(SettingsRoute) });
 
 function SettingsRoute() {
   const { shell } = Route.useRouteContext();
