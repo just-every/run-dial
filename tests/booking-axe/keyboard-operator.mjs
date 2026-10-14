@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { button, keyboardControls, get } from "./keyboard-controls.mjs";
 import { eventKeyboardJourney } from "./keyboard-events.mjs";
 import { settingsKeyboardJourney } from "./keyboard-settings.mjs";
+import { bookingFilterKeyboardJourney } from "./keyboard-filters.mjs";
 import { seedConflict, bookingKeyboardJourney } from "./keyboard-bookings.mjs";
 import { trackPage } from "./audit.mjs";
 
@@ -20,7 +21,9 @@ export async function operatorKeyboardJourney(browser, origin, storageState, che
       assert.equal(response.status(), 201); const booking = await response.json();
       await seedConflict(page, origin, booking);
       assert.equal((await context.request.post(origin + "/__fixtures/booking-ended", { data: { id: booking.id } })).status(), 204);
-      await page.goto(origin + "/app/bookings?query=" + encodeURIComponent(booking.inviteeEmail));
+      await page.goto(origin + "/app");
+      await keys.navigate("Bookings");
+      await bookingFilterKeyboardJourney(page, origin, width, keys, checks, booking);
       const attendance = button(page, "Mark attended"); await attendance.waitFor();
       const before = await get(page, origin, `/api/app/bookings/${booking.id}`);
       const attendanceWrites = [];

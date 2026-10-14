@@ -1,6 +1,6 @@
 import { ErasureRecovery } from "./delivery-actions";
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader } from "../../../app/ui/page-header";
@@ -17,10 +17,15 @@ export function BookingsPage() {
   const [eventTypes, setEventTypes] = useState<EventTypeRecord[]>([]);
   const [selected, setSelected] = useState<string>();
   const [notice, setNotice] = useState("");
+  const noticeElement = useRef<HTMLParagraphElement>(null);
+  const focusNotice = useRef(false);
   const [eventTypesError, setEventTypesError] = useState("");
   const { filters, page, erasedId, navigate } = useBookingWorkspace();
   const moveToPage = useCallback((nextPage: number) => navigate(filters, nextPage, true), [filters, navigate]);
   const { bookings, totalCount, loading, listError, load } = useBookingList(filters, page, moveToPage);
+  useEffect(() => {
+    if (!loading && notice && focusNotice.current) { noticeElement.current?.focus(); focusNotice.current = false; }
+  }, [loading, notice]);
 
   useEffect(() => {
     void api.api.app["event-types"].$get({}).then(async (response) => {
@@ -45,7 +50,7 @@ export function BookingsPage() {
     if (reason === null) return;
     const response = await api.api.app.bookings[":id"].cancel.$post({ param: { id }, json: reason ? { reason } : {} });
     if (!response.ok) { setNotice(await errorMessage(response)); return; }
-    setNotice("Booking cancelled and delivery updates queued."); await load();
+    focusNotice.current = true; setNotice("Booking cancelled and delivery updates queued."); await load();
   }
 
   async function attendance(id: string, status: "attended" | "no_show") {
@@ -53,7 +58,7 @@ export function BookingsPage() {
     if (note === null) return;
     const response = await api.api.app.bookings[":id"].attendance.$post({ param: { id }, json: { status, note } });
     if (!response.ok) { setNotice(await errorMessage(response)); return; }
-    setNotice("Attendance recorded."); await load();
+    focusNotice.current = true; setNotice("Attendance recorded."); await load();
   }
 
   const active = bookings?.find((booking) => booking.id === selected) ?? bookings?.[0];
@@ -64,7 +69,7 @@ export function BookingsPage() {
 
   return <div className="grid gap-7">
     <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review bookings, delivery state, and attendance." actions={<Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link>} />
-    {notice ? <p role="status" aria-label="Booking update" className={noticeClassName("success", "font-semibold")}>{notice}</p> : null}
+    {notice ? <p ref={noticeElement} tabIndex={-1} role="status" aria-label="Booking update" className={noticeClassName("success", "font-semibold")}>{notice}</p> : null}
     {listError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{listError}</p> : null}
     {eventTypesError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{eventTypesError}</p> : null}
     {erasedId ? <ErasureRecovery bookingId={erasedId} /> : null}

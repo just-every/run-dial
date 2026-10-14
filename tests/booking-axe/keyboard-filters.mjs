@@ -1,0 +1,33 @@
+import assert from "node:assert/strict";
+import { button, field, get } from "./keyboard-controls.mjs";
+
+export async function bookingFilterKeyboardJourney(page, origin, width, keys, checks, booking) {
+  const search = field(page, "Search invitee name or email");
+  await keys.type(search, booking.inviteeEmail, "Search booking email");
+  await page.waitForFunction(email => new URL(globalThis.location.href).searchParams.get("query") === email, booking.inviteeEmail);
+  await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
+  const state = page.getByRole("radiogroup", { name: "Lifecycle state", exact: true });
+  await keys.focus(state.getByRole("radio", { name: "All states", exact: true }), "Booking lifecycle radio group");
+  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
+  await page.getByRole("heading", { name: "No bookings match these filters", exact: true }).waitFor();
+  assert.equal(new URL(page.url()).searchParams.get("state"), "cancelled");
+  assert.equal((await get(page, origin, `/api/app/bookings?query=${encodeURIComponent(booking.inviteeEmail)}&state=cancelled`)).length, 0);
+  for (let i = 0; i < 2; i++) await page.keyboard.press("ArrowLeft");
+  await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
+  assert.equal(new URL(page.url()).searchParams.get("state"), "confirmed");
+  await keys.focus(field(page, "Start time"), "Booking temporal filter");
+  await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown"); await page.keyboard.press("Tab");
+  await page.waitForFunction(() => new URL(globalThis.location.href).searchParams.get("time") === "past");
+  await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
+  const rows = await get(page, origin, `/api/app/bookings?query=${encodeURIComponent(booking.inviteeEmail)}&state=confirmed&time=past`);
+  assert.deepEqual(rows.map(row => row.id), [booking.id]);
+  await keys.focus(field(page, "Event type"), "Booking event filter");
+  await page.keyboard.press("ArrowDown"); await page.keyboard.press("Tab");
+  await page.waitForFunction(id => new URL(globalThis.location.href).searchParams.get("eventTypeId") === id, booking.eventTypeId);
+  await keys.screenshot("booking-filters");
+  await keys.activate(button(page, "Clear filters"), "Clear booking filters");
+  await page.waitForFunction(() => !new URL(globalThis.location.href).searchParams.get("query"));
+  await keys.type(search, booking.inviteeEmail, "Restore focused booking search");
+  await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
+  checks.push({ width, flow: "Booking search, lifecycle arrow-key selection, time/event native selects and clear filters with API readback", passed: true });
+}

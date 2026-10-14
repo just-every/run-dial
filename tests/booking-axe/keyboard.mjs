@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { timezoneKeyboardJourney } from "./keyboard-timezone.mjs";
 import { trackPage } from "./audit.mjs";
 import { operatorKeyboardJourney } from "./keyboard-operator.mjs";
 import { keyboardControls, button, get } from "./keyboard-controls.mjs";
@@ -14,6 +15,7 @@ export async function keyboardJourney(browser, origin, errors, storageState, che
       const keyboardActivate = async (target) => keys.activate(target, (await target.getAttribute("aria-label")) || (await target.innerText()));
       const typeField = async (target, value) => keys.type(target, value, (await target.getAttribute("aria-label")) || "Public booking field");
       await page.goto(origin + "/book/dial-host/intro"); await page.locator(".pb-slot-button").first().waitFor();
+      await timezoneKeyboardJourney(page, keys, width, checks);
       await keyboardActivate(page.getByRole("button", { name: "Next week", exact: true })); await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
       await keyboardActivate(page.locator(".pb-slot-button").first()); await page.getByRole("button", { name: "Confirm booking", exact: true }).waitFor();
       // The details fieldset is disabled and aria-busy until the page hydrates; typing before then is lost.
