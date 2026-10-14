@@ -319,7 +319,7 @@
       "name": "CALENDAR_WEBHOOK_SECRET",
       "secret": true,
       "required": false,
-      "why": "Authenticates push callbacks when a Google Calendar is connected. Without it, callbacks are rejected and connected-calendar health checks cannot succeed; this does not block the explicit not_connected saved-availability/non-Meet publication path. Live callback behavior requires separate acceptance."
+      "why": "Authenticates calendar.provider.v2 push callbacks when a Google Calendar is connected. Without it, callbacks are rejected and connected-calendar health checks cannot succeed; this does not block the explicit not_connected saved-availability/non-Meet publication path. Live callback behavior requires separate acceptance."
     },
     {
       "name": "RESEND_WEBHOOK_SECRET",
