@@ -44,7 +44,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   assert.ok(await hostDate.evaluate(el => el === globalThis.document.activeElement && el.validity.valueMissing));
   await keys.focus(hostDate, "Date override host date");
   for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowLeft");
-  for (const key of ["ArrowUp", "ArrowRight", "ArrowUp", "ArrowRight", "ArrowUp", "Tab"]) await page.keyboard.press(key);
+  for (const key of ["ArrowUp", "ArrowRight", "ArrowUp", "ArrowRight", "ArrowUp", "ArrowDown", "Tab"]) await page.keyboard.press(key);
   let date = await hostDate.inputValue(); assert.match(date, /^\d{4}-\d{2}-\d{2}$/);
   await keys.select(field(page, "Schedule for this date"), "open", "Date override mode");
   const overrideForm = hostDate.locator("xpath=ancestor::form");
@@ -58,7 +58,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await keys.screenshot("date-override-error");
   await keys.focus(hostDate, "Recover rejected host date");
   for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("ArrowUp"); await page.keyboard.press("Tab");
+  await page.keyboard.press("ArrowUp"); await page.keyboard.press("ArrowUp"); await page.keyboard.press("Tab");
   date = await hostDate.inputValue();
   assert.ok(date > new Date().toISOString().slice(0, 10), "keyboard recovery chooses a future date");
   await mutation(page, `/api/app/event-types/${event.id}/availability-overrides/${date}`, () => keys.activate(button(page, "Save date override"), "Save recovered date override"));

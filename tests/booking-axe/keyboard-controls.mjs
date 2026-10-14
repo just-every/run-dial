@@ -78,5 +78,5 @@ export function keyboardControls(page, width, checks) {
 export async function get(page, origin, path) { const response = await page.request.get(origin + path); assert.equal(response.status(), 200, `GET ${path}`); return response.json(); }
 export async function mutation(page, path, action, expected = 200) {
   const response = page.waitForResponse(r => new URL(r.url()).pathname === path && r.request().method() !== "GET");
-  await action(); const result = await response; assert.equal(result.status(), expected, `${path}: ${await result.text()}`); return result;
+  await action(); const result = await response; assert.equal(result.status(), expected, result.status() === expected ? path : `${path}: ${await result.text()}`); return result;
 }

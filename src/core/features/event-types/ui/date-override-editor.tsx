@@ -53,6 +53,7 @@ export function DateOverrideEditor({ eventId, timezone }: { eventId: string; tim
       if (!response.ok) { setError(await errorMessage(response)); return; }
       const stored = await response.json();
       setOverrides((current) => [...(current ?? []).filter((entry) => entry.hostDate !== stored.hostDate), stored].sort((left, right) => left.hostDate.localeCompare(right.hostDate)));
+      restoreFocus.current = true;
       setDraft(undefined);
     } catch { setError("The save result could not be checked. Your date and windows are kept here; review the override before retrying."); }
     finally { inFlight.current = false; setSaving(false); }
@@ -63,6 +64,7 @@ export function DateOverrideEditor({ eventId, timezone }: { eventId: string; tim
     try {
       const response = await api.api.app["event-types"][":id"]["availability-overrides"][":hostDate"].$delete({ param: { id: eventId, hostDate } });
       if (!response.ok && response.status !== 404) { setError(await errorMessage(response)); return; }
+      opener.current = null; restoreFocus.current = true;
       setOverrides((current) => current?.filter((entry) => entry.hostDate !== hostDate));
       if (draft?.hostDate === hostDate) setDraft(undefined);
     } catch { setError("Removal could not be checked. The override is kept here; retry removal to check it again."); }
