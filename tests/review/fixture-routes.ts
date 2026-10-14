@@ -16,6 +16,13 @@ export async function handleFixtures(request: Request, env: AppBindings & { PROV
       return Response.json({ keys: listed.objects.map(object => object.key) });
     }
   const providerDb = env.PROVIDER_DB ?? env.DB;
+    if (url.pathname === "/__fixtures/booking-ended" && request.method === "POST") {
+      const { id } = await request.json<{ id: string }>();
+      const end = new Date(Date.now() - 86400000);
+      const start = new Date(end.getTime() - 1800000);
+      await env.DB.prepare("UPDATE booking_occurrences SET start_at = ?, end_at = ? WHERE id = (SELECT current_occurrence_id FROM bookings WHERE id = ?)").bind(start.toISOString(), end.toISOString(), id).run();
+      return new Response(null, { status: 204 });
+    }
     if (url.pathname === "/__fixtures/bookings-501") return bulkBookingsFixture(request, env, servicesFor(env));
     if (url.pathname === "/__fixtures/setup" && request.method === "POST") return Response.json(await setup(env, servicesFor(env)));
     if (url.pathname === "/__fixtures/schedule" && request.method === "POST") {

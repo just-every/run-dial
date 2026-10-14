@@ -5,7 +5,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "**/.wrangler/**", "node_modules/**", "wrangler.toml", "scripts/base-cli/**", "scripts/base-onboarding/**"] },
+  { ignores: ["dist/**", "**/.wrangler/**", "node_modules/**", "wrangler.toml"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

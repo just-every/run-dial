@@ -5,9 +5,9 @@ runnable edition's root, install locked dependencies, prepare its local owner,
 then start development:
 
 ```sh
-node scripts/rer.mjs install
-node scripts/rer.mjs setup --owner-email you@example.com
-node scripts/rer.mjs dev
+rer install
+rer setup --owner-email you@example.com
+rer dev
 ```
 
 Commands that run project work select the exact Node version declared by the
@@ -37,7 +37,7 @@ readiness is bounded and failure stops the owned processes.
 
 Missing non-interactive setup answers exit 3 and name the manifest fields.
 Read `rer-setup.json` and pass a private, mode-0600 JSON object keyed by those
-names using `node scripts/rer.mjs setup --answers PATH --non-interactive`,
+names using `rer setup --answers PATH --non-interactive`,
 for example `{"OWNER_EMAIL":"owner@example.com"}`. Secret values stay in
 private inputs and never go in command arguments. A setup rerun with the saved
 owner and origin preserves existing owner/data and exact private settings.
@@ -45,10 +45,7 @@ Conflicting saved identity or origin reports an actionable recovery path.
 Review reset's exact removal inventory before confirmation; export domain data
 first if it should be restored, and import only into an empty destination.
 
-Queue waits report immediately with a reason and numeric one-based position,
-then refresh about every 15 seconds while waiting. From the runnable project
-root, inspect the live queue with
-`node scripts/base-cli/modules/job-queue/cli.mjs status`.
+Queue waits report their reason and live position while the command waits. Package mode has no queue status command.
 
 For the real owner mailbox, `setup` can prompt instead of receiving
 `--owner-email` on the command line. Setup builds the app, applies local
@@ -71,8 +68,8 @@ external email is sent. A successful sign-in consumes the link once. Seeds
 without dev identity print only `RER_SIGN_IN URL` for the local outbox.
 
 Dev and preview are managed foreground servers. The first invocation stays
-active while serving. Use `node scripts/rer.mjs dev --stop` or
-`node scripts/rer.mjs preview --stop` to stop them; `--idle-timeout SECONDS`
+active while serving. Use `rer dev --stop` or
+`rer preview --stop` to stop them; `--idle-timeout SECONDS`
 sets inactivity cleanup. Compatible repeated starts reuse the registered
 server, print readiness and exit. Preview serves fixed production output; dev
 serves live source edits.
@@ -89,12 +86,12 @@ path served by the app. Import requires an empty destination and `--yes`
 confirms the restore.
 
 ```sh
-node scripts/rer.mjs verify
-node scripts/rer.mjs reset --yes
-node scripts/rer.mjs export --output exports/installation.rer
-node scripts/rer.mjs import --input exports/installation.rer --yes
-node scripts/rer.mjs deploy
-node scripts/rer.mjs describe
+rer verify
+rer reset --yes
+rer export --output exports/installation.rer
+rer import --input exports/installation.rer --yes
+rer deploy
+rer describe
 ```
 
 Stop dev or preview with `--stop` or Ctrl-C before build or verification, and
@@ -111,12 +108,12 @@ outbox, private settings and transient runtime state are excluded. Remote
 transfer is unsupported by the maintained references and fails visibly.
 
 Real deployment uses the owner-account procedure and its private credentials.
-`node scripts/rer.mjs deploy --dry-run` validates and builds locally without a
+`rer deploy --dry-run` validates and builds locally without a
 provider request. The default environment is `production`; select another with
 `--environment NAME`. Local validation does not establish provider acceptance,
 hosted health or mail delivery.
 
-`node scripts/rer.mjs describe` reads the current checkout's actual verbs,
+`rer describe` reads the current checkout's actual verbs,
 flags, aliases, pins, effects and local state without installing or running
 project commands. New verbs accept `--help`, `--cwd PATH`, `--non-interactive`
 and `--json`. Setup also accepts `--owner-name`, `--port`, `--host` and a
@@ -139,7 +136,7 @@ pnpm run dev
 Package aliases, when used, take the form `pnpm run VERB -- FLAGS`; use
 `pnpm run deploy -- --dry-run` because `pnpm deploy` is a different built-in
 command. `pnpm install --frozen-lockfile` is the equivalent dependency action
-to `node scripts/rer.mjs install`.
+to `rer install`.
 
 Local durable state is `.wrangler/state`; CLI bookkeeping is `.rer/local`,
 installer state is `.seed/installer`, and the default private settings file is

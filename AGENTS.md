@@ -5,9 +5,9 @@
 From this runnable checkout, use the pinned Node 22.20.0 and pnpm 10.12.4:
 
 ```sh
-node scripts/rer.mjs install
-node scripts/rer.mjs setup --owner-email you@example.com
-node scripts/rer.mjs dev
+rer install
+rer setup --owner-email you@example.com
+rer dev
 ```
 
 Use the real owner mailbox. Setup can prompt for it instead of putting the
@@ -23,23 +23,23 @@ every page switches between owner, co-host and signed out. `dev --login` turns
 dev identity off and uses the real email-link path: open the printed outbox,
 choose the newest sign-in message and follow its link; no external email is
 sent. Tests that need a sign-in link read the outbox with the checkout's key.
-Stop dev with `node scripts/rer.mjs dev --stop` or Ctrl-C before verification.
+Stop dev with `rer dev --stop` or Ctrl-C before verification.
 
 ```sh
-node scripts/rer.mjs verify
-node scripts/rer.mjs export --output exports/dial.rer
-node scripts/rer.mjs reset --yes
-node scripts/rer.mjs import --input exports/dial.rer --yes
-node scripts/rer.mjs setup --owner-email you@example.com
-node scripts/rer.mjs deploy --dry-run
-node scripts/rer.mjs describe
+rer verify
+rer export --output exports/dial.rer
+rer reset --yes
+rer import --input exports/dial.rer --yes
+rer setup --owner-email you@example.com
+rer deploy --dry-run
+rer describe
 ```
 
 Export anything needed before reset and save the original private settings
 securely outside the local state paths. Restore those settings, including the
 same `SESSION_SECRET`, before import; import requires an empty destination and
 explicit confirmation. A real deployment is a separate owner-account
-operation using `node scripts/rer.mjs deploy --environment production`. These
+operation using `rer deploy --environment production`. These
 examples do not claim that a deployment or release occurred. See
 `OPERATIONS.md` and `SEED-COMMAND-CONTRACT.md` for the full effects and flags.
 

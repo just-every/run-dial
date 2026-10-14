@@ -25,7 +25,7 @@ jobs:
       - run: corepack enable && pnpm install --frozen-lockfile
         env:
           COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
-      - run: node scripts/rer.mjs deploy --site
+      - run: pnpm exec rer deploy --site
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

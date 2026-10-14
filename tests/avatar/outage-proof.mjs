@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { fixture } from './fixture.mjs';
 import { dialPolicy, guardedBucket } from '../../scripts/local/archive-policy.mjs';
-import { createPortability, readArchive } from '../../scripts/base-cli/modules/portability/index.mjs';
+import { createPortability, readArchive } from '@runeditrun/rer/modules/portability';
 
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=', 'base64');
 const path = '/api/app/profile/avatar';

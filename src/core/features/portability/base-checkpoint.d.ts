@@ -1,5 +1,5 @@
 // Base's checkpoint operations use only D1, without snapshot policy or buckets.
-declare module "*scripts/base-cli/modules/portability/export.mjs" {
+declare module "@runeditrun/rer/internal/modules/portability/export.mjs" {
  interface ExportStatus {
   id: string;
   kind: "export";

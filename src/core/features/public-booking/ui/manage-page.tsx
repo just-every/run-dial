@@ -8,9 +8,12 @@ import { ManageReschedule } from "./manage-reschedule";
 import type { Confirmation } from "./types";
 
 export function ManageBookingPage({ token, embedded = false }: { token: string; embedded?: boolean }) {
+  const resultElement = useRef<HTMLParagraphElement>(null);
+  const focusResult = useRef(false);
   const [booking, setBooking] = useState<Confirmation | undefined>(useDocumentData<Confirmation>());
   const [notice, setNotice] = useState(""), [reason, setReason] = useState(""), [rescheduling, setRescheduling] = useState(false), [working, setWorking] = useState(false), [pending, setPending] = useState(false);
   const hydrated = useHydrated(), refreshEpoch = useRef(0), cancelling = useRef(false);
+  useEffect(() => { if (!working && notice && focusResult.current) { resultElement.current?.focus(); focusResult.current = false; } }, [working, notice]);
   useEffect(() => {
     const epoch = ++refreshEpoch.current;
     void (async () => {
@@ -29,10 +32,10 @@ export function ManageBookingPage({ token, embedded = false }: { token: string; 
     cancelling.current = true; refreshEpoch.current++; setWorking(true); setNotice("");
     try {
       const response = await publicApi.api.public.manage[":token"].cancel.$post({ param: { token }, json: { reason: reason || undefined } });
-      if (response.ok) { setBooking(await response.json() as Confirmation); setRescheduling(false); setNotice("This booking has been cancelled."); }
+      if (response.ok) { const cancelled = await response.json() as Confirmation; focusResult.current = true; setBooking(cancelled); setRescheduling(false); setNotice("This booking has been cancelled."); }
       else setNotice(await errorMessage(response));
     } catch { setNotice("The result could not be received. Retry to check the same booking."); }
     finally { cancelling.current = false; setWorking(false); }
   }
-  return <PublicTheme><PublicHeader embedded={embedded} /><main aria-busy={!hydrated || working} className={`pb-recovery pb-manage ${embedded ? "pb-event-embedded" : ""}`}><section><p className="pb-eyebrow">Manage booking</p><h1>{booking.event.eventTitle}</h1><p>Currently: {format(booking.occurrence.startAt, booking.inviteeTimezone)}, {booking.inviteeTimezone}</p>{notice || booking.state === "cancelled" ? <p role="status">{notice || "This booking has been cancelled."}</p> : null}{booking.state !== "cancelled" ? <><label className="pb-manage-reason">Reason (optional)<textarea disabled={!hydrated || working || pending} value={reason} onChange={event => setReason(event.target.value)} /></label><div className="pb-request-actions"><button type="button" className="pb-secondary-button" disabled={!hydrated || working || pending} onClick={() => void cancel()}>Cancel booking</button><button type="button" className="pb-secondary-button" disabled={!hydrated || working || pending} onClick={() => { refreshEpoch.current++; setRescheduling(true); }}>Reschedule booking</button></div>{rescheduling ? <ManageReschedule key={booking.occurrence.startAt} token={token} booking={booking} reason={reason} onBusy={setWorking} onPending={setPending} onBooked={value => { setBooking(value); setPending(false); setRescheduling(false); setNotice("Your booking has been rescheduled."); }} /> : null}</> : null}</section></main><PublicFooter embedded={embedded} /></PublicTheme>;
+  return <PublicTheme><PublicHeader embedded={embedded} /><main aria-busy={!hydrated || working} className={`pb-recovery pb-manage ${embedded ? "pb-event-embedded" : ""}`}><section><p className="pb-eyebrow">Manage booking</p><h1>{booking.event.eventTitle}</h1><p>Currently: {format(booking.occurrence.startAt, booking.inviteeTimezone)}, {booking.inviteeTimezone}</p>{notice || booking.state === "cancelled" ? <p ref={resultElement} tabIndex={-1} role="status">{notice || "This booking has been cancelled."}</p> : null}{booking.state !== "cancelled" ? <><label className="pb-manage-reason">Reason (optional)<textarea disabled={!hydrated || working || pending} value={reason} onChange={event => setReason(event.target.value)} /></label><div className="pb-request-actions"><button type="button" className="pb-secondary-button" disabled={!hydrated || working || pending} onClick={() => void cancel()}>Cancel booking</button><button type="button" className="pb-secondary-button" disabled={!hydrated || working || pending} onClick={() => { refreshEpoch.current++; setRescheduling(true); }}>Reschedule booking</button></div>{rescheduling ? <ManageReschedule key={booking.occurrence.startAt} token={token} booking={booking} reason={reason} onBusy={setWorking} onPending={setPending} onBooked={value => { focusResult.current = true; setBooking(value); setPending(false); setRescheduling(false); setNotice("Your booking has been rescheduled."); }} /> : null}</> : null}</section></main><PublicFooter embedded={embedded} /></PublicTheme>;
 }

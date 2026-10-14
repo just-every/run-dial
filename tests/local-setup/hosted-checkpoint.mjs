@@ -54,7 +54,7 @@ export async function expiredCheckpoint({ origin, cookie, otherCookie, id, direc
   assert.equal((await request('/download')).status, 503, 'even a previously complete archive cannot download after expiry');
   const client = process.env.DIAL_PUBLISHED_RER_ENTRY
    ? fileURLToPath(new URL('../modules/portability/cli.mjs', pathToFileURL(process.env.DIAL_PUBLISHED_RER_ENTRY)))
-   : join(directory, 'scripts/base-cli/modules/portability/cli.mjs');
+   : join(directory, 'node_modules/@runeditrun/rer/modules/portability/cli.mjs');
   const outputPath = join(directory, 'exports/expired.rer');
   const runClient = async (verb, expected) => {
    const child = spawnOwned(process.execPath, [client, verb, '--origin', origin, '--session-file', sessionFile, '--resume', id, ...(verb === 'export' ? ['--out', outputPath] : [])], { cwd: directory, env: environment() }, { label: `published transfer ${verb}`, onOutput: () => {} });

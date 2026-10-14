@@ -1,6 +1,6 @@
 import schema from "virtual:dial-archive-schema";
-import { createPortabilityHandler } from "../../../../scripts/base-cli/modules/portability/index.mjs";
-import { exportStatus, abortExport } from "../../../../scripts/base-cli/modules/portability/export.mjs";
+import { createPortabilityHandler } from "@runeditrun/rer/modules/portability";
+import { exportStatus, abortExport } from "@runeditrun/rer/internal/modules/portability/export.mjs";
 import { applicationCatalog, catalogQuery } from "../../../../scripts/archive/catalog.mjs";
 import { exportPolicy } from "../../../../scripts/archive/export-policy.mjs";
 import { guardedBucket } from "../../../../scripts/archive/guarded-bucket.mjs";

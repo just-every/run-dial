@@ -1,6 +1,6 @@
-import { previewTarget } from '../base-onboarding/operator-installer.mjs';
-import { selectLocalState } from '../base-onboarding/local/state.mjs';
-import { privateDirectory } from '../base-onboarding/private-files.mjs';
+import { previewTarget } from '@runeditrun/rer/operator-installer';
+import { selectLocalState } from '@runeditrun/rer/local/state';
+import { privateDirectory } from '@runeditrun/rer/private-files';
 import { assertLegacyStateRecovered } from './legacy-state.mjs';
 import { retireLocalObservability } from './observability.mjs';
 

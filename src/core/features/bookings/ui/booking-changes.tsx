@@ -1,5 +1,5 @@
 import { FocusDialog } from "../../../app/ui/focus-dialog";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { useHydrated } from "../../../app/use-hydrated";
 import { Badge, Button, Input, Select } from "../../../app/ui/primitives";
@@ -10,10 +10,17 @@ type Props = { booking: BookingRecord; onChanged(notice?: string): Promise<void>
 
 export function BookingChanges({ booking, onChanged, onCancel }: Props) {
   const hydrated = useHydrated();
+  const returnFocus = useRef<HTMLElement | null>(null);
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [working, setWorking] = useState(false);
   const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (!working && returnFocus.current) {
+      if (returnFocus.current.isConnected) returnFocus.current.focus();
+      returnFocus.current = null;
+    }
+  }, [working]);
   async function restore(conflictId: string) {
     setWorking(true); setNotice("");
     try {
@@ -24,6 +31,7 @@ export function BookingChanges({ booking, onChanged, onCancel }: Props) {
     finally { setWorking(false); }
   }
   async function cancel() {
+    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setWorking(true); setNotice("");
     try { await onCancel(booking.id); }
     catch { setNotice("Cancellation could not be checked. Refresh the booking before trying again."); }

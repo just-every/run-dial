@@ -1,1 +1,0 @@
-export const env = new Proxy({}, { get: (_target, key) => globalThis[Symbol.for('rer.container.bindings')]?.[key], ownKeys: () => Reflect.ownKeys(globalThis[Symbol.for('rer.container.bindings')] ?? {}), getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }) });
