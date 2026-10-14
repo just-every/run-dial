@@ -11,9 +11,9 @@
 <p align="center"><a href="https://run-dial.com">run-dial.com</a> · <a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
 
 <p align="center">
-  <a href="https://justevery.com/#vol-dial"><img src=".github/assets/media/preview.gif" width="800" alt="Dial: Priya picks three dates and a window in her own zone, reviews the request and sends it"></a>
+  <a href="https://justevery.com/#vol-dial"><img src=".github/assets/media/preview.gif" width="800" alt="Dial: Priya picks a time in her own zone, confirms with her name and email and sees the booking confirmed"></a>
 </p>
-<p align="center"><a href="https://justevery.com/#vol-dial"><b>Watch the full demo</b></a> · 44 seconds</p>
+<p align="center"><a href="https://justevery.com/#vol-dial"><b>Watch the full demo</b></a> · 48 seconds</p>
 
 <p align="center">
   <img src=".github/assets/media/flow.webp" width="800" alt="Priya picks three dates for her request, and the host sees her window in her zone, Europe/London, and his own, America/New_York">
