@@ -155,8 +155,11 @@ booking facts while excluding private credentials, sessions, sign-in and invitat
 links, booking capabilities, OAuth credentials, webhook authority, development
 mail, and pending admissions. The private `SESSION_SECRET` is never exported;
 its non-secret continuity hash protects restored retry and erasure guards.
-Export refuses to overwrite an existing archive. Remote transfer is unsupported
-and fails before provider calls.
+Export refuses to overwrite an existing archive. Hosted export is supported
+through an authenticated owner session; remote restore is not exposed. See
+[Backups and export](docs/backups.md#export-from-a-hosted-install) for the hosted
+command and rehearse restoration into an empty local install using the same
+source revision that made the archive.
 
 Restore only to an empty destination. Keep a private copy of the original
 `.dev.vars`; after a reset or on a new machine, restore those settings securely

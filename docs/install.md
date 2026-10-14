@@ -77,7 +77,7 @@ pnpm run reset -- --yes
 
 Reset prints exactly what it removes: your local data, the owner, the generated settings and setup's own records. It keeps the source, the dependencies, your archives in `exports/` and your deploy records in `.rer/deploy`. The next setup makes a fresh, empty Dial whose owner starts setup again.
 
-Local setup does not connect Google Calendar. Fixed-link, phone and in-person event types can offer bookable times using saved availability, existing Dial bookings and the local outbox. Google Meet requires a connected Google Calendar. To explore calendar integration, run the review demo, which uses a synthetic calendar and mail at `http://127.0.0.1:15702`. Sign in as `operator@dial.test` through its local outbox. Never use it for real bookings.
+Local setup does not connect Google Calendar. Choosing **Publish event type** turns on automatic bookings for fixed-link, phone and in-person event types using saved weekly availability, existing Dial bookings and the local outbox. Without a connected calendar, external calendar conflicts are not checked. Google Meet requires a healthy connected Google Calendar that supports Meet. To explore calendar integration, run the review demo, which uses a synthetic calendar and mail at `http://127.0.0.1:15702`. Sign in as `operator@dial.test` through its local outbox. Never use it for real bookings.
 
 ```bash
 pnpm run review
@@ -92,8 +92,8 @@ One command, `pnpm run deploy`, builds your committed source, creates what Dial 
 
 1. **A workers.dev subdomain.** In the Cloudflare dashboard, open Workers & Pages and choose your account's workers.dev subdomain. Without one, deploy stops with `workers-subdomain-missing` before it creates anything.
 2. **An API token.** Create an account API token for that one account with these account permissions: Workers Scripts Edit, D1 Edit, Workers R2 Storage Edit and Queues Edit. If one is missing, deploy names it, for example `token-scope-missing-d1`.
-3. **Your Dial address.** It is your Worker's name, `dial-production`, on your workers.dev subdomain: `https://dial-production.<your-subdomain>.workers.dev`. You need it for SendGrid's webhook before you deploy, and for Google afterwards.
-4. **Your mail settings and secrets.** Follow [Send mail with SendGrid](calendar-and-email.md#send-mail-with-sendgrid) for the sender, the API key and the webhook key, and choose a random session secret and setup token of at least 32 characters each.
+3. **Your Dial address.** It is your Worker's name, `dial-production`, on your workers.dev subdomain: `https://dial-production.<your-subdomain>.workers.dev`. After deployment, use it to sign in and, if you choose, connect Google or enable SendGrid delivery tracking.
+4. **Your mail settings and secrets.** Prepare the verified sender and API key in [Send mail with SendGrid](calendar-and-email.md#send-mail-with-sendgrid), and choose a random session secret and setup token of at least 32 characters each. No webhook key is required to deploy, check the sender or send mail; [delivery and bounce tracking](calendar-and-email.md#optional-delivery-and-bounce-tracking) is a separate opt-in.
 5. **Committed source.** Commit your changes. Deploy refuses to run with uncommitted changes to tracked files and stops with `owner-source-not-committed`.
 
 Then deploy:
@@ -132,10 +132,10 @@ Until you finish setup, signing in opens the setup workspace at `/setup`, and an
 3. **Google Calendar connection.** Connect and check it in Settings if you want calendar integration or Google Meet.
 4. **An availability window.** Add weekly hours to an event type.
 5. **An event type.** Create your first one.
-6. **Publish or Open requests.** Publish it with saved availability, or take requests only.
+6. **Publish or Open requests.** Choose **Publish event type** to enable automatic bookings with saved availability, or **Open requests** to take requests only.
 7. **Copy the booking link.** Copy the event's public booking link.
 
-You need not finish every step. **Finish setup** asks for a saved host profile and a copied link to an event that is published, or open for requests. **Open requests** needs a working mail sender, but no Google Calendar or availability windows. Publishing for bookable times needs saved availability and verified mail, including the local outbox in local mode. A calendar is optional for fixed locations; connected calendars must pass their checks, and Google Meet requires a connected calendar that supports Meet. Finishing checks the current readiness again, then opens the operator app at `/app`.
+You need not finish every step. **Finish setup** asks for a saved host profile and a copied link to an event that is published, or open for requests. **Open requests** needs a working mail sender, but no Google Calendar or availability windows. Publishing for bookable times needs saved availability and verified mail, including the local outbox in local mode. A calendar is optional for fixed locations: publishing enables bookings using saved weekly availability and existing Dial bookings, without checking external calendar conflicts. A connected calendar that is unhealthy or missing its selection blocks publication and bookable times until fixed; Google Meet requires a healthy connected calendar that supports Meet. Finishing checks the current readiness again, then opens the operator app at `/app`.
 
 Setup stays finished. Later connection problems show in Settings and on Overview, where the same steps appear under "Booking configuration", and they never send you back to setup. The Mail step and, when connected, the Google step count only a check that passed in the last 24 hours, so they return to "To do" until you run the check again; without a Google connection, that step shows "Optional" and counts as done.
 
