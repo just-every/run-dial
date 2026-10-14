@@ -107,7 +107,7 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     assert.equal((await visitor.request.post(origin + path + "/selection", { headers, data: connectedSelection })).status(), 503);
     const refusedConfirmation = await visitor.request.post(origin + path + "/confirm", { headers, data: { ...connectedSelection, nonce: connectedNonce, name: "Provider outage guest", email: "provider-outage@example.test", answers: {} } });
     assert.equal(refusedConfirmation.status(), 503, "a nonce selected while healthy cannot bypass the connected calendar outage");
-    assert.equal((await refusedConfirmation.json()).error.code, "calendar_provider_unavailable");
+    assert.deepEqual(await refusedConfirmation.json(), { state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] });
     const afterFailure = await (await owner.request.get(origin + "/__fixtures/status")).json();
     assert.equal(afterFailure.bookings.length, beforeFailure.bookings.length, "unreadable connected calendar creates no booking");
     assert.equal(afterFailure.delivery_outbox.length, beforeFailure.delivery_outbox.length, "refused confirmation creates no mail or calendar command");
