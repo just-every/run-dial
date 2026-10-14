@@ -1,7 +1,7 @@
 // The published 0.2.2 client deliberately discards response bodies. Recognize
 // only its fixed vocabulary; never echo arbitrary exceptions or paths.
 import { PortabilityError } from '@runeditrun/rer/modules/portability';
-const archiveCodes = new Set(['archive_schema_mismatch', 'archive_export_refused', 'archive-migration-history-mismatch', 'archive-owner-salt-required', 'archive-erasure-incomplete', 'archive-unclassified-schema', 'archive-object-changed', 'archive-object-contains-credential', 'archive_maintenance']);
+const archiveCodes = new Set(['archive_schema_mismatch', 'archive_export_refused', 'archive-migration-history-mismatch', 'archive-owner-salt-required', 'archive-erasure-incomplete', 'archive-unclassified-schema', 'archive-object-changed', 'archive-object-contains-credential', 'archive_maintenance', 'archive_writer_admissions_present']);
 const formatCodes = new Set(['archive_json', 'archive_format', 'legacy_archive_unverifiable', 'part_order', 'part_byte_limit', 'part_checksum', 'part_row_limit', 'manifest_identity', 'manifest_counts', 'manifest_inventory', 'schema_checksum', 'table_inventory', 'binary_inventory', 'row_order', 'rowid_inventory', 'rows_missing', 'binary_order', 'binary_size', 'binary_checksum', 'archive_incomplete', 'data_after_closing', 'part_count', 'content_checksum', 'archive_checksum', 'extra_part', 'closing_missing', 'row_columns', 'row_not_null', 'row_type', 'unsafe_integer']);
 const transportCodes = new Set(['ENOTFOUND', 'EAI_AGAIN', 'ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET', 'CERT_HAS_EXPIRED', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'ERR_TLS_CERT_ALTNAME_INVALID']);
 export function remoteExportDiagnostic(error) {
@@ -48,6 +48,8 @@ export function remoteExportFailure(receipt) {
  const cause = (reason === 'hosted-http-refused' && archiveCodes.has(receipt.archiveCause) || reason === 'hosted-archive-invalid' && formatCodes.has(receipt.archiveCause)) ? `; ${receipt.archiveCause}` : reason === 'hosted-transport-failed' && transportCodes.has(receipt.transport) ? `; ${receipt.transport}` : '';
  const action = reason === 'hosted-transport-failed' ? 'Check network connectivity and the HTTPS origin.'
   : reason === 'hosted-archive-invalid' ? 'The downloaded archive failed verification; do not restore its partial output.'
+  : receipt?.archiveCause === 'archive_writer_admissions_present' ? 'Writer admissions remain; inspect Settings export status. Their liveness is unknown; do not delete them.'
+  : receipt?.archiveCause === 'archive_maintenance' ? 'An export holds maintenance or its lease is no longer usable; inspect owner export status.'
   : receipt?.httpStatus === 401 ? 'Sign in as the native owner and replace the private session file.'
   : receipt?.httpStatus === 403 ? 'Check the configured application origin.'
   : receipt?.httpStatus === 409 ? 'Check source archive schema, migration history, and incomplete erasure operations.'

@@ -276,7 +276,8 @@ handler/client. From a stopped local checkout of the exact deployed revision:
     rer export --target remote --origin https://dial.example --session-file .rer/local/hosted-owner.cookie --output exports/hosted.rer
 
 The mode-0600 session file holds one native owner cookie, never a URL or provider
-credential. The runtime exposes only `/api/portability/exports`; remote imports
+credential. The runtime exposes `/api/portability/exports` and the read-only
+`GET /api/portability/status` control plane; remote imports
 remain refused. Base enforces Origin and per-owner job ownership. Expired,
 revoked, review and development sessions cannot export. No Cloudflare account
 API is called by this command.
@@ -296,13 +297,32 @@ fails, retain the private `.transfer.json` and use the published client to abort
     node node_modules/@runeditrun/rer/modules/portability/cli.mjs abort --origin https://dial.example --session-file /absolute/private/native-cookie --resume JOB_ID
 
 Do not operate D1/R2 directly or run deployments/migrations during capture; these
-owner-account actions bypass application admission. A killed application worker
-can leave a writer receipt. Such a receipt blocks export, not normal use: do not
-expire or delete it while any old request can still execute. Quiesce the source
-and its Queue/Cron/DO activity, prove all old workers have stopped, then clear
-only `kind='writer'` rows from `dial_portability_admission` through the owner
-account before restarting. This is an explicit owner recovery operation, never
-a timed guess. A busy source otherwise refuses with `archive_maintenance`.
+owner-account actions bypass application admission. Export creation refuses with
+HTTP 503 and `X-Dial-Archive-Error: archive_writer_admissions_present` when writer
+admissions remain, or `archive_maintenance` when another export holds maintenance.
+The latter also refuses an export whose lease expired. Both responses are
+no-store and retain Retry-After. The transfer client reports these typed causes.
+
+Settings → Export status reads the number of writer admissions and whether an
+unexpired export currently holds maintenance. Refresh is explicit; failures are
+visible. This is an observation, not a reservation or a promise that a later
+export can acquire. The endpoint requires a native owner session, the configured
+origin/Host and same-site access. Its authentication and status query are reads;
+it bypasses application admission and does not clean expired leases or create
+jobs. It remains available during maintenance; loading a new Settings document
+still uses ordinary admission and may receive 503 until maintenance ends.
+
+A terminated application worker can leave a writer receipt, but Dial cannot
+establish that any particular writer has terminated. Its liveness is unknown;
+legacy receipts contain neither creation time nor revocable storage authority.
+Such receipts block export, not normal use. There is no Clear action or supported
+source-only recovery procedure. Preserve them. Support must first obtain an
+independently verified revocation or drain covering all old invocations AND
+already-issued D1/R2 effects. Disabling ingress, pausing Queue/Cron/DO activity,
+redeploying, waiting, and an owner checkbox do not establish that guarantee.
+Only after that prerequisite is proved can a separately reviewed recovery reclaim
+appropriate admissions. No provider cutover or storage revocation is performed
+by Dial's status view, and deleting receipts without it risks a mixed snapshot.
 
 D1/R2 archive equivalence covers durable product state. Queue messages and
 coordinator retry/watch alarms are intentionally excluded execution state;
