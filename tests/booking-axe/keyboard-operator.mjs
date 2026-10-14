@@ -10,9 +10,9 @@ import { trackPage } from "./audit.mjs";
 export async function operatorKeyboardJourney(browser, origin, storageState, checks, errors) {
   for (const width of [1440, 390]) {
     const context = await browser.newContext({ storageState, viewport: { width, height: width === 390 ? 844 : 900 }, locale: "en-US", timezoneId: "UTC" });
+    const page = await context.newPage(); trackPage(page, errors);
+    const keys = keyboardControls(page, width, checks);
     try {
-      const page = await context.newPage(); trackPage(page, errors);
-      const keys = keyboardControls(page, width, checks);
       const fixture = await (await context.request.post(origin + "/__fixtures/setup")).json();
       const event = await get(page, origin, `/api/app/event-types/${fixture.eventId}`);
       const date = new Date(Date.now() + (width === 390 ? 30 : 20) * 86400000).toISOString().slice(0, 10);
@@ -41,6 +41,10 @@ export async function operatorKeyboardJourney(browser, origin, storageState, che
       await bookingKeyboardJourney(page, origin, width, keys, checks, booking);
       await eventKeyboardJourney(page, origin, width, keys, checks);
       await settingsKeyboardJourney(page, origin, width, keys, checks, booking, errors);
+    } catch (error) {
+      checks.push({ width, passed: false, error: error.message, accessibilitySnapshot: await page.locator("body").ariaSnapshot() });
+      await keys.screenshot("operator-failure");
+      throw error;
     } finally { await context.close(); }
   }
 }

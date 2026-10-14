@@ -3,7 +3,7 @@ import { evidencePath } from "../../scripts/evidence-path.mjs";
 import { keyboardFocus } from "./audit.mjs";
 
 export const button = (page, name) => page.getByRole("button", { name, exact: true });
-export const field = (page, name) => page.getByLabel(name, { exact: true });
+export const field = (page, name) => page.getByLabel(name, { exact: true }).or(page.getByRole("combobox", { name, exact: true }));
 function paint(element) {
   const controlStyle = globalThis.getComputedStyle(element);
   const indicator = element.matches('input[type="radio"]') && controlStyle.opacity === "0" ? element.nextElementSibling : element;
