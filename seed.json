@@ -307,19 +307,19 @@
       "name": "GOOGLE_OAUTH_CLIENT_ID",
       "secret": false,
       "required": false,
-      "why": "Identifies the calendar.provider.v2 Google OAuth client. Without a configured and connected calendar, Dial offers no verified availability; provider setup and live OAuth proof require separate acceptance."
+      "why": "Identifies the calendar.provider.v2 Google OAuth client. Without OAuth client configuration, the host cannot connect Google Calendar; an explicitly not_connected host can still publish from saved availability with a non-Meet location. A configured but unhealthy connection remains fail-closed; live OAuth acceptance is separate."
     },
     {
       "name": "GOOGLE_OAUTH_CLIENT_SECRET",
       "secret": true,
       "required": false,
-      "why": "Authenticates the calendar.provider.v2 Google OAuth client during authorisation and token refresh; missing configuration leaves calendar availability fail-closed."
+      "why": "Authenticates the calendar.provider.v2 Google OAuth client during authorisation and token refresh. Missing OAuth credentials prevent a healthy connected-calendar setup; explicit not_connected publication remains available from saved availability with a non-Meet location, while a configured but unhealthy connection fails closed. Google Meet requires a healthy conference-capable calendar."
     },
     {
       "name": "CALENDAR_WEBHOOK_SECRET",
       "secret": true,
       "required": false,
-      "why": "Authenticates calendar.provider.v2 push callbacks together with the registered channel identity; without it, callbacks are rejected and provider health is not established."
+      "why": "Authenticates push callbacks when a Google Calendar is connected. Without it, callbacks are rejected and connected-calendar health checks cannot succeed; this does not block the explicit not_connected saved-availability/non-Meet publication path. Live callback behavior requires separate acceptance."
     },
     {
       "name": "RESEND_WEBHOOK_SECRET",

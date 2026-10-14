@@ -738,7 +738,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "ab9ed115a874fb62f3faf0330451aacc5bfdc5d5a25df243e460ae72f66bd154",
+      "sha256": "2b106c998b384b01fb657bcf74eab0cb312e149d2f0edef00788a599cb85fd5b",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -830,7 +830,7 @@
       "executable": false
     },
     "ERASURE.md": {
-      "sha256": "eff991589b672015794687a1b053557f5188f23cb5f0fa3a3b51875198fd3db2",
+      "sha256": "fa28022777adfeb0a954694ff4183cf18f71d626521a8cabb92b74ffddaf3b32",
       "executable": false
     },
     "eslint.config.mjs": {
@@ -838,7 +838,7 @@
       "executable": false
     },
     "HANDOVER.md": {
-      "sha256": "86b46c324b57c32f6e7275d6685ab86e4ce712ee4d9fce2a47075cf20bf15d1d",
+      "sha256": "ad2c1c820e6337db5eb371517eb0ae3fc39ea61fb75c47d52f46911b3de3f085",
       "executable": false
     },
     "LICENSE": {
@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "512ca1484edc50cc802b70ba3d407f956ce6623f0a7206e2732591b349888c57",
+      "sha256": "27021fb3be5fd0b8e9164b6faa8284cd5aae5f9e5c3fd738922b4cc9016e0f2f",
       "executable": false
     },
     "src/base/deployment-health.ts": {
@@ -3134,7 +3134,7 @@
       "executable": false
     },
     "src/core/app/ui/app-shell.tsx": {
-      "sha256": "928b52b32e965acac0db117c469f499eb67694664ae4963f27d3c9a161f82afd",
+      "sha256": "50c3f716c809b5a26fad46abf1073b1bc8fb8640b980bd541ff427b393ebbeb6",
       "executable": false
     },
     "src/core/app/ui/empty-state.tsx": {
@@ -3326,7 +3326,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/bookings-filter-bar.tsx": {
-      "sha256": "a336fe68e78857b90dff114d245e5ab3cc25018fa14e1d8e8e66fd4cb73121bc",
+      "sha256": "66a87a885d3c4033bbd04dcde53433bf0b1ddd489848ff3ddb46fad0d4b6bf77",
       "executable": false
     },
     "src/core/features/bookings/ui/bookings-page.tsx": {
@@ -3574,7 +3574,7 @@
       "executable": false
     },
     "src/core/features/erasure/ui/person-erasure.tsx": {
-      "sha256": "4883f3ca8ebc767e023958ca8fade5ec936ab5445e9fc2b2982c84e9bf3b81e4",
+      "sha256": "bca8a1b03fe04561cde8234b2e3ffa0e263df6eb610c368c44f30242e6d9824c",
       "executable": false
     },
     "src/core/features/event-types/date-overrides/repository.ts": {
@@ -3634,7 +3634,7 @@
       "executable": false
     },
     "src/core/features/event-types/ui/date-override-editor.tsx": {
-      "sha256": "bb9ba01c3c40d29be0652a0a6847946a5cb721cb298f516ced305141b81ed86e",
+      "sha256": "ee612e93bae542062e789124f5e5a183437e4429ad96ec9a2796e8de84c9b772",
       "executable": false
     },
     "src/core/features/event-types/ui/date-override-form.tsx": {
@@ -3930,7 +3930,7 @@
       "executable": false
     },
     "src/core/features/operators/ui/operator-access.tsx": {
-      "sha256": "fc75778eca02411575bf9f8fa682678984d2069098032784dbeda00fde0d706d",
+      "sha256": "6059426e52a93534ada1df14a6141d3b71275e1d7e8b29c0c441f6b331b16987",
       "executable": false
     },
     "src/core/features/operators/ui/overview-activity.tsx": {
@@ -4046,7 +4046,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/manage-page.tsx": {
-      "sha256": "8c0a2fcf70f308e9a411424cb540179abaa973a2e5349ec9c4235893a54a0e95",
+      "sha256": "4a79097f8a63f938b1f7484a630dc81cd165d1f61d721f2c1019ef27e9c33e7a",
       "executable": false
     },
     "src/core/features/public-booking/ui/manage-reschedule.tsx": {
@@ -5046,27 +5046,27 @@
       "executable": false
     },
     "tests/booking-axe/keyboard-bookings.mjs": {
-      "sha256": "0b50db969459fbfe7c3169ff5d541e1998de4c11cee30921296f614afbfce94b",
+      "sha256": "530777bc8c645fe3ade7ab40f76e66478c85251ea822d2c67d84e5191398c406",
       "executable": false
     },
     "tests/booking-axe/keyboard-controls.mjs": {
-      "sha256": "5cec631bfb9c7a59dbc3063e19026a35705671d0b3ec3524f1b1f559d2c3eb4d",
+      "sha256": "b7932ea29ae4fbc8f1953ade0ee453b6525220e64975050d99c99b3cfd1f94f5",
       "executable": false
     },
     "tests/booking-axe/keyboard-events.mjs": {
-      "sha256": "02ef050f1b649e1afd890767715dc87a321d1db298459aaf3ec53668c320bfc0",
+      "sha256": "0af7de363b5643abdd532b0079c33be0907e7bcc0e9d1efaa47e7147c93cb6e6",
       "executable": false
     },
     "tests/booking-axe/keyboard-filters.mjs": {
-      "sha256": "da13cedbf123e5e1923ae2abf1129fa9a149c748025a3fa6b3c5e321fef77c29",
+      "sha256": "0a596d78215eb4497cf8ab1c0d9449985f5210afdfcf509b7efc028234b7285c",
       "executable": false
     },
     "tests/booking-axe/keyboard-operator.mjs": {
-      "sha256": "f446774d76a7fc19d194df28034cde8a6e307c45a142b44e2a558a0fcbc00727",
+      "sha256": "585dd924b8c24989a3d0c98916946ffa0be638cfb8800dd3255d1ffdff441d69",
       "executable": false
     },
     "tests/booking-axe/keyboard-settings.mjs": {
-      "sha256": "f3b75ec2bb865726db75a1afc3eb8a22aa1bece0bac6bc545055505fb0f408b6",
+      "sha256": "d065a7c51b267181bb092998768f2cc34480388636a1947bf9c59d2d76c308ba",
       "executable": false
     },
     "tests/booking-axe/keyboard-timezone.mjs": {
@@ -5074,7 +5074,7 @@
       "executable": false
     },
     "tests/booking-axe/keyboard.mjs": {
-      "sha256": "f136cfd7a8270ef574faecc05b0557022b331e5101ba07349ddeb194b101489f",
+      "sha256": "0d0e5c0a1e8b0265bd20fccc9e367f4361c304ebc7e0695958e80357d7d1fcbc",
       "executable": false
     },
     "tests/booking-axe/link-contrast.mjs": {
@@ -5106,7 +5106,7 @@
       "executable": false
     },
     "tests/booking-axe/worker.wrangler.toml": {
-      "sha256": "133f8d8536c50809226e524f1937ccc071cd488d46903ae9b802a681e0a12da8",
+      "sha256": "6be221511782f5e5c7109d74356c4aa2cc8ad7ab71b6c3298daa97bfa7499065",
       "executable": false
     },
     "tests/booking-http-worker.ts": {
@@ -6474,7 +6474,7 @@
       "executable": false
     },
     "tests/review/worker.ts": {
-      "sha256": "d36f0d25669cbca0c86065241ac725a95af5a2160beee4a2555714635f3c86fb",
+      "sha256": "f940d072f4338a2e9340c9925a33c8ba4e6532b8bc65e98aa971a67b9633ba2c",
       "executable": false
     },
     "tests/runtime-server.mjs": {
