@@ -30,6 +30,11 @@ function workingDay(today: string, offset: number) {
  * and repositories, sends no mail and makes no calendar request.
  */
 export async function seedDemo(env: AppBindings, { now }: { ownerEmail: string; now: Date }) {
+  // One-off hosted egress proof. This branch is deployed only to the disposable test host.
+  let refused = false;
+  try { await fetch("https://example.com/"); }
+  catch (error) { refused = error instanceof TypeError && error.message.includes("demo mode sends nothing"); }
+  if (!refused) throw new Error("Hosted demo public fetch was not refused by the app guard");
   const runtime = parseRuntimeEnvironment(env as unknown as Record<string, unknown>);
   const services = createServices(env.DB, runtime, env.ASSETS);
   const owner = await env.DB.prepare("SELECT id FROM oa_operators WHERE role = 'owner' AND status = 'active' ORDER BY created_at LIMIT 1").first<{ id: string }>();
