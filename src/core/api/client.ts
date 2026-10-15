@@ -7,9 +7,12 @@ export const api = hc<AppType>("/", {
   init: { credentials: "same-origin" },
 });
 
-/** Sessionless public reads deliberately omit operator cookies. */
+/** Public requests need the hosted demo's visitor cookie to reach its isolated app. */
 export const publicApi = hc<AppType>("/", {
-  init: { credentials: "omit" },
+  fetch: (input: RequestInfo | URL, init?: RequestInit) => globalThis.fetch(input, {
+    ...init,
+    credentials: typeof document !== "undefined" && document.querySelector('style[data-rer-label="Demo"]') ? "same-origin" : "omit",
+  }),
 });
 
 const apiErrorSchema = z.object({
