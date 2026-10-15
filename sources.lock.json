@@ -766,7 +766,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "3681838104f77585d03aa08dc988b7ecf9286732eff26baabc2447f02732312e",
+      "sha256": "8ac031235662f7b957fd7811c66c5c4800ede6bb9c34c3c0eafd94a44ae2841f",
       "executable": false
     },
     "CLAUDE.md": {
@@ -774,7 +774,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5cb98647720dc4a0d67b4cc5a55ca53e66806ef27651ce5acc1119804fcace22",
+      "sha256": "9021bec8a373d10b42c9f620f90359466a9db8d95d5fcc28176297b6deff426c",
       "executable": false
     },
     "DEMO.md": {
@@ -814,7 +814,7 @@
       "executable": false
     },
     "docs/calendar-and-email.md": {
-      "sha256": "97fc4397a0fcfab85cf4e87eda2411bc97cf3d44ccdbafa5f18895c9dee4f804",
+      "sha256": "239fb7cd1792d09b60ee365194583c7b1721dc4ae3fe55dc46dba03ffcc5a525",
       "executable": false
     },
     "docs/importing.md": {
@@ -822,7 +822,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "99baf0e919b60fad535f7b8c5a9d9a2f9325113e3a408e4bad135a8e59a491a9",
+      "sha256": "b998992885fb6d0116870a5b3184b9bd7b918eca83cf357beaf52a211e86e729",
       "executable": false
     },
     "docs/overview.md": {
@@ -2590,11 +2590,11 @@
       "executable": false
     },
     "OPERATIONS.json": {
-      "sha256": "c706c2eaa3a067000747e93f663049e724fe75ed3985cbf507d8be26ee6fedbb",
+      "sha256": "02500792fd4d3dc8972b1193ab20357403a75e0daf271ff3b5408493af97cbae",
       "executable": false
     },
     "OPERATIONS.md": {
-      "sha256": "91a2fadcc328f7e0bcc9ca12c14d70c1d3f118124681e975cef6066ec5bf13c6",
+      "sha256": "4f1b5c1e10062af644d690e747997e4b1efd33dcb6740edc800654ded7ef73e4",
       "executable": false
     },
     "operations/operations.mjs": {
@@ -3070,7 +3070,7 @@
       "executable": false
     },
     "scripts/operations-config.mjs": {
-      "sha256": "4d21e20638e302b2c8eb6c4039c8ffb5e933477fcc55e5fa90e469f38857c3c3",
+      "sha256": "abd5a4a1cd2d090a472974e95635e47fbcf9a374a45dcb26d1ce8399e6f80299",
       "executable": false
     },
     "scripts/operations.mjs": {
@@ -3254,7 +3254,7 @@
       "executable": false
     },
     "scripts/verify-profile-authoring.mjs": {
-      "sha256": "ab4d3d7542ed6c266c9125410f5f196013d77a9f4682b408f62e991af0b7a5e4",
+      "sha256": "05245b226a6990718801f1e75819bc65b36e1c884e4efd6f41b44ade197bb96e",
       "executable": false
     },
     "scripts/verify-public-admission.mjs": {
@@ -3434,7 +3434,7 @@
       "executable": false
     },
     "src/core/app/services.ts": {
-      "sha256": "4c46166a4d4ffc909916dd81da87f9ee2c5d5f2ef9526a65c3d69559f7d3a754",
+      "sha256": "a571e1dbda3ffd0beac7312501c5a1b78b21056ebac5ecd156cd8e6c9c1cfdfa",
       "executable": false
     },
     "src/core/app/signin-options.server.ts": {
@@ -4798,15 +4798,15 @@
       "executable": false
     },
     "src/core/platform/mail/base-mail.ts": {
-      "sha256": "07b8bf92d1ed7def47d9652d809a0f328aa2431e519a75c7ce331d2824fdfe8e",
+      "sha256": "07a5e45e81b5f3e20eb1cf262b47bba8ff15c7a85401e07f57075cd2e69aa208",
       "executable": false
     },
     "src/core/platform/mail/connection-message.ts": {
-      "sha256": "5d3ba8adeb89b5bb26edf160e92d2c5ff4c064cd91cf3d0003b5b168d3ea8c14",
+      "sha256": "d3c98d279d540e37a33bcd92fc85ab3a06e1bc04812fb430a0b458197cf1abe5",
       "executable": false
     },
     "src/core/platform/mail/connection.ts": {
-      "sha256": "ad7d88dcaa0cd3c5dce03563869d9a2c17e6aa46747b2e7f684e1ac98677cf5c",
+      "sha256": "5bc91300b6c58269a1aafcb1cc73706bd1260353791d18a8f0170ef3e0759a9d",
       "executable": false
     },
     "src/core/platform/mail/development.ts": {
@@ -5278,7 +5278,7 @@
       "executable": false
     },
     "tests/archive/operator-worker.ts": {
-      "sha256": "ef9b8886f8fd2f0d3a58f316c71203dc7988c557c096c3e8462964e4e22f1b91",
+      "sha256": "d9d5b540f661596d976c3dc2e1b62d043f005f516ffe57167294c43944296b12",
       "executable": false
     },
     "tests/archive/status-fixture.mjs": {
@@ -5290,7 +5290,7 @@
       "executable": false
     },
     "tests/auth-client.mjs": {
-      "sha256": "c73001466788493338f7be4d194a670fc4d237af03f08ad2e2ef6073e24e86a1",
+      "sha256": "99d589071dc7faa81650a246c14e3658be5fc0057b85e97b0cda7f6d82adf599",
       "executable": false
     },
     "tests/auth-fixture.ts": {
@@ -5302,7 +5302,7 @@
       "executable": false
     },
     "tests/availability-diagnostics/helpers.mjs": {
-      "sha256": "79db0ff1daf2720e689863de364f2085f41b4e6ac7268607f2b4d6af5a08cb61",
+      "sha256": "ba8991cb0feec5e3939c70c2b27b5980fb4eba4dcc3306d396823fc62417d5a0",
       "executable": false
     },
     "tests/availability-diagnostics/profile-worker.wrangler.toml": {
@@ -5310,7 +5310,7 @@
       "executable": false
     },
     "tests/availability-diagnostics/worker.ts": {
-      "sha256": "f2b551ced5a20eb6edd7065de8fd6f1f98e52cca4e278954326f75c9bee7698f",
+      "sha256": "487018c53bad46cf95b6f5b47ce105b98b1f30c7a372340c6233a44a5723fe38",
       "executable": false
     },
     "tests/availability-diagnostics/worker.wrangler.toml": {
@@ -5514,7 +5514,7 @@
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "75962154c6eef8cf5cb7c686b3fe4a4a8e7145f1e53b900dc1e1ae56cf3c7215",
+      "sha256": "bd19b6fe235f269f3b649b669c55736f8151e105a69ebe6b415e19182179c61e",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {
@@ -5570,7 +5570,7 @@
       "executable": false
     },
     "tests/custom-fields/worker.ts": {
-      "sha256": "45000c06fc647295921fdfdf4f73720bdebf761abcc72118968076d93f119658",
+      "sha256": "1e2b2f36beadc8ee6e92531a873ee05f9ff2399a7079ac050695334bb32d9fed",
       "executable": false
     },
     "tests/deletion-fixtures/providers.ts": {
@@ -5586,7 +5586,7 @@
       "executable": false
     },
     "tests/deletion-worker.ts": {
-      "sha256": "07de402e8e0840744587a2af152008f01427e40ac2368d2794e3845a613bc46d",
+      "sha256": "23b6840a7d75439f5b2ad858bb3a08d33d9b5efb3de566b61ae437346b529e8a",
       "executable": false
     },
     "tests/deletion-worker.wrangler.toml": {
@@ -5594,7 +5594,7 @@
       "executable": false
     },
     "tests/deploy-adoption.test.mjs": {
-      "sha256": "0dbb04379f16c2074f06777482dd0ad826b36cc6d7655ab56ebcea89af46bfa6",
+      "sha256": "391082e171b79687061939a0d90aaf84a587cc62be25d91aa924304807f6a4ed",
       "executable": false
     },
     "tests/deploy-lifecycle.test.mjs": {
@@ -5890,7 +5890,7 @@
       "executable": false
     },
     "tests/mail-preferences/worker.ts": {
-      "sha256": "542806c36695b33805a66c48fbcc52306a558e2b4e9aa6f5f6e0200091200e5e",
+      "sha256": "e06214ae9ad5f6e11b26f1c39d70dab155128e9b1b074179fd10877f527e40eb",
       "executable": false
     },
     "tests/mail-preferences/worker.wrangler.toml": {
@@ -5914,7 +5914,7 @@
       "executable": false
     },
     "tests/managed-admission.test.mjs": {
-      "sha256": "f83a50391d46e2e3b1c4de18dc7f6456d9e62a0aa6543ef86712848fd792a6df",
+      "sha256": "f3a8f4bdac42f7380e12745a4a7d0ad5f0feb13d9450d2ea60c42ae617ac46a2",
       "executable": false
     },
     "tests/managed-admission/editor-journey.mjs": {
@@ -5934,7 +5934,7 @@
       "executable": false
     },
     "tests/managed-admission/worker.ts": {
-      "sha256": "d5a9b5657927b8ea268f5f3f27a96272bd1b75e59624a0ed3012f847a6f304b9",
+      "sha256": "ba1a07866bf82b060be5a4fdaff8bd03f765286591ebb17a73ef5d3ccd62c3d1",
       "executable": false
     },
     "tests/move-in-booking-actions.test.mjs": {
@@ -6318,7 +6318,7 @@
       "executable": false
     },
     "tests/move-in/runtime.mjs": {
-      "sha256": "a123fb3a83d9a310acb9265c337007f766e0fe4983344353cca048d7c7f1d26f",
+      "sha256": "0d25c3735dc8c411e51f05ffe119e442188c85f2c5d647cf5f92dc3fea9d48b5",
       "executable": false
     },
     "tests/move-in/upload.mjs": {
@@ -6378,7 +6378,7 @@
       "executable": false
     },
     "tests/operator-creation-recovery/worker.ts": {
-      "sha256": "48a0a18de89b66e322f05c92409c439822b06c6e431def102aae8c0189e4acc4",
+      "sha256": "62ef20d92ed6930c419f85b16cb268eee19cf542c6248e8bb65c29d0368be18b",
       "executable": false
     },
     "tests/operator-creation-recovery/worker.wrangler.toml": {

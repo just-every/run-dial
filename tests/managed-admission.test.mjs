@@ -2,7 +2,7 @@ import { contract } from './contract.mjs';
 import assert from 'node:assert/strict';
 import { admissionRuntime, sessionCookie, setupToken } from './managed-admission/runtime.mjs';
 
-contract('AUTH-006', 'signed admission verifies before writes, commits one native owner, and stays consumed after restart and retirement', async t => {
+contract('AUTH-006', 'signed admission verifies before authority writes, commits one native owner, and stays consumed after restart and retirement', async t => {
   const app = await admissionRuntime(); t.after(() => app.close());
   assert.equal((await app.call('/auth/bootstrap', { token: setupToken })).status, 403);
   const empty = await app.state();
@@ -28,7 +28,7 @@ contract('AUTH-006', 'signed admission verifies before writes, commits one nativ
   const cookie = sessionCookie(results.find(r => r.status === 303));
   const state = await app.state();
   const { oa_limits: limitRows, ...identityCounts } = state.counts;
-  assert.deepEqual(identityCounts, { oa_operators: 1, oa_bootstrap: 1, oa_sessions: 1, oc_owner_claims: 1, operators: 1, operator_setup_identity: 1, public_rate_events: empty.counts.public_rate_events });
+  assert.deepEqual(identityCounts, { oa_operators: 1, oa_bootstrap: 1, oa_sessions: 1, oc_owner_claims: 1, operators: 1, operator_setup_identity: 1 });
   assert.equal(limitRows, state.limits.length);
   assert.ok(state.limits.length > 0 && state.limits.every(count => count === 1), 'the concurrent loser rolls back every rate counter');
   assert.equal((await app.call('/auth/session', undefined, { cookie })).status, 200);
