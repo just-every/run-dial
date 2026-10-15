@@ -79,6 +79,10 @@ and exits. It keeps the saved owner, domain data and private settings on repeat
 runs, and refuses a conflicting owner or origin. The ordinary fresh-checkout
 `rer dev` path needs no separate setup command.
 
+To look around with sample data, run `rer demo` after setup: a throwaway Dial
+signed in as the owner, with a week of bookings, that sends nothing and is
+deleted when it stops. See [DEMO.md](DEMO.md).
+
 `rer dev --as co-host` starts as the dev co-host (a second operator,
 `co-host@dev.localhost`) and `rer dev --as signed-out` starts as a visitor; the
 badge on every page switches between them. `rer dev --login` turns dev identity

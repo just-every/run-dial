@@ -66,3 +66,12 @@ Applied migration copies retain their original pins and bytes. Runtime modules
 outside the package remain governed by their existing byte-copy records;
 `verify:copies` checks those records. `rer check --profile first-party` checks
 the package pin, locked dependency, aliases, and absence of the vendored trees.
+
+Demo mode adopts Base `c1cd7bfa55388886f9607cfe03e758aba09e98e4` (rer 0.2.12).
+`src/modules/demo` holds Base `modules/demo`; five files are byte-exact copies
+recorded in `base-copies.json`. Its `index.mjs` differs only in its two
+operator-auth imports, which reach Dial's `modules/operator-auth` from
+`src/modules/demo` (the path rer's container import boundary admits); it is
+therefore not a recorded copy. `modules/operator-auth/csp.mjs`, the shared
+inline-style CSP helper the Demo bar needs, is a byte-exact copy at the same
+commit; the rest of operator-auth keeps its existing pin. See [DEMO.md](../DEMO.md).

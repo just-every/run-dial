@@ -5,14 +5,14 @@ import { type MailSender as AuthMailSender } from "../../../../modules/operator-
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 import { ProviderFailure } from "../calendar/types";
 import type { MailMessage, MailSender, MailSendResult } from "./types";
-import { developmentOutbox, isLocalOutboxEnabled } from "./development";
+import { capturesMail, developmentOutbox } from "./development";
 import { checkMailProvider } from "./connection";
 
 type BaseMessage = { deliveryId: string; from: string; to: string[]; subject: string; text: string; html?: string; replyTo?: string; headers?: Record<string, string>; attachments?: { filename: string; contentType: string; content: Uint8Array }[] };
 type BaseResult = { status: "accepted" | "development" | "rejected" | "rate_limited" | "uncertain"; provider: string; providerMessageId: string | null; code?: string };
 type BaseSender = { send(message: BaseMessage): Promise<BaseResult> };
 
-type MailRuntime = Pick<RuntimeEnvironment, "MAIL_PROVIDER" | "MAIL_API_KEY" | "MAIL_FROM" | "MAIL_WEBHOOK_KEY" | "RESEND_API_KEY" | "RESEND_FROM_EMAIL"> & Partial<Pick<RuntimeEnvironment, "ENVIRONMENT" | "APP_URL">>;
+type MailRuntime = Pick<RuntimeEnvironment, "MAIL_PROVIDER" | "MAIL_API_KEY" | "MAIL_FROM" | "MAIL_WEBHOOK_KEY" | "RESEND_API_KEY" | "RESEND_FROM_EMAIL"> & Partial<Pick<RuntimeEnvironment, "ENVIRONMENT" | "APP_URL" | "RER_DEMO">>;
 export function mailConfiguration(runtime: MailRuntime) {
   if (runtime.MAIL_PROVIDER) return { provider: runtime.MAIL_PROVIDER, apiKey: runtime.MAIL_API_KEY, from: runtime.MAIL_FROM };
   // Existing installed Resend configuration retains its provider and delivery identities.
@@ -20,10 +20,10 @@ export function mailConfiguration(runtime: MailRuntime) {
 }
 
 export function createAuthenticationMail(db: D1Database, runtime: RuntimeEnvironment): AuthMailSender | undefined {
-  if (isLocalOutboxEnabled(runtime)) {
+  if (capturesMail(runtime)) {
     return createMailSender({ provider: "development", mode: "development" }, { outbox: developmentOutbox(db, runtime) }) as BaseSender;
   }
-  if (runtime.MAIL_PROVIDER === "development") throw new Error("Development mail is unavailable outside a loopback development install");
+  if (runtime.MAIL_PROVIDER === "development") throw new Error("Development mail is unavailable outside a loopback development install or demo mode");
   const config = mailConfiguration(runtime);
   if (!config.apiKey || !config.from) return undefined;
   return createMailSender({ provider: config.provider, apiKey: config.apiKey, mode: "production" }) as BaseSender;
@@ -53,7 +53,7 @@ export class BaseMailSender implements MailSender {
         contentType: attachment.contentType ?? "application/octet-stream", content: Uint8Array.from(atob(attachment.contentBase64), (char) => char.charCodeAt(0)) })) } : {}) };
     if (config.provider === "sendgrid") return this.sendOnce(sender, wire);
     const result = await sender.send(wire);
-    if (result.status === "development" && isLocalOutboxEnabled(this.runtime)) return { providerMessageId: null };
+    if (result.status === "development" && capturesMail(this.runtime)) return { providerMessageId: null };
     return checkedResult(result, true);
   }
 

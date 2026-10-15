@@ -1,3 +1,5 @@
+// Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
+import { withDemo } from "../../modules/demo/index.mjs";
 import { enterApplication, withApplication, ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
 import { hostedExport } from "../features/portability/routes";
 import { staticAssetResponse } from "../../base/static-assets";
@@ -16,6 +18,7 @@ import { isPrivateLocalPath } from "../platform/private-local-path";
 import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse, admissionResponse, isAuthenticatedCallbackPath, requiresPublicAdmission } from "../platform/public-admission";
 
 import start from "@tanstack/react-start/server-entry";
+import { seedDemo } from "../../demo";
 
 export { BookingCoordinator } from "./booking-coordinator";
 import { bookingMutationTarget, forwardBookingRequest, coordinatedCalendarChanges } from "./booking-coordination";
@@ -100,4 +103,4 @@ return {
 
 }
 
-export default createWorker();
+export default withDemo(createWorker(), { seed: seedDemo });

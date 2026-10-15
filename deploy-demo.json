@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "domain": "run-dial.com",
+  "name": "Dial",
+  "settings": {
+    "MAIL_PROVIDER": "development",
+    "MAIL_FROM": "noreply@demo.invalid"
+  }
+}

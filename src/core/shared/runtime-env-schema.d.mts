@@ -23,4 +23,5 @@ export const runtimeEnvironmentSchema: z.ZodObject<{
   RESEND_API_KEY: z.ZodOptional<z.ZodString>;
   RESEND_FROM_EMAIL: z.ZodOptional<z.ZodString>;
   RESEND_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;
+  RER_DEMO: z.ZodOptional<z.ZodLiteral<"1">>;
 }>;
