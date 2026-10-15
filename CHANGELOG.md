@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Mark example and test credentials explicitly synthetic so hosted source admission accepts the fixtures.
+
 - Split push Verify into parallel checks. The unchanged README installation and real-time Cron journeys run nightly, on release tags and on demand; local `pnpm verify` still runs them all.
 
 - Pin rer 0.2.22 and declare RER Managed mail. Configure supplies and hides the relay settings and installation credential; direct SendGrid and Resend installs retain their provider setup. Relay sends use Base’s adapter, durable admission, Retry-After-aware queue backoff and visible credential refusals. Migration `0050_managed_mail_health.sql` preserves existing provider health while adding the relay identity.

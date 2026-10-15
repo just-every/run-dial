@@ -49,7 +49,7 @@ export async function eraseOperatorInviteeRecords(rt, context) {
   const identityTables = ['oa_operators', 'operators', 'oa_sessions', 'oa_tokens', 'oa_bootstrap', 'operator_setup_identity'];
   const identities = () => Promise.all(identityTables.map(async table => [table, (await rt.db.prepare(`SELECT * FROM ${table} ORDER BY 1`).all()).results]));
   const identityBefore = JSON.stringify(await identities());
-  const archive = await dialPolicy(rt.db, { SESSION_SECRET: 'dial-booking-wire-synthetic-local-session-secret' });
+  const archive = await dialPolicy(rt.db, { SESSION_SECRET: 'synthetic-dial-booking-wire-synthetic-local-session-secret' });
   const transfers = await createPortability({ db: rt.db, buckets: { FILES: guardedBucket(rt.bucket, archive.knownSecrets) }, policy: archive.policy });
   const stale = await transfers.exports.create();
   const outcomes = [];

@@ -53,14 +53,14 @@ contract('DATA-002', 'native email preview is inert; one confirmation erases per
     await rt.data('/api/app/blocked-addresses', { kind: 'email', value: email }, 201);
     await rt.data('/auth/magic-link', { email, returnTo: '/app' }, 202);
     const knownHashes = (await rt.db.prepare('SELECT composition_hash FROM availability_request_review_nonces WHERE invitee_email=?').bind(email).all()).results.map(row => row.composition_hash);
-    knownHashes.push(await hashToken('dial-booking-wire-synthetic-local-session-secret', 'rate', `magic:email:${email}`));
+    knownHashes.push(await hashToken('synthetic-dial-booking-wire-synthetic-local-session-secret', 'rate', `magic:email:${email}`));
     assert.ok(JSON.stringify(await snapshot(rt.db)).includes(text));
     await rt.data('/api/app/bookings?' + new URLSearchParams({ query: name }));
     assert.ok((await rt.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox WHERE instr(message,?)>0').bind(email).first()).n > 0, 'native development mailbox contains an actual sent personal message');
     const controlId = rows.find(row => row.inviteeEmail === 'control-person-78321@example.test').id;
     const controlBefore = await rt.data(`/api/app/bookings/${controlId}`);
     const profileBefore = await rt.data('/api/app/profile');
-    const archive = await dialPolicy(rt.db, { SESSION_SECRET: 'dial-booking-wire-synthetic-local-session-secret' });
+    const archive = await dialPolicy(rt.db, { SESSION_SECRET: 'synthetic-dial-booking-wire-synthetic-local-session-secret' });
     const transfers = await createPortability({ db: rt.db, buckets: { FILES: guardedBucket(rt.bucket, archive.knownSecrets) }, policy: archive.policy });
     const frozenExport = await transfers.exports.create();
     const before = await snapshot(rt.db);

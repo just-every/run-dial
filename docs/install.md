@@ -143,10 +143,10 @@ Configure the inputs before the dry run:
 
    ```dotenv
    CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
-   CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
+   CLOUDFLARE_API_TOKEN=synthetic-cloudflare-api-token
    OWNER_EMAIL=you@your-domain.example
    MAIL_FROM=bookings@your-verified-domain.example
-   SENDGRID_API_KEY=your-sendgrid-api-key
+   SENDGRID_API_KEY=synthetic-sendgrid-api-key
    ```
 
    The deploy declaration sets `MAIL_PROVIDER=sendgrid` and maps

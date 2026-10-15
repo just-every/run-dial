@@ -11,7 +11,7 @@ MAIL_FROM = "no-reply@dial.test"
 SETUP_TOKEN = "dial-test-only-setup-token-at-least-32"
 ENVIRONMENT = "preview"
 APP_URL = "http://127.0.0.1:41868"
-SESSION_SECRET = "operator-management-isolated-test-secret-only"
+SESSION_SECRET = "synthetic-operator-management-isolated-test-secret-only"
 [[d1_databases]]
 binding = "DB"
 database_name = "dial-operator-management-test"

@@ -3,8 +3,8 @@ import { createD1DevelopmentOutbox } from '../../modules/mail/src/development/in
 
 export const runtime = {
   ENVIRONMENT: 'development', APP_URL: 'http://127.0.0.1:8787', OWNER_EMAIL: 'second@example.test',
-  SESSION_SECRET: 'restored-session-secret-at-least-32-characters',
-  SETUP_TOKEN: 'restored-setup-token-at-least-32-characters',
+  SESSION_SECRET: 'synthetic-restored-session-secret-at-least-32-characters',
+  SETUP_TOKEN: 'synthetic-restored-setup-token-at-least-32-characters',
   MAIL_PROVIDER: 'development', MAIL_FROM: 'mail@example.test',
 };
 export function request(path, body, cookie) {

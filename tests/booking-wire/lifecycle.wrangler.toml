@@ -46,7 +46,7 @@ APP_URL = "http://127.0.0.1:15770"
 GOOGLE_OAUTH_CLIENT_ID = "synthetic-client"
 GOOGLE_OAUTH_CLIENT_SECRET = "synthetic-secret"
 CALENDAR_WEBHOOK_SECRET = "synthetic-calendar-webhook-secret-for-test-only"
-SESSION_SECRET = "dial-lifecycle-synthetic-local-session-secret"
+SESSION_SECRET = "synthetic-dial-lifecycle-synthetic-local-session-secret"
 
 MAIL_PROVIDER = "sendgrid"
 MAIL_API_KEY = "wire-mail-key"

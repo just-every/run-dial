@@ -11,10 +11,10 @@ type Bindings = { DB: D1Database };
 const runtime: RuntimeEnvironment = {
   ENVIRONMENT: "development",
   APP_URL: "http://dial.test",
-  SESSION_SECRET: "provider-runtime-test-secret-that-is-at-least-thirty-two-bytes",
+  SESSION_SECRET: "synthetic-provider-runtime-test-secret-that-is-at-least-thirty-two-bytes",
   GOOGLE_OAUTH_CLIENT_ID: "google-client",
   GOOGLE_OAUTH_CLIENT_SECRET: "google-secret",
-  CALENDAR_WEBHOOK_SECRET: "calendar-webhook-secret-that-is-at-least-thirty-two-bytes",
+  CALENDAR_WEBHOOK_SECRET: "synthetic-calendar-webhook-secret-that-is-at-least-thirty-two-bytes",
   RESEND_API_KEY: "re_test",
   RESEND_FROM_EMAIL: "no-reply@dial.test",
   RESEND_WEBHOOK_SECRET: "whsec_test",
@@ -34,7 +34,7 @@ class FixtureCalendar implements CalendarAdapter {
   }
 
   async exchangeAuthorizationCode(): Promise<CalendarCredentials> {
-    return { accessToken: "access-token-for-runtime-test", refreshToken: "refresh-token-for-runtime-test", expiresAt: "2030-01-01T00:00:00.000Z" };
+    return { accessToken: "synthetic-access-token-for-runtime-test", refreshToken: "refresh-token-for-runtime-test", expiresAt: "2030-01-01T00:00:00.000Z" };
   }
 
   async refreshAccessToken(): Promise<CalendarCredentials> {
@@ -136,7 +136,7 @@ async function oauthCycle(calendar: CalendarConnectionService, binding: D1Databa
   const connected = await calendar.completeAuthorization({ state, code: "provider-code", session });
   const replay = await calendar.completeAuthorization({ state, code: "provider-code", session });
   const connection = await binding.prepare("SELECT status, access_token_ciphertext AS accessTokenCiphertext FROM calendar_connections WHERE singleton_key = 'default'").first<{ status: string; accessTokenCiphertext: string }>();
-  return { connected: connected.kind, replay: replay.kind, status: connection?.status, storesPlainToken: connection?.accessTokenCiphertext.includes("access-token-for-runtime-test") ?? false };
+  return { connected: connected.kind, replay: replay.kind, status: connection?.status, storesPlainToken: connection?.accessTokenCiphertext.includes("synthetic-access-token-for-runtime-test") ?? false };
 }
 
 async function ensureConnection(calendar: CalendarConnectionService, repository: CalendarConnectionRepository) {

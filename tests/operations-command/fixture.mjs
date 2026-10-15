@@ -22,7 +22,7 @@ export function operationsCheckout() {
   symlinkSync(join(source, 'node_modules'), join(checkout, 'node_modules'), 'dir');
   const settings = {
     OWNER_EMAIL: 'doctor-owner@fixture.test', APP_URL: 'http://127.0.0.1:8787',
-    SESSION_SECRET: 'doctor-local-settings-secret-'.repeat(2),
+    SESSION_SECRET: 'synthetic-doctor-local-settings-secret-'.repeat(2),
   };
   writeFileSync(join(checkout, '.dev.vars'), Object.entries(settings).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join('\n') + '\n', { mode: 0o600 });
   return checkout;
@@ -72,7 +72,7 @@ export function checkDoctor(env, ready) {
       SESSION_SECRET: 'doctor-prerequisite-session-'.repeat(2),
       SETUP_TOKEN: 'doctor-prerequisite-setup-'.repeat(2),
       MAIL_PROVIDER: 'sendgrid', MAIL_FROM: 'no-reply@fixture.test',
-      MAIL_API_KEY: 'doctor-prerequisite-synthetic-key',
+      MAIL_API_KEY: 'synthetic-doctor-prerequisite-synthetic-key',
     }, true);
     prerequisitesChecked = true;
   }

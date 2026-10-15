@@ -2,7 +2,7 @@ import { BookingsRepository } from "../src/core/features/bookings/repository";
 import { hashToken } from "../src/core/platform/auth/tokens";
 
 type Bindings = { DB: D1Database };
-const secret = "booking-worker-test-secret-not-used-by-the-app";
+const secret = "synthetic-booking-worker-test-secret-not-used-by-the-app";
 const defaultStartAt = "2030-06-03T10:00:00.000Z";
 const defaultEndAt = "2030-06-03T10:30:00.000Z";
 

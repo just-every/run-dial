@@ -21,7 +21,7 @@ contract('CAL-006', 'restored Calendar requires reauthorization for a connected 
       async exchangeAuthorizationCode() { calls++; return { accessToken: 'new-access', refreshToken: 'new-refresh', expiresAt: '2099-01-01T00:00:00.000Z' }; },
       async listCalendars() { calls++; return []; },
     };
-    const runtime = { APP_URL: 'https://dial.example.test', SESSION_SECRET: 'fresh-session-secret-at-least-32-chars', GOOGLE_OAUTH_CLIENT_ID: 'fixture-client', GOOGLE_OAUTH_CLIENT_SECRET: 'fixture-secret', CALENDAR_WEBHOOK_SECRET: 'fixture-webhook' };
+    const runtime = { APP_URL: 'https://dial.example.test', SESSION_SECRET: 'synthetic-fresh-session-secret-at-least-32-chars', GOOGLE_OAUTH_CLIENT_ID: 'fixture-client', GOOGLE_OAUTH_CLIENT_SECRET: 'fixture-secret', CALENDAR_WEBHOOK_SECRET: 'fixture-webhook' };
     const calendar = new CalendarConnectionService(new CalendarConnectionRepository(destination.binding), runtime, adapter);
     assert.equal((await calendar.connectionHealth()).reason, 'reauthorization_required');
     assert.deepEqual(await calendar.checkConnection(), { kind: 'unavailable', code: 'reauthorization_required' });

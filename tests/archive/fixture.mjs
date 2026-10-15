@@ -3,7 +3,7 @@ import { schemaModel, quote } from '../../scripts/archive/schema.mjs';
 import { chunks } from '../../scripts/archive/streams.mjs';
 import { exported } from '../../scripts/archive/policy.mjs';
 export const instant = '2026-10-07T00:00:00.000Z';
-export const secret = 'PLANTED_PRIVATE_CREDENTIAL_0123456789';
+export const secret = 'synthetic-PLANTED_PRIVATE_CREDENTIAL_0123456789';
 export const copyReport = {
   id: '01K6Z21FDK9C9E2RVFQDBCGD53', event_type_id: 'event_types-1',
   canonical_url: 'https://dial.example.test/book/host/event_types.slug',

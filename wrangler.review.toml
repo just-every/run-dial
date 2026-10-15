@@ -45,7 +45,7 @@ APP_URL = "http://127.0.0.1:15702"
 GOOGLE_OAUTH_CLIENT_ID = "synthetic-client"
 GOOGLE_OAUTH_CLIENT_SECRET = "synthetic-secret"
 CALENDAR_WEBHOOK_SECRET = "synthetic-calendar-webhook-secret-for-test-only"
-SESSION_SECRET = "dial-task-review-session-secret-for-synthetic-data-only"
+SESSION_SECRET = "synthetic-dial-task-review-session-secret-for-synthetic-data-only"
 
 OWNER_EMAIL = "operator@dial.test"
 MAIL_PROVIDER = "development"
