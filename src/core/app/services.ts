@@ -27,6 +27,7 @@ import { PublicAbuseRepository } from "../features/public-abuse";
 import { createSpaSurface } from "../platform/assets/spa-surface";
 import { SendGridWebhookReceiver } from "../features/delivery/sendgrid-webhook";
 import { ResendMailSender } from "../platform/mail/resend";
+import { suppressesMail } from "../platform/mail/development";
 import { BaseMailSender, mailConfiguration } from "../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 
@@ -34,7 +35,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const hostProfile = new HostProfileService(new HostProfileRepository(binding));
   const calendar = new CalendarConnectionService(new CalendarConnectionRepository(binding), runtime, adapters.calendar);
   const mailConfig = mailConfiguration(runtime);
-  const mail = adapters.mail ?? ((mailConfig.provider === "sendgrid" || mailConfig.provider === "development") ? new BaseMailSender(binding, runtime)
+  const mail = adapters.mail ?? ((suppressesMail(runtime) || mailConfig.provider === "sendgrid" || mailConfig.provider === "development") ? new BaseMailSender(binding, runtime)
     : new ResendMailSender(mailConfig.apiKey && mailConfig.from && (runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET) ? { apiKey: mailConfig.apiKey, fromEmail: mailConfig.from } : undefined));
   const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile, { calendar, mail });
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar);
@@ -47,7 +48,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     const result = await adapters.mail!.send({ to: message.to[0], subject: message.subject, text: message.text, ...(message.html ? { html: message.html } : {}), idempotencyKey: message.deliveryId });
     return { status: "accepted" as const, provider: "edition", providerMessageId: result.providerMessageId };
   } } : undefined;
-  const operators = new OperatorsService(binding, runtime, runtime.ENVIRONMENT === "development" ? undefined : authMail);
+  const operators = new OperatorsService(binding, runtime, authMail);
   return {
     customFields: createCustomFields(binding),
     moveIn: new MoveInService(binding, runtime.SESSION_SECRET),

@@ -1,7 +1,7 @@
 # Dial demo
 
 After the ordinary `rer setup`, run `rer demo` (`rer dev --demo`) and open its
-private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.18 release
+private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.20 release
 includes demo mode. `rer demo --stop`, Ctrl-C, or its end (one hour) stops it and
 deletes `.rer/demo/<start>/`; the next demo starts afresh. Stop `rer dev` first:
 one server runs per checkout.
@@ -19,29 +19,31 @@ phone) and a week of bookings around today with four invitees. The data is
 written through Dial's own services and repositories, once, after the owner
 exists; it sends no mail and makes no calendar request.
 
-## Nothing is sent
+## Real reads and mocked sends
 
-Base's demo module (`src/modules/demo`, `withDemo` wrapping the default export of
-the Worker entry `src/core/app/worker.ts` as its first import) refuses every
-non-loopback `fetch`, WebSocket, beacon, event stream and socket for the whole
-isolate, and lists each refusal in the Demo bar. Dial's outbound effects:
+Base's demo module (`modules/demo`, imported first by
+`src/core/app/worker.ts`) lets public reads/checks use real networking.
+Google Calendar's POST free/busy query declares read intent with
+`fetchDemoRead`. External HTTP writes receive simulated provider success.
+Dial's dev/demo mail validates normally and is silently suppressed without
+retaining a message. Neither a bar nor an outbox is served. The marked product
+name and document title read **Dial Demo**; `rer dev` reads **Dial Dev**.
 
-| Effect | In a demo |
-|---|---|
-| Booking mail (confirmations, host notices, reminders, cancellations) and sign-in mail | Captured in the development outbox and listed in the Demo bar. |
-| Google Calendar OAuth, busy reads, event sync and push channels | Refused: a demo has no Google client, so **Connect Google Calendar** answers `calendar_not_configured` before any request. The token exchange is refused by the guard too. |
-| SendGrid sender-domain check | Refused: demo mail is the outbox, so **Check sender** reads the outbox; a request to `api.sendgrid.com` is refused by the guard. |
-| Public booking pages | Locally on the demo's loopback origin. Hosted, every request without the visitor's demo cookie stops at the front Worker. |
+Sample bookings and public availability use the real application, database,
+and scheduling rules. Google Calendar connection still needs the installation's
+OAuth configuration. The demo's sample events use fixed locations so visitors
+can book, reschedule, cancel and invite an operator without provider credentials.
 
-Without `RER_DEMO=1` the guard returns the Worker unchanged; `rer deploy` refuses
-a declaration or settings that carry `RER_DEMO`.
+Without `RER_DEMO=1`, public networking and provider writes keep their ordinary
+behavior. Production builds/deploys refuse demo settings; local dev continues
+to suppress mail.
 
 ## Hosted demo
 
 `deploy-demo.json` declares the demo at `demo.run-dial.com` with plain settings
 (`MAIL_PROVIDER=development`, `MAIL_FROM=noreply@demo.invalid`); `deploy.json`
 lists the `container` platform (workerd engine). Under `RER_DEMO=1` Dial accepts
-the development outbox on the demo's https origin, and the owner claim's
+silent development mail on the demo's https origin, and the owner claim's
 audience is the front-supplied `APP_URL`; production still requires its explicit
 claim origin and a loopback install for development mail.
 

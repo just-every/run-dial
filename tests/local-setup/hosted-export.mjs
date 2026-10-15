@@ -8,7 +8,7 @@ import { assertNoSecretValues } from '../../scripts/owner-session/export-proof.m
 import { exported, excluded } from '../../scripts/archive/policy.mjs';
 import { spawnOwned } from '../native-process/lifecycle.mjs';
 import { openGateFromLink } from '../dev-key.mjs';
-import { anotherHostedOwner } from './hosted-authority.mjs';
+import { anotherHostedOwner, localOwnerCookie } from './hosted-authority.mjs';
 import { answer } from './hosted-records.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
 import { publishedPackage } from './published-package.mjs';
@@ -21,22 +21,17 @@ async function inspect(path) {
 }
 /** Ordinary native application upload/session, hosted HTTP transport and public
  * CLI import in an independent empty checkout. No fake application endpoints. */
-export async function hostedExportJourney(page, { hostedMigrations, origin, privateBytes, values, records, stopSource, checkpointState }) {
+export async function hostedExportJourney(page, { openUrl, ownerGrant, hostedMigrations, origin, privateBytes, values, records, stopSource, checkpointState }) {
  const publishedProof = await publishedPackage();
  const directory = await freshCopy(); let destination, context;
  const evidence = { source: 'real-local-hosted-standin', liveProviderCalls: false };
  try {
   await runRer(directory, ['install'], { timeout: 300_000 });
   await writeFile(join(directory, '.dev.vars'), privateBytes, { mode: 0o600 });
-  const cookies = await page.context().cookies(origin);
-  // Choose the actual cookie by native authority, without exposing its name/value.
-  let cookie;
-  for (const item of cookies) {
-   const candidate = `${item.name}=${item.value}`;
-   const response = await fetch(origin + '/api/app/session', { headers: { Cookie: candidate } });
-   if (response.ok) { cookie = candidate; break; }
-  }
-  assert.ok(cookie, 'a native signed-in owner cookie exists');
+  const cookie = await localOwnerCookie(origin, values.SESSION_SECRET);
+  const separator = cookie.indexOf('=');
+  await page.context().addCookies([{ name: cookie.slice(0, separator), value: cookie.slice(separator + 1), url: origin, httpOnly: true, sameSite: 'Lax' }]);
+  assert.equal((await fetch(origin + '/api/app/session', { headers: { Cookie: cookie } })).status, 200);
   const sessionPath = '.rer/local/hosted-owner.cookie', sessionFile = join(directory, sessionPath);
   await mkdir(join(directory, '.rer/local'), { recursive: true, mode: 0o700 });
   await writeFile(sessionFile, cookie, { mode: 0o600 });
@@ -44,7 +39,7 @@ export async function hostedExportJourney(page, { hostedMigrations, origin, priv
   const upload = await page.request.put(origin + '/api/app/profile/avatar', { headers: { origin, 'content-type': 'image/png' }, data: png });
   assert.equal(upload.status(), 200); const profile = await upload.json();
   assert.deepEqual(Buffer.from(await (await page.request.get(origin + '/media/' + profile.avatarKey)).body()), png);
-  const otherCookie = await anotherHostedOwner(page, origin);
+  const otherCookie = await anotherHostedOwner(origin, { openUrl, secret: values.SESSION_SECRET, ownerGrant });
   const api = '/api/portability/exports';
   assert.equal((await fetch(origin + api, { method: 'POST', headers: { Origin: origin } })).status, 401);
   assert.equal((await fetch(origin + api, { method: 'POST', headers: { Origin: 'https://other.invalid', Cookie: cookie } })).status, 403);
@@ -101,16 +96,12 @@ export async function hostedExportJourney(page, { hostedMigrations, origin, priv
   await runRer(directory, ['import', '--input', input, '--yes'], { expected: 4 });
   await runRer(directory, ['setup', '--owner-email', values.OWNER_EMAIL, '--port', '15760', '--non-interactive'], { timeout: 300_000 });
   const targetOrigin = (await variables(directory)).APP_URL;
-  destination = await start(directory, 'preview', targetOrigin);
+  destination = await start(directory, 'dev', targetOrigin);
   assert.equal((await fetch(targetOrigin + '/api/app/session', { headers: { Cookie: cookie } })).status, 401, 'source native session does not survive import');
   context = await page.context().browser().newContext();
   await openGateFromLink(context, destination.openUrl);
   const targetPage = await context.newPage();
-  await targetPage.goto(destination.signInUrl);
-  const signIn = targetPage.locator('article').filter({ has: targetPage.getByRole('heading', { name: 'Your sign-in link for Dial', exact: true }) }).first();
-  await signIn.getByRole('link', { name: 'Read message', exact: true }).click();
-  await targetPage.getByRole('link', { name: 'Open this link', exact: true }).click();
-  await targetPage.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await targetPage.goto(destination.openUrl);
   await targetPage.waitForURL(targetOrigin + '/app');
   const targetBooking = await (await targetPage.request.get(targetOrigin + '/api/app/bookings/' + records.booking.id)).json();
   assert.equal(targetBooking.id, records.booking.id); assert.equal(targetBooking.inviteeEmail, records.booking.inviteeEmail);
@@ -122,7 +113,7 @@ export async function hostedExportJourney(page, { hostedMigrations, origin, priv
   const claim = await targetPage.request.post(targetOrigin + '/auth/bootstrap', { headers: { origin: targetOrigin }, data: { token: values.SETUP_TOKEN, displayName: 'Replacement owner' } });
   assert.equal(claim.status(), 409, 'import preserves consumed first-owner authority');
   await context.close(); context = undefined;
-  await runRer(directory, ['preview', '--stop']); await destination.owned.stop(); destination = undefined;
+  await runRer(directory, ['dev', '--stop']); await destination.owned.stop(); destination = undefined;
 
   await assert.rejects(fetch(origin + '/health'), 'source remains unavailable after target proof');
   Object.assign(evidence, { passed: true, completeTableCoverage: true, hostedTrackedLedgerToLocalRestore: true, tables: source.manifest.tables.length, objects: source.manifest.objects.length, contentHash: source.closing.contentHash, sourceArchiveSha256: createHash('sha256').update(source.bytes).digest('hex'), independentEmptyDestination: true, saltMismatchRefused: true, sessionAndOriginRefused: true, otherNativeOwnerRefused: true, remoteImportNotExposed: true, bytesAndMetadataEquivalent: true, publicBookingAndAnswer: true, freshRuntimeRestoredBooking: true, oldSessionRefused: true, nonemptyRestoreRefused: true, originalOwnerClaimPreserved: true });

@@ -1,3 +1,4 @@
+import { captureMail } from "../mail-capture";
 import { issuedDevelopmentLink } from "../development-auth";
 import { ensureTestOperator, registerTestSetup } from "../auth-fixture";
 import { createApp } from "../../src/core/app/hono";
@@ -33,7 +34,7 @@ export default {
       await registerTestSetup(env.DB, owner.id);
       const other = await ensureTestOperator(env.DB, "colleague@example.test");
       await setup(env, services);
-      const signin = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, env.ASSETS);
+      const signin = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, env.ASSETS, { mail: captureMail(env.DB) });
       const link = await issuedDevelopmentLink(env.DB, owner.email, () => signin.operators.requestMagicLink(request, owner.email));
       return Response.json({ owner, other, link });
     }

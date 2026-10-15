@@ -1,3 +1,4 @@
+import { captureMail } from "../mail-capture";
 import { issuedDevelopmentLink } from "../development-auth";
 import { ensureTestOperator, registerTestSetup } from "../auth-fixture";
 import start from "@tanstack/react-start/server-entry";
@@ -56,7 +57,7 @@ export default {
     }
     if (url.pathname === "/__removal/signin") {
       const { email } = await request.json<{ email: string }>();
-      const development = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, { fetch: (input: Request) => start.fetch(input) } as Fetcher);
+      const development = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, { fetch: (input: Request) => start.fetch(input) } as Fetcher, { mail: captureMail(env.DB) });
       const entry = await env.DB.prepare("SELECT status FROM oa_operators WHERE email=?").bind(email).first<{ status: string }>();
       const link = await issuedDevelopmentLink(env.DB, email, () => entry?.status === "invited"
         ? development.operatorManagement.invite(request, email)

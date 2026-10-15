@@ -1,5 +1,5 @@
 // Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
-import { withDemo } from "../../modules/demo/index.mjs";
+import { withDemo } from "../../../modules/demo/index.mjs";
 import { enterApplication, withApplication, ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
 import { hostedExport } from "../features/portability/routes";
 import { staticAssetResponse } from "../../base/static-assets";
@@ -7,7 +7,6 @@ import { setupStateResponse, claimedWhen } from "../../base/setup-state";
 import { lobbyResponse } from "../../base/lobby";
 import { identity } from "../../identity";
 import { ownerClaim } from "../features/operators/owner-claim.server";
-import { handleDevelopmentOutbox } from "../platform/mail/development";
 import { createApp } from "./hono";
 import type { AppBindings } from "./bindings";
 import { createServices, type AppServices } from "./services";
@@ -41,7 +40,6 @@ const worker = {
     const runtime = parseRuntimeEnvironment(env);
     if (url.host !== new URL(runtime.APP_URL).host || (request.headers.has("host") && request.headers.get("host") !== new URL(runtime.APP_URL).host)) return new Response("Not found", { status: 404 });
     if (url.pathname === "/auth/owner-claim") return (await ownerClaim(env.DB, runtime, request)) ?? new Response("Not found", { status: 404 });
-    if (url.pathname === "/__dev/key" || url.pathname === "/__dev/outbox" || url.pathname.startsWith("/__dev/outbox/")) return (await handleDevelopmentOutbox(request, env.DB, runtime, env.RER_DEV_KEY)) ?? new Response("Not found", { status: 404 });
     // General app build assets spend the native public budget before dispatch below.
     const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
     const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };

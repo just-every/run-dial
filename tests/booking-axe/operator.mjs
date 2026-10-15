@@ -35,7 +35,7 @@ export async function operatorJourney(browser, origin, scans, errors) {
     assert.equal(response.status(), 303, "native bootstrap succeeds");
     assert.ok(response.headers()["set-cookie"], "native bootstrap issues its session cookie");
     storageState = await bootstrap.storageState();
-    assert.ok(storageState.cookies.some(cookie => cookie.name === "operator_session_local" && cookie.httpOnly), "the native HttpOnly session is retained");
+    assert.ok(storageState.cookies.some(cookie => cookie.name.startsWith("operator_session_local_") && cookie.httpOnly), "the native HttpOnly session is retained");
     const eventsResponse = await bootstrap.request.get(origin + "/api/app/event-types");
     assert.equal(eventsResponse.status(), 200);
     assert.deepEqual(await eventsResponse.json(), [], "preview begins with genuinely empty D1, without development samples");

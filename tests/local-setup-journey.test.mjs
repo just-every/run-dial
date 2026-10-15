@@ -13,6 +13,7 @@ import { hostedLedger } from './local-setup/hosted-ledger.mjs';
 import { hostedRecords } from './local-setup/hosted-records.mjs';
 import { nativeSignIn } from './local-setup/native-signin.mjs';
 import { safeBrowserFailure } from './local-setup/evidence-safety.mjs';
+import { ownerGrant } from './local-setup/owner-grant.mjs';
 import { checkpointState } from './local-setup/hosted-checkpoint.mjs';
 import { legacyResetRefusal } from './local-setup/legacy-reset.mjs';
 
@@ -32,10 +33,9 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
    assert.equal((await stat(join(directory, '.dev.vars'))).mode, privateMode);
    await runRer(directory, ['setup', '--owner-email', 'other@example.test', '--non-interactive'], { expected: 4 });
    await assertPrivateBuild(directory, values);
-   // --login keeps the outbox sign-in (the kept end-to-end email-link journey); the key gate still protects the outbox.
-   server = await start(directory, 'dev', values.APP_URL, ['--login']);
+   // Local sign-in completes without mail, including before hydration.
+   server = await start(directory, 'dev', values.APP_URL, []);
    await runRer(directory, ['reset', '--yes'], { expected: 4 });
-   await runRer(directory, ['outbox']);
    browser = await chromium.launch({ headless: true });
    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width, height: 900 } });
    await openGateFromLink(context, server.openUrl);
@@ -64,18 +64,15 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
    assert.equal((await closing('first.rer')).contentHash, (await closing('second.rer')).contentHash);
    // README restores private settings and data before rerunning setup.
    await runRer(directory, args, { timeout: 300_000 });
-   server = await start(directory, 'dev', values.APP_URL, ['--login']);
-   await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width, completed: true, openUrl: server.openUrl, issuedSignInUrl: server.signInUrl });
-   await runRer(directory, ['dev', '--stop']); await server.owned.stop(); server = undefined;
-   server = await start(directory, 'preview', values.APP_URL);
-   await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width, completed: true, openUrl: server.openUrl, issuedSignInUrl: server.signInUrl, onSignedIn: async page => {
+   server = await start(directory, 'dev', values.APP_URL, []);
+   await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width, completed: true, openUrl: server.openUrl, onSignedIn: async page => {
     assert.deepEqual(await (await page.request.get(values.APP_URL + '/api/app/profile')).json(), savedProfile);
     assert.ok((await (await page.request.get(values.APP_URL + '/api/app/host-setup')).json()).completedAt);
     await page.goto(values.APP_URL + '/setup'); await page.waitForURL(values.APP_URL + '/app');
     await page.goto(values.APP_URL + '/app/settings');
     assert.equal((await page.request.get(values.APP_URL + '/api/app/profile')).status(), 200);
    } });
-   await runRer(directory, ['preview', '--stop']); await server.owned.stop(); server = undefined;
+   await runRer(directory, ['dev', '--stop']); await server.owned.stop(); server = undefined;
    await runRer(directory, ['reset', '--yes']);
    await runRer(directory, args, { timeout: 300_000 });
    server = await start(directory, 'dev', values.APP_URL);
@@ -97,9 +94,9 @@ contract('DATA-001', 'native hosted export imports through the ordinary CLI into
   await runRer(directory, ['setup', '--owner-email', 'hosted-owner@example.test', '--port', '15750', '--non-interactive'], { timeout: 300_000 });
   const hostedMigrations = await hostedLedger(directory);
   const values = await variables(directory), privateBytes = await readFile(join(directory, '.dev.vars'));
-  server = await start(directory, 'preview', values.APP_URL);
+  server = await start(directory, 'dev', values.APP_URL);
   let records;
-  await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width: 1440, openUrl: server.openUrl, issuedSignInUrl: server.signInUrl, onSignedIn: async page => {
+  await browserJourney(values.APP_URL, { email: values.OWNER_EMAIL, width: 1440, openUrl: server.openUrl, onSignedIn: async page => {
    records = await hostedRecords(page, values.APP_URL);
   } });
   // Complete the source browser checks before a separate session exports and
@@ -110,22 +107,12 @@ contract('DATA-001', 'native hosted export imports through the ordinary CLI into
    await openGateFromLink(context, server.openUrl);
    const page = await context.newPage();
    try {
-    await page.goto(values.APP_URL + '/signin');
-    await page.locator('main[data-signin-ready="true"]').waitFor();
-    await page.getByLabel('Email address', { exact: true }).fill(values.OWNER_EMAIL);
-    const accepted = page.waitForResponse(response => response.url() === values.APP_URL + '/api/auth/magic-links' && response.request().method() === 'POST');
-    await page.getByRole('button', { name: 'Send magic link', exact: true }).click();
-    assert.equal((await accepted).status(), 202);
-    await page.getByRole('link', { name: 'Open local outbox', exact: true }).click();
-    const message = page.locator('article').filter({ has: page.getByRole('heading', { level: 2, name: 'Your sign-in link for Dial', exact: true }) }).first();
-    await message.getByRole('link', { name: 'Read message', exact: true }).click();
-    await page.getByRole('link', { name: 'Open this link', exact: true }).click();
-    await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+    await page.goto(server.openUrl);
     await page.waitForURL(values.APP_URL + '/app');
     assert.equal((await page.request.get(values.APP_URL + '/api/app/session')).status(), 200);
    } catch { throw Error('Hosted export owner sign-in failed; private diagnostics omitted.'); }
-   await hostedExportJourney(page, { hostedMigrations, origin: values.APP_URL, privateBytes, values, records, checkpointState: (id, operation) => checkpointState(directory, id, operation), stopSource: async () => {
-    await runRer(directory, ['preview', '--stop']);
+   await hostedExportJourney(page, { openUrl: server.openUrl, ownerGrant: email => ownerGrant(directory, email), hostedMigrations, origin: values.APP_URL, privateBytes, values, records, checkpointState: (id, operation) => checkpointState(directory, id, operation), stopSource: async () => {
+    await runRer(directory, ['dev', '--stop']);
     await server.owned.stop(); server = undefined;
    } });
   } catch (error) { throw safeBrowserFailure('signed-in callback', 1440, error); }

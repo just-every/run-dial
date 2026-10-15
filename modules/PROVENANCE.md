@@ -67,13 +67,20 @@ outside the package remain governed by their existing byte-copy records;
 `verify:copies` checks those records. `rer check --profile first-party` checks
 the package pin, locked dependency, aliases, and absence of the vendored trees.
 
-Demo mode adopts Base `e8296d97481b62ec6805d780021ed7cb528b7a07` (rer 0.2.18).
-`src/modules/demo` holds Base `modules/demo`; five files are byte-exact copies
-recorded in `base-copies.json`. Its `index.mjs` differs only in its two imports:
-`http.mjs` from Dial's `modules/operator-auth`, and `csp.mjs` from beside it.
-`src/modules/demo/csp.mjs` carries the bytes of Base's
-`modules/operator-auth/csp.mjs` at that commit (the inline-style CSP helper the
-Demo bar needs; Dial's pinned operator-auth has the same helpers only inside
-`dev/badge.mjs`). It is placed with the demo and not recorded as an
-operator-auth copy, so operator-auth keeps its single pin (SC-05). Neither
-adapted file is a recorded copy. See [DEMO.md](../DEMO.md).
+Demo mode, its local identity wrapper and dependencies, and silent development
+mail adopt Base `5afc5530c67454482153dbfc097bbda8a1d27981` (rer 0.2.20).
+`base-copies.json` records each refreshed source and its exact bytes. The demo
+now lives at `modules/demo` so Base's relative imports remain verbatim.
+The dev wrapper index retains one Dial adaptation: a fenced persona insert is
+refused only when D1 reports zero changes. Dial's identity projection triggers
+make a successful insert report multiple changes; the Base strict-one check
+incorrectly returned 409 after creating the operator. All authority fences stay
+intact. The adapted index is deliberately outside the verbatim copy inventory.
+The existing DATA-002 rate-correlation adaptation is carried across Base's
+email-link refactor in service.mjs, accounts/store.mjs, identity/email-link/index.mjs
+and index.d.mts. These adapted files are outside the verbatim inventory; counters
+and their erasure correlations still commit in one D1 transaction.
+accounts/admin.mjs preserves Dial's existing OPER-001/002 equal-operator
+management: ordinary invitations/removals do not become a new role-transfer
+step-up flow. Actual role changes retain the fresh-proof guard. This adapted
+file is outside the verbatim inventory.

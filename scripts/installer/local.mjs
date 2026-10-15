@@ -30,8 +30,8 @@ export const commandAdapter = createCommandAdapter(lifecycle, {
  // A demo claims the saved owner in its own state, so it never opens the checkout's database (even a read rewrites SQLite's -shm).
  localPrerequisites: async ({ root, vars, email, demo }) => vars.ENVIRONMENT === 'development' && vars.MAIL_PROVIDER === 'development' && Boolean(vars.SESSION_SECRET) && (demo || await operatorPrerequisites(root, email)),
  setup: { manifestFile: 'rer-setup.json' }, browserModule: 'scripts/installer/ui/seed.mjs', product: 'Dial',
- // Local dev identity: the local-only Worker entry, the build output rer build scans for the dev layer, and the kept end-to-end email-link test.
- devIdentity: { entry: 'src/server.dev.ts', output: ['dist'], emailLinkTest: 'tests/local-setup-journey.test.mjs' },
+ // Local dev identity: the local-only Worker entry, the build output rer build scans for the dev layer, and the native mail-adapter authentication test.
+ devIdentity: { entry: 'src/server.dev.ts', output: ['dist'], emailLinkTest: 'tests/runtime.test.mjs' },
  localOnlyKeys: ['RER_DEV_ORIGIN', 'RER_DEV_IDENTITY'],
  input: {
   names: { name: 'displayName' },

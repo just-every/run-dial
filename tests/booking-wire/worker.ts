@@ -15,7 +15,7 @@ type WireBindings = AppBindings & { PROVIDER_DB?: D1Database };
 const providerDb = (env: WireBindings) => env.PROVIDER_DB ?? env.DB;
 const servicesFor = (env: WireBindings) => {
   const runtime = parseRuntimeEnvironment(env), wire = wireTransport(providerDb(env));
-  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), mail: new BaseMailSender(env.DB, runtime, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) });
+  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), mail: new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) });
 };
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: WireBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);

@@ -5,7 +5,7 @@ import { type MailSender as AuthMailSender } from "../../../../modules/operator-
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 import { ProviderFailure } from "../calendar/types";
 import type { MailMessage, MailSender, MailSendResult } from "./types";
-import { capturesMail, developmentOutbox } from "./development";
+import { suppressesMail } from "./development";
 import { checkMailProvider } from "./connection";
 
 type BaseMessage = { deliveryId: string; from: string; to: string[]; subject: string; text: string; html?: string; replyTo?: string; headers?: Record<string, string>; attachments?: { filename: string; contentType: string; content: Uint8Array }[] };
@@ -19,9 +19,14 @@ export function mailConfiguration(runtime: MailRuntime) {
   return { provider: "resend" as const, apiKey: runtime.RESEND_API_KEY, from: runtime.RESEND_FROM_EMAIL };
 }
 
-export function createAuthenticationMail(db: D1Database, runtime: RuntimeEnvironment): AuthMailSender | undefined {
-  if (capturesMail(runtime)) {
-    return createMailSender({ provider: "development", mode: "development" }, { outbox: developmentOutbox(db, runtime) }) as BaseSender;
+export function createAuthenticationMail(runtime: RuntimeEnvironment): AuthMailSender | undefined {
+  if (suppressesMail(runtime)) {
+    const sender = createMailSender({ provider: "development", mode: "development" }, {}) as BaseSender;
+    return { async send(message) {
+      await sender.send(message);
+      // Hosted demos use an HTTPS origin; their mocked send is still accepted.
+      return { status: "accepted", provider: "development", providerMessageId: null };
+    } };
   }
   if (runtime.MAIL_PROVIDER === "development") throw new Error("Development mail is unavailable outside a loopback development install or demo mode");
   const config = mailConfiguration(runtime);
@@ -33,27 +38,25 @@ export class BaseMailSender implements MailSender {
   constructor(private readonly db: D1Database | undefined, private readonly runtime: MailRuntime, private readonly request: typeof fetch = fetch) {}
   async checkConnection() {
     const config = mailConfiguration(this.runtime);
-    if (config.provider === "development") {
-      if (!this.db) throw new ProviderFailure("missing_configuration", false);
-      await developmentOutbox(this.db, this.runtime).list();
+    if (suppressesMail(this.runtime)) {
       return { checkedAt: new Date().toISOString() };
     }
     return checkMailProvider(config as { provider: "resend" | "sendgrid"; apiKey?: string; from?: string }, this.request);
   }
   async send(message: MailMessage): Promise<MailSendResult> {
     const config = mailConfiguration(this.runtime);
-    if ((!config.apiKey && config.provider !== "development") || !config.from) throw new ProviderFailure("missing_configuration", false);
+    if ((!config.apiKey && !suppressesMail(this.runtime)) || !config.from) throw new ProviderFailure("missing_configuration", false);
     if (!/^no-?reply@/i.test(config.from)) throw new ProviderFailure("invalid_delivery_payload", false);
-    const sender = config.provider === "development"
-      ? createMailSender({ provider: "development", mode: "development" }, { outbox: developmentOutbox(this.db!, this.runtime) }) as BaseSender
+    const sender = suppressesMail(this.runtime)
+      ? createMailSender({ provider: "development", mode: "development" }, {}) as BaseSender
       : createMailSender({ provider: config.provider, mode: "production", apiKey: config.apiKey }, { fetch: this.request }) as BaseSender;
     const wire: BaseMessage = { deliveryId: message.idempotencyKey, from: config.from, to: [message.to], subject: message.subject, text: message.text,
       ...(message.html ? { html: message.html } : {}), ...(message.replyTo ? { replyTo: message.replyTo } : {}),
       ...(message.attachments?.length ? { attachments: message.attachments.map((attachment) => ({ filename: attachment.filename,
         contentType: attachment.contentType ?? "application/octet-stream", content: Uint8Array.from(atob(attachment.contentBase64), (char) => char.charCodeAt(0)) })) } : {}) };
-    if (config.provider === "sendgrid") return this.sendOnce(sender, wire);
+    if (config.provider === "sendgrid" && !suppressesMail(this.runtime)) return this.sendOnce(sender, wire);
     const result = await sender.send(wire);
-    if (result.status === "development" && capturesMail(this.runtime)) return { providerMessageId: null };
+    if (result.status === "development" && suppressesMail(this.runtime)) return { providerMessageId: null };
     return checkedResult(result, true);
   }
 

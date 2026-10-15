@@ -6,6 +6,6 @@ export async function signinOptions(bindings: Pick<AppBindings, "DB" | "SETUP_TO
   const claimed = await bindings.DB.prepare("SELECT singleton FROM oa_bootstrap LIMIT 1").first();
   return {
     setup: Boolean(bindings.SETUP_TOKEN) && !claimed && !signedOwnerClaimConfigured(bindings),
-    ...signinPresentation({ AUTH_LOCAL: bindings.ENVIRONMENT === "development" ? "true" : "false", AUTH_ORIGIN: bindings.APP_URL, MAIL_PROVIDER: bindings.MAIL_PROVIDER }),
+    ...signinPresentation({ AUTH_LOCAL: bindings.ENVIRONMENT === "development" ? "true" : "false", AUTH_ORIGIN: bindings.APP_URL }),
   };
 }

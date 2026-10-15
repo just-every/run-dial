@@ -80,16 +80,12 @@ runs, and refuses a conflicting owner or origin. The ordinary fresh-checkout
 `rer dev` path needs no separate setup command.
 
 To look around with sample data, run `rer demo` after setup: a throwaway Dial
-signed in as the owner, with a week of bookings, that sends nothing and is
+signed in as the owner, with a week of bookings and simulated external sends, that is
 deleted when it stops. See [DEMO.md](DEMO.md).
 
-`rer dev --as co-host` starts as the dev co-host (a second operator,
-`co-host@dev.localhost`) and `rer dev --as signed-out` starts as a visitor; the
-badge on every page switches between them. `rer dev --login` turns dev identity
-off and prints `RER_SIGN_IN` and `RER_OPEN` for the local email-link path: open
-the outbox, choose the newest sign-in message, and follow its link. No email is
-sent. Sign-in forms work before JavaScript hydration. To request a fresh one-use
-link while the app is running, use `rer outbox --owner-email EMAIL`.
+The nav and title read **Dial Dev** locally and **Dial Demo** in a demo.
+Open the printed `RER_OPEN` link to enter as the owner. Mail is silently
+suppressed in dev and demo. There is no injected bar or captured-mail inbox.
 
 Stop dev with `rer dev --stop` (or Ctrl-C) before
 `rer verify`. Stop preview with `rer preview --stop` before changing modes,
@@ -114,7 +110,7 @@ metadata, not as evidence that historical setup actions occurred.
 Dev serves source edits through Vite HMR. Run `rer preview`
 to serve the fixed production Worker and assets. Both are managed foreground
 servers on loopback, share the same owner and durable data, and print readiness
-only after health and outbox checks pass. Compatible repeat starts reuse the
+only after application health passes. Compatible repeat starts reuse the
 registered server. Use
 `--idle-timeout SECONDS` to change its inactivity limit, and `--port PORT` to
 choose an available loopback port.
@@ -125,9 +121,9 @@ deployed scheduled pass: connection checks and alerts, calendar sync and channel
 renewal, then due reminders and mail or calendar retries. The root
 `wrangler.jsonc` repeats the template's `triggers.crons` because rer reads its
 schedule only from that file; rendering refuses (so build, setup and verify fail)
-when the two differ. `rer preview` still runs no schedule. Fixed-link, phone and
+when the two differ. `rer preview` runs the same schedule from fixed production output. Fixed-link, phone and
 in-person events can publish without a calendar; their reminders use the
-configured mail sender, including the local outbox. The journey `node scripts/verify-lifecycle-journey.mjs`
+configured mail sender; local dev and demos suppress those sends. The journey `node scripts/verify-lifecycle-journey.mjs`
 proves reminders, retries, alerts and sync on this schedule against synthetic
 provider HTTP. See [OPERATIONS.md](OPERATIONS.md).
 
@@ -138,11 +134,8 @@ declare it, and the installer refuses a theme that breaks Base's grammar or cont
 Private settings live in `.dev.vars` with mode `0600`; canonical D1 and R2 state
 lives in `.wrangler/state`; private installer captures live in
 `.seed/installer`. The checkout's dev key lives in `.rer/local/dev-key.env`
-(mode `0600`); `rer setup` creates it and `rer reset --yes` removes it. The
-local outbox at `/__dev/outbox`, dev sign-in and the personas answer only a
-local runtime that holds the key and a request that presents it, so a tunnel or
-local proxy that forwards to the loopback port gets 404. The outbox retains up to
-100 messages for seven days. Anyone with access to the local account can read it.
+(mode `0600`); `rer setup` creates it and `rer reset --yes` removes it. Dev sign-in and persona endpoints answer only a local runtime holding the key
+and a request that presents it; a tunnel or proxy without the key gets 404.
 Dev sessions and personas never reach a deployment or an export: `rer build`
 refuses output that bundles the dev layer and `rer deploy` refuses the key.
 

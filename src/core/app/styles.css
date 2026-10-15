@@ -81,6 +81,3 @@
     outline-offset: 3px;
   }
 }
-
-/* Local identity controls stay in document flow so they never cover a task. */
-body #rer-dev-badge { position: static; width: fit-content; margin: 12px; }

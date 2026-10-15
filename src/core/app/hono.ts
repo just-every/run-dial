@@ -23,7 +23,6 @@ import { publicBookingRoutes } from "../features/public-booking/routes";
 import { checkPlatformBindings } from "../platform/health";
 import { apiError, discardRequestBody } from "../shared/http";
 import { RuntimeConfigurationError, parseRuntimeEnvironment } from "../shared/runtime-env";
-import { handleDevelopmentOutbox } from "../platform/mail/development";
 import type { AppEnvironment } from "./context";
 import type { AppBindings } from "./bindings";
 import type { AppServices } from "./services";
@@ -36,7 +35,6 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
   const base = new Hono<AppEnvironment>()
     .use("*", async (context, next) => {
       const runtime = parseRuntimeEnvironment(context.env);
-      if (context.req.path === "/__dev/outbox") return (await handleDevelopmentOutbox(context.req.raw, context.env.DB, runtime, context.env.RER_DEV_KEY)) ?? context.notFound();
       const services = servicesFactory ? servicesFactory(context.env) : createServices(context.env.DB, runtime, (documents ?? context.env.ASSETS) as Fetcher, { files: context.env.FILES });
       const origin = context.req.header("Origin");
       if (["POST", "PATCH", "PUT", "DELETE"].includes(context.req.method) && origin && origin !== new URL(runtime.APP_URL).origin && !context.req.path.startsWith("/api/webhooks/")) return apiError(context, 403, "origin_not_allowed", "Use the deployment origin for this action.");

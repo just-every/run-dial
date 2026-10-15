@@ -93,7 +93,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1024 });
   console.log("Public SSR/hydration navigation passed; checking private navigation.");
   const browserSession = await signIn();
-  await page.context().addCookies([{ name: "operator_session_local", value: browserSession.split("=")[1], url: origin }]);
+  await page.context().addCookies([{ name: browserSession.slice(0, browserSession.indexOf("=")), value: browserSession.split("=")[1], url: origin }]);
   const privateResponse = await page.goto(origin + "/app");
   console.log("Private document", privateResponse.status(), page.url());
   await writeFile(evidencePath("private-document.html"), await page.content());

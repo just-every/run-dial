@@ -14,24 +14,20 @@ export async function bootstrapTestOwner(origin) {
   assert.ok([303,409].includes(response.status), `Test bootstrap: ${response.status}: ${await response.clone().text()}`);
 }
 
-/** Read the real Base viewer, without adding any application-only test route. */
-export async function readLocalOutbox(origin) {
-  const response = await fetch(origin + "/__dev/outbox", { headers: devKeyHeaders });
-  assert.equal(response.status, 200, "local outbox is reachable");
-  const html = await response.text();
-  return [...html.matchAll(/href="(\/__dev\/outbox\?message=[^"]+)"/g)].map(match => match[1].replaceAll("&amp;", "&"));
+/** Messages from a test-owned mail adapter, never an application outbox. */
+export async function readTestMail(origin) {
+  const response = await fetch(origin + "/__test/mail", { headers: devKeyHeaders });
+  if (response.ok) return (await response.json()).map(row => row.message);
+  assert.equal(response.status, 404);
+  const fixture = await fetch(origin + "/__fixtures/status");
+  assert.equal(fixture.status, 200, "test provider storage is reachable");
+  return (await fixture.json()).fixture_mail.map(row => JSON.parse(row.message_json));
 }
 export async function localMagicLink(origin) {
-  const messages = await readLocalOutbox(origin);
-  assert.ok(messages.length, "a sign-in message reached the local outbox");
-  for (const path of messages) {
-    const detail = await fetch(origin + path, { headers: devKeyHeaders });
-    assert.equal(detail.status, 200);
-    const html = await detail.text();
-    const link = /href="([^"]*\/auth\/confirm\?token=[^"]+)"/.exec(html)?.[1];
-    if (link) return { developmentLink: link.replaceAll("&amp;", "&") };
-  }
-  assert.fail("the outbox contains a sign-in link");
+  const messages = await readTestMail(origin);
+  const link = messages.map(message => message.text?.match(/https?:\/\/[^\s<>]+\/auth\/confirm\?token=[^\s<>]+/)?.[0]).find(Boolean);
+  assert.ok(link, "a sign-in message reached the test mail adapter");
+  return { developmentLink: link };
 }
 export async function seedDemoWorkspace(origin, cookie) {
   const { build } = await import("esbuild");

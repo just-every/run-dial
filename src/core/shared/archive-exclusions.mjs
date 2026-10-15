@@ -42,6 +42,13 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  oa_auth_audit: 'Installation-local authentication audit; never restore source identity authority',
+  oa_credentials: 'Live credential authority; recreate at the destination',
+  oa_provider_sessions: 'Live provider sessions; sign in at the destination',
+  oa_provider_session_pins: 'Live provider session provenance; sign in at the destination',
+  oa_logout_events: 'Provider replay authority; never restore it',
+  oa_setup_links: 'Ephemeral installation-local setup attempts',
+  oa_owner_signins: 'One-use owner sign-in capabilities; never restore them',
   oa_auth_settings: 'Local identity-provider setup and admission state; the destination keeps its own setup authority',
   dial_portability_admission: "Source runtime admission receipts and temporary hosted export lease; never restore execution authority",
   ...importExcluded,

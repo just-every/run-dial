@@ -25,7 +25,7 @@ export function safeBrowserFailure(phase, width, error, diagnostics) {
 export function assertSafeEvidenceSurface(url, visibleText, secrets = []) {
   const location = new URL(url);
   const approved = ["/app", "/setup", "/auth/confirm"].includes(location.pathname)
-    || (location.pathname === "/__dev/outbox" && location.search === "");
+;
   if (!approved || /\/auth\/confirm\?token=|[?&]token=/i.test(visibleText)
       || secrets.filter(Boolean).some(secret => visibleText.includes(secret))) {
     throw new Error("Refusing an evidence image containing sensitive content or an unapproved surface.");

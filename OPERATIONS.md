@@ -56,8 +56,7 @@ CLI values.
 rer setup --owner-email you@example.com
 rer dev
 
-Setup builds the app, applies local migrations, records the first owner, requests
-an ordinary local sign-in message, checks that it reached the outbox, and exits
+Setup builds the app, applies local migrations, records the first owner and exits
 without leaving an app running. It preserves the saved owner, domain data, and
 private settings on rerun. Conflicting owner or origin answers are refused;
 setup does not rotate secrets or replace an owner. Native setup and dev sign-in
@@ -81,16 +80,13 @@ scripts/verify-lifecycle-journey.mjs` drives the whole lifecycle on this schedul
 against synthetic provider HTTP. Preview runs no schedule and serves the fixed
 production Worker and assets after setup. Both are managed foreground servers
 on loopback and share the same owner and canonical data. Readiness output appears
-only after application health and a fresh outbox check succeed. Open the
+only after application health succeeds. Open the
 printed RER_SIGN_IN URL, choose the newest ordinary sign-in message, and
 follow its link. No email is sent.
 
-The local outbox is at /__dev/outbox; it is guarded to the selected loopback
-origin, is never mounted remotely, and retains up to 100 messages for seven
-days. rer outbox prints the running outbox URL.
-rer outbox --owner-email EMAIL requests a fresh one-use
-sign-in message. Keep the outbox private: any local user or process with access
-to the account can read it.
+Local dev and demos silently suppress mail. Open the printed RER_OPEN link
+for one-click owner sign-in. The nav/title identify Dial Dev or Dial Demo,
+without an injected bar or captured-mail inbox.
 
 The default local state is .wrangler/state; CLI bookkeeping is .rer/local;
 installer drafts and captures are in .seed/installer. Private settings are in

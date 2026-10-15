@@ -1,6 +1,6 @@
 import { signedOwnerClaimConfigured } from "./owner-claim.server";
 import { operatorRateCorrelation } from "./rate-correlation";
-import { createAuthHandler, createOperatorAuth, AuthError, isLoopbackHost, type OperatorAuth, type PolicyInput } from "../../../../modules/operator-auth/index.mjs";
+import { createAuthHandler, createOperatorAuth, AuthError, type OperatorAuth, type PolicyInput } from "../../../../modules/operator-auth/index.mjs";
 import type { MailSender as AuthMailSender } from "../../../../modules/operator-auth/index.mjs";
 import { createAuthenticationMail } from "../../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
@@ -21,7 +21,7 @@ export class OperatorsService {
     const config = operatorAuthConfig(this.runtime);
     const { local } = config;
     const { MAIL_FROM, RESEND_FROM_EMAIL } = this.runtime;
-    const mailSender = this.mail ?? createAuthenticationMail(this.binding, this.runtime);
+    const mailSender = this.mail ?? createAuthenticationMail(this.runtime);
     this.service = createOperatorAuth({
       db: this.binding, config,
       mailSender,
@@ -58,13 +58,6 @@ export class OperatorsService {
         return { status: "accepted" };
       },
     } : auth)(request);
-    if (path === "/auth/magic-link" && response?.status === 303 && request.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded")) {
-      // Base returns a native form notice after acceptance. Only the successful
-      // local notice opens Dial's key-gated outbox; errors keep their recovery.
-      const notice = new URL(response.headers.get("location") ?? "", this.runtime.APP_URL);
-      const local = this.runtime.ENVIRONMENT === "development" && this.runtime.MAIL_PROVIDER === "development" && isLoopbackHost(new URL(this.runtime.APP_URL).hostname);
-      if (local && notice.pathname === "/signin" && notice.searchParams.get("notice") === "sent") return new Response(null, { status: 303, headers: { Location: "/__dev/outbox", "Cache-Control": "no-store" } });
-    }
     return response;
   }
 

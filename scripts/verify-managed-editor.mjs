@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { localMagicLink } from '../tests/auth-client.mjs';
 import { admissionRuntime, sessionCookie } from '../tests/managed-admission/runtime.mjs';
 import { managementEdge } from '../tests/managed-admission/management-edge.mjs';
 import { establishEditorWorkspace } from '../tests/managed-admission/ready-workspace.mjs';
@@ -21,13 +22,8 @@ try {
   await establishEditorWorkspace(app.origin, cookie);
   const freshCookie = async () => {
     assert.equal((await app.call('/auth/magic-link', { email: 'owner@dial.test', returnTo: '/app' })).status, 202);
-    const listing = await (await app.call('/__dev/outbox')).text();
-    const message = listing.match(/href="(\/__dev\/outbox\?message=[^"]+)"/);
-    assert.ok(message, 'the native development outbox lists a sign-in message');
-    const detail = await (await app.call(message[1].replaceAll('&amp;', '&'))).text();
-    const link = detail.match(/class="open" href="([^"]+)"/);
-    assert.ok(link, 'native development mail carries the confirmation capability');
-    const token = new URL(link[1].replaceAll('&amp;', '&')).searchParams.get('token');
+    const { developmentLink } = await localMagicLink(app.origin);
+    const token = new URL(developmentLink).searchParams.get('token');
     const response = await app.call('/auth/confirm', { token }); assert.equal(response.status, 303);
     return sessionCookie(response);
   };

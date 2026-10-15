@@ -1,6 +1,6 @@
 import { CalendarConnectionRepository, CalendarConnectionService } from '../../src/core/features/calendar-connection/index.ts';
 import { DeliveryRepository, ProviderDeliveryService } from '../../src/core/features/delivery/index.ts';
-import { BaseMailSender } from '../../src/core/platform/mail/base-mail.ts';
+import { captureAuthMail, captureMail } from '../mail-capture.ts';
 import { OperatorsService } from '../../src/core/features/operators/service.ts';
 
 export default {
@@ -9,12 +9,12 @@ export default {
     // This envelope exists only in the test worker; the real auth guards still run.
     const { url, ...init } = await envelope.json();
     const request = new Request(url, init);
-    const service = new OperatorsService(env.DB, env);
+    const service = new OperatorsService(env.DB, env, captureAuthMail(env.DB));
     const path = new URL(request.url).pathname;
     try {
       if (path === '/test/mail-check') {
         const calendar = new CalendarConnectionService(new CalendarConnectionRepository(env.DB), env);
-        const delivery = new ProviderDeliveryService(new DeliveryRepository(env.DB, 'development'), calendar, new BaseMailSender(env.DB, env), undefined, env.SESSION_SECRET);
+        const delivery = new ProviderDeliveryService(new DeliveryRepository(env.DB, 'development'), calendar, captureMail(env.DB), undefined, env.SESSION_SECRET);
         return Response.json(await delivery.checkMailConnection());
       }
       if (path === '/api/auth/magic-links') return Response.json(await service.requestMagicLink(request, (await request.json()).email));

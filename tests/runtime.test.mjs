@@ -1,4 +1,4 @@
-import { readLocalOutbox, seedDemoWorkspace, localMagicLink, confirmAuthLink, bootstrapTestOwner } from "./auth-client.mjs";
+import { readTestMail, seedDemoWorkspace, localMagicLink, confirmAuthLink, bootstrapTestOwner } from "./auth-client.mjs";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -49,7 +49,7 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
   assert.equal(forgedApi.status, 401);
 
   const unknown = await requestMagicLink("not-an-operator@dial.test");
-  const beforeKnown = await readLocalOutbox(origin);
+  const beforeKnown = await readTestMail(origin);
   const known = await requestMagicLink("operator@dial.test");
   assert.equal(unknown.status, 202);
   assert.equal(known.status, 202);
@@ -63,7 +63,7 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
   const verified = await confirmAuthLink(developmentLink);
   assert.equal(verified.status, 303);
   const cookie = verified.headers.get("set-cookie");
-  assert.match(cookie ?? "", /operator_session_local=/);
+  assert.ok(cookie, "confirmation issues a session cookie");
   assert.match(cookie ?? "", /HttpOnly/);
   assert.match(cookie ?? "", /SameSite=Lax/);
   assert.doesNotMatch(cookie ?? "", /; Secure/, "development cookies deliberately omit Secure for loopback HTTP");
@@ -82,7 +82,7 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
   assert.match(signedOut.headers.get("set-cookie") ?? "", /Max-Age=0/);
   const afterSignOut = await fetch(`${origin}/api/app/profile`, { headers: { cookie: sessionCookie } });
   assert.equal(afterSignOut.status, 401, "sign-out revokes the persisted session");
-  // The outbox is reachable only on this loopback-bound development Worker.
+  // A second genuine provider message establishes a new native session.
   await requestMagicLink("operator@dial.test");
   const { developmentLink: secondDevelopmentLink } = await localMagicLink(origin);
   const secondVerification = await confirmAuthLink(secondDevelopmentLink);

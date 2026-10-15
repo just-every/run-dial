@@ -48,7 +48,7 @@ export async function hostedExport(request: Request, env: AppBindings, operators
   // content. Only a cookie that independently authenticates this exact session
   // is secret material; unrelated short cookies must not redact ordinary text.
   let nativeCookie = "";
-  for (const cookie of (request.headers.get("cookie") ?? "").split(";").map(value => value.trim()).filter(value => /^(?:__Host-operator_session|operator_session_local)=/.test(value))) {
+  for (const cookie of (request.headers.get("cookie") ?? "").split(";").map(value => value.trim()).filter(Boolean)) {
    const headers = new Headers(request.headers); headers.set("cookie", cookie);
    const current = await operators.auth.getSession(new Request(request.url, { headers }));
    if (current?.id === session.id) nativeCookie = cookie.slice(cookie.indexOf("=") + 1);

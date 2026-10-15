@@ -1,4 +1,4 @@
-import production, { BookingCoordinator } from "../../src/core/app/worker";
+import production, { BookingCoordinator } from "../mail-runtime.worker";
 import type { AppBindings } from "../../src/core/app/bindings";
 export { BookingCoordinator };
 

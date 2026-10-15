@@ -60,7 +60,7 @@ const browser = await chromium.launch({ headless: true });
 let page;
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1024 }, timezoneId: "Australia/Brisbane" });
-  await context.addCookies([{ name: "operator_session_local", value: cookie.slice(cookie.indexOf("=") + 1), url: origin }]);
+  await context.addCookies([{ name: cookie.slice(0, cookie.indexOf("=")), value: cookie.slice(cookie.indexOf("=") + 1), url: origin }]);
   page = await context.newPage(); page.setDefaultTimeout(25000);
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
