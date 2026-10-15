@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-10-16
 
 - Mark example and test credentials explicitly synthetic so hosted source admission accepts the fixtures.
 - Pin rer 0.2.23 and adopt Base's matching mail adapter: Managed sign-in mail sends from Workers with manual redirect refusal and relay-owned automated-mail headers. RER's `login_hint` prefills the sign-in email using Base's validation, without submitting the form.
