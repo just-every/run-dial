@@ -1978,7 +1978,7 @@
       "executable": false
     },
     "modules/mail/src/development/viewer.mjs": {
-      "sha256": "8c8c7575c2364151501d1725515b90fa662be039422837643d89f6668f241627",
+      "sha256": "423acdb06c31a351b14ae5a42469a65c07aede807e4438a3724b86ce426996a2",
       "executable": false
     },
     "modules/mail/src/doctor/common.mjs": {

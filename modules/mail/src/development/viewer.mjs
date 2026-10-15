@@ -12,7 +12,7 @@ function localOrigin(origin) {
 }
 
 function routePath(path) {
-  return typeof path === 'string' && /^\/(?:[A-Za-z0-9_-]+\/?)+$/.test(path) && !path.includes('//');
+  return typeof path === 'string' && /^\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\/?$/.test(path) && !path.includes('//');
 }
 
 /** Opt-in local route. Rejected requests return null without touching the outbox. */
