@@ -144,9 +144,14 @@ does not fall back to local mail when hosted credentials are missing or a
 provider request fails. The current deployment declaration selects SendGrid.
 It maps the owner-supplied SENDGRID_API_KEY to the private MAIL_API_KEY
 binding and requires a verified MAIL_FROM sender. The SendGrid
-MAIL_WEBHOOK_KEY is its webhook verification key; connection readiness for
-bounce reconciliation requires it even though local owner setup and sign-in do
-not. The MAIL_FROM sender must be a verified noreply@ or no-reply@ address.
+MAIL_WEBHOOK_KEY is an optional webhook verification key. Without it, delivery
+and bounce tracking is off and callbacks return 401 without changes; sender
+readiness still checks the API key and verified sender before publication.
+Opt in to its declaration in deploy.json, then use rer deploy --set-secret
+MAIL_WEBHOOK_KEY to add it while retaining deployment receipt custody. See
+docs/calendar-and-email.md for the private input file and exact command.
+Later deploys retain existing Worker secrets. An absent health row is unchecked,
+not evidence of missing configuration. The MAIL_FROM sender must be a verified noreply@ or no-reply@ address.
 The read-only SendGrid connection check accepts an exact verified Single Sender
 or an exact authenticated domain marked valid. Matching ignores case but does
 not extend to parent domains or subdomains; the check sends no test message.
@@ -271,7 +276,8 @@ handler/client. From a stopped local checkout of the exact deployed revision:
     rer export --target remote --origin https://dial.example --session-file .rer/local/hosted-owner.cookie --output exports/hosted.rer
 
 The mode-0600 session file holds one native owner cookie, never a URL or provider
-credential. The runtime exposes only `/api/portability/exports`; remote imports
+credential. The runtime exposes `/api/portability/exports` and the read-only
+`GET /api/portability/status` control plane; remote imports
 remain refused. Base enforces Origin and per-owner job ownership. Expired,
 revoked, review and development sessions cannot export. No Cloudflare account
 API is called by this command.
@@ -291,13 +297,32 @@ fails, retain the private `.transfer.json` and use the published client to abort
     node node_modules/@runeditrun/rer/modules/portability/cli.mjs abort --origin https://dial.example --session-file /absolute/private/native-cookie --resume JOB_ID
 
 Do not operate D1/R2 directly or run deployments/migrations during capture; these
-owner-account actions bypass application admission. A killed application worker
-can leave a writer receipt. Such a receipt blocks export, not normal use: do not
-expire or delete it while any old request can still execute. Quiesce the source
-and its Queue/Cron/DO activity, prove all old workers have stopped, then clear
-only `kind='writer'` rows from `dial_portability_admission` through the owner
-account before restarting. This is an explicit owner recovery operation, never
-a timed guess. A busy source otherwise refuses with `archive_maintenance`.
+owner-account actions bypass application admission. Export creation refuses with
+HTTP 503 and `X-Dial-Archive-Error: archive_writer_admissions_present` when writer
+admissions remain, or `archive_maintenance` when another export holds maintenance.
+The latter also refuses an export whose lease expired. Both responses are
+no-store and retain Retry-After. The transfer client reports these typed causes.
+
+Settings → Export status reads the number of writer admissions and whether an
+unexpired export currently holds maintenance. Refresh is explicit; failures are
+visible. This is an observation, not a reservation or a promise that a later
+export can acquire. The endpoint requires a native owner session, the configured
+origin/Host and same-site access. Its authentication and status query are reads;
+it bypasses application admission and does not clean expired leases or create
+jobs. It remains available during maintenance; loading a new Settings document
+still uses ordinary admission and may receive 503 until maintenance ends.
+
+A terminated application worker can leave a writer receipt, but Dial cannot
+establish that any particular writer has terminated. Its liveness is unknown;
+legacy receipts contain neither creation time nor revocable storage authority.
+Such receipts block export, not normal use. There is no Clear action or supported
+source-only recovery procedure. Preserve them. Support must first obtain an
+independently verified revocation or drain covering all old invocations AND
+already-issued D1/R2 effects. Disabling ingress, pausing Queue/Cron/DO activity,
+redeploying, waiting, and an owner checkbox do not establish that guarantee.
+Only after that prerequisite is proved can a separately reviewed recovery reclaim
+appropriate admissions. No provider cutover or storage revocation is performed
+by Dial's status view, and deleting receipts without it risks a mixed snapshot.
 
 D1/R2 archive equivalence covers durable product state. Queue messages and
 coordinator retry/watch alarms are intentionally excluded execution state;
@@ -319,12 +344,19 @@ variables, and secret bindings. Cloudflare Workers Paid is required. The
 owner-account CLI builds and validates locally, provisions declared resources,
 then checks authenticated health.
 
-The owner-session deployment path still depends on the retained older
-deployment controller, deploy-kit, and root operations. Native RER deploy
-health currently requires SETUP_TOKEN even after authoritative bootstrap
-consumption. Retiring those helpers and accepting exact owner-account health
-remain deferred until the owner-gated live acceptance or upstream native lifecycle support adds
-conditional health; this guide does not claim that boundary is resolved.
+Native `rer deploy` claims the hosted owner after a healthy deploy and removes
+the one-time setup token. The owner then opens `/signin` and requests an email
+link. There is no browser first-operator step after that claim. Working SendGrid
+mail, a verified sender and an OWNER_EMAIL mailbox the owner can read are needed
+before deploying; no-mail recovery is not yet available.
+
+New Workers inherit the local setup owner if OWNER_EMAIL is omitted and get
+fresh generated SESSION_SECRET and SETUP_TOKEN values if not supplied. Set the
+real hosted owner address explicitly when local development used a generated
+owner. Inputs come from the environment or an owner-readable 0600 KEY=VALUE
+file passed with --env-file. Later deploys retain stored secrets; use the
+explicit --set-secret or --unset-secret operation for changes. The complete
+input and sign-in instructions are in [Install](docs/install.md#reference-deploy-inputs).
 
 A dry run makes no provider requests:
 
@@ -340,6 +372,15 @@ A deployment receipt identifies resources and migrations; it is not by itself
 proof of healthy product use. Provider connection checks, a real first-owner
 sign-in, booking acceptance, and remote health require separate evidence. No
 live deployment or provider acceptance is claimed by this guide.
+
+To remove a hosted installation, export any needed data first and use the
+checkout holding its deployment receipt, with Cloudflare credentials available:
+
+    rer deploy --remove --yes --environment production
+
+This permanently deletes only the Worker, D1, R2, KV and queues proven owned by
+that environment's receipt, then reads back that each is gone. Keep the receipt
+until removal completes. Local reset does not delete hosted resources.
 
 rer release --repo PATH --output PATH uses Base's release
 producer and writes its local receipt. It does not push, publish, tag, or

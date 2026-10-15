@@ -18,7 +18,7 @@ export function parseRuntimeEnvironment(env: Record<string, unknown>): RuntimeEn
 
   const parsed = runtimeEnvironmentSchema.safeParse(env);
   if (parsed.success) {
-    if (parsed.data.MAIL_PROVIDER === "development" && (parsed.data.ENVIRONMENT !== "development" || !isLoopbackHost(new URL(parsed.data.APP_URL).hostname))) throw new Error("Invalid runtime configuration: development mail requires a loopback development install");
+    if (parsed.data.MAIL_PROVIDER === "development" && parsed.data.RER_DEMO !== "1" && (parsed.data.ENVIRONMENT !== "development" || !isLoopbackHost(new URL(parsed.data.APP_URL).hostname))) throw new Error("Invalid runtime configuration: development mail requires a loopback development install or demo mode");
     return parsed.data;
   }
   throw new Error(`Invalid runtime configuration: ${parsed.error.issues.map((issue) => issue.path.join(".")).join(", ")}`);

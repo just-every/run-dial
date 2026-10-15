@@ -8,7 +8,7 @@ export function defaultEventQuestions(): EventQuestionInput[] {
 export function defaultEventTypeInput(): EventTypeInput {
   return {
     slug: "", title: "", description: "", durationMinutes: 30, color: "#dcab3c",
-    locationType: "google_meet", locationLabel: "Google Meet", locationValue: "",
+    locationType: "fixed_link", locationLabel: "Fixed link", locationValue: "",
     listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 15,
     minimumNoticeMinutes: 240, bookingHorizonDays: 60, beforeBufferMinutes: 0,
     afterBufferMinutes: 0, hostDayBookingLimit: null,

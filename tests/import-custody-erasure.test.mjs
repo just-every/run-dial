@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { contract } from './contract.mjs';
 import { bookingRuntime } from './move-in/booking-runtime.mjs';
 import { importPeople, people, erase, finish, refuseReplay, assertErased, custodyEvidence } from './erasure/import-custody.mjs';
-import { snapshot } from './erasure/scan.mjs';
+import { snapshot, containsPersonal } from './erasure/scan.mjs';
 
-contract('DATA-002', 'person HTTP erasure preserves safe undo and refuses unsupported shared-source erasure before mutation', async context => {
+contract('DATA-002', 'person HTTP erasure removes a cancelled invitee from a peer imported booking, keeps the peer byte-identical, undo and replay refusal', async context => {
   const rt = await bookingRuntime();
   try {
     const cancelled = { email: 'cancelled-shared-94127@example.test', name: 'CANCELLED_SHARED_94127', answer: 'CANCELLED_ANSWER_94127' };
@@ -12,39 +12,49 @@ contract('DATA-002', 'person HTTP erasure preserves safe undo and refuses unsupp
     await finish(rt, await rt.data(`/api/app/move-in/jobs/${historical.job.id}/undo`, {}), 'undone');
     const imported = await importPeople(rt, people, cancelled);
     assert.notEqual(imported.job.id, historical.job.id);
-    const rows = await rt.data('/api/app/bookings'), peer = rows.find(row => row.inviteeEmail === people[1].email);
+    const peer = (await rt.data('/api/app/bookings')).find(row => row.inviteeEmail === people[1].email);
     const peerBefore = await rt.data(`/api/app/bookings/${peer.id}`);
-    const refuseShared = async () => {
-      const preview = await rt.data('/api/app/privacy/preview', { email: cancelled.email });
-      const before = await snapshot(rt.db), counts = await custodyEvidence(rt, cancelled);
-      assert.ok(Object.values(counts.custody).some(row => row.personalRows > 0));
-      const response = await rt.api('/api/app/privacy/erase', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({email:cancelled.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt}) });
-      assert.equal(response.status, 503);
-      const refusal = await response.json();
-      assert.equal(refusal.error.code, 'erasure_import_shared_source');
-      context.diagnostic(JSON.stringify({ sharedSourceRefusal: refusal.error }));
-      const after = await snapshot(rt.db);
-      for (const table of Object.keys(before).filter(name => /^(ik_|rer_portability_|move_in_|bookings$|booking_|person_erasure_)/u.test(name))) assert.deepEqual(after[table], before[table], `${table}: unsupported erasure changes no custody, native data or receipt`);
-      assert.deepEqual(await custodyEvidence(rt, cancelled), counts);
-    };
-    await refuseShared();
+    const peerJobs = async () => { const chunks = (await rt.db.prepare('SELECT job_id,body FROM ik_d1_plan_chunks').all()).results; return [...new Set(chunks.map(row => row.job_id))].filter(job => containsPersonal(chunks.filter(row => row.job_id === job), Object.values(people[1]))).sort(); };
+    const before = await snapshot(rt.db), sharedBefore = await custodyEvidence(rt, cancelled), peerCustody = await peerJobs();
+    assert.ok(Object.values(sharedBefore.custody).some(row => row.personalRows > 0));
+    assert.equal(peerCustody.length, 2);
+    const epochBefore = await rt.db.prepare('SELECT epoch FROM rer_portability_state WHERE id=1').first();
+    assert.equal((await erase(rt, cancelled.email)).localComplete, true);
+    const after = await snapshot(rt.db);
+    for (const table of Object.keys(before).filter(name => !/^(ik_|rer_portability_|rer_erasure_|person_erasure_)/u.test(name))) assert.deepEqual(after[table], before[table], `${table}: shared-source erasure changes no native row`);
+    assert.deepEqual(await rt.data(`/api/app/bookings/${peer.id}`), peerBefore);
+    assert.deepEqual(await peerJobs(), peerCustody, 'every import keeps the peer record');
+    await rt.data(`/api/app/move-in/jobs/${historical.job.id}`);
+    await assertErased(rt, cancelled);
+    assert.ok((await rt.db.prepare('SELECT epoch FROM rer_portability_state WHERE id=1').first()).epoch > (epochBefore?.epoch ?? 0), 'the erasure fences older archives');
+    // The peer's import stays live, yet the saved export still holding the erased invitee is refused, adding no job.
+    await refuseReplay(rt, imported.files);
+    const sharedAfter = await custodyEvidence(rt, cancelled);
+    await finish(rt, await rt.data(`/api/app/move-in/jobs/${imported.job.id}/undo`, {}), 'undone');
+    assert.equal((await rt.db.prepare('SELECT count(*) AS n FROM bookings').first()).n, 0);
+    await assertErased(rt, cancelled);
+    // Only the erased invitee blocks the saved export: the same capture without them imports.
+    await refuseReplay(rt, imported.files);
+    const reimported = await importPeople(rt, people);
+    const rows = await rt.data('/api/app/bookings'), retained = rows.find(row => row.inviteeEmail === people[1].email);
+    const retainedBefore = await rt.data(`/api/app/bookings/${retained.id}`);
     const beforeCounts = await custodyEvidence(rt, people[0]);
     const stateBefore = await rt.db.prepare('SELECT epoch FROM rer_portability_state WHERE id=1').first();
     await erase(rt, people[0].email);
-    assert.deepEqual(await rt.data(`/api/app/bookings/${peer.id}`), peerBefore);
+    assert.deepEqual(await rt.data(`/api/app/bookings/${retained.id}`), retainedBefore);
     const journal = await assertErased(rt, people[0]);
     const afterCounts = await custodyEvidence(rt, people[0]);
     assert.ok((await rt.db.prepare('SELECT epoch FROM rer_portability_state WHERE id=1').first()).epoch > (stateBefore?.epoch ?? 0));
     for (const verb of ['UPDATE ik_d1_erasure_journal SET recorded_at=recorded_at', 'DELETE FROM ik_d1_erasure_journal', 'INSERT OR REPLACE INTO ik_d1_erasure_journal SELECT * FROM ik_d1_erasure_journal']) await assert.rejects(() => rt.db.prepare(verb).run());
     assert.deepEqual((await rt.db.prepare('SELECT * FROM ik_d1_erasure_journal').all()).results, journal);
-    await rt.data(`/api/app/move-in/jobs/${imported.job.id}`);
-    await refuseReplay(rt, imported.files);
-    const undone = await finish(rt, await rt.data(`/api/app/move-in/jobs/${imported.job.id}/undo`, {}), 'undone');
+    await rt.data(`/api/app/move-in/jobs/${reimported.job.id}`);
+    await refuseReplay(rt, reimported.files);
+    const undone = await finish(rt, await rt.data(`/api/app/move-in/jobs/${reimported.job.id}/undo`, {}), 'undone');
     assert.equal(undone.job.erasedRecords > 0, true);
     assert.equal((await rt.db.prepare('SELECT count(*) AS n FROM bookings').first()).n, 0);
     await assertErased(rt, people[0]);
-    await refuseShared();
-    context.diagnostic(JSON.stringify({before:beforeCounts,afterErasure:afterCounts,peerUnchanged:true,afterUndo:await custodyEvidence(rt,people[0]),sharedSourceRefusedBeforeMutation:true,historicalCopies:2}));
+    await assertErased(rt, cancelled);
+    context.diagnostic(JSON.stringify({sharedSource:{before:sharedBefore,afterErasure:sharedAfter,peerJobs:peerCustody.length,nativeUnchanged:true,replayRefused:true},before:beforeCounts,afterErasure:afterCounts,peerUnchanged:true,afterUndo:await custodyEvidence(rt,people[0]),historicalCopies:2}));
   } finally { await rt.close(); }
 });
 

@@ -172,7 +172,7 @@ try {
   assert.ok((await update.innerText()).trim(), "the successful restore remains acknowledged after the booking refresh");
   assert.equal(await page.getByRole("dialog", { name: "Calendar conflicts", exact: true }).count(), 0);
   const calendarDelivery = page.getByText("Calendar delivery", { exact: true }).locator("..").locator("dd");
-  assert.equal(await calendarDelivery.innerText(), "pending");
+  assert.equal(await calendarDelivery.innerText(), "Update pending");
   acknowledgedEmptyActions.add(completedRestore.url());
   await call(`/api/app/bookings/${booking.id}/calendar-conflicts/${currentConflict.id}/restore`, {}, 204, true);
   state = await snapshot();
@@ -193,7 +193,7 @@ try {
   await page.reload();
   await page.getByRole("button").filter({ hasText: booking.invitee_name }).click();
   await page.getByRole("heading", { name: booking.invitee_name, exact: true }).waitFor();
-  assert.equal(await calendarDelivery.innerText(), "pending");
+  assert.equal(await calendarDelivery.innerText(), "Update pending");
   await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
   await page.getByRole("dialog", { name: "Calendar conflicts", exact: true }).waitFor();
   assert.equal(await page.getByRole("button", { name: "Restore booking time", exact: true }).count(), 0, "a restored conflict cannot be restored again from the hydrated UI");
@@ -209,7 +209,7 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await selectBooking();
-  assert.equal(await calendarDelivery.innerText(), "succeeded");
+  assert.equal(await calendarDelivery.innerText(), "Up to date");
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "mobile operator workflow has no horizontal overflow");
   await page.screenshot({ path: evidencePath("operator-change-mobile.png"), fullPage: true });
   assert.equal((await snapshot()).bookings.find((row) => row.id === booking.id).current_occurrence_id, moved.current_occurrence_id);

@@ -36,7 +36,7 @@ Shared baseline requirements defined in Base. Editions ship their own copy and b
 
 ## Operations
 
-- **BASE-OPS-001 — Health.** `/health` returns 200 within 1 second when the database, storage, and queues are reachable, and 503 otherwise.
+- **BASE-OPS-001 — Health.** `/health` checks D1 and R2 independently, each with a 1-second deadline, and sends one Queue health probe with a 12-second deadline. It returns as soon as all results settle: 200 only when every required primitive succeeds, and 503 if a primitive is missing, rejects, or does not settle by its deadline. Healthy checks have no intentional delay; the Queue settle window is bounded, not a 1-second overall response deadline.
 - **BASE-OPS-002 — Migrations.** Migrating from the previous released tag to the current one succeeds on sample data. Destructive changes are expand → migrate → contract with a documented recovery step.
 - **BASE-OPS-003 — Idempotency.** Queue consumers and webhook handlers produce the same result when a message is delivered twice.
 - **BASE-OPS-004 — Failure is visible.** A job that fails after its retries is marked failed where an operator can see it. Nothing is dropped silently.

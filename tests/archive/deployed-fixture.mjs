@@ -1,17 +1,23 @@
 import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
-import { migrate } from '../../modules/deploy-kit/migrations.mjs';
+import { migrate } from '@runeditrun/rer/internal/modules/deploy-kit/migrations.mjs';
 import { hash, quote, restoreStatements } from '../../scripts/archive/schema.mjs';
 import { exported, excluded } from '../../scripts/archive/policy.mjs';
 import { fixture } from './fixture.mjs';
 
 // Only the provider transport is synthetic: Base owns the ledger DDL, claims,
 // migration execution and applied hashes, using the product's actual SQL bytes.
-export async function deployedFixture(t, { populated = false, install = 'destination' } = {}) {
+export async function deployedFixture(t, { populated = false, install = 'destination', localLedger = false } = {}) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
-  const api = { async request(path, options) {
+  const imports = [];
+  const api = { async importSql(id, sql) {
+    assert.equal(id, 'archive-test'); imports.push(sql);
+    db.exec('BEGIN');
+    try { db.exec(sql); db.exec('COMMIT'); }
+    catch (error) { db.exec('ROLLBACK'); throw error; }
+  }, async request(path, options) {
     assert.equal(path, '/d1/database/archive-test/query');
     assert.equal(options.method, 'POST');
     const { sql } = options.body;
@@ -27,14 +33,16 @@ export async function deployedFixture(t, { populated = false, install = 'destina
     const sql = await readFile(new URL(name, directory), 'utf8');
     migrations.push({ name, sql, sha256: hash(sql) });
   }
-  // Distinct test-only, schema-neutral installer receipts make a source-ledger
-  // replacement observable. Neither changes product migration files or records.
-  const probe = `-- Test-only installation receipt; no schema or product data changes.\nSELECT '${install.replaceAll("'", "''")}';`;
-  const history = [...migrations, { name: '9999_archive_test_install.sql', sql: probe, sha256: hash(probe) }];
-  await migrate(api, 'archive-test', history);
-  assert.deepEqual((await migrate(api, 'archive-test', history, { apply: false })).applied, []);
-  const ledger = () => db.prepare('SELECT name,sha256,state FROM _rer_deploy_migrations ORDER BY name').all();
-  assert.deepEqual(ledger().map(row => ({ ...row })), history.map(({ name, sha256 }) => ({ name, sha256, state: 'applied' })));
+  await migrate(api, 'archive-test', migrations);
+  assert.equal(imports.length, migrations.length, 'published migration runner sends each SQL body through importSql');
+  assert.deepEqual((await migrate(api, 'archive-test', migrations, { apply: false })).applied, []);
+  assert.equal(imports.length, migrations.length, 'read-only verification does not import SQL');
+  assert.deepEqual(db.prepare('SELECT name,sha256,state FROM d1_migrations ORDER BY id').all().map(row => ({ ...row })), migrations.map(({ name, sha256 }) => ({ name, sha256, state: 'applied' })));
+  // Installer timestamps belong to each installation, and must not be replaced
+  // by source timestamps during restore. They do not invent product migrations.
+  db.prepare('UPDATE d1_migrations SET applied_at=?').run(install === 'source' ? '2026-10-13 01:00:00' : '2026-10-14 01:00:00');
+  if (localLedger) db.exec('ALTER TABLE d1_migrations DROP COLUMN sha256; ALTER TABLE d1_migrations DROP COLUMN state;');
+  const ledger = () => db.prepare('SELECT * FROM d1_migrations ORDER BY id').all();
   if (populated) {
     const data = await fixture();
     try {

@@ -23,4 +23,6 @@ export const runtimeEnvironmentSchema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
   RESEND_WEBHOOK_SECRET: z.string().min(1).optional(),
+  // Demo mode (`rer demo` or a hosted demo container): nothing is sent, mail stays in the outbox.
+  RER_DEMO: z.literal("1").optional(),
 });

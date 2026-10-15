@@ -23,6 +23,9 @@ export default tseslint.config(
   },
   // Adopted erasure runtime executes inside the Worker; keep all lint rules active.
   { files: ["src/modules/erasure/*.mjs"], languageOptions: { globals: globals.worker } },
+  // Adopted demo guard runs inside the Worker; its Vite plugin runs in Node.
+  { files: ["src/modules/demo/index.mjs", "src/modules/demo/sockets.mjs", "src/modules/demo/csp.mjs"], languageOptions: { globals: globals.worker } },
+  { files: ["src/modules/demo/vite.mjs"], languageOptions: { globals: globals.node } },
   // Exact Base producer runtime rejects control characters in trust-boundary inputs.
   { files: ["scripts/delivery/base/**/*.mjs"], rules: { "no-control-regex": "off" } },
   // Exact upstream authoring 1.1 bytes: its own tests validate these pinned files.

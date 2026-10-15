@@ -1,5 +1,6 @@
 export type PickerSlot = { startAt: string; endAt: string; hostDate: string; hostOffset: string };
-export type PickerAvailability = { state: "available"; week: string; slots: PickerSlot[]; recommendations: Array<PickerSlot & { reason: string }>; rankedSlots: Array<PickerSlot & { reason: string }> } | { state: "temporarily_unavailable"; provider: string; slots: [] };
+type RankedSlot = PickerSlot & { reason: string; freeTimeRank: number; hasFreeTime: boolean };
+export type PickerAvailability = { state: "available"; week: string; slots: PickerSlot[]; recommendations: RankedSlot[]; rankedSlots: RankedSlot[] } | { state: "temporarily_unavailable"; provider: string; slots: [] };
 export function dateInZone(value: string, timezone: string) {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(value));
   const part = (name: string) => parts.find(item => item.type === name)?.value;

@@ -11,9 +11,9 @@
 <p align="center"><a href="https://run-dial.com">run-dial.com</a> · <a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
 
 <p align="center">
-  <a href="https://justevery.com/#vol-dial"><img src=".github/assets/media/preview.gif" width="800" alt="Dial: Priya picks three dates and a window in her own zone, reviews the request and sends it"></a>
+  <a href="https://justevery.com/#vol-dial"><img src=".github/assets/media/preview.gif" width="800" alt="Dial: Priya picks a time in her own zone, confirms with her name and email and sees the booking confirmed"></a>
 </p>
-<p align="center"><a href="https://justevery.com/#vol-dial"><b>Watch the full demo</b></a> · 44 seconds</p>
+<p align="center"><a href="https://justevery.com/#vol-dial"><b>Watch the full demo</b></a> · 48 seconds</p>
 
 <p align="center">
   <img src=".github/assets/media/flow.webp" width="800" alt="Priya picks three dates for her request, and the host sees her window in her zone, Europe/London, and his own, America/New_York">
@@ -46,40 +46,54 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-1. Clone the source with `git clone https://github.com/just-every/run-dial.git dial` and
-   `cd dial`. Use Node **22.20.0** and pnpm **10.12.4**. Install the locked dependencies:
-   `rer install`. `pnpm install --frozen-lockfile` is the
-   equivalent package-manager command. Dependency builds are limited to esbuild
-   and workerd.
-2. Check this first-party declaration with
-   `rer check --profile first-party`.
-3. Set up the real owner using
-   `rer setup --owner-email you@example.com`, or run
-   `rer setup` and answer the owner prompt. Use an address you
-   can access. For automation, supply the owner explicitly and add
-   `--non-interactive`.
-4. Start `rer dev`. After health checks it prints
-   `RER_READY`, `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`. Open that URL on this
-   computer and Dial opens signed in as the owner, in the authenticated `/setup`
-   workspace on a fresh install. `RER_OPEN` carries this checkout's local dev
-   key in its fragment, which the page trades for a cookie: treat the line as a
-   credential and do not share it. `dev --as co-host` starts as the dev
-   co-host (a second operator, `co-host@dev.localhost`) and `dev --as
-   signed-out` starts as a visitor; the badge on every page switches between
-   them. `dev --login` turns dev identity off and prints `RER_SIGN_IN` and
-   `RER_OPEN` for the real email-link path: open the outbox, choose the newest
-   sign-in message, and follow its link. No email is sent. Sign-in forms work
-   before JavaScript hydration. To request a fresh one-use link while the app is
-   running, use `rer outbox --owner-email EMAIL`.
-5. Stop dev with `rer dev --stop` (or Ctrl-C) before
-   `rer verify`. Stop preview with
-   `rer preview --stop` before changing modes, building,
-   verifying, resetting, or moving data.
+Install the latest `rer` with Node 22 or later and Git, then clone Dial and start it:
 
-Setup builds and migrates the app, prepares its real first owner, requests an
-ordinary sign-in message, then exits with no app running. Repeating setup keeps
-the saved owner, domain data, and private settings; a conflicting owner or
-origin is refused. There is no automatic owner or secret rotation.
+```sh
+npm install -g @runeditrun/rer
+git clone https://github.com/just-every/run-dial.git dial
+cd dial
+rer dev
+```
+
+On a fresh checkout, `rer dev` selects Dial's pinned Node **22.20.0** and pnpm
+**10.12.4**, fetching either into its own cache when needed. It installs the
+locked dependencies and creates a local development owner automatically; you do
+not need to select those versions or run `rer install` or `rer setup` first.
+Allow network access for the first launch. After health checks it prints
+`RER_READY`, `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`. Open `RER_OPEN` on this
+computer to start signed in at the authenticated `/setup` workspace. The
+automatically created owner is local to this checkout. `RER_OPEN` carries this
+checkout's local dev key in its fragment, which the page trades for a cookie:
+treat the line as a credential and do not share it.
+
+If your local workflow needs a chosen owner address, run explicit setup on the
+fresh checkout before its first dev launch, then start dev:
+
+```sh
+rer setup --owner-email you@example.com
+rer dev
+```
+
+Setup builds and migrates the app, writes private settings, prepares the owner
+and exits. It keeps the saved owner, domain data and private settings on repeat
+runs, and refuses a conflicting owner or origin. The ordinary fresh-checkout
+`rer dev` path needs no separate setup command.
+
+To look around with sample data, run `rer demo` after setup: a throwaway Dial
+signed in as the owner, with a week of bookings, that sends nothing and is
+deleted when it stops. See [DEMO.md](DEMO.md).
+
+`rer dev --as co-host` starts as the dev co-host (a second operator,
+`co-host@dev.localhost`) and `rer dev --as signed-out` starts as a visitor; the
+badge on every page switches between them. `rer dev --login` turns dev identity
+off and prints `RER_SIGN_IN` and `RER_OPEN` for the local email-link path: open
+the outbox, choose the newest sign-in message, and follow its link. No email is
+sent. Sign-in forms work before JavaScript hydration. To request a fresh one-use
+link while the app is running, use `rer outbox --owner-email EMAIL`.
+
+Stop dev with `rer dev --stop` (or Ctrl-C) before
+`rer verify`. Stop preview with `rer preview --stop` before changing modes,
+building, verifying, resetting, or moving data.
 
 ## First-run workspace setup
 
@@ -111,9 +125,9 @@ deployed scheduled pass: connection checks and alerts, calendar sync and channel
 renewal, then due reminders and mail or calendar retries. The root
 `wrangler.jsonc` repeats the template's `triggers.crons` because rer reads its
 schedule only from that file; rendering refuses (so build, setup and verify fail)
-when the two differ. `rer preview` still runs no schedule. With no calendar
-connected the pass has no bookings to remind or retry, since publishing needs a
-checked destination calendar; the journey `node scripts/verify-lifecycle-journey.mjs`
+when the two differ. `rer preview` still runs no schedule. Fixed-link, phone and
+in-person events can publish without a calendar; their reminders use the
+configured mail sender, including the local outbox. The journey `node scripts/verify-lifecycle-journey.mjs`
 proves reminders, retries, alerts and sync on this schedule against synthetic
 provider HTTP. See [OPERATIONS.md](OPERATIONS.md).
 
@@ -155,8 +169,11 @@ booking facts while excluding private credentials, sessions, sign-in and invitat
 links, booking capabilities, OAuth credentials, webhook authority, development
 mail, and pending admissions. The private `SESSION_SECRET` is never exported;
 its non-secret continuity hash protects restored retry and erasure guards.
-Export refuses to overwrite an existing archive. Remote transfer is unsupported
-and fails before provider calls.
+Export refuses to overwrite an existing archive. Hosted export is supported
+through an authenticated owner session; remote restore is not exposed. See
+[Backups and export](docs/backups.md#export-from-a-hosted-install) for the hosted
+command and rehearse restoration into an empty local install using the same
+source revision that made the archive.
 
 Restore only to an empty destination. Keep a private copy of the original
 `.dev.vars`; after a reset or on a new machine, restore those settings securely
@@ -184,9 +201,21 @@ files are preserved byte for byte.
 `rer deploy --dry-run` builds and validates locally without
 provider requests. A real deployment is a separate owner-account operation:
 `rer deploy --environment production`. It requires the
-configured Cloudflare account and production secrets. Local checks and the dry
+configured Cloudflare account and working SendGrid mail: a real API key, a
+verified sender, and `OWNER_EMAIL` set to a mailbox you can read. After a healthy
+deploy, rer claims the hosted owner and removes the one-time setup token. Open
+`/signin` on the deployed address and request an email link; no separate
+first-operator setup step is needed. No-mail recovery is not yet available. See
+[Install: deploy inputs](docs/install.md#reference-deploy-inputs) for generated
+secrets, local-owner defaults and private env files. Local checks and the dry
 run do not establish remote health, email delivery, Google Calendar access, or
 production acceptance.
+
+To permanently remove a hosted installation, export any needed data first, then
+run `rer deploy --remove --yes` from the checkout holding its deployment receipt.
+Add `--environment NAME` if you deployed with a nondefault environment. See
+[Remove a hosted installation](docs/install.md#remove-a-hosted-installation) for
+what is deleted.
 
 `rer release --repo PATH --output PATH` creates the declared
 local release artifact and receipt. It does not push, publish, or deploy. No
@@ -221,8 +250,8 @@ commands, flags, aliases, pins, and effects. Check validates the declared
 contract; doctor inspects local tools and configuration. Neither proves app
 acceptance, remote deployment, or live provider health.
 
-For package-script forwarding, use `pnpm run VERB -- FLAGS`; in particular,
-`pnpm run deploy -- --dry-run` selects Dial's deploy command. `pnpm deploy` is
-pnpm's built-in dependency command.
+Use the `rer` verbs directly for supported Dial commands. For package scripts,
+use `pnpm run SCRIPT -- FLAGS`; `pnpm deploy` is pnpm's built-in dependency
+command.
 
 Move an existing schedule with the [saved-data importing guide](docs/importing.md).

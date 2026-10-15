@@ -33,7 +33,7 @@ export async function occurrenceDurationJourney(origin, t) {
     snapshot = await state();
     const confirmations = wireMail(snapshot).filter(mail => ["Confirmed: " + title, "New booking: " + title].includes(mail.subject));
     assert.equal(confirmations.length, 2);
-    for (const mail of confirmations) assertFacts(mail, 30, "Calendar setup: pending.", title);
+    for (const mail of confirmations) assertFacts(mail, 30, "Calendar setup: Update pending.", title);
   });
   // Complete the original calendar first, so the reschedule must replace a succeeded state with pending.
   for (const row of currentRows("calendar_upsert")) await deliver(row);
@@ -56,7 +56,7 @@ export async function occurrenceDurationJourney(origin, t) {
     const mails = wireMail(snapshot).filter(mail => mail.subject === "Rescheduled: " + title);
     assert.equal(mails.length, 2);
     for (const mail of mails) {
-      assertFacts(mail, 60, "Calendar state: pending.", title);
+      assertFacts(mail, 60, "Calendar state: Update pending.", title);
       for (const [label, occurrence, zone] of [["Previous invitee", first.occurrence, "UTC"], ["New invitee", changed.occurrence, "America/New_York"], ["Previous host", first.occurrence, "Australia/Brisbane"], ["New host", changed.occurrence, "Australia/Brisbane"]]) {
         const range = timeRange(occurrence.startAt, occurrence.endAt, zone);
         assertTimeRange(textBody(mail), htmlBody(mail), range, `${label} time: `);
@@ -73,7 +73,7 @@ export async function occurrenceDurationJourney(origin, t) {
     snapshot = await state();
     const mails = wireMail(snapshot).filter(mail => mail.subject === "Your meeting link is ready" && recipient(mail).includes(email));
     assert.equal(mails.length, 1);
-    assertFacts(mails[0], 60, "Calendar setup: succeeded.", title);
+    assertFacts(mails[0], 60, "Calendar setup: Up to date.", title);
   });
   await t.test(contractTitle("NOTIFY-003", "all recipient reminders select the current 60-minute occurrence"), async () => {
     const rows = currentRows("reminder");
@@ -82,7 +82,7 @@ export async function occurrenceDurationJourney(origin, t) {
     snapshot = await state();
     const mails = wireMail(snapshot).filter(mail => mail.subject === "Reminder: " + title);
     assert.equal(mails.length, 4);
-    for (const mail of mails) assertFacts(mail, 60, "Calendar setup: succeeded.", title);
+    for (const mail of mails) assertFacts(mail, 60, "Calendar setup: Up to date.", title);
   });
   await t.test(contractTitle("NOTIFY-004", "Google cancellation describes the transaction-selected current 60-minute occurrence in both parts"), async () => {
     const persisted = snapshot.bookings.find(item => item.id === booking.id);
@@ -94,7 +94,7 @@ export async function occurrenceDurationJourney(origin, t) {
     const mails = wireMail(snapshot).filter(mail => mail.subject === "Booking cancelled: " + title);
     assert.equal(mails.length, 2);
     for (const mail of mails) {
-      assertFacts(mail, 60, "Calendar state: pending.", title);
+      assertFacts(mail, 60, "Calendar state: Update pending.", title);
       assert.match(textBody(mail), /^Reason: deleted_in_google_calendar\.$/mu);
       assert.ok(htmlBody(mail).includes("Reason: deleted_in_google_calendar."));
       assert.ok(textBody(mail).includes(`Previous invitee time: ${timeRange(changed.occurrence.startAt, changed.occurrence.endAt, "America/New_York")}`));
@@ -111,9 +111,14 @@ function assertFacts(mail, minutes, calendarLine, title) {
   assert.ok(text.includes(`Duration: ${minutes} minutes`));
   const facts = new Map([...html.matchAll(/<tr><td[^>]*>([^<]*)<\/td><td[^>]*>([^<]*)<\/td><\/tr>/gu)].map(match => [match[1], match[2]]));
   assert.equal(facts.get("Duration"), `${minutes} minutes`);
-  assert.ok(text.includes(calendarLine));
-  const [calendarLabel, calendarValue] = calendarLine.replace(/\.$/u, "").split(": ");
-  assert.equal(facts.get(calendarLabel), calendarValue);
+  if (recipient(mail).includes("operator@dial.test")) {
+    assert.ok(text.includes(calendarLine));
+    const [calendarLabel, calendarValue] = calendarLine.replace(/\.$/u, "").split(": ");
+    assert.equal(facts.get(calendarLabel), calendarValue);
+  } else {
+    assert.equal(/Calendar (?:setup|state):/.test(text), false);
+    assert.equal(facts.has("Calendar setup") || facts.has("Calendar state"), false);
+  }
   assert.ok(text.includes(title));
   assert.ok(html.includes(escape(title)));
   assert.equal(html.includes(title), false);

@@ -4,29 +4,10 @@ import { fixture, testPlatform } from './archive/fixture.mjs';
 import { createArchive } from './archive/artifact.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { schemaModel } from '../scripts/archive/schema.mjs';
-import { canonicalRow, collectSecrets } from '../scripts/archive/policy.mjs';
 
 const numbers = '{"overflow":1e309,"precise":9007199254740993,"fraction":0.12345678901234567890123456789,"negativeZero":-0,"exponent":1.2300e+12}';
 const text = '  ordinary user text\n\twith whitespace, secretary and tokenizer  ';
 const credential = 'synthetic-numeric-neighbor-private-value';
-
-contract('DATA-001', 'historical tagging and nested credential scrubbing preserve nonsecret JSON numeric spellings and user text', () => {
-  const nested = ` \n{ "metadata": ${numbers}, "text": ${JSON.stringify(text)}, "accessToken": ${JSON.stringify(credential)} }\t`;
-  const payload_json = ` { "metadata": ${numbers}, "serialized": ${JSON.stringify(nested)}, "description": ${JSON.stringify(text)}, "wireMail": { "text": "historical wire command" }, "credentials": ${JSON.stringify(credential)} } `;
-  const row = { state: 'pending', payload_json };
-  const secrets = collectSecrets([{ name: 'delivery_outbox', rows: [row] }]);
-  assert.ok(secrets.includes(credential));
-  const result = canonicalRow('delivery_outbox', row, secrets); const payload = JSON.parse(result.payload_json);
-  assert.ok(result.payload_json.includes(numbers)); assert.ok(payload.serialized.includes(numbers));
-  assert.equal(payload.description, text); assert.equal(JSON.parse(payload.serialized).text, text);
-  assert.equal(payload.archiveHistorical, true); assert.equal(payload.wireMail, undefined);
-  assert.equal(result.state, 'failed'); assert.equal(result.last_error_code, 'restored_historical_command');
-  assert.equal(result.payload_json.includes(credential), false);
-  assert.deepEqual(canonicalRow('delivery_outbox', result), result);
-  const untouched = ` \n{ "metadata" : ${numbers}, "text" : ${JSON.stringify(text)} }\t`;
-  assert.equal(canonicalRow('host_profiles', { biography: untouched }).biography, untouched);
-  assert.equal(canonicalRow('booking_answers', { value_json: JSON.stringify(untouched) }).value_json, JSON.stringify(untouched));
-});
 
 contract('DATA-001', 'actual export restore reexport retains structured numeric facts alongside credential removal and historical markers', async () => {
   const source = await fixture(); const target = await schemaModel();

@@ -35,9 +35,6 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
   const [saving, setSaving] = useState(false);
   const creationAttempt = useRef<{ key: string; fingerprint: string } | undefined>(undefined);
   useEffect(() => {
-    const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setTimezone(browserZone);
-    if (!requestId) setInviteeTimezone(browserZone);
     void (async () => {
       try {
         const [eventResponse, profileResponse] = await Promise.all([api.api.app["event-types"].$get({}), api.api.app.profile.$get()]);
@@ -46,6 +43,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
         setEvents(next); setEventTypeId((current) => current || next[0]?.id || "");
         const profile = await profileResponse.json();
         setHostTimezone(profile?.timezone ?? null);
+        if (profile) { setTimezone(profile.timezone); if (!requestId) setInviteeTimezone(profile.timezone); }
         if (requestId) {
           const response = await api.api.app["availability-requests"][":id"].$get({ param: { id: requestId } });
           if (!response.ok) { setNotice(await errorMessage(response)); return; }
@@ -82,6 +80,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
     {events && !events.length ? <p role="status" className={noticeClassName("warning")}>Create an event type before creating a booking.</p> : null}
     {request && !event ? <p role="status" className={noticeClassName("warning")}>This request’s event type is no longer available. Return to requests to review it.</p> : null}
     {request && request.state !== "submitted" ? <p role="status" className={noticeClassName("warning")}>This request is already {request.state}. Review its existing record before creating another booking.</p> : null}
+    {request ? <Card className="max-w-3xl p-5 sm:p-6"><h2 className="font-semibold text-ink">Requested windows</h2><div className="mt-3 grid gap-3">{request.windows.map((window, index) => <div className="rounded-2xl bg-row px-4 py-3.5" key={index}><p className="font-[650] text-ink">Host: {window.hostLabel}</p><p className="mt-1 text-sm text-muted">Invitee: {window.inviteeLabel}</p></div>)}</div>{request.note ? <p className="mt-4 whitespace-pre-wrap text-sm text-ink">{request.note}</p> : null}</Card> : null}
     <Card className="max-w-3xl p-5 sm:p-6"><form onSubmit={(formEvent) => void create(formEvent)}>
       <fieldset disabled={!hydrated || !ready || saving} className="border-0 p-0">
         <div className="grid gap-4 sm:grid-cols-2">

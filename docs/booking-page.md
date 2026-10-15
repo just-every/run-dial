@@ -36,7 +36,7 @@ A buffer keeps free time around a booking without changing the times clients see
 
 **Visibility.** Tick **List this event on the public profile**, or leave it off for an unlisted event reached only by its link. Disabling or deleting an event type removes its public page but keeps existing bookings.
 
-**Publishing.** The **Event type readiness** panel names anything missing: an open availability window, a saved location and a passing mail check. If a calendar is connected, it must pass its checks; Google Meet also requires a destination calendar that supports Meet. Fixed-link, phone and in-person events can be published without a calendar. Then choose **Publish event type**.
+**Publishing.** The **Event type readiness** panel names anything missing: an open availability window, a saved location and a passing mail check. If a calendar is connected, it must pass its checks; Google Meet also requires a destination calendar that supports Meet. Fixed-link, phone and in-person events can be published without a calendar. **Publish event type** turns on real bookings from your saved weekly availability and existing Dial bookings. Without a connected calendar, Dial does not check external calendar conflicts. Keep commitments outside Dial out of your weekly windows or close those times with date overrides before publishing.
 
 **Private annotations.** Operators can define fields for event types, bookings and availability requests in Settings, then edit values on each record. The available kinds are text, long text, single choice and checkbox. These annotations are private to operators and are not shown to clients or included in email. Use **Questions** above when you want to collect answers from clients.
 

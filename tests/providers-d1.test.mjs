@@ -46,7 +46,8 @@ contract("CAL-003", "a durable calendar command persists Meet readiness and the 
   assert.ok(result.link.payload.text.startsWith("Your meeting link is ready: https://meet.google.com/provider-test\n"));
   const text = result.link.payload.text;
   const html = result.link.payload.html;
-  for (const fact of ["Provider host", "Provider event", "UTC", "Australia/Brisbane", "30 minutes", "Google Meet: https://meet.google.com/provider-test", "Calendar setup: succeeded.", "Join session: https://meet.google.com/provider-test", "Manage this booking:", "Add to calendar:", "/api/public/manage/"]) {
+  assert.doesNotMatch(text, /Calendar (?:setup|state):/);
+  for (const fact of ["Provider host", "Provider event", "UTC", "Australia/Brisbane", "30 minutes", "Google Meet: https://meet.google.com/provider-test", "Join session: https://meet.google.com/provider-test", "Manage this booking:", "Add to calendar:", "/api/public/manage/"]) {
     assert.ok(result.link.payload.text.includes(fact), `link-ready plain text includes ${fact}`);
   }
   assert.match(result.link.payload.html, /<table\b/);
@@ -59,7 +60,7 @@ contract("CAL-003", "a durable calendar command persists Meet readiness and the 
   assert.ok(result.link.payload.html.includes("Join session"));
   assert.ok(result.link.payload.html.includes("Manage booking"));
   assert.ok(result.link.payload.html.includes("Add to calendar"));
-  for (const prefix of ["Event: ", "Host: ", "Invitee time: ", "Host time: ", "Duration: ", "Location: ", "Calendar setup: "]) {
+  for (const prefix of ["Event: ", "Host: ", "Invitee time: ", "Host time: ", "Duration: ", "Location: "]) {
     const line = text.split("\n").find((candidate) => candidate.startsWith(prefix));
     assert.ok(line, `link-ready plain text has ${prefix.trimEnd()} fact`);
     const value = line.slice(prefix.length).replace(/\.$/, "");

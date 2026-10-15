@@ -35,13 +35,17 @@ export function buildRecommendationContext(input: SlotEngineInput, range: { star
 /** Offers are immutable inputs: ranking selects/reorders them and creates no new slot. */
 export function rankSlots(slots: AvailableSlot[], context: RecommendationContext, limit = 5) {
   const unique = new Map(slots.map((slot) => [String(Date.parse(slot.startAt)) + "/" + String(Date.parse(slot.endAt)), slot]));
-  return [...unique.values()].map((slot) => {
+  const scored = [...unique.values()].map((slot) => {
     const start = Date.parse(slot.startAt), end = Date.parse(slot.endAt);
     const free = containing(context.free, start, end);
     const working = Boolean(containing(context.working, start, end));
     return { slot, start, end, working, freeMinutes: free ? (start - free.start + free.end - end) / 60_000 : 0 };
-  }).sort((left, right) => Number(right.working) - Number(left.working) || right.freeMinutes - left.freeMinutes || left.start - right.start || left.end - right.end)
-    .slice(0, limit).map(({ slot, working, freeMinutes }) => ({ ...slot, reason: working ? context.inviteeZoneSubmitted ? "Inside both working days" : "Inside host working day" : freeMinutes > 0 ? "More uninterrupted free time" : "Earliest available time" }));
+  }).sort((left, right) => right.freeMinutes - left.freeMinutes || left.start - right.start || left.end - right.end);
+  // An ordinal lets the browser rank for its own zone without sending device
+  // information or exposing the host's private occupancy intervals.
+  return scored.map((score, freeTimeRank) => ({ ...score, freeTimeRank }))
+    .sort((left, right) => Number(right.working) - Number(left.working) || left.freeTimeRank - right.freeTimeRank)
+    .slice(0, limit).map(({ slot, working, freeMinutes, freeTimeRank }) => ({ ...slot, freeTimeRank, hasFreeTime: freeMinutes > 0, reason: working ? context.inviteeZoneSubmitted ? "Inside both working days" : "Inside host working day" : freeMinutes > 0 ? "More uninterrupted free time" : "Earliest available time" }));
 }
 
 function workingMinute(parts: ZonedParts) { return parts.hour >= 9 && parts.hour < 17; }

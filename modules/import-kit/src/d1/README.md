@@ -455,6 +455,11 @@ nothing back: the native rows are fenced by the erasure module's
 unbounded (one batch), so `maxBatchBytes` is refused with
 `IMPORT_RETIREMENT_UNBOUNDED_ONLY`.
 
+`person.related.fields` can stand without a `target` (a person who appears only
+inside other people's records), and `{ resumable: true }` spreads a redaction
+across requests in bounded steps; see the kit README, "Erasing fields in
+retained shared records".
+
 
 ## Normalized paged imports
 
@@ -749,6 +754,52 @@ context)`. A sealed private generation cannot be overwritten by a stale retry.
 Cancellation, erasure and verified publication cascade private headers and
 receipts. An authority failure can leave private custody for an authorized
 owner to inspect or cancel; it cannot confer publication permission.
+
+### Preparation across requests
+
+A large normalized file costs more CPU than one Worker request allows when it
+is reviewed, prepared and verified in one go (a 100,000-row Typeform export
+took about 55 s of hosted CPU to review and 62 s to prepare; Workers Paid allows
+30 s). `prepareD1ImportSteps(source, mapping, context)` does the same work in
+bounded steps instead. Call it with the same source, mapping and
+`operationKey`, once per request, until its result is `reviewable`:
+
+- `preparing`: each step maps, normalizes and stages 5,000 records as a private,
+  sealed generation under the usual privacy admission (registered identities
+  before payload, erasure tombstones checked at every write).
+- `verifying`: each step reads 125 staged pages, makes cold verification's checks
+  (page projection, privacy index, index and policy hashes, counts) and writes
+  them into the complete canonical fingerprint with a SHA-256 whose state is
+  kept in D1 (`ik_d1_preparation_steps`), fenced by every generation's
+  revision. A changed, missing or reordered page fails the step or changes the
+  fingerprint; nothing the caller sends can supply hash state. The last step
+  copies the generations into one sealed preparation in SQL.
+- `reviewable`: carries `fingerprint`, `counts` and `diagnostics`, the review.
+  The fingerprint equals the one `planD1ImportStream` computes for the same
+  source. Show it, and after the owner acknowledges call
+  `publishD1ImportPreparation(id, { ...context, reviewedFingerprint })`, which
+  publishes atomically without reading the pages again while the preparation is
+  still at the revision the steps verified (any change sends it through full
+  cold verification). Then apply with `resumeD1ImportStream` as before.
+
+Unlike `planD1ImportStream`, this review is computed from private custody, so
+the steps write before the owner acknowledges; that custody is private,
+owner-scoped and removed by `cancelD1ImportStaging(operationKey, context)`,
+destination field erasure, or header retirement of its operation key. A step
+generation erased or changed between steps ends the preparation with
+`IMPORT_PREPARATION_INTERRUPTED`: cancel and prepare again. A step whose request
+ended after it staged its slice but before recording it is staged again by the
+next call, and cancellation or retirement removes every generation the steps
+staged, recorded or not. A different upload under the same operation key is
+refused (`OPERATION_KEY_CONFLICT`), before and after publication: the published
+stream keeps the steps' source digest (`ik_d1_stream_sources`), so only the same
+upload returns `published`, and a key an import published in one request is
+refused here. Measured on default-seed's people
+adapter: 100,000 rows in 40 requests, none above 2 s of Node CPU against
+15 s for the one-request review (see the kit test
+`tests/d1/preparation-steps.test.ts`, run at full size in `verify:scale`).
+Apply `d1PreparationStepsSchema` as a new numbered migration after
+`d1PreparationSchema`; `initializeD1ImportStorage` applies it.
 
 Apply the additive `d1PreparationSchema` after `d1CustodyStateSchema`.
 `initializeD1ImportStorage` applies that order and preserves existing jobs.

@@ -16,6 +16,7 @@
           "src",
           "migrations",
           "deploy",
+          "management",
           "sample-data",
           "package.json",
           "pnpm-lock.yaml",
@@ -32,8 +33,7 @@
           "scripts/verify-managed-editor.mjs",
           "rer-project.json",
           ".github/workflows/rer-managed.yml",
-          "scripts/operations.mjs",
-          "patches"
+          "scripts/operations.mjs"
         ]
       }
     },

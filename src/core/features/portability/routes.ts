@@ -4,19 +4,29 @@ import { exportStatus, abortExport } from "@runeditrun/rer/internal/modules/port
 import { applicationCatalog, catalogQuery } from "../../../../scripts/archive/catalog.mjs";
 import { exportPolicy } from "../../../../scripts/archive/export-policy.mjs";
 import { guardedBucket } from "../../../../scripts/archive/guarded-bucket.mjs";
-import { acquireExport, renewExport, releaseExport, ArchiveMaintenance, maintenanceResponse } from "./admission";
+import { acquireExport, renewExport, releaseExport, archiveStatus, ArchiveMaintenance, ArchiveWritersPresent } from "./admission";
 import type { AppBindings } from "../../app/bindings";
 import type { OperatorsService } from "../operators";
 
-const reply = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
+const reply = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store", "X-Dial-Archive-Error": error, ...(status === 503 ? { "Retry-After": "10" } : {}) } });
+const archiveFailures = new Set(["archive-migration-history-mismatch", "archive-owner-salt-required", "archive-erasure-incomplete", "archive-unclassified-schema", "archive-object-changed", "archive-object-contains-credential"]);
 /** Export only. Native authority, Origin and job ownership guard every operation. */
 export async function hostedExport(request: Request, env: AppBindings, operators: OperatorsService) {
  const url = new URL(request.url), origin = new URL(env.APP_URL).origin;
  if (url.origin !== origin || request.headers.has("host") && request.headers.get("host") !== new URL(origin).host) return reply("not_found", 404);
- if (!/^\/api\/portability\/exports(?:\/[a-zA-Z0-9-]+(?:\/(advance|download|abort))?)?$/.test(url.pathname)) return reply("not_found", 404);
+ const inspecting = url.pathname === "/api/portability/status";
+ if (!inspecting && !/^\/api\/portability\/exports(?:\/[a-zA-Z0-9-]+(?:\/(advance|download|abort))?)?$/.test(url.pathname)) return reply("not_found", 404);
+ if (request.headers.get("sec-fetch-site") === "cross-site" || request.headers.has("Origin") && request.headers.get("Origin") !== origin || !["GET", "HEAD"].includes(request.method) && request.headers.get("Origin") !== origin) return reply("origin_refused", 403);
+ // Native getSession authenticates via oaSessions -> AuthStore.session: SELECT
+ // only, with no refresh, counters or cleanup. Keep this control plane outside
+ // application admission; even authentication must not write during inspection.
  const session = await operators.auth.getSession(request);
  if (!session || session.kind !== "native" || session.operator.role !== "owner") return reply("native_owner_session_required", 401);
- if (request.headers.get("sec-fetch-site") === "cross-site" || !["GET", "HEAD"].includes(request.method) && request.headers.get("Origin") !== origin) return reply("origin_refused", 403);
+ if (inspecting) {
+  if (request.method !== "GET") return reply("method_not_allowed", 405);
+  try { return Response.json(await archiveStatus(env.DB), { headers: { "Cache-Control": "no-store" } }); }
+  catch { return reply("archive_status_unavailable", 503); }
+ }
  const segments = url.pathname.split("/"), jobId = segments[4], action = segments[5];
  if (jobId && !await env.DB.prepare("SELECT 1 FROM rer_portability_jobs WHERE id=? AND actor=? AND kind='export'").bind(jobId, session.operator.id).first()) return reply("job_not_found", 404);
  const creating = !jobId && request.method === "POST";
@@ -51,7 +61,13 @@ export async function hostedExport(request: Request, env: AppBindings, operators
    } });
   const response = await handle(request);
   if (!response) return reply("not_found", 404);
-  if (!response.ok) { if (creating) await releaseExport(env.DB, lease); return response; }
+  if (!response.ok) {
+   if (creating) await releaseExport(env.DB, lease);
+   // Base catches typed bucket refusals inside handle(). Expose only our finite
+   // vocabulary to the client that deliberately ignores HTTP response bodies.
+   const failure = await response.clone().json().catch(() => null) as { error?: unknown } | null;
+   return typeof failure?.error === "string" && archiveFailures.has(failure.error) ? reply(failure.error, response.status) : response;
+  }
   // If a request outlasted its lease it can never publish/download a snapshot.
   await renewExport(env.DB, lease);
   if (creating) {
@@ -62,7 +78,8 @@ export async function hostedExport(request: Request, env: AppBindings, operators
   return response;
  } catch (error) {
   if (creating && held) await releaseExport(env.DB, lease);
-  return error instanceof ArchiveMaintenance ? maintenanceResponse() : reply("archive_export_refused", 409);
+  if (error instanceof ArchiveWritersPresent) return reply("archive_writer_admissions_present", 503);
+  return error instanceof ArchiveMaintenance ? reply("archive_maintenance", 503) : reply(error instanceof Error && archiveFailures.has(error.message) ? error.message : "archive_export_refused", 409);
  } finally {
   // A failed preflight must not retain a lock without a created job.
   if (creating && lease.length && !await env.DB.prepare("SELECT 1 FROM rer_portability_jobs WHERE id=?").bind(lease).first()) await releaseExport(env.DB, lease);

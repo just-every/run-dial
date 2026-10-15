@@ -9,6 +9,7 @@ import { browserJourney } from './local-setup/browser.mjs';
 import { devIdentityJourney } from './local-setup/dev-identity.mjs';
 import { openGateFromLink } from './dev-key.mjs';
 import { hostedExportJourney } from './local-setup/hosted-export.mjs';
+import { hostedLedger } from './local-setup/hosted-ledger.mjs';
 import { hostedRecords } from './local-setup/hosted-records.mjs';
 import { nativeSignIn } from './local-setup/native-signin.mjs';
 import { safeBrowserFailure } from './local-setup/evidence-safety.mjs';
@@ -94,6 +95,7 @@ contract('DATA-001', 'native hosted export imports through the ordinary CLI into
  try {
   await runRer(directory, ['install'], { timeout: 300_000 });
   await runRer(directory, ['setup', '--owner-email', 'hosted-owner@example.test', '--port', '15750', '--non-interactive'], { timeout: 300_000 });
+  const hostedMigrations = await hostedLedger(directory);
   const values = await variables(directory), privateBytes = await readFile(join(directory, '.dev.vars'));
   server = await start(directory, 'preview', values.APP_URL);
   let records;
@@ -122,7 +124,7 @@ contract('DATA-001', 'native hosted export imports through the ordinary CLI into
     await page.waitForURL(values.APP_URL + '/app');
     assert.equal((await page.request.get(values.APP_URL + '/api/app/session')).status(), 200);
    } catch { throw Error('Hosted export owner sign-in failed; private diagnostics omitted.'); }
-   await hostedExportJourney(page, { origin: values.APP_URL, privateBytes, values, records, checkpointState: (id, operation) => checkpointState(directory, id, operation), stopSource: async () => {
+   await hostedExportJourney(page, { hostedMigrations, origin: values.APP_URL, privateBytes, values, records, checkpointState: (id, operation) => checkpointState(directory, id, operation), stopSource: async () => {
     await runRer(directory, ['preview', '--stop']);
     await server.owned.stop(); server = undefined;
    } });

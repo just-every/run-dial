@@ -4,11 +4,16 @@ import { evidencePath } from "../../scripts/evidence-path.mjs";
 
 /** The same cold-host journey continues through a real signed-out booking and independent contenders. */
 export async function calendarOptionalJourney(browser, owner, origin, eventId, width, scan) {
-  const visitor = await browser.newContext({ viewport: { width, height: 900 }, timezoneId: "UTC" });
+  const visitor = await browser.newContext({ viewport: { width, height: 900 }, timezoneId: "Asia/Tokyo" });
   const competitor = await browser.newContext();
   const headers = { Origin: origin };
   const path = "/api/public/book/fresh-host/first-event";
   try {
+    await owner.goto(origin + `/app/event-types/${eventId}`);
+    // Check the operator can review the disconnected booking limitation beside publication.
+    const lifecycle = owner.locator("section").filter({ has: owner.getByRole("heading", { name: "Lifecycle", exact: true }) });
+    await expect(lifecycle).toContainText(/does not check external calendar conflicts/i);
+    await expect(lifecycle.getByRole("button", { name: "Update published event", exact: true })).toBeEnabled();
     const guest = await visitor.newPage();
     await guest.goto(origin + "/book/fresh-host/first-event");
     await expect(guest.locator(".pb-slot-button").first()).toBeVisible();
@@ -53,6 +58,10 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     assert.equal(native.delivery_outbox.filter(job => job.kind.startsWith("calendar_")).length, 0);
     await owner.goto(origin + "/app/bookings");
     await expect(owner.getByRole("button", { name: /Schedule guest/ })).toBeVisible();
+    const booked = bookings.find(booking => booking.inviteeName === "Schedule guest");
+    assert.notEqual(booked.hostTimezone, booked.inviteeTimezone);
+    const hostTime = new Intl.DateTimeFormat("en-US", { timeZone: booked.hostTimezone, dateStyle: "medium", timeStyle: "short" }).format(new Date(booked.occurrence.startAt));
+    await expect(owner.getByRole("button", { name: /Schedule guest/ })).toContainText(`${hostTime} (${booked.hostTimezone})`);
     await owner.getByRole("button", { name: /Schedule guest/ }).click();
     await expect(owner.getByText("No connected calendar", { exact: true })).toBeVisible();
     await scan("calendar-optional-host-booking");
@@ -71,7 +80,7 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     const afterCancel = await (await owner.request.get(origin + "/__fixtures/status")).json();
     assert.equal(afterCancel.delivery_outbox.filter(job => job.kind.startsWith("calendar_")).length, 0, "schedule-only lifecycle never queues an impossible provider command");
     assert.equal(afterCancel.fixture_activity.filter(item => ["busy", "check", "upsert", "cancel"].includes(item.kind)).length, 0, "no calendar provider is contacted in the absent mode");
-        // Google Meet remains a provider capability, even though fixed locations work.
+    // Google Meet remains a provider capability, even though fixed locations work.
     const source = await (await owner.request.get(origin + `/api/app/event-types/${eventId}`)).json();
     const created = await owner.request.post(origin + "/api/app/event-types", { headers, data: { ...source, slug: "needs-meet", locationType: "google_meet", locationValue: "" } });
     assert.equal(created.status(), 201);
@@ -88,11 +97,24 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     await expect(owner.getByText("Calendar selection saved. Check the connection to verify it.", { exact: true })).toBeVisible();
     await owner.getByRole("button", { name: "Check connection", exact: true }).click();
     await expect(owner.getByText("Calendar check passed.", { exact: true })).toBeVisible();
+    const connectedSlots = await available();
+    assert.ok(connectedSlots.length, "healthy connected calendar still offers checked times");
+    const connectedSelection = { startAt: connectedSlots[0].startAt, inviteeTimezone: "UTC" };
+    const selected = await visitor.request.post(origin + path + "/selection", { headers, data: connectedSelection });
+    assert.equal(selected.status(), 201);
+    const connectedNonce = (await selected.json()).nonce;
+    const beforeFailure = await (await owner.request.get(origin + "/__fixtures/status")).json();
     await owner.request.post(origin + "/__fixtures/control", { data: { kind: "busy", failure: true } });
     await owner.request.post(origin + "/__fixtures/calendar-health", { data: { healthy: false } });
     const unavailable = await (await visitor.request.get(origin + `${path}/availability?week=${week}&inviteeTimezone=UTC`)).json();
     assert.equal(unavailable.state, "temporarily_unavailable"); assert.deepEqual(unavailable.slots, []);
-    assert.equal((await visitor.request.post(origin + path + "/selection", { headers, data: selection })).status(), 503);
+    assert.equal((await visitor.request.post(origin + path + "/selection", { headers, data: connectedSelection })).status(), 503);
+    const refusedConfirmation = await visitor.request.post(origin + path + "/confirm", { headers, data: { ...connectedSelection, nonce: connectedNonce, name: "Provider outage guest", email: "provider-outage@example.test", answers: {} } });
+    assert.equal(refusedConfirmation.status(), 503, "a nonce selected while healthy cannot bypass the connected calendar outage");
+    assert.deepEqual(await refusedConfirmation.json(), { state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] });
+    const afterFailure = await (await owner.request.get(origin + "/__fixtures/status")).json();
+    assert.equal(afterFailure.bookings.length, beforeFailure.bookings.length, "unreadable connected calendar creates no booking");
+    assert.equal(afterFailure.delivery_outbox.length, beforeFailure.delivery_outbox.length, "refused confirmation creates no mail or calendar command");
     assert.equal((await owner.request.post(origin + `/api/app/event-types/${eventId}/publish`, { headers })).status(), 409);
     await owner.request.post(origin + "/__fixtures/control", { data: { kind: "busy", failure: false } });
     await owner.request.post(origin + "/__fixtures/calendar-health", { data: { healthy: true } });

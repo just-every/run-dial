@@ -11,6 +11,13 @@
     }
   ],
   "originVar": "APP_URL",
+  "platforms": [
+    "workers",
+    "container"
+  ],
+  "container": {
+    "engine": "workerd"
+  },
   "vars": {
     "ENVIRONMENT": "production",
     "MAIL_PROVIDER": "sendgrid"
@@ -36,10 +43,6 @@
       "binding": "MAIL_FROM",
       "environment": "MAIL_FROM",
       "verifyStandIn": "noreply@dial.test"
-    },
-    {
-      "binding": "MAIL_WEBHOOK_KEY",
-      "environment": "MAIL_WEBHOOK_KEY"
     }
   ],
   "queues": [

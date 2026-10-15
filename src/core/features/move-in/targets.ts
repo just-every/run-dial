@@ -85,6 +85,13 @@ export const importTargets:D1TargetAdapter={
   return markers.map(marker=>{const tables:NativeValue['tables']={};for(const [table,key]of Object.entries(groups[marker.kind])){const rows=(sets.get(`${marker.kind}:${table}`)??[]).filter(row=>key.includes(' IN ')?(sets.get(`${marker.kind}:availability_date_overrides`)??[]).some(o=>o.id===row.override_id&&o.event_type_id===marker.id):row[key]===marker.id);if(table!=='ext_custom_field_values'||rows.length)tables[table]=rows;}return {destination,targetKind:marker.kind,targetId:marker.id,revision:marker.revision,value:snapshot(tables,marker.valueHash)};});
  },
  matchesCount(count){return {sql:'(SELECT count(*) FROM move_in_targets)=?',params:[count]};},
+ // A native value is {tables}: a selector outside `tables` (an invitee inside a
+ // retained source payload) can hold no native leaf, so field redaction reads
+ // and rewrites no native row. Dial selects no native columns by path.
+ async redaction(_db,_destination,fields){
+  if(fields.some(field=>field.path[0]==='tables'))throw new Error('Native field redaction is not supported.');
+  return {rows:[],holding:()=>[],matches:()=>[],write:()=>[]};
+ },
  async preparePreservedUndo(db:D1Database,destination:string,effects:D1UndoEffect[]){
   const observations=[],dependencies:D1UndoDependency[]=[],guards:D1Sql[]=[];
   for(const effect of effects){const {targetKind:kind,targetId:id}=effect.expected;const current=await this.read(db,destination,kind,id);observations.push({effectId:effect.provenance.id,current:current??null,entity:{table:Object.keys(groups[kind])[0],recordId:id}});guards.push(...this.matchesParts!(current??null,destination,kind,id));

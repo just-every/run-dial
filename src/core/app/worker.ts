@@ -1,3 +1,5 @@
+// Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
+import { withDemo } from "../../modules/demo/index.mjs";
 import { enterApplication, withApplication, ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
 import { hostedExport } from "../features/portability/routes";
 import { staticAssetResponse } from "../../base/static-assets";
@@ -16,6 +18,7 @@ import { isPrivateLocalPath } from "../platform/private-local-path";
 import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse, admissionResponse, isAuthenticatedCallbackPath, requiresPublicAdmission } from "../platform/public-admission";
 
 import start from "@tanstack/react-start/server-entry";
+import { seedDemo } from "../../demo";
 
 export { BookingCoordinator } from "./booking-coordinator";
 import { bookingMutationTarget, forwardBookingRequest, coordinatedCalendarChanges } from "./booking-coordination";
@@ -23,6 +26,7 @@ import { consumeJobs, runScheduledWork } from "./background-work";
 import { connectionWatchObservers } from "./connection-watch";
 
 const claimed = claimedWhen("SELECT 1 FROM operator_setup_identity WHERE singleton_key='default' AND onboarding_completed_at IS NOT NULL LIMIT 1");
+const ownerAdmitted = claimedWhen("SELECT singleton FROM oa_bootstrap WHERE singleton = 1");
 
 export function createWorker(servicesFactory?: (env: AppBindings) => AppServices) {
 const servicesFor = servicesFactory ?? ((env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { files: env.FILES, calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) }));
@@ -42,7 +46,7 @@ const worker = {
     const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
     const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };
     const state = await setupStateResponse(request, lobbyBindings, claimed); if (state) return state;
-    const lobby = await lobbyResponse(request, lobbyBindings, identity, claimed); if (lobby) return lobby;
+    const lobby = await lobbyResponse(request, lobbyBindings, identity, ownerAdmitted); if (lobby) return lobby;
     if (requiresPublicAdmission(url.pathname) && !isAuthenticatedCallbackPath(request)) {
       try {
         const refusal = admissionResponse(await new PublicAdmissionGate(env.DB, runtime).admit(request));
@@ -71,15 +75,22 @@ const worker = {
 } satisfies ExportedHandler<AppBindings>;
 return {
  ...worker,
- async fetch(request: Request, env: AppBindings, context: ExecutionContext) {
-  if (new URL(request.url).pathname.startsWith("/api/portability/")) return hostedExport(request, env, servicesFor(env).operators);
-  let leave: (() => Promise<void>) | undefined;
-  const pending: Promise<unknown>[] = [];
-  try {
-   leave = await enterApplication(env.DB);
-   return await worker.fetch(request, env, { waitUntil(work: Promise<unknown>) { pending.push(work); }, passThroughOnException() { context.passThroughOnException(); } } as ExecutionContext);
-  } catch (error) { if (error instanceof ArchiveMaintenance) return maintenanceResponse(); throw error; }
-  finally { if (leave) { await Promise.allSettled(pending); await leave(); } }
+ fetch(request: Request, env: AppBindings, context: ExecutionContext) {
+  const operation = (async () => {
+   if (new URL(request.url).pathname.startsWith("/api/portability/")) return hostedExport(request, env, servicesFor(env).operators);
+   let leave: (() => Promise<void>) | undefined;
+   const pending: Promise<unknown>[] = [];
+   try {
+    leave = await enterApplication(env.DB);
+    return await worker.fetch(request, env, { waitUntil(work: Promise<unknown>) { pending.push(work); }, passThroughOnException() { context.passThroughOnException(); } } as ExecutionContext);
+   } catch (error) { if (error instanceof ArchiveMaintenance) return maintenanceResponse(); throw error; }
+   finally { if (leave) { await Promise.allSettled(pending); await leave(); } }
+  })();
+  // Client disconnects can cancel an awaited fetch before its finally runs.
+  // Keep admission, application work and receipt cleanup in the runtime's
+  // post-disconnect lifetime; never release admission while work is pending.
+  context.waitUntil(operation);
+  return operation;
  },
  async queue(batch: MessageBatch<unknown>, env: AppBindings) {
   try { await withApplication(env.DB, () => worker.queue(batch, env)); }
@@ -93,4 +104,4 @@ return {
 
 }
 
-export default createWorker();
+export default withDemo(createWorker(), { seed: seedDemo });

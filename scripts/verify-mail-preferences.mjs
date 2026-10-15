@@ -49,7 +49,10 @@ try {
     assert.equal(operatorConfirmations.length, 2);
     assert.deepEqual(new Set(operatorConfirmations.map((row) => payload(row).to)), new Set([previous.firstEmail, previous.secondEmail]));
     assert.ok(payload(inviteeConfirmation[0]).text.includes("Google Meet link pending"), "the original confirmation keeps its pending Meet fact");
-    assert.ok(payload(inviteeConfirmation[0]).text.includes("Calendar setup: pending."), "the original confirmation keeps its pending calendar state");
+    const inviteeMail = payload(inviteeConfirmation[0]);
+    assert.doesNotMatch(inviteeMail.text, /Calendar (?:setup|state):/, "invitee confirmation omits host calendar setup details");
+    assert.doesNotMatch(inviteeMail.html, /Calendar (?:setup|state)/, "invitee HTML omits host calendar setup details");
+    assert.ok(operatorConfirmations.every((row) => payload(row).text.includes("Calendar setup: Update pending.")), "operator confirmations retain the pending calendar state");
 
     const linkReady = state.delivery_outbox.filter((row) => row.booking_id === booking.id && row.kind === "mail_send" && row.idempotency_key.endsWith(":link-ready"));
     assert.equal(linkReady.length, 1);
@@ -61,7 +64,9 @@ try {
     const meetingUrl = booking.meeting_url;
     assert.ok(typeof meetingUrl === "string" && meetingUrl.startsWith("https://meet.example.test/"), "the completed booking has its synthetic Meet link");
     const linkReadyMail = payload(linkReady[0]);
-    for (const fact of [`Your meeting link is ready: ${meetingUrl}`, `Location: Google Meet: ${meetingUrl}`, "Calendar setup: succeeded.", `Join session: ${meetingUrl}`, "Manage this booking:", "Add to calendar:"]) {
+    assert.doesNotMatch(linkReadyMail.text, /Calendar (?:setup|state):/, "invitee link-ready mail omits host calendar setup details");
+    assert.doesNotMatch(linkReadyMail.html, /Calendar (?:setup|state)/, "invitee link-ready HTML omits host calendar setup details");
+    for (const fact of [`Your meeting link is ready: ${meetingUrl}`, `Location: Google Meet: ${meetingUrl}`, `Join session: ${meetingUrl}`, "Manage this booking:", "Add to calendar:"]) {
       assert.ok(linkReadyMail.text.includes(fact), `link-ready message includes ${fact}`);
     }
     for (const row of [...confirmation, ...linkReady]) assertFrozenProviderReceipt(state, row, row === linkReady[0] ? "link-ready" : "booking confirmation");

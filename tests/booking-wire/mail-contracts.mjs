@@ -49,7 +49,9 @@ export function assertConfirmation(snapshot, receipt, email) {
     assertTimeRange(body, html, timeRange(receipt.occurrence.startAt, receipt.occurrence.endAt, "UTC"));
     assertTimeRange(body, html, timeRange(receipt.occurrence.startAt, receipt.occurrence.endAt, "Australia/Brisbane"));
     assert.match(body, /Duration: 30 minutes/); assert.match(body, /What would you like to discuss\?: Wire lifecycle/);
-    assert.match(body, /Google Meet link pending/); assert.match(body, /Calendar setup: pending/);
+    assert.match(body, /Google Meet link pending/);
+    assert.equal(/Calendar (?:setup|state):/.test(body), !recipient(mail).includes(email));
+    if (!recipient(mail).includes(email)) assert.match(body, /Calendar setup: Update pending/);
     assert.match(html, /<table\b/); assert.match(html, /style="/);
     assert.ok(html.includes("A focused introduction")); assert.ok(html.includes("Morgan Bell"));
     assert.ok(html.includes("Australia/Brisbane"));
@@ -67,7 +69,7 @@ export function assertConfirmation(snapshot, receipt, email) {
       const attachment = mail.attachments[0];
       assert.equal(attachment.filename, "booking.ics"); assert.equal(attachment.type, "text/calendar");
       const ics = Buffer.from(attachment.content, "base64").toString().replaceAll("\r\n ", "");
-      assert.match(ics, /BEGIN:VCALENDAR\r\nVERSION:2.0/); assert.match(ics, /METHOD:REQUEST/);
+      assert.match(ics, /BEGIN:VCALENDAR\r\nVERSION:2.0/); assert.match(ics, /METHOD:PUBLISH/);
       assert.ok(ics.includes(`UID:${snapshot.bookings.find(booking => booking.invitee_email === email).ical_uid}`));
       assert.ok(ics.includes(`DTSTART:${instant(receipt.occurrence.startAt)}`));
       assert.ok(ics.includes(`DTEND:${instant(receipt.occurrence.endAt)}`));
@@ -100,7 +102,7 @@ export function assertChange(snapshot, first, changed, email, kind, reason, acto
     assert.ok(body.includes(`by ${actor}`)); assert.ok(body.includes(`Reason: ${reason}`));
     assert.ok(html.includes(first.event.eventTitle));
     assert.ok(html.includes("Australia/Brisbane")); assert.ok(html.includes(kind === "reschedule" ? previousInviteeTimezone : currentInviteeTimezone));
-    assert.match(body, /Calendar state:/);
+    assert.equal(/Calendar state:/.test(body), recipient(mail).includes("operator@dial.test"));
     if (kind === "reschedule") {
       for (const [prefix, occurrence, inviteeTimezone] of [["Previous", first.occurrence, previousInviteeTimezone], ["New", changed.occurrence, currentInviteeTimezone]]) {
         const inviteeTime = timeRange(occurrence.startAt, occurrence.endAt, inviteeTimezone);
@@ -170,7 +172,7 @@ export function assertReminder(snapshot, email, hostName, expected = 2) {
   const zone = operator ? booking.host_timezone : booking.invitee_timezone;
   const format = instant => new Intl.DateTimeFormat("en-GB", { timeZone: zone, dateStyle: "full", timeStyle: "long" }).format(new Date(instant));
   const range = `${format(occurrence.start_at)} – ${format(occurrence.end_at)} (${zone})`;
-  const location = booking.meeting_url ?? "Meeting link pending — contact the host if it is not ready.";
+  const location = booking.meeting_url ?? (booking.meeting_state === "failed" || booking.calendar_state === "failed" ? "Meeting link unavailable — contact the host." : "Meeting link pending — contact the host if it is not ready.");
   const inviteePayload = snapshot.delivery_outbox.map(row => JSON.parse(row.payload_json)).find(payload => payload.to === booking.invitee_email && payload.recipientRole === "invitee" && typeof payload.manageUrl === "string");
   assert.ok(inviteePayload?.manageUrl);
   const icsUrl = new URL(inviteePayload.manageUrl);
@@ -182,9 +184,10 @@ export function assertReminder(snapshot, email, hostName, expected = 2) {
     assertActionParity(body, html);
     assertTimeRange(body, html, range, `${booking.event_title}\n`, true, "\n");
     assert.ok(body.includes(`Host: ${hostName}`));
-    assert.ok(body.includes(`${booking.location_label}: ${location}`));
+    assert.ok(body.includes(`${booking.meeting_url ? booking.location_label.replace(/\s*\(link on confirmation\)/giu, "").trim() : booking.location_label}: ${location}`));
     assert.ok(body.includes(`Duration: ${booking.duration_minutes} minutes`));
-    assert.ok(body.includes(`Calendar setup: ${booking.calendar_state}.`));
+    assert.equal(/Calendar (?:setup|state):/.test(body), operator);
+    if (operator) assert.ok(body.includes(`Calendar setup: ${{ pending: "Update pending", succeeded: "Up to date", failed: "Update failed", not_required: "No connected calendar" }[booking.calendar_state]}.`));
     assert.ok(html.includes(hostName));
     assert.ok(html.includes(booking.event_title));
 

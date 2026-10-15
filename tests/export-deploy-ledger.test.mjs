@@ -9,7 +9,7 @@ import { restoreArchive } from './archive/artifact.mjs';
 
 contract('DATA-001', 'Base-installed schema exports all product records while preserving each populated installer ledger', async t => {
   const source = await deployedFixture(t, { populated: true, install: 'source' });
-  const target = await deployedFixture(t);
+  const target = await deployedFixture(t, { localLedger: true });
   const sourceLedger = source.ledger(); const targetLedger = target.ledger();
   assert.notDeepEqual(sourceLedger, targetLedger, 'independent installations have distinct bookkeeping');
   const sourceCatalog = source.db.prepare(catalogQuery).all();
@@ -23,18 +23,18 @@ contract('DATA-001', 'Base-installed schema exports all product records while pr
   const archive = await createArchive(platform);
   const names = source.db.prepare(tableQuery).all().map(row => row.name);
   assertCoverage(names);
-  assert.match(internal._rer_deploy_migrations, /installer/i);
-  assert.ok(!Object.hasOwn(excluded, '_rer_deploy_migrations'));
+  assert.match(internal.d1_migrations, /installer/i);
+  assert.ok(!Object.hasOwn(excluded, 'd1_migrations'));
   assert.deepEqual(archive.tables.map(table => table.name), exported);
   for (const table of archive.tables) {
     if (table.name === "operator_erasure_subjects") assert.equal(table.rows.length, 0, "unfinished operator erasure cannot be archived");
     else assert.ok(table.rows.length > 0, `${table.name} is populated`);
   }
-  assert.ok(!archive.tables.some(table => table.name === '_rer_deploy_migrations'));
+  assert.ok(!archive.tables.some(table => table.name === 'd1_migrations'));
   assert.deepEqual(archive.migrations, source.migrations, 'archive retains exact product migration hashes');
   assert.ok(!JSON.stringify(archive).includes(secret), 'planted credentials stay excluded');
   assert.deepEqual(applicationCatalog(sourceCatalog), applicationCatalog(targetCatalog));
-  assert.ok(!applicationCatalog(sourceCatalog).some(row => row.tbl_name === '_rer_deploy_migrations'));
+  assert.ok(!applicationCatalog(sourceCatalog).some(row => row.tbl_name === 'd1_migrations'));
 
   await restoreArchive(destination, archive);
   assert.deepEqual(await createArchive(destination), archive);
@@ -56,6 +56,15 @@ contract('BASE-DATA-001', 'installed migration bookkeeping never exempts unknown
   const sourceLedger = source.ledger(); const targetLedger = target.ledger();
   const platform = testPlatform(source.db); const destination = testPlatform(target.db);
   const archive = await createArchive(platform);
+  for (const [column, value] of [['sha256', 'changed-sql-bytes'], ['state', 'applying'], ['name', '9999_unrecognized.sql']]) {
+    for (const [installation, binding, operation] of [[source, platform, () => createArchive(platform)], [target, destination, () => restoreArchive(destination, archive)]]) {
+      const original = installation.ledger()[0], before = { ...binding.writes };
+      installation.db.prepare(`UPDATE d1_migrations SET ${column}=? WHERE id=?`).run(value, original.id);
+      await assert.rejects(operation(), /archive-migration-history-mismatch/);
+      installation.db.prepare(`UPDATE d1_migrations SET ${column}=? WHERE id=?`).run(original[column], original.id);
+      assert.deepEqual(binding.writes, before);
+    }
+  }
   for (const name of ['future_owner_data', '_rer_deploy_future_data']) {
     source.db.exec(`CREATE TABLE "${name}"(id TEXT)`);
     await assert.rejects(createArchive(platform), /archive-unclassified-schema/);

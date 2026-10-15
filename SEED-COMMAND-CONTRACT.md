@@ -107,7 +107,7 @@ A first-party seed may declare one theme so the shared installer, sign-in confir
 
 Required first-party pins: `.node-version` is `22.20.0`; `package.json.engines.node` is `22.20.0`; `packageManager` is `pnpm@10.12.4`. Keep any `.nvmrc`, CI/bootstrap and documentation declarations consistent. These are today's tested Base cloud-bootstrap/foundation pins, not a requirement for independent projects. Commands that execute project work select the exact Node pin, using an exact matching installed runtime or a checksum-verified user-cache copy at `~/.rer/node/node-vVERSION-PLATFORM-ARCH/`; when needed on supported platforms, the runner retrieves the official release and verifies its SHA-256 against `SHASUMS256.txt`. The runner never changes global Node installations. `RER_NODE_AUTO=0` opts out; a failure reports the repair invocation `npm exec --yes --package=node@VERSION -- node SCRIPT VERB --cwd PROJECT`. Help, check, describe, doctor and stop do not select or acquire Node. Refresh lockfiles legitimately for pnpm 10 and retain the reviewed native-build allowlist (esbuild/workerd where needed).
 
-Pin `@runeditrun/rer` exactly in devDependencies and retain its frozen lockfile and pnpm patch. Package aliases use the installed `rer` dispatcher; no vendored CLI, onboarding tree or wrapper remains. Dial's 0.2.2 patch awaits the adapter's legacy-state reset preflight before inventory/removal and recognizes pnpm patched lock entries. Preserve that patch when upgrading until the package supplies these behaviors.
+Pin `@runeditrun/rer` exactly in devDependencies and retain its frozen lockfile. Package aliases use the installed `rer` dispatcher; no vendored CLI, onboarding tree, wrapper or package patch remains. The package awaits the adapter's `resetPreflight` before reset inventory or removal; Dial's preflight keeps its legacy-state guard there.
 
 Package scripts for `setup dev preview build verify reset deploy export import release outbox doctor describe check` use the package dispatcher: each value is the OPERATIONS argv (`["rer",VERB]`) joined by single spaces. Invoke them as `pnpm run VERB -- FLAGS`; use `pnpm run deploy`, not pnpm's built-in deploy. Never define a package `install` lifecycle script to launch `rer install`; `pnpm install --frozen-lockfile` is the dependency action. Provide `deps` (the same dispatcher with `install`) and `rer` (the dispatcher alone). Internal adapter targets use distinct names/files to prevent alias recursion.
 
@@ -133,6 +133,15 @@ export/import/export equivalence across all supported resources. Local
 export/import must cover every supported resource. Remote transfer is optional
 and requires complete resource coverage; an unsupported remote target fails
 with exit 4 and names the missing capability.
+
+Dial enables authenticated hosted export with its native owner session, covering
+all classified durable tables and every FILES object, with declared credential
+exclusions. Hosted archive import is not exposed. Its local restore requires an
+empty destination, the original owner salt and the exact source migration/schema
+proof; it preserves destination migration bookkeeping and rejects changed hashes
+or unfinished migration claims. The hosted deploy adapter uses the pinned
+package’s D1 `importSql` transport for deployment migrations, independently of
+archive restore.
 
 Independent projects without an adapter use `OPERATIONS.json` v2 `commands.NAME.argv`, `inputs`, effects, environmentSources and loops. Execute argv directly with shell false in the checkout, forwarding explicit arguments after `--` unchanged; never translate them into Cloudflare/pnpm/Base behavior. Common wrapper flags are consumed before the separator. No declared verb means exit 4, not an inferred command/fallback. Existing v1 inspection remains supported. Do not infer runnable commands from the platform registration descriptor's shell strings. No global pins, aliases, installer, outbox, state layout or required verb set is imposed on independent projects; runtime requirements remain project-owned. Independent check still validates the actual declaration and refuses missing/outside-checkout inputs.
 

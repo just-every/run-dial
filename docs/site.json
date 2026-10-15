@@ -21,6 +21,7 @@
     { "source": "CHANGELOG.md", "reason": "Release history for maintainers, which cites internal requirement records; the pages link it on GitHub" },
     { "source": "CLAUDE.md", "reason": "A one-line pointer to AGENTS.md for coding agents" },
     { "source": "CONTRACT.md", "reason": "Product requirement clauses, for maintainers and reviewers" },
+    { "source": "DEMO.md", "reason": "How to run the throwaway sample-data demo and what it blocks, for owners and maintainers" },
     { "source": "DIVERGENCE.md", "reason": "Design decisions record for maintainers" },
     { "source": "ERASURE.md", "reason": "Storage census, destructive erasure and restore-fence implementation evidence with verification limits, for maintainers" },
     { "source": "HANDOVER.md", "reason": "Maintainer orientation and the current verification scope; the Overview summarises what is not yet proven" },

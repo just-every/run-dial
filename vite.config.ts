@@ -11,8 +11,11 @@ import { archiveSchema } from "./scripts/archive/schema-plugin";
 import { buildAssets } from "./scripts/build-assets";
 import { retireLocalObservability } from "./scripts/local/observability.mjs";
 import { archiveOutputGuard } from "@runeditrun/rer/archive-output";
+import { demoSockets } from "./src/modules/demo/vite.mjs";
 
-const persistState = process.env.DIAL_PERSIST_STATE_DIR ? { path: process.env.DIAL_PERSIST_STATE_DIR } : true;
+// `rer demo` hands its throwaway state folder in RER_STATE_DIR, so a demo never opens this checkout's own state.
+const stateDir = process.env.RER_STATE_DIR ?? process.env.DIAL_PERSIST_STATE_DIR;
+const persistState = stateDir ? { path: stateDir } : true;
 const wranglerConfig = process.env.DIAL_WRANGLER_CONFIG_PATH ?? "wrangler.toml";
 const inspectorPort = process.env.DIAL_DISABLE_INSPECTOR === "1" ? false : process.env.DIAL_INSPECTOR_PORT ? Number(process.env.DIAL_INSPECTOR_PORT) : undefined;
 const cloudflareEnv = process.env.CLOUDFLARE_ENV ?? "";
@@ -23,6 +26,7 @@ const portabilityRuntimeFiles = [
   "scripts/archive/catalog.mjs", "scripts/archive/policy.mjs", "scripts/archive/import-policy.mjs",
   "scripts/archive/redaction.mjs", "scripts/archive/private-links.mjs", "scripts/archive/json-values.mjs",
   "scripts/archive/environment-secrets.mjs", "scripts/archive/export-policy.mjs", "scripts/archive/guarded-bucket.mjs",
+  "scripts/archive/migration-ledger.mjs",
   "scripts/archive/secret-scanner.mjs", "scripts/archive/json-secret-scanner.mjs",
   "node_modules/@runeditrun/rer/modules/portability/bridge.mjs",
   "node_modules/@runeditrun/rer/modules/portability/catalogue.mjs",
@@ -50,6 +54,8 @@ const portabilityRuntimeFiles = [
 // Absolute: an isolated Worker configuration lives in another directory, and `main` resolves against it.
 const devEntry = fileURLToPath(new URL("./src/server.dev.ts", import.meta.url));
 const devKey = process.env.RER_DEV_KEY ? { RER_DEV_KEY: process.env.RER_DEV_KEY, RER_DEV_IDENTITY: process.env.RER_DEV_IDENTITY ?? "on" } : undefined;
+// `rer demo` (RER_DEMO=1) reaches the dev entry's vars with its end time; nothing else sets them.
+const demo = process.env.RER_DEMO === "1" ? { RER_DEMO: "1", ...(process.env.RER_DEMO_EXPIRES ? { RER_DEMO_EXPIRES: process.env.RER_DEMO_EXPIRES } : {}) } : undefined;
 
 async function runtimeCacheDir(command: "build" | "serve") {
   if (command !== "serve" || (wranglerConfig === "wrangler.toml" && !cloudflareEnv)) return undefined;
@@ -70,7 +76,7 @@ export default defineConfig(async ({ command }) => {
     // Cover direct Vite invocations as well as the RER lifecycle's prepare hook.
     process.env.X_LOCAL_OBSERVABILITY = "false";
     process.env.X_LOCAL_EXPLORER = "false";
-    await retireLocalObservability(process.cwd(), process.env.DIAL_PERSIST_STATE_DIR ?? ".wrangler/state");
+    await retireLocalObservability(process.cwd(), stateDir ?? ".wrangler/state");
   }
   const cacheDir = await runtimeCacheDir(command);
   return {
@@ -79,7 +85,7 @@ export default defineConfig(async ({ command }) => {
     define: { __DIAL_SOURCE_URL__: JSON.stringify(readRepository(process.cwd()).url) },
     // Workerd requests SSR imports through Vite too; allow the imported shared modules
     // and the public capacity manifest without exposing the repository root.
-    server: { fs: { strict: true, allow: ["src", "public", "node_modules", "modules/editor", "modules/operator-auth", "modules/owner-claim", "modules/mail", "modules/local-signin", "modules/import-kit", "seed.json", "deploy-site.json", ...portabilityRuntimeFiles], deny: ["**/.rer/**", "**/.seed/**", "**/exports/**", "**/*.rer"] } },
-    plugins: [cloudflare({ config: command === "serve" ? (config) => ({ ...(process.env.RER_DEV_ORIGIN ? { vars: { ...config.vars, APP_URL: process.env.RER_DEV_ORIGIN, ...devKey } } : {}), ...(devKey ? { main: devEntry } : {}), assets: { ...config.assets, run_worker_first: ["/*", "!/@*", "!/src/*", "!/node_modules/*", "!/modules/editor/*"] } }) : undefined, configPath: wranglerConfig, persistState, inspectorPort, viteEnvironment: { name: "ssr" } }), docsSite(), tanstackStart({ prerender: { enabled: false } }), react(), tailwindcss(), archiveSchema(), buildAssets(), archiveOutputGuard()],
+    server: { fs: { strict: true, allow: ["src", "public", "node_modules", "modules/editor", "modules/operator-auth", "modules/owner-claim", "modules/mail", "modules/local-signin", "modules/import-kit", "seed.json", "deploy-site.json", "sample-data/dial-demo.ts", ...portabilityRuntimeFiles], deny: ["**/.rer/**", "**/.seed/**", "**/exports/**", "**/*.rer"] } },
+    plugins: [demoSockets(), cloudflare({ config: command === "serve" ? (config) => ({ ...(process.env.RER_DEV_ORIGIN ? { vars: { ...config.vars, APP_URL: process.env.RER_DEV_ORIGIN, ...devKey, ...demo } } : {}), ...(devKey ? { main: devEntry } : {}), assets: { ...config.assets, run_worker_first: ["/*", "!/@*", "!/src/*", "!/node_modules/*", "!/modules/editor/*"] } }) : undefined, configPath: wranglerConfig, persistState, inspectorPort, viteEnvironment: { name: "ssr" } }), docsSite(), tanstackStart({ prerender: { enabled: false } }), react(), tailwindcss(), archiveSchema(), buildAssets(), archiveOutputGuard()],
   };
 });

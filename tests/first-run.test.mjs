@@ -18,7 +18,7 @@ contract("OPER-005", "native D1 setup gates documents and completes request-only
   assert.equal((await call("/api/app/host-setup/complete", {})).status, 409);
   assert.equal((await send("/api/app/profile", { method: "PATCH", body: { name: "Host", handle: "host", title: "Host", biography: "Scheduling", timezone: "UTC", focusAreas: [], socialProof: [] } })).status, 200);
   const defaults = await (await call("/api/app/__fixture/defaults")).json();
-  const created = await call("/api/app/event-types", { ...defaults, title: "Requests", slug: "requests", description: "Propose a time", availability: [] });
+  const created = await call("/api/app/event-types", { ...defaults, title: "Requests", slug: "requests", description: "Propose a time", locationValue: "https://meet.example.test/private-consultation", availability: [] });
   assert.equal(created.status, 201); const event = await created.json();
   assert.equal((await call(`/api/app/event-types/${event.id}/open-requests`, {})).status, 200, "actual development mail supports request-only without Google");
   assert.equal((await call("/api/app/host-setup/complete", {})).status, 409, "publication alone is not completion");

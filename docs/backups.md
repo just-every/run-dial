@@ -22,18 +22,17 @@ Export writes a new file that only you can read, and it refuses to overwrite an 
 
 ## Export from a hosted install
 
-Sign in as an owner through the normal email link. Privately save just the native session cookie as `name=value` in `.rer/local/hosted-owner.cookie` inside the stopped checkout with permissions `0600`. Do not paste the cookie into a command, log, issue or archive. From a stopped local checkout of the same Dial revision:
+1. Sign in to your hosted Dial as an owner through the normal email link.
+2. Open **Settings → Export status** and choose **Download backup**.
+3. Keep Settings open while Dial prepares the archive. Your browser downloads a dated `dial-….rer` file. Check your downloads and move it to your private backup storage; it contains your clients' names, emails and answers.
 
-```bash
-rer export --target remote \
-  --origin https://your-dial.example \
-  --session-file .rer/local/hosted-owner.cookie \
-  --output exports/hosted-dial.rer
-```
+Your browser supplies the existing secure session automatically. No cookie copying, local checkout or Cloudflare API token is needed. Development/review sessions cannot export. The same native owner owns the export job throughout; cross-origin requests and remote imports are refused.
 
-The client talks only to the supplied Dial origin. It does not need a Cloudflare API token. The same native owner must own every export job; cross-origin mutations, development/review sessions and remote imports are refused.
+Export briefly puts the source in maintenance after existing request and background work has drained. Requests receive 503, queues retry and the connection watch delays its next check. If writer admissions remain, export refuses with a message to wait or contact installation support. An active export holds maintenance and refuses a competing export. Settings → Export status shows a read-only count and whether an export currently holds maintenance; use **Refresh status** for a new observation. The count does not reserve or guarantee an export.
 
-Export briefly puts the source in maintenance after existing request and background work has drained. Requests receive 503, queues retry and the connection watch delays its next check. If the source is busy, the command refuses; try again when it is quiet. The command removes the snapshot and releases maintenance after download. An interrupted client leaves a private `.transfer.json` job checkpoint; the maintenance lease expires after five minutes and the old job cannot be downloaded or resumed. Start a new export to a new path. See OPERATIONS.md for cleanup and a source whose terminated writer prevents export.
+After the archive reaches your browser, Dial removes the source snapshot and releases maintenance. If preparation or downloading fails, it attempts the same cleanup and shows an error. If cleanup cannot be confirmed, or you close the page mid-export, the maintenance lease expires after five minutes; the old job cannot be downloaded or resumed. Refresh status, then start a new backup. See OPERATIONS.md for export-job cleanup and the support boundary for writer admissions that remain.
+
+Dial cannot establish that a legacy writer has died and provides no Clear action. Keep its admission until independently verified revocation or drain covers all old invocations and already-issued D1 and R2 effects. Pausing ingress, redeploying, waiting, or an owner confirmation does not prove this. Installation support must establish that storage guarantee before any recovery can be designed; deleting receipts without it can produce an inconsistent archive. The status endpoint remains available during maintenance, although opening a new Settings page can itself receive maintenance until the export ends.
 
 The archive captures durable D1 records and all FILES bytes and metadata. Queue messages and coordinator alarms are execution state, not transferable authority: pending deliveries are made historical and provider checks must be re-established after restore. Privately retain the original `SESSION_SECRET`, configuration and exact source revision separately. The hosted archive imports with the ordinary local command below.
 
@@ -46,7 +45,7 @@ Everything durable:
 - Alternative requests, delivery attempts, settings and the audit trail.
 - Calendar connection details and sync state, without the credentials.
 
-Each part of the archive is checked before restore, and an archive whose tables do not match this version of Dial is refused.
+Each part of the archive is checked before restore. Use the exact source revision that made the archive: unknown tables or indexes, changed migration hashes, missing entries in the migration ledger, and unfinished hosted migration claims are refused. Local Wrangler history and hosted installer history have different bookkeeping columns; those differences do not change your application schema. Restore keeps the destination’s migration ledger.
 
 ## What it leaves out
 

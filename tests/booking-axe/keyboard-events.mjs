@@ -9,6 +9,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   assert.ok(await field(page, "Event name").evaluate(el => el === globalThis.document.activeElement && el.validity.valueMissing && el.matches(":invalid")), "native required-field validation focuses the missing event name");
   await keys.type(field(page, "Event name"), `Keyboard event ${width}`, "Event name");
   await keys.type(field(page, "Description"), "A keyboard-created conversation", "Event description");
+  await keys.type(field(page, "Private link, number, or address"), "https://meet.example.test/keyboard", "Private meeting link");
   const created = await mutation(page, "/api/app/event-types", () => keys.activate(button(page, "Save changes"), "Save new event"), 201);
   const event = await created.json();
   await button(page, "Save recurring availability").waitFor();

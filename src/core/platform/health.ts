@@ -19,17 +19,25 @@ export type PlatformHealth = {
   status: "ok" | "unavailable";
 };
 
+const platformBindingHealthTimeoutMs = 1_000;
+const platformQueueHealthTimeoutMs = 12_000;
+
 /**
  * Checks each bound persistent primitive without changing user data. Every
  * primitive has its own deadline, so one slow or pending provider call marks only
- * that primitive unavailable, and the response returns within the deadline even
- * if a provider leaves an operation pending.
+ * that primitive unavailable. The first Queue send from a fresh Worker can take
+ * longer to settle than the D1 and R2 probes, so it has its own bounded window.
  */
-export async function checkPlatformBindings(bindings: PlatformHealthBindings, timeoutMs = 1_000): Promise<PlatformHealth> {
+export async function checkPlatformBindings(
+  bindings: PlatformHealthBindings,
+  deadlines: { databaseAndStorageMs?: number; queueMs?: number } = {},
+): Promise<PlatformHealth> {
+  const databaseAndStorageMs = deadlines.databaseAndStorageMs ?? platformBindingHealthTimeoutMs;
+  const queueMs = deadlines.queueMs ?? platformQueueHealthTimeoutMs;
   const [database, storage, queue] = await Promise.all([
-    outcome(() => bindings.database.prepare("SELECT 1").run(), timeoutMs),
-    outcome(() => bindings.files.head("__dial_health_check__/binding-probe"), timeoutMs),
-    outcome(() => bindings.jobs.send({ kind: "health" } satisfies PlatformHealthJob), timeoutMs),
+    outcome(() => bindings.database.prepare("SELECT 1").run(), databaseAndStorageMs),
+    outcome(() => bindings.files.head("__dial_health_check__/binding-probe"), databaseAndStorageMs),
+    outcome(() => bindings.jobs.send({ kind: "health" } satisfies PlatformHealthJob), queueMs),
   ]);
   const checks = { database, storage, queue } as const;
   return { checks, status: Object.values(checks).every((state) => state === "ok") ? "ok" : "unavailable" };

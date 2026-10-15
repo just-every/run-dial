@@ -32,7 +32,7 @@ export class HostSetupService {
       const url = eligibleBookingUrl(this.publicOrigin, profile, event);
       return url ? [{ eventTypeId: event.id, title: event.title, url, requestOnly: Boolean(event.requestOnly), copiedAt: reports.find((report) => report.eventTypeId === event.id && report.canonicalUrl === url)?.acceptedAt ?? null }] : [];
     });
-    return { completedAt: await this.completion(), publicOrigin: this.publicOrigin, profileReady: validHostProfile(profile), availabilityReady: events.some((event) => event.availability.length > 0), eventTypeId: events[0]?.id ?? null, links, moveInStarted: await this.repository.moveInStarted() };
+    return { completedAt: await this.completion(), publicOrigin: this.publicOrigin, hostTimezone: profile?.timezone || null, profileReady: validHostProfile(profile), availabilityReady: events.some((event) => event.availability.length > 0), eventTypeId: events[0]?.id ?? null, links, moveInStarted: await this.repository.moveInStarted() };
   }
 
   async reportCopy(eventId: string, submittedUrl: string) {

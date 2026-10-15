@@ -7,11 +7,12 @@ import { EmbedSettingsCard } from "../core/features/embeds/ui/embed-settings";
 import { SettingsPage } from "../core/features/operators/ui/settings-page";
 import { BlockedAddressesCard } from "../core/features/public-abuse/ui/blocked-addresses";
 import { MailPreferencesCard } from "../core/features/delivery/ui/mail-preferences";
+import { ArchiveStatusCard } from "../core/features/portability/status-card";
 
 
-export const Route = createFileRoute('/app/settings' )({ component: withEditorLeaf(SettingsRoute) });
+export const Route = createFileRoute('/app/settings' )({ codeSplitGroupings: [], component: withEditorLeaf(SettingsRoute) });
 
 function SettingsRoute() {
   const { shell } = Route.useRouteContext();
-  return <><SettingsPage privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} /><div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
+  return <><SettingsPage privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} />{shell.canInspectArchive ? <ArchiveStatusCard /> : null}<div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
 }

@@ -2,12 +2,16 @@ import { createD1DevelopmentOutbox, createDevelopmentOutboxHandler } from "../..
 import { devGate, devNotFound, isLoopbackHost } from "../../../../modules/operator-auth/index.mjs";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 
-type LocalMailRuntime = Pick<RuntimeEnvironment, "ENVIRONMENT" | "APP_URL" | "MAIL_PROVIDER">;
+type LocalMailRuntime = Pick<RuntimeEnvironment, "ENVIRONMENT" | "APP_URL" | "MAIL_PROVIDER" | "RER_DEMO">;
 export function isLocalOutboxEnabled(runtime: Partial<LocalMailRuntime>): boolean {
   return runtime.ENVIRONMENT === "development" && runtime.MAIL_PROVIDER === "development" && Boolean(runtime.APP_URL) && isLoopbackHost(new URL(runtime.APP_URL!).hostname);
 }
+/** Mail is captured in the outbox, never sent: a loopback development install, or demo mode (a hosted demo has an https origin). */
+export function capturesMail(runtime: Partial<LocalMailRuntime>): boolean {
+  return isLocalOutboxEnabled(runtime) || (runtime.RER_DEMO === "1" && runtime.MAIL_PROVIDER === "development");
+}
 export function developmentOutbox(db: D1Database, runtime: Partial<LocalMailRuntime>) {
-  if (!isLocalOutboxEnabled(runtime)) throw new Error("Development mail requires explicit local configuration");
+  if (!capturesMail(runtime)) throw new Error("Development mail requires explicit local configuration");
   return createD1DevelopmentOutbox({ db });
 }
 /**

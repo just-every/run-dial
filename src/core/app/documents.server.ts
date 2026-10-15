@@ -16,12 +16,14 @@ export async function readPrivateShell(setup = false) {
   const services = createServices(bound.DB, runtime, bound.ASSETS, { files: bound.FILES });
   const session = await services.operators.authenticate(getRequest());
   if (!session) throw redirect({ to: "/signin" });
+  const nativeSession = await services.operators.auth.getSession(getRequest());
   const completed = await services.hostSetup.completion();
   if (setup && completed) throw redirect({ to: "/app" });
   if (!setup && !completed) throw redirect({ to: "/setup" });
   return {
     profile: await services.hostProfile.getProfile(),
     operator: session,
+    canInspectArchive: nativeSession?.kind === "native" && nativeSession.operator.role === "owner",
     publicOrigin: installPublicOrigin(runtime.APP_URL),
     editorConfigured: Boolean(runtime.RER_MANAGEMENT_ORIGIN || runtime.RER_INSTALLATION_ID),
   };
