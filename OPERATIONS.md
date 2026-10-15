@@ -344,7 +344,10 @@ Native `rer deploy` claims the hosted owner after a healthy deploy and removes
 the one-time setup token. The owner then opens `/signin` and requests an email
 link. There is no browser first-operator step after that claim. Working SendGrid
 mail, a verified sender and an OWNER_EMAIL mailbox the owner can read are needed
-before deploying; no-mail recovery is not yet available.
+before deploying. Dial pins rer 0.2.20. For owner access without mail, run
+`rer signin --environment NAME` from the deploying checkout with its receipt and
+Cloudflare credentials (`production` is the default). Open the private, one-use
+link and confirm within 15 minutes; never copy it into logs or messages.
 
 New Workers inherit the local setup owner if OWNER_EMAIL is omitted and get
 fresh generated SESSION_SECRET and SETUP_TOKEN values if not supplied. Set the

@@ -120,7 +120,7 @@ One command, `rer deploy`, builds your committed source, creates what Dial needs
 1. **A workers.dev subdomain.** In the Cloudflare dashboard, open Workers & Pages and choose your account's workers.dev subdomain. Without one, deploy stops with `workers-subdomain-missing` before it creates anything.
 2. **An API token.** Create an account API token for that one account with these account permissions: Workers Scripts Edit, D1 Edit, Workers R2 Storage Edit and Queues Edit. If one is missing, deploy names it, for example `token-scope-missing-d1`.
 3. **Your Dial address.** It is your Worker's name, `dial-production`, on your workers.dev subdomain: `https://dial-production.<your-subdomain>.workers.dev`. After deployment, use it to sign in and, if you choose, connect Google or enable SendGrid delivery tracking.
-4. **Working mail and a reachable owner.** Prepare a real SendGrid API key and verified sender in [Send mail with SendGrid](calendar-and-email.md#send-mail-with-sendgrid). Set `OWNER_EMAIL` to a mailbox you can read, even if you previously used a generated local development owner. Check the address carefully: the hosted owner signs in by email link immediately after deployment. No-mail recovery is not yet available. No webhook key is required to deploy, check the sender or send mail; [delivery and bounce tracking](calendar-and-email.md#optional-delivery-and-bounce-tracking) is a separate opt-in.
+4. **Working mail and a reachable owner.** Prepare a real SendGrid API key and verified sender in [Send mail with SendGrid](calendar-and-email.md#send-mail-with-sendgrid). Set `OWNER_EMAIL` to a mailbox you can read, even if you previously used a generated local development owner. Check the address carefully: the hosted owner signs in by email link immediately after deployment. Keep the deploying checkout and its Cloudflare credentials for `rer signin` recovery. No webhook key is required to deploy, check the sender or send mail; [delivery and bounce tracking](calendar-and-email.md#optional-delivery-and-bounce-tracking) is a separate opt-in.
 5. **Committed source.** Commit your changes. Deploy refuses to run with uncommitted changes to tracked files and stops with `owner-source-not-committed`.
 
 Then deploy:
@@ -147,7 +147,17 @@ rer deploy --environment staging
 
 After a healthy deploy, `rer` claims the hosted owner and removes the one-time setup token. Open `/signin` on the deployed address, enter the deployed owner email, choose **Send magic link**, then open the email and confirm its link. There is no separate first-operator setup step or hosted local outbox. On the first sign-in, Dial opens the setup workspace: work through [Finish setup](#finish-setup), and [Calendar and email](calendar-and-email.md) for the connections.
 
-If the email does not arrive, check the owner address, SendGrid credentials, verified sender and mailbox delivery. A successful deploy or health check does not prove email delivery. No-mail recovery is not yet available; a setup token cannot sign you in after the owner has been claimed.
+If the email does not arrive, check the owner address, SendGrid credentials, verified sender and mailbox delivery. A successful deploy or health check does not prove email delivery. A setup token cannot sign you in after the owner has been claimed.
+
+Dial pins **rer 0.2.20**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
+
+```bash
+rer signin
+# For a separately named deployment:
+rer signin --environment staging
+```
+
+The default environment is `production`. Open the printed private link and choose **Confirm**. It works once, expires after 15 minutes and signs in the active owner; it does not create a new owner. Keep it out of logs and messages. Email sign-in remains the normal path, and working transactional mail is still required for booking notifications.
 
 [OPERATIONS.md](../OPERATIONS.md#owner-account-deployment-and-release) describes the deployment and release boundaries for maintainers.
 

@@ -84,3 +84,8 @@ accounts/admin.mjs preserves Dial's existing OPER-001/002 equal-operator
 management: ordinary invitations/removals do not become a new role-transfer
 step-up flow. Actual role changes retain the fresh-proof guard. This adapted
 file is outside the verbatim inventory.
+
+Owner sign-in confirmation counters also use that rate-correlation hook, keyed
+to the grant's operator through its digest. The Lobby adopts only Base 0.2.20's
+manual-setup-token hint condition; Dial retains its existing copy, styles and
+onboarding-completion predicate.

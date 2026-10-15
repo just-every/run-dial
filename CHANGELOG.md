@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Pin rer 0.2.20, whose removal command empties populated R2 buckets in one pass. Document `rer signin` using the maintained owner sign-in grants and confirmation handler. Grants and authentication audit remain installation-local; operator erasure covers both, including attributable confirmation counters.
+- `HOME-001`: the installed Lobby and `/setup/state` both use completed onboarding. Owner admission alone keeps **Finish setup**; completion switches it to **Sign in**. The setup-token hint is shown only for editions that declare manual token claims; Dial's CLI claims its owner automatically. Existing Lobby wording and styles are unchanged.
+- Anonymous requests pass host and public rate checks before archive admission. Static assets and the Lobby avoid writer receipts; provider callbacks authenticate and pass their rate check before acquiring a receipt. Admitted work still retains its receipt through background work.
+
 ## 0.2.0 — 2026-10-15
 
 - Demo mode: `rer demo` (`rer dev --demo`) opens a throwaway Dial signed in as the saved owner, filled with sample data (Maya Chen's profile, three published event types and a week of bookings with four invitees, from `sample-data/dial-demo.ts` via `src/demo.ts`), with a Demo bar and nothing sent: booking mail stays in the outbox, Google Calendar is refused before any request, and the demo guard refuses every other outbound request. Its data lives in `.rer/demo/<start>/` and the checkout's own `.wrangler/state` is never opened. `deploy-demo.json`, the `container` platform and `.github/workflows/run-demo.yml` prepare the hosted demo at `demo.run-dial.com`; see DEMO.md. Pinned `@runeditrun/rer` 0.2.12.

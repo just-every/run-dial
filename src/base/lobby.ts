@@ -44,7 +44,7 @@ export function lobbyHtml(identity: EditionIdentity, state: SetupState): string 
   const claimed = state === 'claimed', product = escape(identity.product)
   const line = claimed ? escape(deploymentLine(identity)) : `This ${product} is waiting for its owner.`
   const action = claimed ? `<a class="btn" href="${escape(identity.signInPath)}">Sign in${ARROW}</a>` : `<a class="btn" href="/setup">Finish setup${ARROW}</a>`
-  const credit = claimed ? `<p class="credit">Powered by <a href="${escape(identity.runSite)}">${product}</a>, free and open source</p>` : '<p class="credit">You’ll need the setup token from your install.</p>'
+  const credit = claimed ? `<p class="credit">Powered by <a href="${escape(identity.runSite)}">${product}</a>, free and open source</p>` : identity.manualSetupTokenClaim ? '<p class="credit">You’ll need the setup token from your install.</p>' : ''
   const title = claimed ? `${escape(identity.deployment)} · ${product}` : `Finish setup · ${product}`
   const art = identity.band ? `<div class="door-art" aria-hidden="true"><img src="${escape(identity.band)}" alt=""></div>` : ''
   return `<!doctype html><html lang="en" data-state="${state}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>`

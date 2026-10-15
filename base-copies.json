@@ -3135,45 +3135,167 @@
       }
     },
     {
-      "path": "src/base",
-      "originPath": "foundation/runtime",
+      "path": "src/base/deployment-health.ts",
+      "originPath": "foundation/runtime/deployment-health.ts",
       "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
       "files": {
-        "src/base/deployment-health.ts": "49f4dac80429ea7d9477b40799a6242f9af4870f3229df70d0ac1f635476b8b7",
-        "src/base/dispatch.ts": "695ff1bf5bdcf65a429e3853eb80bcb477297c29e55221f6cad08dcff6ba610c",
-        "src/base/font-head.ts": "937fe339a397abee96e4279f2e310fa336eb30b2ec3aeb98f2c09ed0ba7d5dac",
-        "src/base/font-response.ts": "55abc935a78085735ae5b7f2d441ee7a5a67d9c797417f9b5ac3c2449f8c91a8",
-        "src/base/hydration/intro-guard.ts": "abc289d53537b631ad6de323b9123c843aea7498aa50d429a4786d7819194fcd",
-        "src/base/hydration/README.md": "4b72e893c9437a1ddc516759c1bae121db8290a01addf02fc9edb04f8add6ba8",
-        "src/base/hydration/report.ts": "38792ad67dc33c9ccd9537bcfc41b7f21a57f0d6f6266d045cb71d70630cf3d7",
-        "src/base/hydration/unit.tsx": "932bf2aa40a05c76f3a2c25a121db282e17c7bc839f9c37cd102ffe7f4e7ceca",
-        "src/base/identity.ts": "be1347292694308cb7d3820f31644cd81f4ce15c533d24be5e6b9a954ae67573",
-        "src/base/lobby.ts": "8d596a71c38eca61c5c220a73dc3848cd303ea9c2d15c432e262e43019b0fe28",
-        "src/base/page-style.ts": "58211f173d3b6d9245e80f217c2f3e4e743d59a559e63817865644a991215111",
-        "src/base/rejected-response.ts": "5fe6ea3ac3d113f727431d898b56d4194fad39832c01d0e3cc5cd6d75eafe671",
-        "src/base/run-site.ts": "a9bf7a49e00918a694b8dc33f45584531cb6d99f76ac181a34d8ea1aed154241",
-        "src/base/setup-state.ts": "41d478a3d4d9280b8af8b0e47f51fc4ec45413b5fe141b3aba724b75f7ae0983",
-        "src/base/setup.ts": "fe4d6792bdc370fe20a223a9add9c680c789ae80eedb46afc6deb90c86568a5b",
-        "src/base/static-assets.ts": "d6ed4098fbee2dc6d557eb1365e9a56b5f5435ad869357cb7d8472a8d0c70e76",
+        "src/base/deployment-health.ts": "49f4dac80429ea7d9477b40799a6242f9af4870f3229df70d0ac1f635476b8b7"
+      },
+      "modes": {
+        "src/base/deployment-health.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/dispatch.ts",
+      "originPath": "foundation/runtime/dispatch.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/dispatch.ts": "695ff1bf5bdcf65a429e3853eb80bcb477297c29e55221f6cad08dcff6ba610c"
+      },
+      "modes": {
+        "src/base/dispatch.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/font-head.ts",
+      "originPath": "foundation/runtime/font-head.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/font-head.ts": "937fe339a397abee96e4279f2e310fa336eb30b2ec3aeb98f2c09ed0ba7d5dac"
+      },
+      "modes": {
+        "src/base/font-head.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/font-response.ts",
+      "originPath": "foundation/runtime/font-response.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/font-response.ts": "55abc935a78085735ae5b7f2d441ee7a5a67d9c797417f9b5ac3c2449f8c91a8"
+      },
+      "modes": {
+        "src/base/font-response.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/hydration/README.md",
+      "originPath": "foundation/runtime/hydration/README.md",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/hydration/README.md": "4b72e893c9437a1ddc516759c1bae121db8290a01addf02fc9edb04f8add6ba8"
+      },
+      "modes": {
+        "src/base/hydration/README.md": "100644"
+      }
+    },
+    {
+      "path": "src/base/hydration/intro-guard.ts",
+      "originPath": "foundation/runtime/hydration/intro-guard.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/hydration/intro-guard.ts": "abc289d53537b631ad6de323b9123c843aea7498aa50d429a4786d7819194fcd"
+      },
+      "modes": {
+        "src/base/hydration/intro-guard.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/hydration/report.ts",
+      "originPath": "foundation/runtime/hydration/report.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/hydration/report.ts": "38792ad67dc33c9ccd9537bcfc41b7f21a57f0d6f6266d045cb71d70630cf3d7"
+      },
+      "modes": {
+        "src/base/hydration/report.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/hydration/unit.tsx",
+      "originPath": "foundation/runtime/hydration/unit.tsx",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/hydration/unit.tsx": "932bf2aa40a05c76f3a2c25a121db282e17c7bc839f9c37cd102ffe7f4e7ceca"
+      },
+      "modes": {
+        "src/base/hydration/unit.tsx": "100644"
+      }
+    },
+    {
+      "path": "src/base/page-style.ts",
+      "originPath": "foundation/runtime/page-style.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/page-style.ts": "58211f173d3b6d9245e80f217c2f3e4e743d59a559e63817865644a991215111"
+      },
+      "modes": {
+        "src/base/page-style.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/rejected-response.ts",
+      "originPath": "foundation/runtime/rejected-response.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/rejected-response.ts": "5fe6ea3ac3d113f727431d898b56d4194fad39832c01d0e3cc5cd6d75eafe671"
+      },
+      "modes": {
+        "src/base/rejected-response.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/run-site.ts",
+      "originPath": "foundation/runtime/run-site.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/run-site.ts": "a9bf7a49e00918a694b8dc33f45584531cb6d99f76ac181a34d8ea1aed154241"
+      },
+      "modes": {
+        "src/base/run-site.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/setup-state.ts",
+      "originPath": "foundation/runtime/setup-state.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/setup-state.ts": "41d478a3d4d9280b8af8b0e47f51fc4ec45413b5fe141b3aba724b75f7ae0983"
+      },
+      "modes": {
+        "src/base/setup-state.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/setup.ts",
+      "originPath": "foundation/runtime/setup.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/setup.ts": "fe4d6792bdc370fe20a223a9add9c680c789ae80eedb46afc6deb90c86568a5b"
+      },
+      "modes": {
+        "src/base/setup.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/static-assets.ts",
+      "originPath": "foundation/runtime/static-assets.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
+        "src/base/static-assets.ts": "d6ed4098fbee2dc6d557eb1365e9a56b5f5435ad869357cb7d8472a8d0c70e76"
+      },
+      "modes": {
+        "src/base/static-assets.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/theme-frame.ts",
+      "originPath": "foundation/runtime/theme-frame.ts",
+      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "files": {
         "src/base/theme-frame.ts": "3de5d84ebabbe4d6f80396903248ebebcd860c4b4a927d7cbbdd452f05ee4495"
       },
       "modes": {
-        "src/base/deployment-health.ts": "100644",
-        "src/base/dispatch.ts": "100644",
-        "src/base/font-head.ts": "100644",
-        "src/base/font-response.ts": "100644",
-        "src/base/hydration/intro-guard.ts": "100644",
-        "src/base/hydration/README.md": "100644",
-        "src/base/hydration/report.ts": "100644",
-        "src/base/hydration/unit.tsx": "100644",
-        "src/base/identity.ts": "100644",
-        "src/base/lobby.ts": "100644",
-        "src/base/page-style.ts": "100644",
-        "src/base/rejected-response.ts": "100644",
-        "src/base/run-site.ts": "100644",
-        "src/base/setup-state.ts": "100644",
-        "src/base/setup.ts": "100644",
-        "src/base/static-assets.ts": "100644",
         "src/base/theme-frame.ts": "100644"
       }
     },

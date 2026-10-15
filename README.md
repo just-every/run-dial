@@ -46,7 +46,7 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-Install the latest `rer` with Node 22 or later and Git, then clone Dial and start it:
+Install the latest `rer` with Node 22 or later and Git, then clone Dial and start it. Dial pins **rer 0.2.20**:
 
 ```sh
 npm install -g @runeditrun/rer
@@ -198,7 +198,10 @@ configured Cloudflare account and working SendGrid mail: a real API key, a
 verified sender, and `OWNER_EMAIL` set to a mailbox you can read. After a healthy
 deploy, rer claims the hosted owner and removes the one-time setup token. Open
 `/signin` on the deployed address and request an email link; no separate
-first-operator setup step is needed. No-mail recovery is not yet available. See
+first-operator setup step is needed. If mail is unavailable, run `rer signin` from
+the checkout that deployed it, with the same Cloudflare credentials, for a one-time
+owner link valid for 15 minutes. Use `--environment NAME` for a named environment
+(the default is `production`). Keep the link private and confirm it once. See
 [Install: deploy inputs](docs/install.md#reference-deploy-inputs) for generated
 secrets, local-owner defaults and private env files. Local checks and the dry
 run do not establish remote health, email delivery, Google Calendar access, or

@@ -1,4 +1,5 @@
 import { personErasureRoutes } from "../features/erasure/person-routes";
+import { ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
 import { ErasureError } from "../../modules/erasure/index.mjs";
 import { extensionRoutes } from "./mount.server";
 import { avatarRoutes } from "../features/host-profile/avatar-routes";
@@ -27,11 +28,11 @@ import type { AppEnvironment } from "./context";
 import type { AppBindings } from "./bindings";
 import type { AppServices } from "./services";
 import { createServices } from "./services";
-import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse } from "../platform/public-admission";
+import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse, type Admission, type CallbackProvider } from "../platform/public-admission";
 import { publicAbuseRoutes } from "../features/public-abuse";
 
 /** Compose typed sub-apps so AppType retains the complete Hono RPC schema. */
-export function createApp(documents?: { fetch(request: Request): Promise<Response> }, servicesFactory?: (env: AppBindings) => AppServices) {
+export function createApp(documents?: { fetch(request: Request): Promise<Response> }, servicesFactory?: (env: AppBindings) => AppServices, admitProvider?: (request: Request, env: AppBindings, provider: CallbackProvider) => Promise<Admission>) {
   const base = new Hono<AppEnvironment>()
     .use("*", async (context, next) => {
       const runtime = parseRuntimeEnvironment(context.env);
@@ -40,7 +41,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       if (["POST", "PATCH", "PUT", "DELETE"].includes(context.req.method) && origin && origin !== new URL(runtime.APP_URL).origin && !context.req.path.startsWith("/api/webhooks/")) return apiError(context, 403, "origin_not_allowed", "Use the deployment origin for this action.");
       context.set("runtime", runtime);
       context.set("services", services);
-      context.set("admitProvider", (provider) => new PublicAdmissionGate(context.env.DB, runtime).admit(context.req.raw, provider));
+      context.set("admitProvider", (provider) => admitProvider ? admitProvider(context.req.raw, context.env, provider) : new PublicAdmissionGate(context.env.DB, runtime).admit(context.req.raw, provider));
 
       await next();
       if (context.req.path === "/app" || context.req.path.startsWith("/app/")) context.res = editorDocument(context.res, runtime);
@@ -93,6 +94,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .get("/signin", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw));
 
   app.onError((error, context) => {
+    if (error instanceof ArchiveMaintenance) return maintenanceResponse();
     if (error instanceof ErasureError) return apiError(context, error.status as 400, error.code, error.code === "native_session_required" ? "Sign in with your operator sign-in link to erase personal data." : error.code === "erasure_preview_changed" ? "The preview expired or matching records changed. Preview again before confirming." : error.code === "erasure_import_value_too_long" ? "A saved value for this person inside another person's imported booking is longer than 4,096 characters and cannot be matched exactly; no completed erasure receipt was issued." : "Erasure could not complete. Preview the email again to resume; no completed receipt was issued.");
     if (error instanceof AuthError) return context.json({ error: { code: error.code, message: error.code === "last_owner" ? "The last operator cannot be removed." : error.code === "operator_identity_overlap" ? "This operator also has bookings or requests. Use Erase personal data in Settings to erase every matching invitee record, then remove the operator separately." : "Operator access could not be changed. Reload and try again." } }, error.status as 400);
     if (error instanceof PublicAdmissionError) return admissionErrorResponse(error);

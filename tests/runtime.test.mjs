@@ -235,11 +235,12 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
   const home = await fetch(`${origin}/api/public/home/profile`);
   assert.equal(home.status, 200);
   assert.ok(!(await home.json()).eventTypes.some((entry) => entry.slug === slug), "only published and listed events appear on the public home profile route");
-  await context.test(contractTitle("HOME-001", "an owner claim shows the claimed Lobby before onboarding completes"), async () => {
+  await context.test(contractTitle("HOME-001", "an owner claim keeps the unfinished Lobby until onboarding completes"), async () => {
     const homeSurface = await fetch(`${origin}/`);
     assert.equal(homeSurface.status, 200, "the Lobby is a Worker-first public surface");
     assert.equal(homeSurface.headers.get("set-cookie"), null, "the Lobby sets no cookie");
-    assert.match(await homeSurface.text(), /data-state="claimed"/, "the owner bootstrap claim marks the Lobby claimed before onboarding completes");
+    assert.match(await homeSurface.text(), /data-state="unclaimed"/, "owner admission does not complete the scheduling setup");
+    assert.deepEqual(await (await fetch(`${origin}/setup/state`)).json(), { state: "unclaimed" });
   });
 
   const privacySurface = await fetch(`${origin}/privacy`);

@@ -75,8 +75,12 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   await expect(page.getByRole("main").getByRole("status")).toHaveText("Booking link copied.");
   assert.equal(await page.evaluate(() => globalThis.navigator.clipboard.readText()), expected);
   await page.goto(origin + "/setup");
+  assert.deepEqual(await (await fetch(origin + "/setup/state")).json(), { state: "unclaimed" });
+  assert.match(await (await fetch(origin + "/")).text(), /data-state="unclaimed"/);
   await page.getByRole("button", { name: "Finish setup", exact: true }).click();
   await page.waitForURL(origin + "/app");
+  assert.deepEqual(await (await fetch(origin + "/setup/state")).json(), { state: "claimed" });
+  assert.match(await (await fetch(origin + "/")).text(), /data-state="claimed"/);
   await page.goto(origin + "/setup"); await page.waitForURL(origin + "/app");
   await expect(page.getByText("0 bookings", { exact: true })).toBeVisible();
   await expect(page.getByText("0 requests", { exact: true })).toBeVisible();

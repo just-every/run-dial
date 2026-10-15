@@ -22,6 +22,8 @@ export interface EditionIdentity {
    * (a status page, a public form) and links Sign in from its header.
    */
   installedHome: 'lobby' | 'page'
+  /** Only editions whose owner manually claims with a setup token show its hint. */
+  manualSetupTokenClaim?: boolean
   /** Served files: the theme stylesheet, the mark and the optional floor art. */
   theme: string
   mark: string
