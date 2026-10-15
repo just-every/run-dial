@@ -363,8 +363,7 @@
       ]
     },
     "page": {
-      "path": "/",
-      "originVariable": "APP_URL"
+      "path": "/"
     }
   }
 }
