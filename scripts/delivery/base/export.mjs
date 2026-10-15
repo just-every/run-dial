@@ -9,13 +9,13 @@ import {loadSetupManifest} from './setup-manifest.mjs';
 export async function exportProducer({root = process.cwd(), config, output = 'scripts/delivery/base'} = {}) {
   const {setup} = packagingConfig(config);
   root = await candidateRoot(root);
-  await loadSetupManifest(root, setup);
+  await loadSetupManifest(root, setup, config.artifact.specInputs?.mail);
   const destination = await outputLocation(root, `${output}/packaging.json`);
   const source = fileURLToPath(new URL('.', import.meta.url));
   const files = (await readdir(source)).filter(name => name.endsWith('.mjs')).sort();
   const generators = (await readdir(join(source,'generators'))).filter(name => name.endsWith('.mjs')).sort();
   const schemaSource = fileURLToPath(new URL('../../schema/', import.meta.url));
-  const schemaFiles = ['SETUP.schema.json','json-schema.mjs','setup-validation.mjs'];
+  const schemaFiles = ['SETUP.schema.json','json-schema.mjs','setup-validation.mjs','dependencies.mjs'];
   await mkdir(destination.directory, {recursive:true});
   try {
     for (const name of [...files, ...generators.map(name => `generators/${name}`)]) {

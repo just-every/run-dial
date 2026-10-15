@@ -6,6 +6,7 @@ import {keys, string} from './bindings.mjs';
 import {generateProjectDescriptor} from './generators/project.mjs';
 import {generateManagedWorkflow} from './generators/managed.mjs';
 import {loadSetupManifest, setupSelection} from './setup-manifest.mjs';
+import {validateDeclarations} from './declarations.mjs';
 
 export function packagingConfig(config) {
   keys(config, ['schema','project','managed','artifact','edition','setup'], 'packaging configuration');
@@ -13,6 +14,7 @@ export function packagingConfig(config) {
   const project = generateProjectDescriptor(config.project);
   if (project.deployment.target !== 'cloudflare-workers') throw Error('Packaging requires the cloudflare-workers target');
   keys(config.artifact, ['specInputs','workerDirectory','assetsDirectory','mainModule','additionalModules'], 'artifact policy');
+  validateDeclarations(config.artifact.specInputs ?? {});
   if (config.managed.artifactFile !== project.deployment.artifactFile) throw Error('Workflow and project artifact filenames must agree');
   const workflow = generateManagedWorkflow(config.managed);
   if ((config.managed.buildProfile ?? 'project') === 'project' && (config.managed.verificationProfiles ?? ['full','visual']).includes('visual')) throw Error('The trusted project workflow requires full verification');

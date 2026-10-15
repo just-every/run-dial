@@ -4,16 +4,22 @@ import type { D1Database, D1FieldMatch, D1FieldRedaction, D1Sql } from './types.
 import { canonicalJson, sha256 } from '../provenance/identity.ts';
 import { sql } from './database.ts';
 
-/** Jobs one resumable step reads. A step reads and rewrites at most this many
- * jobs' custody, which keeps it far inside one request's statements and CPU. */
+/** The most jobs one resumable step reads, which bounds its CPU. A step takes
+ * fewer when they do not fit one request's statements (see redaction-step.ts). */
 export const STEP_JOBS = 25;
 
+/** A job too large for one step is redacted in pages of `count` entries; the
+ * next page starts at `from`. `revision` is the job's custody revision after
+ * the last page, so a job changed in between starts again from its first entry. */
+export interface RedactionPage { job: string; from: number; count: number; revision: number | null }
 /** Where a resumable redaction stands: the jobs already read and found free of
  * the selected values (or rewritten), each at the custody revision it then had,
  * and the matches counted so far. A changed revision makes a job pending again.
- * It holds job ids, revisions, counts and a salted digest of the selectors, never
- * a selected value; it is bound to the destination and selectors it began with. */
-export interface RedactionProgress { nonce: string; digest: string; clean: Map<string, number>; matched: D1FieldMatch[] }
+ * `span` is how many jobs the next step reads, and `page` a job being redacted
+ * in pages. It holds job ids, revisions, counts, sizes and a salted digest of
+ * the selectors, never a selected value; it is bound to the destination and
+ * selectors it began with. */
+export interface RedactionProgress { nonce: string; digest: string; clean: Map<string, number>; matched: D1FieldMatch[]; span: number; page?: RedactionPage }
 
 const digestOf = (nonce: string, destination: string, fields: readonly D1FieldRedaction[]) =>
   sha256(canonicalJson([nonce, destination, fields.map(({ path, value, optional }) => [path, value, optional === true])]));
@@ -21,20 +27,24 @@ const digestOf = (nonce: string, destination: string, fields: readonly D1FieldRe
 export function readProgress(continuation: string | undefined, destination: string, fields: readonly D1FieldRedaction[]): RedactionProgress {
   if (continuation === undefined) {
     const nonce = randomUUID();
-    return { nonce, digest: digestOf(nonce, destination, fields), clean: new Map(), matched: [] };
+    return { nonce, digest: digestOf(nonce, destination, fields), clean: new Map(), matched: [], span: STEP_JOBS };
   }
   let token: any;
   try { token = JSON.parse(Buffer.from(continuation, 'base64url').toString('utf8')); } catch { throw new Error('IMPORT_REDACTION_CONTINUATION_INVALID'); }
   if (token?.v !== 1 || typeof token.nonce !== 'string' || !Array.isArray(token.clean) || !Array.isArray(token.matched)
-    || !token.clean.every((item: unknown) => Array.isArray(item) && typeof item[0] === 'string' && Number.isSafeInteger(item[1]))) throw new Error('IMPORT_REDACTION_CONTINUATION_INVALID');
+    || !token.clean.every((item: unknown) => Array.isArray(item) && typeof item[0] === 'string' && Number.isSafeInteger(item[1]))
+    || token.span !== undefined && !(Number.isSafeInteger(token.span) && token.span >= 1 && token.span <= STEP_JOBS)
+    || token.page !== undefined && !(typeof token.page?.job === 'string' && [token.page.from, token.page.count].every(n => Number.isSafeInteger(n) && n >= 0) && token.page.count >= 1
+      && (token.page.revision === null || Number.isSafeInteger(token.page.revision)))) throw new Error('IMPORT_REDACTION_CONTINUATION_INVALID');
   // A continuation from another erasure (other selectors or destination) must
   // never let this one skip a job.
   if (token.digest !== digestOf(token.nonce, destination, fields)) throw new Error('IMPORT_REDACTION_CONTINUATION_MISMATCH');
-  return { nonce: token.nonce, digest: token.digest, clean: new Map(token.clean), matched: token.matched };
+  const { job, from, count, revision } = token.page ?? {};
+  return { nonce: token.nonce, digest: token.digest, clean: new Map(token.clean), matched: token.matched, span: token.span ?? STEP_JOBS, ...token.page ? { page: { job, from, count, revision } } : {} };
 }
 
 export function writeProgress(progress: RedactionProgress): string {
-  return Buffer.from(JSON.stringify({ v: 1, nonce: progress.nonce, digest: progress.digest, clean: [...progress.clean], matched: progress.matched }), 'utf8').toString('base64url');
+  return Buffer.from(JSON.stringify({ v: 1, nonce: progress.nonce, digest: progress.digest, clean: [...progress.clean], matched: progress.matched, span: progress.span, ...progress.page ? { page: progress.page } : {} }), 'utf8').toString('base64url');
 }
 
 export function addMatches(total: D1FieldMatch[], step: readonly D1FieldMatch[]): D1FieldMatch[] {
@@ -46,10 +56,12 @@ export function addMatches(total: D1FieldMatch[], step: readonly D1FieldMatch[])
   return result;
 }
 
+/** A job of the destination with its custody revision and entry count. */
+export interface JobRevision { id: string; revision: number | null; total: number }
 /** Every job of the destination with its custody revision, read before any plan,
  * so a change after the read always shows as a newer revision. */
-export async function destinationRevisions(db: D1Database, destination: string): Promise<{ id: string; revision: number | null }[]> {
-  return (await db.prepare('SELECT j.id AS id,s.revision AS revision FROM ik_jobs j LEFT JOIN ik_d1_custody_states s ON s.job_id=j.id WHERE j.destination=? ORDER BY j.id').bind(destination).all<{ id: string; revision: number | null }>()).results;
+export async function destinationRevisions(db: D1Database, destination: string): Promise<JobRevision[]> {
+  return (await db.prepare('SELECT j.id AS id,s.revision AS revision,j.total AS total FROM ik_jobs j LEFT JOIN ik_d1_custody_states s ON s.job_id=j.id WHERE j.destination=? ORDER BY j.id').bind(destination).all<JobRevision>()).results;
 }
 
 /** Read inside a step's batch, after its writes: the revisions it leaves. */

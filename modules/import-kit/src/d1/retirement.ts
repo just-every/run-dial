@@ -1,14 +1,16 @@
 import { randomUUID } from 'node:crypto';
-import type { D1CustodyRetirement, D1ErasureJournalEntry, D1FieldRedaction, D1ImportContext, D1ImportPerson, D1RetirementOptions, D1RetirementProgress, D1Sql } from './types.ts';
+import type { D1CustodyRetirement, D1ErasureJournalEntry, D1ImportContext, D1ImportPerson, D1RetirementOptions, D1RetirementProgress, D1Sql } from './types.ts';
 import { requestContext, packGuards, remaining, D1RequestLimitError } from './budget.ts';
 import { authority, authorize, finalAuthority, readonlyChecks, prepare, readAtomic, sql } from './database.ts';
 import { requireText } from '../provenance/identity.ts';
 import { targetErasure, type ErasureStep } from './erasure.ts';
-import { exactRows } from './sets.ts';
-import { addMatches, destinationRevisions, readProgress, revisionsAfter, STEP_JOBS, writeProgress, type RedactionProgress } from './retirement-steps.ts';
+import { destinationRevisions, readProgress, type JobRevision, type RedactionProgress } from './retirement-steps.ts';
+import { overflow, redactionSteps } from './redaction-step.ts';
 import { headerAbsence, retirementScope, retirementWrites, scopeGuards } from './retirement-scope.ts';
 import { tallyBefore, tallyJournal, tallyStores } from './retirement-tally.ts';
 import { fieldRedactions } from './field-redaction.ts';
+import { retireD1ImportCustodyStep } from './retirement-bounded.ts';
+import type { D1ErasurePending, D1ErasureStepOptions } from './erasure-progress.ts';
 
 /** Erase a person from import custody and journal it, in one D1 batch with the
  * product's native statements.
@@ -27,11 +29,13 @@ import { fieldRedactions } from './field-redaction.ts';
  * retires custody, so an archive older than the erasure is refused whole once
  * the later journal is supplied; a batch without it proves no custody row changed. */
 export function retireD1ImportCustody(person: D1ImportPerson, nativeStatements: D1Sql[], input: D1ImportContext, checkpoint: D1Sql[]): Promise<D1CustodyRetirement>;
+export function retireD1ImportCustody(person: D1ImportPerson, nativeStatements: D1Sql[], input: D1ImportContext, checkpoint: D1Sql[], options: D1ErasureStepOptions): Promise<D1CustodyRetirement | D1ErasurePending>;
 export function retireD1ImportCustody(person: D1ImportPerson, nativeStatements: D1Sql[], input: D1ImportContext, checkpoint: D1Sql[], options: D1RetirementOptions): Promise<D1CustodyRetirement | D1RetirementProgress>;
-export async function retireD1ImportCustody(person: D1ImportPerson, nativeStatements: D1Sql[], input: D1ImportContext, checkpoint: D1Sql[], options: D1RetirementOptions = {}): Promise<D1CustodyRetirement | D1RetirementProgress> {
+export async function retireD1ImportCustody(person: D1ImportPerson, nativeStatements: D1Sql[], input: D1ImportContext, checkpoint: D1Sql[], options: D1RetirementOptions | D1ErasureStepOptions = {}): Promise<D1CustodyRetirement | D1RetirementProgress | D1ErasurePending> {
+  if ('operationKey' in options) return retireD1ImportCustodyStep(person, nativeStatements, input, checkpoint, options);
   person = { ...person, related: person.related ? { ...person.related, fields: fieldRedactions(person.related.fields) } : undefined };
   const context = requestContext({ ...input, originalErasurePolicy: input.originalErasurePolicy ?? 'withdraw-affected-artifacts' });
-  if (context.maxBatchBytes !== undefined) throw new Error('IMPORT_RETIREMENT_UNBOUNDED_ONLY');
+  if (context.maxBatchBytes !== undefined) throw new Error('IMPORT_RETIREMENT_OPERATION_KEY_REQUIRED');
   const values = [...new Set(person.values ?? [])].sort();
   for (const value of values) requireText(value, 'person value');
   if (person.target) { requireText(person.target.kind, 'target kind'); requireText(person.target.id, 'target id'); }
@@ -48,28 +52,40 @@ export async function retireD1ImportCustody(person: D1ImportPerson, nativeStatem
   const fence = fenced ? checkpoint : [];
   // Only the checkpoint fences rows the tally does not count (another import's jobs, a seed's tables): unfenced caller SQL is refused.
   if (nativeStatements.length && !fence.length) throw new Error('IMPORT_RETIREMENT_NATIVE_REQUIRES_CHECKPOINT');
-  let step: ErasureStep | undefined, progress: RedactionProgress | undefined;
+  let step: ErasureStep | undefined, progress: RedactionProgress | undefined, pending: JobRevision[] = [];
   if (options.resumable && fields.length) {
     progress = readProgress(options.continuation, destination, fields);
     const jobs = await destinationRevisions(db, destination);
     const clean = new Map(jobs.filter(job => job.revision !== null && progress!.clean.get(job.id) === job.revision).map(job => [job.id, job.revision!]));
-    const pending = jobs.filter(job => !clean.has(job.id));
-    if (pending.length > STEP_JOBS) {
+    pending = jobs.filter(job => !clean.has(job.id));
+    progress = { ...progress, clean };
+    if (progress.page || pending.length > progress.span) {
       if (person.related?.snapshot !== undefined) throw new Error('IMPORT_REDACTION_SNAPSHOT_UNBOUNDED_ONLY');
-      return redactionStep(fields, context, fence, { ...progress, clean }, pending.slice(0, STEP_JOBS), pending.length);
+      return redactionSteps(fields, context, fence, progress, pending);
     }
     step = { selection: { jobs: pending.map(job => job.id), clean, complete: true }, matched: progress.matched };
   }
-  const erasure = person.target || fields.length ? await targetErasure(person.target, context, person.related, retiring, step) : { before: [], after: [], final: [], decisions: [], jobs: [], fieldMatches: [] };
-  const receiptId = randomUUID(), recordedAt = new Date().toISOString();
-  const touched = { destination, jobs: [...new Set([...erasure.jobs, ...scope.jobs])].sort(), streams: [] as string[] };
-  touched.streams = [...new Set([...scope.anchors, ...await pageStreams(db, touched.jobs)])].sort();
-  const stores = await tallyStores(db);
-  const entry = { recordedAt, recordsErased: erasure.decisions.length, jobsRetired: scope.jobs.length, streamsRetired: scope.anchors.length };
-  const prefix = packGuards([authority(context, 'erase'), ...tallyBefore(stores, receiptId, touched), ...erasure.before, ...scopeGuards(scope)]);
-  const suffix = [...packGuards([...erasure.after, ...retirementWrites(scope, destination, receiptId, recordedAt), ...headerAbsence(destination, values),
-    ...tallyJournal(stores, receiptId, touched, entry, fenced), authority(context, 'erase'), sql('DELETE FROM ik_d1_assertions')]), ...readonlyChecks(erasure.final), finalAuthority(context, 'erase')];
-  if (prefix.length + nativeStatements.length + fence.length + suffix.length > remaining(context)) throw new D1RequestLimitError();
+  const start = remaining(context);
+  let erasure: Awaited<ReturnType<typeof targetErasure>>, receiptId: string, prefix: D1Sql[], suffix: D1Sql[];
+  try {
+    erasure = person.target || fields.length ? await targetErasure(person.target, context, person.related, retiring, step) : { before: [], after: [], final: [], decisions: [], jobs: [], fieldMatches: [] };
+    receiptId = randomUUID(); const recordedAt = new Date().toISOString();
+    const touched = { destination, jobs: [...new Set([...erasure.jobs, ...scope.jobs])].sort(), streams: [] as string[] };
+    touched.streams = [...new Set([...scope.anchors, ...await pageStreams(db, touched.jobs)])].sort();
+    const stores = await tallyStores(db);
+    const entry = { recordedAt, recordsErased: erasure.decisions.length, jobsRetired: scope.jobs.length, streamsRetired: scope.anchors.length };
+    prefix = packGuards([authority(context, 'erase'), ...tallyBefore(stores, receiptId, touched), ...erasure.before, ...scopeGuards(scope)]);
+    suffix = [...packGuards([...erasure.after, ...retirementWrites(scope, destination, receiptId, recordedAt), ...headerAbsence(destination, values),
+      ...tallyJournal(stores, receiptId, touched, entry, fenced), authority(context, 'erase'), sql('DELETE FROM ik_d1_assertions')]), ...readonlyChecks(erasure.final), finalAuthority(context, 'erase')];
+    // One read after the batch returns its journal row.
+    const needed = prefix.length + nativeStatements.length + fence.length + suffix.length + 1;
+    if (needed > remaining(context)) throw overflow(needed);
+  } catch (error) {
+    // A redaction too large for one request goes on in steps; nothing was written.
+    if (!step || !pending.length || person.related?.snapshot !== undefined || !(error instanceof D1RequestLimitError)) throw error;
+    const needed = (error as { needed?: number }).needed;
+    return redactionSteps(fields, context, fence, progress!, pending, { cost: needed === undefined ? undefined : start - remaining(context) + needed });
+  }
   const results = await db.batch([...prefix, ...nativeStatements, ...fence, ...suffix].map(statement => prepare(db, statement)));
   const [journal] = await readJournal(db, destination, receiptId);
   return { ...journal, phase: 'complete', fieldMatches: erasure.fieldMatches, retiredJobs: scope.jobs, retiredStreams: scope.anchors, nativeResults: results.slice(prefix.length, prefix.length + nativeStatements.length) };
@@ -77,34 +93,6 @@ export async function retireD1ImportCustody(person: D1ImportPerson, nativeStatem
 
 const pageStreams = async (db: D1ImportContext['storage']['database'], jobs: string[]) =>
   (await db.prepare('SELECT DISTINCT stream_id AS id FROM ik_d1_stream_pages WHERE job_id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(jobs)).all<{ id: string }>()).results.map(row => row.id);
-
-/** One bounded step of a resumable redaction: read `page`'s custody, and in one
- * batch with the restore checkpoint and a journal row rewrite the jobs holding a
- * selected value together with the native rows they own. Jobs found free of the
- * values are fenced at the revision read before their plans. The caller's native
- * statements wait for the final step, which also proves no other row holds one. */
-async function redactionStep(fields: readonly D1FieldRedaction[], context: D1ImportContext, fence: D1Sql[], progress: RedactionProgress, page: { id: string; revision: number | null }[], pending: number): Promise<D1RetirementProgress> {
-  const db = context.storage.database, destination = context.destination;
-  const erasure = await targetErasure(undefined, context, { fields }, new Set(), { selection: { jobs: page.map(job => job.id), clean: new Map(), complete: false }, owned: true });
-  const holding = new Set(erasure.jobs), free = page.filter(job => !holding.has(job.id) && job.revision !== null);
-  const clean = new Map(progress.clean), matched = addMatches(progress.matched, erasure.fieldMatches);
-  for (const job of free) clean.set(job.id, job.revision!);
-  let receiptId: string | undefined;
-  if (holding.size) {
-    receiptId = randomUUID();
-    const recordedAt = new Date().toISOString(), touched = { destination, jobs: [...holding].sort(), streams: [] as string[] };
-    touched.streams = (await pageStreams(db, touched.jobs)).sort();
-    const stores = await tallyStores(db);
-    const prefix = packGuards([authority(context, 'erase'), ...tallyBefore(stores, receiptId, touched), ...erasure.before,
-      ...exactRows('ik_d1_custody_states', ['job_id', 'revision'], free.map(job => ({ job_id: job.id, revision: job.revision })))]);
-    const suffix = [...packGuards([...erasure.after, ...tallyJournal(stores, receiptId, touched, { recordedAt, recordsErased: 0, jobsRetired: 0, streamsRetired: 0 }, true),
-      authority(context, 'erase'), sql('DELETE FROM ik_d1_assertions')]), ...readonlyChecks(erasure.final), revisionsAfter(touched.jobs), finalAuthority(context, 'erase')];
-    if (prefix.length + fence.length + suffix.length > remaining(context)) throw new D1RequestLimitError();
-    const results = await db.batch([...prefix, ...fence, ...suffix].map(statement => prepare(db, statement)));
-    for (const row of (results[results.length - 2] as { results: { job_id: string; revision: number }[] }).results) clean.set(row.job_id, row.revision);
-  }
-  return { phase: 'redacting', continuation: writeProgress({ ...progress, clean, matched }), jobsRedacted: holding.size, jobsPending: pending - page.length, fieldMatches: matched, ...receiptId ? { receiptId } : {} };
-}
 
 /** The destination's erasure journal, oldest first. Seeds show it, export it in
  * archives and use it to explain a retired job or stream. */

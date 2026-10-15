@@ -30,7 +30,7 @@ The trusted controller must verify artifact-service run/source custody and obtai
 
 Worker names are `rer-base-stage-<run-id>`, with `-db` D1 and `-jobs` Queue. The exact account's authenticated workers.dev subdomain defines the origin. There is no arbitrary URL/command/name workflow input. Default-seed requires D1, JOBS and its ten-minute Cron only. No unrelated mail credential is required.
 
-Parent integration must extend actual default-seed `/health` after a real D1 readiness check:
+The maintained default-seed `/health` returns the existing `status: 'ok'` plus this deployment identity after its real D1 readiness check, built by `deploymentHealth(env)` from `foundation/runtime/deployment-health.ts`:
 
 ```js
 { ok: true, deployment: {
@@ -40,23 +40,25 @@ Parent integration must extend actual default-seed `/health` after a real D1 rea
 } }
 ```
 
+Assets upload with `run_worker_first: true` (`RUN_WORKER_FIRST` in `render.mjs`). Every request reaches the Worker first, so the seed's routing, origin admission, `no-store` document policy and private-path refusals decide what is served, and the Base delivery producer accepts no other setting. A built file therefore reaches the browser only through the Worker: seed entries call `staticAssetResponse(request, env)` from `foundation/runtime/static-assets.ts` first. After the deploy identity passes, health requests one built file (the first artifact asset that is neither an HTML document nor under a dot path) once, without credentials, and fails with `asset-http-failed` unless it answers 200; the result is recorded as `health.asset`. `rer verify` serves the local build with the same setting (`cli/hosted-output.mjs`).
+
 The controller supplies the two public variables and Cloudflare version-metadata binding. The parent owns default-seed source/types, package scripts, shared manifests and workflows. Keep the staged-deploy descriptor blocked until the three-stage isolation and actual build/health integration pass; the original deploy-then-health executor cannot safely run installation/build with its credentials.
 
 ## Reconciliation and repeats
 
 `deploy({api,plan,artifact,artifactSha256,previousReceipt,env,fetch})` is the shared implementation for deploy and stage. Plans are controller-owned and validated; do not derive a secret-bearing plan from executable project configuration. `defaultStagePlan` demonstrates the full schema. Optional R2 `{binding,name}`, Queue `{binding,name,consumer?}`, DO `{binding,className,storage:'sqlite'|'classic'}`, and secret `{binding,environment}` declarations are supported. New DOs must use SQLite; existing classic namespaces are reusable. Namespace creation occurs through Worker upload migrations, with old/new migration tags, then authenticated namespace readback. No namespace create endpoint is invented. Cron and queue consumers reconcile after Worker creation. Conflicting consumers and resource identities fail; resources/data are never deleted.
 
-Cron reads require the documented `result: {schedules: [...]}` envelope, including valid unique Cron strings; bare arrays and partial/malformed results fail. Before changing an existing Worker, deployment reads its schedules and rejects any Cron outside the requested plan with `cron-drift`, before resource writes, SQL migrations or Worker upload. Trigger reconciliation repeats that read before any trigger write. This applies to ordinary changed-source upgrades with or without a prior receipt. The kit may add requested schedules; it never intentionally removes existing schedules. Removing a Cron from the plan while it still exists remotely requires a separate reviewed removal first. Unchanged deployment and health require the exact desired schedule set and perform no repairs. Callers must serialize deployments and out-of-band schedule edits for a Worker: the provider schedule replacement API offers no conditional update in this interface.
+Cron reads require the documented `result: {schedules: [...]}` envelope, including valid unique Cron strings; bare arrays and partial/malformed results fail. Before changing an existing Worker, deployment reads its schedules and rejects any Cron outside the requested plan with `cron-drift`, before resource writes, SQL migrations or Worker upload. Trigger reconciliation repeats that read before any trigger write. This applies to ordinary changed-source upgrades with or without a prior receipt. The kit may add requested schedules; it never intentionally removes existing schedules. Removing a Cron from the plan while it still exists remotely requires a separate reviewed removal first. Every changed upload reapplies its nonempty declared Cron set after workers.dev activation, even when the Worker-scoped list already matches. The kit reads the exact schedule set back after the write and checks that the active deployment identity remained stable. A declared Cron also requires the authenticated active version to report a `scheduled` handler; absent detection fails with `missing-scheduled-handler`. These checks establish provider configuration, not proof that a scheduled invocation has executed. Dispatch is the provider's: on the RunEditRun account (11 October 2026) a correctly registered Cron started only at the account scheduler's next refresh, observed 60 to 106 minutes apart, so a first tick can arrive well after Cloudflare's documented 15 minutes; a cleared schedule keeps running, and a deleted Worker keeps being invoked (as `internalError`), until a later refresh. A redeploy keeps the existing dispatch: the first run after it executes the new version. Judge first-deploy Cron by the seed's own scheduled-run record, not by a short watch. Unchanged deployment and health require the exact desired schedule set and perform no repairs. Callers must serialize deployments and out-of-band schedule edits for a Worker: the provider schedule replacement API offers no conditional update in this interface.
 
 `workerConsumerScript(consumer)` (also exported from `index.mjs`) decodes Worker consumer identities from either documented `script_name` or the observed GET response string `script`. It returns the exact name using the plan's resource-name grammar, or `null` for missing, malformed, conflicting, or non-Worker identities. If both fields are present, each must be valid and both must agree; a malformed alias is never ignored. Reconciliation checks every consumer on queues with a requested consumer before any trigger write and rejects foreign or duplicate consumers. Writes continue to use the documented `script_name` request field. Read-only health and retained-receipt repeats accept either response variant without repairs.
 
-D1/Queue/DO account listings fully paginate with bounded page/request budgets. R2 follows provider cursors. Missing pagination evidence, duplicate names, permission errors, partial success, redirects and transport failures fail visibly. Requests go only to Cloudflare's exact account API. Every read has a 30-second timeout and bounded response size; no request is retried. Asset upload tokens are used only on the documented same-account assets endpoint.
+D1/Queue/DO account listings fully paginate with bounded page/request budgets. R2 follows provider cursors. Missing pagination evidence, duplicate names, permission errors, partial success, redirects and transport failures fail visibly. Requests go only to Cloudflare's exact account API. Requests have a 30-second timeout and bounded response size. Before any HTTP status, GET/HEAD reads and writes that provably failed before connecting (DNS failure, connection refusal or connect timeout) may retry once, sharing the original timeout and request budget. The first read reserves half the timeout for a retry; caller deadlines and cancellation still apply. HTTP responses, failed response-body reads and ambiguous write failures are never replayed. Asset upload tokens are used only on the documented same-account assets endpoint.
 
 The first receipt binds source commit SHA and tree, artifact/config SHA-256, effective deployment fingerprint, account/Worker, actual resource IDs, migration hashes, secret names and active provider deployment/version/etag. It contains no secret value. The CLI creates it exclusively at mode 0600 before the first health request; it is an identity receipt, not a claim that health passed (health attempts are added afterwards, see below). A failed health request still exits nonzero, while the retained identity allows the next explicit invocation to authenticate state without another upload. For the second deployment use the **same artifact, run/attempt and receipt**. Current provider state must match the prior receipt. The kit performs no resource creation, Worker/asset upload, SQL mutation, Cron/consumer update, or secret rewrite when unchanged. Read-only D1 queries use the provider's POST query transport; a POST is not by itself a database mutation. The receipt remains byte-identical on a repeat. Missing resources, drift or stale state fail without repair during this repeat.
 
-Opaque existing secrets are preserved by name and strict binding inheritance; values are never fetched or compared. Missing declared secrets are supplied in the upload metadata in memory only. Rotation is a separate explicit operation; changing an input value does not overwrite a deployed secret. No temporary secret files are used.
+Opaque existing secrets are preserved by name and strict binding inheritance; values are never fetched or compared. Missing declared secrets are supplied in the upload metadata in memory only. Rotation is a separate explicit operation (owner-account mode: `rer deploy --set-secret NAME`); changing an input value does not overwrite a deployed secret. No temporary secret files are used.
 
-Health independently reads current deployment/version/settings, resources, namespaces, schedules, consumers, secret presence and migration history. It requests only the authenticated account-derived `/health`, without credentials, rejects redirects/malformed/unhealthy/stale identity and reads deployment identity again afterward.
+Health independently reads current deployment/version/settings, resources, namespaces, schedules, consumers, secret presence and migration history. It requests only the authenticated account-derived `/health`, without credentials, rejects redirects/malformed/unhealthy/stale identity and reads deployment identity again afterward. A healthy answer naming another Worker version (an edge still serving the version before a secret change) is asked again within the window.
 
 `health.mjs` is Base's one health verifier. `waitForDeploymentHealth(url, options)` (formerly `deployment/health.mjs`) gives a newly published route and its bindings one bounded window, 30 seconds by default: only 404, 503 and network failures are retried, every other status and every redirect is terminal, and the final error states the last result. The standalone `health` command probes `/health` once; transient failures are recorded as failures without a retry. The library `verifyHealth` retains its bounded readiness window. After an upload, `deploy` uses the recorded readiness wait described below.
 
@@ -83,6 +85,15 @@ The seed declares bindings, never names:
 
 Names are deterministic. The Worker is `<last segment of project>-<environment>`, for example `penny-production`. Each D1 database, R2 bucket, KV namespace and Queue is `<worker>-<binding in lower case, _ as ->`, for example `penny-production-db` and `penny-production-jobs-dead`. Durable Object namespaces belong to the Worker and are created by its upload migration. `originVar` receives `https://<worker>.<account subdomain>.workers.dev`. Migrations come from the packaged build's `migrations/core/*.sql` files. A name over 63 characters is refused, not shortened.
 
+A declaration may also bind another owner-deployed Worker and may keep its own workers.dev route off. Both keys are optional, and a declaration without them renders and fingerprints exactly as before:
+
+```json
+{ "services": [{ "binding": "PENNY_EGRESS", "project": "runeditrun/egress-service", "entrypoint": "Optional", "allowedHosts": ["hooks.example.com", "*.example.org"] }],
+  "workersDev": false }
+```
+
+A service's Worker name is derived from its `project` and this deploy's environment, so the example above binds `egress-service-production`. `allowedHosts` becomes the binding's `props` (`{allowedHosts}`), which the bound Worker reads as `ctx.props`. The binding is uploaded and read back like every other binding, so a changed `props` is reported as `binding-readback-mismatch`. Before any write, deploy reads each bound Worker. If it is absent, deploy refuses with `service-worker-missing` and resource `service:<worker>`; deploy that Worker first. `workersDev: false` keeps the route off: an enabled route is switched off on upload, the receipt's `origin` is `null`, and health uses provider readback only, because there is no public `/health` to request. [modules/egress-service](../egress-service/README.md) is the Worker this exists for.
+
 `ownerTarget`, `ownerPlan`, `ownerDeploy` and `ownerHealth` (exported from `index.mjs`) are the same steps for a seed's own script. A seed script can compute vars before calling `ownerPlan`.
 
 Ownership lives in a state file, by default `.rer/deploy/<environment>.json` under the checkout (mode 0600). It holds the account, project, environment, the resources this kit created with their ids (for an R2 bucket, its creation date), the pending upload intent and its observed provider identity, and the last receipt. It holds no secret values. Keep it out of Git and keep it: it is the only proof of which resources the kit created. Back it up after each deploy; see "If the state file is lost" below.
@@ -92,9 +103,28 @@ Ownership lives in a state file, by default `.rer/deploy/<environment>.json` und
 - **Partial failure and resume.** The kit records each create as `pending` before the request and `created` with the provider id after it. A failed create leaves `pending`. On the next run an absent pending name is created again, and a present one is refused as `uncertain-resource-create`, because a lost response cannot prove who created it. Inspect it: if it is the empty resource from the interrupted run, delete it and re-run. A Worker upload is recorded as created when the upload succeeds, so a failure after it resumes with one fresh upload. If the response to the very first upload is lost, the Worker exists but is still `pending`. The kit records the build and its fingerprint before sending an upload. With no prior receipt, the same build may recover its pending Worker only when the live fingerprint matches that intent, then resume with one fresh upload. A different build or fingerprint is refused as `uncertain-resource-create`; recover with the original build first. If the uncertain Worker cannot be authenticated, inspect it and delete it only after confirming that it is the kit-created Worker and that its Durable Object data is disposable. Back up any needed data before deleting it. Migration claims keep the rules under Migration safety.
 - **Drift.** A created resource that has gone is refused as `owned-resource-missing`; one replaced under the same name is refused as `owned-resource-replaced`. The kit never deletes or recreates them. This covers D1, KV, Queues and R2 (a bucket is identified by its creation date; a state file written before that was recorded keeps working and is not checked for that bucket). For the Worker, the live deployment (version id, deployment id and etag) must be the last receipt's before any write; someone else's upload under the same name is refused as `owned-resource-replaced` and never overwritten. Immediately before the Worker PUT, the kit rechecks every saved resource identity, including resources omitted from the current plan, then the Worker identity. A replacement during provisioning or asset upload is refused before the upload intent or receipt is saved. An interrupted successful upload may resume only when the live version id, deployment id and etag match the identity saved immediately after that upload. A historical fingerprint alone never overrides a receipt mismatch.
 - **Lost upgrade response.** If an upgrade response is lost and the live identity no longer matches the receipt, the kit refuses rather than guessing ownership. A [Cloudflare rollback](https://developers.cloudflare.com/workers/versions-and-deployments/rollbacks/) creates a new deployment, so it does not restore the recorded identity. Recover with a new environment and a fresh state path, or back up the state and any needed data, confirm ownership, and follow the cleanup under "If the state file is lost" with a fresh `--state` path.
+- **Settling listings.** Right after a create or delete, an account listing can briefly disagree with its own page counts (`provider-partial-list`: on 13 October 2026 D1's `total_count` lagged its rows by about 7 seconds after a create). Owner-mode deploy, health and removal discard such a snapshot and list again from the start for up to 30 seconds with a short backoff; a partial listing is never accepted.
 - **One run at a time.** A deploy takes an exclusive lock file, `<state file>.lock`, for the whole run and removes it at the end, even after a failure. A second run on the same state file is refused as `owner-state-locked` before any provider request. If a run was killed (power loss, `kill -9`) and no deploy is running, delete the lock file by hand.
 
 The CLI prints JSON: refusal codes and resource names only, never inputs, tokens or provider bodies.
+A refused provider call also carries `providerRefusal` on the thrown error: the call (`PUT /workers/scripts/<name>`) and Cloudflare's own codes and messages, with the account id and token removed and each message cut to 300 characters. `rer deploy` names it when a custom deploy hook fails on one.
+
+A transport failure carries `providerTransport`: the operation, sanitized endpoint, attempt count, whether an HTTP status was received and a structural network reason. Both standard and custom-hook `rer deploy` failures name the call and retain the same-input recovery command. Endpoint details omit URL credentials, queries, account ids and R2 object keys; signed D1 import destinations are withheld.
+
+### rer deploy: inputs, the hosted owner, secret changes and removal
+
+`rer deploy` runs these steps for a seed whose adapter uses `ownerDeploy` from `cli/deploy.mjs`.
+
+- **Inputs.** Declared secrets come from the environment, then `--env-file FILE` (an owned 0600 file of `KEY=VALUE` lines), which wins. For a secret the Worker does not hold yet, rer supplies the setup manifest's owner email (`emailField`) from the local setup's private settings, and a fresh random value for each secret field the manifest generates (`generate`), such as the session secret and the setup token; a value the Worker already holds is kept. A still-missing secret stops the run before any write with a message that names it.
+- **Hosted owner.** After deploy and health pass, rer claims the setup owner on the hosted app: it POSTs the setup token to the seed's standard owner step (`hooks.owner`, by default `/auth/bootstrap`). 303 means claimed; `409 already_initialized` means an owner was already claimed and is kept. Then rer deletes the token secret from the Worker, records the new Worker version in the state file, and lists the token in `retiredSecrets`, so later plans no longer declare it. The build fingerprint still names it, and the recorded claim stays as recorded, so an untouched repeat deploy writes nothing. A Worker that still holds a token rer did not upload in this run (an older deploy) first gets a fresh token through the same recorded secret change. Dependency approvals that need the token run before the claim. A seed with an owner step function, an identity-provider claim, or no declared token secret claims its owner its own way.
+- **Secret changes.** `rer deploy --set-secret NAME` (value from the environment or `--env-file`, under the declaration's environment name) and `--unset-secret NAME` change one declared secret of the recorded Worker without a build. Before writing, rer records the starting version and the exact live names of all other secrets, never their values. Accepted or ambiguous writes retain that intent until readback confirms the change; explicit refusals clear it. An ambiguous failure, or a later command's preflight, can clear an unapplied intent only when the live deployment still matches the receipt and the newest listed version matches it too. A surviving intent blocks further mutations until consistency returns; retry the same command then. Recovery requires the recorded immediate successor (or the recorded confirming rotation's successor), the receipt's script etag and fingerprint, the intended binding's presence, and an unchanged set of other secret names. Ambiguous rotations require a confirming PUT before reporting success. Older intents without names may recover only from the exact starting version's historical bindings, with its id, etag and fingerprint verified; unavailable or malformed historical bindings refuse adoption. Each historical binding must have an exact provider type supported by this kit; unrecognized types cannot prove that a name was not a secret. Added, removed or renamed other secrets refuse deploy and removal before writes. Values remain opaque: these checks cannot distinguish an otherwise identical outside change to the pending binding.
+- **Removal.** `rer deploy --remove --yes` deletes what the state file says rer created for this environment: the Worker (schedules first; its Durable Objects go with it) and each D1, R2, KV and queue that is still the one rer created, after checking all of them before the first delete. A replaced or uncertain resource refuses the whole removal, except a D1 or KV whose create answer was lost: under this environment's derived name it is deleted once confirmed empty (a D1 with no tables, a KV namespace with no keys); one holding data is refused as `uncertain-resource-not-empty`, and an uncertain queue, whose backlog rer cannot read, as `uncertain-resource-unverifiable` (delete it by hand if it is the empty one from the interrupted run).
+
+  R2 removal requires a saved `created` identity (the bucket's creation date). Pending buckets or buckets missing that identity are refused as `uncertain-resource-create`, and same-named replacements as `owned-resource-replaced`, even if empty. For a confirmed bucket, removal automatically lists and deletes its objects before deleting the bucket, checking its identity again before every object delete and the bucket delete. Serialize outside bucket deletion and recreation with removal: the provider cannot make a delete conditional on that identity.
+
+  Removal reads back that no recorded resource remains before deleting the state file. On partial failure, the state file retains the remaining resources so a later `--remove --yes` can finish. Resources rer did not create are never touched.
+
+- **Owner sign-in without mail.** `rer signin [--environment NAME] [--env-file FILE]` (owner CLI `signin`) needs only `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (with D1 edit). It refuses unless the state file holds a completed deploy and the live Worker is the one it recorded. It finds the one recorded D1 that holds `oa_owner_signins` and writes a single-use grant for the claimed owner there: the token's SHA-256, never the token. It returns the link once, to the terminal only. The state file is not changed. See operator-auth's "Owner sign-in without mail".
 
 ### If the state file is lost
 
@@ -129,15 +159,59 @@ When a token lacks a permission, the CLI prints which one instead of only a stat
 A seed carries a copy of `modules/deploy-kit/` from a Base pin. Refresh the copy, write a `deploy.json` from the plan the seed already builds, and point `deploy`, and the hosting step of `setup`, at `owner-cli.mjs`. Keep any throwaway controller only for proofs. In `deploy.json` declare:
 
 - the bindings the app uses (`DB`, `FILES`, `JOBS` and so on), with each queue's consumer and dead-letter queue and each SQLite Durable Object class;
-- the secrets the app reads, such as its session secret and the mail provider's key;
+- the secrets the app reads, such as its session secret and the mail provider's key. A secret item may add `verifyStandIn`, the hosted-valid value `rer verify`'s hosted check binds in its place (`{"binding": "MAIL_PROVIDER", "environment": "MAIL_PROVIDER", "verifyStandIn": "resend"}`); the kit validates it (a non-empty string), leaves it out of the plan and its fingerprint, and never sends it or makes it a secret value;
 - any Cron schedule and the public setup fields the app takes in `vars`;
 - `originVar`, the variable that holds the app's public origin (for example `APP_ORIGIN`).
 
 A seed whose setup provisions nothing declares the same bindings and deploys through its own `deploy` verb. Resource names change from `rer-seedproof-*` or a chosen prefix to `<project>-<environment>-*`. The kit refuses rather than adopts an earlier installation's resources.
 
+### Run site (`rer deploy --site`)
+
+A seed's run site (`run-<seed>.com`: its marketing homepage, `/run` and docs, written by `rer build --site`) deploys to the owner's account as a **Base-generated site Worker** (`site.mjs`). The seed declares only the apex domain, beside `deploy.json`, in the file its `commandAdapter` `site.declaration` names (Base's seeds: `deploy-site.json`):
+
+```json
+{ "version": 1, "domain": "run-cradle.com" }
+```
+
+The domain is an apex hostname: no scheme, path, port, upper case or `www.`. The plan (`sitePlan`) names:
+
+- the Worker `<project>-<environment>--site`. Owner Worker names never contain `--`, so it can never be the installed app's Worker (`<project>-<environment>`), and a site deploy never reads or writes the app Worker or any of its resources;
+- its one module, `site-worker.mjs` (`SITE_WORKER`): fixed content Base generates, with no seed code. Its only binding is the assets (`ASSETS`), it runs first on every request (`run_worker_first`), and it has no secrets, no schedules and workers.dev off. A request to `www.<domain>` gets a 301 to `https://<domain>` with path and query kept; every other request is answered from the assets exactly as an assets-only Worker would answer it: the `rer build --site` folder with `html_handling: auto-trailing-slash` (`/run` serves `run.html`) and `not_found_handling: 404-page`;
+- the apex as a Workers Custom Domain, and `www.<domain>` as a second Custom Domain on the same Worker, so the www host has DNS and a certificate and its requests reach the Worker's redirect.
+
+No zone ruleset is read or written. Every request now invokes the Worker: one page view costs one Worker request for the page and one per same-origin file it loads (the default seed's run site: at most 7 per uncached page view).
+
+`rer deploy --site --dry-run` builds the site and prints that plan (`--json`: a `site` event and a result with `dryRun: true`, `deployed: false` and the same `site` object) with no provider request and nothing written, even with `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` set. Without `--dry-run` it needs both inputs. Ownership is read from the provider alone, so a deploy from a fresh checkout (a CI runner with no `.rer/`) recognises the site it deployed before:
+
+- the Worker is the kit's when its latest deployment serves, at 100%, the Worker's newest version, and that version's message annotation is the kit's `rer-site:<fingerprint>` (every site upload sets it);
+- a Custom Domain is the kit's when its service is the kit's Worker.
+
+A read-only preflight reads the zone (it must be in this account, else `site-zone-missing`), the Worker and the zone's Custom Domains, and refuses before any write: `resource-name-collision` for a Worker of the name whose live version the kit did not upload, or for a hostname attached to another service (or to a Worker that is not the kit's); `owned-resource-replaced` for a kit Worker whose latest deployment is not the kit's upload (a dashboard rollback or a split deployment). It then uploads the assets and the site Worker, checks that the new version is live, turns workers.dev off, attaches each missing hostname, and reads the Worker and both domains back. A repeat attaches nothing new. `.rer/deploy/site-<environment>.json` receives a receipt for the person; it is never read. The real path is tested only against the fake Cloudflare API in `tests/site-provider.mjs`, where every zone ruleset path answers 403; it has not run against a live account.
+
+The token needs, beyond the owner-account permissions above:
+
+| Permission | Scope | Used for |
+| --- | --- | --- |
+| Workers Scripts: Edit | the account | the site Worker upload, its assets, versions and deployments, workers.dev, and Workers Custom Domains (`/workers/domains`) |
+| Zone: Read | the run site zones | finding the zone by name |
+| Workers Routes: Edit | the run site zones | Workers Custom Domains, which also create their DNS records and certificates |
+
+No Single Redirect (dynamic redirect ruleset) permission is needed. Base's references declare reserved `.example` domains (`run-default-seed.example`, `run-<edition>.example` for a new foundation), so a real deploy of either stops at `site-zone-missing`.
+
 ## Migration safety
 
-SQL files have ordered unique names and SHA-256 identities. `_rer_deploy_migrations` is permanent controller-owned history. Applied entries must be an unchanged prefix of the desired set. A new migration gets an `applying` claim before its SQL and completion marker are submitted together to the D1 batch query API. Any interrupted, failed or uncertain outcome remains blocked and must be inspected explicitly; the kit never automatically retries, rolls back user data, or marks an unknown outcome successful. Readback checks every final identity.
+SQL files have ordered unique names and SHA-256 identities. `d1_migrations` holds controller history with ordered IDs, names, timestamps, SHA-256 hashes and states. Native archives already exclude this installation table. Standard Wrangler name-only inserts remain possible, but their missing hashes/states block subsequent Base deployment pending reviewed adoption. Applied entries must be an unchanged prefix of the desired set. A new migration gets an `applying` claim before its SQL and completion marker are submitted together through the [Cloudflare D1 SQL import API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/import/), using the same whole-file protocol as Wrangler to preserve compound trigger bodies and atomic SQL/completion. Uploads use bounded HTTPS R2 destinations, without account credentials; polling is bounded and signed URLs and import response text are never diagnostic output. Any interrupted, failed or uncertain outcome remains blocked and must be inspected explicitly; the kit never automatically retries, rolls back user data, or marks an unknown outcome successful. Readback checks every final identity.
+
+A seed that had to rewrite a migration it already released declares the rewrite
+in `migrations/rewrites.json`: `{ "version": 1, "rewrites": [{ "migration":
+"0019_import_custody.sql", "from": "<released SHA-256>", "to": "<current SHA-256>",
+"reason": "...", "reviewed": true }] }`. An applied row holding `from` then counts
+as that migration, so an upgrade past it proceeds; the ledger keeps the released
+digest it applied. A later migration must converge databases that applied the
+released bytes. The record is refused unless `reviewed` is `true`, it names a
+migration in the set, and `to` is that migration's current bytes; every other
+change to applied history is still refused. Keep the record for as long as any
+installation may hold the released digest.
 
 Completion preserves the original SQL bytes and always starts on a new line.
 Comment-only migrations are rejected before any provider request or ledger claim.
@@ -147,7 +221,7 @@ without treating quoted semicolons as terminators or changing migration hashes.
 
 A lexical guard rejects standalone transaction/resource control statements (`BEGIN`, `COMMIT`, `END`, `ROLLBACK`, `SAVEPOINT`, `RELEASE`, `ATTACH`, `DETACH`, `VACUUM`) at statement boundaries, including after a trigger. Bare `ROLLBACK` is also refused in conflict clauses and `RAISE`, which can roll back a batch without a standalone control statement. SQLite `CREATE [TEMP|TEMPORARY] TRIGGER` bodies and nested `CASE ... END` expressions are supported; quoted text and comments cannot create statement boundaries. Both ledger names are reserved in bare, double-quoted, backtick and bracket identifiers, including schema-qualified references. [SQLite also accepts single-quoted identifiers](https://www.sqlite.org/lang_keywords.html), so exact controller ledger names are reserved in every token, including data strings, relation names, virtual-table options and introspection arguments. Comments and longer descriptive strings remain allowed. This intentionally conservative policy does not attempt to authorize arbitrary SQLite name grammars. Incomplete quotes, block comments, parentheses, CASE expressions or trigger bodies and NUL bytes fail closed; trigger header expressions must close before BEGIN and body expressions before their statement semicolon. This guard protects controller custody; SQLite still validates application SQL syntax.
 
-Existing Wrangler `d1_migrations` records lack content hashes. Automatic adoption would fabricate historical certainty, so those installations require separately reviewed history/hash adoption before this kit proceeds. The kit can extend its own previous migrations while retaining existing application rows. Local SQLite tests prove failure rollback in the test transport; the provider's actual failure atomicity, retained data, and two-deploy no-mutation behavior remain live proof obligations. The conservative `applying` claim prevents automatic replay even if a remote batch partially commits.
+The old kit `_rer_deploy_migrations` ledger is moved atomically into `d1_migrations` only after every applied name/hash/state proves an exact desired-history prefix. An ordinary deploy performs this one-time metadata transition even for unchanged code; subsequent redeploys write nothing, and health remains read-only. Existing Wrangler `d1_migrations` records lack content hashes. Automatic adoption would fabricate historical certainty, so those installations require separately reviewed history/hash adoption before this kit proceeds unless their ordered rows exactly match a prefix already attested by the old kit ledger. That transition preserves their IDs and timestamps. The kit can extend its own previous migrations while retaining existing application rows. Local SQLite tests prove failure rollback in the test transport; the provider's actual failure atomicity, retained data, and two-deploy no-mutation behavior remain live proof obligations. The conservative `applying` claim prevents automatic replay even if a remote response is lost.
 
 ## Local operations and source templates
 
@@ -163,7 +237,7 @@ node --test modules/deploy-kit/tests/*.test.mjs operations/*.test.mjs
 
 The tests cover real SQLite prior data, migration order/hash/failure/replay safety, fixture provider uploads and repeated no mutations across D1/R2/Queue/DO/Cron/secrets, wrong/missing mail inputs, transport boundaries/pagination, stale health/version, artifact links/custody, actual authoring lock/check and unchanged v1 regression tests. Owner-account tests use a fake Cloudflare API (`tests/owner-provider.mjs`, which adds KV, foreign resources and injected failures to the same fixture): first create, byte-identical re-run, partial failure and resume, a lost create response, a Worker upload failure, a lost first-upload response, collisions with resources the kit did not create, a Worker or bucket replaced under the same name, a missing workers.dev subdomain, token-scope failures, the state-file lock, and the CLI over a committed seed build. `pnpm verify:deployment` runs every deploy-kit test in Base verify. They are not live receipts. CF throwaway token/account ID and evidence persistence token remain missing until the owner supplies them. Prepare/build's Actions isolation and real default-seed remote health require the parent integration; no Mac provider login or live call was used.
 
-Implementation references read: the public HappyToHelp v0.2.1 release's `scripts/deployment/*`, Base `deployment/owner-migrations.mjs`, `operations/` and `edition-authoring/`. The ambient-login/catch-and-continue paths in those examples were not adopted. No private source was copied or merged.
+Implementation references read: an earlier public seed release's own deployment scripts, Base `deployment/owner-migrations.mjs`, `operations/` and `edition-authoring/`. The ambient-login/catch-and-continue paths in those examples were not adopted. No private source was copied or merged.
 
 Primary protocol references: [Worker upload](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/methods/update/), [multipart metadata](https://developers.cloudflare.com/workers/configuration/multipart-upload-metadata/), [asset upload](https://developers.cloudflare.com/workers/static-assets/direct-upload/), [D1 query](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/query/), [Queue consumers](https://developers.cloudflare.com/api/resources/queues/subresources/consumers/), [R2 pagination](https://developers.cloudflare.com/api/resources/r2/subresources/buckets/methods/list/), [DO namespaces](https://developers.cloudflare.com/api/resources/durable_objects/subresources/namespaces/), [Worker versions](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/versions/methods/get/). Checked 6 October 2026; hosted conformance is not inferred from documentation.
 
@@ -189,7 +263,7 @@ without metadata fails closed. Present metadata must supply a valid positive
 Cursors are encoded, validated and checked for cycles. Any supplied count or
 total count must agree with returned rows and completion, and totals cannot
 change between pages. Request, page, row and response-size budgets still apply.
-No metadata is fabricated and no request is retried. Generic `pagination:'cursor'`
+No metadata is fabricated; only the bounded pre-status transport retry above applies. Generic `pagination:'cursor'`
 retains its existing contract: omitted metadata fails, and its R2 null-metadata
 exception accepts only a short page. D1/Queue/DO page pagination is unchanged.
 The bounded strategy is covered with local provider fixtures; this change does
@@ -203,22 +277,44 @@ After an upload that changed the Worker, `deploy` gives `/health` a total
 90-second readiness budget (`readiness.totalMs`, never above 90000). Retries wait
 1 second, doubling to a 10-second cap, and never less than the 2-second poll of
 the standalone window: 2, 2, 4, 8, 10, 10 ... seconds. Only transport failures,
-404 and 5xx (including Cloudflare 52x) retry. A redirect, any other status, a
-malformed or unhealthy body and a deployment identity mismatch fail at once.
+404 and 5xx (including Cloudflare 52x) retry, and so does a healthy answer that
+names another Worker version (the edge still serving the previous version just
+after the upload). A redirect, any other status, a malformed or unhealthy body
+and a wrong identity from the uploaded version itself fail at once. The one
+built file then requested must answer 200; after an upload its 404, 5xx and
+transport failures are retried for up to 60 seconds, since an edge still serving
+the previous version does not have the new build's hashed files (seen live on
+13 October 2026).
 Each request is capped by both the 30-second request limit and the remaining
 budget, and no request starts at the deadline. An unchanged repeat uses the
 existing library window and does not record first-upload readiness attempts.
-The standalone CLI `health` command sends a single request. Library `verifyHealth`
+The standalone CLI `health` command sends a single request; only an answer from
+another Worker version (an edge still converging after a secret change) is asked
+again, within 30 seconds. Library `verifyHealth`
 retains the existing window, retrying only 404, 503 and network failures for
 30 seconds by default.
 
+Custom-hook `rer deploy` finalization gets a separate 90-second `/health` wait
+after the hook returns, using the current recorded Worker version when available.
+The hook can already have claimed the owner and retired its token, which creates
+another version and can exhaust the original upload window. First hosted Slate
+and Pencil deploys on 15 October 2026 failed this final gate even though health
+named the right commit seconds later. Reusing the existing 90-second propagation
+budget gives this final observation the same bounded allowance, without spending
+it on the hook's earlier work. Transport failures and healthy identity mismatches wait;
+permanent HTTP or malformed responses still fail. The deadline includes request
+time and backoff; each request is capped at 30 seconds. Failure names the last
+observed answer and the exact same-environment rerun.
+
 The returned receipt carries `health: {ok, versionId, attempts}`. Each attempt is
-`{offsetMs, status, cfRay, contentType, body, errorClass}`: `status` is null for
-a transport failure, `body` is the first 256 response bytes decoded as UTF-8 and
-`errorClass` is null for the passing attempt. A failed wait throws an error whose
-message names the class and the last status (for example
-`health-http-failed-last-status-503`) and which carries `attempts`, `status` and
-the identity `receipt` (with `health.ok` false). Provider diagnostics are never
+`{offsetMs, status, cfRay, contentType, errorClass}`: `status` is null for
+a transport failure and `errorClass` is null for the passing attempt. The receipt
+and owner state keep no response text, since an unhealthy app may echo a secret.
+A failed wait throws an error whose message names the class and the last status
+(for example `health-http-failed-last-status-503`) and which carries `attempts`
+(each with `body`, the first 256 response bytes decoded as UTF-8, for the
+caller's redacted diagnostic), `status` and the identity `receipt` (with
+`health.ok` false). Provider diagnostics are never
 retained; the endpoint must not return credentials. `readiness: {totalMs, clock,
 sleep}` selects a smaller bound and deterministic time; `healthOptions.now` and
 `healthOptions.sleep` act as `clock` and `sleep` for the same purpose.
@@ -227,6 +323,22 @@ sleep}` selects a smaller bound and deterministic time; `healthOptions.now` and
 `onHealth: receipt => writeHealthReceipt(receiptPath, receipt)`, which atomically
 replaces the mode-0600 receipt and refuses any change to its identity; the default
 CLI and owner-account state do this. A no-op repeat never rewrites the original receipt.
+
+Owner-account secret changes use the same bounded `waitHealth` after their new
+Worker version has settled and been recorded. This includes explicit
+`--set-secret`/`--unset-secret` commands, a fresh owner setup token, and the
+post-claim retirement performed by standard deploys and custom deploy hooks.
+Readiness checks the receipt source SHA, fingerprint and actual new version;
+it needs neither build output nor clean source for a secret-only command.
+Workers without a public route retain provider-only verification.
+
+A failed readiness check leaves the applied secret change, owner claim and token
+retirement recorded. The public command fails with the last HTTP status and the
+first bounded, redacted response line. Correct the seed/app configuration and
+redeploy; an app that requires an already spent setup token must remove that
+runtime requirement, rather than restoring the token or undoing ownership.
+The ownership receipt records readiness success/failure for the new version;
+untrusted response prefixes are never written into that record.
 
 ## Read-only teardown verification
 
@@ -267,9 +379,31 @@ const verification = await verifyTeardown({api, plan, receipt});
 return {ok: true, deleted: true, verification};
 ```
 
-Worker deletion covers its schedules and bindings; the namespace listing
+Worker deletion removes its schedules and bindings from the API, but not from
+the provider's dispatch: a deleted cron Worker keeps being invoked (failing) until
+the account's next scheduler refresh (see Cron above). A teardown that deletes a
+Worker calls `deleteWorker({api, worker})`, which PUTs an empty schedule set, reads
+the schedules back until the provider reports none (bounded, 60 seconds by default;
+a set that does not settle fails with `teardown-schedules-not-cleared` and leaves
+the Worker in place) and only then deletes. The deploy CLI prints one line after a
+Cron deploy that the first scheduled run can take up to about two hours on some
+accounts. The namespace listing
 independently checks Durable Object removal. Persist the verification (or the
 error's `attempts` and `remaining`) in the seed's teardown evidence. This Base change
 modifies no seed repository. Protocol references:
 [Worker scripts list](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/methods/list/)
 and [Queue consumers list](https://developers.cloudflare.com/api/resources/queues/subresources/consumers/methods/list/).
+
+Named egress service grants may be declared as `services[].grant` alongside
+`entrypoint`. The grant carries exact `allowedHosts`, service `sourceSha`,
+`fingerprint` and the service receipt's `provider` identity (`versionId`,
+`deploymentId`, `etag`). These are controller checks, not upload binding fields.
+Before deployment and during health verification, deploy-kit reads the target
+Worker's `EGRESS_GRANTS` plain-text binding and verifies the chosen entrypoint,
+host grant, source and immutable deployment identity. Missing, duplicate or
+widened grants fail closed, as do service/binding/entrypoint/environment drift.
+Only the ordinary named service binding is uploaded. This supports service-owned
+narrowing where Cloudflare omits service-binding `props` from settings/version
+readback. Ordinary `allowedHosts` still maps to `props` and retains strict
+readback; missing props are never silently accepted. See the
+[egress service guide](../egress-service/README.md).

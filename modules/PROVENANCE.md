@@ -43,14 +43,7 @@ Dial owns packaging policy, artifact caller, setup manifest, integration checker
 and HTTP/browser/artifact journeys. The integration checker wraps Base producer
 validation; Base does not supply a separate projects/integrations CLI.
 
-The import-kit source and its README, CONTRACT and FIXTURES documents are
-byte-exact Base files at `6c8374d5eb2e7eb53bad079d0502dbc4f930fd1c`, recorded in
-`base-copies.json`, with one exception: Dial's `src/d1/erasure-writes.ts`
-rebinds a source claim shared by several jobs to the hashes of its own job's
-decision, where Base takes the first job's. A field redaction keeps each job's
-own effects, and Dial's per-upload manage tokens make those differ, so Base's
-choice left the current import's claim mismatched and its undo refused. The
-file leaves the byte-copy record until Base carries the same change.
+The import-kit runtime and documents follow the coordinated runtime refresh below.
 `0045_import_preparation_steps.sql` and `0046_import_stream_sources.sql` are
 byte-exact Base default-seed migrations adding the kit's additive control
 tables. Dial owns `0029_move_in_import.sql`, the source adapter, native targets,
@@ -67,27 +60,24 @@ outside the package remain governed by their existing byte-copy records;
 `verify:copies` checks those records. `rer check --profile first-party` checks
 the package pin, locked dependency, aliases, and absence of the vendored trees.
 
-Demo mode, its local identity wrapper and dependencies, and silent development
-mail adopt Base `5afc5530c67454482153dbfc097bbda8a1d27981` (rer 0.2.20).
-`base-copies.json` records each refreshed source and its exact bytes. The demo
-now lives at `modules/demo` so Base's relative imports remain verbatim.
-The dev wrapper index retains one Dial adaptation: a fenced persona insert is
-refused only when D1 reports zero changes. Dial's identity projection triggers
-make a successful insert report multiple changes; the Base strict-one check
-incorrectly returned 409 after creating the operator. All authority fences stay
-intact. The adapted index is deliberately outside the verbatim copy inventory.
-The existing DATA-002 rate-correlation adaptation is carried across Base's
-email-link refactor in service.mjs, accounts/store.mjs, identity/email-link/index.mjs
-and index.d.mts. These adapted files are outside the verbatim inventory; counters
-and their erasure correlations still commit in one D1 transaction.
-accounts/admin.mjs preserves Dial's existing OPER-001/002 equal-operator
-management: ordinary invitations/removals do not become a new role-transfer
-step-up flow. Actual role changes retain the fresh-proof guard. This adapted
-file is outside the verbatim inventory.
+All vendored runtime modules are refreshed together from rer-v0.2.22,
+Base commit `1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74`, including demo,
+operator-auth, owner-claim, mail, dependencies, deploy-kit, editor, import-kit,
+erasure, local sign-in and delivery-producer projections. Import-kit now also
+uses Base's d1-transport module. Applied migrations retain their original bytes.
+`base-copies.json` records the refreshed sources and exact bytes.
 
-Owner sign-in confirmation counters also use that rate-correlation hook, keyed
-to the grant's operator through its digest. The Lobby adopts only Base 0.2.20's
-manual-setup-token hint condition; Dial retains its existing copy, styles and
-onboarding-completion predicate.
+Base now witnesses authentication writes with returned IDs, so Dial's former
+trigger-count workaround in the dev wrapper is removed. The two DATA-002
+rate-correlation adaptations in AuthStore and email-link remain, rebased onto
+this release. Base's import erasure implementation now includes the prior Dial
+claim adaptation and is byte-exact again. Demo v2 has no bar or mail outbox;
+Base mail and authentication complete suppressed sends as success.
 
 Managed mail uses the existing byte-exact Base `modules/mail` RER adapter shipped in rer 0.2.22. The delivery producer spec, mail declaration validator and package adopt Base `a1cde988c1be2c9f74ff5ca374dc47e044ba193c`; setup-manifest keeps Dial’s local schema paths and adds its managed-mail validation. Dial’s relay integration preserves safe status/Retry-After metadata without changing the Base adapter or reading response bodies.
+
+Dial retains its equal-operator administration policy and rate-correlation hook
+wiring/types. Local sign-in rebases Base's loopback import to its adopted path;
+the unused default-seed persona copy is removed. The erasure queue omits one
+unused upstream helper so Dial's lint remains active. These adaptations are
+excluded from byte-exact copy claims.

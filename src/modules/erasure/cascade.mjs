@@ -5,6 +5,7 @@ import { verificationStatements, childAbsenceStatements } from './verification.m
 import { collect, matchSql, checkDeclared } from './plan.mjs';
 import { auditStatements } from './audit.mjs';
 import { progressStatement, committedStatement } from './receipt.mjs';
+import { queueStatements, readQueue, consumeStatement, clearQueue, slicePlan, rootScopeExists } from './queue.mjs';
 
 const where = (keys, table) => keys.get(table).pk.map(c => `${c === 'rowid' ? 'rowid' : quote(c)}=?`).join(' AND ');
 const values = e => Object.values(e.key);
@@ -37,7 +38,8 @@ export async function deletionStatements(ctx, d, plan, entries, id, deleted) {
 export async function firstStatements(ctx, d, plan, label) {
   return d.beforeStatements ? await d.beforeStatements({ db: ctx.db, subject: plan.subject, label }) : [];
 }
-export const cleanupStatements = (ctx, d, plan, label) => [...redactStatements(ctx.db, d, plan), ...auditStatements(ctx.db, d, plan, label)];
+// `relabel: false` (a slice of the plan) leaves the table-wide relabel of earlier audit rows to the final batch.
+export const cleanupStatements = (ctx, d, plan, label, options) => [...redactStatements(ctx.db, d, plan), ...auditStatements(ctx.db, d, plan, label, options)];
 /** Commits with the subject row: a second redaction/audit pass catches rows written
  * during a long erasure. Verify before removing the root (so triggers cannot hide
  * new children through CASCADE), then after final policy effects. */
@@ -53,8 +55,43 @@ export async function finalStatements(ctx, d, plan, id, label, now, deleted) {
   return out;
 }
 
+const lost = error => {
+  if (/erasure_retained_missing/.test(String(error?.message ?? error))) throw new ErasureError('retained_row_missing', 409);
+  if (/CHECK constraint failed/.test(String(error?.message ?? error))) throw new ErasureError('erasure_busy', 409);
+  throw error;
+};
+
+/** A non-final step: deletes `entries` (a slice of the plan in deletion order)
+ * and leaves `rest` queued. Everything the batch verifies is bounded by the
+ * slice. Completeness is the final step's job, which collects the whole graph
+ * again from the subject and every remembered parent. */
+async function sliceStep(ctx, d, op, entries, { first = null, rest = null } = {}) {
+  const { db, fence } = ctx, id = op.id, deleted = JSON.parse(op.deleted);
+  const plan = await slicePlan(db, d, JSON.parse(op.subject), entries);
+  const batch = [db.prepare('PRAGMA defer_foreign_keys=ON'),
+    guard(db, "EXISTS(SELECT 1 FROM rer_erasure_operations WHERE id=? AND step=? AND phase='deleting')", id, op.step),
+    ...await fence.transfers()];
+  batch.push(...await scopeStatements(db, d, first ?? plan, id, first ? [...entries, first.root] : entries, { whole: Boolean(first) }));
+  if (first) batch.push(...await firstStatements(ctx, d, plan, op.label));
+  batch.push(...await verificationStatements(db, d, plan, id, op.label));
+  batch.push(...cleanupStatements(ctx, d, plan, op.label, { relabel: false }));
+  batch.push(...await deletionStatements(ctx, d, plan, entries, id, deleted));
+  batch.push(...await verificationStatements(db, d, plan, id, op.label, { intake: false }));
+  if (rest) batch.push(...queueStatements(db, id, rest));
+  else batch.push(consumeStatement(db, id, entries.at(-1).seq));
+  batch.push(progressStatement(db, id, op.step, deleted), db.prepare('DELETE FROM rer_erasure_guard'));
+  try { await db.batch(batch); }
+  catch (error) {
+    if (/erasure_scope_changed/.test(String(error?.message ?? error))) { await clearQueue(db, id).run(); return 'changed'; }
+    return lost(error);
+  }
+  return true;
+}
+
 /** One bounded, atomic D1 commit of up to `rows` dependents, leaves first. The
- * subject row commits with the last step. A concurrent runner loses the guard. */
+ * subject row commits with the last step. A concurrent runner loses the guard.
+ * The first step collects and orders the whole plan and queues what it leaves;
+ * later steps take their slice from the queue until it is empty. */
 export async function step(ctx, d, id, { rows = 500 } = {}) {
   const { db, fence } = ctx;
   const op = await statement(db, 'SELECT * FROM rer_erasure_operations WHERE id=?', id).first();
@@ -63,29 +100,33 @@ export async function step(ctx, d, id, { rows = 500 } = {}) {
   const now = new Date().toISOString(), deleted = JSON.parse(op.deleted);
   await checkDeclared(db, d);
   insist(Number.isInteger(rows) && rows > 0, 'batch_rows');
+  if (op.step > 0) {
+    const slice = await readQueue(db, id, rows);
+    if (slice.length) {
+      insist(await rootScopeExists(db, id, d), 'erasure_scope_missing', 409);
+      return sliceStep(ctx, d, op, slice);
+    }
+  }
   const remembered = await readScope(db, id);
   insist(op.step === 0 || remembered.some(e => e.table === d.root.table), 'erasure_scope_missing', 409);
   const plan = await collect(db, d, JSON.parse(op.subject), remembered);
   insist(plan && plan.root, 'subject_removed_outside_erasure', 409);
+  const take = plan.order.slice(0, rows), final = take.length === plan.order.length;
+  if (!final) return sliceStep(ctx, d, op, take, { first: op.step === 0 ? plan : null, rest: plan.order.slice(rows) });
   const batch = [db.prepare('PRAGMA defer_foreign_keys=ON'),
     guard(db, "EXISTS(SELECT 1 FROM rer_erasure_operations WHERE id=? AND step=? AND phase='deleting')", id, op.step),
     ...await fence.transfers()];
-  const take = plan.order.slice(0, rows), final = take.length === plan.order.length;
   batch.push(...await scopeStatements(db, d, plan, id, [...take, plan.root]));
   if (op.step === 0) batch.push(...await firstStatements(ctx, d, plan, op.label));
   batch.push(...await verificationStatements(db, d, plan, id, op.label));
   batch.push(...cleanupStatements(ctx, d, plan, op.label));
   batch.push(...await deletionStatements(ctx, d, plan, take, id, deleted));
-  if (final) batch.push(...await finalStatements(ctx, d, plan, id, op.label, now, deleted));
-  else batch.push(...await verificationStatements(db, d, plan, id, op.label, { intake: false }));
-
-  batch.push(progressStatement(db, id, op.step, deleted), db.prepare('DELETE FROM rer_erasure_guard'));
+  batch.push(...await finalStatements(ctx, d, plan, id, op.label, now, deleted));
+  batch.push(clearQueue(db, id), progressStatement(db, id, op.step, deleted), db.prepare('DELETE FROM rer_erasure_guard'));
   try { await db.batch(batch); }
   catch (error) {
     if (/erasure_scope_changed/.test(String(error?.message ?? error))) return 'changed';
-    if (/erasure_retained_missing/.test(String(error?.message ?? error))) throw new ErasureError('retained_row_missing', 409);
-    if (/CHECK constraint failed/.test(String(error?.message ?? error))) throw new ErasureError('erasure_busy', 409);
-    throw error;
+    return lost(error);
   }
-  return !final;
+  return false;
 }

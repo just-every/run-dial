@@ -53,7 +53,9 @@ export function createErasure(options: { db: D1Database; buckets?: Record<string
 export function toD1Sql(statement: D1PreparedStatement): D1Sql;
 export class ErasureError extends Error { code: string; status: number; constructor(code: string, status?: number) }
 /** Attributable rate-limit or counter rows: see README "Attributable counters". */
-export interface RateRoot { table: string; column: string }
+/** `live`: SQL predicate over the root row, true while the subject may be counted.
+ * Required when the declaration's root is redacted (it must be false after redaction). */
+export interface RateRoot { table: string; column: string; live?: string }
 export interface RateSpec { entity: string; root: RateRoot; subject: Cell; rateTable: string; rateKey: string }
 export function rateEdges(options: { entity: string; root: RateRoot; counters: { table: string; keyColumn: string }[] }): Edge[];
 export function rateCorrelation(db: D1Database, spec: RateSpec): D1PreparedStatement[];

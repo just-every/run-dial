@@ -1,6 +1,6 @@
 import type { Json, ImportPlan, OriginalErasurePolicy } from '../types.ts';
 import type { D1FieldRedaction, D1FieldMatch } from './types.ts';
-import { requireText, canonicalJson, sha256 } from '../provenance/identity.ts';
+import { requireText, canonicalJson, sha256, sourceIdentity } from '../provenance/identity.ts';
 import { planFingerprint } from '../plan/index.ts';
 import { withdrawArtifacts } from './erased-artifacts.ts';
 
@@ -52,13 +52,23 @@ export function redactFields(value: Json, fields: readonly D1FieldRedaction[], c
   return visit(value, fields, 0) as Json;
 }
 
-export function redactPlanFields(plan: ImportPlan, fields: readonly D1FieldRedaction[], policy?: OriginalErasurePolicy): { plan: ImportPlan; identities: Set<string> } {
+/** Entries `from` (inclusive) to `to` (exclusive) of one job's plan: one page
+ * of a job too large to redact in one request. */
+export interface EntryRange { from: number; to: number }
+export const inRange = (range: EntryRange | undefined, ordinal: number): boolean => !range || ordinal >= range.from && ordinal < range.to;
+
+/** With `range`, only those entries and the source records they collapse are
+ * redacted; the rest of the plan stays as it is until a later page. */
+export function redactPlanFields(plan: ImportPlan, fields: readonly D1FieldRedaction[], policy?: OriginalErasurePolicy, range?: EntryRange): { plan: ImportPlan; identities: Set<string> } {
   const identities = new Set<string>();
+  const paged = range && new Set(plan.entries.slice(range.from, range.to).map(entry => entry.identity));
   const record = (source: ImportPlan['source']['records'][number]) => {
+    if (paged && !paged.has(sourceIdentity(plan.destination, plan.namespace, source.kind, source.sourceId))) return source;
     const payload = redactFields(source.payload, fields);
     return payload === source.payload ? source : { ...source, payload, payloadHash: sha256(canonicalJson(payload)) };
   };
-  const entries = plan.entries.map(entry => {
+  const entries = plan.entries.map((entry, ordinal) => {
+    if (!inRange(range, ordinal)) return entry;
     const source = record(entry.source);
     const effects = entry.effects.map(effect => {
       const value = redactFields(effect.value, fields);

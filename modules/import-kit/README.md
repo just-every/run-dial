@@ -344,16 +344,29 @@ resume and undo. `related.source` and `related.original` still need a `target`.
 **Across requests.** Each job holding a value costs a few statements to rewrite,
 so one request covers about 150 such jobs (a 100,000-row stream has 1,000). Pass
 `{ resumable: true }` as the fifth argument: when more than 25 jobs remain
-unchecked the call commits one bounded step (those jobs' custody and the native
-rows they own, with the checkpoint and a journal row) and returns `{ phase:
-'redacting', continuation, jobsRedacted, jobsPending }`. Call again in a new
-request with `{ resumable: true, continuation }` until `phase` is `'complete'`;
-the native statements run only in that final batch, which fences every job
-checked earlier by its custody revision and proves no other row holds a value.
-A job that changed since it was checked is checked again. The continuation holds
-job ids, revisions, match counts and a salted digest of the selectors, never a
-selected value; keep it server-side (default-seed queues it with the operator
-id). `related.snapshot` cannot span steps (`IMPORT_REDACTION_SNAPSHOT_UNBOUNDED_ONLY`).
+unchecked, or the rest does not fit one request, the call commits one bounded
+step (some jobs' custody and the native rows they own, with the checkpoint and
+a journal row) and returns `{ phase: 'redacting', continuation, jobsRedacted,
+jobsPending }`. Call again in a new request with `{ resumable: true,
+continuation }` until `phase` is `'complete'`; the native statements run only in
+that final batch, which fences every job checked earlier by its custody revision
+and proves no other row holds a value. A job that changed since it was checked
+is checked again.
+
+Steps follow the request's own statement budget. A step takes as many jobs as
+fit (at least one, at most 25); a job that does not fit alone is redacted in
+pages of its entries, each a consistent job (its plan, provenance, history and
+native rows rewritten for those entries), and a job changed between its pages
+starts again. A step that would not fit writes nothing and is sized from what
+it would have cost: it is tried again in the same request while there is room,
+otherwise the call returns `redacting` with no rows written (`jobsRedacted: 0`)
+and the next request takes the smaller step. Only a single entry larger than a
+request, or a final batch larger than one (an adapter without `redaction` reads
+and fences every native row there), still refuses with `D1RequestLimitError`.
+The continuation holds job ids, revisions, match counts, step sizes and a salted
+digest of the selectors, never a selected value; keep it server-side
+(default-seed queues it with the operator id). `related.snapshot` cannot span
+steps (`IMPORT_REDACTION_SNAPSHOT_UNBOUNDED_ONLY`).
 
 This additive API uses the existing D1 erasure/retirement schemas; no new
 migration is needed for an installation already using them. Like related-record

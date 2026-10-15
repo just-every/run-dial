@@ -2,7 +2,7 @@ import type { ImportPlan, TargetRow } from '../types.ts';
 import type { D1FieldMatch, D1FieldRedaction, D1ImportContext, D1Sql } from './types.ts';
 import type { InventorySnapshot } from './inventory-snapshot.ts';
 import { canonicalJson, sha256 } from '../provenance/identity.ts';
-import { redactFields } from './field-redaction.ts';
+import { inRange, redactFields, type EntryRange } from './field-redaction.ts';
 import { withdrawnLocation } from './erased-artifacts.ts';
 import { recordWrites } from './erasure-writes.ts';
 import { targetGuards } from './target-guards.ts';
@@ -10,11 +10,12 @@ import { guard } from './database.ts';
 
 /** Keep attribution and revision identities; change only the erased fields and
  * their content bindings. A sanitized before-image is what undo will restore. */
-export function redactedCustody(plan: ImportPlan, next: ImportPlan, id: string, snapshot: InventorySnapshot, fields: readonly D1FieldRedaction[]): D1Sql[] {
+export function redactedCustody(plan: ImportPlan, next: ImportPlan, id: string, snapshot: InventorySnapshot, fields: readonly D1FieldRedaction[], range?: EntryRange): D1Sql[] {
   const writes: D1Sql[] = [];
   for (const table of ['ik_provenance', 'ik_d1_history']) {
     const rows: { id: string; body: string }[] = [];
     for (const row of snapshot.rows(table, 'job_id', [id])) {
+      if (!inRange(range, row.ordinal)) continue;
       const entry = next.entries[row.ordinal], effect = entry.effects[row.effect_ordinal];
       if (!effect) continue; // Whole-record tombstones delete their provenance.
       const record = JSON.parse(row.record_json);

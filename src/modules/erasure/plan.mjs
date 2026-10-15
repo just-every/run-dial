@@ -1,5 +1,6 @@
 import { deletionOrder } from './order.mjs';
 import { rootValues } from './root.mjs';
+import { redactionEndsRates } from './rate.mjs';
 import { all, statement, quote, insist, canonicalJson, sha256, chunks } from './sql.mjs';
 
 const same = (a, b) => a.toLowerCase() === b.toLowerCase();
@@ -39,7 +40,9 @@ export function matchSql(item, parents) {
   if (!item.on) return parents.map(p => ({ where: `(${item.where})`, values: (item.params ?? []).map(c => p[c]) }));
   const pairs = Object.entries(item.on);
   const tuples = parents.map(p => pairs.map(([, parent]) => p[parent])).filter(t => t.every(v => v !== null && v !== undefined));
-  const where = `EXISTS(SELECT 1 FROM json_each(?) j WHERE ${pairs.map(([child], i) => `${quote(item.table)}.${quote(child)}=json_extract(j.value,'$[${i}]')`).join(' AND ')})`;
+  // A set lookup, so an index on the child columns serves it; json_each's own
+  // columns (id, key, value...) are never in scope beside the child's.
+  const where = `(${pairs.map(([child]) => `${quote(item.table)}.${quote(child)}`).join(',')}) IN (SELECT ${pairs.map((_, i) => `json_extract(j.value,'$[${i}]')`).join(',')} FROM json_each(?) j)`;
   return chunks(tuples, 200).map(part => ({ where, values: [JSON.stringify(part)] }));
 }
 
@@ -57,7 +60,7 @@ export async function collect(db, d, subject, remembered = []) {
   for (const t of new Set([...d.tracked, ...d.redact.map(r => r.table)])) keys.set(t, await tableKeys(db, t));
   for (const item of d.audit) insist(keys.get(item.of).pk.length === 1, 'audit_composite_key:' + item.of);
   const columns = needed(d, keys), rootKey = keys.get(d.root.table).pk;
-  if (d.root.redact) await rootValues(d, keys.get(d.root.table), subject, 'erased:admission');
+  if (d.root.redact) await redactionEndsRates(db, d, await rootValues(d, keys.get(d.root.table), subject, 'erased:admission'));
   insist(subject && typeof subject === 'object' && canonicalJson(Object.keys(subject).sort()) === canonicalJson([...rootKey].sort()), 'subject_key');
   const rows = new Map(d.tracked.map(t => [t, new Map()]));
   const keyOf = (table, row) => Object.fromEntries(keys.get(table).pk.map(c => [c, row[c]]));
@@ -70,7 +73,7 @@ export async function collect(db, d, subject, remembered = []) {
   for (const [table, old] of known) {
     const pk = keys.get(table).pk;
     for (const part of chunks([...old.values()], 200)) {
-      const found = await all(db, `SELECT ${projection(columns.get(table))} FROM ${quote(table)} WHERE EXISTS(SELECT 1 FROM json_each(?) j WHERE ${pk.map((c, i) => `${quote(c)} IS json_extract(j.value,'$[${i}]')`).join(' AND ')})`, JSON.stringify(part.map(row => pk.map(c => row[c]))));
+      const found = await all(db, `SELECT ${projection(columns.get(table))} FROM ${quote(table)} WHERE EXISTS(SELECT 1 FROM json_each(?) j WHERE ${pk.map((c, i) => `${quote(table)}.${c === 'rowid' ? 'rowid' : quote(c)} IS json_extract(j.value,'$[${i}]')`).join(' AND ')})`, JSON.stringify(part.map(row => pk.map(c => row[c]))));
       for (const row of found) { remember(table, row); const key = keyOf(table, row); rows.get(table).set(canonicalJson(key), { table, key, row, depth: 1 }); }
     }
   }

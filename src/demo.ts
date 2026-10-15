@@ -1,4 +1,6 @@
 import { demoBookings, demoEventTypes, demoInvitees, demoProfile } from "../sample-data/dial-demo";
+import { seedDemoFields } from "./demo-fields";
+import { seedDemoRequests } from "./demo-requests";
 import { createServices } from "./core/app/services";
 import type { AppBindings } from "./core/app/bindings";
 import { BookingsRepository } from "./core/features/bookings/repository";
@@ -35,6 +37,9 @@ export async function seedDemo(env: AppBindings, { now }: { ownerEmail: string; 
   const owner = await env.DB.prepare("SELECT id FROM oa_operators WHERE role = 'owner' AND status = 'active' ORDER BY created_at LIMIT 1").first<{ id: string }>();
   if (!owner) throw new Error("Demo data needs the owner");
 
+  const mail = await services.delivery.checkMailConnection();
+  if (mail.kind !== "healthy") throw new Error("Demo mail check failed");
+
   const profile = (await services.hostProfile.getProfile()) ?? await services.hostProfile.saveProfile(demoProfile);
   if (!profile) throw new Error("Demo profile was not saved");
   const existing = await services.eventTypes.listEventTypes();
@@ -60,6 +65,7 @@ export async function seedDemo(env: AppBindings, { now }: { ownerEmail: string; 
 
   const repository = new BookingsRepository(env.DB);
   const today = hostDateToday(profile.timezone, now);
+  await seedDemoRequests(services, today);
   for (const [index, plan] of demoBookings.entries()) {
     const id = bookingId(index);
     if (await repository.getById(id)) continue;
@@ -81,4 +87,5 @@ export async function seedDemo(env: AppBindings, { now }: { ownerEmail: string; 
     }, owner.id);
     if (claimed !== "claimed") throw new Error(`Demo booking ${index} was not saved: ${claimed}`);
   }
+  await seedDemoFields(services);
 }

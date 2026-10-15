@@ -10,6 +10,7 @@ import { batchBytes } from './transport.ts';
 import { D1RequestLimitError, packGuards, remaining } from './budget.ts';
 import { d1ErasureSchema } from './erasure-schema.ts';
 import { d1RetirementSchema } from './retirement-schema.ts';
+import { d1ErasureProgressSchema } from './erasure-progress-schema.ts';
 import { schema } from '../storage/schema.ts';
 import { requireText } from '../provenance/identity.ts';
 import type { ImportAction } from '../types.ts';
@@ -55,6 +56,7 @@ export async function initializeD1ImportStorage(database: D1Database): Promise<v
   await database.batch(d1PreparationSchema.map(sql => database.prepare(sql)));
   await database.batch(d1PreparationStepsSchema.map(sql => database.prepare(sql)));
   await database.batch(d1RetirementSchema.map(sql => database.prepare(sql)));
+  await database.batch(d1ErasureProgressSchema.map(sql => database.prepare(sql)));
 }
 export const sql = (sql: string, ...params: any[]): D1Sql => ({ sql, params });
 export const prepare = (db: D1Database, query: D1Sql): D1Statement => db.prepare(query.sql).bind(...(query.params ?? []));

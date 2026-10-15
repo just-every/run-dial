@@ -3,7 +3,7 @@ import { guard, sql } from './database.ts';
 
 // Bookkeeping that every custody change bumps, plus the erasure's own records.
 const SKIPPED = new Set(['ik_d1_assertions', 'ik_d1_custody_states', 'ik_d1_custody_revisions', 'ik_d1_publication_fences',
-  'ik_d1_erasure_tally', 'ik_d1_erasure_journal', 'ik_d1_retirements', 'ik_d1_erased_sources', 'ik_d1_erased_targets', 'ik_targets']);
+  'ik_d1_erasure_tally', 'ik_d1_erasure_journal', 'ik_d1_erasure_progress', 'ik_d1_retirements', 'ik_d1_erased_sources', 'ik_d1_erased_targets', 'ik_targets']);
 const COUNTERS = new Set(['revision', 'layout_revision', 'progress_revision', 'seal']);
 
 export interface TallyScope { destination: string; jobs: string[]; streams: string[] }

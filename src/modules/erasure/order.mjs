@@ -1,6 +1,24 @@
 import { all, canonicalJson, insist, quote } from './sql.mjs';
 import { matching } from './plan.mjs';
 
+/** Every foreign key between two deleted tables, grouped per constraint. Schema
+ * only: it never reads a row, so a later step can use it without a plan. */
+export async function foreignKeyLinks(db, d) {
+  const links = [];
+  for (const table of d.deleted) {
+    const groups = new Map();
+    for (const fk of await all(db, `PRAGMA foreign_key_list(${quote(table)})`)) {
+      if (!groups.has(fk.id)) groups.set(fk.id, []);
+      groups.get(fk.id).push(fk);
+    }
+    for (const group of groups.values()) {
+      const parentTable = d.deleted.find(name => name.toLowerCase() === group[0].table.toLowerCase());
+      if (parentTable) links.push({ table, parentTable, group });
+    }
+  }
+  return links;
+}
+
 /** Topological row order across every path, not the depth of the first visit.
  * Actual FK links also constrain order, even if a row was reached by another edge. */
 export async function deletionOrder(db, d, plan) {
@@ -18,28 +36,17 @@ export async function deletionOrder(db, d, plan) {
       if (child) link(parent, child);
     }
   }
-  plan.foreignKeys = [];
-  for (const table of d.deleted) {
-    const groups = new Map();
-    for (const fk of await all(db, `PRAGMA foreign_key_list(${quote(table)})`)) {
-      if (!groups.has(fk.id)) groups.set(fk.id, []);
-      groups.get(fk.id).push(fk);
-    }
-    for (const group of groups.values()) {
-      const parentTable = d.deleted.find(name => name.toLowerCase() === group[0].table.toLowerCase());
-      const parents = parentTable && plan.rows.get(parentTable);
-      if (parentTable) plan.foreignKeys.push({ table, parentTable, group });
-      if (!parents) continue;
-      for (const parent of parents.values()) {
-        const parentKeys = plan.keys.get(parent.table).pk;
-        // Read the actual join: FK columns need not be part of a declared edge's projection.
-        const cols = plan.keys.get(table).pk;
-        const found = await all(db, `SELECT ${cols.map(c => c === 'rowid' ? 'rowid AS rowid' : quote(c)).join(',')} FROM ${quote(table)} WHERE ${group.map(f => `${quote(f.from)}=(SELECT ${quote(f.to || parentKeys[f.seq])} FROM ${quote(parent.table)} WHERE ${parentKeys.map(c => `${quote(c)}=?`).join(' AND ')})`).join(' AND ')}`, ...group.flatMap(() => parentKeys.map(c => parent.key[c])));
-        for (const row of found) {
-          const child = entries.get(table + '\0' + canonicalJson(Object.fromEntries(cols.map(c => [c, row[c]]))));
-          insist(child, `unreached_dependent:${table}:${parent.table}`, 409);
-          link(parent, child);
-        }
+  plan.foreignKeys = await foreignKeyLinks(db, d);
+  for (const { table, parentTable, group } of plan.foreignKeys) {
+    for (const parent of plan.rows.get(parentTable).values()) {
+      const parentKeys = plan.keys.get(parent.table).pk;
+      // Read the actual join: FK columns need not be part of a declared edge's projection.
+      const cols = plan.keys.get(table).pk;
+      const found = await all(db, `SELECT ${cols.map(c => c === 'rowid' ? 'rowid AS rowid' : quote(c)).join(',')} FROM ${quote(table)} WHERE ${group.map(f => `${quote(f.from)}=(SELECT ${quote(f.to || parentKeys[f.seq])} FROM ${quote(parent.table)} WHERE ${parentKeys.map(c => `${quote(c)}=?`).join(' AND ')})`).join(' AND ')}`, ...group.flatMap(() => parentKeys.map(c => parent.key[c])));
+      for (const row of found) {
+        const child = entries.get(table + '\0' + canonicalJson(Object.fromEntries(cols.map(c => [c, row[c]]))));
+        insist(child, `unreached_dependent:${table}:${parent.table}`, 409);
+        link(parent, child);
       }
     }
   }

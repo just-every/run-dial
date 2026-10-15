@@ -21,7 +21,7 @@ import type { ImportPlan } from '../types.ts';
 import { changed, deleteRows } from './expected-state.ts';
 import { eraseBounded } from './erasure-bounded.ts';
 import { originalVersions } from './original-storage.ts';
-import { fieldRedactions, redactPlanFields, unmatchedPath } from './field-redaction.ts';
+import { fieldRedactions, inRange, redactPlanFields, unmatchedPath } from './field-redaction.ts';
 import { redactedCustody, redactedNativeFields } from './redacted-custody.ts';
 
 /** Erase one normalized native entity and every retained copy of its source.
@@ -79,7 +79,8 @@ export async function targetErasure(target: { kind: string; id: string } | undef
   const after: D1Sql[] = [], final: D1Sql[] = [], changedJobs: ErasedJob[] = [], decisions: ErasedDecision[] = [], redactions: ErasedDecision[] = [];
   const fields = related?.fields ?? [];
   if (fields.length || related?.snapshot !== undefined) {
-    const owned = step?.owned ? new Set(snapshot.rows('ik_provenance', 'job_id', ids).filter(row => !row.reversed).map(row => `${row.target_kind}\u0000${row.target_id}`)) : undefined;
+    const range = step?.selection.range;
+    const owned = step?.owned ? new Set(snapshot.rows('ik_provenance', 'job_id', ids).filter(row => !row.reversed && inRange(range, row.ordinal)).map(row => `${row.target_kind}\u0000${row.target_id}`)) : undefined;
     const native = await redactedNativeFields(kind, id, context, fields, scan!.fieldMatches, owned && (row => owned.has(`${row.targetKind}\u0000${row.targetId}`)));
     if (related?.snapshot !== undefined && related.snapshot !== fieldSelectionSnapshot([...scan!.guards, ...native.before])) throw new Error('IMPORT_REDACTION_SNAPSHOT_CHANGED');
     for (const earlier of step?.matched ?? []) { const count = scan!.fieldMatches.find(item => canonicalJson(item.path) === canonicalJson(earlier.path)); if (count) count.matches += earlier.matches; }
@@ -99,12 +100,12 @@ export async function targetErasure(target: { kind: string; id: string } | undef
     await readOriginals(plan, job.id, context, snapshot);
     before.push(...custodyGuards(plan, job.id), ...await inventoryGuards(job, plan, context, snapshot));
     let next = erasePlanRecords(plan, identities, context.originalErasurePolicy, { ...severed, originals });
-    if (fields.length) next = redactPlanFields(next, fields, context.originalErasurePolicy).plan;
+    if (fields.length) next = redactPlanFields(next, fields, context.originalErasurePolicy, step?.selection.range).plan;
     const retained = retainPlan(next, job.id, next.source.artifacts.some(a => a.original?.status === 'available') ? undefined : targets.planCodec);
     originalVersions.set(next,originalVersions.get(plan)!);
     changedPlans.set(job.id, next);
     after.push(...erasedCustody(plan, next, job.id, snapshot), ...retained.statements);
-    if (fields.length) after.push(...redactedCustody(plan, next, job.id, snapshot, fields));
+    if (fields.length) after.push(...redactedCustody(plan, next, job.id, snapshot, fields, step?.selection.range));
     // A severed record's index row moves from its native target (or none) to the erased target.
     if (canonicalJson(planIndex(next, job.id)) !== canonicalJson(planIndex(plan, job.id))) after.push(sql('DELETE FROM ik_d1_plan_index WHERE job_id=?', job.id), ...planIndexRows(next, job.id));
     after.push(guard(sql('(SELECT count(*) FROM ik_d1_creation_plans WHERE job_id=? AND released=0)=? AND (SELECT count(*) FROM ik_d1_plan_chunks WHERE job_id=?)=?', job.id, retained.encoded.chunks.length, job.id, retained.encoded.chunks.length)));

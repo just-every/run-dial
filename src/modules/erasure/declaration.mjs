@@ -38,6 +38,9 @@ export function defineErasure(input) {
     insist(text(d.root.redact.reason), 'root_redact_reason');
     insist(Array.isArray(d.root.redact.identityColumns ?? []) && (d.root.redact.identityColumns ?? []).every(name), 'root_identity_columns');
     insist(typeof d.root.redact.set === 'function' || (d.root.redact.set && Object.keys(d.root.redact.set).length > 0 && Object.keys(d.root.redact.set).every(name)), 'root_redact_set');
+    // The retained root keeps its key, so rate writes naming it need a liveness
+    // predicate the redaction ends (rateEdges root.live).
+    for (const [i, edge] of d.edges.entries()) if (edge.rate && edge.from === d.root.table) insist(text(edge.rate.live), `rate_root_live:${i}`);
   }
   for (const hook of ['hold', 'beforeStatements', 'statements']) insist(d[hook] === undefined || typeof d[hook] === 'function', `${hook}_hook`);
   return Object.freeze({ ...d, tracked: [...tables], deleted: [...tables].filter(t => t !== d.root.table || !d.root.redact) });

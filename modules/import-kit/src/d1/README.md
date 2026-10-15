@@ -6,6 +6,15 @@ readers can explicitly import `src/readers/index.ts`. The synchronous Node API a
 unchanged. D1 uses the same reviewed plans, source identities, retained originals,
 provenance and inert-effect policy through an asynchronous native SQL port.
 
+Copy the shared [D1 transport](../../../d1-transport/index.mjs) and its
+[types](../../../d1-transport/index.d.mts), preserving their sibling location
+beside the import-kit directory.
+The D1 entry uses this shared transport automatically. It accounts for actual
+UTF-8 bytes and workerd's whole-call two-byte strings, escapes sparse wide text
+for SQLite to decode, and keeps each mutation in its original transaction.
+Retained plans are read in bounded pages, including their reserved return-query
+budget. Calls that still exceed the provider transport ceiling fail explicitly.
+
 Apply `d1Schema`, `d1ErasureSchema`, `d1StreamOriginSchema`,
 `d1LegacyStreamReceiptUpgrade`, `d1StagingSchema`,
 `d1NativeStagingSchema`, `d1CustodyStateSchema`, `d1PreparationSchema`, `d1ReversalFenceSchema` and `d1RetirementSchema` in product-owned numbered migrations, or call
@@ -451,15 +460,85 @@ already applied an earlier `d1RetirementSchema` applies `d1RetirementAppendOnly`
 (the two insert triggers) as its next numbered migration. Keep the journal and
 retirements in archives. Restoring an archive made before the erasure brings
 nothing back: the native rows are fenced by the erasure module's
-`nativeStatements`, and import custody by the checkpoint. The path is
-unbounded (one batch), so `maxBatchBytes` is refused with
-`IMPORT_RETIREMENT_UNBOUNDED_ONLY`.
+`nativeStatements`, and import custody by the checkpoint. Without an operation
+key this remains a single transaction. A bounded call supplies an operation key
+as described below; omitting it with `maxBatchBytes` raises
+`IMPORT_RETIREMENT_OPERATION_KEY_REQUIRED`.
 
 `person.related.fields` can stand without a `target` (a person who appears only
 inside other people's records), and `{ resumable: true }` spreads a redaction
 across requests in bounded steps; see the kit README, "Erasing fields in
 retained shared records".
 
+
+### Resuming bounded retirement and erasure
+
+Apply `d1ErasureProgressSchema` as a new numbered migration after the existing
+kit schemas. `initializeD1ImportStorage` includes it. Keep completed progress
+in archives alongside the erasure journal and retirement rows.
+
+`retireD1ImportCustodyStep` (also `retireD1ImportCustody` with an `operationKey`
+option) prepares oversized legacy custody over multiple requests. Reuse the
+product's durable operation key, person, native SQL and checkpoint each time:
+
+```ts
+const result = await retireD1ImportCustodyStep(person, native, context, checkpoint, {
+  operationKey: operation.id,
+  maxStatements: 800,
+});
+return Response.json(result, { status: result.phase === 'pending' ? 202 : 200 });
+```
+
+Each invocation executes at most `maxStatements` SQL statements, including reads
+(default and maximum 1000). Mutation batches fit the smaller of
+`context.maxBatchBytes` and 2 MiB; omission chooses 2 MiB. Admission uses the shared
+D1 transport's UTF-8, JSON escaping and whole-call string-width accounting. It
+admits a useful future step and the indivisible publication, without charging
+all future staging batches to this request. `admissionOnly: true` compiles using
+real reads and writes nothing. Its pending descriptor does not create a job.
+
+`phase: 'pending'` reports the operation id and verified index/value counts. A
+later invocation recompiles the custody generation and obtains its offset from
+`ik_d1_erasure_progress`. Each insertion verifies exact rows after triggers and
+advances that journal in the same transaction. A failed transaction leaves the
+previous offset; a lost acknowledgement resumes from the committed offset.
+Changed custody starts a newly guarded generation. An offset disagreeing with
+the stage binding, revision or physical counts is refused. Request options do
+not accept numeric offsets. Progress stores digests and counts, never selected
+values; private normalized values remain under native staging privacy guards.
+
+Only final publication changes native rows, rewrites plans, retires the header
+closure, advances the restore checkpoint and writes the receipt. It also removes
+the private stage. Reusing a completed operation returns the same receipt without
+applying its writes again. `nativeResults` is present on the publishing response
+and empty on a completed retry. Different request bindings under the same key
+raise `IMPORT_ERASURE_OPERATION_CHANGED`. Keep identities distinct for distinct
+erasures. Provider errors preserve progress because a batch may have committed.
+`cancelD1ErasureStaging` removes private staging under current erase authority;
+a later invocation can begin preparation again.
+
+`eraseD1ImportTargetStep(kind, id, native, context, options)` provides the same
+journaled continuation for target-only erasure. Use retirement when headers and
+restore checkpoints also apply. Existing one-invocation erasure remains usable.
+
+For additional product custody rewrites, such as removing legacy mapper
+`source.options`, use `stageD1ImportErasure(context, options, binding, build)`.
+`build(id, boundedContext)` returns `D1ErasureStageSpec`: deterministic,
+authenticated fragments, native snapshot guards, target publication declarations
+and final predicates. Always use its supplied context for database work. The
+binding identifies immutable product erasure intent. Optional `publication`
+statements surround the compiled writes; its `tail` runs after retained values
+are consumed and the stage is discarded, in the same transaction. This supports
+product journals, restore fences and work-item completion. `survivingJobs`
+excludes jobs deleted by that tail from final custody seals. Exact replay,
+privacy membership and native publication checks still apply.
+
+`NativeStageRows` accepts an opaque `VerifiedNativeStageOffset` from
+`verifyNativeStageOffset`. Supply the journal's counts and authentic journal
+guards. Verification binds it to the context, generation, baseline, table and
+canonical columns. Replay starts at the beginning and skips only that verified
+prefix. Its optional checkpoint callback runs atomically with each insertion;
+a forged object or truncated replay is refused.
 
 ## Normalized paged imports
 
