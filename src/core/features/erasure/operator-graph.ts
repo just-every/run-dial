@@ -10,7 +10,6 @@ export function operatorGraph(retainNative: boolean) {
   const edges: Edge[] = [
     ...["oa_sessions", "oa_tokens", "oa_step_up_challenges", "oa_external_identities", "oa_invitation_cancellations", "calendar_oauth_states", "oc_owner_claims", "operator_sessions", "magic_link_tokens", "operator_delivery_preferences", "operator_creation_receipts", "operator_creation_tombstones"].map(table => ({ table, from: root, on: { operator_id: "id" } })),
     { table: "oa_tokens", from: root, on: { issuer_id: "id" } },
-    { table: "oa_sessions", from: "oa_tokens", on: { source_token_id: "id" } },
     { table: "oa_step_up_challenges", from: "oa_sessions", on: { session_id: "id" } },
     { table: "oa_dev_credentials", from: "oa_tokens", where: "credential='oa_tokens' AND id=?", params: ["id"] },
     { table: "oa_dev_credentials", from: "oa_sessions", where: "credential='oa_sessions' AND id=?", params: ["id"] },

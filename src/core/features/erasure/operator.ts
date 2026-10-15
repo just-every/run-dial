@@ -17,14 +17,17 @@ export async function eraseRemovedOperator(db:D1Database,target:{id:string;email
   const fence=await erasurePortability(db);
   const email=foldEmail(target.email);
   await admitErasure(db,email,actor);
-  if (retainNative) {
-    const authority = erasureAuthority(actor);
-    await db.batch([
-      db.prepare(authority.sql).bind(...authority.params),
-      db.prepare("INSERT INTO operator_erasure_subjects(id) SELECT id FROM oa_operators WHERE id=? AND status='inactive' ON CONFLICT DO NOTHING").bind(target.id),
-      db.prepare(authority.sql).bind(...authority.params),
-    ]);
-  }
+  const authority = erasureAuthority(actor);
+  await db.batch([
+    db.prepare(authority.sql).bind(...authority.params),
+    ...(retainNative ? [db.prepare("INSERT INTO operator_erasure_subjects(id) SELECT id FROM oa_operators WHERE id=? AND status='inactive' ON CONFLICT DO NOTHING").bind(target.id)] : []),
+    // An accepted invitation grants the recipient independent native authority.
+    // Detach that session's provenance before graph discovery: erasing its
+    // inviter must erase the invitation, not the recipient's live session.
+    // Base has already deactivated the issuer, so no invitation can now join.
+    db.prepare("UPDATE oa_sessions SET source_token_id=NULL WHERE operator_id<>? AND source_token_id IN (SELECT id FROM oa_tokens WHERE issuer_id=?)").bind(target.id,target.id),
+    db.prepare(authority.sql).bind(...authority.params),
+  ]);
   const graph = operatorGraph(retainNative);
   const engine=createErasure({db,portability:fence,declarations:[graph]});
   const plan=await engine.nativeStatements(retainNative ? "operator-author" : "operator",{id:target.id});
