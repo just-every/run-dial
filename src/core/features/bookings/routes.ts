@@ -2,7 +2,8 @@ import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
 import { apiError } from "../../shared/http";
-import { ianaTimeZoneSchema } from "../../shared/scheduling";
+import { hostDateFilterBounds } from "./operator-date-filters";
+import { hostDateSchema, ianaTimeZoneSchema } from "../../shared/scheduling";
 import { validate } from "../../shared/validation";
 import { hasSupportedInstantPrecision } from "../../shared/instants";
 import { unavailableTimeMessage, type SlotExclusion } from "../availability";
@@ -18,6 +19,8 @@ const operatorListSchema = z.object({
   time: z.enum(["future", "past"]).optional(),
   eventTypeId: z.string().length(26).optional(),
   from: instantSchema.optional(),
+  fromDate: hostDateSchema.optional(),
+  throughDate: hostDateSchema.optional(),
   to: instantSchema.optional(),
   order: z.enum(["created"]).optional(),
   limit: z.coerce.number().int().min(1).max(500).optional(),
@@ -25,6 +28,8 @@ const operatorListSchema = z.object({
   deliveryFailed: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
   query: z.string().trim().min(1).max(160).optional(),
 }).superRefine((input, context) => {
+  if (input.fromDate && input.throughDate && input.fromDate > input.throughDate) context.addIssue({ code: "custom", path: ["throughDate"], message: "The end of the date range must follow its start." });
+  if ((input.fromDate || input.throughDate) && (input.from || input.to)) context.addIssue({ code: "custom", path: ["fromDate"], message: "Choose either host dates or instant boundaries for the date range." });
   if (input.from && input.to && input.from > input.to) context.addIssue({ code: "custom", path: ["to"], message: "The end of the date range must follow its start." });
 });
 const operatorCreateSchema = z.object({
@@ -46,7 +51,13 @@ const attendanceSchema = z.object({ status: z.enum(["attended", "no_show"]), not
 /** Session-gated lifecycle endpoints. Booking IDs and delivery detail never cross this boundary. */
 export const bookingOperatorRoutes = new Hono<AppEnvironment>()
   .get("/api/app/bookings", validate("query", operatorListSchema), async (context) => {
-    const { bookings, totalCount } = await context.get("services").bookings.listForOperatorWithCount(context.req.valid("query"));
+    const services = context.get("services");
+    const { fromDate, throughDate, ...filters } = context.req.valid("query");
+    const profile = await services.hostProfile.getProfile();
+    if ((fromDate || throughDate) && !profile) return apiError(context, 409, "host_profile_required", "Set up the host profile before filtering bookings by host date.");
+    const bounds = profile ? hostDateFilterBounds(fromDate, throughDate, profile.timezone) : {};
+    const { bookings, totalCount } = await services.bookings.listForOperatorWithCount({ ...filters, ...bounds });
+    if (profile) context.header("X-Host-Timezone", profile.timezone);
     context.header("X-Total-Count", String(totalCount));
     return context.json(bookings);
   })

@@ -55,4 +55,5 @@
 .pb-manage-picker > h2 { letter-spacing: -.02em; }
 .pb-reschedule-review { margin-top: 18px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; }
 @media (max-width: 640px) { .pb-timezone-bar { flex-wrap: wrap; } .pb-zone-control { flex: 1 1 200px; } .pb-zone-control input { width: 100%; } }
-.pb-manage .pb-day-picker > section { width: 100%; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: none; text-align: left; }
+.pb-manage .pb-zone-control label { margin-top: 0; }
+.pb-manage .pb-timezone-bar { width: 100%; }

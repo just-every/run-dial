@@ -1,3 +1,5 @@
+import { deviceTimezone } from "./timezone-search";
+import { dayLabel, dateInZone } from "./day-picker-model";
 import { RequestDates, nextTenDates } from "./request-dates";
 import { useHydrated } from "../../../app/use-hydrated";
 import { useDocumentData, useDocumentInstant } from "../../../app/document-data";
@@ -31,14 +33,14 @@ export function AlternativeRequestPage({ handle, slug, embedded = false }: { han
 function RequestComposer({ data, embedded }: { data: PublicEventPayload; embedded: boolean }) {
   const search = useRouterState({ select: (state) => state.location.searchStr });
   const instant = useDocumentInstant();
-  const dates = useMemo(() => nextTenDates(instant), [instant]);
   const hydrated = useHydrated();
   const storageKey = `dial.request-review.v1:${data.profile.handle}:${data.eventType.slug}`;
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [ranges, setRanges] = useState<TimeRange[]>([{ start: "", end: "" }]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [timezone, setTimezone] = useState("UTC");
+  const [timezone, setTimezone] = useState(data.profile.timezone);
+  const dates = useMemo(() => nextTenDates(dateInZone(instant, timezone)), [instant, timezone]);
   const [note, setNote] = useState("");
   const [review, setReview] = useState<Review>();
   const [message, setMessage] = useState("");
@@ -80,7 +82,7 @@ function RequestComposer({ data, embedded }: { data: PublicEventPayload; embedde
   }, [acknowledgement, completed, data.eventType.slug, data.profile.handle, receiptNonce]);
 
   useEffect(() => {
-    setTimezone(browserTimezone());
+    setTimezone(deviceTimezone(data.profile.timezone));
     const stored = readReview(storageKey);
     if (!stored || Date.parse(stored.expiresAt) <= Date.now()) return;
     setReview(stored);
@@ -90,7 +92,7 @@ function RequestComposer({ data, embedded }: { data: PublicEventPayload; embedde
     setNote(stored.request.note ?? "");
     setSelectedDates([...new Set(stored.request.windows.map((window) => window.date))]);
     setRanges(uniqueRanges(stored.request.windows));
-  }, [storageKey]);
+  }, [storageKey, data.profile.timezone]);
 
   const composition = () => ({
     inviteeName: name.trim(),
@@ -141,7 +143,7 @@ function RequestComposer({ data, embedded }: { data: PublicEventPayload; embedde
 }
 
 function RequestReview({ review, message, onBack, onSubmit, submitting }: { review: Review; message: string; onBack: () => void; onSubmit: () => void; submitting: boolean }) {
-  return <section className="pb-request-form pb-request-review" aria-labelledby="request-review-title"><p className="pb-eyebrow">Ready to send</p><h2 id="request-review-title">{review.request.eventTitle}</h2><p>Your request will be sent once to {review.request.hostName}. The host will follow up by email.</p><dl><div><dt>Name</dt><dd>{review.request.inviteeName}</dd></div><div><dt>Email</dt><dd>{review.request.inviteeEmail}</dd></div><div><dt>Timezone</dt><dd>{review.request.inviteeTimezone}</dd></div><div><dt>Preferred windows</dt><dd><ul>{review.request.windows.map((window) => <li key={`${window.date}-${window.startMinute}-${window.endMinute}`}>{window.date} · {time(window.startMinute)}–{time(window.endMinute)}</li>)}</ul></dd></div>{review.request.note ? <div><dt>Note</dt><dd>{review.request.note}</dd></div> : null}</dl>{message ? <p className="pb-request-notice" role="alert">{message}</p> : null}<div className="pb-request-actions"><button type="button" className="pb-secondary-button" onClick={onBack} disabled={submitting}>Edit request</button><button type="button" className="pb-primary-button" onClick={onSubmit} disabled={submitting}>{submitting ? "Sending…" : "Send request"}</button></div></section>;
+  return <section className="pb-request-form pb-request-review" aria-labelledby="request-review-title"><p className="pb-eyebrow">Ready to send</p><h2 id="request-review-title">{review.request.eventTitle}</h2><p>Your request will be sent once to {review.request.hostName}. The host will follow up by email.</p><dl><div><dt>Name</dt><dd>{review.request.inviteeName}</dd></div><div><dt>Email</dt><dd>{review.request.inviteeEmail}</dd></div><div><dt>Timezone</dt><dd>{review.request.inviteeTimezone}</dd></div><div><dt>Preferred windows</dt><dd><ul>{review.request.windows.map((window) => <li key={`${window.date}-${window.startMinute}-${window.endMinute}`}>{dayLabel(window.date)} · {time(window.startMinute)}–{time(window.endMinute)}</li>)}</ul></dd></div>{review.request.note ? <div><dt>Note</dt><dd>{review.request.note}</dd></div> : null}</dl>{message ? <p className="pb-request-notice" role="alert">{message}</p> : null}<div className="pb-request-actions"><button type="button" className="pb-secondary-button" onClick={onBack} disabled={submitting}>Edit request</button><button type="button" className="pb-primary-button" onClick={onSubmit} disabled={submitting}>{submitting ? "Sending…" : "Send request"}</button></div></section>;
 }
 
 
@@ -151,7 +153,6 @@ function RequestRanges({ ranges, onChange }: { ranges: TimeRange[]; onChange: (r
 }
 
 
-function browserTimezone() { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; }
 function minutes(value: string) { const [hour, minute] = value.split(":").map(Number); return hour * 60 + minute; }
 function time(value: number) { return `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`; }
 function uniqueRanges(windows: RequestWindow[]) { const ranges = new Map(windows.map((window) => [`${window.startMinute}-${window.endMinute}`, { start: time(window.startMinute), end: time(window.endMinute) }])); return [...ranges.values()]; }

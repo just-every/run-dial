@@ -23,7 +23,7 @@ export function BookingsPage() {
   const [eventTypesError, setEventTypesError] = useState("");
   const { filters, page, erasedId, navigate } = useBookingWorkspace();
   const moveToPage = useCallback((nextPage: number) => navigate(filters, nextPage, true), [filters, navigate]);
-  const { bookings, totalCount, loading, listError, load } = useBookingList(filters, page, moveToPage);
+  const { bookings, totalCount, hostTimezone, loading, listError, load } = useBookingList(filters, page, moveToPage);
   useEffect(() => {
     if (!loading && notice && focusNotice.current) { noticeElement.current?.focus(); focusNotice.current = false; }
   }, [loading, notice]);
@@ -74,7 +74,7 @@ export function BookingsPage() {
     {listError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{listError}</p> : null}
     {eventTypesError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{eventTypesError}</p> : null}
     {erasedId ? <ErasureRecovery bookingId={erasedId} /> : null}
-    <BookingsFilterBar filters={filters} eventTypes={eventTypes} onChange={changeFilters} onClear={clearFilters} />
+    <BookingsFilterBar filters={filters} eventTypes={eventTypes} hostTimezone={hostTimezone} onChange={changeFilters} onClear={clearFilters} />
     <p className="text-sm font-semibold text-soft" role="status" aria-live="polite">
       {loading ? "Loading bookings…" : bookings === undefined ? "Bookings unavailable" : `Showing ${firstVisible.toLocaleString()}–${lastVisible.toLocaleString()} of ${totalCount.toLocaleString()} matching booking${totalCount === 1 ? "" : "s"}`}
     </p>

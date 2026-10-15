@@ -111,9 +111,14 @@ function assertFacts(mail, minutes, calendarLine, title) {
   assert.ok(text.includes(`Duration: ${minutes} minutes`));
   const facts = new Map([...html.matchAll(/<tr><td[^>]*>([^<]*)<\/td><td[^>]*>([^<]*)<\/td><\/tr>/gu)].map(match => [match[1], match[2]]));
   assert.equal(facts.get("Duration"), `${minutes} minutes`);
-  assert.ok(text.includes(calendarLine));
-  const [calendarLabel, calendarValue] = calendarLine.replace(/\.$/u, "").split(": ");
-  assert.equal(facts.get(calendarLabel), calendarValue);
+  if (recipient(mail).includes("operator@dial.test")) {
+    assert.ok(text.includes(calendarLine));
+    const [calendarLabel, calendarValue] = calendarLine.replace(/\.$/u, "").split(": ");
+    assert.equal(facts.get(calendarLabel), calendarValue);
+  } else {
+    assert.equal(/Calendar (?:setup|state):/.test(text), false);
+    assert.equal(facts.has("Calendar setup") || facts.has("Calendar state"), false);
+  }
   assert.ok(text.includes(title));
   assert.ok(html.includes(escape(title)));
   assert.equal(html.includes(title), false);

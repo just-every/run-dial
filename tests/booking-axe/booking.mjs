@@ -31,7 +31,11 @@ export async function bookingJourney(browser, origin, scans, errors, widths = [1
       const token = new URL(page.url()).pathname.split("/").at(-1);
       const old = await (await page.request.get(`${origin}/api/public/manage/${token}`)).json(); assert.equal(old.inviteeTimezone, "Australia/Brisbane");
       await keyboardActivate(page, page.getByRole("button", { name: "Reschedule booking", exact: true })); await page.locator(".pb-slot-button").first().waitFor();
-      assert.equal(await page.getByLabel("View in timezone", { exact: true }).inputValue(), "Australia/Brisbane"); assert.ok(await page.getByText(/Currently:.*Australia\/Brisbane/).first().isVisible());
+      assert.equal(await page.getByLabel("View in timezone", { exact: true }).inputValue(), "America/New_York");
+      await page.getByLabel("View in timezone", { exact: true }).fill("Australia/Brisbane");
+      await page.getByLabel("View in timezone", { exact: true }).press("Enter");
+      await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
+      assert.ok(await page.getByText(/Currently:.*Australia\/Brisbane/).first().isVisible());
       assert.equal(await page.getByRole("button", { name: "Confirm reschedule", exact: true }).count(), 0, "no confirm before choosing an offered slot"); await audit("manage-error");
       const endpoint = await (await page.request.get(`${origin}/api/public/manage/${token}/reschedule/availability?inviteeTimezone=Australia%2FBrisbane`)).json(); assert.ok(endpoint.slots.length);
       const actual = []; const days = page.locator(".pb-picker-day");

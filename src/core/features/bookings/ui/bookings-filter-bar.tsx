@@ -10,11 +10,13 @@ const fieldLabel = "grid content-start gap-2 text-sm font-[650] text-ink";
 export function BookingsFilterBar({
   filters,
   eventTypes,
+  hostTimezone,
   onChange,
   onClear,
 }: {
   filters: BookingFilters;
   eventTypes: EventTypeRecord[];
+  hostTimezone?: string;
   onChange: (change: Partial<BookingFilters>) => void;
   onClear: () => void;
 }) {
@@ -52,11 +54,11 @@ export function BookingsFilterBar({
         </Select>
       </label>
       <label className={fieldLabel}>
-        From date (UTC)
+        From date ({hostTimezone ?? "host time zone"})
         <Input type="date" value={filters.from ?? ""} max={filters.to} onChange={(event) => onChange({ from: event.currentTarget.value || undefined })} />
       </label>
       <label className={fieldLabel}>
-        Through date (UTC)
+        Through date ({hostTimezone ?? "host time zone"})
         <Input type="date" value={filters.to ?? ""} min={filters.from} onChange={(event) => onChange({ to: event.currentTarget.value || undefined })} />
       </label>
       <div className="flex items-end">

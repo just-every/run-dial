@@ -28,7 +28,7 @@ export type PublicRequestReview = {
   request: PublicRequestComposition;
 };
 export type PublicRequestComposition = RequestComposition & { eventTitle: string; hostName: string };
-export type OperatorRequest = Omit<RequestRecord, "compositionHash"> & { windows: OperatorRequestedWindow[] };
+export type OperatorRequest = Omit<RequestRecord, "compositionHash" | "windows"> & { windows: OperatorRequestedWindow[] };
 export type OperatorRequestedWindow = RequestedWindow & { inviteeLabel: string; hostLabel: string };
 
 export class AvailabilityRequestsService {
