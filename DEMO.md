@@ -1,7 +1,7 @@
 # Dial demo
 
 After the ordinary `rer setup`, run `rer demo` (`rer dev --demo`) and open its
-private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.15 release
+private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.18 release
 includes demo mode. `rer demo --stop`, Ctrl-C, or its end (one hour) stops it and
 deletes `.rer/demo/<start>/`; the next demo starts afresh. Stop `rer dev` first:
 one server runs per checkout.

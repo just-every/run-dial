@@ -67,7 +67,7 @@ outside the package remain governed by their existing byte-copy records;
 `verify:copies` checks those records. `rer check --profile first-party` checks
 the package pin, locked dependency, aliases, and absence of the vendored trees.
 
-Demo mode adopts Base `c1cd7bfa55388886f9607cfe03e758aba09e98e4` (rer 0.2.12).
+Demo mode adopts Base `e8296d97481b62ec6805d780021ed7cb528b7a07` (rer 0.2.18).
 `src/modules/demo` holds Base `modules/demo`; five files are byte-exact copies
 recorded in `base-copies.json`. Its `index.mjs` differs only in its two imports:
 `http.mjs` from Dial's `modules/operator-auth`, and `csp.mjs` from beside it.
