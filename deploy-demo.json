@@ -6,5 +6,5 @@
     "MAIL_PROVIDER": "development",
     "MAIL_FROM": "noreply@demo.invalid"
   },
-  "instanceType": "standard-2"
+  "instanceType": "basic"
 }
