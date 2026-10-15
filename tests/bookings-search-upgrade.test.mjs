@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import { fixture } from './archive/fixture.mjs';
 import { openInstall } from './archive/operator-runtime.mjs';
 import { quote, restoreStatements } from '../scripts/archive/schema.mjs';
-import { internal } from '../scripts/archive/policy.mjs';
+import { isInternalTable } from '../scripts/archive/policy.mjs';
 import { foldBookingSearch } from '../src/core/features/bookings/search/case-fold.mjs';
 
 // A populated upgrade is high-stakes data work, separate from the single OPER-003 journey.
@@ -36,7 +36,7 @@ test('native D1 migration upgrades populated pre-0030 data without changing any 
     runtime = await openInstall(root);
     const db = runtime.env.DB;
     const catalog = (await db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()).results;
-    const tables = catalog.filter(({ name }) => !Object.hasOwn(internal, name));
+    const tables = catalog.filter(({ name }) => !isInternalTable(name));
     const columns = {};
     const values = [];
     for (const { name } of tables) {
