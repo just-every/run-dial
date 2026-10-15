@@ -19,6 +19,9 @@ test('reviewed Dial health requires authoritative owner bootstrap before droppin
  const { env, state, requests, planned } = await installation(t);
  assert.equal(planned.deployed, false);
  assert.equal((await deploy(['health'], env)).ok, true);
+ state.handlers = ['fetch', 'queue'];
+ await assert.rejects(deploy(['health'], env), /missing-scheduled-handler/);
+ state.handlers.push('scheduled');
  state.secrets = state.secrets.filter(row => row.name !== 'SETUP_TOKEN');
  await assert.rejects(deploy(['health'], env), /missing-deployed-secret/);
  state.bootstrap.exec("INSERT INTO oa_bootstrap VALUES(1,'owner')");
