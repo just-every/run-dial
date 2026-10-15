@@ -16,6 +16,7 @@
           "src",
           "migrations",
           "deploy",
+          "management",
           "sample-data",
           "package.json",
           "pnpm-lock.yaml",

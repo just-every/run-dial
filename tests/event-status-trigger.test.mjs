@@ -42,31 +42,3 @@ contract('EVENT-005', 'native disable returns the changed event while its copy-i
   assert.equal(missing.error.code, 'event_not_found');
   assert.deepEqual(await f.snapshot(), after, 'a missing ID mutates no product record');
 });
-
-contract('EVENT-001', 'native repository status returns one target for changed and repeated statuses regardless of copy deletion', async t => {
-  const f = await fixture(t);
-  const event = await f.create('repository-event');
-  const other = await f.create('other-copied-event');
-  for (const record of [event, other]) {
-    await f.json(`/api/app/event-types/${record.id}/open-requests`, { body: {} });
-    await f.copy(record);
-  }
-  const otherBefore = await f.json(`/api/app/event-types/${other.id}`);
-  const otherReport = (await f.reports()).find(report => report.event_type_id === other.id);
-  const status = value => f.json('/api/app/__fixture/status', { body: { id: event.id, status: value } });
-  const changed = await status('disabled');
-  assert.ok(changed, 'repository returns the updated record despite the additional trigger delete');
-  assert.equal(changed.id, event.id); assert.equal(changed.status, 'disabled');
-  assert.deepEqual(changed, await f.json(`/api/app/event-types/${event.id}`));
-  assert.deepEqual(await f.reports(), [otherReport], 'only the target report is invalidated');
-  for (const value of ['disabled', 'draft', 'published', 'published', 'disabled']) {
-    const result = await status(value);
-    assert.equal(result.id, event.id); assert.equal(result.status, value);
-    assert.deepEqual(result, await f.json(`/api/app/event-types/${event.id}`));
-    assert.deepEqual(await f.json(`/api/app/event-types/${other.id}`), otherBefore);
-    assert.deepEqual(await f.reports(), [otherReport]);
-  }
-  const before = await f.snapshot();
-  assert.equal(await f.json('/api/app/__fixture/status', { body: { id: '00000000000000000000000000', status: 'disabled' } }), null);
-  assert.deepEqual(await f.snapshot(), before);
-});

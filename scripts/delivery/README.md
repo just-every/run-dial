@@ -23,6 +23,17 @@ minute schedule, D1 and R2 declarations come from emitted Wrangler configuration
 No credential values are inputs to packaging. Provider effects declare possible
 calendar, conferencing, OAuth and mail activity; they do not grant consent.
 
+`management/integration/deployment-spec.json` publishes that same spec for RER's
+Managed Configure form, so an imported repository needs no pasted specification.
+After changing build bindings, migrations or packaging policy, run `pnpm build`
+then `pnpm deployment-spec:generate` and commit the result. Verify runs
+`pnpm deployment-spec:check` against the built Worker and refuses drift.
+RER reads the owner-claim email and hidden generated token from the canonical
+manifest and uses native `POST /auth/bootstrap` for imported installations.
+The manifest's signed path remains `/auth/owner-claim` for registry installations.
+The CLI adapter uses rer's `ownerDeploy` directly, preserving its
+`managesHostedOwner` marker and native owner/token retirement workflow.
+
 `.github/workflows/rer-managed.yml` calls the trusted delivery workflow at an
 immutable commit. Full verification includes the local owner-claim HTTP tests,
 built-artifact checks and the native editor browser journey at 1440 and 390 pixels.
