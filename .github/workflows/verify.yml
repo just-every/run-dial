@@ -12,8 +12,38 @@ permissions:
 
 jobs:
   verify:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 15
+    # Each runner owns its native listeners/state. The slow README installation
+    # and real-time Cron journey live in nightly-journeys.yml; all other test
+    # files are discovered and assigned exactly once by ci-test-files.mjs.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Static and migrations
+            args: static
+          - name: Build and native hosted checks
+            args: build
+          - name: Managed editor
+            args: editor
+          - name: Tests 1 of 8
+            args: test 0
+          - name: Tests 2 of 8
+            args: test 1
+          - name: Tests 3 of 8
+            args: test 2
+          - name: Tests 4 of 8
+            args: test 3
+          - name: Tests 5 of 8
+            args: test 4
+          - name: Tests 6 of 8
+            args: test 5
+          - name: Tests 7 of 8
+            args: test 6
+          - name: Tests 8 of 8
+            args: test 7
     env:
       CI: "true"
     steps:
@@ -48,11 +78,12 @@ jobs:
           node scripts/ci-runtime-ports.mjs --check
       - run: pnpm install --frozen-lockfile
       - name: Install Chromium and native dependencies
-        timeout-minutes: 10
+        if: ${{ matrix.args != 'static' }}
+        timeout-minutes: 5
         run: |
           sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS "$(command -v node)" scripts/ci-apt-bootstrap.mjs
           pnpm exec playwright install --with-deps chromium
-      - name: Run pnpm verify
+      - name: Run verification partition
         env:
           DIAL_TEST_DIAGNOSTICS_DIR: ${{ runner.temp }}/dial-test-diagnostics
         run: |
@@ -60,4 +91,4 @@ jobs:
           monitor="$!"
           trap 'kill "$monitor" 2>/dev/null || true; wait "$monitor" 2>/dev/null || true' EXIT
           export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$PWD/scripts/test-worker-diagnostics.mjs"
-          pnpm verify
+          node scripts/ci-verify.mjs ${{ matrix.args }}

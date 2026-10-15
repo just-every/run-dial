@@ -11,7 +11,7 @@ const { Miniflare } = await import(pathToFileURL(require.resolve('miniflare')));
 export const origin = 'https://mail-connection.example.test';
 export const configuration = { ENVIRONMENT: 'production', APP_URL: origin, SESSION_SECRET: 'synthetic-mail-session-secret-at-least-32', SETUP_TOKEN: 'synthetic-mail-bootstrap-secret-at-least-32', OWNER_EMAIL: 'owner@example.test', MAIL_PROVIDER: 'sendgrid', MAIL_API_KEY: 'synthetic-mail-api-key', MAIL_FROM: 'noreply@example.test' };
 
-export async function fixture(t, overrides = {}) {
+export async function fixture(t, overrides = {}, outbound) {
   const state = await mkdtemp(join(tmpdir(), 'dial-mail-connection-'));
   const runtime = { ...configuration, ...overrides };
   let worker, verified = true, calls = 0;
@@ -22,10 +22,12 @@ export async function fixture(t, overrides = {}) {
     const compiled = await build({ entryPoints: [new URL('./worker.mjs', import.meta.url).pathname], bundle: true, format: 'esm', platform: 'browser', external: ['node:*', 'cloudflare:workers'], write: false });
     worker = new Miniflare({ cf: false, resourcePersistencePath: state, workers: [{ config: {
       type: 'worker', name: 'mail-connection', compatibilityDate: '2026-09-08', compatibilityFlags: ['nodejs_compat'],
-      env: { DB: { type: 'd1', id: 'mail-connection' }, ...Object.fromEntries(Object.entries(runtime).filter(([, value]) => value !== undefined).map(([name, value]) => [name, { type: 'text', value }])) },
+      exports: { BookingCoordinator: { type: 'durable-object', storage: 'sqlite' } },
+      env: { DB: { type: 'd1', id: 'mail-connection' }, BOOKING_COORDINATOR: { type: 'durable-object', worker: 'mail-connection', exportName: 'BookingCoordinator' }, ...Object.fromEntries(Object.entries(runtime).filter(([, value]) => value !== undefined).map(([name, value]) => [name, { type: 'text', value }])) },
       manifest: { mainModule: 'worker.mjs', modulesRoot: state, modules: { 'worker.mjs': { type: 'esm', contents: compiled.outputFiles[0].text } } },
     }, dev: { outboundService: { type: 'fetcher', handler: async (request) => {
       calls++;
+      if (outbound) return outbound(request);
       assert.equal(request.url, 'https://api.sendgrid.com/v3/verified_senders');
       assert.equal(request.method, 'GET');
       return verified ? Response.json({ results: [{ from_email: configuration.MAIL_FROM, verified: true }] }) : new Response(null, { status: 403 });

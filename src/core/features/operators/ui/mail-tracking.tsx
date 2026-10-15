@@ -1,4 +1,4 @@
-type TrackingHealth = { provider: "sendgrid" | "resend" | "development"; eventTracking: "on" | "off" | "not_applicable" };
+type TrackingHealth = { provider: "sendgrid" | "resend" | "rer" | "development"; eventTracking: "on" | "off" | "not_applicable" };
 
 export function MailTracking({ health }: { health?: TrackingHealth }) {
   if (!health || health.eventTracking === "not_applicable") return null;

@@ -67,6 +67,7 @@
         "OWNER_EMAIL",
         "MAIL_PROVIDER",
         "MAIL_FROM",
+        "MAIL_RELAY_URL",
         "RESEND_FROM_EMAIL",
         "GOOGLE_OAUTH_CLIENT_ID",
         "RER_MANAGEMENT_ORIGIN",
@@ -78,10 +79,10 @@
       ],
       "secretNames": [
         "SESSION_SECRET",
-        "SETUP_TOKEN",
-        "MAIL_API_KEY"
+        "SETUP_TOKEN"
       ],
       "optionalSecretNames": [
+        "MAIL_API_KEY",
         "MAIL_WEBHOOK_KEY",
         "GOOGLE_OAUTH_CLIENT_SECRET",
         "CALENDAR_WEBHOOK_SECRET",
@@ -108,7 +109,12 @@
           ]
         }
       },
-      "recovery": "Preserve the private deployment receipt, owner-held SESSION_SECRET, and applied migration history. Restore only into an empty migrated installation with writers stopped; reconnect calendars and recheck mail before publishing booking events."
+      "recovery": "Preserve the private deployment receipt, owner-held SESSION_SECRET, and applied migration history. Restore only into an empty migrated installation with writers stopped; reconnect calendars and recheck mail before publishing booking events.",
+      "mail": {
+        "providers": [
+          "rer"
+        ]
+      }
     }
   }
 }

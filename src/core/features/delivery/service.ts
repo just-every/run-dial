@@ -56,8 +56,10 @@ export class ProviderDeliveryService {
       return "succeeded";
     } catch (error) {
       const failure = asProviderFailure(error);
-      const delay = retryDelaysMs[record.attempts - 1];
+      const backoff = retryDelaysMs[record.attempts - 1];
+      const delay = backoff === undefined ? undefined : Math.max(backoff, (failure.retryAfterSeconds ?? 0) * 1000);
       const retryable = failure.retryable && delay !== undefined;
+      if (failure.code === "unauthorized" && ["mail_send", "reminder"].includes(record.kind)) await this.repository.setMailHealth("unhealthy", failure.code);
       await this.repository.failed(record, {
         retryable,
         errorCode: failure.code,

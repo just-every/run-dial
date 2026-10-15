@@ -8,6 +8,9 @@ const configuredDestination = process.env.DIAL_WRANGLER_CONFIG_PATH ?? "wrangler
 const destination = resolve(root, configuredDestination);
 
 let toml = await readFile(source, "utf8");
+// Public mail settings must appear in the built deployment spec. Runtime setup
+// supplies their values; direct installs retain SendGrid as their provider.
+toml = toml.replace('ENVIRONMENT = "production"\n', 'ENVIRONMENT = "production"\nMAIL_PROVIDER = "sendgrid"\nMAIL_FROM = ""\nMAIL_RELAY_URL = ""\n');
 if (dirname(destination) !== root) {
   const workerEntry = resolve(root, "src/core/app/worker.ts").replaceAll("\\", "\\\\");
   const migrations = resolve(root, "migrations/core").replaceAll("\\", "\\\\");

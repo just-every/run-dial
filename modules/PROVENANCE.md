@@ -89,3 +89,5 @@ Owner sign-in confirmation counters also use that rate-correlation hook, keyed
 to the grant's operator through its digest. The Lobby adopts only Base 0.2.20's
 manual-setup-token hint condition; Dial retains its existing copy, styles and
 onboarding-completion predicate.
+
+Managed mail uses the existing byte-exact Base `modules/mail` RER adapter shipped in rer 0.2.22. The delivery producer spec, mail declaration validator and package adopt Base `a1cde988c1be2c9f74ff5ca374dc47e044ba193c`; setup-manifest keeps Dial’s local schema paths and adds its managed-mail validation. Dial’s relay integration preserves safe status/Retry-After metadata without changing the Base adapter or reading response bodies.

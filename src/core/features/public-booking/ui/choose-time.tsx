@@ -10,6 +10,7 @@ import { FlowShell } from "./flow-shell";
 import type { PublicEventPayload } from "./types";
 import type { PublicSelection } from "./selection-types";
 import { rememberSelection } from "./selection-storage";
+import { readRecoveryDraft } from "./booking-recovery-draft";
 import { isCanonicalIanaTimeZone } from "../../../shared/scheduling";
 import { DayTimePicker } from "./day-time-picker";
 import { shiftHostDate, dateInZone, dayLabel, type PickerSlot as Slot, type PickerAvailability as Availability } from "./day-picker-model";
@@ -25,12 +26,14 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
   const [selecting, setSelecting] = useState<string>();
   const [localTimezone, setLocalTimezone] = useState(data.profile.timezone);
   const [selectedDay, setSelectedDay] = useState<string>();
+  const [hasRecoveryDraft, setHasRecoveryDraft] = useState(false);
   const instant = useDocumentInstant();
   const [today] = useState(() => dateInZone(instant, data.profile.timezone));
   const displayTimezone = inviteeTimezone ?? localTimezone;
   useEffect(() => {
     const restore = () => {
       const query = new URLSearchParams(window.location.search);
+      setHasRecoveryDraft(Boolean(readRecoveryDraft(data.profile.handle, data.eventType.slug)));
       const savedZone = query.get("timezone");
       const zone = savedZone && isCanonicalIanaTimeZone(savedZone) ? savedZone : deviceTimezone(data.profile.timezone);
       setLocalTimezone(zone);
@@ -39,7 +42,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     };
     restore(); window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
-  }, [data.profile.timezone]);
+  }, [data.profile.handle, data.profile.timezone, data.eventType.slug]);
   function remember(patch: Record<string, string>) {
     const url = new URL(window.location.href);
     for (const [key, value] of Object.entries(patch)) url.searchParams.set(key, value);
@@ -77,7 +80,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
       const selected = await response.json() as PublicSelection;
       if (!currentSelection()) return;
       rememberSelection(data.profile.handle, data.eventType.slug, selected);
-      window.location.assign(bookingPath(data.profile.handle, data.eventType.slug, "/details", embedded, { nonce: selected.nonce, startAt: selected.selection.startAt, inviteeTimezone: selected.selection.inviteeTimezone }, search));
+      window.location.assign(bookingPath(data.profile.handle, data.eventType.slug, "/details", embedded, { nonce: selected.nonce, startAt: selected.selection.startAt, inviteeTimezone: selected.selection.inviteeTimezone, day: dateInZone(slot.startAt, displayTimezone), timezone: displayTimezone, ...(availability?.state === "available" ? { week: availability.week } : {}) }, window.location.search));
     } catch { if (currentSelection()) setNotice("That time could not be checked. Please retry."); }
     finally { selectingNow.current = false; setSelecting(undefined); }
   }
@@ -87,6 +90,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
   return <FlowShell data={data} embedded={embedded} step={1}>
     {preview ? <p className="pb-preview-banner">Operator preview — providers are not used from preview.</p> : null}
     <div className="pb-event-heading"><div><p className="pb-eyebrow">{data.eventType.title} · {data.eventType.durationMinutes} minutes</p><h1>Choose a day and time.</h1><p>Times are checked against the host’s availability before confirmation.</p></div></div>
+    {new URLSearchParams(search).get("notice") === "slot_changed" ? <p className="pb-request-notice" role="status">That time was just taken. Choose another time.{hasRecoveryDraft ? " Your details are saved for this booking." : null}</p> : null}
     <TimezoneControl timezone={displayTimezone} hostTimezone={data.profile.timezone} disabled={Boolean(selecting)} onChange={zone => { setInviteeTimezone(zone); remember({ timezone: zone }); }} />
     {checking ? <p role="status">Checking current times…</p> : null}
     {availability?.state === "available" ? <><section className="pb-week-navigation" aria-label="Availability week"><button type="button" className="pb-secondary-button" disabled={Boolean(selecting) || availability.week <= today} onClick={() => changeWeek(-7)}>Previous week</button><p>{dayLabel(availability.week)} – {dayLabel(shiftHostDate(availability.week, 6))}</p><button type="button" className="pb-secondary-button" disabled={Boolean(selecting) || shiftHostDate(availability.week, 7) > shiftHostDate(today, data.eventType.bookingHorizonDays)} onClick={() => changeWeek(7)}>Next week</button></section><DayTimePicker availability={availability} timezone={displayTimezone} hostTimezone={data.profile.timezone} selectedDay={selectedDay} onDay={day => { setSelectedDay(day); remember({ day, timezone: displayTimezone, week: availability.week }); }} onSelect={slot => void select(slot)} disabled={Boolean(selecting) || checking} /></> : <section className="pb-unavailable" aria-live="polite"><div><p className="pb-eyebrow">{availability || notice ? "Booking temporarily unavailable" : "Availability"}</p><h2>{availability || notice ? "Times cannot be verified right now." : "Checking available times…"}</h2><p>{availability?.state === "temporarily_unavailable" ? "Availability cannot be verified, so no time is offered." : notice ? "Please retry when availability can be checked." : "This page will update when availability has been checked."}</p></div></section>}

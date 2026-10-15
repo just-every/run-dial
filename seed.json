@@ -210,9 +210,21 @@
       ]
     },
     {
+      "id": "rer-managed-mail",
+      "required": false,
+      "why": "Managed hosting supplies the mail.sender.v1 relay and installation credential. Direct provider credentials are not needed on Managed. No fallback is selected if the configured provider fails.",
+      "data": [
+        "operator and invitee email",
+        "booking or request content"
+      ],
+      "adapters": [
+        "mail.sender.v1"
+      ]
+    },
+    {
       "id": "sendgrid",
-      "required": true,
-      "why": "Dial setup selects SendGrid through mail.sender.v1 for operator sign-in and transactional messages; Dial does not configure an alternate Cloudflare Email Sending adapter. EVENT-006 blocks normal or request-only publication while the configured mail-provider connection check is unhealthy.",
+      "required": false,
+      "why": "Direct installs select SendGrid through mail.sender.v1 for sign-in and transactional messages. Managed installs use the RER relay instead. EVENT-006 blocks publication while the selected mail connection is unhealthy.",
       "data": [
         "operator and invitee email",
         "booking or request content",
@@ -271,7 +283,7 @@
       "name": "MAIL_PROVIDER",
       "secret": false,
       "required": false,
-      "why": "Selects the explicit SendGrid, retained Resend, or loopback-development mail.sender.v1 provider. Development captures use the local outbox and cannot run in production. The setup chooses SendGrid; an absent or unhealthy provider does not authorize normal or request-only publication."
+      "why": "Selects the explicit RER Managed relay, SendGrid, retained Resend, or loopback-development mail.sender.v1 provider. Missing or unhealthy mail blocks publication."
     },
     {
       "name": "MAIL_API_KEY",
@@ -283,7 +295,13 @@
       "name": "MAIL_FROM",
       "secret": false,
       "required": false,
-      "why": "Verified no-reply sender for the selected mail.sender.v1 provider and operator sign-in or transactional messages."
+      "why": "Verified sender for the selected mail.sender.v1 provider; Managed hosting assigns it."
+    },
+    {
+      "name": "MAIL_RELAY_URL",
+      "required": false,
+      "secret": false,
+      "why": "HTTPS relay endpoint for the RER Managed mail.sender.v1 adapter, supplied by Managed hosting."
     },
     {
       "name": "MAIL_WEBHOOK_KEY",

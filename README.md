@@ -46,7 +46,7 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-Install the latest `rer` with Node 22 or later and Git, then clone Dial and start it. Dial pins **rer 0.2.20**:
+Install the latest `rer` with Node 22 or later and Git, then clone Dial and start it. Dial pins **rer 0.2.22**:
 
 ```sh
 npm install -g @runeditrun/rer
@@ -54,6 +54,16 @@ git clone https://github.com/just-every/run-dial.git dial
 cd dial
 rer dev
 ```
+
+The default clone follows `main`. To start from the tagged **v0.2.0** release
+instead, replace the clone command with:
+
+```sh
+git clone --branch v0.2.0 https://github.com/just-every/run-dial.git dial
+```
+
+A tag retains its own dependency pins; the commands and **rer 0.2.22** pin here
+describe current `main`.
 
 On a fresh checkout, `rer dev` selects Dial's pinned Node **22.20.0** and pnpm
 **10.12.4**, fetching either into its own cache when needed. It installs the
@@ -191,21 +201,35 @@ files are preserved byte for byte.
 
 ## Deploy and release
 
-`rer deploy --dry-run` builds and validates locally without
-provider requests. A real deployment is a separate owner-account operation:
-`rer deploy --environment production`. It requires the
-configured Cloudflare account and working SendGrid mail: a real API key, a
-verified sender, and `OWNER_EMAIL` set to a mailbox you can read. After a healthy
-deploy, rer claims the hosted owner and removes the one-time setup token. Open
-`/signin` on the deployed address and request an email link; no separate
-first-operator setup step is needed. If mail is unavailable, run `rer signin` from
-the checkout that deployed it, with the same Cloudflare credentials, for a one-time
-owner link valid for 15 minutes. Use `--environment NAME` for a named environment
-(the default is `production`). Keep the link private and confirm it once. See
-[Install: deploy inputs](docs/install.md#reference-deploy-inputs) for generated
-secrets, local-owner defaults and private env files. Local checks and the dry
-run do not establish remote health, email delivery, Google Calendar access, or
-production acceptance.
+For a self-hosted deployment, configure the Cloudflare account and mail inputs
+**before** running the dry run. Set `OWNER_EMAIL` to a mailbox you can read.
+Dial's runtime mail inputs are `MAIL_PROVIDER`, `MAIL_FROM`, and the private
+`MAIL_API_KEY`; `MAIL_PROVIDER=rer` also requires `MAIL_RELAY_URL`. For the
+SendGrid deploy path, the declaration sets `MAIL_PROVIDER=sendgrid`; supply a
+working SendGrid key as `SENDGRID_API_KEY` (bound privately as `MAIL_API_KEY`),
+and any sender address on your verified domain as `MAIL_FROM`
+(for example, `bookings@your-domain.example`). See
+[Install: deploy inputs](docs/install.md#reference-deploy-inputs) for the exact
+private env-file example and generated secrets.
+
+Then run `rer deploy --dry-run --env-file /absolute/private/dial-deploy.env`.
+It builds and validates locally without provider requests; it still requires
+the declared inputs. It does not verify credentials, sender verification,
+email delivery, Google Calendar access, or remote health. A real deployment is a
+separate owner-account operation:
+`rer deploy --environment production --env-file /absolute/private/dial-deploy.env`.
+After a healthy deploy, rer claims the hosted owner and removes the one-time
+setup token. Open `/signin` on the deployed address and request an email link;
+no separate first-operator setup step is needed. If mail is unavailable, run
+`rer signin` from the checkout that deployed it, with the same Cloudflare
+credentials, for a one-time owner link valid for 15 minutes. Use
+`--environment NAME` for a named environment (the default is `production`).
+Keep the link private and confirm it once.
+
+For a **Managed installation through RER**, Configure supplies mail
+automatically. You do not need a provider account or a provider API key; RER
+provides the sender, relay URL and private relay credential for that installation.
+Local checks and a dry run do not establish production acceptance.
 
 To permanently remove a hosted installation, export any needed data first, then
 run `rer deploy --remove --yes` from the checkout holding its deployment receipt.

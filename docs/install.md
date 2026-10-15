@@ -8,8 +8,10 @@ Dial runs as one Cloudflare Worker with a D1 database, an R2 bucket, queues, a D
   and run. It selects the exact Node and pnpm versions pinned by Dial when
   needed.
 - **A Cloudflare account on the Workers Paid plan,** with a workers.dev subdomain and an API token for that account. [Deploy to Cloudflare](#deploy-to-cloudflare) lists the permissions.
-- **Working SendGrid mail before deploying:** an API key, a verified sender address, and an owner mailbox you can read. Hosted sign-in requires an emailed link. See [Calendar and email](calendar-and-email.md#send-mail-with-sendgrid).
+- **Working mail before self-hosted deployment:** the SendGrid path below needs an API key, any sender address on a verified domain, and an owner mailbox you can read. Hosted sign-in requires an emailed link. See [Calendar and email](calendar-and-email.md#send-mail-with-sendgrid).
 - **A Google Cloud project** is optional, for Google Calendar integration and Google Meet. See [Calendar and email](calendar-and-email.md#connect-google-calendar).
+
+For a **Managed installation through RER**, Configure supplies mail automatically: no provider account or provider API key is needed. RER configures the sender, relay URL and private relay credential for that installation. The Cloudflare deployment instructions below are for self-hosting.
 
 You need none of the provider accounts to try Dial on your computer. A deployed Dial lives on a `workers.dev` address; deploy accepts no custom domain. For cost and limits, see [the overview](overview.md#cost-and-limits).
 
@@ -27,6 +29,16 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
    git clone https://github.com/just-every/run-dial.git dial
    cd dial
    ```
+
+   The default clone follows `main`. For the tagged **v0.2.0** release instead,
+   replace the clone command above with:
+
+   ```bash
+   git clone --branch v0.2.0 https://github.com/just-every/run-dial.git dial
+   ```
+
+   A tag retains its own dependency pins. This guide describes current `main`,
+   which pins **rer 0.2.22**.
 
 3. Start Dial:
 
@@ -120,21 +132,48 @@ One command, `rer deploy`, builds your committed source, creates what Dial needs
 1. **A workers.dev subdomain.** In the Cloudflare dashboard, open Workers & Pages and choose your account's workers.dev subdomain. Without one, deploy stops with `workers-subdomain-missing` before it creates anything.
 2. **An API token.** Create an account API token for that one account with these account permissions: Workers Scripts Edit, D1 Edit, Workers R2 Storage Edit and Queues Edit. If one is missing, deploy names it, for example `token-scope-missing-d1`.
 3. **Your Dial address.** It is your Worker's name, `dial-production`, on your workers.dev subdomain: `https://dial-production.<your-subdomain>.workers.dev`. After deployment, use it to sign in and, if you choose, connect Google or enable SendGrid delivery tracking.
-4. **Working mail and a reachable owner.** Prepare a real SendGrid API key and verified sender in [Send mail with SendGrid](calendar-and-email.md#send-mail-with-sendgrid). Set `OWNER_EMAIL` to a mailbox you can read, even if you previously used a generated local development owner. Check the address carefully: the hosted owner signs in by email link immediately after deployment. Keep the deploying checkout and its Cloudflare credentials for `rer signin` recovery. No webhook key is required to deploy, check the sender or send mail; [delivery and bounce tracking](calendar-and-email.md#optional-delivery-and-bounce-tracking) is a separate opt-in.
+4. **Working mail and a reachable owner.** Prepare a real SendGrid API key and any sender address on your verified domain in [Send mail with SendGrid](calendar-and-email.md#send-mail-with-sendgrid). Set `OWNER_EMAIL` to a mailbox you can read, even if you previously used a generated local development owner. Check the address carefully: the hosted owner signs in by email link immediately after deployment. Keep the deploying checkout and its Cloudflare credentials for `rer signin` recovery. No webhook key is required to deploy, check the sender or send mail; [delivery and bounce tracking](calendar-and-email.md#optional-delivery-and-bounce-tracking) is a separate opt-in.
 5. **Committed source.** Commit your changes. Deploy refuses to run with uncommitted changes to tracked files and stops with `owner-source-not-committed`.
 
-Then deploy:
+Configure the inputs before the dry run:
 
-1. Check the deploy on your computer first. This builds Dial and checks the deploy declaration in `deploy.json`. Nothing is deployed and nothing is sent to Cloudflare. This does not check provider credentials, sender verification or email delivery; it cannot establish that hosted sign-in will work.
+1. Create an owner-only file outside the repository, for example
+   `/absolute/private/dial-deploy.env`, with mode `0600`. Replace every example
+   value below with your real values. The SendGrid path uses these inputs:
 
-   ```bash
-   rer deploy --dry-run
+   ```dotenv
+   CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
+   CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
+   OWNER_EMAIL=you@your-domain.example
+   MAIL_FROM=bookings@your-verified-domain.example
+   SENDGRID_API_KEY=your-sendgrid-api-key
    ```
 
-2. Set the environment variables listed in [Reference: deploy inputs](#reference-deploy-inputs), then deploy. This creates the Worker `dial-production`, the D1 database `dial-production-db`, the R2 bucket `dial-production-files`, the queues `dial-production-jobs` and `dial-production-jobs-dead`, the booking Durable Object and the one-minute schedule, then checks health.
+   The deploy declaration sets `MAIL_PROVIDER=sendgrid` and maps
+   `SENDGRID_API_KEY` to the private runtime binding `MAIL_API_KEY`.
+   `MAIL_FROM` may use any local part on the verified domain; it need not start
+   with `noreply` or `no-reply`. See [Reference: deploy inputs](#reference-deploy-inputs)
+   for the runtime names, relay configuration and generated secrets. Keep API
+   keys out of source, shell history and shared logs.
+
+2. Check the deploy on your computer first, using that file. This builds Dial
+   and checks the deploy declaration in `deploy.json`, including required input
+   presence. Nothing is deployed and nothing is sent to Cloudflare. This does
+   not check provider credentials, sender verification or email delivery; it
+   cannot establish that hosted sign-in will work.
 
    ```bash
-   rer deploy
+   rer deploy --dry-run --env-file /absolute/private/dial-deploy.env
+   ```
+
+3. Deploy with the same configured inputs. This creates the Worker
+   `dial-production`, the D1 database `dial-production-db`, the R2 bucket
+   `dial-production-files`, the queues `dial-production-jobs` and
+   `dial-production-jobs-dead`, the booking Durable Object and the one-minute
+   schedule, then checks health.
+
+   ```bash
+   rer deploy --env-file /absolute/private/dial-deploy.env
    ```
 
 Deploy records what it created in `.rer/deploy/production.json`, a private file in your checkout. Keep it, and keep a copy somewhere private outside the checkout after each deploy: it is the only proof of which resources are yours. Without it, a later deploy refuses with `resource-name-collision` rather than take over resources it cannot prove it made. Deploy from the same checkout each time, one run at a time.
@@ -142,14 +181,14 @@ Deploy records what it created in `.rer/deploy/production.json`, a private file 
 The default environment is `production`. To deploy a separate install with its own resources and address, name another environment. This one is named `dial-staging`:
 
 ```bash
-rer deploy --environment staging
+rer deploy --environment staging --env-file /absolute/private/dial-deploy.env
 ```
 
 After a healthy deploy, `rer` claims the hosted owner and removes the one-time setup token. Open `/signin` on the deployed address, enter the deployed owner email, choose **Send magic link**, then open the email and confirm its link. There is no separate first-operator setup step or hosted local outbox. On the first sign-in, Dial opens the setup workspace: work through [Finish setup](#finish-setup), and [Calendar and email](calendar-and-email.md) for the connections.
 
 If the email does not arrive, check the owner address, SendGrid credentials, verified sender and mailbox delivery. A successful deploy or health check does not prove email delivery. A setup token cannot sign you in after the owner has been claimed.
 
-Dial pins **rer 0.2.20**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
+Dial pins **rer 0.2.22**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
 
 ```bash
 rer signin
@@ -186,13 +225,25 @@ Every real deploy needs:
 - `CLOUDFLARE_ACCOUNT_ID`: your Cloudflare account ID.
 - `CLOUDFLARE_API_TOKEN`: the API token from step 2 above.
 
-For a new Worker, supply:
+For a new Worker using the supplied SendGrid deploy declaration, supply these
+before either the dry run or a real deploy:
 
 - `OWNER_EMAIL`: the hosted owner's mailbox, which you can read. If omitted, rer uses the saved local setup owner; a generated development address is unsuitable for hosted sign-in.
-- `SENDGRID_API_KEY`: a working SendGrid API key, stored as `MAIL_API_KEY`.
-- `MAIL_FROM`: your verified sender address.
+- `SENDGRID_API_KEY`: a working SendGrid API key, stored as the private runtime binding `MAIL_API_KEY`.
+- `MAIL_FROM`: any sender address on your verified domain.
 
-The mail key and sender must be supplied on the first deploy; missing values stop it before resource creation. They must also work: placeholder values cannot deliver your sign-in link.
+The declaration sets the runtime binding `MAIL_PROVIDER=sendgrid`; it does not
+ask you for a provider selector. Missing required inputs stop deployment before
+resource creation. A dry run checks input presence, not whether those values
+work: placeholder values cannot deliver your sign-in link.
+
+The runtime mail inputs are `MAIL_PROVIDER`, `MAIL_FROM`, and private
+`MAIL_API_KEY`. With `MAIL_PROVIDER=rer`, `MAIL_RELAY_URL` is also required,
+`MAIL_FROM` is the assigned sender, and `MAIL_API_KEY` is the installation's
+private relay credential. Managed RER Configure supplies all of these
+automatically; a Managed customer does not obtain or paste a provider API key.
+The self-hosted SendGrid declaration above uses the `SENDGRID_API_KEY` input
+alias; setting `MAIL_API_KEY` alone does not supply that declaration's input.
 
 `SESSION_SECRET` and `SETUP_TOKEN` are optional inputs for a new Worker: rer generates fresh values when they are omitted. If you supply them, use random values of at least 32 characters. The session secret is needed for archive continuity; keep it securely with your recovery settings. The setup token is used by rer to claim the owner and then removed from the Worker; it is not a sign-in credential to enter in the browser.
 

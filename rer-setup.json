@@ -9,7 +9,7 @@
     {
       "id": "mail",
       "label": "Sign-in email",
-      "help": "Hosted installs require a verified sender and a Resend or SendGrid API key."
+      "help": "Managed hosting supplies mail automatically. Other hosted installs need a verified sender and provider credentials."
     }
   ],
   "fields": [
@@ -34,6 +34,10 @@
           "label": "Local development outbox"
         },
         {
+          "value": "rer",
+          "label": "RER Managed mail"
+        },
+        {
           "value": "sendgrid",
           "label": "SendGrid"
         },
@@ -53,6 +57,18 @@
       "group": "mail"
     },
     {
+      "name": "MAIL_RELAY_URL",
+      "label": "Managed mail relay URL",
+      "kind": "url",
+      "required": true,
+      "when": {
+        "field": "MAIL_PROVIDER",
+        "equals": "rer"
+      },
+      "group": "mail",
+      "help": "Supplied automatically by RER Managed hosting."
+    },
+    {
       "name": "MAIL_API_KEY",
       "label": "Mail API key",
       "kind": "secret",
@@ -61,6 +77,14 @@
       "ownerVisible": true,
       "group": "mail",
       "presentations": [
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "rer"
+          },
+          "label": "RER mail credential",
+          "required": true
+        },
         {
           "when": {
             "field": "MAIL_PROVIDER",

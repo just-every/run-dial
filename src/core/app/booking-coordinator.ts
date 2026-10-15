@@ -50,7 +50,7 @@ export class BookingCoordinator extends DurableObject<AppBindings> {
           return Response.json({ value: await invokeOperatorMail(this.env.DB, services.mail, parsed.data.outboxId, parsed.data.attempt) });
         } catch (error) {
           const failure = error instanceof ProviderFailure ? error : new ProviderFailure("internal_error", false);
-          return Response.json({ error: { code: failure.code, retryable: failure.retryable } });
+          return Response.json({ error: { code: failure.code, retryable: failure.retryable, retryAfterSeconds: failure.retryAfterSeconds } });
         }
       }
       if (connectionWatchPaths.includes(path) && request.method === "POST") {

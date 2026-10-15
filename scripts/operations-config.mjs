@@ -20,9 +20,9 @@ export function invalidConfigurationNames(env) {
   const apiKeyName = env.MAIL_PROVIDER ? "MAIL_API_KEY" : "RESEND_API_KEY";
   // Legacy Resend is selected without MAIL_PROVIDER, but absent optional mail
   // must remain valid for a foundation-only install.
-  if (["sendgrid", "resend"].includes(provider) && (env.MAIL_PROVIDER || env[apiKeyName] !== undefined)) {
-    try { validateMailConfig({ provider, mode: "production", apiKey: env[apiKeyName] }); }
-    catch { invalid.push(apiKeyName); }
+  if (["sendgrid", "resend", "rer"].includes(provider) && (env.MAIL_PROVIDER || env[apiKeyName] !== undefined)) {
+    try { validateMailConfig({ provider, mode: "production", apiKey: env[apiKeyName], ...(provider === "rer" ? { relayUrl: env.MAIL_RELAY_URL } : {}) }); }
+    catch { invalid.push(apiKeyName); if (provider === "rer") invalid.push("MAIL_RELAY_URL"); }
   }
   try {
     const url = new URL(env.APP_URL);

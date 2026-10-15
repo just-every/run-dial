@@ -312,6 +312,12 @@
       "name": "0049_auth_owner_signin.sql",
       "sha256": "98da904e768e35b43fb1be83d9dcc9c9b5d86ab3a795234ed5223c4fddc567d9",
       "sql": "-- One-time owner sign-in links minted by `rer signin` with the deployment's own\n-- Cloudflare credentials, written straight into this table through the D1 API.\n-- Apply as a NEW numbered migration under the seed's next unused number; never\n-- rewrite an applied migration. Additive only. token_hash is the SHA-256 of the\n-- link token (owner-signin-grant.mjs); the token itself is never stored.\nCREATE TABLE IF NOT EXISTS oa_owner_signins (\n id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE,\n operator_id TEXT NOT NULL REFERENCES oa_operators(id), operator_version INTEGER NOT NULL,\n created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, consumed_at INTEGER\n);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0050_managed_mail_health.sql",
+      "sha256": "cc683f44e27421639f5f91639b8e1744dc8d878a0675de7339f5a734464ab130",
+      "sql": "-- Add the Managed relay identity without changing any existing provider health.\nALTER TABLE provider_connection_health RENAME TO provider_connection_health_before_managed_mail;\nCREATE TABLE provider_connection_health (\n  provider TEXT PRIMARY KEY NOT NULL CHECK (provider IN ('google_calendar', 'resend', 'sendgrid', 'rer', 'development')),\n  status TEXT NOT NULL CHECK (status IN ('healthy', 'unhealthy')),\n  last_checked_at TEXT,\n  unhealthy_code TEXT,\n  alert_state TEXT NOT NULL CHECK (alert_state IN ('healthy_announced', 'unhealthy_announced', 'unannounced')),\n  alert_cycle INTEGER NOT NULL DEFAULT 0 CHECK (alert_cycle >= 0),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nINSERT INTO provider_connection_health SELECT * FROM provider_connection_health_before_managed_mail;\nDROP TABLE provider_connection_health_before_managed_mail;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
@@ -333,14 +339,17 @@
     }
   ],
   "publicVariables": {
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "production",
+    "MAIL_PROVIDER": "sendgrid",
+    "MAIL_FROM": "",
+    "MAIL_RELAY_URL": ""
   },
   "secretNames": [
     "SESSION_SECRET",
-    "SETUP_TOKEN",
-    "MAIL_API_KEY"
+    "SETUP_TOKEN"
   ],
   "optionalSecretNames": [
+    "MAIL_API_KEY",
     "MAIL_WEBHOOK_KEY",
     "GOOGLE_OAUTH_CLIENT_SECRET",
     "CALENDAR_WEBHOOK_SECRET",
@@ -380,5 +389,10 @@
         }
       ]
     }
+  },
+  "mail": {
+    "providers": [
+      "rer"
+    ]
   }
 }

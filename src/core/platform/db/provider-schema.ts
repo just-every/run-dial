@@ -57,7 +57,7 @@ export const calendarPushChannels = sqliteTable(
 );
 
 export const providerConnectionHealth = sqliteTable("provider_connection_health", {
-  provider: text("provider", { enum: ["google_calendar", "resend", "sendgrid", "development"] }).primaryKey(),
+  provider: text("provider", { enum: ["google_calendar", "resend", "sendgrid", "rer", "development"] }).primaryKey(),
   status: text("status", { enum: ["healthy", "unhealthy"] }).notNull(),
   lastCheckedAt: text("last_checked_at"),
   unhealthyCode: text("unhealthy_code"),

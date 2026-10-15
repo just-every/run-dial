@@ -3031,9 +3031,9 @@
     {
       "path": "scripts/delivery/base/package.mjs",
       "originPath": "modules/delivery-producer/package.mjs",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "a1cde988c1be2c9f74ff5ca374dc47e044ba193c",
       "files": {
-        "scripts/delivery/base/package.mjs": "8daa16d77dfd21ea918dd896b25bcf7e67627d7bf89933e5f5719fe9093e6ca8"
+        "scripts/delivery/base/package.mjs": "3fd9062e9486092b9436fba6a3c26aba5951be01d922327c31fa418c96070bdf"
       },
       "modes": {
         "scripts/delivery/base/package.mjs": "100644"
@@ -3097,9 +3097,9 @@
     {
       "path": "scripts/delivery/base/spec.mjs",
       "originPath": "modules/delivery-producer/spec.mjs",
-      "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
+      "revision": "a1cde988c1be2c9f74ff5ca374dc47e044ba193c",
       "files": {
-        "scripts/delivery/base/spec.mjs": "4526a4d0f3ec141b4afa8d848badb12a08e42d60e1b00bd1db9e63064483428b"
+        "scripts/delivery/base/spec.mjs": "6a11b2986a98936f60c8984e73add5ba491002f0609fb0b478874967caaffd92"
       },
       "modes": {
         "scripts/delivery/base/spec.mjs": "100644"
@@ -3342,6 +3342,17 @@
         "src/modules/erasure/scope.mjs": "100644",
         "src/modules/erasure/sql.mjs": "100644",
         "src/modules/erasure/verification.mjs": "100644"
+      }
+    },
+    {
+      "path": "scripts/delivery/base/mail.mjs",
+      "originPath": "modules/delivery-producer/mail.mjs",
+      "revision": "a1cde988c1be2c9f74ff5ca374dc47e044ba193c",
+      "files": {
+        "scripts/delivery/base/mail.mjs": "2323205c7cbc1aea81ec85509d597df2e486abfc9443981ceaee04950db913a4"
+      },
+      "modes": {
+        "scripts/delivery/base/mail.mjs": "100644"
       }
     }
   ],

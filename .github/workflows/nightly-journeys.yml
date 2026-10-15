@@ -1,0 +1,77 @@
+name: Scheduled and release journeys
+
+on:
+  push:
+    tags:
+      - "v*"
+  schedule:
+    - cron: "17 16 * * *"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact commit, tag or branch to verify (empty uses the selected workflow ref)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  journeys:
+    name: ${{ matrix.journey }} journey
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # Cron waits for real scheduled minutes and exceeded 18 minutes in the
+        # prior run; installer exercises the complete README clone/restore flow.
+        journey: [installer, cron]
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.ref }}
+      - name: Reclaim disposable hosted-runner SDKs for native CLI proof
+        if: ${{ runner.environment == 'github-hosted' && runner.os == 'Linux' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_ACTIONS" == "true" && "$RUNNER_ENVIRONMENT" == "github-hosted" && "$RUNNER_OS" == "Linux" ]]
+          available_bytes() {
+            df -B1 --output=avail "$1" | tail -n 1 | tr -d ' '
+          }
+          printf 'Before checkout available bytes: %s\n' "$(available_bytes "$GITHUB_WORKSPACE")"
+          printf 'Before temporary available bytes: %s\n' "$(available_bytes "$RUNNER_TEMP")"
+          # Dial uses none of these preinstalled SDKs. Keep the native CLI's real disk guard.
+          sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+          printf 'After checkout available bytes: %s\n' "$(available_bytes "$GITHUB_WORKSPACE")"
+          printf 'After temporary available bytes: %s\n' "$(available_bytes "$RUNNER_TEMP")"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+      - name: Reserve native fixture listeners before starting runtimes
+        run: |
+          ports="$(node scripts/ci-runtime-ports.mjs)"
+          sudo sysctl -w "net.ipv4.ip_local_reserved_ports=$ports"
+          node scripts/ci-runtime-ports.mjs --check
+      - run: pnpm install --frozen-lockfile
+      - name: Install Chromium and native dependencies
+        timeout-minutes: 5
+        run: |
+          sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS "$(command -v node)" scripts/ci-apt-bootstrap.mjs
+          pnpm exec playwright install --with-deps chromium
+      - name: Run complete slow journey
+        env:
+          DIAL_TEST_DIAGNOSTICS_DIR: ${{ runner.temp }}/dial-test-diagnostics
+        run: |
+          node scripts/monitor-test-workers.mjs &
+          monitor="$!"
+          trap 'kill "$monitor" 2>/dev/null || true; wait "$monitor" 2>/dev/null || true' EXIT
+          export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$PWD/scripts/test-worker-diagnostics.mjs"
+          node scripts/ci-verify.mjs journeys ${{ matrix.journey }}

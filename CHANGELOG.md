@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Split push Verify into parallel checks. The unchanged README installation and real-time Cron journeys run nightly, on release tags and on demand; local `pnpm verify` still runs them all.
+
+- Pin rer 0.2.22 and declare RER Managed mail. Configure supplies and hides the relay settings and installation credential; direct SendGrid and Resend installs retain their provider setup. Relay sends use Base’s adapter, durable admission, Retry-After-aware queue backoff and visible credential refusals. Migration `0050_managed_mail_health.sql` preserves existing provider health while adding the relay identity.
+- A double-booking loser sees that the time was just taken, keeps their day and details privately in the tab for up to 30 minutes, and can choose another time. Deploy docs configure mail before the dry run and show how to clone the v0.2.0 tag beside main.
+
 - Pin rer 0.2.20, whose removal command empties populated R2 buckets in one pass. Document `rer signin` using the maintained owner sign-in grants and confirmation handler. Grants and authentication audit remain installation-local; operator erasure covers both, including attributable confirmation counters.
 - `HOME-001`: the installed Lobby and `/setup/state` both use completed onboarding. Owner admission alone keeps **Finish setup**; completion switches it to **Sign in**. The setup-token hint is shown only for editions that declare manual token claims; Dial's CLI claims its owner automatically. Existing Lobby wording and styles are unchanged.
 - Anonymous requests pass host and public rate checks before archive admission. Static assets and the Lobby avoid writer receipts; provider callbacks authenticate and pass their rate check before acquiring a receipt. Admitted work still retains its receipt through background work.

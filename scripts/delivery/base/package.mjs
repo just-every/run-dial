@@ -37,7 +37,7 @@ export async function producePackage({root = process.cwd(), config, output = 're
   root = await candidateRoot(root);
   const {project, workflow, setup} = packagingConfig(config);
   await checkEdition(root, config.edition);
-  const selectedSetup = await loadSetupManifest(root, setup);
+  const selectedSetup = await loadSetupManifest(root, setup, config.artifact.specInputs?.mail);
   const descriptor = selectedSetup
     ? {...project, setup: {path: selectedSetup.path, sha256: selectedSetup.sha256}}
     : project;
@@ -65,6 +65,6 @@ export async function produceSeedArtifact({root = process.cwd(), config, output}
   root = await candidateRoot(root);
   const {project, setup} = packagingConfig(config);
   await checkEdition(root, config.edition);
-  await loadSetupManifest(root, setup);
+  await loadSetupManifest(root, setup, config.artifact.specInputs?.mail);
   return produceArtifact({...config.artifact, root, output:output ?? `delivery-artifact/${project.deployment.artifactFile}`});
 }
