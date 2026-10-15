@@ -319,10 +319,10 @@
   },
   "secretNames": [
     "SESSION_SECRET",
-    "SETUP_TOKEN"
+    "SETUP_TOKEN",
+    "MAIL_API_KEY"
   ],
   "optionalSecretNames": [
-    "MAIL_API_KEY",
     "MAIL_WEBHOOK_KEY",
     "GOOGLE_OAUTH_CLIENT_SECRET",
     "CALENDAR_WEBHOOK_SECRET",

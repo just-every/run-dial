@@ -33,5 +33,8 @@ export const commandAdapter = createCommandAdapter(lifecycle, {
  // Local dev identity: the local-only Worker entry, the build output rer build scans for the dev layer, and the kept end-to-end email-link test.
  devIdentity: { entry: 'src/server.dev.ts', output: ['dist'], emailLinkTest: 'tests/local-setup-journey.test.mjs' },
  localOnlyKeys: ['RER_DEV_ORIGIN', 'RER_DEV_IDENTITY'],
- input: { names: { name: 'displayName' } },
+ input: {
+  names: { name: 'displayName' },
+  defaults: () => ({ MAIL_PROVIDER: 'development', MAIL_FROM: 'noreply@localhost.test' }),
+ },
 });
