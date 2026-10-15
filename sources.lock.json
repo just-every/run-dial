@@ -778,7 +778,7 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "22893221f94885f9be290b8f135c2c40cd867f3b2c4ac717aebaa001fa46f8b2",
+      "sha256": "28e2392bfc077a808ec1a0b38bde91814ca3b76846d0dbd04ab7ab69154facb2",
       "executable": false
     },
     "deploy-demo.json": {
@@ -2410,7 +2410,7 @@
       "executable": false
     },
     "rer-project.json": {
-      "sha256": "c7dfe1924bb51696bb633832cd0597c9f6caaa2d7327e73c587b516a1b2a496a",
+      "sha256": "7c8555a707c8cdf5e8d286fc3c87f9ed751fc690a9f43c1ef2df6dfae0ab2073",
       "executable": false
     },
     "rer-setup.json": {
@@ -2602,7 +2602,7 @@
       "executable": false
     },
     "scripts/delivery/base/packaging.json": {
-      "sha256": "6c69eebfed76f22393ff80bea117c29061e70fb8c7e755f1f7ea2d9386b5a724",
+      "sha256": "92da81c776453d00b793104517ebe20b62371f8d98d189fd3aefc5d2a62363c9",
       "executable": false
     },
     "scripts/delivery/base/paths.mjs": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "scripts/verify-operator-change.mjs": {
-      "sha256": "a494cfa694f4d146e3902d5bb616a8f5886b8e7a7c204238464a5da2d438acc1",
+      "sha256": "e35b9169c65fd621f32b2fb20373c111983449e38eff6b393204451d4a64509b",
       "executable": false
     },
     "scripts/verify-operator-creation-recovery.mjs": {
@@ -4406,7 +4406,7 @@
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Hero.tsx": {
-      "sha256": "b4075fa1db7400e61fd03a74844d5e249cbeb6612c4c3e83deee6b93d123d779",
+      "sha256": "98f129b81f62e59539ae99985ae07880d2cfe66e75ddfc92e55d7a4b69b013fe",
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Invitees.tsx": {
@@ -5170,7 +5170,7 @@
       "executable": false
     },
     "tests/booking-axe/keyboard-events.mjs": {
-      "sha256": "0af7de363b5643abdd532b0079c33be0907e7bcc0e9d1efaa47e7147c93cb6e6",
+      "sha256": "a7711b4f1273dfc932f894fb58c012e2f5f95e55db1e560569eae1223b6d0b10",
       "executable": false
     },
     "tests/booking-axe/keyboard-filters.mjs": {
@@ -5302,7 +5302,7 @@
       "executable": false
     },
     "tests/bookings-search-upgrade.test.mjs": {
-      "sha256": "851cd2524d065a9301115e01177b58d4a0d2e75a27bf44af39b1bc1cc8f9ad9a",
+      "sha256": "bbf8f4f71954dcae4f54d0660a4ad4675c2e4a8d269fc942a0c863751eb55991",
       "executable": false
     },
     "tests/calendar-file-worker.wrangler.toml": {
@@ -5486,7 +5486,7 @@
       "executable": false
     },
     "tests/first-run.test.mjs": {
-      "sha256": "e92b06956a20431d3fad1bf69a107afe7ce445c61d435ec4e7b6a00aa35dbacf",
+      "sha256": "6e24a39e77942271c5bf17d9400490947a04b795f918bde40c0ec5a869605e9f",
       "executable": false
     },
     "tests/first-run/fixture.mjs": {
@@ -6358,7 +6358,7 @@
       "executable": false
     },
     "tests/runtime.test.mjs": {
-      "sha256": "579a6e31d2f96982fb35b5116f2ae5a16df6a58236a295566d2a18039eda37f8",
+      "sha256": "ec0c8d364a975435c34cb2b3dabed3498d868feb5ce9766ec3c7c0b60cc44bcc",
       "executable": false
     },
     "tests/sendgrid-provider-migration.test.mjs": {
