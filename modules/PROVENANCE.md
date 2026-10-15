@@ -12,13 +12,12 @@ restore-fence implementation. This adoption does not refresh the whole CLI or
 claim a green aggregate Base gate: a later exact-head runner run passed
 14/24 stages and remains blocked by failures also reported on its main.
 
-The CLI/onboarding runtime is the exact `@runeditrun/rer` 0.2.2 package pin,
-with a committed pnpm patch. The published version lacks an adapter reset
-preflight, so the patch awaits Dial's existing legacy-state guard before any
-reset inventory or removal. It also teaches the package lock inspector to read
-pnpm's patched version suffix. The package, patch, and frozen lockfile travel
-with the consumer source. The command guides now describe this package adoption
-and are maintained by Dial rather than recorded as byte-exact Base guides.
+The CLI/onboarding runtime is the published `@runeditrun/rer` package at the
+exact version `package.json` pins, with its frozen lockfile and no package patch.
+The package awaits Dial's adapter `resetPreflight`, which keeps the legacy-state
+guard before any reset inventory or removal. The command guides describe this
+package adoption and are maintained by Dial rather than recorded as byte-exact
+Base guides.
 
 Dial owns the adapter and the thin `scripts/operations.mjs` delegate. The
 native root `operations/` pair remains solely for deploy-kit and the owner-gated live
@@ -44,10 +43,19 @@ Dial owns packaging policy, artifact caller, setup manifest, integration checker
 and HTTP/browser/artifact journeys. The integration checker wraps Base producer
 validation; Base does not supply a separate projects/integrations CLI.
 
-The import-kit source and README, CONTRACT and FIXTURES documents are byte-exact
-Base files at this revision. Dial owns `0029_move_in_import.sql`, the source
-adapter, native targets, routes and synthetic acceptance journeys. No live source
-account proof is claimed.
+The import-kit source and its README, CONTRACT and FIXTURES documents are
+byte-exact Base files at `6c8374d5eb2e7eb53bad079d0502dbc4f930fd1c`, recorded in
+`base-copies.json`, with one exception: Dial's `src/d1/erasure-writes.ts`
+rebinds a source claim shared by several jobs to the hashes of its own job's
+decision, where Base takes the first job's. A field redaction keeps each job's
+own effects, and Dial's per-upload manage tokens make those differ, so Base's
+choice left the current import's claim mismatched and its undo refused. The
+file leaves the byte-copy record until Base carries the same change.
+`0045_import_preparation_steps.sql` and `0046_import_stream_sources.sql` are
+byte-exact Base default-seed migrations adding the kit's additive control
+tables. Dial owns `0029_move_in_import.sql`, the source adapter, native targets,
+routes, the erased-invitee tombstone and synthetic acceptance journeys. No live
+source account proof is claimed.
 
 Base keeps its edition importer catalogue and source-specific guides in its private
 authoring tree; those files are not copied into Dial. The reusable import schemas

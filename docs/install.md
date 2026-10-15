@@ -15,10 +15,10 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
 
 ## Run it on your computer
 
-1. Install `rer` 0.2.2 globally. Use Node 22 or later with npm:
+1. Install the latest `rer` globally. Use Node 22 or later with npm. In a Dial checkout, it runs the exact `rer` version Dial pins in `package.json`:
 
    ```bash
-   npm install -g @runeditrun/rer@0.2.2
+   npm install -g @runeditrun/rer
    ```
 
 2. Clone the source and enter the checkout:
@@ -159,9 +159,9 @@ Until you finish setup, signing in opens the setup workspace at `/setup`, and an
 4. **An availability window.** Add weekly hours to an event type.
 5. **An event type.** Create your first one.
 6. **Publish or Open requests.** Choose **Publish event type** to enable automatic bookings with saved availability, or **Open requests** to take requests only.
-7. **Copy the booking link.** Copy the event's public booking link.
+7. **Copy the booking link.** Copy the event's public booking link. If your browser blocks clipboard access, Dial shows the link in a box to select and copy yourself; choose **I have shared it** to record the step.
 
-You need not finish every step. **Finish setup** asks for a saved host profile and a copied link to an event that is published, or open for requests. **Open requests** needs a working mail sender, but no Google Calendar or availability windows. Publishing for bookable times needs saved availability and verified mail, including the local outbox in local mode. A calendar is optional for fixed locations: publishing enables bookings using saved weekly availability and existing Dial bookings, without checking external calendar conflicts. A connected calendar that is unhealthy or missing its selection blocks publication and bookable times until fixed; Google Meet requires a healthy connected calendar that supports Meet. Finishing checks the current readiness again, then opens the operator app at `/app`.
+You need not finish every step. **Finish setup** asks for a saved host profile and a copied (or shared) link to an event that is published, or open for requests. **Open requests** needs a working mail sender, but no Google Calendar or availability windows. Publishing for bookable times needs saved availability and verified mail, including the local outbox in local mode. A calendar is optional for fixed locations: publishing enables bookings using saved weekly availability and existing Dial bookings, without checking external calendar conflicts. A connected calendar that is unhealthy or missing its selection blocks publication and bookable times until fixed; Google Meet requires a healthy connected calendar that supports Meet. Finishing checks the current readiness again, then opens the operator app at `/app`.
 
 Setup stays finished. Later connection problems show in Settings and on Overview, where the same steps appear under "Booking configuration", and they never send you back to setup. The Mail step and, when connected, the Google step count only a check that passed in the last 24 hours, so they return to "To do" until you run the check again; without a Google connection, that step shows "Optional" and counts as done.
 

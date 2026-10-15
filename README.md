@@ -46,10 +46,10 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-Install `rer` 0.2.2 with Node 22 or later and Git, then clone Dial and start it:
+Install the latest `rer` with Node 22 or later and Git, then clone Dial and start it:
 
 ```sh
-npm install -g @runeditrun/rer@0.2.2
+npm install -g @runeditrun/rer
 git clone https://github.com/just-every/run-dial.git dial
 cd dial
 rer dev

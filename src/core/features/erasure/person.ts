@@ -1,4 +1,4 @@
-import { importPersonValues, erasePersonSourceCustody, finishPersonCustody } from "../move-in";
+import { importPersonValues, erasePersonSourceCustody, erasePersonSharedCustody, finishPersonCustody } from "../move-in";
 import { admitErasure, erasureAuthority, requireErasureSession } from "./admission";
 import { foldEmail, mailRecipientMatches, emailFoldSql, personalRecords, operatorOverlap, operatorOverlapSql } from "./identity";
 import { mailGraph } from "./graphs";
@@ -35,10 +35,9 @@ export class PersonErasure {
     if (input.expiresAt<Date.now() || input.expiresAt>Date.now()+300_000 || !constantEqual(input.confirmation,await this.signature(email,records,session,input.expiresAt,operatorIdentityRetained))) throw new ErasureError("erasure_preview_changed",409);
     await requireErasureSession(this.db,session);
     const custody = await importPersonValues(this.db, email, session);
-    // Base currently requires an absent native target for related redaction.
-    // A source-only invitee cannot name the peer's booking or sever its undo.
-    // Refuse before admission, native deletion or a completed receipt.
-    if (custody.sharedCustody) throw new ErasureError("erasure_import_shared_source",503);
+    // A selector longer than the kit accepts cannot be matched exactly. Refuse
+    // before admission, native deletion or a completed receipt.
+    if (custody.oversized) throw new ErasureError("erasure_import_value_too_long",503);
     const requestedAt=nowIso(), proposedId=createId();
     // A failed request leaves this admission closed and visible to the next preview.
     // It carries no authority: every retry still needs a native session and confirmation.
@@ -59,6 +58,7 @@ export class PersonErasure {
     const id=pending.receipt_id;
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
     await erasePersonSourceCustody(this.db, email, custody.custodyOnly, custody.values, session);
+    await erasePersonSharedCustody(this.db, custody.values, custody.sharedFields, custody.sharedInvitees, session);
     for (const booking of records.bookings) await eraseEntity("bookings",booking);
     for (const request of records.requests) await eraseEntity("availability-requests",request);
     const remaining=await this.records(email);

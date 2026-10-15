@@ -8,6 +8,7 @@ import { readSavedFiles, type SavedFile } from './source';
 import { reviewedApplication } from './application';
 import { issueUploadIdentity, verifyUploadIdentity } from './upload-identity.mjs';
 import { uploadGeneration, fenceUploadGeneration } from './upload-generation';
+import { guardErasedInvitees, fenceErasedInvitees } from './erased-invitees';
 import { reserveSourceContext } from './source-claims';
 import type { Choices, Row, Snapshot } from './model';
 import { captureMode } from './catch-up';
@@ -51,13 +52,13 @@ export class MoveInService{
   const mode=await captureMode(this.db,source.data);
   const catchUp=mode.mode==='catch-up'?{known:mode.known,imported:await importedBookings(this.db)}:undefined;
   const {plan}=await planMoveIn(files,choices,asOf,await this.snapshot(),context,this.secret,upload.nonces,catchUp);
-  await guardErasedSources(plan,this.db);await reserveSourceContext(plan,context);
+  await guardErasedSources(plan,this.db);await guardErasedInvitees(plan,this.db);await reserveSourceContext(plan,context);
   return {plan,report:reportFromPlan(plan,'preview',await describeDifferences(this.db,captureFacts(plan).differences)),uploadIdentity:upload.identity,generation};
  }
  async apply(files:SavedFile[],choices:Choices,asOf:string,fingerprint:string,acknowledged:boolean,session:SessionRecord,uploadIdentity?:string){
   if(!acknowledged)throw new Error('Acknowledge losses, rejected overlaps and changed values before applying.');
   const {plan,generation}=await this.preview(files,choices,asOf,session,uploadIdentity,true);if(plan.fingerprint!==fingerprint)throw new Error('The source or destination changed. Review a fresh preview.');
-  const context=fenceUploadGeneration(await reserveSourceContext(plan,await reviewedApplication(importContext(this.db,session),fingerprint)),generation);
+  const context=fenceErasedInvitees(fenceUploadGeneration(await reserveSourceContext(plan,await reviewedApplication(importContext(this.db,session),fingerprint)),generation),plan);
   const job=await createD1ImportJob(plan,context);await recordFacts(this.db,job.id,captureFacts(plan));return this.read(job.id,session);
  }
  async read(id:string,session:SessionRecord){const context=importContext(this.db,session);const job=await readD1ImportJob(id,context);const {plan}=await stored(id,context);return {job,report:reportFromPlan(plan,job.state,await storedDifferences(this.db,id)),...(job.state==='undone'?{undo:await readD1ImportUndoReport(job.id,context,{limit:1000})}:{})};}

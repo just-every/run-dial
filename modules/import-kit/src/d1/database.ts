@@ -1,5 +1,6 @@
 import { d1StreamOriginSchema } from './stream-origin.ts';
 import { d1PreparationSchema } from './preparation-schema.ts';
+import { d1PreparationStepsSchema } from './preparation-steps-schema.ts';
 import { stageNativeTransaction } from './native-staging.ts';
 import type { NativeStagingScope } from './native-staging-context.ts';
 import { d1NativeStagingSchema } from './native-staging-schema.ts';
@@ -52,6 +53,7 @@ export async function initializeD1ImportStorage(database: D1Database): Promise<v
   await database.batch(d1CustodyStateSchema.map(sql => database.prepare(sql)));
   await database.batch(d1ReversalFenceSchema.map(sql => database.prepare(sql)));
   await database.batch(d1PreparationSchema.map(sql => database.prepare(sql)));
+  await database.batch(d1PreparationStepsSchema.map(sql => database.prepare(sql)));
   await database.batch(d1RetirementSchema.map(sql => database.prepare(sql)));
 }
 export const sql = (sql: string, ...params: any[]): D1Sql => ({ sql, params });

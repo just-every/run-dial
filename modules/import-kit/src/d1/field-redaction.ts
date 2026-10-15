@@ -1,5 +1,5 @@
 import type { Json, ImportPlan, OriginalErasurePolicy } from '../types.ts';
-import type { D1FieldRedaction } from './types.ts';
+import type { D1FieldRedaction, D1FieldMatch } from './types.ts';
 import { requireText, canonicalJson, sha256 } from '../provenance/identity.ts';
 import { planFingerprint } from '../plan/index.ts';
 import { withdrawArtifacts } from './erased-artifacts.ts';
@@ -7,20 +7,34 @@ import { withdrawArtifacts } from './erased-artifacts.ts';
 /** Snapshot the caller's selectors before any awaited reads. Never retain the
  * selected private values in the plan or journal. */
 export function fieldRedactions(fields: readonly D1FieldRedaction[] = []): D1FieldRedaction[] {
-  return fields.map(({ path, value }) => {
+  return fields.map(({ path, value, optional }) => {
     requireText(value, 'redaction value');
     if (!Array.isArray(path) || !path.length || path.length > 256 || path.some(segment =>
       typeof segment !== 'string' && !(Number.isSafeInteger(segment) && segment >= 0))) throw new Error('IMPORT_INVALID_REDACTION_PATH');
-    return { path: [...path], value };
+    if (optional !== undefined && typeof optional !== 'boolean') throw new Error('IMPORT_INVALID_REDACTION_PATH');
+    return { path: [...path], value, ...optional ? { optional } : {} };
   });
+}
+
+/** A path matched nowhere is a typo unless every selector on it is optional. */
+export function unmatchedPath(fields: readonly D1FieldRedaction[], counts: readonly D1FieldMatch[]): boolean {
+  return counts.some(count => count.matches === 0 && fields.some(field => !field.optional && canonicalJson(field.path) === canonicalJson(count.path)));
+}
+
+export function fieldMatches(fields: readonly D1FieldRedaction[]): D1FieldMatch[] {
+  return [...new Map(fields.map(field => [canonicalJson(field.path), { path: [...field.path], matches: 0 }])).values()];
 }
 
 const removed = Symbol('removed JSON field');
 /** Copy only changed branches. Wildcards select arrays, never arbitrary object
  * properties; exact leaves prevent substring replacement in unrelated text. */
-export function redactFields(value: Json, fields: readonly D1FieldRedaction[]): Json {
+export function redactFields(value: Json, fields: readonly D1FieldRedaction[], counts?: D1FieldMatch[]): Json {
   const visit = (input: Json, selected: readonly D1FieldRedaction[], at: number): Json | typeof removed => {
-    if (selected.some(field => field.path.length === at && input === field.value)) return removed;
+    const matched = selected.filter(field => field.path.length === at && input === field.value);
+    if (matched.length) {
+      for (const count of counts ?? []) if (matched.some(field => canonicalJson(field.path) === canonicalJson(count.path))) count.matches++;
+      return removed;
+    }
     if (input === null || typeof input !== 'object') return input;
     const result: Json[] | Record<string, Json> = Array.isArray(input) ? [] : {};
     let changed = false;
