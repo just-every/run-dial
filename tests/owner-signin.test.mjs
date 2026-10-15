@@ -13,12 +13,12 @@ contract('AUTH-006', 'deployment owner grants survive link scanners, admit once,
  const output = await build({ entryPoints: ['src/core/features/operators/rate-correlation.ts'], bundle: true, write: false, platform: 'node', format: 'esm' });
  const { operatorRateCorrelation } = await import(`data:text/javascript;base64,${Buffer.from(output.outputFiles[0].text).toString('base64')}`);
  const binding = sqliteBinding(db);
- const auth = createOperatorAuth({ db: binding, hooks: { rateCorrelation: operatorRateCorrelation(binding) }, config: { origin, OWNER_EMAIL: 'owner@example.test', SESSION_SECRET: 'test-session-secret-at-least-32-characters', SETUP_TOKEN: 'test-setup-token-at-least-32-characters' }, clientIp: () => '192.0.2.1' });
+ const auth = createOperatorAuth({ db: binding, hooks: { rateCorrelation: operatorRateCorrelation(binding) }, config: { origin, OWNER_EMAIL: 'owner@example.test', SESSION_SECRET: 'synthetic-test-session-secret-at-least-32-characters', SETUP_TOKEN: 'synthetic-test-setup-token-at-least-32-characters' }, clientIp: () => '192.0.2.1' });
  const handle = createAuthHandler(auth);
  const request = (path, init = {}) => new Request(origin + path, { ...init, headers: { host: new URL(origin).host, ...init.headers } });
  const post = token => request('/auth/owner-signin', { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
  try {
-  const boot = await handle(request('/auth/bootstrap', { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ token: 'test-setup-token-at-least-32-characters', displayName: 'Dial owner' }) }));
+  const boot = await handle(request('/auth/bootstrap', { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ token: 'synthetic-test-setup-token-at-least-32-characters', displayName: 'Dial owner' }) }));
   assert.equal(boot.status, 303);
   const owner = db.prepare('SELECT id,version FROM oa_operators').get();
   const mint = async (overrides = {}) => {

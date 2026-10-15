@@ -33,7 +33,7 @@ export default {
     if (new URL(request.url).pathname === '/fresh') {
       // A newly issued capability and newly requested work may use an imported
       // booking; its archived commands must remain historical.
-      const token = 'new-synthetic-capability';
+      const token = 'synthetic-new-synthetic-capability';
       const manageUrl = `https://dial.test/manage/${token}`;
       await env.DB.prepare('INSERT INTO booking_manage_tokens (id,booking_id,token_hash,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?)')
         .bind('fresh-manage', bookingId, await hashToken(token, sessionSecret), '2099-12-31', now, now).run();

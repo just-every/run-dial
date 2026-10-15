@@ -39,7 +39,7 @@ APP_URL = "http://127.0.0.1:15756"
 GOOGLE_OAUTH_CLIENT_ID = "synthetic-client"
 GOOGLE_OAUTH_CLIENT_SECRET = "synthetic-secret"
 CALENDAR_WEBHOOK_SECRET = "synthetic-calendar-webhook-secret-for-test-only"
-SESSION_SECRET = "dial-embed-document-synthetic-local-session-secret"
+SESSION_SECRET = "synthetic-dial-embed-document-synthetic-local-session-secret"
 
 MAIL_PROVIDER = "development"
 RER_DEV_KEY = "dial-test-only-dev-key-abcdef0123456789abcdef0123456789"

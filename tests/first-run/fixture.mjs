@@ -13,8 +13,8 @@ export const origin = 'http://127.0.0.1:15766';
 export async function fixture(t) {
   const state = await mkdtemp(join(tmpdir(), 'dial-first-run-'));
   const runtime = { ENVIRONMENT: 'development', APP_URL: origin, OWNER_EMAIL: 'owner@dial.test',
-    SESSION_SECRET: 'first-run-native-test-session-secret-at-least-32',
-    SETUP_TOKEN: 'first-run-native-test-setup-token-at-least-32',
+    SESSION_SECRET: 'synthetic-first-run-native-test-session-secret-at-least-32',
+    SETUP_TOKEN: 'synthetic-first-run-native-test-setup-token-at-least-32',
     MAIL_PROVIDER: 'development', MAIL_FROM: 'noreply@dial.test' };
   let worker;
   t.after(async () => { try { await worker?.dispose(); } finally { await rm(state, { recursive: true, force: true }); } });

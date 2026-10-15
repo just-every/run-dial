@@ -14,7 +14,7 @@ import { hashToken } from "../src/core/platform/auth/tokens";
 import type { RuntimeEnvironment } from "../src/core/shared/runtime-env";
 
 type Bindings = { DB: D1Database };
-const runtime: RuntimeEnvironment = { ENVIRONMENT: "development", APP_URL: "http://dial.test", SESSION_SECRET: "booking-http-worker-test-secret-not-used-by-the-app" };
+const runtime: RuntimeEnvironment = { ENVIRONMENT: "development", APP_URL: "http://dial.test", SESSION_SECRET: "synthetic-booking-http-worker-test-secret-not-used-by-the-app" };
 const calendar: CalendarBusyReader = { async readBusy() { return { kind: "ok", observedAt: new Date().toISOString(), intervals: [] }; } };
 
 export default {

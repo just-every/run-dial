@@ -14,7 +14,7 @@ contract("AUTH-004", "a forged OAuth callback changes nothing and returns 400 fr
   const server = spawn("pnpm", [
     "exec", "wrangler", "dev", "--local", "--persist-to", persistState, "--config", "tests/providers-app-worker.wrangler.toml",
     "--ip", "127.0.0.1", "--port", port, "--inspector-port", "15721",
-    "--var", "OWNER_EMAIL:operator@dial.test", "--var", "ENVIRONMENT:development", "--var", `APP_URL:${origin}`, "--var", "SESSION_SECRET:provider-runtime-test-secret-that-is-at-least-thirty-two-bytes",
+    "--var", "OWNER_EMAIL:operator@dial.test", "--var", "ENVIRONMENT:development", "--var", `APP_URL:${origin}`, "--var", "SESSION_SECRET:synthetic-provider-runtime-test-secret-that-is-at-least-thirty-two-bytes",
   ], {
     cwd: new URL("../", import.meta.url),
     env: { ...process.env, CI: "1" },

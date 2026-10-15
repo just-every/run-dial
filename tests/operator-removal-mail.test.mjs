@@ -42,7 +42,7 @@ contract("OPER-002", "removal retires pending operator notifications without rev
   const stepUpBefore = (await sql('SELECT id FROM oa_step_up_challenges WHERE operator_id=?', [second.id])).results;
   assert.equal(stepUpBefore.length, 1, 'native step-up creates a session-bound proof');
   await data('/auth/magic-link', { email: 'rate-control@example.test', returnTo: '/app' }, 202);
-  const rateSecret = 'operator-management-isolated-test-secret-only';
+  const rateSecret = 'synthetic-operator-management-isolated-test-secret-only';
   const personalRateKeys = await Promise.all(['invite','magic','step-up'].map(scope => hashToken(rateSecret, 'rate', `${scope}:email:${email}`)));
   // The valid-link confirmation counter cannot be recomputed from anything stored after the link is used:
   // only its write-time rer_erasure_rates correlation lets erasure find it (DATA-002).

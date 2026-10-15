@@ -1,13 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { fixture } from './mail-connection/fixture.mjs';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { chromium } from '@playwright/test';
+import { emittedFixture, fixture, origin } from './mail-connection/fixture.mjs';
+import { linkMessage } from '../modules/operator-auth/identity/email-link/message.mjs';
 
-test('Managed mail verifies the relay, sends through Base, honours Retry-After and exposes a retired credential to the owner', async t => {
+test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner', async t => {
   const calls = [], relay = 'https://platform.example.test/api/managed-mail/send';
   let status = 202;
-  const f = await fixture(t, { MAIL_PROVIDER: 'rer', MAIL_API_KEY: 'synthetic-managed-credential', MAIL_RELAY_URL: relay }, async request => {
+  const f = await emittedFixture(t, { MAIL_PROVIDER: 'rer', MAIL_API_KEY: 'synthetic-managed-credential', MAIL_RELAY_URL: relay }, async request => {
     assert.equal(request.url, relay);
     assert.equal(request.method, 'POST');
+    // A network receiver cannot see fetch options. Native acceptance plus the
+    // redirect destination never being requested proves manual mode in workerd.
     assert.equal(request.headers.get('authorization'), 'Bearer synthetic-managed-credential');
     assert.equal(request.headers.get('content-type'), 'application/json');
     const body = await request.json();
@@ -19,7 +25,10 @@ test('Managed mail verifies the relay, sends through Base, honours Retry-After a
     return Response.json(status === 202 ? { accepted: true } : { error: 'sensitive provider body must not reach Dial' }, { status, headers: status === 429 ? { 'Retry-After': '180' } : {} });
   });
   assert.equal((await f.request('/api/app/mail/check', {})).status, 200);
-  const event = await (await f.request('/__fixture/seed')).json();
+  assert.equal((await f.fetch('/api/app/profile', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Robin Miller', handle: 'robin', title: 'Independent consultant', biography: 'Practical conversations about your next project.', timezone: 'Australia/Brisbane', focusAreas: [], socialProof: [] }) })).status, 200);
+  const created = await f.request('/api/app/event-types', { title: 'Project conversation', slug: 'project-conversation', description: 'Talk through your next project with Robin.', durationMinutes: 30, color: '#f08c52', locationType: 'phone', locationLabel: 'Phone call', locationValue: '+61755550123', listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 15, minimumNoticeMinutes: 240, bookingHorizonDays: 60, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, availability: [{ weekday: 1, startMinute: 540, endMinute: 1020 }] });
+  assert.equal(created.status, 201);
+  const event = await created.json();
   assert.equal((await f.request(`/api/app/event-types/${event.id}/publish`, {})).status, 200);
   const now = new Date(), at = now.toISOString();
   // A real queued invitee notice, with network as the only substituted edge.
@@ -27,41 +36,113 @@ test('Managed mail verifies the relay, sends through Base, honours Retry-After a
     await f.db.prepare("INSERT INTO delivery_outbox(id,kind,idempotency_key,payload_json,state,attempts,next_attempt_at,created_at,updated_at) VALUES(?,'mail_send',?,?,'pending',0,?,?,?)")
       .bind(id, id, JSON.stringify({ to: 'invitee@example.test', subject: 'A conversation with Robin', text: 'Your conversation is confirmed.', html: '<p>Your conversation is confirmed.</p>', ...recipient }), at, at, at).run();
   };
-  const process = async (id, time = at) => (await (await f.request('/__fixture/process', { outboxId: id, now: time })).json()).result;
-  const row = id => f.db.prepare('SELECT state,last_error_code,next_attempt_at FROM delivery_outbox WHERE id=?').bind(id).first();
+  const row = id => f.db.prepare('SELECT state,attempts,last_error_code,next_attempt_at FROM delivery_outbox WHERE id=?').bind(id).first();
+  const processDelivery = async id => { await f.queue(id); return (await row(id)).state; };
   await enqueue('managed-accepted');
-  assert.equal(await process('managed-accepted'), 'succeeded');
-  assert.equal(await process('managed-accepted'), 'not_due');
+  assert.equal(await processDelivery('managed-accepted'), 'succeeded');
+  assert.equal(await processDelivery('managed-accepted'), 'succeeded');
+  assert.equal((await row('managed-accepted')).attempts, 1);
   assert.equal(calls.filter(body => body.to).length, 1, 'a completed command is never sent twice');
   status = 429;
   await enqueue('managed-throttled');
-  assert.equal(await process('managed-throttled'), 'retrying');
-  assert.equal(Date.parse((await row('managed-throttled')).next_attempt_at) - now.getTime(), 180_000);
-  assert.equal(await process('managed-throttled', new Date(now.getTime() + 179_000).toISOString()), 'not_due');
+  const throttledAt = Date.now();
+  assert.equal(await processDelivery('managed-throttled'), 'pending');
+  const due = Date.parse((await row('managed-throttled')).next_attempt_at);
+  assert.ok(due >= throttledAt + 180_000 && due <= Date.now() + 180_000);
+  const afterThrottle = calls.length;
+  assert.equal(await processDelivery('managed-throttled'), 'pending');
+  assert.equal(calls.length, afterThrottle, 'an early queue redelivery does not submit again');
   status = 202;
-  assert.equal(await process('managed-throttled', new Date(now.getTime() + 180_000).toISOString()), 'succeeded');
+  await f.db.prepare('UPDATE delivery_outbox SET next_attempt_at=? WHERE id=?').bind(at, 'managed-throttled').run();
+  assert.equal(await processDelivery('managed-throttled'), 'succeeded');
+  assert.equal((await row('managed-throttled')).attempts, 2);
   status = 429;
   const owner = await f.db.prepare('SELECT id,access_generation AS generation FROM operators WHERE normalized_email=?').bind('owner@example.test').first();
   await enqueue('managed-operator-throttled', { to: 'owner@example.test', recipientRole: 'operator', operatorAccess: owner });
-  assert.equal(await process('managed-operator-throttled'), 'retrying');
-  assert.equal(Date.parse((await row('managed-operator-throttled')).next_attempt_at) - now.getTime(), 180_000, 'Retry-After survives the native notification coordinator');
+  const operatorAt = Date.now();
+  assert.equal(await processDelivery('managed-operator-throttled'), 'pending');
+  assert.ok(Date.parse((await row('managed-operator-throttled')).next_attempt_at) >= operatorAt + 180_000, 'Retry-After survives the native notification coordinator');
   status = 401;
   await enqueue('managed-retired');
-  assert.equal(await process('managed-retired'), 'failed');
+  assert.equal(await processDelivery('managed-retired'), 'failed');
   assert.equal((await row('managed-retired')).last_error_code, 'unauthorized');
   const health = await (await f.request('/api/app/mail/connection')).json();
   assert.equal(health.state, 'unhealthy');
   assert.equal(health.reason, 'unauthorized');
   assert.equal((await f.request('/api/app/mail/check', {})).status, 503);
   assert.equal((await f.request(`/api/app/event-types/${event.id}/publish`, {})).status, 409);
+  t.diagnostic('401: permanent failure, unhealthy sender, publication blocked; provider response body stays private');
   status = 307;
   await enqueue('managed-redirect');
-  assert.equal(await process('managed-redirect'), 'failed');
-  assert.equal((await row('managed-redirect')).last_error_code, 'mail_outcome_unknown');
+  assert.equal(await processDelivery('managed-redirect'), 'failed');
+  assert.equal((await row('managed-redirect')).last_error_code, 'permanent_delivery_failure');
+  assert.equal((await f.db.prepare('SELECT state FROM base_mail_dispatch WHERE delivery_id=?').bind('managed-redirect').first()).state, 'rejected');
+  t.diagnostic('307: rejected, no redirect destination requested; fetch redirect=manual');
   status = 202;
   assert.equal((await f.request('/auth/magic-link', { email: 'owner@example.test', returnTo: '/app' })).status, 202);
-  assert.ok(calls.some(body => body.to === 'owner@example.test' && body.text.includes('/auth/confirm')));
+  const signIn = calls.find(body => body.to === 'owner@example.test' && body.text.includes('/auth/confirm'));
+  assert.ok(signIn, 'native authentication sends automated mail through the relay');
+  const confirmation = new URL(signIn.text.split('\n\n').at(-1));
+  assert.equal(confirmation.origin, origin);
+  assert.equal(confirmation.pathname, '/auth/confirm');
+  assert.deepEqual(signIn, { to: 'owner@example.test', ...linkMessage({ branding: { productName: 'Dial', accentColor: '#1d1c1a' }, linkSeconds: 900 }, { kind: 'signin' }, confirmation.href) });
+  t.diagnostic('sign-in: exact POST URL, bearer authorization, JSON recipient/subject/text/html; Auto-Submitted is relay-owned');
+  t.diagnostic('429: Retry-After=180 persisted for invitee and owner; early delivery skipped; due retry accepted once');
   const missing = await fixture(t, { MAIL_PROVIDER: 'rer', MAIL_API_KEY: undefined, MAIL_RELAY_URL: relay });
   assert.equal((await missing.request('/api/app/mail/check', {})).status, 503);
   assert.equal(missing.calls, 0);
+  await missing.close();
+
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const context = await browser.newContext();
+  let browserIp;
+  await context.route('**/*', async route => {
+    const request = route.request(), url = new URL(request.url());
+    assert.equal(url.origin, origin);
+    const response = await f.fetch(url.pathname + url.search, { method: request.method(), headers: { ...request.headers(), 'cf-connecting-ip': browserIp }, body: request.postDataBuffer() ?? undefined });
+    const headers = Object.fromEntries(response.headers);
+    for (const name of ['content-encoding', 'content-length', 'transfer-encoding']) delete headers[name];
+    await route.fulfill({ status: response.status, headers, body: Buffer.from(await response.arrayBuffer()) });
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', error => { errors.push(error.message); t.diagnostic(error.message); });
+  const screenshot = async name => {
+    if (!process.env.DIAL_LOGIN_HINT_SHOTS) return;
+    await mkdir(process.env.DIAL_LOGIN_HINT_SHOTS, { recursive: true });
+    await page.screenshot({ path: join(process.env.DIAL_LOGIN_HINT_SHOTS, name), fullPage: true });
+  };
+  for (const width of [1440, 390]) {
+    // Desktop and phone are separate connecting clients with their real budgets.
+    browserIp = width === 1440 ? '198.18.0.3' : '198.18.0.4';
+    await page.setViewportSize({ width, height: 900 });
+    const before = calls.length;
+    assert.equal((await page.goto(origin + '/signin?login_hint=owner%40example.test')).status(), 200);
+    await page.locator('[data-signin-ready]').waitFor();
+    assert.equal(await page.getByRole('textbox', { name: 'Email address' }).inputValue(), 'owner@example.test');
+    assert.equal(calls.length, before, 'a hint never submits the form');
+    assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth));
+    await screenshot(`login-hint-${width}.png`);
+    await page.goto(origin + '/signin');
+    assert.equal(await page.getByRole('textbox', { name: 'Email address' }).inputValue(), '');
+    await page.goto(origin + '/signin?login_hint=invalid%3Cscript%3E');
+    assert.equal(await page.getByRole('textbox', { name: 'Email address' }).inputValue(), '');
+    assert.equal((await page.goto(origin + '/signin?login_hint=owner%40example.test')).status(), 200);
+    await page.locator('[data-signin-ready]').waitFor();
+    await page.getByRole('button', { name: 'Send magic link' }).click();
+    await page.getByRole('status').waitFor();
+    assert.ok(calls.length > before, 'the owner explicitly submits sign-in');
+    await screenshot(`login-hint-sent-${width}.png`);
+    status = 401;
+    await page.goto(origin + '/setup/settings');
+    await page.getByRole('button', { name: 'Check sender' }).click();
+    await page.getByRole('button', { name: 'Check sender', exact: true }).waitFor();
+    await page.getByText(/Mail credentials were refused/).waitFor();
+    assert.ok(!(await page.locator('body').innerText()).includes('sensitive provider body'));
+    await screenshot(`managed-mail-credential-${width}.png`);
+    status = 202;
+  }
+  assert.deepEqual(errors, []);
+  t.diagnostic('1440/390: login_hint survives SSR and hydration, bare/invalid hints stay empty, explicit submission succeeds, owner sees credential recovery');
 });
