@@ -737,7 +737,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "13b65084dc297681c1619e59bfb25ca3beacbeba6bcd8482b4fb7b7cda6cacfe",
+      "sha256": "79f1806e83cee5fcb20692af41ceb6cdb4c746d6c569057ea44c5bd96c616ee4",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -829,7 +829,7 @@
       "executable": false
     },
     "ERASURE.md": {
-      "sha256": "6cf2af888b841ea1231bd08b8d13848d2b8289f6bc7568b73d87c092b30ce658",
+      "sha256": "a10be0eff39031ab0fdeaeaf9de218a1b954ddf3f605cbf94ad4ef9a3f45a187",
       "executable": false
     },
     "eslint.config.mjs": {
