@@ -49,7 +49,7 @@ export function assertConfirmation(snapshot, receipt, email) {
     assertTimeRange(body, html, timeRange(receipt.occurrence.startAt, receipt.occurrence.endAt, "UTC"));
     assertTimeRange(body, html, timeRange(receipt.occurrence.startAt, receipt.occurrence.endAt, "Australia/Brisbane"));
     assert.match(body, /Duration: 30 minutes/); assert.match(body, /What would you like to discuss\?: Wire lifecycle/);
-    assert.match(body, /Google Meet link pending/); assert.match(body, /Calendar setup: pending/);
+    assert.match(body, /Google Meet link pending/); assert.match(body, /Calendar setup: Update pending/);
     assert.match(html, /<table\b/); assert.match(html, /style="/);
     assert.ok(html.includes("A focused introduction")); assert.ok(html.includes("Morgan Bell"));
     assert.ok(html.includes("Australia/Brisbane"));
@@ -67,7 +67,7 @@ export function assertConfirmation(snapshot, receipt, email) {
       const attachment = mail.attachments[0];
       assert.equal(attachment.filename, "booking.ics"); assert.equal(attachment.type, "text/calendar");
       const ics = Buffer.from(attachment.content, "base64").toString().replaceAll("\r\n ", "");
-      assert.match(ics, /BEGIN:VCALENDAR\r\nVERSION:2.0/); assert.match(ics, /METHOD:REQUEST/);
+      assert.match(ics, /BEGIN:VCALENDAR\r\nVERSION:2.0/); assert.match(ics, /METHOD:PUBLISH/);
       assert.ok(ics.includes(`UID:${snapshot.bookings.find(booking => booking.invitee_email === email).ical_uid}`));
       assert.ok(ics.includes(`DTSTART:${instant(receipt.occurrence.startAt)}`));
       assert.ok(ics.includes(`DTEND:${instant(receipt.occurrence.endAt)}`));
@@ -184,7 +184,7 @@ export function assertReminder(snapshot, email, hostName, expected = 2) {
     assert.ok(body.includes(`Host: ${hostName}`));
     assert.ok(body.includes(`${booking.location_label}: ${location}`));
     assert.ok(body.includes(`Duration: ${booking.duration_minutes} minutes`));
-    assert.ok(body.includes(`Calendar setup: ${booking.calendar_state}.`));
+    assert.ok(body.includes(`Calendar setup: ${{ pending: "Update pending", succeeded: "Up to date", failed: "Update failed", not_required: "No connected calendar" }[booking.calendar_state]}.`));
     assert.ok(html.includes(hostName));
     assert.ok(html.includes(booking.event_title));
 

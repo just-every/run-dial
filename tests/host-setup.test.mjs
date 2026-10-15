@@ -18,7 +18,7 @@ async function fixture(t) {
   const events = new core.EventTypesService(repository, profiles, publication);
   const reports = new core.HostSetupRepository(f.binding);
   const setup = new core.HostSetupService(reports, profiles, events, origin);
-  const create = () => events.createEventType({ ...core.defaultEventTypeInput(), title: "Introduction", slug: "intro", description: "Description", availability: [{ weekday: 1, startMinute: 540, endMinute: 1020 }] });
+  const create = () => events.createEventType({ ...core.defaultEventTypeInput(), locationType: "google_meet", locationLabel: "Google Meet", title: "Introduction", slug: "intro", description: "Description", availability: [{ weekday: 1, startMinute: 540, endMinute: 1020 }] });
   return { ...f, profiles, repository, events, reports, setup, health, create };
 }
 

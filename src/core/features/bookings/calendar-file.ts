@@ -16,7 +16,7 @@ export function initialBookingIcs(input: { bookingId: string; eventTitle: string
 }
 
 function calendarFile(input: { uid: string; sequence: number; cancelled: boolean; updatedAt: string; startAt: string; endAt: string; title: string; location: string }) {
-  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Dial//Booking//EN", `METHOD:${input.cancelled ? "CANCEL" : "REQUEST"}`,
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Dial//Booking//EN", `METHOD:${input.cancelled ? "CANCEL" : "PUBLISH"}`,
     "BEGIN:VEVENT", `UID:${text(input.uid)}`, `SEQUENCE:${input.sequence}`, `DTSTAMP:${instant(input.updatedAt)}`,
     `DTSTART:${instant(input.startAt)}`, `DTEND:${instant(input.endAt)}`, `SUMMARY:${text(input.title)}`, `LOCATION:${text(input.location)}`,
     ...(input.cancelled ? ["STATUS:CANCELLED"] : []), "END:VEVENT", "END:VCALENDAR"]

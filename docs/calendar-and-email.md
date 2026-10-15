@@ -52,6 +52,8 @@ To stop booking mail for yourself, tick **Mute booking mail for me** under **You
 
 ## Send mail with SendGrid
 
+Set this up before deploying a hosted Dial. After deploy claims the owner, the first sign-in requires an emailed link to `OWNER_EMAIL`; use a mailbox you can read. Placeholder credentials cannot deliver that link, and no-mail recovery is not yet available.
+
 1. Choose a sender starting with `noreply@` or `no-reply@`. Dial refuses to send from anything else.
 2. In SendGrid, verify that exact address as a Single Sender, or authenticate its exact domain.
 3. Create an API key with Mail Send (`mail.send`) permission and read access to verified senders and authenticated domains.

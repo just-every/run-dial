@@ -4,7 +4,7 @@ import { evidencePath } from "../../scripts/evidence-path.mjs";
 
 /** The same cold-host journey continues through a real signed-out booking and independent contenders. */
 export async function calendarOptionalJourney(browser, owner, origin, eventId, width, scan) {
-  const visitor = await browser.newContext({ viewport: { width, height: 900 }, timezoneId: "UTC" });
+  const visitor = await browser.newContext({ viewport: { width, height: 900 }, timezoneId: "Asia/Tokyo" });
   const competitor = await browser.newContext();
   const headers = { Origin: origin };
   const path = "/api/public/book/fresh-host/first-event";
@@ -58,6 +58,10 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     assert.equal(native.delivery_outbox.filter(job => job.kind.startsWith("calendar_")).length, 0);
     await owner.goto(origin + "/app/bookings");
     await expect(owner.getByRole("button", { name: /Schedule guest/ })).toBeVisible();
+    const booked = bookings.find(booking => booking.inviteeName === "Schedule guest");
+    assert.notEqual(booked.hostTimezone, booked.inviteeTimezone);
+    const hostTime = new Intl.DateTimeFormat("en-US", { timeZone: booked.hostTimezone, dateStyle: "medium", timeStyle: "short" }).format(new Date(booked.occurrence.startAt));
+    await expect(owner.getByRole("button", { name: /Schedule guest/ })).toContainText(`${hostTime} (${booked.hostTimezone})`);
     await owner.getByRole("button", { name: /Schedule guest/ }).click();
     await expect(owner.getByText("No connected calendar", { exact: true })).toBeVisible();
     await scan("calendar-optional-host-booking");

@@ -125,9 +125,9 @@ deployed scheduled pass: connection checks and alerts, calendar sync and channel
 renewal, then due reminders and mail or calendar retries. The root
 `wrangler.jsonc` repeats the template's `triggers.crons` because rer reads its
 schedule only from that file; rendering refuses (so build, setup and verify fail)
-when the two differ. `rer preview` still runs no schedule. With no calendar
-connected the pass has no bookings to remind or retry, since publishing needs a
-checked destination calendar; the journey `node scripts/verify-lifecycle-journey.mjs`
+when the two differ. `rer preview` still runs no schedule. Fixed-link, phone and
+in-person events can publish without a calendar; their reminders use the
+configured mail sender, including the local outbox. The journey `node scripts/verify-lifecycle-journey.mjs`
 proves reminders, retries, alerts and sync on this schedule against synthetic
 provider HTTP. See [OPERATIONS.md](OPERATIONS.md).
 
@@ -201,9 +201,21 @@ files are preserved byte for byte.
 `rer deploy --dry-run` builds and validates locally without
 provider requests. A real deployment is a separate owner-account operation:
 `rer deploy --environment production`. It requires the
-configured Cloudflare account and production secrets. Local checks and the dry
+configured Cloudflare account and working SendGrid mail: a real API key, a
+verified sender, and `OWNER_EMAIL` set to a mailbox you can read. After a healthy
+deploy, rer claims the hosted owner and removes the one-time setup token. Open
+`/signin` on the deployed address and request an email link; no separate
+first-operator setup step is needed. No-mail recovery is not yet available. See
+[Install: deploy inputs](docs/install.md#reference-deploy-inputs) for generated
+secrets, local-owner defaults and private env files. Local checks and the dry
 run do not establish remote health, email delivery, Google Calendar access, or
 production acceptance.
+
+To permanently remove a hosted installation, export any needed data first, then
+run `rer deploy --remove --yes` from the checkout holding its deployment receipt.
+Add `--environment NAME` if you deployed with a nondefault environment. See
+[Remove a hosted installation](docs/install.md#remove-a-hosted-installation) for
+what is deleted.
 
 `rer release --repo PATH --output PATH` creates the declared
 local release artifact and receipt. It does not push, publish, or deploy. No

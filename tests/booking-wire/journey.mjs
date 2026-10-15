@@ -196,7 +196,7 @@ for (const mail of externalCancellation) {
   assertTimeRange(textBody(mail), htmlBody(mail), timeRange(second.receipt.occurrence.startAt, second.receipt.occurrence.endAt, "UTC"), "Previous invitee time: ");
   assertTimeRange(textBody(mail), htmlBody(mail), timeRange(second.receipt.occurrence.startAt, second.receipt.occurrence.endAt, "Australia/Brisbane"), "Previous host time: ");
   assert.ok(textBody(mail).includes("Reason: deleted_in_google_calendar."));
-  assert.ok(textBody(mail).includes("Calendar state: pending."));
+  assert.ok(textBody(mail).includes("Calendar state: Update pending."));
   assert.ok(htmlBody(mail).includes("Reason: deleted_in_google_calendar."));
   assert.ok(htmlBody(mail).includes("Calendar state"));
   assert.ok(htmlBody(mail).includes("Booking cancelled"));

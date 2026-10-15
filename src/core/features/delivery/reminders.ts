@@ -1,3 +1,4 @@
+import { calendarStatus } from "../../shared/booking-status";
 import { bookingJoinUrl, bookingReminderHtml } from "./booking-mails";
 import { inviteeCalendarUrl } from "./branded-layout";
 
@@ -19,7 +20,7 @@ export function reminderMessage(booking: ReminderBooking, payload: Record<string
     "",
     `Host: ${booking.hostName}`,
     `Duration: ${booking.durationMinutes} minutes`,
-    `Calendar setup: ${booking.calendarState}.`,
+    `Calendar setup: ${calendarStatus(booking.calendarState)}.`,
     ...(joinUrl ? [`Join session: ${joinUrl}`] : []),
     ...(invitee && manageUrl ? [`Add to calendar: ${inviteeCalendarUrl(manageUrl)}`] : []),
   ].join("\n");

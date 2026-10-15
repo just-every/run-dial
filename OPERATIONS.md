@@ -344,12 +344,19 @@ variables, and secret bindings. Cloudflare Workers Paid is required. The
 owner-account CLI builds and validates locally, provisions declared resources,
 then checks authenticated health.
 
-The owner-session deployment path still depends on the retained older
-deployment controller, deploy-kit, and root operations. Native RER deploy
-health currently requires SETUP_TOKEN even after authoritative bootstrap
-consumption. Retiring those helpers and accepting exact owner-account health
-remain deferred until the owner-gated live acceptance or upstream native lifecycle support adds
-conditional health; this guide does not claim that boundary is resolved.
+Native `rer deploy` claims the hosted owner after a healthy deploy and removes
+the one-time setup token. The owner then opens `/signin` and requests an email
+link. There is no browser first-operator step after that claim. Working SendGrid
+mail, a verified sender and an OWNER_EMAIL mailbox the owner can read are needed
+before deploying; no-mail recovery is not yet available.
+
+New Workers inherit the local setup owner if OWNER_EMAIL is omitted and get
+fresh generated SESSION_SECRET and SETUP_TOKEN values if not supplied. Set the
+real hosted owner address explicitly when local development used a generated
+owner. Inputs come from the environment or an owner-readable 0600 KEY=VALUE
+file passed with --env-file. Later deploys retain stored secrets; use the
+explicit --set-secret or --unset-secret operation for changes. The complete
+input and sign-in instructions are in [Install](docs/install.md#reference-deploy-inputs).
 
 A dry run makes no provider requests:
 
@@ -365,6 +372,15 @@ A deployment receipt identifies resources and migrations; it is not by itself
 proof of healthy product use. Provider connection checks, a real first-owner
 sign-in, booking acceptance, and remote health require separate evidence. No
 live deployment or provider acceptance is claimed by this guide.
+
+To remove a hosted installation, export any needed data first and use the
+checkout holding its deployment receipt, with Cloudflare credentials available:
+
+    rer deploy --remove --yes --environment production
+
+This permanently deletes only the Worker, D1, R2, KV and queues proven owned by
+that environment's receipt, then reads back that each is gone. Keep the receipt
+until removal completes. Local reset does not delete hosted resources.
 
 rer release --repo PATH --output PATH uses Base's release
 producer and writes its local receipt. It does not push, publish, tag, or

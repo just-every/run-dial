@@ -1,5 +1,15 @@
 # Dial acceptance
 
+Start with the jobs a new host and invitee need to complete:
+
+- The host signs in, saves a profile and timezone, creates an event with a private location, sets weekly availability, publishes it and copies its booking link.
+- An invitee opens that link without an account, picks a time in their own zone, confirms with a name and email, and gets the location, an add-to-calendar file and a private manage link.
+- The invitee reschedules or cancels through that private link, and the host sees the change in Bookings, with list times in the host's named zone.
+- An invitee requests another time; the host reads the windows in both zones and creates the agreed booking from the request.
+- On a hosted install, deploy claims the owner and the owner signs in by email link. Working mail and a readable owner mailbox are prerequisites. The owner can export their data and remove the deployment using the documented commands.
+
+The checks and provider limits below support those jobs.
+
 The release candidate must preserve every requirement in [CONTRACT.md](CONTRACT.md) and [BASELINE.md](BASELINE.md), including deliberate supersessions described in [DIVERGENCE.md](DIVERGENCE.md). The manifest's maturity, capacity estimates and accessibility target remain explicit limits on claims.
 
 ## Pre-round recorded baseline (15 Oct 2026)

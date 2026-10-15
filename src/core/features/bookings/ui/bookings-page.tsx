@@ -12,6 +12,7 @@ import { BookingsFilterBar } from "./bookings-filter-bar";
 
 import { useBookingWorkspace } from "./use-booking-workspace";
 import { useBookingList } from "./use-booking-list";
+import { startTime } from "./operator-time";
 
 export function BookingsPage() {
   const [eventTypes, setEventTypes] = useState<EventTypeRecord[]>([]);
@@ -90,14 +91,10 @@ export function BookingsPage() {
         <Card className="divide-y divide-line-soft overflow-hidden">
           {bookings.map((booking) => <button type="button" className={`w-full px-5 py-4 text-left transition-colors ${active?.id === booking.id ? "bg-gold-wash" : "hover:bg-row"}`} onClick={() => setSelected(booking.id)} key={booking.id}>
             <div className="flex items-start justify-between gap-3"><span className="min-w-0"><strong className="block text-base font-bold leading-[1.3]">{booking.inviteeName}</strong>{booking.imported ? <small className="text-sm text-muted">Imported · </small> : null}<small className="text-sm text-muted">{booking.eventTitle}</small></span><BookingBadge state={booking.state} /></div>
-            <p className="mt-2 text-[15px] text-soft">{displayTime(booking.occurrence.startAt, booking.inviteeTimezone)}</p>
+            <p className="mt-2 text-[15px] text-soft">{startTime(booking.occurrence.startAt, booking.hostTimezone)}</p>
           </button>)}
         </Card>
         {active ? <BookingDetail key={active.id} booking={active} onChanged={async (message) => { setNotice(message ?? ""); await load(); }} onCancel={cancel} onAttendance={attendance} onErased={(message, id) => { setNotice(message); void navigate(filters, page, true, id).then(load); }} /> : null}
       </div>}
   </div>;
-}
-
-function displayTime(value: string, timezone: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: timezone, dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }

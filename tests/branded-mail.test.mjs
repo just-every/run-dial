@@ -82,7 +82,7 @@ contract("NOTIFY-002", "link-ready mail presents matching verified join, manage 
   assert.ok(sample.html.includes(layout.escapeHtml("Australia/Brisbane")));
   assert.ok(sample.html.includes(layout.escapeHtml("America/New_York")));
   assert.ok(texts.linkReady.startsWith(`Your meeting link is ready: https://meet.google.com/aaa-bbbb-ccc\n`));
-  for (const value of [fixture.hostName, fixture.eventTitle, fixture.inviteeTimezone, fixture.hostTimezone, `${fixture.durationMinutes} minutes`, "Google Meet", "succeeded", fixture.manageUrl, "/api/public/manage/capability-fixture/calendar.ics"]) {
+  for (const value of [fixture.hostName, fixture.eventTitle, fixture.inviteeTimezone, fixture.hostTimezone, `${fixture.durationMinutes} minutes`, "Google Meet", "Up to date", fixture.manageUrl, "/api/public/manage/capability-fixture/calendar.ics"]) {
     assert.ok(texts.linkReady.includes(value), `link-ready text includes ${value}`);
   }
   assertActionLinksMatchText(sample.html, texts.linkReady, sample.kind, layout);
@@ -105,12 +105,12 @@ contract("NOTIFY-003", "reminders carry recipient-zone event facts and keep priv
   assert.ok(!operator.html.includes("capability-fixture"));
   assert.ok(texts.reminderInvitee.includes(`Host: ${fixture.hostName}`));
   assert.ok(texts.reminderInvitee.includes(`Duration: ${fixture.durationMinutes} minutes`));
-  assert.ok(texts.reminderInvitee.includes("Calendar setup: succeeded."));
+  assert.ok(texts.reminderInvitee.includes("Calendar setup: Up to date."));
   assert.ok(texts.reminderInvitee.includes("Join session: https://meet.example.test/join?next=%22%20onmouseover%3Dalert(1)"));
   assert.ok(texts.reminderInvitee.includes(`Add to calendar: https://dial.example.test/api/public/manage/capability-fixture/calendar.ics`));
   assert.ok(texts.reminderOperator.includes(`Host: ${fixture.hostName}`));
   assert.ok(texts.reminderOperator.includes(`Duration: ${fixture.durationMinutes} minutes`));
-  assert.ok(texts.reminderOperator.includes("Calendar setup: succeeded."));
+  assert.ok(texts.reminderOperator.includes("Calendar setup: Up to date."));
   assertActionLinksMatchText(invitee.html, texts.reminderInvitee, invitee.kind, layout);
   assertActionLinksMatchText(operator.html, texts.reminderOperator, operator.kind, layout);
   assert.ok(texts.reminderInvitee.startsWith(`${fixture.eventTitle}\n`));
@@ -141,7 +141,7 @@ contract("NOTIFY-004", "reschedule and cancellation copies escape values and kee
   assertActionLinksMatchText(rescheduleOperator.html, source.booking.bookingChangeHtml({ hostName: fixture.hostName, eventTitle: fixture.eventTitle, startAt: fixture.startAt, endAt: fixture.endAt, durationMinutes: fixture.durationMinutes, inviteeTimezone: fixture.inviteeTimezone, hostTimezone: fixture.hostTimezone, locationType: fixture.locationType, locationLabel: fixture.locationLabel, locationValue: fixture.locationValue, meetingUrl: fixture.meetingUrl, calendarState: "pending", actor: fixture.inviteeName, previousInviteeTime: source.booking.formatTimeRange(fixture.startAt, fixture.endAt, fixture.inviteeTimezone), previousHostTime: source.booking.formatTimeRange(fixture.startAt, fixture.endAt, fixture.hostTimezone), reason: fixture.note, recipientRole: "operator", inviteeName: fixture.inviteeName, inviteeEmail: fixture.inviteeEmail }).text, rescheduleOperator.kind, layout);
   for (const text of [texts.cancellationInvitee, texts.cancellationOperator]) {
     assert.match(text, /^Reason: deleted_in_google_calendar\.$/mu);
-    for (const value of [fixture.eventTitle, fixture.hostName, fixture.inviteeTimezone, fixture.hostTimezone, `${fixture.durationMinutes} minutes`, fixture.locationLabel, fixture.locationValue, "Calendar state: pending"]) assert.ok(text.includes(value), `cancellation text includes ${value}`);
+    for (const value of [fixture.eventTitle, fixture.hostName, fixture.inviteeTimezone, fixture.hostTimezone, `${fixture.durationMinutes} minutes`, fixture.locationLabel, fixture.locationValue, "Calendar state: Update pending"]) assert.ok(text.includes(value), `cancellation text includes ${value}`);
   }
   for (const sample of [cancellationInvitee, cancellationOperator]) {
     assert.ok(sample.html.includes("Reason: deleted_in_google_calendar."));

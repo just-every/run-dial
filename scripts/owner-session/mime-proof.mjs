@@ -57,7 +57,7 @@ export function assertSigninMime(raw,link) {
 export function assertConfirmationMime(raw,{title,manageUrl}) {
  const parts=mimeParts(raw),texts=parts.filter(part=>part.type==='text/plain'),htmls=parts.filter(part=>part.type==='text/html'),calendars=parts.filter(part=>part.type==='text/calendar');
  must(texts.length===1&&htmls.length===1,'confirmation-multipart-alternative-required');
- must(calendars.length===1&&/BEGIN:VCALENDAR/.test(calendars[0].body)&&/METHOD:REQUEST/.test(calendars[0].body)&&!calendars[0].body.includes(manageUrl),'confirmation-ics-attachment');
+ must(calendars.length===1&&/BEGIN:VCALENDAR/.test(calendars[0].body)&&/METHOD:PUBLISH/.test(calendars[0].body)&&!calendars[0].body.includes(manageUrl),'confirmation-ics-attachment');
  must(texts[0].body.includes(title)&&texts[0].body.includes(manageUrl)&&htmls[0].body.includes(manageUrl.replaceAll('&','&amp;')),'confirmation-manage-link-parity');
  return {parts:['text/plain','text/html','text/calendar'],manageLinkInBoth:true,icsAttached:true};
 }

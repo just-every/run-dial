@@ -46,7 +46,7 @@ contract("CAL-003", "a durable calendar command persists Meet readiness and the 
   assert.ok(result.link.payload.text.startsWith("Your meeting link is ready: https://meet.google.com/provider-test\n"));
   const text = result.link.payload.text;
   const html = result.link.payload.html;
-  for (const fact of ["Provider host", "Provider event", "UTC", "Australia/Brisbane", "30 minutes", "Google Meet: https://meet.google.com/provider-test", "Calendar setup: succeeded.", "Join session: https://meet.google.com/provider-test", "Manage this booking:", "Add to calendar:", "/api/public/manage/"]) {
+  for (const fact of ["Provider host", "Provider event", "UTC", "Australia/Brisbane", "30 minutes", "Google Meet: https://meet.google.com/provider-test", "Calendar setup: Up to date.", "Join session: https://meet.google.com/provider-test", "Manage this booking:", "Add to calendar:", "/api/public/manage/"]) {
     assert.ok(result.link.payload.text.includes(fact), `link-ready plain text includes ${fact}`);
   }
   assert.match(result.link.payload.html, /<table\b/);

@@ -26,6 +26,7 @@ import { consumeJobs, runScheduledWork } from "./background-work";
 import { connectionWatchObservers } from "./connection-watch";
 
 const claimed = claimedWhen("SELECT 1 FROM operator_setup_identity WHERE singleton_key='default' AND onboarding_completed_at IS NOT NULL LIMIT 1");
+const ownerAdmitted = claimedWhen("SELECT singleton FROM oa_bootstrap WHERE singleton = 1");
 
 export function createWorker(servicesFactory?: (env: AppBindings) => AppServices) {
 const servicesFor = servicesFactory ?? ((env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { files: env.FILES, calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) }));
@@ -45,7 +46,7 @@ const worker = {
     const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
     const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };
     const state = await setupStateResponse(request, lobbyBindings, claimed); if (state) return state;
-    const lobby = await lobbyResponse(request, lobbyBindings, identity, claimed); if (lobby) return lobby;
+    const lobby = await lobbyResponse(request, lobbyBindings, identity, ownerAdmitted); if (lobby) return lobby;
     if (requiresPublicAdmission(url.pathname) && !isAuthenticatedCallbackPath(request)) {
       try {
         const refusal = admissionResponse(await new PublicAdmissionGate(env.DB, runtime).admit(request));
