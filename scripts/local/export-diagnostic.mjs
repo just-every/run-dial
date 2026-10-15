@@ -1,18 +1,28 @@
-// The published 0.2.2 client deliberately discards response bodies. Recognize
-// only its fixed vocabulary; never echo arbitrary exceptions or paths.
+// The published client discards response bodies. Recognize only its fixed
+// vocabulary; never echo arbitrary exceptions or paths.
 import { PortabilityError } from '@runeditrun/rer/modules/portability';
 const archiveCodes = new Set(['archive_schema_mismatch', 'archive_export_refused', 'archive-migration-history-mismatch', 'archive-owner-salt-required', 'archive-erasure-incomplete', 'archive-unclassified-schema', 'archive-object-changed', 'archive-object-contains-credential', 'archive_maintenance', 'archive_writer_admissions_present']);
 const formatCodes = new Set(['archive_json', 'archive_format', 'legacy_archive_unverifiable', 'part_order', 'part_byte_limit', 'part_checksum', 'part_row_limit', 'manifest_identity', 'manifest_counts', 'manifest_inventory', 'schema_checksum', 'table_inventory', 'binary_inventory', 'row_order', 'rowid_inventory', 'rows_missing', 'binary_order', 'binary_size', 'binary_checksum', 'archive_incomplete', 'data_after_closing', 'part_count', 'content_checksum', 'archive_checksum', 'extra_part', 'closing_missing', 'row_columns', 'row_not_null', 'row_type', 'unsafe_integer']);
 const transportCodes = new Set(['ENOTFOUND', 'EAI_AGAIN', 'ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET', 'CERT_HAS_EXPIRED', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'ERR_TLS_CERT_ALTNAME_INVALID']);
+// The published client (rer 0.2.12) reports each failure as an approved bounded
+// message, "Hosted export <step> failed (job ID; HTTP n; code C).", kept in its
+// realm-shared registry. Only an approved message is parsed, for its step, HTTP
+// status and machine code; anything else is refused without detail.
+const approvedDiagnostic = error => globalThis[Symbol.for('runeditrun.portability.diagnostics.v1')]?.get(error);
 export function remoteExportDiagnostic(error) {
  const message = error instanceof Error ? error.message : '';
- const status = /^The transfer was refused \(HTTP ([4-5][0-9]{2})\)\.$/.exec(message);
- if (status) return { reason: 'hosted-http-refused', httpStatus: Number(status[1]) };
- if (message === 'The transfer request failed.') return { reason: 'hosted-transport-failed' };
- if (message === 'The export is not complete.') return { reason: 'hosted-archive-incomplete' };
+ if (message === 'remote-credentials-required' || message === 'private-session-file-required') return { reason: message };
  const archiveCause = error instanceof PortabilityError ? error.code.split(':')[0] : message === 'archive_json' ? message : undefined;
  if (formatCodes.has(archiveCause)) return { reason: 'hosted-archive-invalid', archiveCause };
- if (message === 'remote-credentials-required' || message === 'private-session-file-required') return { reason: message };
+ const approved = /^Hosted export ([a-z]+) failed(?: \((.*)\))?\.$/.exec(approvedDiagnostic(error) ?? '');
+ if (!approved) return { reason: 'hosted-export-refused' };
+ const details = (approved[2] ?? '').split('; ');
+ const httpStatus = Number(details.find(detail => /^HTTP [1-5][0-9]{2}$/.test(detail))?.slice(5));
+ const code = details.find(detail => /^code [A-Za-z][A-Za-z0-9_]{0,63}$/.test(detail))?.slice(5);
+ if (formatCodes.has(code)) return { reason: 'hosted-archive-invalid', archiveCause: code };
+ if (!httpStatus) return { reason: 'hosted-transport-failed' };
+ if (httpStatus >= 400) return { reason: 'hosted-http-refused', httpStatus };
+ if (['status', 'advance'].includes(approved[1])) return { reason: 'hosted-archive-incomplete' };
  return { reason: 'hosted-export-refused' };
 }
 

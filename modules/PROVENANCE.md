@@ -69,9 +69,11 @@ the package pin, locked dependency, aliases, and absence of the vendored trees.
 
 Demo mode adopts Base `c1cd7bfa55388886f9607cfe03e758aba09e98e4` (rer 0.2.12).
 `src/modules/demo` holds Base `modules/demo`; five files are byte-exact copies
-recorded in `base-copies.json`. Its `index.mjs` differs only in its two
-operator-auth imports, which reach Dial's `modules/operator-auth` from
-`src/modules/demo` (the path rer's container import boundary admits); it is
-therefore not a recorded copy. `modules/operator-auth/csp.mjs`, the shared
-inline-style CSP helper the Demo bar needs, is a byte-exact copy at the same
-commit; the rest of operator-auth keeps its existing pin. See [DEMO.md](../DEMO.md).
+recorded in `base-copies.json`. Its `index.mjs` differs only in its two imports:
+`http.mjs` from Dial's `modules/operator-auth`, and `csp.mjs` from beside it.
+`src/modules/demo/csp.mjs` carries the bytes of Base's
+`modules/operator-auth/csp.mjs` at that commit (the inline-style CSP helper the
+Demo bar needs; Dial's pinned operator-auth has the same helpers only inside
+`dev/badge.mjs`). It is placed with the demo and not recorded as an
+operator-auth copy, so operator-auth keeps its single pin (SC-05). Neither
+adapted file is a recorded copy. See [DEMO.md](../DEMO.md).

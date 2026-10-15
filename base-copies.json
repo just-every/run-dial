@@ -2003,17 +2003,6 @@
       }
     },
     {
-      "path": "modules/operator-auth/csp.mjs",
-      "originPath": "modules/operator-auth/csp.mjs",
-      "revision": "c1cd7bfa55388886f9607cfe03e758aba09e98e4",
-      "files": {
-        "modules/operator-auth/csp.mjs": "9bf6c5c5b2adcfc6f6c82a657af38346b8ec4e2344aea20b4d972a2564cffaed"
-      },
-      "modes": {
-        "modules/operator-auth/csp.mjs": "100644"
-      }
-    },
-    {
       "path": "modules/operator-auth/dev",
       "originPath": "modules/operator-auth/dev",
       "revision": "3d643dda1d203d36e3fa57e8e5ba14e414bba6f9",
