@@ -41,7 +41,7 @@ book available time, manage a booking through its private link, or ask the host
 for another window. Operators manage event types, availability, bookings,
 requests, and calendar connections.
 
-Public source: [just-every/run-dial](https://github.com/just-every/run-dial), release 0.1.0.
+Public source: [just-every/run-dial](https://github.com/just-every/run-dial), release 0.2.0.
 Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer

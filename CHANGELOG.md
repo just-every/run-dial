@@ -1,4 +1,6 @@
-# Unreleased
+# Changelog
+
+## 0.2.0 — 2026-10-15
 
 - Demo mode: `rer demo` (`rer dev --demo`) opens a throwaway Dial signed in as the saved owner, filled with sample data (Maya Chen's profile, three published event types and a week of bookings with four invitees, from `sample-data/dial-demo.ts` via `src/demo.ts`), with a Demo bar and nothing sent: booking mail stays in the outbox, Google Calendar is refused before any request, and the demo guard refuses every other outbound request. Its data lives in `.rer/demo/<start>/` and the checkout's own `.wrangler/state` is never opened. `deploy-demo.json`, the `container` platform and `.github/workflows/run-demo.yml` prepare the hosted demo at `demo.run-dial.com`; see DEMO.md. Pinned `@runeditrun/rer` 0.2.12.
 - `rer export --origin` keeps its bounded hosted-export causes on rer 0.2.12, whose portability client reports each failure as its own approved message (an unverifiable download, an HTTP refusal, a transport failure or an unfinished job) instead of 0.2.7's fixed texts; Dial reads those messages through the client's shared diagnostic registry and still prints no response body, cookie or session path.
@@ -29,8 +31,6 @@
 - The browser installer and the sign-in confirmation page wear Dial's own look (`public/rer-theme.css`).
 - Added a saved-data move-in preview, reviewed import, resume, conflict-preserving undo and privacy erasure. Evidence remains synthetic-only.
 - The operator app mounts the owner editor only on an install configured for it (EDITOR-001). An install without `RER_MANAGEMENT_ORIGIN` and `RER_INSTALLATION_ID` no longer requests `/api/editor/config` on every app page and logs its 503.
-
-# Changelog
 
 ## 0.1.0 — first release
 

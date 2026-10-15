@@ -766,7 +766,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "59c63ed2176984a6b37b0b03be8f356df16b77476b9c709227a3b5d3f4958e61",
+      "sha256": "90cada34dffc6ec40d7c6132c363a2032cc179afcdcaf06f57c0de102395e38d",
       "executable": false
     },
     "CLAUDE.md": {
@@ -806,7 +806,7 @@
       "executable": false
     },
     "docs/backups.md": {
-      "sha256": "578ebefbe491113ad64529bb63b288cac4d0102dfff93e1e675c847e6400e4b4",
+      "sha256": "428a721f4ec4dab0b9814b012d45949602ff4611ab5fa1c889fc68bdbb252062",
       "executable": false
     },
     "docs/booking-page.md": {
@@ -834,7 +834,7 @@
       "executable": false
     },
     "docs/updating.md": {
-      "sha256": "19ce11bf3547011c58dd789c81b0b59f0725ff64763f45b6e20e7a44cf7431e5",
+      "sha256": "03877c3b1b68b9d437e8837b82b7a365a944bcbd4cf1cedd234da06ea4612349",
       "executable": false
     },
     "edition.json": {
@@ -2366,7 +2366,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "8e670b6dbe5363dde80c0598706db58d670e1bb444096fc4bcddaed8ab7a1abc",
+      "sha256": "0983e5e0b2fca4b38cae4dec65a0828cdd4d2c68a30f00f754f82d2559aea8db",
       "executable": false
     },
     "pnpm-lock.yaml": {
@@ -2394,11 +2394,11 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "d52d7740b0a10cb102d081d42b7c40660ec37b8f70393dbb8e549d718ec3f6e6",
+      "sha256": "5fe8e2f4c1acbc791e068fc1e09265772799a2d6770fe4607df0e0a406f166f9",
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "0981c1118a505baeb0e8bcfe739d9c3ae30b76fb6519670ee1183bd3dc6bfcca",
+      "sha256": "28aced15164a492f7f239c4786b9db26843697ad1fb313ecd0a21b576383917d",
       "executable": false
     },
     "RELEASE.md": {
@@ -3046,7 +3046,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "7d4bc7254ab0937ab7b75e48c0ff36a016924f51b64ae3b62ba6da2542945d47",
+      "sha256": "0e2e094b1204218e46cba2525bb11e376ed4b6d60da0180a213d7307107e778e",
       "executable": false
     },
     "src/base/deployment-health.ts": {
