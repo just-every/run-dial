@@ -21,7 +21,7 @@ export async function readTestMail(origin) {
   assert.equal(response.status, 404);
   const fixture = await fetch(origin + "/__fixtures/status");
   assert.equal(fixture.status, 200, "test provider storage is reachable");
-  return (await fixture.json()).fixture_mail.map(row => JSON.parse(row.message_json));
+  return (await fixture.json()).fixture_mail.sort((a, b) => b.sent_at.localeCompare(a.sent_at)).map(row => JSON.parse(row.message_json));
 }
 export async function localMagicLink(origin) {
   const messages = await readTestMail(origin);

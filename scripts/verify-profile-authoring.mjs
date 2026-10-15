@@ -2,6 +2,7 @@ import { evidencePath as outputPath } from "./evidence-path.mjs";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
+import { readTestMail } from "../tests/auth-client.mjs";
 import { authenticateViaSyntheticMail, call, data, origin, productRecords, snapshot } from "../tests/availability-diagnostics/helpers.mjs";
 
 const evidencePath = outputPath("profile-authoring-native.json"), checks = [];
@@ -83,8 +84,8 @@ try {
   const denied = await data("/api/app/bookings", { ...body, idempotencyKey: randomUUID(), email: "occupied-profile-invitee@dial.test" }, 409, true);
   assert.equal(denied.error.code, "slot_unavailable"); assert.ok(denied.error.details.includes("dial_booking"));
   await assertPublic(profile);
-  const final = await snapshot(); assert.equal(final.bookings.length, 1); assert.equal(final.booking_occurrences.length, 1); assert.equal(final.fixture_mail.length, 1); assert.equal(final.fixture_events.length, 0);
-  assert.equal(JSON.parse(final.fixture_mail[0].message_json).subject, "Your sign-in link for Dial");
+  const final = await snapshot(); assert.equal(final.bookings.length, 1); assert.equal(final.booking_occurrences.length, 1); assert.equal(final.fixture_mail.length, 0); assert.equal(final.fixture_events.length, 0);
+  const signInMail = await readTestMail(origin); assert.equal(signInMail.length, 1); assert.ok(signInMail[0].to.includes(fixture.operatorEmail));
   mark("host timezone edits preserve committed booking/answer/capability/claim snapshots and exact retry identity; the occupied UTC instant remains denied and booking provider sends stay queued");
   await writeFile(evidencePath, JSON.stringify({ status: "verified", verifiedAt: new Date().toISOString(), origin, checks, proofs: { concurrentFirstSaves: 4, retainedSingletonId: stable.id, syntheticSignInMail: 1, bookingProviderSendEffects: 0, committedBookings: 1 }, limits: ["Actual native Hono/Start/D1/DO and SSR in profile-only preview configuration, fresh task-owned temporary state and synthetic providers only; native authentication follows one explicitly authorized synthetic sign-in email and never injects a session.", "Profile creation UI, focus retention, transport recovery and busy controls remain source-reviewed only under the browser launch hold.", "Blank profile setup removes only the synthetic setup profile before any booking exists; it is guarded against reusing populated fixture state and never targets retained15702."] }, null, 2) + "\n");
 } catch (error) {

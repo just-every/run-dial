@@ -1,3 +1,4 @@
+import { captureAuthMail, capturedMail } from "../mail-capture";
 import { ensureTestOperator } from "../auth-fixture";
 import start from "@tanstack/react-start/server-entry";
 import { createWorker } from "../../src/core/app/worker";
@@ -12,7 +13,7 @@ import { setup, status } from "../review/setup";
 
 const secondEmail = "second-operator@dial.test";
 function servicesFor(env: AppBindings) {
-  return createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { ...fixtureProviders(isolatedProviderDb(env)), calendarChanges: coordinatedCalendarChanges(env) });
+  return createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { ...fixtureProviders(isolatedProviderDb(env)), authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
 }
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const production = createWorker(servicesFor);
@@ -22,6 +23,7 @@ export default {
     isolatedProviderDb(env);
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
+    if (url.pathname === "/__test/mail") return capturedMail(env.DB);
     if (url.pathname === "/__fixtures/setup" && request.method === "POST") {
       const services = servicesFor(env), fixture = await setup(env, services);
       const second = await ensureTestOperator(env.DB, secondEmail);

@@ -31,7 +31,7 @@ import { suppressesMail } from "../platform/mail/development";
 import { BaseMailSender, mailConfiguration } from "../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 
-export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers } = {}) {
+export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers } = {}) {
   const hostProfile = new HostProfileService(new HostProfileRepository(binding));
   const calendar = new CalendarConnectionService(new CalendarConnectionRepository(binding), runtime, adapters.calendar);
   const mailConfig = mailConfiguration(runtime);
@@ -44,10 +44,10 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   });
   calendar.setExternalChangeHandler(adapters.calendarChanges ?? bookings);
   if (adapters.connectionWatch) calendar.setWatchObservers(adapters.connectionWatch);
-  const authMail = adapters.mail ? { async send(message: import("../../../modules/operator-auth/index.mjs").MailMessage) {
+  const authMail = adapters.authMail ?? (adapters.mail ? { async send(message: import("../../../modules/operator-auth/index.mjs").MailMessage) {
     const result = await adapters.mail!.send({ to: message.to[0], subject: message.subject, text: message.text, ...(message.html ? { html: message.html } : {}), idempotencyKey: message.deliveryId });
     return { status: "accepted" as const, provider: "edition", providerMessageId: result.providerMessageId };
-  } } : undefined;
+  } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
     customFields: createCustomFields(binding),
