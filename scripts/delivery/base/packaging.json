@@ -106,9 +106,6 @@
               ]
             }
           ]
-        },
-        "page": {
-          "path": "/"
         }
       },
       "recovery": "Preserve the private deployment receipt, owner-held SESSION_SECRET, and applied migration history. Restore only into an empty migrated installation with writers stopped; reconnect calendars and recheck mail before publishing booking events."
