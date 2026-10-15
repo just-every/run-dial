@@ -81,7 +81,7 @@ contract("HOME-001", "the landing loads only same-origin resources and keeps no 
   assert.doesNotMatch(html, /<(img|script|link|iframe|video|audio|object|embed)\b/, "drawings are inline; the document head adds the shared same-origin assets");
   assert.doesNotMatch(html, /\ssrc(set)?="/);
   const external = hrefs(html).filter((href) => /^[a-z]+:|^\/\//i.test(href));
-  assert.deepEqual([...new Set(external)].sort(), [sourceUrl, "https://runeditrun.com"].sort(), "the only off-origin addresses are the Source and credit links");
+  assert.deepEqual([...new Set(external)].sort(), [sourceUrl, "https://runeditrun.com", "https://demo.run-dial.com/"].sort(), "the only off-origin addresses are the demo, Source and credit links");
   const files = (directory) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? files(join(directory, entry.name)) : [join(directory, entry.name)]);
   const sources = ["src/core/features/public-site/landing", "src/core/features/public-site/chrome", "src/core/shared/drawing"].flatMap(files).filter((file) => /\.(tsx?|css)$/.test(file));
   for (const file of sources) {

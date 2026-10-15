@@ -49,7 +49,8 @@ claim origin and a loopback install for development mail.
 the RunEditRun account) runs `rer deploy --demo`. `test_only` deploys the
 separate `demo-test` host at `demo.test.run-dial.com` with Cloudflare's
 always-passing Turnstile test keys; `remove` removes the selected host. No
-repository variable is needed. The run site and its homepage are unchanged.
+repository variable is needed. The run-site homepage links to the production
+demo with **Try the demo** beside **Run Dial**.
 
 The pinned rer release admits Dial’s `cloudflare:workers` imports,
 `BookingCoordinator` Durable Object and `passThroughOnException` forwarding
