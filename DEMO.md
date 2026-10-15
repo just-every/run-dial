@@ -1,7 +1,7 @@
 # Dial demo
 
 After the ordinary `rer setup`, run `rer demo` (`rer dev --demo`) and open its
-private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.12 release
+private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.14 release
 includes demo mode. `rer demo --stop`, Ctrl-C, or its end (one hour) stops it and
 deletes `.rer/demo/<start>/`; the next demo starts afresh. Stop `rer dev` first:
 one server runs per checkout.
@@ -51,8 +51,6 @@ separate `demo-test` host at `demo.test.run-dial.com` with Cloudflare's
 always-passing Turnstile test keys; `remove` removes the selected host. No
 repository variable is needed. The run site and its homepage are unchanged.
 
-As of rer 0.2.12, `rer deploy --demo --dry-run` stops at the container import
-boundary: it refuses Dial's `BookingCoordinator` Durable Object, its
-`cloudflare:workers` `env` imports and its `passThroughOnException` forwarding,
-although the workerd engine runs them. The hosted demo is not deployed until rer
-admits them for the workerd engine.
+The pinned rer release admits Dial’s `cloudflare:workers` imports,
+`BookingCoordinator` Durable Object and `passThroughOnException` forwarding
+for the workerd container engine.

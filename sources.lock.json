@@ -777,7 +777,7 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "22893221f94885f9be290b8f135c2c40cd867f3b2c4ac717aebaa001fa46f8b2",
+      "sha256": "000389a44f001b1c8f2dcd69849ae947eb4177623dfc34ff7a64930f071fdea5",
       "executable": false
     },
     "deploy-demo.json": {
@@ -2361,11 +2361,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "ab651914ba80b5f87fc1bab5ab752a36964329bd980c9ce7c5af25e7a6e82129",
+      "sha256": "434d2be5f1c8fc3219b404f16f43f8bd9b9ca484789875740935d297b0a2b661",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "147193f9b3be41efe03601ffcfe5872ed8a5906be5683faaa784e427f6bcea8e",
+      "sha256": "ea638df65abc0b23328a8723a27e7f676b5b06691151ee975ac9f2c8ec31e4a1",
       "executable": false
     },
     "public/brand/band.svg": {
