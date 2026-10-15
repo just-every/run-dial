@@ -14,7 +14,7 @@ export function managedRelaySender(config: RelayConfig, request: typeof fetch): 
   return { async send(message) {
     let status: number | undefined, retryAfterSeconds: number | undefined;
     const sender = createMailSender({ provider: "rer", mode: "production", ...config }, { fetch: async (url: string, init: RequestInit) => {
-      const response = await relayRequest(request, url, init);
+      const response = await request(url, init);
       status = response.status;
       const value = response.headers.get("Retry-After");
       if (status === 429 && value && /^\d+$/.test(value) && Number.isSafeInteger(Number(value))) retryAfterSeconds = Math.min(Number(value), 86_400);
@@ -32,17 +32,9 @@ export async function checkManagedRelay(config: RelayConfig, request: typeof fet
   catch { throw new ProviderFailure("missing_configuration", false); }
   let response: Response;
   try {
-    response = await relayRequest(request, config.relayUrl!, { method: "POST", redirect: "error", signal: AbortSignal.timeout(10_000),
+    response = await request(config.relayUrl!, { method: "POST", redirect: "manual", signal: AbortSignal.timeout(10_000),
       headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" }, body: "{}" });
   } catch { throw new ProviderFailure("provider_unavailable", true); }
   if (response.status !== 400) throw new ProviderFailure(response.status === 401 ? "unauthorized" : [402, 403].includes(response.status) ? "forbidden" : "provider_unavailable", response.status >= 500);
   return { checkedAt: new Date().toISOString() };
-}
-
-/** Workers fetch lacks redirect:error. Implement its refusal using manual mode;
- * neither the credential nor the message can reach a redirect destination. */
-async function relayRequest(request: typeof fetch, url: string, init: RequestInit) {
-  const response = await request(url, { ...init, redirect: "manual" });
-  if (response.status >= 300 && response.status < 400) throw new TypeError("Managed mail redirects are refused");
-  return response;
 }

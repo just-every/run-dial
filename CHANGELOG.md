@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Mark example and test credentials explicitly synthetic so hosted source admission accepts the fixtures.
+- Pin rer 0.2.23 and adopt Base's matching mail adapter: Managed sign-in mail sends from Workers with manual redirect refusal and relay-owned automated-mail headers. RER's `login_hint` prefills the sign-in email using Base's validation, without submitting the form.
 
 - Split push Verify into parallel checks. The unchanged README installation and real-time Cron journeys run nightly, on release tags and on demand; local `pnpm verify` still runs them all.
 

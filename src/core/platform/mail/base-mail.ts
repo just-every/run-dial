@@ -30,11 +30,7 @@ export function createAuthenticationMail(runtime: RuntimeEnvironment): AuthMailS
   if (!config.apiKey || !config.from) return undefined;
   if (config.provider === "rer") {
     const sender = managedRelaySender({ apiKey: config.apiKey, relayUrl: config.relayUrl }, fetch);
-    return { send(message) {
-      // Native auth marks automated mail. The relay owns provider headers.
-      const headers = Object.fromEntries(Object.entries(message.headers ?? {}).filter(([name]) => name.toLowerCase() !== "auto-submitted"));
-      return sender.send({ ...message, headers: Object.keys(headers).length ? headers : undefined });
-    } };
+    return sender;
   }
   return createMailSender({ provider: config.provider, apiKey: config.apiKey, mode: "production" }) as BaseSender;
 }

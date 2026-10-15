@@ -14,12 +14,14 @@ export const loadPrivateShell = createServerFn({ method: "GET" }).middleware([pa
   return readPrivateShell();
 });
 
-// Only public presentation flags leave this server function. Bootstrap retains
+// Only public sign-in presentation leaves this server function. Bootstrap retains
 // its independent transactional first-owner guard.
-export const loadSigninOptions = createServerFn({ method: "GET" }).middleware([pageLoadTransport]).handler(async () => {
-  const { readSigninOptions } = await import("./signin-options.server");
-  return readSigninOptions();
-});
+export const loadSigninOptions = createServerFn({ method: "GET" }).middleware([pageLoadTransport])
+  .inputValidator(z.object({ loginHint: z.string().optional() }))
+  .handler(async ({ data }) => {
+    const { readSigninOptions } = await import("./signin-options.server");
+    return readSigninOptions(data.loginHint);
+  });
 
 export const loadSetupShell = createServerFn({ method: "GET" }).middleware([pageLoadTransport]).handler(async () => {
   const { readPrivateShell } = await import("./documents.server");
