@@ -32,9 +32,10 @@ export class MoveInService{
  }
  async preview(files:SavedFile[],choices:Choices,asOf:string,session:SessionRecord,uploadIdentity?:string,applying=false){
   const source=await readSavedFiles(files),context=importContext(this.db,session);
-  const previous=(await this.db.prepare("SELECT id FROM ik_jobs WHERE principal_id=? AND destination='dial' ORDER BY rowid DESC").bind(session.id).all<{id:string}>()).results;
+  await guardErasedInvitees(context.destination,source.data.invitees.map(invitee=>invitee.uri),this.db);
+  const previous=(await this.db.prepare("SELECT id,operation_key FROM ik_jobs WHERE principal_id=? AND destination='dial' ORDER BY rowid DESC").bind(session.id).all<{id:string;operation_key:string}>()).results;
   const identity=(artifacts:typeof source.bundle.artifacts)=>canonicalJson(artifacts.map(a=>({name:a.name,sha256:a.sha256,size:a.size})).sort((a,b)=>a.name.localeCompare(b.name)));
-  let existing:ImportPlan|undefined;
+  let existing:ImportPlan|undefined,operationKey:string|undefined;
   for(const row of previous){await readD1ImportJob(row.id,context);const {job,plan}=await stored(row.id,context);if(identity(plan.source.artifacts)!==identity(source.bundle.artifacts)&&captureFacts(plan).capture!==captureIdentity(source.bundle.artifacts))continue;
    if(plan.entries.some(e=>e.erased))throw new Error('This saved source contains erased personal data and cannot be replayed.');
    if(job.state==='undone'||job.state==='rolled_back'){
@@ -42,23 +43,25 @@ export class MoveInService{
     if(undo.dispositions.some(item=>item.disposition==='retained'))throw new Error(`This import retained edited records or their required parents during undo. Reimport is blocked to preserve them. Open saved import ${job.id} to review retained conflicts; no new source copy was saved.`);
     continue;
    }
-   existing=plan;break;
+   existing=plan;operationKey=row.operation_key;break;
   }
   if(applying&&!uploadIdentity)throw new Error('Review an uploaded source before applying.');
   const generation=await uploadGeneration(context);
   const binding={owner:session.id,session:session.sessionId,source:sha256(identity(source.bundle.artifacts)),asOf,generation,bookingCount:source.data.scheduled_events.length};
   const upload=uploadIdentity?await verifyUploadIdentity(uploadIdentity,this.secret,binding):await issueUploadIdentity(this.secret,{...binding,asOf:existing?reportFromPlan(existing).asOf:asOf});
-  if(existing){const report=reportFromPlan(existing,'already here');report.items=report.items.map(item=>({...item,reason:`Already here. ${item.reason}`}));return {plan:existing,report,uploadIdentity:upload.identity,generation};}
+  if(existing){const report=reportFromPlan(existing,'already here');report.items=report.items.map(item=>({...item,reason:`Already here. ${item.reason}`}));return {plan:existing,report,uploadIdentity:upload.identity,generation,operationKey};}
   const mode=await captureMode(this.db,source.data);
   const catchUp=mode.mode==='catch-up'?{known:mode.known,imported:await importedBookings(this.db)}:undefined;
   const {plan}=await planMoveIn(files,choices,asOf,await this.snapshot(),context,this.secret,upload.nonces,catchUp);
-  await guardErasedSources(plan,this.db);await guardErasedInvitees(plan,this.db);await reserveSourceContext(plan,context);
+  await guardErasedSources(plan,this.db);await reserveSourceContext(plan,context);
   return {plan,report:reportFromPlan(plan,'preview',await describeDifferences(this.db,captureFacts(plan).differences)),uploadIdentity:upload.identity,generation};
  }
  async apply(files:SavedFile[],choices:Choices,asOf:string,fingerprint:string,acknowledged:boolean,session:SessionRecord,uploadIdentity?:string){
   if(!acknowledged)throw new Error('Acknowledge losses, rejected overlaps and changed values before applying.');
-  const {plan,generation}=await this.preview(files,choices,asOf,session,uploadIdentity,true);if(plan.fingerprint!==fingerprint)throw new Error('The source or destination changed. Review a fresh preview.');
-  const context=fenceErasedInvitees(fenceUploadGeneration(await reserveSourceContext(plan,await reviewedApplication(importContext(this.db,session),fingerprint)),generation),plan);
+  const {plan,generation,operationKey}=await this.preview(files,choices,asOf,session,uploadIdentity,true);if(plan.fingerprint!==fingerprint)throw new Error('The source or destination changed. Review a fresh preview.');
+  // A replay keys on the stored job's operation key: a redaction rewrites that job's fingerprint but not its key.
+  const reviewed=await reviewedApplication(importContext(this.db,session),fingerprint);
+  const context=fenceErasedInvitees(fenceUploadGeneration(await reserveSourceContext(plan,operationKey?{...reviewed,operationKey}:reviewed),generation),plan);
   const job=await createD1ImportJob(plan,context);await recordFacts(this.db,job.id,captureFacts(plan));return this.read(job.id,session);
  }
  async read(id:string,session:SessionRecord){const context=importContext(this.db,session);const job=await readD1ImportJob(id,context);const {plan}=await stored(id,context);return {job,report:reportFromPlan(plan,job.state,await storedDifferences(this.db,id)),...(job.state==='undone'?{undo:await readD1ImportUndoReport(job.id,context,{limit:1000})}:{})};}

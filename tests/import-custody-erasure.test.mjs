@@ -27,6 +27,8 @@ contract('DATA-002', 'person HTTP erasure removes a cancelled invitee from a pee
     await rt.data(`/api/app/move-in/jobs/${historical.job.id}`);
     await assertErased(rt, cancelled);
     assert.ok((await rt.db.prepare('SELECT epoch FROM rer_portability_state WHERE id=1').first()).epoch > (epochBefore?.epoch ?? 0), 'the erasure fences older archives');
+    // The peer's import stays live, yet the saved export still holding the erased invitee is refused, adding no job.
+    await refuseReplay(rt, imported.files);
     const sharedAfter = await custodyEvidence(rt, cancelled);
     await finish(rt, await rt.data(`/api/app/move-in/jobs/${imported.job.id}/undo`, {}), 'undone');
     assert.equal((await rt.db.prepare('SELECT count(*) AS n FROM bookings').first()).n, 0);

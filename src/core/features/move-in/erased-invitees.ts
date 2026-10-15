@@ -23,10 +23,12 @@ function planInvitees(plan: ImportPlan) {
 
 const absent = (destination: string, chunk: string): D1Sql => ({ sql: 'NOT EXISTS(SELECT 1 FROM ik_d1_erased_sources WHERE destination=? AND identity IN (SELECT value FROM json_each(?)))', params: [destination, chunk] });
 
-export async function guardErasedInvitees(plan: ImportPlan, db: D1Database) {
-  for (const chunk of jsonChunks(planInvitees(plan))) {
-    const predicate = absent(plan.destination, chunk);
-    if (!(await db.prepare(`SELECT ${predicate.sql} AS clear`).bind(...predicate.params!).first<{ clear: number }>())?.clear) throw new Error('IMPORT_SOURCE_ERASED');
+/** Checks the upload's own invitees, before any stored plan is reused: a field
+ * redaction leaves the peer's job live, so a replay must not answer "already here". */
+export async function guardErasedInvitees(destination: string, uris: string[], db: D1Database) {
+  for (const chunk of jsonChunks([...new Set(uris)].map(uri => inviteeIdentity(destination, uri)))) {
+    const predicate = absent(destination, chunk);
+    if (!(await db.prepare(`SELECT ${predicate.sql} AS clear`).bind(...predicate.params!).first<{ clear: number }>())?.clear) throw new Error('This saved source contains erased personal data and cannot be replayed.');
   }
 }
 
