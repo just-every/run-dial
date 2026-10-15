@@ -5,60 +5,69 @@ import { type MailSender as AuthMailSender } from "../../../../modules/operator-
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 import { ProviderFailure } from "../calendar/types";
 import type { MailMessage, MailSender, MailSendResult } from "./types";
-import { developmentOutbox, isLocalOutboxEnabled } from "./development";
+import { suppressesMail } from "./development";
 import { checkMailProvider } from "./connection";
+import { checkManagedRelay, managedRelaySender, type BaseMessage, type BaseResult, type BaseSender } from "./managed-relay";
 
-type BaseMessage = { deliveryId: string; from: string; to: string[]; subject: string; text: string; html?: string; replyTo?: string; headers?: Record<string, string>; attachments?: { filename: string; contentType: string; content: Uint8Array }[] };
-type BaseResult = { status: "accepted" | "development" | "rejected" | "rate_limited" | "uncertain"; provider: string; providerMessageId: string | null; code?: string };
-type BaseSender = { send(message: BaseMessage): Promise<BaseResult> };
-
-type MailRuntime = Pick<RuntimeEnvironment, "MAIL_PROVIDER" | "MAIL_API_KEY" | "MAIL_FROM" | "MAIL_WEBHOOK_KEY" | "RESEND_API_KEY" | "RESEND_FROM_EMAIL"> & Partial<Pick<RuntimeEnvironment, "ENVIRONMENT" | "APP_URL">>;
+type MailRuntime = Pick<RuntimeEnvironment, "MAIL_PROVIDER" | "MAIL_API_KEY" | "MAIL_FROM" | "MAIL_RELAY_URL" | "MAIL_WEBHOOK_KEY" | "RESEND_API_KEY" | "RESEND_FROM_EMAIL"> & Partial<Pick<RuntimeEnvironment, "ENVIRONMENT" | "APP_URL" | "RER_DEMO">>;
 export function mailConfiguration(runtime: MailRuntime) {
-  if (runtime.MAIL_PROVIDER) return { provider: runtime.MAIL_PROVIDER, apiKey: runtime.MAIL_API_KEY, from: runtime.MAIL_FROM };
+  if (runtime.MAIL_PROVIDER) return { provider: runtime.MAIL_PROVIDER, apiKey: runtime.MAIL_API_KEY, from: runtime.MAIL_FROM, relayUrl: runtime.MAIL_RELAY_URL };
   // Existing installed Resend configuration retains its provider and delivery identities.
   return { provider: "resend" as const, apiKey: runtime.RESEND_API_KEY, from: runtime.RESEND_FROM_EMAIL };
 }
 
-export function createAuthenticationMail(db: D1Database, runtime: RuntimeEnvironment): AuthMailSender | undefined {
-  if (isLocalOutboxEnabled(runtime)) {
-    return createMailSender({ provider: "development", mode: "development" }, { outbox: developmentOutbox(db, runtime) }) as BaseSender;
+export function createAuthenticationMail(runtime: RuntimeEnvironment): AuthMailSender | undefined {
+  if (suppressesMail(runtime)) {
+    const sender = createMailSender({ provider: "development", mode: "development" }, {}) as BaseSender;
+    return { async send(message) {
+      await sender.send(message);
+      // Hosted demos use an HTTPS origin; their mocked send is still accepted.
+      return { status: "accepted", provider: "development", providerMessageId: null };
+    } };
   }
-  if (runtime.MAIL_PROVIDER === "development") throw new Error("Development mail is unavailable outside a loopback development install");
+  if (runtime.MAIL_PROVIDER === "development") throw new Error("Development mail is unavailable outside a loopback development install or demo mode");
   const config = mailConfiguration(runtime);
   if (!config.apiKey || !config.from) return undefined;
+  if (config.provider === "rer") {
+    const sender = managedRelaySender({ apiKey: config.apiKey, relayUrl: config.relayUrl }, fetch);
+    return { send(message) {
+      // Native auth marks automated mail. The relay owns provider headers.
+      const headers = Object.fromEntries(Object.entries(message.headers ?? {}).filter(([name]) => name.toLowerCase() !== "auto-submitted"));
+      return sender.send({ ...message, headers: Object.keys(headers).length ? headers : undefined });
+    } };
+  }
   return createMailSender({ provider: config.provider, apiKey: config.apiKey, mode: "production" }) as BaseSender;
 }
 
 export class BaseMailSender implements MailSender {
   constructor(private readonly db: D1Database | undefined, private readonly runtime: MailRuntime, private readonly request: typeof fetch = fetch) {}
   async checkConnection() {
-    if (this.runtime.MAIL_PROVIDER === "sendgrid" && !this.runtime.MAIL_WEBHOOK_KEY) throw new ProviderFailure("missing_configuration", false);
     const config = mailConfiguration(this.runtime);
-    if (config.provider === "development") {
-      if (!this.db) throw new ProviderFailure("missing_configuration", false);
-      await developmentOutbox(this.db, this.runtime).list();
+    if (suppressesMail(this.runtime)) {
       return { checkedAt: new Date().toISOString() };
     }
+    if (!config.from) throw new ProviderFailure("missing_configuration", false);
+    if (config.provider === "rer") return checkManagedRelay({ apiKey: config.apiKey, relayUrl: config.relayUrl }, this.request);
     return checkMailProvider(config as { provider: "resend" | "sendgrid"; apiKey?: string; from?: string }, this.request);
   }
   async send(message: MailMessage): Promise<MailSendResult> {
     const config = mailConfiguration(this.runtime);
-    if ((!config.apiKey && config.provider !== "development") || !config.from) throw new ProviderFailure("missing_configuration", false);
-    if (!/^no-?reply@/i.test(config.from)) throw new ProviderFailure("invalid_delivery_payload", false);
-    const sender = config.provider === "development"
-      ? createMailSender({ provider: "development", mode: "development" }, { outbox: developmentOutbox(this.db!, this.runtime) }) as BaseSender
+    if ((!config.apiKey && !suppressesMail(this.runtime)) || !config.from) throw new ProviderFailure("missing_configuration", false);
+    const sender = suppressesMail(this.runtime)
+      ? createMailSender({ provider: "development", mode: "development" }, {}) as BaseSender
+      : config.provider === "rer" ? managedRelaySender({ apiKey: config.apiKey, relayUrl: config.relayUrl }, this.request)
       : createMailSender({ provider: config.provider, mode: "production", apiKey: config.apiKey }, { fetch: this.request }) as BaseSender;
     const wire: BaseMessage = { deliveryId: message.idempotencyKey, from: config.from, to: [message.to], subject: message.subject, text: message.text,
       ...(message.html ? { html: message.html } : {}), ...(message.replyTo ? { replyTo: message.replyTo } : {}),
       ...(message.attachments?.length ? { attachments: message.attachments.map((attachment) => ({ filename: attachment.filename,
         contentType: attachment.contentType ?? "application/octet-stream", content: Uint8Array.from(atob(attachment.contentBase64), (char) => char.charCodeAt(0)) })) } : {}) };
-    if (config.provider === "sendgrid") return this.sendOnce(sender, wire);
+    if (["sendgrid", "rer"].includes(config.provider) && !suppressesMail(this.runtime)) return this.sendOnce(sender, wire);
     const result = await sender.send(wire);
-    if (result.status === "development" && isLocalOutboxEnabled(this.runtime)) return { providerMessageId: null };
+    if (result.status === "development" && suppressesMail(this.runtime)) return { providerMessageId: null };
     return checkedResult(result, true);
   }
 
-  /** SendGrid has no idempotency facility. A durable admission precedes invocation;
+  /** SendGrid and the RER relay have no idempotency facility. A durable admission precedes invocation;
    * unknown outcomes and process loss never become an automatic second send. */
   private async sendOnce(sender: BaseSender, wire: BaseMessage): Promise<MailSendResult> {
     if (!this.db) throw new ProviderFailure("missing_configuration", false);
@@ -83,7 +92,8 @@ export class BaseMailSender implements MailSender {
 }
 function checkedResult(result: BaseResult, idempotent: boolean): MailSendResult {
   if (result.status === "accepted") return { providerMessageId: result.providerMessageId };
-  if (result.status === "rate_limited") throw new ProviderFailure("quota_exhausted", true);
+  if (result.status === "rate_limited") throw new ProviderFailure("quota_exhausted", true, result.retryAfterSeconds);
+  if (result.code === "unauthorized") throw new ProviderFailure("unauthorized", false);
   if (result.status === "uncertain") throw new ProviderFailure(idempotent ? "provider_unavailable" : "mail_outcome_unknown", idempotent);
   throw new ProviderFailure("permanent_delivery_failure", false);
 }

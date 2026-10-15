@@ -1,5 +1,6 @@
 import { lstat } from 'node:fs/promises';
 import { RerError, refuse, missing } from '@runeditrun/rer/errors';
+import { remoteExportFailure } from './export-diagnostic.mjs';
 // Base's CLI accepts only unserved locations (exports/ or an absolute path outside the checkout) before this hook runs.
 async function transfer({ root, path, journal, store, signal, operationToken, target, origin, sessionFile }, direction) {
  if (target === 'remote' && direction !== 'export') throw refuse('Remote restore is not exposed. Import the hosted archive into an empty local installation.');
@@ -16,7 +17,7 @@ async function transfer({ root, path, journal, store, signal, operationToken, ta
  child.stdout.on('data', chunk => { output += chunk; });
  const status = await new Promise(resolve => child.once('close', (code, signal) => resolve({ code, signal })));
  let receipt; try { receipt = JSON.parse(output.trim().split('\n').at(-1)); } catch { throw new RerError('transfer_failed', 'Dial transfer returned no complete receipt.', 1); }
- if (status.code !== 0 || !receipt.ok) throw new RerError('transfer_failed', `Dial transfer failed (${receipt.reason ?? 'incomplete'}); preserve the archive and inspect the private log.`, receipt.exitCode ?? 1);
+ if (status.code !== 0 || !receipt.ok) throw new RerError('transfer_failed', target === 'remote' ? remoteExportFailure(receipt) : `Dial transfer failed (${receipt.reason ?? 'incomplete'}); preserve the archive and inspect the private log.`, target === 'remote' ? 4 : receipt.exitCode ?? 1);
  delete receipt.ok;
  return { target: target ?? 'local', ...receipt };
 }

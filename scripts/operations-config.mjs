@@ -20,9 +20,9 @@ export function invalidConfigurationNames(env) {
   const apiKeyName = env.MAIL_PROVIDER ? "MAIL_API_KEY" : "RESEND_API_KEY";
   // Legacy Resend is selected without MAIL_PROVIDER, but absent optional mail
   // must remain valid for a foundation-only install.
-  if (["sendgrid", "resend"].includes(provider) && (env.MAIL_PROVIDER || env[apiKeyName] !== undefined)) {
-    try { validateMailConfig({ provider, mode: "production", apiKey: env[apiKeyName] }); }
-    catch { invalid.push(apiKeyName); }
+  if (["sendgrid", "resend", "rer"].includes(provider) && (env.MAIL_PROVIDER || env[apiKeyName] !== undefined)) {
+    try { validateMailConfig({ provider, mode: "production", apiKey: env[apiKeyName], ...(provider === "rer" ? { relayUrl: env.MAIL_RELAY_URL } : {}) }); }
+    catch { invalid.push(apiKeyName); if (provider === "rer") invalid.push("MAIL_RELAY_URL"); }
   }
   try {
     const url = new URL(env.APP_URL);
@@ -44,9 +44,9 @@ export function invalidConfigurationNames(env) {
   // Match the runtime's provider selection: legacy Resend is active only without MAIL_PROVIDER.
   const senderName = env.MAIL_PROVIDER ? "MAIL_FROM" : "RESEND_FROM_EMAIL";
   const sender = env[senderName];
-  if (sender && (!runtimeEnvironmentSchema.shape[senderName].safeParse(sender).success || !/^no-?reply@/i.test(sender))) {
+  if (sender && !runtimeEnvironmentSchema.shape[senderName].safeParse(sender).success) {
     invalid.push(senderName);
-    console.error(`Set ${senderName} to a verified noreply@ or no-reply@ sender address, then run pnpm exec rer doctor again.`);
+    console.error(`Set ${senderName} to a full sender email address, then run pnpm exec rer doctor again.`);
   }
   return Object.keys(runtimeEnvironmentSchema.shape).filter(name => invalid.includes(name));
 }

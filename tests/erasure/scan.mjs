@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 export async function snapshot(db) {
   const tables = (await db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()).results;
   const result = {};
-  // D1's own authorizer denies all access to this private engine metadata table;
-  // it is not an application store and cannot receive application values.
-  for (const { name } of tables.filter(table => table.name !== '_cf_METADATA')) result[name] = (await db.prepare(`SELECT * FROM "${name.replaceAll('"', '""')}"`).all()).results;
+  // Cloudflare's private engine tables are outside application storage and
+  // D1's authorizer can refuse access to them.
+  for (const { name } of tables.filter(table => !table.name.startsWith('_cf_'))) result[name] = (await db.prepare(`SELECT * FROM "${name.replaceAll('"', '""')}"`).all()).results;
   return result;
 }
 export function containsPersonal(value, markers) {

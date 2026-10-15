@@ -1,3 +1,5 @@
+// @ts-expect-error Base's effects module is portable ESM; the public declaration lives in demo/index.d.mts.
+import { fetchDemoRead } from "../../../../modules/demo/effects.mjs";
 import { inspectGoogleManagedEvent } from "./google-inspection";
 import type {
   CalendarAdapter,
@@ -62,9 +64,9 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
 
   async readBusy(accessToken: string, input: { calendarIds: string[]; startsAt: string; endsAt: string; timeZone: string }) {
     if (input.calendarIds.length === 0) throw new ProviderFailure("invalid_provider_response", false);
-    const body = await this.authorizedJson(accessToken, `${calendarApi}/freeBusy`, {
+    const body = await requestJsonWithTimeout(this.request === globalThis.fetch ? fetchDemoRead : this.request, `${calendarApi}/freeBusy`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", authorization: `Bearer ${accessToken}` },
       body: JSON.stringify({
         timeMin: input.startsAt,
         timeMax: input.endsAt,

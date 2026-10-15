@@ -13,9 +13,10 @@ export const runtimeEnvironmentSchema: z.ZodObject<{
   RER_OWNER_CLAIM_INSTALLATION_ID: z.ZodOptional<z.ZodString>;
   RER_OWNER_CLAIM_APP_ORIGIN: z.ZodOptional<z.ZodString>;
   RER_OWNER_CLAIM_PUBLIC_KEYS: z.ZodOptional<z.ZodString>;
-  MAIL_PROVIDER: z.ZodOptional<z.ZodEnum<{ sendgrid: "sendgrid"; resend: "resend"; development: "development" }>>;
+  MAIL_PROVIDER: z.ZodOptional<z.ZodEnum<{ sendgrid: "sendgrid"; resend: "resend"; rer: "rer"; development: "development" }>>;
   MAIL_API_KEY: z.ZodOptional<z.ZodString>;
   MAIL_FROM: z.ZodOptional<z.ZodString>;
+  MAIL_RELAY_URL: z.ZodOptional<z.ZodString>;
   MAIL_WEBHOOK_KEY: z.ZodOptional<z.ZodString>;
   GOOGLE_OAUTH_CLIENT_ID: z.ZodOptional<z.ZodString>;
   GOOGLE_OAUTH_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
@@ -23,4 +24,5 @@ export const runtimeEnvironmentSchema: z.ZodObject<{
   RESEND_API_KEY: z.ZodOptional<z.ZodString>;
   RESEND_FROM_EMAIL: z.ZodOptional<z.ZodString>;
   RESEND_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;
+  RER_DEMO: z.ZodOptional<z.ZodLiteral<"1">>;
 }>;

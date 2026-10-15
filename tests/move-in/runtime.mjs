@@ -21,7 +21,7 @@ export async function runtime(options={}){
  const open=async()=>{
   const env = {
    DB: {type:'d1',id:options.databaseId??'move-in'}, FILES:{type:'r2',name:'files'}, JOBS:{type:'queue',name:'jobs'},
-   ...Object.fromEntries(Object.entries({ENVIRONMENT:'development',OWNER_EMAIL:'operator@example.test',APP_URL:origin,SETUP_TOKEN:setupToken,SESSION_SECRET:'synthetic-import-session-secret-at-least-32',MAIL_PROVIDER:'sendgrid',MAIL_API_KEY:'synthetic-edge-key',MAIL_FROM:'noreply@example.test'}).map(([key,value])=>[key,{type:'text',value}]))
+   ...Object.fromEntries(Object.entries({ENVIRONMENT:'preview',OWNER_EMAIL:'operator@example.test',APP_URL:origin,SETUP_TOKEN:setupToken,SESSION_SECRET:'synthetic-import-session-secret-at-least-32',MAIL_PROVIDER:'sendgrid',MAIL_API_KEY:'synthetic-edge-key',MAIL_FROM:'noreply@example.test'}).map(([key,value])=>[key,{type:'text',value}]))
   };
   mf=new Miniflare({host:'127.0.0.1',port,cf:false,resourcePersistencePath:state,workers:[{
    config:{type:'worker',name:'move-in',compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],env,

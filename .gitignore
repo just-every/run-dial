@@ -31,3 +31,6 @@ rer-package/
 
 # Static run-site output
 dist/site/
+
+# Throwaway demo state
+.rer/demo/

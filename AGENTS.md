@@ -15,14 +15,9 @@ address in the command. `dev` prints `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`:
 open that URL on this computer and Dial opens signed in as the owner; a fresh
 owner lands on authenticated `/setup`, see `OPERATIONS.md` for completion.
 `RER_OPEN` carries the checkout's local dev key in its fragment (it is only a
-cookie after the page trades it); treat the line as a credential. `RER_OPEN`
-is also what opens the outbox for `dev --login` and `preview`. `dev --as co-host`
-starts as the dev co-host (`co-host@dev.localhost`, a real second operator that
-exists only in local dev) and `dev --as signed-out` as a visitor; the badge on
-every page switches between owner, co-host and signed out. `dev --login` turns
-dev identity off and uses the real email-link path: open the printed outbox,
-choose the newest sign-in message and follow its link; no external email is
-sent. Tests that need a sign-in link read the outbox with the checkout's key.
+cookie after the page trades it); treat the line as a credential. Local dev uses one-click sign-in and silently suppresses mail. The product name
+reads Dial Dev; demos read Dial Demo. Dev persona endpoints remain key-gated;
+there is no injected identity bar or captured-mail inbox.
 Stop dev with `rer dev --stop` or Ctrl-C before verification.
 
 ```sh

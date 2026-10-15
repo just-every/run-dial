@@ -37,7 +37,7 @@ export function DashboardPage() {
   }, []);
   const published = eventTypes?.filter((eventType) => eventType.status === "published").length ?? 0;
   return <div className="grid gap-7">
-    <PageHeader eyebrow="Operator workspace" title={profile ? `Welcome, ${profile.name.split(" ")[0]}.` : "Scheduling overview"} description="Review live scheduling configuration and resolve the requirements that keep public booking unavailable." art={<MiniDial size={72} />} actions={<Link to="/app/event-types/new" className={buttonClassName()}>New event type</Link>} />
+    <PageHeader eyebrow="Operator workspace" title={profile ? `Welcome, ${profile.name.split(" ")[0]}.` : "Scheduling overview"} description={setup.state?.completedAt ? "Review your event types, bookings, requests, and connection health." : "Review live scheduling configuration and resolve the requirements that keep public booking unavailable."} art={<MiniDial size={72} />} actions={<Link to="/app/event-types/new" className={buttonClassName()}>New event type</Link>} />
     {profileError ? <p role="alert" className={noticeClassName("error")}>{profileError}</p> : null}
     {eventError ? <p role="alert" className={noticeClassName("error")}>{eventError}</p> : null}
     {setup.error ? <p role="alert" className="text-sm text-danger">{setup.error}</p> : setup.state ? <SetupChecklist state={setup.state} workspace="/app" /> : <p role="status">Loading setup…</p>}

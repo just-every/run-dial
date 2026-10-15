@@ -38,7 +38,8 @@ export async function dayPickerJourney(browser, origin, scans, errors) {
         assert.equal(await page.getByRole("button", { name: "Previous week", exact: true }).isDisabled(), true);
         const input = page.getByLabel("View in timezone", { exact: true });
         assert.equal(await input.inputValue(), "America/New_York");
-        const expected = await (await initialAvailability).json();
+        const initial = await (await initialAvailability).json();
+        const expected = await (await page.request.get(origin + `/api/public/book/dial-host/intro/availability?week=${initial.week}&inviteeTimezone=America%2FNew_York`)).json();
         assert.equal(expected.rankedSlots.length, expected.slots.length);
         assert.deepEqual(expected.recommendations, expected.rankedSlots.slice(0, 5));
         const actual = [];
@@ -48,7 +49,7 @@ export async function dayPickerJourney(browser, origin, scans, errors) {
           await days.nth(index).click();
           const selectedDate = await days.nth(index).getAttribute("data-date");
           const rankedDay = expected.rankedSlots.filter(slot => inviteeDate(slot.startAt) === selectedDate).slice(0, 5);
-          assert.deepEqual(await suggestions.locator("button").evaluateAll(elements => elements.map(el => el.dataset.startAt)), rankedDay.map(slot => slot.startAt), "suggestions follow native full ranking on every selected day");
+          assert.deepEqual(await suggestions.locator("button").evaluateAll(elements => elements.map(el => el.dataset.startAt)), rankedDay.map(slot => slot.startAt), "first-visit suggestions match both-zone native ranking on every selected day without sending the device zone");
           assert.deepEqual(await suggestions.locator("em").allTextContents(), rankedDay.map(slot => slot.reason), "native ranking reasons are unchanged");
           const dayHeight = await page.evaluate(() => globalThis.document.documentElement.scrollHeight);
           assert.ok(dayHeight <= (width === 390 ? 2532 : 1800), `${schedule} ${width} selected day height ${dayHeight}`);

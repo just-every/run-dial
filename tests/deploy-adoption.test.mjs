@@ -6,7 +6,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setup } from "../scripts/deployment/setup-inputs.mjs";
 import { validateSetup } from "../scripts/setup/configuration.mjs";
-import { invalidConfigurationNames } from "../scripts/operations-config.mjs";
 import { contract } from "./contract.mjs";
 const configuration = {version:1,ownerEmail:"owner@fixture.test",prefix:"rer-seedproof-dial",target:"https://rer-seedproof-dial.fixture-account.workers.dev",mailProvider:"sendgrid",mailFrom:"sender@fixture.test"};
 const operationsEnvironment = {ENVIRONMENT:"production",APP_URL:configuration.target,SESSION_SECRET:"synthetic-session".repeat(3),OWNER_EMAIL:configuration.ownerEmail,SETUP_TOKEN:"synthetic-setup".repeat(3),MAIL_PROVIDER:"sendgrid",MAIL_FROM:configuration.mailFrom,MAIL_API_KEY:"synthetic-provider-key"};
@@ -20,12 +19,8 @@ test("setup collects supplied owner identity and refuses overwrite and mismatche
   await assert.rejects(setup(args),{code:"EEXIST"});
   for(const target of ["http://rer-seedproof-dial.fixture-account.workers.dev","https://other.fixture-account.workers.dev","https://rer-seedproof-dial.fixture-account.workers.dev/path"]) assert.throws(()=>validateSetup({...configuration,target}),/invalid-workers-dev-target/);
 });
-contract("NOTIFY-006", "doctor refuses the original reply-capable bootstrap sender with value-free output", () => {
-  checkDoctor(operationsEnvironment, false);
-  assert.deepEqual(invalidConfigurationNames(operationsEnvironment), ["MAIL_FROM"]);
-});
-contract("NOTIFY-006", "doctor accepts no-reply bootstrap inputs and refuses an absent provider credential", () => {
-  const env = { ...operationsEnvironment, MAIL_FROM: "no-reply@fixture.test" };
+contract("NOTIFY-006", "doctor accepts an ordinary sender and refuses an absent provider credential", () => {
+  const env = operationsEnvironment;
   checkDoctor(env, true);
   checkDoctor({ ...env, MAIL_API_KEY: "" }, false);
 });

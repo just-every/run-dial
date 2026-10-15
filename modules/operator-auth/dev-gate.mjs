@@ -1,14 +1,16 @@
+import { rejectedResponse } from './rejected-response.mjs';
 import { constantEqual } from './crypto.mjs';
-import { isLoopbackHost } from './http.mjs';
+import { isLoopbackHost, localCookieName } from './http.mjs';
 
 // The local key gate. `rer setup` writes a random RER_DEV_KEY per checkout and
 // the local runtimes receive it as a binding; a deployed Worker never has one
 // (`rer deploy` refuses it), so this gate is inert there. A tunnel or local
 // reverse proxy makes remote requests look local, so the network is not the
 // gate: holding the key is. Browsers trade it once for a host-only cookie; test
-// harnesses and the rer command line present it in a header.
+// harnesses and the rer command line present it in a header. The cookie is
+// named for the origin's port (`rer_dev_gate_8787`), so checkouts side by side
+// on one loopback host keep their own.
 export const DEV_KEY_HEADER = 'x-rer-dev-key';
-export const DEV_GATE_COOKIE = 'rer_dev_gate';
 export const DEV_KEY_PATH = '/__dev/key';
 const encoder = new TextEncoder();
 const validKey = value => typeof value === 'string' && /^[A-Za-z0-9_-]{43,256}$/.test(value);
@@ -25,8 +27,10 @@ async function cookieValue(key) {
 
 // Reads `#rer-dev=KEY` (with optional `as` or `next`), removes it from the
 // address bar first, then trades it through a same-origin POST. The fragment
-// never reaches a server; the key never appears in a query string.
-export const EXCHANGE_SCRIPT = "(()=>{const h=new URLSearchParams(location.hash.slice(1)),k=h.get('rer-dev');if(!k)return;history.replaceState(null,'',location.pathname+location.search);const a=h.get('as'),n=h.get('next')||(a?'/auth/dev/enter?as='+encodeURIComponent(a):location.pathname+location.search),to=n.startsWith('/')&&!n.startsWith('//')&&!n.includes('\\\\')?n:'/';fetch('" + DEV_KEY_PATH + "',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({key:k})}).then(r=>{if(r.ok)location.replace(to);else document.body.insertAdjacentHTML('beforeend','<p role=\"alert\">This link no longer opens the app. Run rer dev again for a fresh one.</p>')})})()";
+// never reaches a server; the key never appears in a query string. Listen for
+// fragment navigation too: an open gate page stays loaded when RER_OPEN points
+// to the same path with a fresh key fragment.
+export const EXCHANGE_SCRIPT = "(()=>{const exchange=()=>{const h=new URLSearchParams(location.hash.slice(1)),k=h.get('rer-dev');if(!k)return;history.replaceState(null,'',location.pathname+location.search);const a=h.get('as'),n=h.get('next')||(a?'/auth/dev/enter?as='+encodeURIComponent(a):location.pathname+location.search),to=n.startsWith('/')&&!n.startsWith('//')&&!n.includes('\\\\')?n:'/';fetch('" + DEV_KEY_PATH + "',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({key:k})}).then(r=>{if(r.ok)location.replace(to);else document.body.insertAdjacentHTML('beforeend','<p role=\"alert\">This link no longer opens the app. Run rer dev again for a fresh one.</p>')})};addEventListener('hashchange',exchange);exchange()})()";
 const PAGE_STYLE = 'body{margin:0;font:16px/1.5 system-ui,sans-serif;color:#17212e;background:#f5f7fa}main{max-width:36rem;margin:0 auto;padding:32px 16px}';
 let hashes;
 export async function exchangeHashes() {
@@ -39,9 +43,9 @@ export function devNotFound() {
     'content-security-policy': "default-src 'none'; script-src 'none'; style-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'" } });
 }
 
-function readGateCookie(request) {
-  const entries = (request.headers.get('cookie') || '').split(';').map(part => part.trim()).filter(part => part.startsWith(`${DEV_GATE_COOKIE}=`));
-  return entries.length === 1 ? entries[0].slice(DEV_GATE_COOKIE.length + 1) : null;
+function readGateCookie(request, name) {
+  const entries = (request.headers.get('cookie') || '').split(';').map(part => part.trim()).filter(part => part.startsWith(`${name}=`));
+  return entries.length === 1 ? entries[0].slice(name.length + 1) : null;
 }
 
 /**
@@ -54,13 +58,15 @@ export function devGate({ key, origin, local }) {
   let url; try { url = new URL(origin); } catch { return null; }
   if (url.origin !== origin || url.username || url.password || !isLoopbackHost(url.hostname)) return null;
   let expected;
+  const cookieName = localCookieName('rer_dev_gate', origin);
   const cookie = () => expected ??= cookieValue(key);
-  const setCookie = async () => `${DEV_GATE_COOKIE}=${await cookie()}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000${url.protocol === 'https:' ? '; Secure' : ''}`;
+  const setCookie = async () => `${cookieName}=${await cookie()}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000${url.protocol === 'https:' ? '; Secure' : ''}`;
   return Object.freeze({
+    cookieName,
     async admits(request) {
       const presented = request.headers.get(DEV_KEY_HEADER);
       if (presented !== null) return constantEqual(presented, key);
-      const value = readGateCookie(request);
+      const value = readGateCookie(request, cookieName);
       return value !== null && constantEqual(value, await cookie());
     },
     setCookie,
@@ -73,7 +79,7 @@ export function devGate({ key, origin, local }) {
         return new Response(request.method === 'HEAD' ? null : body, { headers: { ...privateHeaders, 'content-type': 'text/html; charset=utf-8',
           'content-security-policy': `default-src 'none'; script-src ${script}; style-src ${style}; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'` } });
       }
-      if (request.method !== 'POST' || request.headers.get('sec-fetch-site') === 'cross-site' || !request.headers.get('content-type')?.startsWith('application/json')) return devNotFound();
+      if (request.method !== 'POST' || request.headers.get('sec-fetch-site') === 'cross-site' || !request.headers.get('content-type')?.startsWith('application/json')) return rejectedResponse(request, devNotFound());
       const text = await request.text();
       let presented; try { presented = text.length <= 1024 ? JSON.parse(text)?.key : undefined; } catch {}
       if (typeof presented !== 'string' || !constantEqual(presented, key)) return devNotFound();

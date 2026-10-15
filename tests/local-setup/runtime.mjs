@@ -33,24 +33,21 @@ export async function runRer(directory, args, { expected = 0, timeout = 180_000 
     throw new Error(`Native command failure: ${JSON.stringify(commandDiagnostic(output, verb, owned.state.code))}; captured output omitted`, { cause: error });
   } finally { await owned.stop(); }
 }
-// `rer dev` opens signed in (RER_SIGNED_IN, RER_OPEN); `rer dev --login` and `rer preview` keep the outbox sign-in, which the key
-// gate still protects, so they print RER_SIGN_IN and the RER_OPEN link that opens it.
+// Local owner journeys use the one-click dev identity.
 export async function start(directory, command, origin, flags = []) {
   let output = "";
-  const owned = spawnOwned(process.execPath, rerArguments([rerEntry, command, ...flags]), { cwd: directory, env: environment() }, { label: `rer ${command}`, onOutput: chunk => { output += chunk; } });
-  const outbox = command === "preview" || flags.includes("--login");
+  const owned = spawnOwned(process.execPath, rerArguments([rerEntry, command, ...flags, "--foreground"]), { cwd: directory, env: environment() }, { label: `rer ${command}`, onOutput: chunk => { output += chunk; } });
   try {
     for (let attempt = 0; attempt < 2400; attempt++) {
       owned.assertRunning();
       const lines = output.split(/\r?\n/);
       const ready = lines.includes(`RER_READY ${origin}`);
       const open = lines.find(line => line.startsWith("RER_OPEN "));
-      const signIn = lines.find(line => line === `RER_SIGN_IN ${origin}/__dev/outbox`);
       const signedIn = lines.find(line => line.startsWith("RER_SIGNED_IN "));
       // The CLI performs health and ordinary sign-in delivery before its markers.
       // Wait for both before asserting health to avoid pre-readiness quota use.
-      if (ready && open && (outbox ? signIn : signedIn)) {
-        try { if ((await fetch(origin + "/health")).ok) return { owned, output: () => output, openUrl: open.slice("RER_OPEN ".length), signInUrl: signIn?.slice("RER_SIGN_IN ".length), signedInAs: signedIn?.slice("RER_SIGNED_IN ".length) }; } catch { /* native Worker startup */ }
+      if (ready && open && signedIn) {
+        try { if ((await fetch(origin + "/health")).ok) return { owned, output: () => output, openUrl: open.slice("RER_OPEN ".length), signedInAs: signedIn?.slice("RER_SIGNED_IN ".length) }; } catch { /* native Worker startup */ }
       }
       await new Promise(done => setTimeout(done, 125));
     }

@@ -8,7 +8,7 @@ import { BlockedAddressesCard } from "../core/features/public-abuse/ui/blocked-a
 import { MailPreferencesCard } from "../core/features/delivery/ui/mail-preferences";
 
 
-export const Route = createFileRoute('/setup/settings' )({ component: SettingsRoute });
+export const Route = createFileRoute('/setup/settings' )({ codeSplitGroupings: [], component: SettingsRoute });
 
 function SettingsRoute() {
   const { shell } = Route.useRouteContext();

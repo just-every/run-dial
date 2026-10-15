@@ -24,7 +24,7 @@ export type DeliveryOutboxRecord = {
 export class DeliveryRepository {
   private readonly db;
 
-  constructor(private readonly binding: D1Database, readonly mailProvider: "resend" | "sendgrid" | "development" = "resend") {
+  constructor(private readonly binding: D1Database, readonly mailProvider: "resend" | "sendgrid" | "rer" | "development" = "resend", private readonly webhookConfigured = false) {
     this.db = createDatabase(binding);
   }
 
@@ -34,7 +34,7 @@ export class DeliveryRepository {
   }
 
   async reminderBooking(record: DeliveryOutboxRecord, now: string) {
-    return this.binding.prepare("SELECT b.event_title AS title, p.name AS hostName, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, o.start_at AS startAt, o.end_at AS endAt, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.location_type AS locationType, b.location_value AS locationValue, b.location_label AS locationLabel, b.meeting_url AS meetingUrl, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE b.calendar_state END AS calendarState FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id JOIN host_profiles p ON 1 = 1 WHERE b.id = ? AND o.id = ? AND o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.start_at > ?").bind(record.bookingId, record.occurrenceId, now).first<import("./reminders").ReminderBooking>();
+    return this.binding.prepare("SELECT b.event_title AS title, p.name AS hostName, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, o.start_at AS startAt, o.end_at AS endAt, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.location_type AS locationType, b.location_value AS locationValue, b.location_label AS locationLabel, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE b.calendar_state END AS calendarState FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id JOIN host_profiles p ON 1 = 1 WHERE b.id = ? AND o.id = ? AND o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.start_at > ?").bind(record.bookingId, record.occurrenceId, now).first<import("./reminders").ReminderBooking>();
   }
 
   async dueIds(now: string, limit: number) {
@@ -113,19 +113,20 @@ export class DeliveryRepository {
 
   async mailHealth() {
     const [record] = await this.db.select().from(providerConnectionHealth).where(eq(providerConnectionHealth.provider, this.mailProvider));
-    return record ? { state: record.status, checkedAt: record.lastCheckedAt, reason: record.unhealthyCode } : { state: "unhealthy" as const, checkedAt: null, reason: "missing_configuration" };
+    const health = record ? { state: record.status, checkedAt: record.lastCheckedAt, reason: record.unhealthyCode } : { state: "unchecked" as const, checkedAt: null, reason: null };
+    return { ...health, provider: this.mailProvider, eventTracking: ["development", "rer"].includes(this.mailProvider) ? "not_applicable" as const : this.webhookConfigured ? "on" as const : "off" as const };
   }
 
   async setMailHealth(status: "healthy" | "unhealthy", reason: string | null) {
     return this.setConnectionHealth(this.mailProvider, status, reason);
   }
 
-  async connectionStatus(provider: "google_calendar" | "resend" | "sendgrid" | "development") {
+  async connectionStatus(provider: "google_calendar" | "resend" | "sendgrid" | "rer" | "development") {
     const [existing] = await this.db.select({ status: providerConnectionHealth.status }).from(providerConnectionHealth).where(eq(providerConnectionHealth.provider, provider));
     return existing?.status;
   }
 
-  async setConnectionHealth(provider: "google_calendar" | "resend" | "sendgrid" | "development", status: "healthy" | "unhealthy", reason: string | null) {
+  async setConnectionHealth(provider: "google_calendar" | "resend" | "sendgrid" | "rer" | "development", status: "healthy" | "unhealthy", reason: string | null) {
     const [existing] = await this.db.select().from(providerConnectionHealth).where(eq(providerConnectionHealth.provider, provider));
     const timestamp = nowIso();
     const changed = Boolean(existing && existing.status !== status);
@@ -139,7 +140,7 @@ export class DeliveryRepository {
     return { changed, alertCycle };
   }
 
-  async enqueueConnectionAlert(input: { provider: "google_calendar" | "resend" | "sendgrid" | "development"; status: "healthy" | "unhealthy"; reason: string | null; alertCycle: number }) {
+  async enqueueConnectionAlert(input: { provider: "google_calendar" | "resend" | "sendgrid" | "rer" | "development"; status: "healthy" | "unhealthy"; reason: string | null; alertCycle: number }) {
     const recipients = await this.db.select({ id: operators.id, email: operators.email, generation: operators.accessGeneration }).from(operators).where(isNull(operators.removedAt)).orderBy(asc(operators.email));
     if (recipients.length === 0) return;
     const timestamp = nowIso();
@@ -202,7 +203,7 @@ export class DeliveryRepository {
 
   async cancellationMailSnapshot(record: DeliveryOutboxRecord) {
     if (!record.bookingId || !record.occurrenceId) return undefined;
-    return this.binding.prepare("SELECT b.event_title AS eventTitle, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, b.invitee_name AS inviteeName, b.invitee_email AS inviteeEmail, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.location_type AS locationType, b.location_label AS locationLabel, b.location_value AS locationValue, b.meeting_url AS meetingUrl, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE 'pending' END AS calendarState, o.start_at AS startAt, o.end_at AS endAt FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id WHERE b.id = ? AND o.id = ? AND b.state = 'cancelled'").bind(record.bookingId, record.occurrenceId).first<Pick<BookingMailDetails, "eventTitle" | "durationMinutes" | "hostTimezone" | "inviteeTimezone" | "locationType" | "locationLabel" | "locationValue" | "meetingUrl" | "calendarState" | "startAt" | "endAt"> & { inviteeName: string; inviteeEmail: string }>();
+    return this.binding.prepare("SELECT b.event_title AS eventTitle, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, b.invitee_name AS inviteeName, b.invitee_email AS inviteeEmail, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.location_type AS locationType, b.location_label AS locationLabel, b.location_value AS locationValue, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE 'pending' END AS calendarState, o.start_at AS startAt, o.end_at AS endAt FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id WHERE b.id = ? AND o.id = ? AND b.state = 'cancelled'").bind(record.bookingId, record.occurrenceId).first<Pick<BookingMailDetails, "eventTitle" | "durationMinutes" | "hostTimezone" | "inviteeTimezone" | "locationType" | "locationLabel" | "locationValue" | "meetingUrl" | "calendarState" | "meetingState" | "startAt" | "endAt"> & { inviteeName: string; inviteeEmail: string }>();
   }
 
   async freezeMail(record: DeliveryOutboxRecord, message: unknown, manageUrl?: string) {

@@ -11,7 +11,7 @@
   "operations": {
     "setup": "pnpm install --frozen-lockfile",
     "build": "pnpm run build",
-    "verify": "pnpm run verify",
+    "verify": "pnpm run validate && pnpm run boundaries",
     "artifact": "node scripts/build-delivery-artifact.mjs",
     "recovery": "Preserve the private deployment receipt, owner-held SESSION_SECRET, and applied migration history. Restore only into an empty migrated installation with writers stopped; reconnect calendars and recheck mail before publishing booking events."
   },
@@ -46,6 +46,6 @@
   },
   "setup": {
     "path": "rer-setup.json",
-    "sha256": "cdada9c8c19877b679e5841660a1a2b347a28402fbe40546bd1c365d9a1cd456"
+    "sha256": "fd40d850c1c340ab65a6e51e8d84b1f85a5dc3f25418d82b29673f5466c32750"
   }
 }

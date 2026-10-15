@@ -5,13 +5,8 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { build } from "esbuild";
 import { contract } from "./contract.mjs";
 
-async function moduleAt(path) {
-  const compiled = await build({ entryPoints: [new URL(path, import.meta.url).pathname], bundle: true, format: "esm", platform: "node", write: false });
-  return import(`data:text/javascript,${encodeURIComponent(compiled.outputFiles[0].text)}`);
-}
 function parse(file) {
   assert.ok(file.endsWith("\r\n"));
   assert.doesNotMatch(file.replaceAll("\r\n", ""), /[\r\n]/, "all line endings are CRLF");
@@ -23,38 +18,6 @@ function parse(file) {
   return values;
 }
 const decodedText = (text) => text.replace(/\\([\\;,n])/g, (_, character) => character === "n" ? "\n" : character);
-
-contract("CAL-009", "calendar files preserve UTC instants, escaped UTF8 text and one stable cancellation sequence through the mail adapter", async () => {
-  const { bookingIcs, initialBookingIcs } = await moduleAt("../src/core/features/bookings/calendar-file.ts");
-  const title = "工程🌏".repeat(22) + ", plan; \\path\r\nBEGIN:VEVENT\rEND:VEVENT\nNext";
-  const location = "Room, B; \\building\r\nSecond floor";
-  const booking = { id: "fixture-one", icalUid: "dial-fixture-one@dial", state: "confirmed", updatedAt: "2030-03-10T12:34:56.789Z", eventTitle: title, locationType: "in_person", locationValue: location,
-    occurrence: { sequence: 0, startAt: "2030-03-10T01:30:00-05:00", endAt: "2030-03-10T03:30:00-04:00" } };
-  const file = bookingIcs(booking);
-  const fields = parse(file);
-  assert.equal(fields.DTSTAMP, "20300310T123456Z");
-  assert.equal(fields.DTSTART, "20300310T063000Z");
-  assert.equal(fields.DTEND, "20300310T073000Z");
-  assert.equal(decodedText(fields.SUMMARY), title.replace(/\r\n|\r|\n/g, "\n"));
-  assert.equal(decodedText(fields.LOCATION), location.replace(/\r\n|\r|\n/g, "\n"));
-  assert.equal(bookingIcs({ ...booking, occurrence: { ...booking.occurrence, startAt: "2030-03-10T06:30:00.000Z", endAt: "2030-03-10T07:30:00.000Z" } }), file, "equivalent source offsets have identical UTC calendar bytes");
-  const moved = { ...booking, state: "rescheduled", occurrence: { sequence: 1, startAt: "2030-03-11T09:30:00+10:00", endAt: "2030-03-11T10:00:00+10:00" } };
-  const movedFields = parse(bookingIcs(moved));
-  const cancelledFile = bookingIcs({ ...moved, state: "cancelled" });
-  const cancelled = parse(cancelledFile);
-  assert.equal(movedFields.UID, fields.UID); assert.equal(movedFields.SEQUENCE, "1");
-  assert.equal(cancelled.UID, fields.UID); assert.equal(cancelled.SEQUENCE, "2");
-  assert.equal(cancelled.METHOD, "CANCEL"); assert.equal(cancelled.STATUS, "CANCELLED");
-  assert.equal(bookingIcs({ ...moved, state: "cancelled" }), cancelledFile, "repeated download does not increment again");
-  const initial = initialBookingIcs({ bookingId: booking.id, eventTitle: title, startAt: booking.occurrence.startAt, endAt: booking.occurrence.endAt, location, createdAt: booking.updatedAt });
-  assert.equal(initial, file);
-  const { ResendMailSender } = await moduleAt("../src/core/platform/mail/resend.ts");
-  let envelope;
-  const sender = new ResendMailSender({ apiKey: "synthetic", fromEmail: "no-reply@dial.test" }, async (_url, init) => { envelope = JSON.parse(init.body); return Response.json({ id: "synthetic" }); });
-  await sender.send({ to: "synthetic@dial.test", subject: "Synthetic", text: "Synthetic", idempotencyKey: "ics-fixture", attachments: [{ filename: "booking.ics", contentType: "text/calendar", contentBase64: Buffer.from(file, "utf8").toString("base64") }] });
-  assert.equal(Buffer.from(envelope.attachments[0].content, "base64").toString("utf8"), file);
-  assert.equal(envelope.attachments[0].content_type, "text/calendar");
-});
 
 contract("CAL-009", "real local capability downloads and synthetic confirmation attachment track the current occurrence and cancellation", async (context) => {
   const persist = await mkdtemp(resolve(tmpdir(), "dial-calendar-file-"));

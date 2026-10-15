@@ -53,3 +53,13 @@ contract('BASE-SECRET-001', 'actual export refuses encoded JSON asset credential
     }
   } finally { source.db.close(); await rm(folder, { recursive: true, force: true }); }
 });
+
+contract('BASE-SECRET-001', 'hosted object refusals survive the published HTTP handler and real export command with safe causes and cleanup', async () => {
+  const { hostedObjectRefusal } = await import('./archive/hosted-refusal.mjs');
+  await hostedObjectRefusal();
+});
+
+contract('DATA-001', 'hosted export command retains bounded HTTP/archive and connection causes without exposing source text or credentials', async () => {
+  const { hostedDiagnostics } = await import('./local-setup/hosted-diagnostics.mjs');
+  await hostedDiagnostics();
+});

@@ -1,3 +1,4 @@
+import { RouteLoadError } from "./core/app/ui/route-load-error";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { installCompiledLiveEdits, setLiveEditsReady } from "../modules/editor/index";
@@ -14,11 +15,13 @@ const scrollRestoration = typeof document === "undefined"
   ? ({ location }: { location: { pathname: string } }) => !isPublicSitePath(location.pathname)
   : !isPublicSitePath(window.location.pathname);
 
+// Workspace shells, Settings and event editors load with the entry graph: a refused lazy
+// import otherwise triggers Router's immediate document reload inside the same rate window.
 export function getRouter() {
   if (typeof document !== "undefined") {
     setLiveEditsReady(false);
     installCompiledLiveEdits(visualEdits);
   }
-  return createRouter({ routeTree, scrollRestoration });
+  return createRouter({ routeTree, scrollRestoration, defaultErrorComponent: RouteLoadError });
 }
 declare module "@tanstack/react-router" { interface Register { router: ReturnType<typeof getRouter>; } }

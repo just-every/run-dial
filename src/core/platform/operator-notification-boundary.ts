@@ -12,7 +12,7 @@ export async function operatorNotificationCommand<T>(operation: "send", input: u
     `http://coordinator.internal/__operator-notifications/${operation}`,
     { method: "POST", body: JSON.stringify(input) },
   ));
-  const result = await response.json<{ value?: T; error?: { code: ProviderFailureCode; retryable: boolean } }>();
-  if (!response.ok || result.error) throw new ProviderFailure(result.error?.code ?? "operator_notification_coordination_failed", result.error?.retryable ?? false);
+  const result = await response.json<{ value?: T; error?: { code: ProviderFailureCode; retryable: boolean; retryAfterSeconds?: number } }>();
+  if (!response.ok || result.error) throw new ProviderFailure(result.error?.code ?? "operator_notification_coordination_failed", result.error?.retryable ?? false, result.error?.retryAfterSeconds);
   return result.value as T;
 }

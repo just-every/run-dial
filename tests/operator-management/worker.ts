@@ -1,3 +1,4 @@
+import { captureMail } from "../mail-capture";
 import { controlClock } from "./clock";
 import { issuedDevelopmentLink } from "../development-auth";
 import { ensureTestOperator, registerTestSetup } from "../auth-fixture";
@@ -14,7 +15,7 @@ export default {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
     if (url.pathname === "/__test/clock") return controlClock(request);
-    const services = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, { fetch: (input: Request) => start.fetch(input) } as Fetcher);
+    const services = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, { fetch: (input: Request) => start.fetch(input) } as Fetcher, { mail: captureMail(env.DB) });
     if (url.pathname === "/__test/setup" && request.method === "POST") {
       const operator = await ensureTestOperator(env.DB, "setup@example.test");
       await registerTestSetup(env.DB, operator.id);

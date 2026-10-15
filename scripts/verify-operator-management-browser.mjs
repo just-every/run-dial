@@ -19,12 +19,12 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     const link = await (await fetch(origin + "/__test/signin", { method: "POST", headers: { Origin: origin, "content-type": "application/json" }, body: JSON.stringify({ email: "setup@example.test" }) })).json();
     await page.goto(link.link);
-    assert.equal((await context.cookies()).some((cookie) => cookie.name === "operator_session_local"), false, "reading the confirmation page does not create a session");
+    assert.equal((await context.cookies()).some((cookie) => cookie.name.startsWith("operator_session_local_")), false, "reading the confirmation page does not create a session");
     const confirmed = page.waitForResponse((response) => response.url() === origin + "/auth/confirm" && response.request().method() === "POST");
     await page.getByRole("button", { name: "Confirm", exact: true }).click();
     assert.equal((await confirmed).status(), 303);
     await page.waitForURL(/\/app\/?$/);
-    assert.ok((await context.cookies()).some((cookie) => cookie.name === "operator_session_local"), "explicit confirmation creates the native session");
+    assert.ok((await context.cookies()).some((cookie) => cookie.name.startsWith("operator_session_local_")), "explicit confirmation creates the native session");
     assert.equal((await page.request.get(origin + "/api/app/operators")).status(), 200);
     await page.goto(origin + "/app/settings");
     const card = page.locator("section").filter({ has: page.getByRole("heading", { name: "Operator access", exact: true }) });

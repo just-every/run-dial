@@ -116,7 +116,7 @@ contract("OPER-002", "removal retires pending operator notifications without rev
     assert.equal((await sql('SELECT count(*) AS n FROM oa_step_up_challenges WHERE operator_id=?', [second.id])).results[0].n, 0);
     assert.deepEqual(snapshot.delivery_attempts, before.delivery_attempts.filter(attempt => !removedRows.some(row => row.id === attempt.outbox_id)), "only the removed operator delivery attempts are erased");
     assert.deepEqual(snapshot.fixture_mail, before.fixture_mail, "removal creates no provider effect");
-    const tableNames = (await sql("SELECT name FROM sqlite_master WHERE type='table' AND name<>'_cf_METADATA' ORDER BY name")).results;
+    const tableNames = (await sql("SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB '_cf_*' ORDER BY name")).results;
     for (const { name } of tableNames) {
       const records = (await sql(`SELECT * FROM "${name.replaceAll('"', '""')}"`)).results;
       assert.equal(JSON.stringify(records).toLowerCase().includes(email), false, `${name}: removed operator identity remains`);
@@ -227,7 +227,7 @@ contract("OPER-002", "removal retires pending operator notifications without rev
     assert.equal((await confirmAuthLink(delivery.link)).status, 400);
     await call('/auth/operator/status', { operatorId: author.id, status: 'active' }, 404);
     assert.equal((await sql('SELECT status FROM oa_operators WHERE id=?', [author.id])).results[0].status, 'inactive');
-    for (const { name } of (await sql("SELECT name FROM sqlite_master WHERE type='table' AND name<>'_cf_METADATA'")).results) {
+    for (const { name } of (await sql("SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB '_cf_*'")).results) {
       const values = (await sql(`SELECT * FROM "${name.replaceAll('"', '""')}"`)).results;
       assert.equal(JSON.stringify(values).toLowerCase().includes(address), false, `${name}: domain author identity remained`);
     }

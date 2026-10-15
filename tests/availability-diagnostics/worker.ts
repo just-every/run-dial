@@ -1,3 +1,4 @@
+import { captureAuthMail, capturedMail } from "../mail-capture";
 import start from "@tanstack/react-start/server-entry";
 import { createWorker } from "../../src/core/app/worker";
 import { BookingCoordinator as ProductionCoordinator } from "../../src/core/app/booking-coordinator";
@@ -43,7 +44,7 @@ function servicesFor(env: AppBindings) {
     return { ...result, intervals: [...result.intervals, ...extra.map((interval) => ({ ...interval, calendarId: input.calendarIds[0], startsAt: interval.startAt, endsAt: interval.endAt, deleted: false, transparency: "opaque" as const }))] };
   };
   const runtime = parseRuntimeEnvironment(env), documents = { fetch: (request: Request) => start.fetch(request) } as Fetcher;
-  const services = createServices(env.DB, runtime, documents, { ...providers, calendarChanges: coordinatedCalendarChanges(env) });
+  const services = createServices(env.DB, runtime, documents, { ...providers, authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
   return services;
 }
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
@@ -53,6 +54,7 @@ export default {
   async fetch(request: Request, env: AppBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
+    if (url.pathname === "/__test/mail") return capturedMail(env.DB);
     if (["/__fixtures/setup", "/__fixtures/profile-setup"].includes(url.pathname) && request.method === "POST") {
       if (url.pathname === "/__fixtures/profile-setup" && await env.DB.prepare("SELECT id FROM host_profiles LIMIT 1").first()) return new Response("Profile setup requires fresh task-owned state", { status: 409 });
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS fixture_diagnostics_busy (id INTEGER PRIMARY KEY CHECK(id = 1), intervals_json TEXT NOT NULL)").run();

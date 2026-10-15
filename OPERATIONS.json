@@ -215,9 +215,9 @@
     "SESSION_SECRET": "Generate a fresh session secret and supply it to the deploy step.",
     "MAIL_PROVIDER": "Choose SendGrid or Resend explicitly, or development for the guarded local outbox; absence selects legacy Resend.",
     "MAIL_API_KEY": "Supply the selected hosted provider credential privately as the native mail API key.",
-    "MAIL_FROM": "Use a verified noreply or no-reply sender for hosted mail, or the local setup sender for the development outbox.",
+    "MAIL_FROM": "Use a sender address your mail provider has verified for hosted mail, or the local setup sender for the development outbox.",
     "RESEND_API_KEY": "Supply the legacy Resend credential privately when the provider selector is absent.",
-    "RESEND_FROM_EMAIL": "Use a verified noreply or no-reply sender for legacy Resend when the provider selector is absent."
+    "RESEND_FROM_EMAIL": "Use a sender address Resend has verified for legacy Resend when the provider selector is absent."
   },
   "seedContract": {
     "version": 1,

@@ -12,13 +12,12 @@ restore-fence implementation. This adoption does not refresh the whole CLI or
 claim a green aggregate Base gate: a later exact-head runner run passed
 14/24 stages and remains blocked by failures also reported on its main.
 
-The CLI/onboarding runtime is the exact `@runeditrun/rer` 0.2.2 package pin,
-with a committed pnpm patch. The published version lacks an adapter reset
-preflight, so the patch awaits Dial's existing legacy-state guard before any
-reset inventory or removal. It also teaches the package lock inspector to read
-pnpm's patched version suffix. The package, patch, and frozen lockfile travel
-with the consumer source. The command guides now describe this package adoption
-and are maintained by Dial rather than recorded as byte-exact Base guides.
+The CLI/onboarding runtime is the published `@runeditrun/rer` package at the
+exact version `package.json` pins, with its frozen lockfile and no package patch.
+The package awaits Dial's adapter `resetPreflight`, which keeps the legacy-state
+guard before any reset inventory or removal. The command guides describe this
+package adoption and are maintained by Dial rather than recorded as byte-exact
+Base guides.
 
 Dial owns the adapter and the thin `scripts/operations.mjs` delegate. The
 native root `operations/` pair remains solely for deploy-kit and the owner-gated live
@@ -44,10 +43,12 @@ Dial owns packaging policy, artifact caller, setup manifest, integration checker
 and HTTP/browser/artifact journeys. The integration checker wraps Base producer
 validation; Base does not supply a separate projects/integrations CLI.
 
-The import-kit source and README, CONTRACT and FIXTURES documents are byte-exact
-Base files at this revision. Dial owns `0029_move_in_import.sql`, the source
-adapter, native targets, routes and synthetic acceptance journeys. No live source
-account proof is claimed.
+The import-kit runtime and documents follow the coordinated runtime refresh below.
+`0045_import_preparation_steps.sql` and `0046_import_stream_sources.sql` are
+byte-exact Base default-seed migrations adding the kit's additive control
+tables. Dial owns `0029_move_in_import.sql`, the source adapter, native targets,
+routes, the erased-invitee tombstone and synthetic acceptance journeys. No live
+source account proof is claimed.
 
 Base keeps its edition importer catalogue and source-specific guides in its private
 authoring tree; those files are not copied into Dial. The reusable import schemas
@@ -58,3 +59,25 @@ Applied migration copies retain their original pins and bytes. Runtime modules
 outside the package remain governed by their existing byte-copy records;
 `verify:copies` checks those records. `rer check --profile first-party` checks
 the package pin, locked dependency, aliases, and absence of the vendored trees.
+
+All vendored runtime modules are refreshed together from rer-v0.2.22,
+Base commit `1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74`, including demo,
+operator-auth, owner-claim, mail, dependencies, deploy-kit, editor, import-kit,
+erasure, local sign-in and delivery-producer projections. Import-kit now also
+uses Base's d1-transport module. Applied migrations retain their original bytes.
+`base-copies.json` records the refreshed sources and exact bytes.
+
+Base now witnesses authentication writes with returned IDs, so Dial's former
+trigger-count workaround in the dev wrapper is removed. The two DATA-002
+rate-correlation adaptations in AuthStore and email-link remain, rebased onto
+this release. Base's import erasure implementation now includes the prior Dial
+claim adaptation and is byte-exact again. Demo v2 has no bar or mail outbox;
+Base mail and authentication complete suppressed sends as success.
+
+Managed mail uses the existing byte-exact Base `modules/mail` RER adapter shipped in rer 0.2.22. The delivery producer spec, mail declaration validator and package adopt Base `a1cde988c1be2c9f74ff5ca374dc47e044ba193c`; setup-manifest keeps Dial’s local schema paths and adds its managed-mail validation. Dial’s relay integration preserves safe status/Retry-After metadata without changing the Base adapter or reading response bodies.
+
+Dial retains its equal-operator administration policy and rate-correlation hook
+wiring/types. Local sign-in rebases Base's loopback import to its adopted path;
+the unused default-seed persona copy is removed. The erasure queue omits one
+unused upstream helper so Dial's lint remains active. These adaptations are
+excluded from byte-exact copy claims.

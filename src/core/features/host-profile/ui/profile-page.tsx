@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
-import { Button, Card, Input, Textarea } from "../../../app/ui/primitives";
+import { Button, Card, Input, Textarea, noticeClassName } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
 import type { ProfileInput, ProfileRecord } from "../repository";
 
@@ -15,6 +15,7 @@ export function ProfilePage() {
   const [profile, setProfile] = useState<ProfileInput | ProfileRecord>();
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const load = useCallback(async () => {
     const epoch = ++loadEpoch.current; setError("");
@@ -34,6 +35,7 @@ export function ProfilePage() {
   if (!profile) return error ? <EmptyState tone="error" title="Profile unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload profile</Button>} /> : <p role="status" className="text-sm text-muted">Loading profile…</p>;
 
   function update<K extends keyof ProfileInput>(key: K, value: ProfileInput[K]) {
+    setSaved(false);
     setProfile((current) => (current ? { ...current, [key]: value } : current));
   }
 
@@ -42,10 +44,11 @@ export function ProfilePage() {
     if (!profile || !hydrated || inFlight.current) return;
     inFlight.current = true;
     setSaving(true);
+    setSaved(false);
     setError("");
     try {
       const response = await api.api.app.profile.$patch({ json: profile });
-      if (response.ok) setProfile(await response.json());
+      if (response.ok) { setProfile(await response.json()); setSaved(true); }
       else setError(await errorMessage(response));
     } catch { setError("The save result could not be checked. Your profile details are kept here; retry to apply them."); }
     finally { inFlight.current = false; setSaving(false); }
@@ -55,6 +58,7 @@ export function ProfilePage() {
     <form className="grid gap-7" onSubmit={save}>
       <PageHeader eyebrow="Host configuration" title="Profile" description="This is the single host identity shown across your public scheduling pages." actions={<Button type="submit" disabled={!hydrated || saving}>{saving ? "Saving…" : "Save profile"}</Button>} />
       {error ? <p role="alert" className="rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{error}</p> : null}
+      {saved ? <p role="status" className={noticeClassName("success")}>Profile saved.</p> : null}
       <fieldset disabled={!hydrated || saving} className="grid gap-6 border-0 p-0 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid gap-6">
           <Card className="p-5 sm:p-6">

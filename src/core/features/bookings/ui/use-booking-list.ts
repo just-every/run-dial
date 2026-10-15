@@ -6,6 +6,7 @@ import { bookingListQuery, bookingPageSize, type BookingFilters } from "./bookin
 export function useBookingList(filters: BookingFilters, page: number, moveToPage: (page: number) => Promise<void>) {
   const [bookings, setBookings] = useState<BookingRecord[]>();
   const [totalCount, setTotalCount] = useState(0);
+  const [hostTimezone, setHostTimezone] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
   const latestRequest = useRef(0);
@@ -26,6 +27,7 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
           await moveToPage(lastPage);
           return;
         }
+        setHostTimezone(response.headers.get("X-Host-Timezone") ?? undefined);
         setBookings(records);
         setTotalCount(total);
         setListError("");
@@ -52,5 +54,5 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
     const timer = window.setTimeout(() => { void load(); }, filters.query?.trim() ? 180 : 0);
     return () => { window.clearTimeout(timer); latestRequest.current += 1; };
   }, [filters, load]);
-  return { bookings, totalCount, loading, listError, load };
+  return { bookings, totalCount, hostTimezone, loading, listError, load };
 }

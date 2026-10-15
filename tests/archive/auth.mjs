@@ -17,7 +17,10 @@ export function request(path, body, cookie) {
 export async function operators(binding) {
   const compiled = await build({ entryPoints: [new URL('../../src/core/features/operators/service.ts', import.meta.url).pathname], bundle: true, write: false, platform: 'node', format: 'esm' });
   const { OperatorsService } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`);
-  return new OperatorsService(binding, runtime);
+  return new OperatorsService(binding, runtime, { async send(message) {
+    await createD1DevelopmentOutbox({ db: binding }).put(message);
+    return { status: 'accepted', provider: 'test', providerMessageId: `test-${message.deliveryId}` };
+  } });
 }
 export async function captures(binding) { return createD1DevelopmentOutbox({ db: binding }).list(); }
 export function token(message) { return new URL(message.text.match(/https?:\/\/\S+/)[0]).searchParams.get('token'); }

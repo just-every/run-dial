@@ -19,9 +19,11 @@ export async function verificationStatements(db, d, plan, id, label, { final = f
       const pk = plan.keys.get(table).pk, parentPk = plan.keys.get(parentTable).pk;
       const parents = [...plan.rows.get(parentTable).values()].map(e => parentPk.map(c => e.key[c]));
       const children = [...plan.rows.get(table).values()].map(e => pk.map(c => e.key[c]));
-      const keyMatch = (alias, columns) => columns.map((c, i) => `${alias}.${quote(c)} IS json_extract(j.value,'$[${i}]')`).join(' AND ');
+      if (!parents.length) continue;
+      const keyMatch = (alias, columns, json = 'j') => columns.map((c, i) => `${alias}.${quote(c)} IS json_extract(${json}.value,'$[${i}]')`).join(' AND ');
       const joined = group.map(f => `c.${quote(f.from)}=p.${quote(f.to || parentPk[f.seq])}`).join(' AND ');
-      out.push(verify(db, 'scope', `NOT EXISTS(SELECT 1 FROM ${quote(table)} c JOIN ${quote(parentTable)} p ON ${joined} WHERE EXISTS(SELECT 1 FROM json_each(?) j WHERE ${keyMatch('p', parentPk)}) AND NOT EXISTS(SELECT 1 FROM json_each(?) j WHERE ${keyMatch('c', pk)}))`, JSON.stringify(parents), JSON.stringify(children)));
+      // Parents first, then their children through the key: cost follows the parents, not the child table.
+      out.push(verify(db, 'scope', `NOT EXISTS(SELECT 1 FROM json_each(?) j CROSS JOIN ${quote(parentTable)} p CROSS JOIN ${quote(table)} c WHERE ${keyMatch('p', parentPk)} AND ${joined} AND NOT EXISTS(SELECT 1 FROM json_each(?) k WHERE ${keyMatch('c', pk, 'k')}))`, JSON.stringify(parents), JSON.stringify(children)));
     }
     for (const edge of d.edges) for (const m of matchSql(edge, [...plan.known.get(edge.from).values()])) {
       const pk = plan.keys.get(edge.table).pk, keys = [...plan.rows.get(edge.table).values()].map(e => pk.map(c => e.key[c]));

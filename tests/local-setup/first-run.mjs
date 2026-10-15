@@ -66,7 +66,7 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   await expect(page.getByText("Booking link copied.", { exact: true })).toBeVisible();
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), origin + "/book/preserved-host/first-request");
   onPhase("first-run completion checklist");
-  await page.getByRole("link", { name: "Dial setup", exact: true }).click();
+  await page.locator('nav[aria-label="Setup navigation"] a[href="/setup"]').click();
   const checklistResponse = await page.request.get(origin + "/api/app/host-setup");
   assert.equal(checklistResponse.status(), 200);
   const checklist = await checklistResponse.json();

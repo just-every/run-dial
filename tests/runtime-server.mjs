@@ -1,3 +1,5 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { fixtureVite } from "./native-process/vite.mjs";
 import { spawn } from "node:child_process";
 import { basename, resolve } from "node:path";
 
@@ -12,12 +14,17 @@ const childEnvironment = { ...process.env, CI: "1", DIAL_WRANGLER_CONFIG_PATH: w
 await run("pnpm", ["runtime:config"], { ...childEnvironment, DIAL_WRANGLER_CONFIG_PATH: requestedConfig });
 if (wranglerConfig !== requestedConfig) await run("pnpm", ["runtime:config"]);
 await run("node", ["tests/runtime-vars.mjs"]);
+// Test mail lives at a paid-edge adapter, never in the product's dev runtime.
+if (!process.env.RER_DEV_ORIGIN) {
+  const source = await readFile(wranglerConfig, "utf8");
+  await writeFile(wranglerConfig, source.replace(/^main = .+$/m, `main = ${JSON.stringify(resolve("tests/mail-runtime.worker.ts"))}`));
+}
 const migrationArguments = ["exec", "wrangler", "d1", "migrations", "apply", "dial-local", "--local"];
 if (process.env.DIAL_PERSIST_STATE_DIR) migrationArguments.push("--persist-to", process.env.DIAL_PERSIST_STATE_DIR);
 migrationArguments.push("--config", requestedConfig);
 await run("pnpm", migrationArguments);
 
-const vite = spawn("pnpm", ["exec", "vite", "--host", "127.0.0.1", "--port", port, "--strictPort"], { stdio: "inherit", env: childEnvironment });
+const vite = spawn("pnpm", [...fixtureVite, "--host", "127.0.0.1", "--port", port, "--strictPort"], { stdio: "inherit", env: childEnvironment });
 for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => vite.kill(signal));
 await waitForWorker(vite);
 console.log("Local D1 is migrated and ready.");

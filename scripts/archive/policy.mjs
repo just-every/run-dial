@@ -26,10 +26,13 @@ export const internal = {
   booking_search_casefold: 'Normative Unicode folding data installed by the destination migration; contains no owner data',
   _rer_deploy_migrations: 'Installer-only migration claims and hashes; retain destination history instead of archiving it',
   d1_migrations: 'Installer migration ledger', sqlite_sequence: 'SQLite sequence bookkeeping',
-  sqlite_stat1: 'SQLite query planner statistics', sqlite_stat4: 'SQLite query planner samples', _cf_METADATA: 'D1 runtime metadata', _cf_KV: 'D1 platform key-value store',
+  sqlite_stat1: 'SQLite query planner statistics', sqlite_stat4: 'SQLite query planner samples',
 };
+export function isInternalTable(name) {
+  return Object.hasOwn(internal, name) || name.startsWith('_cf_') || name.startsWith('rer_portability_');
+}
 export function assertCoverage(names) {
-  const application = names.filter(name => !Object.hasOwn(internal, name) && !name.startsWith('rer_portability_')).sort();
+  const application = names.filter(name => !isInternalTable(name)).sort();
   const classified = [...exported, ...Object.keys(excluded)].sort();
   if (JSON.stringify(application) !== JSON.stringify(classified)) throw new Error('archive-unclassified-schema');
 }

@@ -23,6 +23,7 @@ export class ProviderFailure extends Error {
   constructor(
     readonly code: ProviderFailureCode,
     readonly retryable: boolean,
+    readonly retryAfterSeconds?: number,
   ) {
     super(code);
   }

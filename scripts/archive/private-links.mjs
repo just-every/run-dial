@@ -14,7 +14,7 @@ export function privateLinks(text, { known = [], hashes = new Set(), trusted = f
     try {
       const url = new URL(link, 'https://archive.invalid');
       const manage = /^\/(?:embed\/|api\/public\/)?manage\/([^/]+)(?:\/|$)/.exec(url.pathname);
-      const authentication = /^\/(?:api\/)?auth\/(?:confirm|verify)$/.test(url.pathname);
+      const authentication = /^\/(?:api\/)?auth\/(?:confirm|verify|owner-signin)$/.test(url.pathname);
       const raw = manage?.[1] ?? url.searchParams.get('token');
       if (!raw) continue;
       const token = manage ? decodeURIComponent(raw) : raw;

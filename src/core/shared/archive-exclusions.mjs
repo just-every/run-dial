@@ -17,6 +17,7 @@ export const importExcluded = {
   "ik_d1_plan_chunks": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_plan_index": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_preparation_receipts": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
+  "ik_d1_preparation_steps": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_publication_fences": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_reversal_reports": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_staging": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
@@ -28,6 +29,7 @@ export const importExcluded = {
   "ik_d1_stream_origins": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_stream_pages": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_stream_revisions": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
+  "ik_d1_stream_sources": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_d1_streams": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_jobs": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
   "ik_original_sets": "Import custody or transient state can retain source private capabilities and replay authority; resume and undo remain on the original installation",
@@ -40,6 +42,13 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  oa_auth_audit: 'Installation-local authentication audit; never restore source identity authority',
+  oa_credentials: 'Live credential authority; recreate at the destination',
+  oa_provider_sessions: 'Live provider sessions; sign in at the destination',
+  oa_provider_session_pins: 'Live provider session provenance; sign in at the destination',
+  oa_logout_events: 'Provider replay authority; never restore it',
+  oa_setup_links: 'Ephemeral installation-local setup attempts',
+  oa_owner_signins: 'One-use owner sign-in capabilities; never restore them',
   oa_auth_settings: 'Local identity-provider setup and admission state; the destination keeps its own setup authority',
   dial_portability_admission: "Source runtime admission receipts and temporary hosted export lease; never restore execution authority",
   ...importExcluded,

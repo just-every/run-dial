@@ -196,9 +196,9 @@ for (const mail of externalCancellation) {
   assertTimeRange(textBody(mail), htmlBody(mail), timeRange(second.receipt.occurrence.startAt, second.receipt.occurrence.endAt, "UTC"), "Previous invitee time: ");
   assertTimeRange(textBody(mail), htmlBody(mail), timeRange(second.receipt.occurrence.startAt, second.receipt.occurrence.endAt, "Australia/Brisbane"), "Previous host time: ");
   assert.ok(textBody(mail).includes("Reason: deleted_in_google_calendar."));
-  assert.ok(textBody(mail).includes("Calendar state: pending."));
+  assert.equal(textBody(mail).includes("Calendar state: Update pending."), recipient(mail).includes("operator@dial.test"));
   assert.ok(htmlBody(mail).includes("Reason: deleted_in_google_calendar."));
-  assert.ok(htmlBody(mail).includes("Calendar state"));
+  assert.equal(htmlBody(mail).includes("Calendar state"), recipient(mail).includes("operator@dial.test"));
   assert.ok(htmlBody(mail).includes("Booking cancelled"));
   // C.1 gives each preserved zone its own labeled time range for text/HTML parity.
   assert.match(textBody(mail), /Previous invitee time: .+\(UTC\)/);

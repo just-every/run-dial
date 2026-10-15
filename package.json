@@ -1,6 +1,6 @@
 {
   "name": "dial",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "repository": {
     "type": "git",
@@ -32,13 +32,15 @@
     "import": "rer import",
     "reset": "rer reset",
     "release": "rer release",
-    "outbox": "rer outbox",
     "doctor": "rer doctor",
     "describe": "rer describe",
     "check": "rer check",
     "deps": "rer install",
     "rer": "rer",
-    "build:app": "node scripts/render-wrangler.mjs && vite build && node scripts/assert-build-output.mjs",
+    "build:app": "node scripts/render-wrangler.mjs && vite build",
+    "verify:build-output": "node scripts/assert-build-output.mjs",
+    "deployment-spec:generate": "node scripts/projects/deployment-spec.mjs generate",
+    "deployment-spec:check": "node scripts/projects/deployment-spec.mjs check",
     "verify:app": "node scripts/verify.mjs",
     "verify:copies": "node scripts/edition-authoring/cli.mjs verify-base --offline",
     "verify:delivery": "node scripts/verify-delivery-artifact.mjs",
@@ -53,7 +55,7 @@
     "@cloudflare/workers-types": "5.20260908.1",
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.57.0",
-    "@runeditrun/rer": "0.2.2",
+    "@runeditrun/rer": "0.2.22",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "22.19.17",
     "@types/react": "^19.2.18",
@@ -100,9 +102,6 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "workerd"
-    ],
-    "patchedDependencies": {
-      "@runeditrun/rer@0.2.2": "patches/@runeditrun__rer@0.2.2.patch"
-    }
+    ]
   }
 }

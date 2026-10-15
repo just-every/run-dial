@@ -1,25 +1,26 @@
 # Dial handover
 
-## Latest changes (14 Oct 2026)
+## Latest changes (15 Oct 2026)
 
-- Public `main` was `550f530daa9d5c7eb3b143685e94decb675ac496` at the evidence snapshot. [Verify 38483935052](https://github.com/just-every/run-dial/actions/runs/38483935052) succeeded on that exact SHA: 603 TAP entries passed, with zero failed, cancelled or skipped. The count includes nested entries and is not a count of independent requirements. [Run site 38483935136](https://github.com/just-every/run-dial/actions/runs/38483935136) succeeded on the same SHA; its deploy job ran `rer deploy --site`, then read back `/run` as HTTP 200 and `www` root as HTTP 301 to the canonical domain. This is the pre-round recorded baseline; it certifies only that public SHA.
-- The repository was publicly visible and MIT licensed at the snapshot. Source publication and the site workflow's deployment/readback are observed; tags/releases, live operator installation and real provider use are not established.
+- Public `main` was `9b37c951b52065de5f46f3d3f7e1aa2c7c5b7127` before this round. [Verify 38653389135](https://github.com/just-every/run-dial/actions/runs/38653389135) succeeded on that exact SHA. [Run site 38653389156](https://github.com/just-every/run-dial/actions/runs/38653389156) succeeded on the same SHA; its deploy job ran `rer deploy --site`, then read back `/run` as HTTP 200 and `www` root as HTTP 301 to the canonical domain. That baseline certifies only that SHA; each later head is certified by its own exact-SHA Verify run.
+- The repository is public and MIT licensed, with tag `v0.1.0` (no GitHub release object). `run-dial.com` is the live run site, deployed by the Run site workflow on every push to `main`. Live operator installation and real provider use are not established.
+- First-run setup no longer depends on clipboard access: when the browser denies it, **Copy booking link** shows the link in a selectable field and **I have shared it** records the same copy report through the same authenticated route (`tests/host-setup/sharing.mjs`, all six host-setup scenarios).
+- The import kit is Base `6c8374d5eb2e7eb53bad079d0502dbc4f930fd1c`, including its shared-source custody, field redaction and stepwise preparation work; additive migrations 0045 and 0046 add the kit's preparation-step and stream-source tables. Erasing a person who appears only as one invitee of another person's imported booking (a cancelled guest) now completes: their invitee values leave every retained source payload, before-image and original, the peer's native record stays byte-identical and its import keeps resume and undo, and an opaque invitee tombstone refuses a later upload that still carries them (`tests/import-custody-erasure.test.mjs`). Dial's copy of one kit file differs from Base; see [modules/PROVENANCE.md](modules/PROVENANCE.md).
 - `DATA-002`'s native authentication rate-attribution blocker is closed by the maintained `rateCorrelation` hook. Known-operator counters and their correlation rows commit in the same D1 batch; migration 0039 retires pre-hook counters. The valid-link operator-removal test verifies that counter and its correlation are removed while an unrelated control survives. Preserve Dial's hook adaptations when refreshing Base copies.
-- The current schema census is 116 application tables, eight static portability tables and `sqlite_sequence` (125 total), after replaying 44 core migrations. `ERASURE.md` lists each table and its erasure/archive classification.
-- Verify 38483935052 on `550f530` includes the maintained OPER-001 `tests/local-setup-journey.test.mjs` path: README public CLI with explicit `--owner-email` at 1440/390, pre-hydration sign-in, repeat setup preserving private configuration, reset refusal/safety, and an archive round-trip restoring local state. It does not exercise a Git-configured email default or interactive prompt; no separate Git-email journey is evidenced.
+- The current schema census is 118 application tables, eight static portability tables and `sqlite_sequence` (127 total), after replaying 46 core migrations. `ERASURE.md` lists each table and its erasure/archive classification.
+- Verify 38653389135 on `9b37c95` includes the maintained OPER-001 `tests/local-setup-journey.test.mjs` path: README public CLI with explicit `--owner-email` at 1440/390, pre-hydration sign-in, repeat setup preserving private configuration, reset refusal/safety, and an archive round-trip restoring local state. It does not exercise a Git-configured email default or interactive prompt; no separate Git-email journey is evidenced.
 - The `connection-watch` coordinator probes a healthy calendar 30 seconds after each successful health check, then confirms a new failure at 10 and 20 seconds. It alerts only if the connection remains unhealthy; brief failures send neither an alert nor a recovery message.
 - Move-in review remains synthetic: no real Calendly export has been checked. Current capacity measurements are tied to their recorded local workload/source; production capacity at manifest limits stays unqualified until the release cut.
-- The keys13 keyboard run completed on source `110b58c13c6ea01b59c28f7c30b4dc71d79991b3` (remote job `20261014T005138829190Z-sd-dial-r6-keys13-30966956`): 344 checks passed, including 214 painted-focus observations and 28 screenshots, with zero failed records or browser errors. It covers main operator and public journeys at 1440/390. Native DOM dialog Tab/Shift+Tab containment, Escape and opener-focus restoration were tested; JavaScript `confirm`/`prompt` used Playwright accept/dismiss, so literal OS key input remains unverified (`AXIsProcessTrusted=false`). A later review added two public-reschedule completion-focus assertions outside this receipt; the final report must state keyboard verification for the exact frozen head. Full manual screen-reader review and the WCAG 2.2 AA target remain open.
-- The exact upstream CLI pin is 0.2.2, which has no adapter reset preflight. Its documented narrow pnpm patch wires in awaited `resetPreflight`, preserves Dial's legacy build/setup storage and credential safety check during local reset, and accepts compatible `patch_hash` values. Package commit `3947e94` passed eight refusal cases with configuration and data preserved; a fresh exported consumer passed frozen install and `rer check`, and integration typecheck passed. The final report must state Verify's disposition for the exact landed head; the pre-round baseline does not certify later changes.
+- Accessibility proof is owner-scoped (14 Oct 2026) to axe, the accessibility tree and headless keyboard checks. Verify runs them on every head through `tests/booking-axe.test.mjs` (`scripts/verify-booking-axe.mjs` and its `tests/booking-axe/keyboard-*.mjs` journeys) at desktop and mobile widths. The earlier keys13 run on `110b58c13c6ea01b59c28f7c30b4dc71d79991b3` (344 checks, zero failures) remains the recorded broad keyboard receipt for that source. Screen-reader and OS-level key input are out of scope; WCAG 2.2 AA stays the manifest's target level.
+- The CLI is the published `@runeditrun/rer` package at the exact version `package.json` pins, with `pnpm-lock.yaml` frozen and no package patch. The package awaits Dial's adapter `resetPreflight`, which keeps the legacy build/setup storage guard. An exact repeat deploy with unchanged inputs performs zero provider writes and keeps the recorded deploy state and secret bytes; the owner claim is kept, not repeated.
 - SendGrid's published Essentials 50k price was $19.95/month on 14 Oct 2026. At 1,000 bookings and four to six transactional emails each, the estimated 4,000–6,000 sends use 8–12% of that allowance. The $24.95 typical estimate adds Cloudflare Workers Paid at $5; runtime usage remains conditional on included allowances, and taxes, domains, overages, optional tools and paid Google Workspace are excluded. The 60-day, 100-email/day SendGrid trial is not recurring free service.
 
 ## Current implementation boundary
 
-The public command path is supplied by the exact `@runeditrun/rer` 0.2.2
-package pin. `package.json` declares the pin and maps
-`patches/@runeditrun__rer@0.2.2.patch`; `pnpm-lock.yaml` records its frozen
-resolution. The patch adds the awaited adapter `resetPreflight` hook and
-accepts pnpm's patched-version lock suffix. `scripts/installer/local.mjs`
+The public command path is supplied by the published `@runeditrun/rer`
+package at the exact version `package.json` pins; `pnpm-lock.yaml` records its
+frozen resolution, with no package patch. The package awaits the adapter's
+`resetPreflight` before any reset inventory or removal. `scripts/installer/local.mjs`
 binds Dial's setup UI, owner inputs,
 deployment declaration, native provider bindings, legacy-reset guard and
 archive policy. OPERATIONS.json version 2 opts into command contract 1 and
@@ -30,12 +31,31 @@ portability execution; Dial's adapter supplies its product-specific behavior.
 
 Local export and import use the pinned package's D1/R2 portability engine with
 Dial's complete table classification and credential policy. Current transfer
-supports local targets only. Remote transfer refuses before provider calls. The archive
+supports local export/import and authenticated hosted export (`rer export --target remote`).
+Hosted restore is not exposed; restore into an empty local installation of the
+same source revision. The archive
 preserves durable owner and booking facts and original uploaded object bytes;
 it excludes credentials, sessions, sign-in and invitation links, booking
 capabilities, OAuth credentials, webhook authority, development mail, and
 ephemeral admission state. The original SESSION_SECRET stays outside the
 archive and is needed to preserve retry and erasure guards after restore.
+
+The hosted deployment adapter is `ownerDeploy` from the pinned package. Its
+provider already supplies `importSql` to the published migration runner via the
+D1 import API; it does not mean a remote archive-restore endpoint. The archive
+policy validates installed migration names and, when recorded, exact hashes and
+applied states. Destination installer history stays in place. Unknown application
+schema, altered SQL hashes and interrupted migration claims refuse transfer.
+
+The retained deployed-ledger tests use the published migration runner's
+`importSql` transport and restore from its tracked `d1_migrations` ledger into a
+Wrangler-style destination. The native hosted journey separately models that
+tracked ledger on its disposable source, stops the source before import, and
+reads the restored booking and avatar in an independent runtime. An optional
+qualification input runs an independent npm package's `bin/rer.mjs` directly,
+verifies its tarball against the npm manifest integrity, and compares every
+executed package file with that tarball. Qualification requires an actual passing
+receipt for the candidate; presence of the test alone is not proof.
 
 ## First-run setup behavior
 
@@ -106,15 +126,15 @@ from using Node globals at type-check time, and a review has to catch it.
 Every Source, Edit-on-GitHub and rewritten GitHub link comes from
 `package.json` `repository.url` (`https://github.com/just-every/run-dial`, the
 source repository `rer-project.json` declares), and the clone command in the
-install guide names the same repository. At the current evidence snapshot it
-was public and MIT licensed; tags and releases were not inspected. A fork
+install guide names the same repository. It is public and MIT licensed, with
+tag `v0.1.0`. A fork
 points `repository.url` at its own repository.
 
 ## Acceptance and evidence boundary
 
-The lifecycle clause ledger in [ACCEPTANCE.md](ACCEPTANCE.md#lifecycle-clause-ledger) is the single table for local versus live-only CAL, BOOK and NOTIFY behavior. The exact-SHA public Verify and Run site receipts above are green on `550f530`; earlier failures on `cd10e2e`, `526fd05`, `b272` and `7157875` are historical source-specific results. The recorded run's TAP count is not a count of independent product requirements.
+The lifecycle clause ledger in [ACCEPTANCE.md](ACCEPTANCE.md#lifecycle-clause-ledger) is the single table for local versus live-only CAL, BOOK and NOTIFY behavior. The exact-SHA public Verify and Run site receipts above are green on `9b37c95`; earlier failures on `cd10e2e`, `526fd05`, `b272` and `7157875` are historical source-specific results. The recorded run's TAP count is not a count of independent product requirements.
 
-Source publication and the site workflow's deploy/readback are observed. They do not prove live Google Calendar/Meet or SendGrid behavior, an owner-account operator installation, hosted recovery, a live booking, package publication or a tagged release. The latest disconnected archive receipts qualify older heads; a fresh exact-candidate archive qualification remains open. See [ACCEPTANCE.md](ACCEPTANCE.md) for the release gate and open obligations.
+Source publication and the site workflow's deploy/readback are observed. They do not prove live Google Calendar/Meet or SendGrid behavior, an owner-account operator installation, hosted recovery or a live booking. The latest disconnected archive receipts qualify older heads; a fresh exact-candidate archive qualification remains open. See [ACCEPTANCE.md](ACCEPTANCE.md) for the release gate and open obligations.
 
 ## Bounded local acceptance: parts 1–4
 
@@ -169,10 +189,10 @@ Invitee-only person erasure intentionally retains the associated operator identi
 
 Before a release cut:
 
-1. The final report must identify the exact landed SHA and its Verify disposition. The `550f530` result is the pre-round public baseline and certifies no later edits.
+1. The final report must identify the exact landed SHA and its Verify disposition. The `9b37c95` result is the pre-round public baseline and certifies no later edits.
 2. Obtain a fresh disconnected setup/archive/restore/re-export receipt for the exact release candidate. Existing `b272` and `7157875` receipts qualify only those earlier heads.
-3. The keys13 keyboard receipt covers main operator/public journeys at 1440/390 and native DOM dialog Tab/Shift+Tab, Escape and opener-focus restoration. JavaScript `confirm`/`prompt` used Playwright accept/dismiss; literal OS key input remains unverified because `AXIsProcessTrusted=false`. The two later public-reschedule completion-focus assertions are outside that receipt; the final report must state their result on the exact frozen head. Full manual screen-reader review and the WCAG 2.2 AA target remain open.
-4. Recheck the exact 0.2.2 CLI patch in the integrated exact-head gate. The bounded package proof is complete: awaited adapter reset preflight with the legacy reset safety check preserved, eight refusal cases retaining configuration/data, and fresh exported-consumer frozen install plus `rer check`.
+3. Run the owner-scoped accessibility proof (axe, accessibility tree, headless keyboard) on the exact frozen head; Verify includes it. Screen-reader and OS-level key input are out of scope.
+4. Recheck the pinned `rer` package on the exact head: frozen install, `rer check`, reset preflight with the legacy-state guard, and the exact repeat-deploy assertion (zero provider writes).
 5. Keep capacity at declared limits unqualified until the release cut; retain the dates, source heads, workload sizes and actual timings of the historical local measurements above.
 6. Complete owner-account deployment, live Google Calendar/OAuth/Meet, SendGrid delivery/callback, hosted recovery, and real operator booking acceptance. Keep the Git-configured email default/prompt path unqualified; the explicit `--owner-email` flow is covered only by the recorded baseline above.
 

@@ -18,7 +18,8 @@ export async function ownerClaim(db: D1Database, runtime: RuntimeEnvironment, re
         SESSION_SECRET: runtime.SESSION_SECRET, SETUP_TOKEN: runtime.SETUP_TOKEN, sessionSeconds: 30 * 86400 },
       clientIp: request => local ? "loopback" : request.headers.get("cf-connecting-ip") ?? "",
       issuer: runtime.RER_OWNER_CLAIM_ISSUER!, installationId: runtime.RER_OWNER_CLAIM_INSTALLATION_ID!,
-      appOrigin: runtime.RER_OWNER_CLAIM_APP_ORIGIN!, expectedEmail: runtime.OWNER_EMAIL!,
+      // A hosted demo's front sets the claim keys and the exact APP_URL, not a separate claim origin.
+      appOrigin: runtime.RER_OWNER_CLAIM_APP_ORIGIN ?? (runtime.RER_DEMO === "1" ? new URL(runtime.APP_URL).origin : undefined)!, expectedEmail: runtime.OWNER_EMAIL!,
       publicKeys: JSON.parse(runtime.RER_OWNER_CLAIM_PUBLIC_KEYS ?? "null"),
     })(request);
   } catch (error) {

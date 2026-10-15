@@ -3,4 +3,4 @@ export function RequestDates({ dates, selected, onToggle }: { dates: { value: st
 }
 
 
-export function nextTenDates(instant: string) { const formatter = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric" }); return Array.from({ length: 10 }, (_, index) => { const date = new Date(instant); date.setUTCDate(date.getUTCDate() + index + 1); const [label, month, number] = formatter.format(date).replace(",", "").split(" "); return { value: date.toISOString().slice(0, 10), label, date: `${month} ${number}` }; }); }
+export function nextTenDates(civilDate: string) { const formatter = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric" }); return Array.from({ length: 10 }, (_, index) => { const date = new Date(`${civilDate}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + index + 1); const [label, month, number] = formatter.format(date).replace(",", "").split(" "); return { value: date.toISOString().slice(0, 10), label, date: `${month} ${number}` }; }); }

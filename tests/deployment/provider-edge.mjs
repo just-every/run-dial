@@ -7,7 +7,7 @@ export function providerEdge({ receipt, plan, bindings, requests, interrupted })
  const db = new DatabaseSync(':memory:');
  db.exec('CREATE TABLE oa_bootstrap(singleton INTEGER, claim_id TEXT); CREATE TABLE oa_operators(id TEXT, role TEXT, status TEXT)');
  const state = {
-  present: !interrupted, bindings, bootstrap: db,
+  present: !interrupted, bindings, bootstrap: db, handlers: ["fetch", "queue", "scheduled"],
   secrets: ['SESSION_SECRET', 'SETUP_TOKEN', 'MAIL_API_KEY'].map(name => ({ name, type: 'secret_text' })),
   databases: interrupted ? [] : receipt.resources.d1.map(row => ({ name: row.name, uuid: row.id })),
   buckets: [...receipt.resources.r2.map(row => ({ name: row.name })), { name: `${plan.worker}-files-old` }],
@@ -56,7 +56,7 @@ export function providerEdge({ receipt, plan, bindings, requests, interrupted })
   if (path === '/workers/subdomain') return envelope({ subdomain: 'fixture-account' });
   if (path === `${worker}/settings`) return state.present ? envelope({ bindings: state.bindings }) : Response.json({}, { status: 404 });
   if (path === `${worker}/deployments`) return envelope({ deployments: [{ id: receipt.provider.deploymentId, versions: [{ version_id: receipt.provider.versionId, percentage: 100 }] }] });
-  if (path === `${worker}/versions/${receipt.provider.versionId}`) return envelope({ id: receipt.provider.versionId, resources: { script: { etag: receipt.provider.etag } } });
+  if (path === `${worker}/versions/${receipt.provider.versionId}`) return envelope({ id: receipt.provider.versionId, resources: { script: { etag: receipt.provider.etag, handlers: state.handlers } } });
   if (path === `${worker}/subdomain`) return envelope({ enabled: true });
   if (path === `${worker}/secrets`) return envelope(state.secrets);
   if (path === `${worker}/schedules`) return envelope({ schedules: plan.crons.map(cron => ({ cron })) });

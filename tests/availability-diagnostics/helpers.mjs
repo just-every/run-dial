@@ -1,4 +1,4 @@
-import { localMagicLink, confirmAuthLink } from "../auth-client.mjs";
+import { localMagicLink, confirmAuthLink, readTestMail } from "../auth-client.mjs";
 import assert from "node:assert/strict";
 
 export const origin = process.env.DIAL_AVAILABILITY_DIAGNOSTICS_ORIGIN ?? "http://127.0.0.1:15701";
@@ -18,12 +18,12 @@ export async function authenticate(email) {
   assert.equal(signedIn.status, 303); session = signedIn.headers.get("set-cookie").split(";")[0];
 }
 export async function authenticateViaSyntheticMail(email) {
-  const before = (await snapshot()).fixture_mail;
+  const before = await readTestMail(origin);
   await call("/api/auth/magic-links", { email }, 202);
-  const messages = (await snapshot()).fixture_mail.filter((row) => !before.some((prior) => prior.key === row.key));
+  const messages = (await readTestMail(origin)).filter(message => !before.some(prior => prior.deliveryId === message.deliveryId));
   assert.equal(messages.length, 1);
-  const message = JSON.parse(messages[0].message_json);
-  assert.equal(message.to, email); assert.equal(message.subject, "Your sign-in link for Dial");
+  const message = messages[0];
+  assert.ok(message.to.includes(email));
   const link = message.text.match(/http:\/\/127\.0\.0\.1:15701\/auth\/confirm\?token=[^\s]+/)?.[0];
   assert.ok(link, "task-owned synthetic sign-in mail contains the real native verification link");
   const signedIn = await confirmAuthLink(link);

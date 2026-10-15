@@ -3,8 +3,10 @@ import { mkdir, writeFile, readdir, rm } from 'node:fs/promises';
 import { resolve, join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { assert, hash, localPath } from './validation.mjs';
-import { collectFiles, regularBytes, validateArtifact, MAX_ARTIFACT } from './artifact.mjs';
+import { assetsIgnore, collectFiles, regularBytes, validateArtifact, MAX_ARTIFACT } from './artifact.mjs';
 import { collectBuildModules } from './build-modules.mjs';
+import { refuseLocalModels } from './local-only.mjs';
+import { readMigrationRewrites, withRewrites } from './migrations.mjs';
 
 export function assertCredentialFree(env) {
   for (const [key,value] of Object.entries(env)) if (value && /(?:TOKEN|SECRET|PASSWORD|API_KEY|PRIVATE_KEY|AUTHORIZATION|COOKIE|CREDENTIAL)/i.test(key)) throw new Error('prepare-credential-environment-forbidden');
@@ -17,16 +19,20 @@ function run(argv, cwd, env) {
 export async function packageBuild({root,source,runIdentity,productDirectory = 'default-seed'}) {
   assert(productDirectory === '' || localPath(productDirectory), 'invalid-product-directory');
   const product = join(root,productDirectory);
+  await refuseLocalModels(root);
+  if (product !== root) await refuseLocalModels(product);
   const build = join(product,'dist/server');
   const config = JSON.parse(await regularBytes(join(build,'wrangler.json'),1024*1024));
   const main = localPath(relative(build,resolve(build,config.main)));
   const modules = await collectBuildModules(build,config,main);
-  const assets = await collectFiles(join(product,'dist/client'));
-  const migrations = [];
+  const ignored = assetsIgnore(await regularBytes(join(product,'dist/client/.assetsignore'),65536).then(String,error => { if (error.code === 'ENOENT') return ''; throw error; }));
+  const assets = (await collectFiles(join(product,'dist/client'))).filter(file => !ignored(file.path));
+  let migrations = [];
   for (const name of (await readdir(join(product,'migrations/core'))).sort()) {
     assert(/^[0-9]+_[a-zA-Z0-9_-]+\.sql$/.test(name),'unexpected-migration-file');
     const sql = (await regularBytes(join(product,'migrations/core',name),512000)).toString('utf8'); migrations.push({binding:'DB',name,sql,sha256:hash(sql)});
   }
+  migrations = withRewrites(migrations, await readMigrationRewrites(product));
   const artifact = {version:1,source,run:runIdentity,main,modules,assets,migrations}; validateArtifact(artifact);
   return artifact;
 }

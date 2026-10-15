@@ -11,11 +11,12 @@ import { handleFixtures } from "../review/fixture-routes";
 import { consumeJobs, runScheduledWork } from "../../src/core/app/background-work";
 import { initializeWire, wireTransport } from "./transport";
 import { connectionWatchObservers } from "../../src/core/app/connection-watch";
+import { captureAuthMail, captureMail, capturedMail } from "../mail-capture";
 type WireBindings = AppBindings & { PROVIDER_DB?: D1Database };
 const providerDb = (env: WireBindings) => env.PROVIDER_DB ?? env.DB;
 const servicesFor = (env: WireBindings) => {
   const runtime = parseRuntimeEnvironment(env), wire = wireTransport(providerDb(env));
-  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), mail: new BaseMailSender(env.DB, runtime, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) });
+  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) });
 };
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: WireBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);
@@ -23,6 +24,7 @@ export default {
   async fetch(request: Request, env: WireBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
+    if (url.pathname === "/__test/mail") return capturedMail(env.DB);
     if (url.pathname === "/wire/init") { await initializeWire(providerDb(env)); return Response.json({ ok: true }); }
     if (url.pathname === "/wire/state") {
       const tables = ["wire_calls", "wire_events", "base_mail_dispatch", "calendar_connections", "bookings", "booking_occurrences", "booking_nonces", "booking_history", "booking_calendar_conflicts", "delivery_outbox", "delivery_attempts", "availability_requests", "availability_request_windows", "calendar_deletion_probes"];

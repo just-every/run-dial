@@ -8,7 +8,7 @@ import { loadSetupManifest } from '../delivery/base/setup-manifest.mjs';
 export async function checkIntegrations(root = fileURLToPath(new URL('../../', import.meta.url))) {
   const config = JSON.parse(await readFile(resolve(root, 'scripts/delivery/base/packaging.json'), 'utf8'));
   const { project, workflow, setup } = packagingConfig(config);
-  const manifest = await loadSetupManifest(root, setup);
+  const manifest = await loadSetupManifest(root, setup, config.artifact.specInputs.mail);
   if (!manifest) throw new Error('Canonical setup selection is required');
   const expected = { ...project, setup: { path: manifest.path, sha256: manifest.sha256 } };
   if (await readFile(resolve(root, 'rer-project.json'), 'utf8') !== JSON.stringify(expected, null, 2) + '\n') throw new Error('Regenerate the project descriptor from packaging policy and canonical setup');

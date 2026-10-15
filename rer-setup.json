@@ -5,17 +5,103 @@
     {
       "id": "owner",
       "label": "First owner"
+    },
+    {
+      "id": "mail",
+      "label": "Sign-in email",
+      "help": "Managed hosting supplies mail automatically. Other hosted installs need a verified sender and provider credentials."
     }
   ],
   "fields": [
     {
       "name": "OWNER_EMAIL",
       "label": "Owner email",
-      "help": "Sign-in links for this address appear in the local development outbox; no email is sent.",
+      "help": "This address will own Dial and receive sign-in links.",
       "kind": "email",
       "required": true,
       "prefill": "account-email",
       "group": "owner"
+    },
+    {
+      "name": "MAIL_PROVIDER",
+      "label": "Email provider",
+      "kind": "select",
+      "required": true,
+      "default": "sendgrid",
+      "options": [
+        {
+          "value": "development",
+          "label": "Local development outbox"
+        },
+        {
+          "value": "rer",
+          "label": "RER Managed mail"
+        },
+        {
+          "value": "sendgrid",
+          "label": "SendGrid"
+        },
+        {
+          "value": "resend",
+          "label": "Resend"
+        }
+      ],
+      "group": "mail"
+    },
+    {
+      "name": "MAIL_FROM",
+      "label": "Sender email",
+      "help": "Use an address verified with your email provider.",
+      "kind": "email",
+      "required": true,
+      "group": "mail"
+    },
+    {
+      "name": "MAIL_RELAY_URL",
+      "label": "Managed mail relay URL",
+      "kind": "url",
+      "required": true,
+      "when": {
+        "field": "MAIL_PROVIDER",
+        "equals": "rer"
+      },
+      "group": "mail",
+      "help": "Supplied automatically by RER Managed hosting."
+    },
+    {
+      "name": "MAIL_API_KEY",
+      "label": "Mail API key",
+      "kind": "secret",
+      "input": "entered",
+      "required": false,
+      "ownerVisible": true,
+      "group": "mail",
+      "presentations": [
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "rer"
+          },
+          "label": "RER mail credential",
+          "required": true
+        },
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "sendgrid"
+          },
+          "label": "SendGrid API key",
+          "required": true
+        },
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "resend"
+          },
+          "label": "Resend API key",
+          "required": true
+        }
+      ]
     },
     {
       "name": "SESSION_SECRET",

@@ -1,3 +1,4 @@
+import { mailConnectionMessage } from "../../platform/mail/connection-message";
 import { z } from "zod";
 import { validate } from "../../shared/validation";
 import { Hono } from "hono";
@@ -29,7 +30,7 @@ export const deliveryRoutes = new Hono<AppEnvironment>()
     const result = await context.get("services").delivery.checkMailConnection();
     return result.kind === "healthy"
       ? context.json({ state: "healthy", checkedAt: result.checkedAt, reason: null })
-      : apiError(context, 503, "mail_unavailable", "Transactional mail could not be verified for this deployment.");
+      : apiError(context, 503, "mail_unavailable", result.code === "invalid_delivery_payload" ? `${mailConnectionMessage(result.code)}.` : "Transactional mail could not be verified for this deployment.");
   })
   .post("/api/webhooks/sendgrid", async (context) => {
     const result = await context.get("services").sendgridWebhook.receive(context.req.raw, () => context.get("admitProvider")("sendgrid"));

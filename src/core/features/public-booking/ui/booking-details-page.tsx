@@ -14,6 +14,8 @@ import { seedSelection } from "./document-seeds";
 import { forgetSelection, rememberSelection } from "./selection-storage";
 import { detailsErrors, questionErrorKey } from "./details-validation";
 import { Question } from "./public-question";
+import { forgetRecoveryDraft, readRecoveryDraft, rememberRecoveryDraft } from "./booking-recovery-draft";
+import { dateInZone } from "./day-picker-model";
 import type { Confirmation, PublicEventPayload } from "./types";
 import type { BookingDetailsCapability, PublicSelection } from "./selection-types";
 
@@ -57,7 +59,13 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
       setAnswers((previous) => retainConfiguredAnswers(current.event.questions, previous));
     } catch { if (currentRead() && !attempt.current.pending) setSelectionError("Your selected time could not be refreshed. Your details are kept; reload it to retry."); }
   }, [handle, inviteeTimezone, nonce, slug, startAt]);
-  useEffect(() => { const reads = order.current, writes = submissions.current; void refreshSelection(); return () => { reads.invalidate(); writes.invalidate(); }; }, [refreshSelection]);
+  useEffect(() => {
+    const reads = order.current, writes = submissions.current;
+    const draft = readRecoveryDraft(handle, slug);
+    if (draft) { setName(draft.name); setEmail(draft.email); setAnswers(draft.answers); }
+    void refreshSelection();
+    return () => { reads.invalidate(); writes.invalidate(); };
+  }, [handle, slug, refreshSelection]);
   if (missing) return <PublicRecoveryPage kind="booking" />;
   if (!selection || !data) return <PublicTheme><PublicHeader embedded={embedded} step={2} /><main className="pb-loading">{selectionError ? <><p>{selectionError}</p><button type="button" className="pb-secondary-button" disabled={!hydrated} onClick={() => void refreshSelection()}>Reload selected time</button></> : "Loading your details…"}</main></PublicTheme>;
   const currentSelection = selection;
@@ -87,7 +95,16 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
         const refused = attempt.current.refuse(response.status, failure?.error?.code);
         setPending(attempt.current.pending);
         if (refused && response.status === 409 && ["slot_taken", "slot_unavailable"].includes(failure?.error?.code ?? "")) {
-          window.location.assign(bookingPath(handle, slug, "", embedded, { notice: "slot_changed" }, search));
+          if (!rememberRecoveryDraft(handle, slug, { name: input.name, email: input.email, answers: input.answers })) {
+            setNotice("That time was just taken. Your browser could not save your details. Allow session storage, then confirm again to choose another time.");
+            return;
+          }
+          forgetSelection(handle, slug, capability);
+          const currentSearch = window.location.search;
+          window.location.assign(bookingPath(handle, slug, "", embedded, {
+            notice: "slot_changed", day: dateInZone(input.startAt, input.inviteeTimezone), timezone: input.inviteeTimezone,
+            week: new URLSearchParams(currentSearch).get("week") || dateInZone(input.startAt, data!.profile.timezone),
+          }, currentSearch));
           return;
         }
         setNotice(message);
@@ -97,6 +114,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
       attempt.current.unknown();
       const confirmation = await response.json() as Confirmation;
       if (!currentSubmission()) return;
+      forgetRecoveryDraft(handle, slug);
       const token = manageToken(confirmation.manageUrl);
       if (!token) { setNotice("Your booking was recorded, but its receipt could not be opened. Check your confirmation email."); return; }
       window.location.assign(bookingPath(handle, slug, "/confirmed", embedded, { token }, search));

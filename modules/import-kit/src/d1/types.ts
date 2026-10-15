@@ -52,11 +52,26 @@ export interface D1TargetAdapter extends Partial<D1PreservedUndoAdapter> {
   write(row: TargetRow): D1Sql[];
   remove(destination: string, kind: string, id: string): D1Sql[];
   list(db: D1Database, destination: string): Promise<TargetRow[]>;
+  /** Optional field-redaction scope, so its cost follows the affected rows, not
+   * the destination: `rows` are exactly the destination's rows whose native
+   * value holds one of `fields` (exact path and value). `holding` gives nonempty
+   * predicates that exactly the given rows hold one; `matches`, set predicates
+   * that each given row matches its snapshot; `write` rewrites existing rows. */
+  redaction?(db: D1Database, destination: string, fields: readonly D1FieldRedaction[]): Promise<D1RedactionScope>;
+}
+export interface D1RedactionScope {
+  rows: TargetRow[];
+  holding(rows: TargetRow[]): D1Sql[];
+  matches(rows: TargetRow[]): D1Sql[];
+  write(rows: TargetRow[]): D1Sql[];
 }
 /** Product recognition of an erased person's data outside the erased target's own
  * sources: another record's mapped values, a rejected row, or an original's bytes.
  * Called with decoded retained content only; must be pure and must not log it. */
 export interface D1RelatedErasure {
+  /** Optional readD1ImportFieldMatches snapshot. Fences optional-selector
+   * discovery and cancels incomplete private preparations even with no fields. */
+  snapshot?: string;
   /** True when this retained source record holds the erased person's data. */
   source?(record: import('../types.ts').SourceRecord): boolean;
   /** True when this retained original's exact bytes hold the erased person's data. */
@@ -64,12 +79,21 @@ export interface D1RelatedErasure {
   /** Remove exact string values at named paths in retained source payloads,
    * effect/native values and reversal before-images. `*` visits array items.
    * Matching array items are removed; matching object properties are deleted.
-   * Peer records and explicit aggregate counts remain. */
+   * Peer records and explicit aggregate counts remain. Each distinct path must
+   * match at least one exact leaf across all supplied values or erasure refuses. */
   fields?: readonly D1FieldRedaction[];
 }
 export interface D1FieldRedaction {
   path: readonly (string | number)[];
   value: string;
+  /** An optional reference (an alternate identifier the person may not have):
+   * its path may match nothing. A path with a required selector must match. */
+  optional?: boolean;
+}
+/** Exact leaf occurrences per distinct selector path, never selected values. */
+export interface D1FieldMatch {
+  path: readonly (string | number)[];
+  matches: number;
 }
 export interface D1ImportContext extends Pick<ImportContext, 'destination' | 'namespace' | 'mappingVersion' | 'reviewedFingerprint' | 'operationKey' | 'batchSize' | 'maxBatches'> {
   /** Selected at creation. Omission on later calls uses the durable policy;
@@ -113,7 +137,24 @@ export interface D1ErasureJournalEntry {
   streamsRetired: number;
   stores: { store: string; rows: number }[];
 }
+/** `resumable`: a redaction too large for one request commits bounded steps and
+ * returns `D1RetirementProgress`; call again in a new request with its
+ * `continuation` until the result's phase is `complete`. */
+export interface D1RetirementOptions { resumable?: boolean; continuation?: string }
+/** A committed step of a resumable redaction. `receiptId` names its journal row
+ * when it rewrote custody. Keep `continuation` server-side; it is bound to this
+ * person's selectors and destination and holds no selected value. */
+export interface D1RetirementProgress {
+  phase: 'redacting';
+  continuation: string;
+  jobsRedacted: number;
+  jobsPending: number;
+  fieldMatches: D1FieldMatch[];
+  receiptId?: string;
+}
 export interface D1CustodyRetirement extends D1ErasureJournalEntry {
+  phase: 'complete';
+  fieldMatches: D1FieldMatch[];
   /** Jobs and streams whose whole custody was retired: no undo or resume. */
   retiredJobs: string[];
   retiredStreams: string[];

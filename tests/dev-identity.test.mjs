@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer, request as httpRequest } from "node:http";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readFile } from "node:fs/promises";
+import { createHmac } from "node:crypto";
 import test from "node:test";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -38,7 +39,7 @@ test(contractTitle("OPER-005", "local dev identity signs in as the owner and a p
   const forwarded = `http://127.0.0.1:${proxy.address().port}`;
   await bootstrapTestOwner(origin);
 
-  const surfaces = ["/auth/dev/enter?as=owner", "/__dev/personas", "/__dev/outbox"];
+  const surfaces = ["/auth/dev/enter?as=owner", "/__dev/personas"];
   for (const base of [origin, forwarded]) {
     for (const path of surfaces) assert.equal((await fetch(base + path, { redirect: "manual" })).status, 404, `${base}${path} without the key`);
     for (const path of surfaces) assert.equal((await fetch(base + path, { redirect: "manual", headers: { "x-rer-dev-key": "wrong-key-wrong-key-wrong-key-wrong-key-wrong-key" } })).status, 404, `${path} with a wrong key`);
@@ -54,10 +55,22 @@ test(contractTitle("OPER-005", "local dev identity signs in as the owner and a p
   const ownerSession = await session(owner.header);
   assert.equal(ownerSession.status, 200);
   assert.equal((await ownerSession.json()).operator.email, "operator@dial.test");
-  const sessionOnly = owner.cookies.filter((cookie) => cookie.name === "operator_session_local").map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
+  const sessionOnly = owner.cookies.filter((cookie) => cookie.name.startsWith("operator_session_local_")).map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
   assert.equal((await session(sessionOnly)).status, 401, "a dev session without the key's cookie is refused");
 
-  const persona = await signInAs({ origin, key: TEST_DEV_KEY, as: "co-host" });
+  const vars = await readFile(resolve(state, "vars/.dev.vars"), "utf8");
+  const secret = /^SESSION_SECRET=(.+)$/m.exec(vars)[1];
+  const proof = createHmac("sha256", secret).update("local-cli\0sign-in").digest("hex");
+  const native = await fetch(origin + "/auth/local/cli-session", { method: "POST", redirect: "manual", headers: { origin, "content-type": "application/json", "x-rer-local-cli": proof }, body: "{}" });
+  assert.equal(native.status, 303);
+  const entered = await fetch(origin + "/auth/dev/enter?as=co-host", { redirect: "manual", headers: { ...devKeyHeaders, cookie: native.headers.get("set-cookie").split(";")[0] } });
+  if (entered.status !== 303) {
+    const response = await fetch(origin + "/api/app/operators", { headers: { cookie: native.headers.get("set-cookie").split(";")[0] } });
+    const operators = await response.json();
+    console.info(JSON.stringify({ personaResponse: entered.status, createdDespiteRefusal: operators.operators?.some(operator => operator.email === "co-host@dev.localhost") }));
+  }
+  assert.equal(entered.status, 303, await entered.text());
+  const persona = { header: entered.headers.getSetCookie().map(value => value.split(";")[0]).join("; ") };
   assert.equal((await (await session(persona.header)).json()).operator.email, "co-host@dev.localhost");
   const operators = await (await fetch(origin + "/api/app/operators", { headers: { cookie: persona.header } })).json();
   assert.deepEqual(operators.operators.map((operator) => operator.email).sort(), ["co-host@dev.localhost", "operator@dial.test"], "the persona is a real operator");

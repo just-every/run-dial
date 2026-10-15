@@ -65,7 +65,7 @@ export function AppShell() {
         </aside>
       </div>
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-sidebar px-4 lg:hidden">
-        <Link to="/app" className="inline-flex items-center gap-2 text-2xl font-extrabold tracking-[-.02em]"><BrandMark />Dial</Link>
+        <Link to="/app" className="inline-flex items-center gap-2 text-2xl font-extrabold tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></Link>
         <Button ref={menuButton} variant="secondary" className="min-h-9! px-4" type="button" aria-expanded={menuOpen} aria-controls="operator-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
           Menu
         </Button>
@@ -79,7 +79,7 @@ export function AppShell() {
 function SidebarContent({ bookingLink, pathname, profile, profileError, onSignOut, onNavigate, compact = false }: { bookingLink?: BookingLink; pathname: string; profile: ProfileSummary | null; profileError: string; onSignOut: () => Promise<void>; onNavigate?: () => void; compact?: boolean }) {
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
-      {!compact ? <Link to="/app" className="mb-10 inline-flex items-center gap-2.5 text-[30px] font-extrabold leading-none tracking-[-.02em]"><BrandMark />Dial</Link> : null}
+      {!compact ? <Link to="/app" className="mb-10 inline-flex items-center gap-2.5 text-[30px] font-extrabold leading-none tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></Link> : null}
       <div className={`${compact ? "mb-4" : "mb-8"} flex items-center gap-3 rounded-2xl bg-card p-3 shadow-lift`}>
         <span aria-hidden="true" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold-wash text-[15px] font-extrabold text-ink">{initials(profile?.name ?? "Host")}</span>
         <div className="min-w-0"><p className="truncate text-[15px] font-bold">{profileError ? "Host unavailable" : profile?.name ?? "Host not configured"}</p><p className="truncate text-[13px] text-muted">{profile?.title ?? "Set up your host profile"}</p></div>

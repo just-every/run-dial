@@ -1,4 +1,4 @@
-import production, { BookingCoordinator } from "../../src/core/app/worker";
+import production, { BookingCoordinator } from "../mail-runtime.worker";
 import type { AppBindings } from "../../src/core/app/bindings";
 export { BookingCoordinator };
 
@@ -16,7 +16,9 @@ export default {
         else if (action === "retire-owner") await env.DB.exec("DROP TRIGGER oa_preserve_last_owner_delete; DELETE FROM oa_sessions; DELETE FROM oa_bootstrap; DELETE FROM oc_owner_claims WHERE completed=0; DELETE FROM operator_setup_identity; DELETE FROM oa_operators; DELETE FROM operators;");
         else return new Response(null, { status: 400 });
       }
-      const tables = ["oa_operators", "oa_bootstrap", "oa_sessions", "oa_limits", "oc_owner_claims", "operators", "operator_setup_identity", "public_rate_events"];
+      // Public abuse budgets are spent before authentication. This snapshot
+      // guards native identity and product writes during refused claims.
+      const tables = ["oa_operators", "oa_bootstrap", "oa_sessions", "oa_limits", "oc_owner_claims", "operators", "operator_setup_identity"];
       const counts: Record<string, number> = {};
       for (const table of tables) counts[table] = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first<{ n: number }>())!.n;
       const limits = (await env.DB.prepare("SELECT count FROM oa_limits ORDER BY key").all<{ count: number }>()).results;

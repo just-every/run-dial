@@ -104,9 +104,12 @@ export function browserFailureDiagnostic(error, diagnostics = {}) {
   // Outbox subjects and page headings are product copy, never capabilities; keep them short and plain.
   const plain = value => typeof value === "string" ? value.replace(/[^\w .,:'-]/gu, "").slice(0, 80) : null;
   const where = { ...(Array.isArray(diagnostics.outbox) ? { outbox: diagnostics.outbox.slice(0, 5).map(plain) } : {}),
-    ...(diagnostics.page ? { page: { path: ["/__dev/outbox", "/auth/confirm", "/signin", "/setup", "/app"].includes(diagnostics.page.path) ? diagnostics.page.path : "other", heading: plain(diagnostics.page.heading) } } : {}) };
+    ...(diagnostics.page ? { page: { path: ["/auth/confirm", "/signin", "/setup", "/app"].includes(diagnostics.page.path) ? diagnostics.page.path : "other", heading: plain(diagnostics.page.heading) } } : {}) };
+  const assertionSite = error?.code === "ERR_ASSERTION" ? /tests\/([a-z0-9/.-]+\.mjs):(\d+):\d+/i.exec(error.stack ?? "") : null;
+  const scalar = value => typeof value === "boolean" || typeof value === "number" && Number.isFinite(value) ? value : undefined;
   return {
     ...(failures.get(error) ?? { check: "unclassified", kind: failureKind(error) }),
+    ...(assertionSite ? { assertion: { file: assertionSite[1], line: Number(assertionSite[2]), expected: scalar(error.expected), actual: scalar(error.actual) } } : {}),
     ...where,
     httpFailures: [...statuses].sort(([a], [b]) => a - b).map(([status, count]) => ({ status, count })),
     httpFailureGroups: [...responseGroups.values()].sort((a, b) => a.status - b.status || a.routeCategory.localeCompare(b.routeCategory) || a.resourceType.localeCompare(b.resourceType)),
