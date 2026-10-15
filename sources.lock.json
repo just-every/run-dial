@@ -778,7 +778,7 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "22893221f94885f9be290b8f135c2c40cd867f3b2c4ac717aebaa001fa46f8b2",
+      "sha256": "28e2392bfc077a808ec1a0b38bde91814ca3b76846d0dbd04ab7ab69154facb2",
       "executable": false
     },
     "deploy-demo.json": {
@@ -4406,7 +4406,7 @@
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Hero.tsx": {
-      "sha256": "b4075fa1db7400e61fd03a74844d5e249cbeb6612c4c3e83deee6b93d123d779",
+      "sha256": "98f129b81f62e59539ae99985ae07880d2cfe66e75ddfc92e55d7a4b69b013fe",
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Invitees.tsx": {
@@ -5170,7 +5170,7 @@
       "executable": false
     },
     "tests/booking-axe/keyboard-events.mjs": {
-      "sha256": "0af7de363b5643abdd532b0079c33be0907e7bcc0e9d1efaa47e7147c93cb6e6",
+      "sha256": "a7711b4f1273dfc932f894fb58c012e2f5f95e55db1e560569eae1223b6d0b10",
       "executable": false
     },
     "tests/booking-axe/keyboard-filters.mjs": {
