@@ -46,7 +46,6 @@ export class BaseMailSender implements MailSender {
   async send(message: MailMessage): Promise<MailSendResult> {
     const config = mailConfiguration(this.runtime);
     if ((!config.apiKey && !suppressesMail(this.runtime)) || !config.from) throw new ProviderFailure("missing_configuration", false);
-    if (!/^no-?reply@/i.test(config.from)) throw new ProviderFailure("invalid_delivery_payload", false);
     const sender = suppressesMail(this.runtime)
       ? createMailSender({ provider: "development", mode: "development" }, {}) as BaseSender
       : createMailSender({ provider: config.provider, mode: "production", apiKey: config.apiKey }, { fetch: this.request }) as BaseSender;

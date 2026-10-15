@@ -4,7 +4,7 @@ import { isSendGridSenderVerified } from "./sendgrid-readiness";
 /** Credential/sender read only; never delivers a test message. */
 export async function checkMailProvider(config: { provider: "resend" | "sendgrid"; apiKey?: string; from?: string }, request: typeof fetch) {
   if (!config.apiKey || !config.from) throw new ProviderFailure("missing_configuration", false);
-  const domain = /^no-?reply@([^@]+)$/i.exec(config.from)?.[1];
+  const domain = /^[^\s@]+@([^\s@]+)$/.exec(config.from)?.[1];
   if (!domain) throw new ProviderFailure("invalid_delivery_payload", false);
   const controller = new AbortController();
   let timeout: ReturnType<typeof setTimeout> | undefined;

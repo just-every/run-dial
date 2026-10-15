@@ -8,7 +8,7 @@ Dial runs as one Cloudflare Worker with a D1 database, an R2 bucket, queues, a D
   and run. It selects the exact Node and pnpm versions pinned by Dial when
   needed.
 - **A Cloudflare account on the Workers Paid plan,** with a workers.dev subdomain and an API token for that account. [Deploy to Cloudflare](#deploy-to-cloudflare) lists the permissions.
-- **Working SendGrid mail before deploying:** an API key, a verified `noreply@` or `no-reply@` sender, and an owner mailbox you can read. Hosted sign-in requires an emailed link. See [Calendar and email](calendar-and-email.md#send-mail-with-sendgrid).
+- **Working SendGrid mail before deploying:** an API key, a verified sender address, and an owner mailbox you can read. Hosted sign-in requires an emailed link. See [Calendar and email](calendar-and-email.md#send-mail-with-sendgrid).
 - **A Google Cloud project** is optional, for Google Calendar integration and Google Meet. See [Calendar and email](calendar-and-email.md#connect-google-calendar).
 
 You need none of the provider accounts to try Dial on your computer. A deployed Dial lives on a `workers.dev` address; deploy accepts no custom domain. For cost and limits, see [the overview](overview.md#cost-and-limits).
@@ -190,7 +190,7 @@ For a new Worker, supply:
 
 - `OWNER_EMAIL`: the hosted owner's mailbox, which you can read. If omitted, rer uses the saved local setup owner; a generated development address is unsuitable for hosted sign-in.
 - `SENDGRID_API_KEY`: a working SendGrid API key, stored as `MAIL_API_KEY`.
-- `MAIL_FROM`: your verified `noreply@` or `no-reply@` sender.
+- `MAIL_FROM`: your verified sender address.
 
 The mail key and sender must be supplied on the first deploy; missing values stop it before resource creation. They must also work: placeholder values cannot deliver your sign-in link.
 

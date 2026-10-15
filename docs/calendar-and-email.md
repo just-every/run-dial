@@ -41,7 +41,7 @@ If creating the event fails after someone has booked, the booking stays confirme
 
 ## Emails Dial sends
 
-Mail goes out from a no-reply address. Confirmation pages and client emails offer **Add to calendar**, an `.ics` file. A reschedule updates the same calendar entry, and a cancellation marks it cancelled.
+Mail goes out from your verified sender address; Dial never reads replies sent to it. Confirmation pages and client emails offer **Add to calendar**, an `.ics` file. A reschedule updates the same calendar entry, and a cancellation marks it cancelled.
 
 - **Confirmation.** The client and every operator get the time, answers and calendar status. The client's copy has their manage link. When a connected calendar receives the booking, Google separately sends the client its own invitation. If the meeting link is not ready, the email says so, and the client gets one more when it is.
 - **Changes.** A reschedule or cancellation emails the client and every operator once.
@@ -54,7 +54,7 @@ To stop booking mail for yourself, tick **Mute booking mail for me** under **You
 
 Set this up before deploying a hosted Dial. After deploy claims the owner, the first sign-in requires an emailed link to `OWNER_EMAIL`; use a mailbox you can read. Placeholder credentials cannot deliver that link, and successful deployment does not prove delivery. If mail fails, use `rer signin` with the deploying checkout and Cloudflare credentials as described in [Install Dial](install.md).
 
-1. Choose a sender starting with `noreply@` or `no-reply@`. Dial refuses to send from anything else.
+1. Choose the sender address, such as `hello@example.com`. Any address works if SendGrid has verified it or its domain.
 2. In SendGrid, verify that exact address as a Single Sender, or authenticate its exact domain.
 3. Create an API key with Mail Send (`mail.send`) permission and read access to verified senders and authenticated domains.
 4. Give the sender as `MAIL_FROM` and the API key as `SENDGRID_API_KEY` to your first deploy, as in [Reference: deploy inputs](install.md#reference-deploy-inputs). Deploy stores them as Worker secrets.

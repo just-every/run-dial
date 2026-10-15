@@ -20,12 +20,8 @@ test("setup collects supplied owner identity and refuses overwrite and mismatche
   await assert.rejects(setup(args),{code:"EEXIST"});
   for(const target of ["http://rer-seedproof-dial.fixture-account.workers.dev","https://other.fixture-account.workers.dev","https://rer-seedproof-dial.fixture-account.workers.dev/path"]) assert.throws(()=>validateSetup({...configuration,target}),/invalid-workers-dev-target/);
 });
-contract("NOTIFY-006", "doctor refuses the original reply-capable bootstrap sender with value-free output", () => {
-  checkDoctor(operationsEnvironment, false);
-  assert.deepEqual(invalidConfigurationNames(operationsEnvironment), ["MAIL_FROM"]);
-});
-contract("NOTIFY-006", "doctor accepts no-reply bootstrap inputs and refuses an absent provider credential", () => {
-  const env = { ...operationsEnvironment, MAIL_FROM: "no-reply@fixture.test" };
+contract("NOTIFY-006", "doctor accepts an ordinary sender and refuses an absent provider credential", () => {
+  const env = operationsEnvironment;
   checkDoctor(env, true);
   checkDoctor({ ...env, MAIL_API_KEY: "" }, false);
 });

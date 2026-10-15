@@ -5,6 +5,7 @@
 - Pin rer 0.2.20, whose removal command empties populated R2 buckets in one pass. Document `rer signin` using the maintained owner sign-in grants and confirmation handler. Grants and authentication audit remain installation-local; operator erasure covers both, including attributable confirmation counters.
 - `HOME-001`: the installed Lobby and `/setup/state` both use completed onboarding. Owner admission alone keeps **Finish setup**; completion switches it to **Sign in**. The setup-token hint is shown only for editions that declare manual token claims; Dial's CLI claims its owner automatically. Existing Lobby wording and styles are unchanged.
 - Anonymous requests pass host and public rate checks before archive admission. Static assets and the Lobby avoid writer receipts; provider callbacks authenticate and pass their rate check before acquiring a receipt. Admitted work still retains its receipt through background work.
+- A hosted Dial sends from any sender whose address or domain the mail provider has verified, such as `hello@` or `bookings@`, not only `noreply@` or `no-reply@`. The sender check, publication and every send use the one rule, and the operations check no longer refuses an ordinary sender that the deploy setup accepted. SendGrid and Resend still verify the exact address or its domain before Settings reports the sender ready. `NOTIFY-006` now says Dial never reads mail sent to its sender.
 
 ## 0.2.0 — 2026-10-15
 

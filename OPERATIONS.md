@@ -147,7 +147,7 @@ Opt in to its declaration in deploy.json, then use rer deploy --set-secret
 MAIL_WEBHOOK_KEY to add it while retaining deployment receipt custody. See
 docs/calendar-and-email.md for the private input file and exact command.
 Later deploys retain existing Worker secrets. An absent health row is unchecked,
-not evidence of missing configuration. The MAIL_FROM sender must be a verified noreply@ or no-reply@ address.
+not evidence of missing configuration. The MAIL_FROM sender must be an address your provider has verified, on its own or through its domain.
 The read-only SendGrid connection check accepts an exact verified Single Sender
 or an exact authenticated domain marked valid. Matching ignores case but does
 not extend to parent domains or subdomains; the check sends no test message.
