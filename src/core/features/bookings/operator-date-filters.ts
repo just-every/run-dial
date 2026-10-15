@@ -1,5 +1,4 @@
-import { firstInstantOfHostDate } from "../availability";
-import { datePlus } from "../availability/timezone";
+import { datePlus, firstInstantOfHostDate } from "../availability";
 
 /** Civil dates may have a midnight gap, a repeated midnight, or be skipped entirely. */
 function dateBoundary(date: string, timezone: string): Date {

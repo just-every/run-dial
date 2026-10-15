@@ -3,6 +3,6 @@ export type { AvailableSlot, AvailabilityConstraints, AvailabilityWindow, BusyIn
 export { AvailabilityRepository } from "./repository";
 export { AvailabilityService } from "./service";
 export type { AvailabilityResult, CalendarBusyRead, CalendarBusyReader } from "./service";
-export { firstInstantOfHostDate, wallClockInstants, zonedParts, zonedOffsetLabel } from "./timezone";
+export { datePlus, firstInstantOfHostDate, wallClockInstants, zonedParts, zonedOffsetLabel } from "./timezone";
 export type { RecommendationContext } from "./recommendations";
 export { unavailableTimeMessage } from "./diagnostics";
