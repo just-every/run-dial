@@ -10,7 +10,11 @@ const destination = resolve(root, configuredDestination);
 let toml = await readFile(source, "utf8");
 // Public mail settings must appear in the built deployment spec. Runtime setup
 // supplies their values; direct installs retain SendGrid as their provider.
-toml = toml.replace('ENVIRONMENT = "production"\n', 'ENVIRONMENT = "production"\nMAIL_PROVIDER = "sendgrid"\nMAIL_FROM = ""\nMAIL_RELAY_URL = ""\n');
+// Containers receive secret bindings only at runtime. The managed delivery
+// spec uses a public sender field, while deploy.json keeps direct-install mail
+// addresses in its secret inputs; never bake that placeholder into an image.
+const senderVariable = process.argv.includes("--container") ? "" : 'MAIL_FROM = ""\n';
+toml = toml.replace('ENVIRONMENT = "production"\n', `ENVIRONMENT = "production"\nMAIL_PROVIDER = "sendgrid"\n${senderVariable}MAIL_RELAY_URL = ""\n`);
 if (dirname(destination) !== root) {
   const workerEntry = resolve(root, "src/core/app/worker.ts").replaceAll("\\", "\\\\");
   const migrations = resolve(root, "migrations/core").replaceAll("\\", "\\\\");

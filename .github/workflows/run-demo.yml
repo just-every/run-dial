@@ -39,7 +39,7 @@ jobs:
       # Wrangler builds the container image with the runner's Docker and pushes it to the account.
       - name: Render the app runtime configuration
         if: ${{ !inputs.remove }}
-        run: pnpm run runtime:config
+        run: node scripts/render-wrangler.mjs --container
       - if: ${{ !inputs.remove }}
         run: pnpm exec rer deploy --demo --environment "$DEMO_ENVIRONMENT"
         env:
