@@ -1,7 +1,7 @@
 import { asc, sql } from "drizzle-orm";
-import type { createDatabase } from "../../platform/db/client";
-import { eventQuestions, eventTypes, recurringAvailabilityWindows } from "../../platform/db/schema";
-import type { EventLocationType, EventQuestionKind, EventQuestionOptionInput, EventTypeInput, EventTypeRecord } from "./repository";
+import type { createDatabase } from "../../../platform/db/client";
+import { eventQuestions, eventTypes, recurringAvailabilityWindows } from "../../../platform/db/schema";
+import type { EventLocationType, EventQuestionKind, EventQuestionOptionInput, EventTypeInput, EventTypeRecord } from "../repository";
 
 /** One bound JSON array avoids D1's SQL parameter limit for larger event lists. */
 export async function hydrateEventTypes(db: ReturnType<typeof createDatabase>, records: (typeof eventTypes.$inferSelect)[]): Promise<EventTypeRecord[]> {

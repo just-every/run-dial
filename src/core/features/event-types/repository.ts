@@ -1,4 +1,4 @@
-import { hydrateEventTypes } from "./hydration.server";
+import { hydrateEventTypes } from "./hydration/repository";
 import { afterPersistedTimestampSql, nextEventTimestampSql } from "./revision";
 import { replaceDateOverride, deleteDateOverride } from "./override-writes";
 import { readDateOverrides } from "./date-overrides/repository";
