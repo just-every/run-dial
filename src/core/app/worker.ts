@@ -89,7 +89,7 @@ return {
    }
    if (url.pathname.startsWith("/assets/")) return fetchBuildAsset(request, env.ASSETS);
    await admit();
-   if (session && /^\/app(\/|$)/.test(url.pathname)) {
+   if (request.method === "GET" && session && /^\/app(\/|$)/.test(url.pathname)) {
     const services = servicesFor(env);
     // These independent fresh reads need no setup result. Keep authentication
     // and archive admission ahead of them, then overlap the setup check.
