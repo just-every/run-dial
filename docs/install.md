@@ -17,30 +17,24 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
 
 ## Run it on your computer
 
-1. Install the latest `rer` globally. Use Node 22 or later with npm. In a Dial checkout, it runs the exact `rer` version Dial pins in `package.json`:
+1. Use Node 22 or later and Git. One line installs the latest `rer`, clones the source and starts Dial. In a Dial checkout, `rer` runs the exact version Dial pins in `package.json`:
 
    ```bash
-   npm install -g @runeditrun/rer
+   npx -y @runeditrun/rer dev just-every/run-dial
    ```
 
-2. Clone the source and enter the checkout:
-
-   ```bash
-   git clone https://github.com/just-every/run-dial.git dial
-   cd dial
-   ```
-
-   The default clone follows `main`. For the tagged **v0.2.0** release instead,
-   replace the clone command above with:
+   To start it again later, run `cd run-dial && rer dev`. The default clone follows
+   `main`. For the tagged **v0.2.0** release instead, clone it yourself:
 
    ```bash
    git clone --branch v0.2.0 https://github.com/just-every/run-dial.git dial
+   cd dial
    ```
 
    A tag retains its own dependency pins. This guide describes current `main`,
    which pins **rer 0.2.22**.
 
-3. Start Dial:
+2. From a checkout you cloned yourself, start Dial:
 
    ```bash
    rer dev

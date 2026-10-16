@@ -46,20 +46,19 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-Install the latest `rer` with Node 22 or later and Git, then clone Dial and start it. Dial pins **rer 0.2.22**:
+With Node 22 or later and Git, one line installs the latest `rer`, clones Dial and starts it. Dial pins **rer 0.2.22**:
 
 ```sh
-npm install -g @runeditrun/rer
-git clone https://github.com/just-every/run-dial.git dial
-cd dial
-rer dev
+npx -y @runeditrun/rer dev just-every/run-dial
 ```
 
-The default clone follows `main`. To start from the tagged **v0.2.0** release
-instead, replace the clone command with:
+To start it again later, run `cd run-dial && rer dev`. The default clone follows
+`main`. To start from the tagged **v0.2.0** release instead, clone it yourself and
+run `rer dev` in the checkout:
 
 ```sh
 git clone --branch v0.2.0 https://github.com/just-every/run-dial.git dial
+cd dial && rer dev
 ```
 
 A tag retains its own dependency pins; the commands and **rer 0.2.22** pin here
