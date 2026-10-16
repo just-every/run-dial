@@ -5,7 +5,7 @@ export function initialClientChunk() {
   const initial = new Map<string, boolean>();
   return (id: string, graph: ChunkGraph) => {
     // Leave style/asset ownership with Vite's existing plugins.
-    if (/\.(css|scss|sass|less|styl|woff2?|svg)(\?|$)/.test(id)) return null;
+    if (/\.(css|scss|sass|less|styl)(\?|$)/.test(id) && !id.includes("?url")) return null;
     if (!initial.has(id)) {
       const seen = new Set<string>();
       const reachesInitial = (moduleId: string): boolean => {

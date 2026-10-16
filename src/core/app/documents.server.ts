@@ -1,4 +1,4 @@
-import { privateRequestServices, nativeRequestSession } from "./private-request.server";
+import { privateRequestServices, nativeRequestSession, deferPrivateRead } from "./private-request.server";
 import { readWorkspaceReads } from "./workspace-reads.server";
 import { installPublicOrigin } from "../shared/public-origin";
 import { env } from "cloudflare:workers";
@@ -24,10 +24,12 @@ export async function readPrivateShell(setup = false, path = "/app") {
   if (setup && completed) throw redirect({ to: "/app" });
   if (!setup && !completed) throw redirect({ to: "/setup" });
   const canInspectArchive = nativeSession.kind === "native" && nativeSession.operator.role === "owner";
-  const [profile, reads] = await Promise.all([
-    services.hostProfile.getProfile(),
-    setup ? Promise.resolve({}) : readWorkspaceReads(path, request, bound, runtime, services, session, canInspectArchive),
-  ]);
+  const profile = await services.hostProfile.getProfile();
+  const pending = setup ? Promise.resolve({}) : readWorkspaceReads(path, request, bound, runtime, services, session, canInspectArchive);
+  // Initial documents can send their head while fresh native reads finish.
+  // Client navigation still waits for the populated destination before replacing it.
+  const document = /^\/(app|setup)(\/|$)/.test(new URL(request.url).pathname);
+  const reads = document ? deferPrivateRead(pending) : await pending;
   return {
     reads,
     profile,
