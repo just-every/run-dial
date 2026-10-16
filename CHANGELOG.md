@@ -2,6 +2,7 @@
 
 ## 0.3.0 — 2026-10-16
 
+- A Managed mail message the relay transport cannot carry fails at once as a permanent delivery failure, instead of an unknown outcome. The workspace checks database, storage and queue health once per signed-in session and keeps the result while you move between pages.
 - Mark example and test credentials explicitly synthetic so hosted source admission accepts the fixtures.
 - Pin rer 0.2.23 and adopt Base's matching mail adapter: Managed sign-in mail sends from Workers with manual redirect refusal and relay-owned automated-mail headers. RER's `login_hint` prefills the sign-in email using Base's validation, without submitting the form.
 
