@@ -82,7 +82,7 @@ export default defineConfig(async ({ command }) => {
   const cacheDir = await runtimeCacheDir(command);
   return {
     ...(cacheDir ? { cacheDir } : {}),
-    environments: { client: { build: { rolldownOptions: { output: { codeSplitting: { groups: [{ name: initialClientChunk(), includeDependenciesRecursively: false }] } } } } } },
+    environments: { client: { build: { rolldownOptions: { output: { codeSplitting: { groups: [{ name: initialClientChunk(), debugName: "initial-client", includeDependenciesRecursively: false }] } } } } } },
     // The repository URL from package.json, for the public site's Source links (the Worker serves no file from the project root).
     define: { __DIAL_SOURCE_URL__: JSON.stringify(readRepository(process.cwd()).url) },
     // Workerd requests SSR imports through Vite too; allow the imported shared modules

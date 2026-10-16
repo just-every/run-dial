@@ -4,6 +4,8 @@ type ChunkGraph = { getModuleInfo(id: string): { isEntry: boolean; importers: st
 export function initialClientChunk() {
   const initial = new Map<string, boolean>();
   return (id: string, graph: ChunkGraph) => {
+    // Start needs its executable entry facade for the document manifest.
+    if (graph.getModuleInfo(id)?.isEntry) return null;
     // Leave style/asset ownership with Vite's existing plugins.
     if (/\.(css|scss|sass|less|styl)(\?|$)/.test(id) && !id.includes("?url")) return null;
     if (!initial.has(id)) {
