@@ -17,6 +17,7 @@ test("NOTIFY-006 native Workers fetch checks authenticated domains and refuses r
   const compiled = await build({ entryPoints: [fileURLToPath(new URL("./mail-readiness/worker.mjs", import.meta.url))], bundle: true, format: "esm", platform: "browser", write: false });
   const state = await mkdtemp(join(tmpdir(), "dial-mail-readiness-"));
   const calls = [];
+  let domainId, domainValid = true;
   let redirectAt;
   let redirectStatus;
   let worker;
@@ -29,7 +30,8 @@ test("NOTIFY-006 native Workers fetch checks authenticated domains and refuses r
         calls.push({ url: request.url, method: request.method, authorization: request.headers.get("authorization") });
         if (request.url === redirectAt) return new Response(null, { status: redirectStatus, headers: { location: "https://untrusted.example/collect" } });
         if (request.url === senderUrl) return Response.json({ results: [{ from_email: "another@business.example", verified: true }] });
-        if (request.url === domainUrl) return Response.json([{ domain: "business.example", valid: true }]);
+        if (request.url === domainUrl) return Response.json([{ ...(domainId ? { id: domainId } : {}), domain: "business.example", valid: domainValid }]);
+        if (request.url === "https://api.sendgrid.com/v3/whitelabel/domains/173") return Response.json({ id: 173, domain: "business.example", valid: domainValid });
         return new Response("Unexpected provider request", { status: 500 });
       } } },
     }] });
@@ -47,6 +49,33 @@ test("NOTIFY-006 native Workers fetch checks authenticated domains and refuses r
         assert.deepEqual(await refused.json(), { code: "provider_unavailable", retryable: false });
         assert.deepEqual(calls, [senderUrl, domainUrl].map(expectedCall), "only the concurrent initial reads receive credentials; no redirect destination, retry or mail send does");
       }
+    }
+    // A remembered identity selects a live read, never a cached health result.
+    const exactDomainUrl = "https://api.sendgrid.com/v3/whitelabel/domains/173";
+    domainId = 173;
+    redirectAt = undefined;
+    calls.length = 0;
+    assert.equal((await worker.dispatchFetch("https://readiness.test/")).status, 200);
+    assert.deepEqual(calls, [senderUrl, domainUrl].map(expectedCall));
+    calls.length = 0;
+    assert.equal((await worker.dispatchFetch("https://readiness.test/")).status, 200);
+    assert.deepEqual(calls, [expectedCall(exactDomainUrl)]);
+    domainValid = false;
+    calls.length = 0;
+    const revoked = await worker.dispatchFetch("https://readiness.test/");
+    assert.equal(revoked.status, 503);
+    assert.deepEqual(await revoked.json(), { code: "forbidden", retryable: false });
+    assert.deepEqual(calls, [expectedCall(exactDomainUrl)], "domain revocation is read live and fails without retry or discovery");
+    domainValid = true;
+    for (redirectStatus of [301, 302, 303, 307, 308]) {
+      redirectAt = undefined;
+      assert.equal((await worker.dispatchFetch("https://readiness.test/")).status, 200);
+      redirectAt = exactDomainUrl;
+      calls.length = 0;
+      const refused = await worker.dispatchFetch("https://readiness.test/");
+      assert.equal(refused.status, 503);
+      assert.deepEqual(await refused.json(), { code: "provider_unavailable", retryable: false });
+      assert.deepEqual(calls, [expectedCall(exactDomainUrl)], "a known domain still refuses redirects without forwarding credentials");
     }
   } finally {
     try { await worker?.dispose(); }

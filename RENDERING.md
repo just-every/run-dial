@@ -32,6 +32,11 @@ use Start's streaming renderer without its crawler-only all-ready wait, and
 archive admission lasts through deferred reads and the document stream. Setup
 and public documents retain Start's default renderer.
 
+SendGrid can retain an authenticated domain ID in memory, keyed by a hash of the
+credential and sending address. Each use still reads that exact domain from the
+provider and verifies its current domain and validity. Failed or invalid lookups
+clear the hint and fail the check without retrying; no health result is cached.
+
 The existing `/_serverFn/` transport prefix is declared in `seed.json` alongside
 the public document/API/asset paths. The Worker applies shared atomic public
 admission before dispatching those paths; this declaration adds no transport or
