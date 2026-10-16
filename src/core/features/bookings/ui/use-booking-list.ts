@@ -59,6 +59,7 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
   useEffect(() => {
     const showLoading = mounted.current || !hasInitialBookings;
     mounted.current = true;
+    if (showLoading) setLoading(true);
     const timer = window.setTimeout(() => { void load(showLoading); }, filters.query?.trim() ? 180 : 0);
     return () => { window.clearTimeout(timer); latestRequest.current += 1; };
   }, [filters, load, hasInitialBookings]);

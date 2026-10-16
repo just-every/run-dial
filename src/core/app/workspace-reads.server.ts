@@ -1,3 +1,4 @@
+import { deferPrivateRead } from "./private-request.server";
 import { Hono } from "hono";
 import type { AppEnvironment } from "./context";
 import type { AppBindings } from "./bindings";
@@ -66,7 +67,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     const endpoint = `/api/app/event-types/${eventId}/readiness`;
     // Start streams this fresh result while the document's styles and scripts load.
     // The document stream remains open until the native provider check finishes.
-    reads[endpoint] = Promise.resolve(app.fetch(new Request(new URL(endpoint, runtime.APP_URL), { headers: request.headers }), bound)).then(async response => ({ body: await response.text(), status: response.status, headers: Object.fromEntries(response.headers) } satisfies WorkspaceRead));
+    reads[endpoint] = deferPrivateRead(Promise.resolve(app.fetch(new Request(new URL(endpoint, runtime.APP_URL), { headers: request.headers }), bound)).then(async response => ({ body: await response.text(), status: response.status, headers: Object.fromEntries(response.headers) } satisfies WorkspaceRead)));
   }
   if (name === "/app/settings") routes.push(...["session", "calendar/connection", "calendar/setup", "mail/connection", "mail/preferences", "operators", "embed-settings", "blocked-addresses", "custom-fields", "move-in/jobs", "move-in/switch-over"].map(p => "/api/app/" + p));
   const work = routes.map(read);

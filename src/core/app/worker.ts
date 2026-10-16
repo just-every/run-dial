@@ -1,4 +1,4 @@
-import { withPrivateRequest, privateRequestServices, nativeRequestSession } from "./private-request.server";
+import { withPrivateRequest, privateRequestServices, nativeRequestSession, privateReadTasks } from "./private-request.server";
 // Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
 import { withDemo } from "../../../modules/demo/index.mjs";
 import { withApplication, ArchiveMaintenance } from "../features/portability/admission";
@@ -88,7 +88,7 @@ return {
    if (url.pathname.startsWith("/assets/")) return fetchBuildAsset(request, env.ASSETS);
    await admit();
    return worker.fetch(request, env, tracked);
-  });
+  }, privateReadTasks);
   return /^\/(app|setup|_serverFn)(\/|$)/.test(new URL(request.url).pathname)
    ? withPrivateRequest(request, env, newServicesFor(env), run)
    : run();

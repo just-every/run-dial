@@ -3,7 +3,7 @@ import type { AppBindings } from "./bindings";
 import type { AppServices } from "./services";
 import type { OperatorAuth } from "../../../modules/operator-auth/index.mjs";
 
-type PrivateRequest = { request: Request; bindings: AppBindings; services: AppServices; session?: ReturnType<OperatorAuth["getSession"]> };
+type PrivateRequest = { request: Request; bindings: AppBindings; services: AppServices; reads: Promise<unknown>[]; session?: ReturnType<OperatorAuth["getSession"]> };
 const current = new AsyncLocalStorage<PrivateRequest>();
 
 /** A fresh scope for one private HTTP invocation, including Start's SSR/function dispatch. */
@@ -18,7 +18,7 @@ export function withPrivateRequest<T>(request: Request, bindings: AppBindings, s
   const completion = services.hostSetup.completion.bind(services.hostSetup);
   let completionRead: ReturnType<typeof completion> | undefined;
   services.hostSetup.completion = () => completionRead ??= completion();
-  return current.run({ request, bindings, services }, run);
+  return current.run({ request, bindings, services, reads: [] }, run);
 }
 
 export function privateRequestServices(bindings: AppBindings) {
@@ -26,8 +26,20 @@ export function privateRequestServices(bindings: AppBindings) {
   return scope?.bindings.DB === bindings.DB ? scope.services : undefined;
 }
 
+export function deferPrivateRead<T>(task: Promise<T>) {
+  const scope = current.getStore();
+  if (!scope) throw new Error("Private streamed reads require their HTTP request scope.");
+  scope.reads.push(task);
+  return task;
+}
+
+export const privateReadTasks = () => current.getStore()?.reads ?? [];
+
 export function nativeRequestSession(request: Request, auth: OperatorAuth) {
   const scope = current.getStore();
-  if (!scope || scope.request !== request) return auth.getSession(request);
+  if (!scope || scope.request !== request && (
+    scope.request.url !== request.url || scope.request.method !== request.method ||
+    JSON.stringify([...scope.request.headers]) !== JSON.stringify([...request.headers])
+  )) return auth.getSession(request);
   return scope.session ??= auth.getSession(request);
 }
