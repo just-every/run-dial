@@ -1,25 +1,11 @@
-import { useEffect, useState } from "react";
-import { api, errorMessage } from "../../../api/client";
 import { Badge, Card, textLinkClassName } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
-import type { PlatformHealth } from "../../../platform/health";
+import { usePlatformHealth } from "./platform-health";
 import type { HostSetupOverview, ConnectionStatus } from "../steps";
 import { operatorTimestamp } from "../../../shared/operator-format";
 
 export function HealthStatus({ state, workspace = "/app" }: { state: HostSetupOverview; workspace?: "/app" | "/setup" }) {
-  const [platform, setPlatform] = useState<PlatformHealth & { checkedAt: string }>();
-  const [error, setError] = useState("");
-  useEffect(() => {
-    let active = true;
-    const request = new AbortController();
-    const stop = () => { active = false; request.abort(); };
-    window.addEventListener("dial:auth-lost", stop);
-    void api.api.app["platform-health"].$get(undefined, { init: { signal: request.signal } }).then(async (response) => {
-      if (!response.ok) throw new Error(await errorMessage(response));
-      const result = await response.json(); if (active) setPlatform(result);
-    }).catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Platform health could not be checked."); });
-    return () => { stop(); window.removeEventListener("dial:auth-lost", stop); };
-  }, []);
+  const { platform, error } = usePlatformHealth();
   return <Card className="p-5 sm:p-6"><SectionHeading icon="link" title="Integrations and delivery" /><div className="mt-5 grid gap-4">
     {workspace === "/app" && state.completedAt && state.availabilityReady && state.calendar.state === "disconnected" ? <div><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold">Dial availability</h3><Badge tone="success">Active</Badge></div><p className="mt-1 text-sm text-soft">Saved hours and confirmed bookings determine your open times.</p><a className={`${textLinkClassName} mt-2 inline-block text-[15px]`} href={`${workspace}/settings#calendar-connection`}>Connect an optional Google Calendar</a></div> : <><Connection name="Google Calendar" health={state.calendar} timezone={state.hostTimezone} href={`${workspace}/settings#calendar-connection`} /><a className={`${textLinkClassName} w-fit text-[15px]`} href={`${workspace}/settings#calendar-connection`}>Google setup guide</a></>}
     <Connection name="Transactional mail" health={state.mail} timezone={state.hostTimezone} href={`${workspace}/settings#mail-connection`} />

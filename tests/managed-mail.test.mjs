@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import { emittedFixture, fixture, origin } from './mail-connection/fixture.mjs';
 import { linkMessage } from '../modules/operator-auth/identity/email-link/message.mjs';
+import { senderHealthJourney } from './mail-connection/health-journey.mjs';
+import { bookingRelayJourney, bookingStatusScreens } from './mail-connection/booking-journey.mjs';
 
 test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner', async t => {
   const calls = [], relay = 'https://platform.example.test/api/managed-mail/send';
@@ -109,9 +111,10 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
   const errors = [];
   page.on('pageerror', error => { errors.push(error.message); t.diagnostic(error.message); });
   const screenshot = async name => {
-    if (!process.env.DIAL_LOGIN_HINT_SHOTS) return;
-    await mkdir(process.env.DIAL_LOGIN_HINT_SHOTS, { recursive: true });
-    await page.screenshot({ path: join(process.env.DIAL_LOGIN_HINT_SHOTS, name), fullPage: true });
+    const directory = process.env.DIAL_MAIL_SHOTS ?? process.env.DIAL_LOGIN_HINT_SHOTS;
+    if (!directory) return;
+    await mkdir(directory, { recursive: true });
+    await page.screenshot({ path: join(directory, name), fullPage: true });
   };
   for (const width of [1440, 390]) {
     // Desktop and phone are separate connecting clients with their real budgets.
@@ -143,6 +146,14 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
     await screenshot(`managed-mail-credential-${width}.png`);
     status = 202;
   }
+  assert.equal((await f.request('/api/app/mail/check', {})).status, 200);
+  await bookingRelayJourney(f, event, calls);
+  t.diagnostic('real booking: relay 202 with a null receipt is durably accepted; both cancellation notices succeed; unsupported calendar attachment is a definite failure, never unknown');
+  const bookingUrl = origin + '/book/robin/project-conversation';
+  assert.equal((await f.fetch(`/api/app/event-types/${event.id}/copy-report`, { method: 'POST', headers: { 'content-type': 'application/json', 'X-Dial-Copy-Report': '1' }, body: JSON.stringify({ url: bookingUrl }) })).status, 200);
+  assert.equal((await f.request('/api/app/host-setup/complete', {})).status, 200);
+  await senderHealthJourney(page, origin, screenshot, width => { browserIp = width === 1440 ? '198.18.0.5' : '198.18.0.6'; });
+  await bookingStatusScreens(page, origin, screenshot, width => { browserIp = width === 1440 ? '198.18.0.7' : '198.18.0.8'; });
   assert.deepEqual(errors, []);
   t.diagnostic('1440/390: login_hint survives SSR and hydration, bare/invalid hints stay empty, explicit submission succeeds, owner sees credential recovery');
 });

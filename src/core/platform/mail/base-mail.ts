@@ -1,6 +1,6 @@
 // Base mail has a JavaScript public API; this integration supplies the edition types.
 // @ts-expect-error Base's portable ESM distribution has no TypeScript declaration.
-import { createMailSender } from "../../../../modules/mail/index.mjs";
+import { createMailSender, MailValidationError } from "../../../../modules/mail/index.mjs";
 import { type MailSender as AuthMailSender } from "../../../../modules/operator-auth/index.mjs";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 import { ProviderFailure } from "../calendar/types";
@@ -80,7 +80,16 @@ export class BaseMailSender implements MailSender {
     }
     let result: BaseResult;
     try { result = await sender.send(wire); }
-    catch { throw new ProviderFailure("mail_outcome_unknown", false); }
+    catch (error) {
+      // Base validation rejects before invoking the provider. It is a definite
+      // failure, including relay features the assigned transport cannot carry.
+      if (error instanceof MailValidationError) {
+        await this.db.prepare("UPDATE base_mail_dispatch SET state='rejected',updated_at=? WHERE delivery_id=?")
+          .bind(new Date().toISOString(), wire.deliveryId).run();
+        throw new ProviderFailure("permanent_delivery_failure", false);
+      }
+      throw new ProviderFailure("mail_outcome_unknown", false);
+    }
     await this.db.prepare("UPDATE base_mail_dispatch SET state=?,provider_message_id=?,updated_at=? WHERE delivery_id=?")
       .bind(result.status, result.providerMessageId, new Date().toISOString(), wire.deliveryId).run();
     return checkedResult(result, false);
