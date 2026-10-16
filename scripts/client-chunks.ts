@@ -7,7 +7,7 @@ export function initialClientChunk() {
     // Start needs its executable entry facade for the document manifest.
     if (graph.getModuleInfo(id)?.isEntry) return null;
     // Leave style/asset ownership with Vite's existing plugins.
-    if (/\.(css|scss|sass|less|styl)(\?|$)/.test(id) && !id.includes("?url")) return null;
+    if (/\.(css|scss|sass|less|styl)(\?|$)/.test(id) && !id.includes("?url") && !id.includes("?transform-only")) return null;
     if (!initial.has(id)) {
       const seen = new Set<string>();
       const reachesInitial = (moduleId: string): boolean => {

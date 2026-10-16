@@ -18,7 +18,7 @@ import { isThemeFile } from "../platform/theme-files";
 import { isPrivateLocalPath } from "../platform/private-local-path";
 import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse, admissionResponse, isAuthenticatedCallbackPath, requiresPublicAdmission } from "../platform/public-admission";
 
-import start from "@tanstack/react-start/server-entry";
+import start from "./start.server";
 import { seedDemo } from "../../demo";
 
 export { BookingCoordinator } from "./booking-coordinator";

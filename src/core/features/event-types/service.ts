@@ -126,8 +126,9 @@ export class EventTypesService {
   }
 
   /** Fresh checks shared only within this read; mutations still run their own live checks. */
-  async readinessForEvent(event: EventTypeRecord) {
-    const [profile, providers] = await Promise.all([this.hostTimezone.getProfile(), this.providerReadiness()]);
+  async getReadiness(id: string) {
+    const [event, profile, providers] = await Promise.all([this.getEventType(id), this.hostTimezone.getProfile(), this.providerReadiness()]);
+    if (!event) return undefined;
     const requests = this.requestOpeningReadiness(event, requestRequirements(event, profile, providers?.mail.kind === "healthy"));
     return { ...publicationRequirements(event, profile, providers), requests };
   }
