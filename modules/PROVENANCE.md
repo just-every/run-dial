@@ -81,3 +81,8 @@ wiring/types. Local sign-in rebases Base's loopback import to its adopted path;
 the unused default-seed persona copy is removed. The erasure queue omits one
 unused upstream helper so Dial's lint remains active. These adaptations are
 excluded from byte-exact copy claims.
+
+Dial's AuthStore reads an unpinned session and its current operator authority
+in one SELECT. Pinned provider sessions retain a second fresh authority read
+with the captured provider fence. This request-latency adaptation remains outside
+the byte-exact Base copy claims and does not change the upstream revision.

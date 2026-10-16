@@ -1,4 +1,4 @@
-import { withPrivateRequest, privateRequestServices, nativeRequestSession, privateReadTasks } from "./private-request.server";
+import { withPrivateRequest, privateRequestServices, nativeRequestSession, privateReadTasks, deferPrivateRead } from "./private-request.server";
 // Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
 import { withDemo } from "../../../modules/demo/index.mjs";
 import { withApplication, ArchiveMaintenance } from "../features/portability/admission";
@@ -79,7 +79,9 @@ return {
      return admission;
     }).fetch(request, env, tracked);
    }
-   if (requiresPublicAdmission(url.pathname) || !await nativeRequestSession(request, servicesFor(env).operators.auth)) {
+   const publicAdmission = requiresPublicAdmission(url.pathname);
+   const session = publicAdmission ? null : await nativeRequestSession(request, servicesFor(env).operators.auth);
+   if (publicAdmission || !session) {
     try {
      const refusal = admissionResponse(await new PublicAdmissionGate(env.DB, runtime).admit(request));
      if (refusal) return refusal;
@@ -87,6 +89,13 @@ return {
    }
    if (url.pathname.startsWith("/assets/")) return fetchBuildAsset(request, env.ASSETS);
    await admit();
+   if (session && /^\/app(\/|$)/.test(url.pathname)) {
+    const services = servicesFor(env);
+    // These independent fresh reads need no setup result. Keep authentication
+    // and archive admission ahead of them, then overlap the setup check.
+    deferPrivateRead(services.hostProfile.getProfile());
+    if (/^\/app\/event-types\/[0-9A-Z]{26}$/.test(url.pathname)) deferPrivateRead(services.eventTypes.providerReadiness());
+   }
    return worker.fetch(request, env, tracked);
   }, privateReadTasks);
   return /^\/(app|setup|_serverFn)(\/|$)/.test(new URL(request.url).pathname)

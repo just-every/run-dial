@@ -39,7 +39,9 @@ export function privateRequestServices(bindings: AppBindings) {
 export function deferPrivateRead<T>(task: Promise<T>) {
   const scope = current.getStore();
   if (!scope) throw new Error("Private streamed reads require their HTTP request scope.");
-  scope.reads.push(task);
+  // Observe a speculative failure immediately; its actual consumer still gets
+  // the original rejection. Redirects can finish before that consumer runs.
+  scope.reads.push(task.then(() => undefined, () => undefined));
   return task;
 }
 
