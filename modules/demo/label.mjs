@@ -6,7 +6,7 @@ export async function decorateLabel(response, mode) {
   if (!response.body || !response.headers.get('content-type')?.toLowerCase().startsWith('text/html')) return response;
   const suffix = mode === 'Demo' ? 'Demo' : 'Dev';
   const style = `[data-rer-name]::after{content:" ${suffix}"}`;
-  const script = `(()=>{const suffix=${JSON.stringify(suffix)},update=()=>{const title=document.title.replace(/ (?:Demo|Dev)$/,'')+' '+suffix;if(document.title!==title)document.title=title};update();new MutationObserver(update).observe(document.head,{childList:true,subtree:true,characterData:true})})()`;
+  const script = `(()=>{const suffix=document.querySelector('style[data-rer-label]').dataset.rerLabel,update=()=>{const title=document.title.replace(/ (?:Demo|Dev)$/,'')+' '+suffix;if(document.title!==title)document.title=title};update();new MutationObserver(update).observe(document.head,{childList:true,subtree:true,characterData:true})})()`;
   const html = await response.text();
   if (html.includes('data-rer-label=')) return new Response(html, response);
   const headers = new Headers(response.headers);
