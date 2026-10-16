@@ -27,12 +27,12 @@ export class HostSetupService {
   }
 
   async read() {
-    const [profile, events, reports] = await Promise.all([this.profiles.getProfile(), this.events.listEventTypes(), this.repository.reports()]);
+    const [profile, events, reports, completedAt, moveInStarted] = await Promise.all([this.profiles.getProfile(), this.events.listEventTypes(), this.repository.reports(), this.completion(), this.repository.moveInStarted()]);
     const links = events.flatMap((event) => {
       const url = eligibleBookingUrl(this.publicOrigin, profile, event);
       return url ? [{ eventTypeId: event.id, title: event.title, url, requestOnly: Boolean(event.requestOnly), copiedAt: reports.find((report) => report.eventTypeId === event.id && report.canonicalUrl === url)?.acceptedAt ?? null }] : [];
     });
-    return { completedAt: await this.completion(), publicOrigin: this.publicOrigin, hostTimezone: profile?.timezone || null, profileReady: validHostProfile(profile), availabilityReady: events.some((event) => event.availability.length > 0), eventTypeId: events[0]?.id ?? null, links, moveInStarted: await this.repository.moveInStarted() };
+    return { completedAt, publicOrigin: this.publicOrigin, hostTimezone: profile?.timezone || null, profileReady: validHostProfile(profile), availabilityReady: events.some((event) => event.availability.length > 0), eventTypeId: events[0]?.id ?? null, links, moveInStarted };
   }
 
   async reportCopy(eventId: string, submittedUrl: string) {

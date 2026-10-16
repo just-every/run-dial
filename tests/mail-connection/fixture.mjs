@@ -30,6 +30,7 @@ export async function fixture(t, overrides = {}, outbound) {
     }, dev: { outboundService: { type: 'fetcher', handler: async (request) => {
       calls++;
       if (outbound) return outbound(request);
+      if (request.url === 'https://api.sendgrid.com/v3/whitelabel/domains?limit=100&offset=0') return Response.json([]);
       assert.equal(request.url, 'https://api.sendgrid.com/v3/verified_senders');
       assert.equal(request.method, 'GET');
       return verified ? Response.json({ results: [{ from_email: configuration.MAIL_FROM, verified: true }] }) : new Response(null, { status: 403 });

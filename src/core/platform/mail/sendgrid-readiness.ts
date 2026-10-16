@@ -7,7 +7,13 @@ const isRecord = (value: unknown): value is RecordValue => typeof value === "obj
 
 /** Read-only account evidence: exact Single Sender or exact authenticated domain. */
 export async function isSendGridSenderVerified(from: string, domain: string, read: (url: string) => Promise<unknown>) {
-  const senders = await read("https://api.sendgrid.com/v3/verified_senders");
+  const senderRead = read("https://api.sendgrid.com/v3/verified_senders");
+  // Observe the speculative page immediately; exact sender evidence needs no domain result.
+  const firstDomainPage = read(`https://api.sendgrid.com/v3/whitelabel/domains?limit=${pageSize}&offset=0`).then(
+    value => ({ ok: true as const, value }),
+    (error: unknown) => ({ ok: false as const, error }),
+  );
+  const senders = await senderRead;
   if (!isRecord(senders) || !Array.isArray(senders.results) || !senders.results.every((item) => isRecord(item) && typeof item.from_email === "string" && typeof item.verified === "boolean")) {
     throw new ProviderFailure("invalid_provider_response", false);
   }
@@ -17,7 +23,14 @@ export async function isSendGridSenderVerified(from: string, domain: string, rea
   // https://www.twilio.com/docs/sendgrid/api-reference/domain-authentication/list-all-authenticated-domains
   const senderDomain = domain.toLowerCase();
   for (let offset = 0; offset < maximumDomains; offset += pageSize) {
-    const domains = await read(`https://api.sendgrid.com/v3/whitelabel/domains?limit=${pageSize}&offset=${offset}`);
+    let domains: unknown;
+    if (offset === 0) {
+      const first = await firstDomainPage;
+      if (!first.ok) throw first.error;
+      domains = first.value;
+    } else {
+      domains = await read(`https://api.sendgrid.com/v3/whitelabel/domains?limit=${pageSize}&offset=${offset}`);
+    }
     if (!Array.isArray(domains) || domains.length > pageSize || !domains.every((item) => isRecord(item) && typeof item.domain === "string" && typeof item.valid === "boolean")) {
       throw new ProviderFailure("invalid_provider_response", false);
     }

@@ -8,6 +8,13 @@ const current = new AsyncLocalStorage<PrivateRequest>();
 
 /** A fresh scope for one private HTTP invocation, including Start's SSR/function dispatch. */
 export function withPrivateRequest<T>(request: Request, bindings: AppBindings, services: AppServices, run: () => T) {
+  // These immutable inputs are shared only inside this HTTP read, never across navigations.
+  const profile = services.hostProfile.getProfile.bind(services.hostProfile);
+  let profileRead: ReturnType<typeof profile> | undefined;
+  services.hostProfile.getProfile = () => profileRead ??= profile();
+  const events = services.eventTypes.listEventTypes.bind(services.eventTypes);
+  let eventRead: ReturnType<typeof events> | undefined;
+  services.eventTypes.listEventTypes = () => eventRead ??= events();
   return current.run({ request, bindings, services }, run);
 }
 

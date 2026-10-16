@@ -44,7 +44,7 @@ test('fresh mail health stays unchecked until the public sender check records ac
     assert.equal(checked.state, missing ? 'unhealthy' : 'healthy');
     assert.equal(checked.reason, missing ? 'missing_configuration' : null);
     assert.ok(Number.isFinite(Date.parse(checked.checkedAt)));
-    assert.equal(f.calls, missing ? 0 : 1);
+    assert.equal(f.calls, missing ? 0 : 2);
     await f.close();
   }
 });

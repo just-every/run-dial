@@ -45,7 +45,7 @@ test("NOTIFY-006 native Workers fetch checks authenticated domains and refuses r
         const refused = await worker.dispatchFetch("https://readiness.test/");
         assert.equal(refused.status, 503);
         assert.deepEqual(await refused.json(), { code: "provider_unavailable", retryable: false });
-        assert.deepEqual(calls, (redirectAt === senderUrl ? [senderUrl] : [senderUrl, domainUrl]).map(expectedCall), "no redirect destination, retry or mail send receives the credential");
+        assert.deepEqual(calls, [senderUrl, domainUrl].map(expectedCall), "only the concurrent initial reads receive credentials; no redirect destination, retry or mail send does");
       }
     }
   } finally {
