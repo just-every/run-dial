@@ -160,6 +160,12 @@ export class CalendarConnectionRepository {
       .where(eq(calendarConnections.singletonKey, "default"));
   }
 
+  /** Each healthy check records the destination's current conferencing capability for readiness. */
+  async recordConferenceCapability(calendarId: string, conferenceCapable: boolean) {
+    await this.db.update(calendarConnectionCalendars).set({ conferenceCapable })
+      .where(and(eq(calendarConnectionCalendars.purpose, "destination"), eq(calendarConnectionCalendars.calendarId, calendarId)));
+  }
+
   async markUnhealthy(code: string) {
     await this.db
       .update(calendarConnections)

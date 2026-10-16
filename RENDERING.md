@@ -39,8 +39,9 @@ request. A record older than two minutes is shown with its check time while the
 scheduled pass's connection check runs after the response; a GET's waitUntil
 work keeps archive admission through stream EOF like deferred reads, while
 mutations still return after theirs. Only an install
-whose sender was never checked waits for that check. Publication and request
-opening still check providers live.
+whose sender was never checked waits for that check. Each healthy calendar check
+records the destination's current conferencing capability for that read.
+Publication and request opening still check providers live.
 
 SendGrid can retain an authenticated domain ID in memory, keyed by a hash of the
 credential and sending address. Each use still reads that exact domain from the
