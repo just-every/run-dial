@@ -750,7 +750,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "97b0c003d272fc7c27de5bbd8e4ff6552a22c18fabb95807d130d38a1d3b43c9",
+      "sha256": "ea62b35cba833099a2fb916fbe6aedd3fff7875547f322e2e658796e601c9b75",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -782,7 +782,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b2957dc1a7b5801f1c848cc1a40dcda82dddde9467cff182307af6a4cb8fd266",
+      "sha256": "c2537aa06b00bc656828e342a9bd1531933c3a71b0f1ad778f2ee39a7a73416d",
       "executable": false
     },
     "DEMO.md": {
@@ -3422,7 +3422,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "9306553749d9655871f64762dc4be9b55f0998b422c124fbb7d90ddaabbaf9c8",
+      "sha256": "533c045215d7188cf1092530fc028e4ca8cd6af7f22808bdcea98c22e465e228",
       "executable": false
     },
     "src/base/deployment-health.ts": {
