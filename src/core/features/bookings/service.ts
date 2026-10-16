@@ -435,7 +435,9 @@ export class BookingsService {
       const answer = question.key ? invitee.answers[question.key] : undefined;
       return answer === undefined ? [] : [{ label: question.label, value: Array.isArray(answer) ? answer.join(", ") : answer }];
     });
-    const attachment = { filename: "booking.ics", contentBase64: base64(initialBookingIcs({ bookingId, eventTitle: event.title, startAt, endAt, location, createdAt: nowIso() })), contentType: "text/calendar" } as const;
+    // Managed mail carries the private Add to calendar link in both mail parts;
+    // its relay does not accept attachments. Direct providers also carry the file.
+    const calendarFile = this.runtime.MAIL_PROVIDER === "rer" ? {} : { attachments: [{ filename: "booking.ics", contentBase64: base64(initialBookingIcs({ bookingId, eventTitle: event.title, startAt, endAt, location, createdAt: nowIso() })), contentType: "text/calendar" }] };
     const operators = await this.repository.listOperatorRecipients();
     const details = {
       hostName: profile.name, eventTitle: event.title, startAt, endAt, durationMinutes: (Date.parse(endAt) - Date.parse(startAt)) / 60_000,
@@ -444,7 +446,7 @@ export class BookingsService {
       inviteeName: invitee.name, inviteeEmail: invitee.email, answers: answerDetails,
     };
     return [
-      { to: invitee.email, recipientRole: "invitee", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), attachments: [attachment] },
+      { to: invitee.email, recipientRole: "invitee", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), ...calendarFile },
       ...operators.map(({ email: to, id, generation }) => ({ to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `New booking: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "operator" }) })),
     ];
   }

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Pin rer 0.2.25 and declare the browser sign-in route and email-hint support in the generated deployment spec, so RER opens the claimed owner’s sign-in page with their email filled in.
+- Managed booking confirmations use their existing private calendar download link instead of an unsupported attachment. Both guest and host confirmations can be accepted by the relay; acceptance does not assert inbox delivery. Direct SendGrid and Resend confirmations retain the attachment.
+
 ## 0.3.0 — 2026-10-16
 
 - A Managed mail message the relay transport cannot carry fails at once as a permanent delivery failure, instead of an unknown outcome. The workspace checks database, storage and queue health once per signed-in session and keeps the result while you move between pages.
