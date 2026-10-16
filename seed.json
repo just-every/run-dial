@@ -106,7 +106,8 @@
         "BOOK-009",
         "BOOK-010",
         "BOOK-011",
-        "BOOK-012"
+        "BOOK-012",
+        "BOOK-013"
       ]
     },
     {
@@ -142,7 +143,9 @@
         "NOTIFY-004",
         "NOTIFY-005",
         "NOTIFY-006",
-        "NOTIFY-007"
+        "NOTIFY-007",
+        "NOTIFY-008",
+        "NOTIFY-009"
       ]
     },
     {
@@ -188,6 +191,7 @@
         "EVENT-008",
         "EVENT-009",
         "EVENT-010",
+        "EVENT-011",
         "LINK-001",
         "LINK-002",
         "LINK-003",
@@ -221,6 +225,8 @@
       "clauses": [
         "EMBED-001",
         "EMBED-002",
+        "EMBED-003",
+        "EMBED-004",
         "MOBILE-001",
         "MOBILE-002"
       ]
@@ -262,7 +268,8 @@
         "FLOW-002",
         "FLOW-003",
         "FLOW-004",
-        "FLOW-005"
+        "FLOW-005",
+        "FLOW-006"
       ]
     },
     {
@@ -284,7 +291,9 @@
         "INTEG-003",
         "INTEG-004",
         "INTEG-005",
-        "INTEG-006"
+        "INTEG-006",
+        "INTEG-007",
+        "INTEG-008"
       ]
     },
     {
