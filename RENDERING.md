@@ -11,10 +11,10 @@ to Start. Unknown API members stay Hono 404s; unknown documents stay Start 404s.
 Built assets belong to Cloudflare assets. Worker Queue and Cron exports remain on
 the custom Worker entry. Unsupported hosts and methods reach no document or data.
 
-The production build embeds an exact inventory of fingerprinted client JavaScript
+The production build embeds an exact inventory of fingerprinted client JavaScript, CSS and fonts
 in the Worker, using bundler output metadata rather than matching
 request filename patterns. After public admission, successful GET/HEAD responses
-for those assets may be cached for a year as immutable. CSS, public-directory files,
+for those assets may be cached for a year as immutable. Public-directory files,
 unfingerprinted outputs, failed responses and private/no-store responses retain
 their existing cache policy. Development has no production asset inventory.
 Documents and generated server functions retain their existing handling; every
@@ -24,6 +24,13 @@ Public document loaders select only declared public projection endpoints and
 carry no initial visitor-derived timezone. Private generated loaders independently
 validate native D1 sessions before reading host or operator data. No server function
 performs a product mutation; existing typed Hono mutations retain their authority.
+
+Private app documents stream their head while fresh native projection reads
+finish. The fixed read inventory uses the same Hono GET handlers and errors;
+request-local sharing never survives a navigation or mutation. App documents
+use Start's streaming renderer without its crawler-only all-ready wait, and
+archive admission lasts through deferred reads and the document stream. Setup
+and public documents retain Start's default renderer.
 
 The existing `/_serverFn/` transport prefix is declared in `seed.json` alongside
 the public document/API/asset paths. The Worker applies shared atomic public
