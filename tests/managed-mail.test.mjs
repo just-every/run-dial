@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import { emittedFixture, fixture, origin } from './mail-connection/fixture.mjs';
 import { linkMessage } from '../modules/operator-auth/identity/email-link/message.mjs';
+import { senderHealthJourney } from './mail-connection/health-journey.mjs';
+import { bookingRelayJourney, bookingStatusScreens } from './mail-connection/booking-journey.mjs';
 
 test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner', async t => {
   const calls = [], relay = 'https://platform.example.test/api/managed-mail/send';
@@ -109,16 +111,21 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
   const errors = [];
   page.on('pageerror', error => { errors.push(error.message); t.diagnostic(error.message); });
   const screenshot = async name => {
-    if (!process.env.DIAL_LOGIN_HINT_SHOTS) return;
-    await mkdir(process.env.DIAL_LOGIN_HINT_SHOTS, { recursive: true });
-    await page.screenshot({ path: join(process.env.DIAL_LOGIN_HINT_SHOTS, name), fullPage: true });
+    const directory = process.env.DIAL_MAIL_SHOTS ?? process.env.DIAL_LOGIN_HINT_SHOTS;
+    if (!directory) return;
+    await mkdir(directory, { recursive: true });
+    await page.screenshot({ path: join(directory, name), fullPage: true });
   };
+  const spec = JSON.parse(await readFile(new URL('../management/integration/deployment-spec.json', import.meta.url)));
+  const signInSurface = spec.surfaces.app.signIn;
+  const ownerEntry = new URL(signInSurface.path, origin);
+  if (signInSurface.loginHint) ownerEntry.searchParams.set('login_hint', 'owner@example.test');
   for (const width of [1440, 390]) {
     // Desktop and phone are separate connecting clients with their real budgets.
     browserIp = width === 1440 ? '198.18.0.3' : '198.18.0.4';
     await page.setViewportSize({ width, height: 900 });
     const before = calls.length;
-    assert.equal((await page.goto(origin + '/signin?login_hint=owner%40example.test')).status(), 200);
+    assert.equal((await page.goto(ownerEntry.href)).status(), 200);
     await page.locator('[data-signin-ready]').waitFor();
     assert.equal(await page.getByRole('textbox', { name: 'Email address' }).inputValue(), 'owner@example.test');
     assert.equal(calls.length, before, 'a hint never submits the form');
@@ -128,7 +135,7 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
     assert.equal(await page.getByRole('textbox', { name: 'Email address' }).inputValue(), '');
     await page.goto(origin + '/signin?login_hint=invalid%3Cscript%3E');
     assert.equal(await page.getByRole('textbox', { name: 'Email address' }).inputValue(), '');
-    assert.equal((await page.goto(origin + '/signin?login_hint=owner%40example.test')).status(), 200);
+    assert.equal((await page.goto(ownerEntry.href)).status(), 200);
     await page.locator('[data-signin-ready]').waitFor();
     await page.getByRole('button', { name: 'Send magic link' }).click();
     await page.getByRole('status').waitFor();
@@ -143,6 +150,14 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
     await screenshot(`managed-mail-credential-${width}.png`);
     status = 202;
   }
+  assert.equal((await f.request('/api/app/mail/check', {})).status, 200);
+  await bookingRelayJourney(f, event, calls);
+  t.diagnostic('real booking: relay 202 with a null receipt is durably accepted; both cancellation notices succeed; invitee calendar file is available through the mail’s private download link');
+  const bookingUrl = origin + '/book/robin/project-conversation';
+  assert.equal((await f.fetch(`/api/app/event-types/${event.id}/copy-report`, { method: 'POST', headers: { 'content-type': 'application/json', 'X-Dial-Copy-Report': '1' }, body: JSON.stringify({ url: bookingUrl }) })).status, 200);
+  assert.equal((await f.request('/api/app/host-setup/complete', {})).status, 200);
+  await senderHealthJourney(page, origin, screenshot, width => { browserIp = width === 1440 ? '198.18.0.5' : '198.18.0.6'; });
+  await bookingStatusScreens(page, origin, screenshot, width => { browserIp = width === 1440 ? '198.18.0.7' : '198.18.0.8'; });
   assert.deepEqual(errors, []);
   t.diagnostic('1440/390: login_hint survives SSR and hydration, bare/invalid hints stay empty, explicit submission succeeds, owner sees credential recovery');
 });

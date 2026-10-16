@@ -10,6 +10,7 @@ import { readProfile } from "../../features/host-profile/read-profile";
 import { Button, buttonClassName } from "./primitives";
 import { Icon, type IconName } from "../../shared/drawing/icons";
 import { BrandMark } from "../../features/public-booking";
+import { PlatformHealthProvider } from "../../features/host-setup/ui/platform-health";
 
 const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
   ["Overview", "/app", "home"],
@@ -24,6 +25,10 @@ const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
 type ProfileSummary = { name: string; title: string; handle: string };
 
 export function AppShell() {
+  return <PlatformHealthProvider><AppShellContent /></PlatformHealthProvider>;
+}
+
+function AppShellContent() {
   const hydrated = useHydrated();
   const setup = useHostSetup();
   const menuButton = useRef<HTMLButtonElement>(null);
