@@ -4,7 +4,7 @@ const moduleId = "virtual:dial-build-assets";
 const resolvedId = `\0${moduleId}`;
 
 // Start builds the client before the Worker. Carry only that build's emitted,
-// fingerprinted JavaScript into the Worker; CSS and public-directory files are absent.
+// fingerprinted scripts, styles and fonts into the Worker; public-directory files are absent.
 export function buildAssets(): Plugin {
   let building = false;
   let assetPaths: string[] | undefined;
@@ -24,8 +24,11 @@ export function buildAssets(): Plugin {
         if (this.environment.name !== "client") return;
         const paths = new Set<string>();
         for (const output of Object.values(bundle)) {
-          if (output.type !== "chunk") continue;
-          if (output.fileName.startsWith("assets/") && output.fileName.endsWith(".js") && output.preliminaryFileName !== output.fileName) paths.add(`/${output.fileName}`);
+          if (output.type === "chunk") {
+            if (output.fileName.startsWith("assets/") && output.fileName.endsWith(".js") && output.preliminaryFileName !== output.fileName) paths.add(`/${output.fileName}`);
+          } else if (/^assets\/.+-[A-Za-z0-9_-]{8}\.(?:css|woff2?)$/.test(output.fileName)) {
+            paths.add(`/${output.fileName}`);
+          }
         }
         assetPaths = [...paths].sort();
       },

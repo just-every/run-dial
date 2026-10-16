@@ -7,7 +7,7 @@ export async function fetchBuildAsset(request: Request, assets: Fetcher) {
   const path = new URL(request.url).pathname;
   if (!buildAssets.has(path) || !["GET", "HEAD"].includes(request.method) || response.status !== 200) return response;
   const contentType = response.headers.get("Content-Type")?.split(";", 1)[0].trim().toLowerCase();
-  const expectedType = contentType === "text/javascript" || contentType === "application/javascript";
+  const expectedType = contentType !== undefined && ["text/javascript", "application/javascript", "text/css", "font/woff", "font/woff2"].includes(contentType);
   if (!expectedType || response.headers.has("Set-Cookie") || /(?:^|,)\s*(?:private|no-store)\b/i.test(response.headers.get("Cache-Control") ?? "")) return response;
   const headers = new Headers(response.headers);
   headers.set("Cache-Control", "public, max-age=31536000, immutable");

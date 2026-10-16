@@ -1,4 +1,5 @@
 import { installWorkspaceReads, WorkspaceReadsContext, type WorkspaceReads } from "../workspace-reads";
+import { PlatformHealthProvider } from "../../features/host-setup/ui/platform-health";
 import { useHydrated } from "../use-hydrated";
 import { OwnerEditorShell } from "../../features/editor/owner-editor";
 import { useHostSetup } from "../../features/host-setup/ui/use-host-setup";
@@ -32,7 +33,7 @@ export function AppShell() {
 function WorkspaceShell({ reads: pending }: { reads: WorkspaceReads | Promise<WorkspaceReads> }) {
   const reads = pending instanceof Promise ? use(pending) : pending;
   useInsertionEffect(() => { installWorkspaceReads(reads); }, [reads]);
-  return <WorkspaceReadsContext.Provider value={reads}><AppShellContent /></WorkspaceReadsContext.Provider>;
+  return <WorkspaceReadsContext.Provider value={reads}><PlatformHealthProvider><AppShellContent /></PlatformHealthProvider></WorkspaceReadsContext.Provider>;
 }
 
 function AppShellContent() {
