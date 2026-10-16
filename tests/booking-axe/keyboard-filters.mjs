@@ -34,5 +34,6 @@ export async function bookingFilterKeyboardJourney(page, origin, width, keys, ch
   await page.waitForFunction(() => !new URL(globalThis.location.href).searchParams.get("query"));
   await keys.type(search, booking.inviteeEmail, "Restore focused booking search");
   await page.getByRole("heading", { name: booking.inviteeName, exact: true }).waitFor();
+  await page.waitForLoadState("networkidle");
   checks.push({ width, flow: "Booking search, lifecycle arrow-key selection, time/event native selects and clear filters with API readback", passed: true });
 }

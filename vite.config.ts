@@ -1,3 +1,4 @@
+import { initialClientChunk } from "./scripts/client-chunks";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
@@ -81,6 +82,7 @@ export default defineConfig(async ({ command }) => {
   const cacheDir = await runtimeCacheDir(command);
   return {
     ...(cacheDir ? { cacheDir } : {}),
+    environments: { client: { build: { rolldownOptions: { output: { codeSplitting: { groups: [{ name: initialClientChunk(), includeDependenciesRecursively: false }] } } } } } },
     // The repository URL from package.json, for the public site's Source links (the Worker serves no file from the project root).
     define: { __DIAL_SOURCE_URL__: JSON.stringify(readRepository(process.cwd()).url) },
     // Workerd requests SSR imports through Vite too; allow the imported shared modules

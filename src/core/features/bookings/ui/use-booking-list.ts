@@ -14,6 +14,7 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
   const [totalCount, setTotalCount] = useState(Number(initialTotal ?? 0));
   const [hostTimezone, setHostTimezone] = useState<string | undefined>(initialProfile?.timezone);
   const [loading, setLoading] = useState(initialBookings === undefined);
+  const [loadedFor, setLoadedFor] = useState(initialBookings === undefined ? undefined : initialPath);
   const [listError, setListError] = useState("");
   const latestRequest = useRef(0);
   const mounted = useRef(false);
@@ -52,9 +53,9 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
         setListError("Bookings could not be loaded.");
       }
     } finally {
-      if (requestId === latestRequest.current) setLoading(false);
+      if (requestId === latestRequest.current) { setLoadedFor(initialPath); setLoading(false); }
     }
-  }, [filters, page, moveToPage]);
+  }, [filters, page, moveToPage, initialPath]);
 
   useEffect(() => {
     const showLoading = mounted.current || !hasInitialBookings;
@@ -63,5 +64,5 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
     const timer = window.setTimeout(() => { void load(showLoading); }, filters.query?.trim() ? 180 : 0);
     return () => { window.clearTimeout(timer); latestRequest.current += 1; };
   }, [filters, load, hasInitialBookings]);
-  return { bookings, totalCount, hostTimezone, loading, listError, load };
+  return { bookings, totalCount, hostTimezone, loading: loading || loadedFor !== initialPath, listError, load };
 }
