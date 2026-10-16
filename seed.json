@@ -45,7 +45,9 @@
         "OPER-002",
         "OPER-003",
         "OPER-004",
-        "OPER-005"
+        "OPER-005",
+        "OPER-006",
+        "OPER-007"
       ]
     },
     {
@@ -106,7 +108,10 @@
         "BOOK-009",
         "BOOK-010",
         "BOOK-011",
-        "BOOK-012"
+        "BOOK-012",
+        "BOOK-013",
+        "BOOK-014",
+        "BOOK-015"
       ]
     },
     {
@@ -142,7 +147,10 @@
         "NOTIFY-004",
         "NOTIFY-005",
         "NOTIFY-006",
-        "NOTIFY-007"
+        "NOTIFY-007",
+        "NOTIFY-008",
+        "NOTIFY-009",
+        "NOTIFY-010"
       ]
     },
     {
@@ -163,6 +171,167 @@
       "clauses": [
         "CUSTOM-001",
         "CUSTOM-002"
+      ]
+    },
+    {
+      "id": "people-teams-and-admin",
+      "clauses": [
+        "TEAM-001",
+        "TEAM-002",
+        "ADMIN-001",
+        "ADMIN-002"
+      ]
+    },
+    {
+      "id": "public-capabilities-and-api-credentials",
+      "clauses": [
+        "AUTH-007",
+        "AUTH-008"
+      ]
+    },
+    {
+      "id": "event-kinds-and-links",
+      "clauses": [
+        "EVENT-007",
+        "EVENT-008",
+        "EVENT-009",
+        "EVENT-010",
+        "EVENT-011",
+        "LINK-001",
+        "LINK-002",
+        "LINK-003",
+        "POLL-001",
+        "BRAND-001",
+        "LOCALE-001"
+      ]
+    },
+    {
+      "id": "team-scheduling",
+      "clauses": [
+        "TEAM-003",
+        "TEAM-004",
+        "TEAM-005",
+        "TEAM-006",
+        "TEAM-007"
+      ]
+    },
+    {
+      "id": "routing-forms",
+      "clauses": [
+        "ROUTE-001",
+        "ROUTE-002",
+        "ROUTE-003",
+        "ROUTE-004",
+        "ROUTE-005"
+      ]
+    },
+    {
+      "id": "embeds-and-mobile",
+      "clauses": [
+        "EMBED-001",
+        "EMBED-002",
+        "EMBED-003",
+        "EMBED-004",
+        "MOBILE-001",
+        "MOBILE-002"
+      ]
+    },
+    {
+      "id": "availability-limits-and-schedules",
+      "clauses": [
+        "AVAIL-010",
+        "AVAIL-011",
+        "AVAIL-012"
+      ]
+    },
+    {
+      "id": "calendars-and-conferencing",
+      "clauses": [
+        "CAL-010",
+        "CAL-011",
+        "CAL-012",
+        "MEET-001",
+        "MEET-002",
+        "MEET-003",
+        "MEET-004"
+      ]
+    },
+    {
+      "id": "payments",
+      "clauses": [
+        "PAY-001",
+        "PAY-002",
+        "PAY-003",
+        "PAY-004",
+        "PAY-005",
+        "PAY-006"
+      ]
+    },
+    {
+      "id": "workflows",
+      "clauses": [
+        "FLOW-001",
+        "FLOW-002",
+        "FLOW-003",
+        "FLOW-004",
+        "FLOW-005",
+        "FLOW-006"
+      ]
+    },
+    {
+      "id": "clients-and-reporting",
+      "clauses": [
+        "CLIENT-001",
+        "REPORT-001",
+        "REPORT-002",
+        "REPORT-003"
+      ]
+    },
+    {
+      "id": "integrations-and-api",
+      "clauses": [
+        "API-001",
+        "API-002",
+        "INTEG-001",
+        "INTEG-002",
+        "INTEG-003",
+        "INTEG-004",
+        "INTEG-005",
+        "INTEG-006",
+        "INTEG-007",
+        "INTEG-008"
+      ]
+    },
+    {
+      "id": "full-scope-portability",
+      "clauses": [
+        "DATA-004"
+      ]
+    },
+    {
+      "id": "migration",
+      "clauses": [
+        "MIGRATE-001",
+        "MIGRATE-002",
+        "MIGRATE-003",
+        "MIGRATE-004",
+        "MIGRATE-005"
+      ]
+    },
+    {
+      "id": "agents",
+      "clauses": [
+        "AGENT-001",
+        "AGENT-002",
+        "AGENT-003",
+        "AGENT-004",
+        "AGENT-005",
+        "AGENT-006",
+        "AGENT-007",
+        "AGENT-008",
+        "AGENT-009",
+        "AGENT-010",
+        "AGENT-011"
       ]
     }
   ],
