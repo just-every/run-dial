@@ -109,7 +109,8 @@
         "BOOK-011",
         "BOOK-012",
         "BOOK-013",
-        "BOOK-014"
+        "BOOK-014",
+        "BOOK-015"
       ]
     },
     {
@@ -147,7 +148,8 @@
         "NOTIFY-006",
         "NOTIFY-007",
         "NOTIFY-008",
-        "NOTIFY-009"
+        "NOTIFY-009",
+        "NOTIFY-010"
       ]
     },
     {
@@ -237,7 +239,8 @@
       "id": "availability-limits-and-schedules",
       "clauses": [
         "AVAIL-010",
-        "AVAIL-011"
+        "AVAIL-011",
+        "AVAIL-012"
       ]
     },
     {
