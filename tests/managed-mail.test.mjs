@@ -9,6 +9,13 @@ import { senderHealthJourney } from './mail-connection/health-journey.mjs';
 import { bookingRelayJourney, bookingStatusScreens } from './mail-connection/booking-journey.mjs';
 
 test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner', async t => {
+  let browser, context;
+  // After hooks run in registration order. Drain browser requests while their
+  // Worker is still alive, then close the browser before the fixture disposes it.
+  t.after(async () => {
+    try { await context?.unrouteAll({ behavior: 'wait' }); }
+    finally { await browser?.close(); }
+  });
   const calls = [], relay = 'https://platform.example.test/api/managed-mail/send';
   let status = 202;
   const f = await emittedFixture(t, { MAIL_PROVIDER: 'rer', MAIL_API_KEY: 'synthetic-managed-credential', MAIL_RELAY_URL: relay }, async request => {
@@ -95,9 +102,8 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
   assert.equal(missing.calls, 0);
   await missing.close();
 
-  const browser = await chromium.launch();
-  t.after(() => browser.close());
-  const context = await browser.newContext();
+  browser = await chromium.launch();
+  context = await browser.newContext();
   let browserIp;
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
