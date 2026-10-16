@@ -1,7 +1,8 @@
 import { enterApplication, ArchiveMaintenance, maintenanceResponse } from "./admission";
 
-/** Admit only after request checks, retaining the receipt through waitUntil work. */
-export function applicationRequest(db: D1Database, context: ExecutionContext, work: (admit: () => Promise<void>, context: ExecutionContext) => Promise<Response>, deferredReads: () => Promise<unknown>[] = () => []) {
+/** Admit only after request checks, retaining the receipt through waitUntil work.
+ * A read's waitUntil work (a due health refresh) follows its response; mutations return after theirs. */
+export function applicationRequest(db: D1Database, context: ExecutionContext, work: (admit: () => Promise<void>, context: ExecutionContext) => Promise<Response>, deferredReads: () => Promise<unknown>[] = () => [], read = false) {
  const operation = (async () => {
   let leave: (() => Promise<void>) | undefined;
   const pending: Promise<unknown>[] = [];
@@ -11,7 +12,7 @@ export function applicationRequest(db: D1Database, context: ExecutionContext, wo
   } as ExecutionContext;
   try {
    const response = await work(async () => { leave ??= await enterApplication(db); }, tracked);
-   if (leave && deferredReads().length && response.body) {
+   if (leave && (deferredReads().length || read && pending.length) && response.body) {
     // Keep the export admission through deferred provider writes and stream EOF,
     // without holding the document's first byte behind the remaining work.
     const release = leave;

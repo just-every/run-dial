@@ -37,6 +37,9 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     .route("/", calendarConnectionRoutes).route("/", operatorManagementRoutes).route("/", embedRoutes)
     .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", extensionRoutes);
   app.onError(appError);
+  // Work a handler leaves for after its response (a due provider health refresh) follows this request's deferred reads.
+  const execution = { waitUntil: (task: Promise<unknown>) => { deferPrivateRead(task); }, passThroughOnException() {}, props: {} } as ExecutionContext;
+  const fetchRead = (endpoint: string) => app.fetch(new Request(new URL(endpoint, runtime.APP_URL), { headers: request.headers }), bound, execution);
   const reads: WorkspaceReads = {};
   const jobs = new Map<string, Promise<void>>();
   const read = (endpoint: string) => {
@@ -44,7 +47,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     let job = jobs.get(key);
     if (!job) {
       job = (async () => {
-        const response = await app.fetch(new Request(new URL(endpoint, runtime.APP_URL), { headers: request.headers }), bound);
+        const response = await fetchRead(endpoint);
         reads[key] = { body: await response.text(), status: response.status, headers: Object.fromEntries(response.headers) };
       })();
       jobs.set(key, job);
@@ -70,9 +73,9 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
   if (eventId) {
     routes.push(`/api/app/event-types/${eventId}`, `/api/app/custom-fields/eventType/${eventId}`);
     const endpoint = `/api/app/event-types/${eventId}/readiness`;
-    // Start streams this fresh result while the document's styles and scripts load.
-    // The document stream remains open until the native provider check finishes.
-    reads[endpoint] = deferPrivateRead(Promise.resolve(app.fetch(new Request(new URL(endpoint, runtime.APP_URL), { headers: request.headers }), bound)).then(async response => ({ body: await response.text(), status: response.status, headers: Object.fromEntries(response.headers) } satisfies WorkspaceRead)));
+    // Start streams this result beside the event form, which renders without it.
+    // Readiness reads recorded provider health; it never holds the form for a provider.
+    reads[endpoint] = deferPrivateRead(Promise.resolve(fetchRead(endpoint)).then(async response => ({ body: await response.text(), status: response.status, headers: Object.fromEntries(response.headers) } satisfies WorkspaceRead)));
   }
   if (name === "/app/settings") routes.push(...["session", "calendar/connection", "calendar/setup", "mail/connection", "mail/preferences", "operators", "embed-settings", "blocked-addresses", "custom-fields", "move-in/jobs", "move-in/switch-over"].map(p => "/api/app/" + p));
   const work = routes.map(read);

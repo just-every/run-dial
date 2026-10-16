@@ -95,13 +95,10 @@ return {
     // and archive admission ahead of them, then overlap the setup check.
     deferPrivateRead(services.hostProfile.getProfile());
     const eventId = /^\/app\/event-types\/([0-9A-Z]{26})$/.exec(url.pathname)?.[1];
-    if (eventId) {
-     deferPrivateRead(services.eventTypes.providerReadiness());
-     deferPrivateRead(services.eventTypes.getEventType(eventId));
-    }
+    if (eventId) deferPrivateRead(services.eventTypes.getEventType(eventId));
    }
    return worker.fetch(request, env, tracked);
-  }, privateReadTasks);
+  }, privateReadTasks, request.method === "GET");
   return /^\/(app|setup|_serverFn)(\/|$)/.test(new URL(request.url).pathname)
    ? withPrivateRequest(request, env, newServicesFor(env), run)
    : run();

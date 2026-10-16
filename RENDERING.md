@@ -32,6 +32,16 @@ use Start's streaming renderer without its crawler-only all-ready wait, and
 archive admission lasts through deferred reads and the document stream. Setup
 and public documents retain Start's default renderer.
 
+The event editor renders its form from the event's own read; readiness streams
+beside it into its own section. Readiness reads the provider health that the
+scheduled pass and explicit checks record, so a page view makes no provider
+request. A record older than two minutes is shown with its check time while the
+scheduled pass's connection check runs after the response; a GET's waitUntil
+work keeps archive admission through stream EOF like deferred reads, while
+mutations still return after theirs. Only an install
+whose sender was never checked waits for that check. Publication and request
+opening still check providers live.
+
 SendGrid can retain an authenticated domain ID in memory, keyed by a hash of the
 credential and sending address. Each use still reads that exact domain from the
 provider and verifies its current domain and validity. Failed or invalid lookups
