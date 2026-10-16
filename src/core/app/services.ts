@@ -37,7 +37,8 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const mailConfig = mailConfiguration(runtime);
   const mail = adapters.mail ?? ((suppressesMail(runtime) || mailConfig.provider === "sendgrid" || mailConfig.provider === "rer" || mailConfig.provider === "development") ? new BaseMailSender(binding, runtime)
     : new ResendMailSender(mailConfig.apiKey && mailConfig.from && (runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET) ? { apiKey: mailConfig.apiKey, fromEmail: mailConfig.from } : undefined));
-  const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile, { calendar, mail });
+  const deliveryRepository = new DeliveryRepository(binding, mailConfig.provider, Boolean(runtime.MAIL_PROVIDER ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET));
+  const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile, { calendar, mail, recorded: { calendar: () => calendar.connectionHealth(), mail: () => deliveryRepository.mailHealth() } });
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar);
   const bookings = new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
@@ -68,7 +69,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     calendar,
     mail,
     sendgridWebhook: new SendGridWebhookReceiver(binding, runtime.MAIL_WEBHOOK_KEY),
-    delivery: new ProviderDeliveryService(new DeliveryRepository(binding, mailConfig.provider, Boolean(runtime.MAIL_PROVIDER ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET)), calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET),
+    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET),
     availability,
     bookings,
     availabilityRequests: new AvailabilityRequestsService(new AvailabilityRequestsRepository(binding), eventTypes, hostProfile, runtime),

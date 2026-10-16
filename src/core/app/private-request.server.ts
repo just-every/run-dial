@@ -22,9 +22,6 @@ export function withPrivateRequest<T>(request: Request, bindings: AppBindings, s
     if (!read) { read = event(id); eventReads.set(id, read); }
     return read;
   };
-  const providers = services.eventTypes.providerReadiness.bind(services.eventTypes);
-  let providerRead: ReturnType<typeof providers> | undefined;
-  services.eventTypes.providerReadiness = () => providerRead ??= providers();
   const completion = services.hostSetup.completion.bind(services.hostSetup);
   let completionRead: ReturnType<typeof completion> | undefined;
   services.hostSetup.completion = () => completionRead ??= completion();

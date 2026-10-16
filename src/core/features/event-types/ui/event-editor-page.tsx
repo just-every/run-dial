@@ -3,7 +3,7 @@ import { ExtensionSlot } from "../../../app/extensions";
 import { EventFields } from "./event-fields";
 import { EventSharing } from "../../host-setup";
 import { hostSetupChanged } from "../../host-setup";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
@@ -31,24 +31,26 @@ function EventEditorForm({ eventId, workspace = "/app" }: { eventId?: string; wo
   const initialEvent = useWorkspaceRead<EventTypeRecord>(`/api/app/event-types/${eventId}`);
   const [eventType, setEventType] = useState<EventTypeInput | EventTypeRecord | undefined>(() => eventId ? initialEvent : defaultEventTypeInput());
   const [requestFailures, setRequestFailures] = useState<string[]>();
-  type Readiness = { ready: boolean; missing: string[]; requests?: { ready: boolean; missing: string[] } };
+  type Readiness = { ready: boolean; missing: string[]; requests?: { ready: boolean; missing: string[] }; checkedAt?: string | null; recorded?: "current" | "stale" | "unrecorded" };
   const initialReadiness = useWorkspaceRead<Readiness>(`/api/app/event-types/${eventId}/readiness`);
   const [readiness, setReadiness] = useState<Readiness | undefined>(initialReadiness);
   const [checking, setChecking] = useState(Boolean(eventId && !initialReadiness));
+  const [readinessError, setReadinessError] = useState<string>();
+  const hostTimezone = useRouteContext({ strict: false }).shell?.profile?.timezone ?? undefined;
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const checkReadiness = useCallback(async () => {
     if (!eventId) return;
-    const epoch = ++readinessEpoch.current; setChecking(true);
+    const epoch = ++readinessEpoch.current; setChecking(true); setReadinessError(undefined);
     try {
       const response = await api.api.app["event-types"][":id"].readiness.$get({ param: { id: eventId } });
       if (epoch !== readinessEpoch.current) return;
-      if (!response.ok) { const message = await errorMessage(response); if (epoch === readinessEpoch.current) { setError(message); setReadiness(undefined); } return; }
+      if (!response.ok) { const message = await errorMessage(response); if (epoch === readinessEpoch.current) { setReadinessError(message); setReadiness(undefined); } return; }
       const current = await response.json();
       if (epoch === readinessEpoch.current) setReadiness(current);
-    } catch { if (epoch === readinessEpoch.current) { setReadiness(undefined); setError("Publication readiness could not be checked. Publishing will check it again."); } }
+    } catch { if (epoch === readinessEpoch.current) { setReadiness(undefined); setReadinessError("Publication readiness could not be checked. Publishing will check it again."); } }
     finally { if (epoch === readinessEpoch.current) setChecking(false); }
   }, [eventId]);
   const load = useCallback(async () => {
@@ -91,7 +93,7 @@ function EventEditorForm({ eventId, workspace = "/app" }: { eventId?: string; wo
   async function save(event: React.FormEvent) {
     event.preventDefault(); if (!begin()) return;
     let saved: EventTypeRecord | undefined;
-    try { saved = await persist(); if (saved) { if (effectiveId) await checkReadiness(); hostSetupChanged(); await navigate({ to: effectiveId ? `${workspace}/event-types/$id` : `${workspace}/event-types/$id/availability`, params: { id: saved.id } }); } }
+    try { saved = await persist(); if (saved) { if (effectiveId) void checkReadiness(); hostSetupChanged(); await navigate({ to: effectiveId ? `${workspace}/event-types/$id` : `${workspace}/event-types/$id/availability`, params: { id: saved.id } }); } }
     catch { setError(saved ? "Your event was saved. Return to the event list to open it again." : effectiveId ? "The save result could not be checked. Your details are kept here; retry to apply them." : "Creation could not be checked. Your details are kept; check the event list before creating another."); }
     finally { finish(); }
   }
@@ -120,13 +122,13 @@ function EventEditorForm({ eventId, workspace = "/app" }: { eventId?: string; wo
     try {
       const response = await api.api.app["event-types"][":id"]["alternative-requests"].$patch({ param: { id: effectiveId }, json: { enabled: !eventType!.alternativeRequestsEnabled } });
       if (!response.ok) { setError(await errorMessage(response)); return; }
-      setEventType(await response.json()); hostSetupChanged(); await checkReadiness();
+      setEventType(await response.json()); hostSetupChanged(); void checkReadiness();
     } catch { setError("Request settings could not be saved. Reload the event to check its state."); }
     finally { finish(); }
   }
   async function disable() {
     if (!effectiveId || !begin()) return;
-    try { const response = await api.api.app["event-types"][":id"].disable.$post({ param: { id: effectiveId } }); if (response.ok) { setEventType((current) => current ? { ...current, status: "disabled" } : current); hostSetupChanged(); await checkReadiness(); } else setError(await errorMessage(response)); }
+    try { const response = await api.api.app["event-types"][":id"].disable.$post({ param: { id: effectiveId } }); if (response.ok) { setEventType((current) => current ? { ...current, status: "disabled" } : current); hostSetupChanged(); void checkReadiness(); } else setError(await errorMessage(response)); }
     catch { setError("Disabling could not be checked. Retry to check the current state; your entered details are kept."); }
     finally { finish(); }
   }
@@ -147,7 +149,7 @@ function EventEditorForm({ eventId, workspace = "/app" }: { eventId?: string; wo
           <EventFields event={eventType} update={update} />
           <QuestionsEditor questions={eventType.questions} onChange={(questions) => update("questions", questions)} />
         </div>
-        <aside className="grid content-start gap-5">{effectiveId ? <EventSharing workspace={workspace} eventId={effectiveId} /> : null}<ReadinessPanel workspace={workspace} eventId={effectiveId} missing={readiness?.missing} checking={checking} notice={!effectiveId ? "Save the event before checking publication readiness." : hasChanges ? "Publication checks your saved changes." : undefined} /><Card className="p-5 sm:p-6"><SectionHeading icon="clock" title="Availability" /><p className="mt-3 text-sm leading-6 text-soft">{eventType.availability.length === 0 ? "No recurring availability is configured." : `${eventType.availability.length} recurring window${eventType.availability.length === 1 ? "" : "s"} configured.`}</p>{effectiveId ? <Link className={buttonClassName("quiet", "mt-2")} to={`${workspace}/event-types/$id/availability`} params={{ id: effectiveId }}>Edit recurring availability →</Link> : <p className="mt-4 text-sm text-muted">Save this event type before adding availability.</p>}</Card><Card className="p-5 sm:p-6"><SectionHeading icon="restore" title="Lifecycle" action={<Badge tone={status === "draft" ? "warning" : status === "disabled" ? "danger" : "success"}>{"requestOnly" in eventType && eventType.requestOnly && status === "published" ? "Requests only" : status}</Badge>} /><p className="mt-3 text-sm leading-6 text-soft">Publishing turns on real bookings using your saved availability and existing Dial bookings. Without a connected calendar, Dial does not check external calendar conflicts. A connected calendar must pass its checks. Disabled event types are no longer public.</p>{effectiveId ? <div className="mt-4 grid gap-2.5"><Button type="button" variant="secondary" disabled={saving || hasChanges} onClick={() => void toggleRequests()}>{eventType.alternativeRequestsEnabled ? "Disable alternative requests" : "Enable alternative requests"}</Button>{status !== "published" ? <>{(requestFailures ?? readiness?.requests?.missing)?.length ? <ReadinessPanel workspace={workspace} eventId={effectiveId} missing={requestFailures ?? readiness?.requests?.missing} notice="Complete these steps to Open requests." /> : null}<p className="text-sm leading-6 text-soft">Open requests lets guests propose times before automatic booking is ready. It requires a saved host profile, alternative requests enabled, and a verified mail sender. No automatic bookings are offered.</p><Button type="button" variant="secondary" disabled={!hydrated || saving || checking || hasChanges || readiness?.requests?.ready !== true} onClick={() => void openRequests()}>Open requests</Button></> : null}<Button type="button" variant="secondary" disabled={!hydrated || saving || checking || hasChanges || readiness?.ready !== true} onClick={() => void publish()}>{status === "published" ? "Update published event" : "Publish event type"}</Button>{status !== "disabled" ? <Button type="button" variant="secondary" onClick={() => void disable()}>Disable event type</Button> : null}<Button type="button" variant="danger" onClick={() => void remove()}>Delete event type</Button></div> : null}</Card></aside>
+        <aside className="grid content-start gap-5">{effectiveId ? <EventSharing workspace={workspace} eventId={effectiveId} /> : null}<ReadinessPanel workspace={workspace} eventId={effectiveId} missing={readiness?.missing} checking={checking} notice={!effectiveId ? "Save the event before checking publication readiness." : hasChanges ? "Publication checks your saved changes." : readinessError} checkedAt={readiness?.recorded === "stale" ? readiness.checkedAt ?? undefined : undefined} timezone={hostTimezone} /><Card className="p-5 sm:p-6"><SectionHeading icon="clock" title="Availability" /><p className="mt-3 text-sm leading-6 text-soft">{eventType.availability.length === 0 ? "No recurring availability is configured." : `${eventType.availability.length} recurring window${eventType.availability.length === 1 ? "" : "s"} configured.`}</p>{effectiveId ? <Link className={buttonClassName("quiet", "mt-2")} to={`${workspace}/event-types/$id/availability`} params={{ id: effectiveId }}>Edit recurring availability →</Link> : <p className="mt-4 text-sm text-muted">Save this event type before adding availability.</p>}</Card><Card className="p-5 sm:p-6"><SectionHeading icon="restore" title="Lifecycle" action={<Badge tone={status === "draft" ? "warning" : status === "disabled" ? "danger" : "success"}>{"requestOnly" in eventType && eventType.requestOnly && status === "published" ? "Requests only" : status}</Badge>} /><p className="mt-3 text-sm leading-6 text-soft">Publishing turns on real bookings using your saved availability and existing Dial bookings. Without a connected calendar, Dial does not check external calendar conflicts. A connected calendar must pass its checks. Disabled event types are no longer public.</p>{effectiveId ? <div className="mt-4 grid gap-2.5"><Button type="button" variant="secondary" disabled={saving || hasChanges} onClick={() => void toggleRequests()}>{eventType.alternativeRequestsEnabled ? "Disable alternative requests" : "Enable alternative requests"}</Button>{status !== "published" ? <>{(requestFailures ?? readiness?.requests?.missing)?.length ? <ReadinessPanel workspace={workspace} eventId={effectiveId} missing={requestFailures ?? readiness?.requests?.missing} notice="Complete these steps to Open requests." /> : null}<p className="text-sm leading-6 text-soft">Open requests lets guests propose times before automatic booking is ready. It requires a saved host profile, alternative requests enabled, and a verified mail sender. No automatic bookings are offered.</p><Button type="button" variant="secondary" disabled={!hydrated || saving || checking || hasChanges || readiness?.requests?.ready !== true} onClick={() => void openRequests()}>Open requests</Button></> : null}<Button type="button" variant="secondary" disabled={!hydrated || saving || checking || hasChanges || readiness?.ready !== true} onClick={() => void publish()}>{status === "published" ? "Update published event" : "Publish event type"}</Button>{status !== "disabled" ? <Button type="button" variant="secondary" onClick={() => void disable()}>Disable event type</Button> : null}<Button type="button" variant="danger" onClick={() => void remove()}>Delete event type</Button></div> : null}</Card></aside>
       </fieldset>
     </form>
     {effectiveId ? <ExtensionSlot id="event-type.settings.after.v1" entityId={effectiveId} /> : null}</>

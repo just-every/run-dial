@@ -8,6 +8,7 @@ import { mkdtemp, readFile, readdir, rm, mkdir, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { chromium } from "@playwright/test";
+import { privateShellEndpoint } from "../tests/start-transport.mjs";
 
 const port = 15700;
 const origin = `http://127.0.0.1:${port}`;
@@ -49,8 +50,9 @@ try {
   const manifest = await readFile("dist/server/assets/" + resolver, "utf8");
   const functionId = /"([a-f0-9]+)": \{\s*functionName: "loadPrivateShell_createServerFn_handler"/.exec(manifest)?.[1];
   assert.ok(functionId);
+  const endpoint = await privateShellEndpoint(`/_serverFn/${functionId}`, origin);
   for (const cookie of ["", "operator_session_local=forged", session]) {
-    const response = await fetch(`${origin}/_serverFn/${functionId}`, { headers: { cookie, "x-tsr-serverFn": "true", "sec-fetch-site": "same-origin", origin, referer: origin + "/app" }, redirect: "manual" });
+    const response = await fetch(endpoint, { headers: { cookie, "x-tsr-serverFn": "true", "sec-fetch-site": "same-origin", origin, referer: origin + "/app" }, redirect: "manual" });
     const body = await response.text();
     evidence.responses.push({ transport: "generated GET", session: cookie === session ? "valid" : cookie ? "forged" : "missing", status: response.status, headers: safeHeaders(response.headers), body });
     if (cookie === session) { assert.match(body, /Maya Chen/); assert.match(body, /operator@dial.test/); }
@@ -59,7 +61,7 @@ try {
   await fetch(origin + "/api/auth/sign-out", { method: "POST", headers: { cookie: session, origin } });
   await record("revoked API", session, "/api/app/profile", 401);
   await record("revoked document", session, "/app", 302);
-  const revokedFunction = await fetch(`${origin}/_serverFn/${functionId}`, { headers: { cookie: session, "x-tsr-serverFn": "true", "sec-fetch-site": "same-origin", origin, referer: origin + "/app" } });
+  const revokedFunction = await fetch(endpoint, { headers: { cookie: session, "x-tsr-serverFn": "true", "sec-fetch-site": "same-origin", origin, referer: origin + "/app" } });
   const revokedBody = await revokedFunction.text();
   assert.match(revokedBody, /signin|redirect|session/i); assert.doesNotMatch(revokedBody, /Maya Chen|operator@dial.test/);
   evidence.responses.push({ transport: "revoked generated GET", status: revokedFunction.status, body: revokedBody });
@@ -74,7 +76,7 @@ try {
     const source = await readFile("dist/client/assets/" + name, "utf8");
     assert.doesNotMatch(source, /cloudflare:workers|rendering-test-only-local-session-secret|CREATE TABLE|access_token_ciphertext/);
   }
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1024 } });
   page.setDefaultTimeout(15_000);
   const errors = [], failed = [];

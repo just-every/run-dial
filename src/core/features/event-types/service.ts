@@ -15,7 +15,14 @@ export type EventPublicationReadiness = {
     >;
   };
   mail: { checkConnection(): Promise<{ checkedAt: string }> };
+  /** Health the scheduled pass and explicit checks record; reading it contacts no provider. */
+  recorded: {
+    calendar(): Promise<{ state: "healthy" | "unhealthy" | "disconnected"; checkedAt: string | null; reason: string | null; destinationSelected: boolean; conflictCalendarCount: number; conferenceCapable: boolean }>;
+    mail(): Promise<{ state: "healthy" | "unhealthy" | "unchecked"; checkedAt: string | null }>;
+  };
 };
+/** The scheduled pass records provider health every minute; older records are refreshed and labelled. */
+const recordedHealthCurrentForMs = 2 * 60_000;
 export type DateAvailabilityOverrideWriteResult =
   | { kind: "saved"; override: Awaited<ReturnType<EventTypesRepository["replaceDateAvailabilityOverride"]>> }
   | { kind: "event_not_found" | "profile_not_configured" | "profile_timezone_invalid" | "override_in_past" | "invalid_override" };
@@ -125,12 +132,30 @@ export class EventTypesService {
     return publicationRequirements(eventType, await this.hostTimezone.getProfile(), providers);
   }
 
-  /** Fresh checks shared only within this read; mutations still run their own live checks. */
+  /** The last recorded provider health, read without a provider round trip. */
+  async recordedProviderReadiness(now = Date.now()) {
+    if (!this.publication) return null;
+    const [calendar, mail] = await Promise.all([this.publication.recorded.calendar(), this.publication.recorded.mail()]);
+    const calendarHealthy = calendar.state === "healthy" && calendar.destinationSelected && calendar.conflictCalendarCount > 0;
+    const providers = {
+      calendar: calendarHealthy
+        ? { kind: "healthy" as const, conferenceCapable: calendar.conferenceCapable }
+        : { kind: "unavailable" as const, code: calendar.state === "disconnected" ? "not_connected" : calendar.reason ?? "calendar_unavailable" },
+      mail: mail.state === "healthy" ? { kind: "healthy" as const } : { kind: "unavailable" as const },
+    };
+    // A failed calendar check keeps its last success time, so only a healthy calendar dates this result.
+    const checkedAt = mail.checkedAt && [mail.checkedAt, ...(calendarHealthy && calendar.checkedAt ? [calendar.checkedAt] : [])].sort()[0];
+    const state = !checkedAt ? "unrecorded" as const : now - Date.parse(checkedAt) > recordedHealthCurrentForMs ? "stale" as const : "current" as const;
+    return { providers, checkedAt: checkedAt || null, state };
+  }
+
+  /** Readiness from recorded provider health; publication and request opening still check providers live. */
   async getReadiness(id: string) {
-    const [event, profile, providers] = await Promise.all([this.getEventType(id), this.hostTimezone.getProfile(), this.providerReadiness()]);
+    const [event, profile, recorded] = await Promise.all([this.getEventType(id), this.hostTimezone.getProfile(), this.recordedProviderReadiness()]);
     if (!event) return undefined;
+    const providers = recorded?.providers ?? null;
     const requests = this.requestOpeningReadiness(event, requestRequirements(event, profile, providers?.mail.kind === "healthy"));
-    return { ...publicationRequirements(event, profile, providers), requests };
+    return { ...publicationRequirements(event, profile, providers), requests, checkedAt: recorded?.checkedAt ?? null, recorded: recorded?.state ?? "current" as const };
   }
 
   completionReadiness(event: EventTypeRecord) {

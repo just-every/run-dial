@@ -106,7 +106,13 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
     })
     .get("/api/app/event-types/:id/readiness", validate("param", idSchema), async (context) => {
       const services = context.get("services");
-      const readiness = await services.eventTypes.getReadiness(context.req.valid("param").id);
+      const id = context.req.valid("param").id;
+      let readiness = await services.eventTypes.getReadiness(id);
+      // Only an install whose sender was never checked waits for the scheduled pass's check here.
+      if (readiness?.recorded === "unrecorded") {
+        await services.delivery.reconcileConnections();
+        readiness = await services.eventTypes.getReadiness(id);
+      } else if (readiness?.recorded === "stale") context.executionCtx.waitUntil(services.delivery.reconcileConnections());
       return readiness ? context.json(readiness) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })
     .put("/api/app/event-types/:id/availability", validate("param", idSchema), validate("json", z.object({ windows: recurringAvailabilitySchema }).strict()), async (context) => {

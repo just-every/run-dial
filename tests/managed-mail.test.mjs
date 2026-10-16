@@ -7,6 +7,7 @@ import { emittedFixture, fixture, origin } from './mail-connection/fixture.mjs';
 import { linkMessage } from '../modules/operator-auth/identity/email-link/message.mjs';
 import { senderHealthJourney } from './mail-connection/health-journey.mjs';
 import { bookingRelayJourney, bookingStatusScreens } from './mail-connection/booking-journey.mjs';
+import { editorReadinessJourney } from './mail-connection/editor-readiness-journey.mjs';
 
 test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner', async t => {
   let browser, context;
@@ -102,7 +103,7 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
   assert.equal(missing.calls, 0);
   await missing.close();
 
-  browser = await chromium.launch();
+  browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
   context = await browser.newContext();
   let browserIp;
   await context.route('**/*', async route => {
@@ -164,6 +165,7 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
   assert.equal((await f.request('/api/app/host-setup/complete', {})).status, 200);
   await senderHealthJourney(page, origin, screenshot, width => { browserIp = width === 1440 ? '198.18.0.5' : '198.18.0.6'; });
   await bookingStatusScreens(page, origin, screenshot, width => { browserIp = width === 1440 ? '198.18.0.7' : '198.18.0.8'; });
+  await editorReadinessJourney({ page, origin, f, event, calls, screenshot, selectClient: width => { browserIp = width === 1440 ? '198.18.0.9' : '198.18.0.10'; } });
   assert.deepEqual(errors, []);
   t.diagnostic('1440/390: login_hint survives SSR and hydration, bare/invalid hints stay empty, explicit submission succeeds, owner sees credential recovery');
 });

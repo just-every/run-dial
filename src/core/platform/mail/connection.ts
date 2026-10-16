@@ -1,5 +1,6 @@
 import { ProviderFailure } from "../calendar/types";
 import { isSendGridSenderVerified } from "./sendgrid-readiness";
+import { sendGridLookupKey } from "./sendgrid-domain-lookup";
 
 /** Credential/sender read only; never delivers a test message. */
 export async function checkMailProvider(config: { provider: "resend" | "sendgrid"; apiKey?: string; from?: string }, request: typeof fetch) {
@@ -22,7 +23,7 @@ export async function checkMailProvider(config: { provider: "resend" | "sendgrid
   };
   try {
     const verified = config.provider === "sendgrid"
-      ? await isSendGridSenderVerified(config.from, domain, read)
+      ? await isSendGridSenderVerified(config.from, domain, read, await sendGridLookupKey(config.apiKey, config.from))
       : ((await read("https://api.resend.com/domains")) as { data?: { name?: string; status?: string }[] }).data?.some((item) => item.name === domain && item.status === "verified");
     if (!verified) throw new ProviderFailure("forbidden", false);
     return { checkedAt: new Date().toISOString() };

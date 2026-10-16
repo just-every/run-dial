@@ -1,7 +1,18 @@
-import { asc, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import type { createDatabase } from "../../../platform/db/client";
 import { eventQuestions, eventTypes, recurringAvailabilityWindows } from "../../../platform/db/schema";
 import type { EventLocationType, EventQuestionKind, EventQuestionOptionInput, EventTypeInput, EventTypeRecord } from "../repository";
+
+/** The known ID lets parent and children share one fresh D1 transaction. */
+export async function readEventType(db: ReturnType<typeof createDatabase>, id: string): Promise<EventTypeRecord | undefined> {
+  const [records, questions, availability] = await db.batch([
+    db.select().from(eventTypes).where(eq(eventTypes.id, id)),
+    db.select().from(eventQuestions).where(eq(eventQuestions.eventTypeId, id)).orderBy(asc(eventQuestions.position)),
+    db.select().from(recurringAvailabilityWindows).where(eq(recurringAvailabilityWindows.eventTypeId, id))
+      .orderBy(asc(recurringAvailabilityWindows.weekday), asc(recurringAvailabilityWindows.startMinute)),
+  ]);
+  return records[0] ? eventRecord(records[0], questions, availability) : undefined;
+}
 
 /** One bound JSON array avoids D1's SQL parameter limit for larger event lists. */
 export async function hydrateEventTypes(db: ReturnType<typeof createDatabase>, records: (typeof eventTypes.$inferSelect)[]): Promise<EventTypeRecord[]> {

@@ -94,10 +94,11 @@ return {
     // These independent fresh reads need no setup result. Keep authentication
     // and archive admission ahead of them, then overlap the setup check.
     deferPrivateRead(services.hostProfile.getProfile());
-    if (/^\/app\/event-types\/[0-9A-Z]{26}$/.test(url.pathname)) deferPrivateRead(services.eventTypes.providerReadiness());
+    const eventId = /^\/app\/event-types\/([0-9A-Z]{26})$/.exec(url.pathname)?.[1];
+    if (eventId) deferPrivateRead(services.eventTypes.getEventType(eventId));
    }
    return worker.fetch(request, env, tracked);
-  }, privateReadTasks);
+  }, privateReadTasks, request.method === "GET");
   return /^\/(app|setup|_serverFn)(\/|$)/.test(new URL(request.url).pathname)
    ? withPrivateRequest(request, env, newServicesFor(env), run)
    : run();

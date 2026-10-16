@@ -135,6 +135,7 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
         const sync = await this.syncManagedEvents();
         if (sync.kind === "unavailable") return sync;
       }
+      await this.repository.recordConferenceCapability(destination.calendarId, descriptor.conferenceCapable);
       await this.repository.markHealthy(new Date().toISOString());
       if (this.watch) await this.tellWatch("checkedHealthy");
       return { kind: "healthy" as const, conferenceCapable: descriptor.conferenceCapable };

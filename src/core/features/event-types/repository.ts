@@ -1,4 +1,4 @@
-import { hydrateEventTypes } from "./hydration/repository";
+import { hydrateEventTypes, readEventType } from "./hydration/repository";
 import { afterPersistedTimestampSql, nextEventTimestampSql } from "./revision";
 import { replaceDateOverride, deleteDateOverride } from "./override-writes";
 import { readDateOverrides } from "./date-overrides/repository";
@@ -89,9 +89,8 @@ export class EventTypesRepository {
     return (await hydrateEventTypes(this.db, records)).map(toPublicEventType);
   }
 
-  async get(id: string): Promise<EventTypeRecord | undefined> {
-    const [record] = await this.db.select().from(eventTypes).where(eq(eventTypes.id, id));
-    return record ? this.hydrate(record) : undefined;
+  get(id: string): Promise<EventTypeRecord | undefined> {
+    return readEventType(this.db, id);
   }
 
   async getBySlug(slug: string): Promise<EventTypeRecord | undefined> {

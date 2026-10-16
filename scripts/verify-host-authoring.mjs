@@ -105,21 +105,28 @@ try {
   assert.deepEqual(without(event, ["availability", "updatedAt"]), baseline);
   mark("concurrent native full-window replacements finish as one coherent submitted set, preserving independently edited event details");
 
-  await readiness(event.id, []);
-  await probe("mail_check", true); await readiness(event.id, ["transactional_mail"]);
+  // Readiness shows the health explicit checks record; publication still probes each provider itself.
+  const probes = async () => (await snapshot()).fixture_activity.filter((row) => ["mail_check", "check"].includes(row.kind)).length;
+  const recordChecks = async (mail = 200, calendar = 200) => { await call("/api/app/mail/check", {}, mail, true); await call("/api/app/calendar/check", {}, calendar, true); };
+  await recordChecks(); await readiness(event.id, []);
+  await probe("mail_check", true);
+  const viewed = await probes(); await readiness(event.id, []);
+  assert.equal(await probes(), viewed, "readiness reads recorded health without a provider probe");
   await call(`${base}/disable`, {}, 200, true); await unchanged(() => call(`${base}/publish`, {}, 409, true));
-  await probe("mail_check", false); await probe("check", true); await readiness(event.id, ["destination_calendar"]);
-  await probe("check", false); await probe("conference_capability", true);
+  assert.ok(await probes() > viewed, "publication probes the provider despite recorded health");
+  await recordChecks(503); await readiness(event.id, ["transactional_mail"]);
+  await probe("mail_check", false); await probe("check", true); await recordChecks(200, 503); await readiness(event.id, ["destination_calendar"]);
+  await probe("check", false); await probe("conference_capability", true); await recordChecks();
   event = await data(`${base}/details`, details(event, { locationType: "google_meet", locationLabel: "Google Meet", locationValue: "" }), 200, true, "PATCH");
   await readiness(event.id, ["google_meet_capability"]); await unchanged(() => call(`${base}/publish`, {}, 409, true));
-  await probe("conference_capability", false);
+  await probe("conference_capability", false); await recordChecks();
   await data(`${base}/availability`, { windows: [] }, 200, true, "PUT"); await readiness(event.id, ["open_availability"]);
   await unchanged(() => call(`${base}/publish`, {}, 409, true));
   await data(`${base}/availability`, { windows: windowsA }, 200, true, "PUT"); await readiness(event.id, []);
   assert.equal((await data(`${base}/publish`, {}, 200, true)).status, "published");
   const activity = (await snapshot()).fixture_activity;
   assert.ok(activity.some((row) => row.kind === "mail_check")); assert.ok(activity.some((row) => row.kind === "check"));
-  mark("readiness performs real task-owned mail/calendar/conference probes and publication freshly refuses each missing requirement before healthy publication succeeds");
+  mark("readiness names each recorded mail/calendar/conference failure without probing, and publication freshly probes and refuses each missing requirement before healthy publication succeeds");
 
   for (const kind of ["clear", "meet", "disable", "delete"]) {
     const candidate = await data("/api/app/event-types", full(event, { slug: `probe-${kind}`, locationType: "fixed_link", locationLabel: "Private link", locationValue: "https://private.example.test/authoring", availability: windowsA }), 201, true);

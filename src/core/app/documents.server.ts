@@ -20,10 +20,9 @@ export async function readPrivateShell(setup = false, path = "/app") {
   const nativeSession = await nativeRequestSession(request, services.operators.auth);
   if (!nativeSession) throw redirect({ to: "/signin" });
   const session = { id: nativeSession.operator.id, email: nativeSession.operator.email, sessionId: nativeSession.id, expiresAt: new Date(nativeSession.expiresAt).toISOString() };
-  if (!setup && /^\/app\/event-types\/[0-9A-Z]{26}$/.test(new URL(path, runtime.APP_URL).pathname)) {
-    // Authenticated, independent provider reads can overlap setup and event queries.
-    deferPrivateRead(services.eventTypes.providerReadiness());
-  }
+  const eventId = !setup && /^\/app\/event-types\/([0-9A-Z]{26})$/.exec(new URL(path, runtime.APP_URL).pathname)?.[1];
+  // An authenticated, independent event read can overlap the setup query.
+  if (eventId) deferPrivateRead(services.eventTypes.getEventType(eventId));
   const completed = await services.hostSetup.completion();
   if (setup && completed) throw redirect({ to: "/app" });
   if (!setup && !completed) throw redirect({ to: "/setup" });
