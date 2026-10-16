@@ -1,3 +1,4 @@
+import { workspaceFetch } from "../../../app/workspace-reads";
 import { useEffect, useState } from 'react';
 import { Badge, Card, buttonClassName } from '../../../app/ui/primitives';
 import type { SwitchOverService } from '../switch-over';
@@ -14,7 +15,7 @@ function Row({title,clear,children}:{title:string;clear:boolean;children:React.R
 export function SwitchOverCard({className=''}:{className?:string}){
  const [state,setState]=useState<State>(),[error,setError]=useState('');
  useEffect(()=>{
-  const load=()=>void fetch('/api/app/move-in/switch-over').then(async r=>{if(!r.ok)throw new Error();setState(await r.json() as State);setError('');}).catch(()=>setError('The switch-over checklist could not be loaded.'));
+  const load=()=>void workspaceFetch('/api/app/move-in/switch-over').then(async r=>{if(!r.ok)throw new Error();setState(await r.json() as State);setError('');}).catch(()=>setError('The switch-over checklist could not be loaded.'));
   load();window.addEventListener(moveInChanged,load);return ()=>window.removeEventListener(moveInChanged,load);
  },[]);
  if(error)return <Card id="switch-over" className={`p-5 sm:p-6 ${className}`}><p role="alert" className="text-red-800">{error}</p></Card>;

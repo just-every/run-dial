@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { auditor, keyboardActivate, trackPage } from "./audit.mjs";
 import { resetOverviewFixture, seedOverviewRecords } from "../part1-host/native-fixture.mjs";
 import { evidencePath } from "../../scripts/evidence-path.mjs";
-import { holdOverviewReads, loadingOverview, overviewCards, overviewPaths, overviewReads } from "./overview-readiness.mjs";
+import { overviewCards } from "./overview-readiness.mjs";
 import { overviewSynchronizationRegression } from "./overview-sync-regression.mjs";
 import { completeEmptyWorkspace } from "./first-run-fixture.mjs";
 
@@ -82,11 +82,10 @@ export async function operatorJourney(browser, origin, scans, errors) {
     try {
       const page = await context.newPage(); trackPage(page, errors);
       const audit = auditor(page, width, scans);
-      const emptyReads = overviewReads(page);
-      await Promise.all([page.goto(origin + "/app", { timeout: emptyReads.remaining() }), emptyReads.requests, emptyReads.responses]);
-      await page.getByText("No event types are configured yet.", { exact: true }).waitFor({ timeout: emptyReads.remaining() }).catch(async error => { throw new Error(`${error.message}\n${page.url()}\n${await page.locator("body").innerText()}`); });
-      await page.getByText("0 bookings", { exact: true }).waitFor({ timeout: emptyReads.remaining() });
-      await page.getByText("0 requests", { exact: true }).waitFor({ timeout: emptyReads.remaining() });
+      await page.goto(origin + "/app");
+      await page.getByText("No event types are configured yet.", { exact: true }).waitFor({ timeout: 30_000 }).catch(async error => { throw new Error(`${error.message}\n${page.url()}\n${await page.locator("body").innerText()}`); });
+      await page.getByText("0 bookings", { exact: true }).waitFor({ timeout: 30_000 });
+      await page.getByText("0 requests", { exact: true }).waitFor({ timeout: 30_000 });
       assert.ok(await page.getByText("There are no booking records to review.", { exact: true }).isVisible());
       assert.ok(await page.getByText("There are no request records to review.", { exact: true }).isVisible());
       assert.equal(await page.getByText("Host profile not configured", { exact: true }).count(), 0, "the completed workspace retains its saved profile");
@@ -120,14 +119,13 @@ export async function operatorJourney(browser, origin, scans, errors) {
       try {
         const page = await context.newPage(); trackPage(page, errors);
         const audit = auditor(page, width, scans);
-        const reads = overviewReads(page);
-        const [, nativeRequests] = await Promise.all([page.goto(origin + "/app", { timeout: reads.remaining() }), reads.requests, reads.responses]);
-        capture(reviewFailures, `${width}px Overview reads bookings from the native API`, nativeRequests.some(request => new URL(request.url()).pathname === overviewPaths[0]));
-        capture(reviewFailures, `${width}px Overview reads requests from the native API`, nativeRequests.some(request => new URL(request.url()).pathname === overviewPaths[1]));
+        const documentResponse = await page.goto(origin + "/app");
+        const html = await documentResponse.text();
+        for (const name of [...expectedBookingNames, ...expectedRequestNames]) assert.ok(html.includes(name), "native SSR includes each populated activity record");
         const { bookingCard, requestCard } = overviewCards(page);
         await Promise.all([
-          bookingCard.getByText("2 bookings", { exact: true }).waitFor({ timeout: reads.remaining() }),
-          requestCard.getByText("2 requests", { exact: true }).waitFor({ timeout: reads.remaining() }),
+          bookingCard.getByText("2 bookings", { exact: true }).waitFor({ timeout: 30_000 }),
+          requestCard.getByText("2 requests", { exact: true }).waitFor({ timeout: 30_000 }),
         ]);
         await captureEvidence(page, `${evidencePhase}-overview-populated-${width}.png`);
         capture(reviewFailures, `${width}px booking count`, await bookingCard.getByText("2 bookings", { exact: true }).count() === 1);
@@ -158,57 +156,7 @@ export async function operatorJourney(browser, origin, scans, errors) {
       } finally { await context.close(); }
     }
 
-    const loadingContext = await browser.newContext({ locale: "de-DE", timezoneId: "America/New_York", storageState, viewport: { width: 390, height: 844 } });
-    try {
-      const page = await loadingContext.newPage(); trackPage(page, errors);
-      await loadingOverview(page, origin);
-    } finally { await loadingContext.close(); }
-
     await overviewSynchronizationRegression(browser, origin, storageState, errors);
-
-    const failedContext = await browser.newContext({ locale: "de-DE", timezoneId: "America/New_York", storageState, viewport: { width: 390, height: 844 } });
-    const mockedFailures = new Map([["/api/app/bookings", 0], ["/api/app/availability-requests", 0]]);
-    let heldFailures;
-    try {
-      const page = await failedContext.newPage(); trackPage(page, errors);
-      page.on("response", response => {
-        const path = new URL(response.url()).pathname;
-        if (response.status() === 503 && mockedFailures.has(path)) mockedFailures.set(path, mockedFailures.get(path) + 1);
-      });
-      heldFailures = await holdOverviewReads(page, [...mockedFailures.keys()], route => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
-      const failedReads = overviewReads(page, { status: 503 });
-      await Promise.all([page.goto(origin + "/app", { timeout: failedReads.remaining() }), failedReads.requests]);
-      await Promise.race([heldFailures.intercepted, failedReads.responses]);
-      const { bookingCard, requestCard } = overviewCards(page);
-      // Navigation and SSR cards are ready before these responses are delivered.
-      // Exercise that boundary explicitly instead of depending on hydration speed.
-      await Promise.all([
-        bookingCard.getByText("Loading bookings…", { exact: true }).waitFor({ timeout: failedReads.remaining() }),
-        requestCard.getByText("Loading requests…", { exact: true }).waitFor({ timeout: failedReads.remaining() }),
-      ]);
-      assert.deepEqual(Object.fromEntries(mockedFailures), { "/api/app/bookings": 0, "/api/app/availability-requests": 0 }, "pending native responses have not yet produced the intended failures");
-      heldFailures.release();
-      await failedReads.responses;
-      await Promise.all([
-        bookingCard.getByText("Bookings could not be loaded.", { exact: true }).waitFor({ timeout: failedReads.remaining() }),
-        requestCard.getByText("Requests could not be loaded.", { exact: true }).waitFor({ timeout: failedReads.remaining() }),
-      ]);
-      capture(reviewFailures, "390px failed booking response has an explicit error state", await bookingCard.getByText("Bookings could not be loaded.", { exact: true }).count() === 1);
-      capture(reviewFailures, "390px failed request response has an explicit error state", await requestCard.getByText("Requests could not be loaded.", { exact: true }).count() === 1);
-      capture(reviewFailures, "390px failed booking load does not show an empty state", await bookingCard.getByText("There are no booking records to review.", { exact: true }).count() === 0);
-      capture(reviewFailures, "390px failed request load does not show an empty state", await requestCard.getByText("There are no request records to review.", { exact: true }).count() === 0);
-      capture(reviewFailures, "390px failed booking load does not claim zero bookings", !(await bookingCard.innerText()).match(/\b0 bookings?\b/));
-      capture(reviewFailures, "390px failed request load does not claim zero requests", !(await requestCard.innerText()).match(/\b0 requests?\b/));
-      assert.deepEqual(Object.fromEntries(mockedFailures), { "/api/app/bookings": 1, "/api/app/availability-requests": 1 }, "both explicit error states came from the two intended native API failures");
-    } finally { try { await heldFailures?.close(); } finally { await failedContext.close(); } }
-    const mocked503Message = "Failed to load resource: the server responded with a status of 503 (Service Unavailable)";
-    const mocked503Errors = errors.filter(error => error.message === mocked503Message);
-    assert.equal(mocked503Errors.length, 2, "only the two intentional 503 responses are expected to appear as browser console errors");
-    let removedMocked503Errors = 0;
-    for (let index = errors.length - 1; index >= 0 && removedMocked503Errors < 2; index -= 1) {
-      if (errors[index].message === mocked503Message) { errors.splice(index, 1); removedMocked503Errors += 1; }
-    }
-    assert.equal(removedMocked503Errors, 2, "the two route-verified mocked failures are accounted for without suppressing other browser errors");
   } finally {
     try { await resetOverviewFixture(owner, origin); } finally { await owner.close(); }
   }

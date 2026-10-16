@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { readProfile } from "../../host-profile";
 import { mailConnectionMessage } from "../../../platform/mail/connection-message";
 import { ExtensionContribution } from "../../../app/extensions";
@@ -18,10 +19,14 @@ type Calendar = { id: string; accessRole: "freeBusyReader" | "reader" | "writer"
 type MailHealth = { state: "healthy" | "unhealthy" | "unchecked"; checkedAt: string | null; reason: string | null; provider: "sendgrid" | "resend" | "rer" | "development"; eventTracking: "on" | "off" | "not_applicable" };
 
 export function SettingsPage({ embedSettings, blockingSettings, mailPreferences, privacySettings }: { embedSettings?: ReactNode; blockingSettings?: ReactNode; mailPreferences?: ReactNode; privacySettings?: ReactNode }) {
-  const [session, setSession] = useState<Session>();
-  const [timezone, setTimezone] = useState<string | null>(null);
-  const [calendar, setCalendar] = useState<CalendarHealth>();
-  const [mail, setMail] = useState<MailHealth>();
+  const initialSession = useWorkspaceRead<Session>("/api/app/session");
+  const initialCalendar = useWorkspaceRead<CalendarHealth>("/api/app/calendar/connection");
+  const initialMail = useWorkspaceRead<MailHealth>("/api/app/mail/connection");
+  const initialProfile = useWorkspaceRead<{ timezone: string }>("/api/app/profile");
+  const [session, setSession] = useState<Session | undefined>(initialSession);
+  const [timezone, setTimezone] = useState<string | null>(initialProfile?.timezone ?? null);
+  const [calendar, setCalendar] = useState<CalendarHealth | undefined>(initialCalendar);
+  const [mail, setMail] = useState<MailHealth | undefined>(initialMail);
   const [calendars, setCalendars] = useState<Calendar[]>();
   const [destination, setDestination] = useState("");
   const [conflicts, setConflicts] = useState<string[]>([]);

@@ -107,7 +107,7 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
     .get("/api/app/event-types/:id/readiness", validate("param", idSchema), async (context) => {
       const services = context.get("services");
       const event = await services.eventTypes.getEventType(context.req.valid("param").id);
-      return event ? context.json({ ...await services.eventTypes.publishReadiness(event), requests: await services.eventTypes.requestReadiness(event) }) : apiError(context, 404, "event_not_found", "The event type does not exist.");
+      return event ? context.json(await services.eventTypes.readinessForEvent(event)) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })
     .put("/api/app/event-types/:id/availability", validate("param", idSchema), validate("json", z.object({ windows: recurringAvailabilitySchema }).strict()), async (context) => {
       const event = await context.get("services").eventTypes.replaceRecurringAvailability(context.req.valid("param").id, context.req.valid("json").windows);

@@ -9,9 +9,9 @@ export const loadDocument = createServerFn({ method: "GET" }).middleware([pageLo
     return { ...await readPublicDocument(data.path), renderInstant: new Date().toISOString() };
   });
 
-export const loadPrivateShell = createServerFn({ method: "GET" }).middleware([pageLoadTransport]).handler(async () => {
+export const loadPrivateShell = createServerFn({ method: "GET" }).middleware([pageLoadTransport]).inputValidator(z.object({ path: z.string().max(2048) })).handler(async ({ data }) => {
   const { readPrivateShell } = await import("./documents.server");
-  return readPrivateShell();
+  return readPrivateShell(false, data.path);
 });
 
 // Only public sign-in presentation leaves this server function. Bootstrap retains

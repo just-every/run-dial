@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { useHostSetup } from "../../host-setup";
 import { CopyBookingLink } from "../../host-setup";
 import type { BookingLink } from "../../host-setup";
@@ -11,7 +12,8 @@ import type { EventTypeRecord } from "../repository";
 
 export function EventTypesPage({ workspace = "/app" }: { workspace?: "/app" | "/setup" }) {
   const setup = useHostSetup();
-  const [eventTypes, setEventTypes] = useState<EventTypeRecord[]>();
+  const initialEvents = useWorkspaceRead<EventTypeRecord[]>("/api/app/event-types");
+  const [eventTypes, setEventTypes] = useState<EventTypeRecord[] | undefined>(initialEvents);
   const [error, setError] = useState("");
 
   useEffect(() => {

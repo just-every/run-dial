@@ -1,3 +1,4 @@
+import { clearWorkspaceReads } from "./core/app/workspace-reads";
 import { RouteLoadError } from "./core/app/ui/route-load-error";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
@@ -22,6 +23,8 @@ export function getRouter() {
     setLiveEditsReady(false);
     installCompiledLiveEdits(visualEdits);
   }
-  return createRouter({ routeTree, scrollRestoration, defaultErrorComponent: RouteLoadError });
+  const router = createRouter({ routeTree, scrollRestoration, defaultErrorComponent: RouteLoadError });
+  router.subscribe("onBeforeNavigate", clearWorkspaceReads);
+  return router;
 }
 declare module "@tanstack/react-router" { interface Register { router: ReturnType<typeof getRouter>; } }

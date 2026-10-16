@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { HostAvatar } from "./host-avatar";
 import { AvatarEditor } from "./avatar-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,7 +13,8 @@ export function ProfilePage() {
   const hydrated = useHydrated();
   const inFlight = useRef(false);
   const loadEpoch = useRef(0);
-  const [profile, setProfile] = useState<ProfileInput | ProfileRecord>();
+  const initialProfile = useWorkspaceRead<ProfileRecord>("/api/app/profile");
+  const [profile, setProfile] = useState<ProfileInput | ProfileRecord | undefined>(initialProfile);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);

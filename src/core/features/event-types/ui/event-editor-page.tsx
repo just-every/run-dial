@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { ExtensionSlot } from "../../../app/extensions";
 import { EventFields } from "./event-fields";
 import { EventSharing } from "../../host-setup";
@@ -27,9 +28,12 @@ function EventEditorForm({ eventId, workspace = "/app" }: { eventId?: string; wo
   const slugEdited = useRef(false);
   const readinessEpoch = useRef(0);
   const navigate = useNavigate();
-  const [eventType, setEventType] = useState<EventTypeInput | EventTypeRecord | undefined>(() => eventId ? undefined : defaultEventTypeInput());
+  const initialEvent = useWorkspaceRead<EventTypeRecord>(`/api/app/event-types/${eventId}`);
+  const [eventType, setEventType] = useState<EventTypeInput | EventTypeRecord | undefined>(() => eventId ? initialEvent : defaultEventTypeInput());
   const [requestFailures, setRequestFailures] = useState<string[]>();
-  const [readiness, setReadiness] = useState<{ ready: boolean; missing: string[]; requests?: { ready: boolean; missing: string[] } }>();
+  type Readiness = { ready: boolean; missing: string[]; requests?: { ready: boolean; missing: string[] } };
+  const initialReadiness = useWorkspaceRead<Readiness>(`/api/app/event-types/${eventId}/readiness`);
+  const [readiness, setReadiness] = useState<Readiness | undefined>(initialReadiness);
   const [checking, setChecking] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);

@@ -1,0 +1,80 @@
+import { asc, sql } from "drizzle-orm";
+import type { createDatabase } from "../../platform/db/client";
+import { eventQuestions, eventTypes, recurringAvailabilityWindows } from "../../platform/db/schema";
+import type { EventLocationType, EventQuestionKind, EventQuestionOptionInput, EventTypeInput, EventTypeRecord } from "./repository";
+
+/** One bound JSON array avoids D1's SQL parameter limit for larger event lists. */
+export async function hydrateEventTypes(db: ReturnType<typeof createDatabase>, records: (typeof eventTypes.$inferSelect)[]): Promise<EventTypeRecord[]> {
+  if (records.length === 0) return [];
+  const ids = JSON.stringify(records.map(record => record.id));
+  const [questions, availability] = await Promise.all([
+    db.select().from(eventQuestions)
+      .where(sql`${eventQuestions.eventTypeId} IN (SELECT value FROM json_each(${ids}))`)
+      .orderBy(asc(eventQuestions.position)),
+    db.select().from(recurringAvailabilityWindows)
+      .where(sql`${recurringAvailabilityWindows.eventTypeId} IN (SELECT value FROM json_each(${ids}))`)
+      .orderBy(asc(recurringAvailabilityWindows.weekday), asc(recurringAvailabilityWindows.startMinute)),
+  ]);
+  const questionsByEvent = groupByEvent(questions);
+  const availabilityByEvent = groupByEvent(availability);
+  return records.map(record => eventRecord(record, questionsByEvent.get(record.id) ?? [], availabilityByEvent.get(record.id) ?? []));
+}
+
+function groupByEvent<T extends { eventTypeId: string }>(records: T[]) {
+  const groups = new Map<string, T[]>();
+  for (const record of records) {
+    const group = groups.get(record.eventTypeId);
+    if (group) group.push(record);
+    else groups.set(record.eventTypeId, [record]);
+  }
+  return groups;
+}
+
+function eventRecord(record: typeof eventTypes.$inferSelect, questions: (typeof eventQuestions.$inferSelect)[], availability: (typeof recurringAvailabilityWindows.$inferSelect)[]): EventTypeRecord {
+  return {
+    id: record.id,
+    status: record.status,
+    requestOnly: record.requestOnly,
+    slug: record.slug,
+    title: record.title,
+    description: record.description,
+    durationMinutes: record.durationMinutes,
+    color: record.color,
+    locationType: record.locationType as EventLocationType,
+    locationLabel: record.locationLabel,
+    locationValue: record.locationValue,
+    listed: record.listed,
+    alternativeRequestsEnabled: record.alternativeRequestsEnabled,
+    slotIncrementMinutes: record.slotIncrementMinutes as EventTypeInput["slotIncrementMinutes"],
+    minimumNoticeMinutes: record.minimumNoticeMinutes,
+    bookingHorizonDays: record.bookingHorizonDays,
+    beforeBufferMinutes: record.beforeBufferMinutes,
+    afterBufferMinutes: record.afterBufferMinutes,
+    hostDayBookingLimit: record.hostDayBookingLimit,
+    questions: questions.map((question) => ({
+      key: question.publicKey ?? `q_${question.id}`,
+      kind: question.kind as EventQuestionKind,
+      label: question.label,
+      required: question.required,
+      options: parseQuestionOptions(question.optionsJson),
+    })),
+    availability: availability.map(({ weekday, startMinute, endMinute }) => ({ weekday, startMinute, endMinute })),
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  };
+}
+
+function parseQuestionOptions(value: string): EventQuestionOptionInput[] {
+  const parsed: unknown = JSON.parse(value);
+  if (!Array.isArray(parsed)) return [];
+  return parsed.map((option) => {
+    if (typeof option === "string") return { value: option, label: option };
+    if (typeof option === "object" && option !== null && "value" in option && "label" in option) {
+      const candidate = option as { value: unknown; label: unknown };
+      if (typeof candidate.value === "string" && typeof candidate.label === "string") {
+        return { value: candidate.value, label: candidate.label };
+      }
+    }
+    throw new Error("Persisted event question has invalid options");
+  });
+}

@@ -1,3 +1,4 @@
+import { withPrivateRequest, privateRequestServices, nativeRequestSession } from "./private-request.server";
 // Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
 import { withDemo } from "../../../modules/demo/index.mjs";
 import { withApplication, ArchiveMaintenance } from "../features/portability/admission";
@@ -28,7 +29,8 @@ import { connectionWatchObservers } from "./connection-watch";
 const claimed = claimedWhen("SELECT 1 FROM operator_setup_identity WHERE singleton_key='default' AND onboarding_completed_at IS NOT NULL LIMIT 1");
 
 export function createWorker(servicesFactory?: (env: AppBindings) => AppServices) {
-const servicesFor = servicesFactory ?? ((env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { files: env.FILES, calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) }));
+const newServicesFor = servicesFactory ?? ((env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { files: env.FILES, calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) }));
+const servicesFor = (env: AppBindings) => privateRequestServices(env) ?? newServicesFor(env);
 const app = createApp({ fetch: async (request) => start.fetch(request) }, servicesFor);
 
 const worker = {
@@ -58,7 +60,7 @@ const worker = {
 return {
  ...worker,
  fetch(request: Request, env: AppBindings, context: ExecutionContext) {
-  return applicationRequest(env.DB, context, async (admit, tracked) => {
+  const run = () => applicationRequest(env.DB, context, async (admit, tracked) => {
    const url = new URL(request.url);
    if (isPrivateLocalPath(url.pathname)) return new Response("Not found", { status: 404 });
    const runtime = parseRuntimeEnvironment(env);
@@ -77,7 +79,7 @@ return {
      return admission;
     }).fetch(request, env, tracked);
    }
-   if (requiresPublicAdmission(url.pathname) || !await servicesFor(env).operators.auth.getSession(request)) {
+   if (requiresPublicAdmission(url.pathname) || !await nativeRequestSession(request, servicesFor(env).operators.auth)) {
     try {
      const refusal = admissionResponse(await new PublicAdmissionGate(env.DB, runtime).admit(request));
      if (refusal) return refusal;
@@ -87,6 +89,9 @@ return {
    await admit();
    return worker.fetch(request, env, tracked);
   });
+  return /^\/(app|setup|_serverFn)(\/|$)/.test(new URL(request.url).pathname)
+   ? withPrivateRequest(request, env, newServicesFor(env), run)
+   : run();
  },
  async queue(batch: MessageBatch<unknown>, env: AppBindings) {
   try { await withApplication(env.DB, () => worker.queue(batch, env)); }

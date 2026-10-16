@@ -1,3 +1,4 @@
+import { nativeRequestSession } from "../../app/private-request.server";
 import { signedOwnerClaimConfigured } from "./owner-claim.server";
 import { operatorRateCorrelation } from "./rate-correlation";
 import { createAuthHandler, createOperatorAuth, AuthError, type OperatorAuth, type PolicyInput } from "../../../../modules/operator-auth/index.mjs";
@@ -67,7 +68,7 @@ export class OperatorsService {
   }
 
   async authenticate(request: Request): Promise<SessionRecord | undefined> {
-    const value = await this.auth.getSession(request);
+    const value = await nativeRequestSession(request, this.auth);
     return value ? { id: value.operator.id, email: value.operator.email, sessionId: value.id, expiresAt: new Date(value.expiresAt).toISOString() } : undefined;
   }
 

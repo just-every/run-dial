@@ -1,3 +1,4 @@
+import { hydrateEventTypes } from "./hydration.server";
 import { afterPersistedTimestampSql, nextEventTimestampSql } from "./revision";
 import { replaceDateOverride, deleteDateOverride } from "./override-writes";
 import { readDateOverrides } from "./date-overrides/repository";
@@ -76,7 +77,7 @@ export class EventTypesRepository {
 
   async list(): Promise<EventTypeRecord[]> {
     const records = await this.db.select().from(eventTypes).orderBy(asc(eventTypes.createdAt));
-    return Promise.all(records.map((record) => this.hydrate(record)));
+    return hydrateEventTypes(this.db, records);
   }
 
   async listPublishedListed(): Promise<PublicEventTypeRecord[]> {
@@ -85,7 +86,7 @@ export class EventTypesRepository {
       .from(eventTypes)
       .where(and(eq(eventTypes.status, "published"), eq(eventTypes.listed, true)))
       .orderBy(asc(eventTypes.createdAt));
-    return Promise.all(records.map(async (record) => toPublicEventType(await this.hydrate(record))));
+    return (await hydrateEventTypes(this.db, records)).map(toPublicEventType);
   }
 
   async get(id: string): Promise<EventTypeRecord | undefined> {
@@ -204,45 +205,8 @@ export class EventTypesRepository {
   }
 
   private async hydrate(record: typeof eventTypes.$inferSelect): Promise<EventTypeRecord> {
-    const [questions, availability] = await Promise.all([
-      this.db.select().from(eventQuestions).where(eq(eventQuestions.eventTypeId, record.id)).orderBy(asc(eventQuestions.position)),
-      this.db
-        .select()
-        .from(recurringAvailabilityWindows)
-        .where(eq(recurringAvailabilityWindows.eventTypeId, record.id))
-        .orderBy(asc(recurringAvailabilityWindows.weekday), asc(recurringAvailabilityWindows.startMinute)),
-    ]);
-    return {
-      id: record.id,
-      status: record.status,
-      requestOnly: record.requestOnly,
-      slug: record.slug,
-      title: record.title,
-      description: record.description,
-      durationMinutes: record.durationMinutes,
-      color: record.color,
-      locationType: record.locationType as EventLocationType,
-      locationLabel: record.locationLabel,
-      locationValue: record.locationValue,
-      listed: record.listed,
-      alternativeRequestsEnabled: record.alternativeRequestsEnabled,
-      slotIncrementMinutes: record.slotIncrementMinutes as EventTypeInput["slotIncrementMinutes"],
-      minimumNoticeMinutes: record.minimumNoticeMinutes,
-      bookingHorizonDays: record.bookingHorizonDays,
-      beforeBufferMinutes: record.beforeBufferMinutes,
-      afterBufferMinutes: record.afterBufferMinutes,
-      hostDayBookingLimit: record.hostDayBookingLimit,
-      questions: questions.map((question) => ({
-        key: question.publicKey ?? `q_${question.id}`,
-        kind: question.kind as EventQuestionKind,
-        label: question.label,
-        required: question.required,
-        options: parseQuestionOptions(question.optionsJson),
-      })),
-      availability: availability.map(({ weekday, startMinute, endMinute }) => ({ weekday, startMinute, endMinute })),
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    };
+    const [event] = await hydrateEventTypes(this.db, [record]);
+    return event;
   }
 
 }
@@ -296,19 +260,4 @@ function eventColumns(input: EventTypeInput) {
     afterBufferMinutes: input.afterBufferMinutes,
     hostDayBookingLimit: input.hostDayBookingLimit,
   };
-}
-
-function parseQuestionOptions(value: string): EventQuestionOptionInput[] {
-  const parsed: unknown = JSON.parse(value);
-  if (!Array.isArray(parsed)) return [];
-  return parsed.map((option) => {
-    if (typeof option === "string") return { value: option, label: option };
-    if (typeof option === "object" && option !== null && "value" in option && "label" in option) {
-      const candidate = option as { value: unknown; label: unknown };
-      if (typeof candidate.value === "string" && typeof candidate.label === "string") {
-        return { value: candidate.value, label: candidate.label };
-      }
-    }
-    throw new Error("Persisted event question has invalid options");
-  });
 }

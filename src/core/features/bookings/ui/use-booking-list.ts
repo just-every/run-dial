@@ -1,13 +1,18 @@
+import { useWorkspaceRead, useWorkspaceHeader } from "../../../app/workspace-reads";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import type { BookingRecord } from "../types";
 import { bookingListQuery, bookingPageSize, type BookingFilters } from "./booking-filters";
 
 export function useBookingList(filters: BookingFilters, page: number, moveToPage: (page: number) => Promise<void>) {
-  const [bookings, setBookings] = useState<BookingRecord[]>();
-  const [totalCount, setTotalCount] = useState(0);
-  const [hostTimezone, setHostTimezone] = useState<string>();
-  const [loading, setLoading] = useState(true);
+  const initialPath = "/api/app/bookings?" + new URLSearchParams(bookingListQuery(filters, page));
+  const initialBookings = useWorkspaceRead<BookingRecord[]>(initialPath);
+  const initialTotal = useWorkspaceHeader(initialPath, "x-total-count");
+  const initialProfile = useWorkspaceRead<{ timezone: string }>("/api/app/profile");
+  const [bookings, setBookings] = useState<BookingRecord[] | undefined>(initialBookings);
+  const [totalCount, setTotalCount] = useState(Number(initialTotal ?? 0));
+  const [hostTimezone, setHostTimezone] = useState<string | undefined>(initialProfile?.timezone);
+  const [loading, setLoading] = useState(initialBookings === undefined);
   const [listError, setListError] = useState("");
   const latestRequest = useRef(0);
   const load = useCallback(async () => {

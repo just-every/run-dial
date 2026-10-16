@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { useHostSetup } from "../../host-setup";
 import { SetupChecklist } from "../../host-setup";
 import { HealthStatus } from "../../host-setup";
@@ -16,7 +17,8 @@ export function DashboardPage() {
   const setup = useHostSetup();
   const initial = useLoaderData({ from: "/app" });
   const [profile, setProfile] = useState<ProfileRecord | null>(initial.profile ?? null);
-  const [eventTypes, setEventTypes] = useState<EventTypeRecord[]>();
+  const initialEvents = useWorkspaceRead<EventTypeRecord[]>("/api/app/event-types");
+  const [eventTypes, setEventTypes] = useState<EventTypeRecord[] | undefined>(initialEvents);
   const [profileError, setProfileError] = useState("");
   const [eventError, setEventError] = useState("");
   useEffect(() => {

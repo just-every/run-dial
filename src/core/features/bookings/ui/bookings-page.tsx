@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { ErasureRecovery } from "./delivery-actions";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -15,7 +16,8 @@ import { useBookingList } from "./use-booking-list";
 import { startTime } from "./operator-time";
 
 export function BookingsPage() {
-  const [eventTypes, setEventTypes] = useState<EventTypeRecord[]>([]);
+  const initialEvents = useWorkspaceRead<EventTypeRecord[]>("/api/app/event-types");
+  const [eventTypes, setEventTypes] = useState<EventTypeRecord[]>(initialEvents ?? []);
   const [selected, setSelected] = useState<string>();
   const [notice, setNotice] = useState("");
   const noticeElement = useRef<HTMLParagraphElement>(null);

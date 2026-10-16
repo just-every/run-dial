@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, errorMessage } from "../../../api/client";
 import type { PlatformHealth } from "../../../platform/health";
@@ -7,7 +8,8 @@ const PlatformHealthContext = createContext<HealthState | undefined>(undefined);
 
 /** Keep independent binding checks for the lifetime of the signed-in workspace. */
 export function PlatformHealthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<HealthState>({ error: "" });
+  const platform = useWorkspaceRead<NonNullable<HealthState["platform"]>>("/api/app/platform-health");
+  const [state, setState] = useState<HealthState>({ platform, error: "" });
   useEffect(() => {
     let active = true;
     const request = new AbortController();

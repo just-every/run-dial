@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { api, errorMessage } from "../../../api/client";
@@ -7,7 +8,8 @@ export const hostSetupChanged = () => window.dispatchEvent(new Event("dial-host-
 
 export function useHostSetup() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const [state, setState] = useState<HostSetupOverview>();
+  const initial = useWorkspaceRead<HostSetupOverview>("/api/app/host-setup");
+  const [state, setState] = useState<HostSetupOverview | undefined>(initial);
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true;

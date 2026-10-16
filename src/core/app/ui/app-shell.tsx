@@ -1,10 +1,11 @@
+import { installWorkspaceReads, WorkspaceReadsContext } from "../workspace-reads";
 import { useHydrated } from "../use-hydrated";
 import { OwnerEditorShell } from "../../features/editor/owner-editor";
 import { useHostSetup } from "../../features/host-setup/ui/use-host-setup";
 import { CopyBookingLink } from "../../features/host-setup/ui/copy-booking-link";
 import type { BookingLink } from "../../features/host-setup/service";
 import { Link, Outlet, useRouterState, useLoaderData } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useInsertionEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
 import { readProfile } from "../../features/host-profile/read-profile";
 import { Button, buttonClassName } from "./primitives";
@@ -25,7 +26,9 @@ const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
 type ProfileSummary = { name: string; title: string; handle: string };
 
 export function AppShell() {
-  return <PlatformHealthProvider><AppShellContent /></PlatformHealthProvider>;
+  const initial = useLoaderData({ from: "/app" });
+  useInsertionEffect(() => { installWorkspaceReads(initial.reads); }, [initial.reads]);
+  return <WorkspaceReadsContext.Provider value={initial.reads}><PlatformHealthProvider><AppShellContent /></PlatformHealthProvider></WorkspaceReadsContext.Provider>;
 }
 
 function AppShellContent() {

@@ -1,3 +1,4 @@
+import { workspaceFetch } from "../app/workspace-reads";
 import { hc } from "hono/client";
 import { z } from "zod";
 import type { AppType } from "../app/hono";
@@ -5,6 +6,7 @@ import type { AppType } from "../app/hono";
 /** The browser talks only through the Worker contract declared by AppType. */
 export const api = hc<AppType>("/", {
   init: { credentials: "same-origin" },
+  fetch: workspaceFetch,
 });
 
 /** Public requests need the hosted demo's visitor cookie to reach its isolated app. */

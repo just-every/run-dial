@@ -1,3 +1,5 @@
+import { privateRequestServices, nativeRequestSession } from "./private-request.server";
+import { readWorkspaceReads } from "./workspace-reads.server";
 import { installPublicOrigin } from "../shared/public-origin";
 import { env } from "cloudflare:workers";
 import { getRequest } from "@tanstack/react-start/server";
@@ -10,20 +12,27 @@ import { canReadEmbedDocument } from "./embed-document-policy";
 
 const bindings = () => env as unknown as AppBindings;
 
-export async function readPrivateShell(setup = false) {
+export async function readPrivateShell(setup = false, path = "/app") {
   const bound = bindings();
   const runtime = parseRuntimeEnvironment(bound);
-  const services = createServices(bound.DB, runtime, bound.ASSETS, { files: bound.FILES });
-  const session = await services.operators.authenticate(getRequest());
-  if (!session) throw redirect({ to: "/signin" });
-  const nativeSession = await services.operators.auth.getSession(getRequest());
+  const services = privateRequestServices(bound) ?? createServices(bound.DB, runtime, bound.ASSETS, { files: bound.FILES });
+  const request = getRequest();
+  const nativeSession = await nativeRequestSession(request, services.operators.auth);
+  if (!nativeSession) throw redirect({ to: "/signin" });
+  const session = { id: nativeSession.operator.id, email: nativeSession.operator.email, sessionId: nativeSession.id, expiresAt: new Date(nativeSession.expiresAt).toISOString() };
   const completed = await services.hostSetup.completion();
   if (setup && completed) throw redirect({ to: "/app" });
   if (!setup && !completed) throw redirect({ to: "/setup" });
+  const canInspectArchive = nativeSession.kind === "native" && nativeSession.operator.role === "owner";
+  const [profile, reads] = await Promise.all([
+    services.hostProfile.getProfile(),
+    setup ? Promise.resolve({}) : readWorkspaceReads(path, request, bound, runtime, services, session, canInspectArchive),
+  ]);
   return {
-    profile: await services.hostProfile.getProfile(),
+    reads,
+    profile,
     operator: session,
-    canInspectArchive: nativeSession?.kind === "native" && nativeSession.operator.role === "owner",
+    canInspectArchive,
     publicOrigin: installPublicOrigin(runtime.APP_URL),
     editorConfigured: Boolean(runtime.RER_MANAGEMENT_ORIGIN || runtime.RER_INSTALLATION_ID),
   };

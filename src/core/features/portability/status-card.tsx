@@ -1,3 +1,4 @@
+import { workspaceFetch } from "../../app/workspace-reads";
 import { useEffect, useState } from "react";
 import { Button, Card } from "../../app/ui/primitives";
 import { SectionHeading } from "../../app/ui/page-header";
@@ -13,7 +14,7 @@ export function ArchiveStatusCard() {
  async function refresh() {
   setWorking(true); setError(""); setStatus(null);
   try {
-   const response = await fetch("/api/portability/status", { credentials: "same-origin", cache: "no-store" });
+   const response = await workspaceFetch("/api/portability/status", { credentials: "same-origin", cache: "no-store" });
    if (!response.ok) throw new Error(response.status === 401 ? "Sign in with a native owner session to inspect export status." : "Export status could not be loaded. Refresh to retry.");
    setStatus(await response.json() as ArchiveStatus);
   } catch (failure) { setError(failure instanceof Error ? failure.message : "Export status could not be loaded. Refresh to retry."); }

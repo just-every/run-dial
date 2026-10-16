@@ -1,3 +1,4 @@
+import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { ExtensionSlot } from "../../../app/extensions";
 import { operatorTimestamp } from "../../../shared/operator-format";
 import { useEffect, useState } from "react";
@@ -12,8 +13,10 @@ type Request = { id: string; eventTitle: string; inviteeName: string; inviteeEma
 
 export function RequestsInboxPage() {
   const [state, setState] = useState<"all" | RequestState>("submitted");
-  const [requests, setRequests] = useState<Request[]>();
-  const [hostTimezone, setHostTimezone] = useState<string>();
+  const initialRequests = useWorkspaceRead<Request[]>("/api/app/availability-requests?state=submitted");
+  const [requests, setRequests] = useState<Request[] | undefined>(initialRequests);
+  const profile = useWorkspaceRead<{ timezone: string }>("/api/app/profile");
+  const [hostTimezone, setHostTimezone] = useState<string | undefined>(profile?.timezone);
   const [selected, setSelected] = useState<string>();
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");

@@ -1,3 +1,4 @@
+import { publicationRequirements, requestRequirements } from "./publication-readiness.server";
 import { validHostProfile } from "../host-setup";
 import type { ProfileRecord } from "../host-profile";
 import { toPublicEventType } from "./public";
@@ -106,7 +107,8 @@ export class EventTypesService {
   }
 
   async publishReadiness(eventType: EventTypeRecord) {
-    return this.eventReadiness(eventType, await this.providerReadiness());
+    const [profile, providers] = await Promise.all([this.hostTimezone.getProfile(), this.providerReadiness()]);
+    return publicationRequirements(eventType, profile, providers);
   }
 
   /** The calendar and sending-address checks publication runs; one pass serves several event types. */
@@ -120,17 +122,14 @@ export class EventTypesService {
   }
 
   async eventReadiness(eventType: EventTypeRecord, providers: Awaited<ReturnType<EventTypesService["providerReadiness"]>>) {
-    const missing = [
-      ...(!validHostProfile(await this.hostTimezone.getProfile()) ? ["host_profile"] : []),
-      ...(eventType.availability.length === 0 ? ["open_availability"] : []),
-      ...(eventType.locationType !== "google_meet" && !eventType.locationValue.trim() ? ["private_location"] : []),
-    ];
-    if (!providers) return { ready: false, missing: [...missing, "transactional_mail", "destination_calendar", ...(eventType.locationType === "google_meet" ? ["google_meet_capability"] : [])] };
-    const { calendar, mail } = providers;
-    if (calendar.kind !== "healthy" && calendar.code !== "not_connected") missing.push("destination_calendar");
-    if (mail.kind !== "healthy") missing.push("transactional_mail");
-    if (eventType.locationType === "google_meet" && (calendar.kind !== "healthy" || !calendar.conferenceCapable)) missing.push("google_meet_capability");
-    return { ready: missing.length === 0, missing };
+    return publicationRequirements(eventType, await this.hostTimezone.getProfile(), providers);
+  }
+
+  /** Fresh checks shared only within this read; mutations still run their own live checks. */
+  async readinessForEvent(event: EventTypeRecord) {
+    const [profile, providers] = await Promise.all([this.hostTimezone.getProfile(), this.providerReadiness()]);
+    const requests = this.requestOpeningReadiness(event, requestRequirements(event, profile, providers?.mail.kind === "healthy"));
+    return { ...publicationRequirements(event, profile, providers), requests };
   }
 
   completionReadiness(event: EventTypeRecord) {
@@ -138,18 +137,20 @@ export class EventTypesService {
   }
 
   async requestReadiness(event: EventTypeRecord) {
-    const readiness = await this.requestRequirements(event);
+    return this.requestOpeningReadiness(event, await this.requestRequirements(event));
+  }
+
+  private requestOpeningReadiness(event: EventTypeRecord, readiness: { ready: boolean; missing: string[] }) {
     const missing = [...readiness.missing, ...(event.status === "published" ? ["event_already_published"] : [])];
     return { ready: missing.length === 0, missing };
   }
 
   private async requestRequirements(event: EventTypeRecord) {
-    const missing = [
-      ...(!validHostProfile(await this.hostTimezone.getProfile()) ? ["host_profile"] : []),
-      ...(!event.alternativeRequestsEnabled ? ["alternative_requests_enabled"] : []),
-    ];
-    if (!this.publication || !(await this.publication.mail.checkConnection().then(() => true).catch(() => false))) missing.push("transactional_mail");
-    return { ready: missing.length === 0, missing };
+    const [profile, mailHealthy] = await Promise.all([
+      this.hostTimezone.getProfile(),
+      this.publication?.mail.checkConnection().then(() => true).catch(() => false),
+    ]);
+    return requestRequirements(event, profile, mailHealthy === true);
   }
 
   async openRequests(id: string) {

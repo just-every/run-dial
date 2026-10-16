@@ -1,3 +1,4 @@
+import { useWorkspaceRead, useWorkspaceHeader } from "../../../app/workspace-reads";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { api, errorMessage } from "../../../api/client";
@@ -13,8 +14,11 @@ type ActivityState<T> =
   | { status: "loaded"; total: number; items: T[] };
 
 export function OverviewActivity() {
-  const [bookings, setBookings] = useState<ActivityState<BookingRecord>>({ status: "loading" });
-  const [requests, setRequests] = useState<ActivityState<OperatorRequest>>({ status: "loading" });
+  const initialBookings = useWorkspaceRead<BookingRecord[]>("/api/app/bookings?order=created&limit=3");
+  const initialCount = useWorkspaceHeader("/api/app/bookings?order=created&limit=3", "x-total-count");
+  const initialRequests = useWorkspaceRead<OperatorRequest[]>("/api/app/availability-requests");
+  const [bookings, setBookings] = useState<ActivityState<BookingRecord>>(initialBookings ? { status: "loaded", total: Number(initialCount ?? 0), items: initialBookings } : { status: "loading" });
+  const [requests, setRequests] = useState<ActivityState<OperatorRequest>>(initialRequests ? { status: "loaded", total: initialRequests.length, items: [...initialRequests].sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt)) } : { status: "loading" });
 
   useEffect(() => {
     let active = true;

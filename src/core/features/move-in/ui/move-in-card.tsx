@@ -1,3 +1,4 @@
+import { workspaceFetch } from "../../../app/workspace-reads";
 import { useEffect, useState } from 'react';
 import { EventReview,eventName } from './event-review';
 import { DifferencesList } from './differences-list';
@@ -10,13 +11,13 @@ import type { reportFromPlan } from '../planning';
 type Report=ReturnType<typeof reportFromPlan>;
 type Job={id:string;state:string;checkpoint:number;total:number;mode?:'first'|'catch_up'};
 type Result={report:Report;uploadIdentity?:string;job?:Job;undo?:{dispositions:Array<{disposition:string;reason:string;entity:{table:string;recordId:string}}>}};
-async function request(path:string,init?:RequestInit):Promise<Result>{const response=await fetch(`/api/app/move-in/${path}`,init);const result=await response.json() as Result & {error?:{message?:string}};if(!response.ok)throw new Error(result.error?.message??'Import request failed.');return result;}
+async function request(path:string,init?:RequestInit):Promise<Result>{const response=await workspaceFetch(`/api/app/move-in/${path}`,init);const result=await response.json() as Result & {error?:{message?:string}};if(!response.ok)throw new Error(result.error?.message??'Import request failed.');return result;}
 export function MoveInCard(){
  const hydrated=useHydrated();
  const [files,setFiles]=useState<File[]>([]),[upload,setUpload]=useState<{asOf:string;identity:string}>(),[choices,setChoices]=useState<Choices>({}),[result,setResult]=useState<Result>(),[ack,setAck]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[jobs,setJobs]=useState<Job[]>([]),[reviewChoices,setReviewChoices]=useState('');
- useEffect(()=>{void fetch('/api/app/move-in/jobs').then(async r=>await r.json() as {jobs?:Job[]}).then(r=>setJobs(r.jobs??[])).catch(()=>setError('Saved imports could not be loaded.'));},[]);
+ useEffect(()=>{void workspaceFetch('/api/app/move-in/jobs').then(async r=>await r.json() as {jobs?:Job[]}).then(r=>setJobs(r.jobs??[])).catch(()=>setError('Saved imports could not be loaded.'));},[]);
  async function run(work:()=>Promise<Result>){setBusy(true);setError('');try{const next=await work();setResult(next);if(next.job)setJobs(prev=>[{...prev.find(j=>j.id===next.job!.id),...next.job!},...prev.filter(j=>j.id!==next.job!.id)]);window.dispatchEvent(new Event(moveInChanged));}catch(e){setError(e instanceof Error?e.message:'Import could not be completed.');}finally{setBusy(false);}}
- async function decide(path:string){const id=result?.job?.id;if(!id)return;await run(async()=>{const response=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:'{}'});if(!response.ok){const body=await response.json() as {error?:{message?:string}};throw new Error(body.error?.message??'The decision could not be saved.');}return request(`jobs/${id}`);});}
+ async function decide(path:string){const id=result?.job?.id;if(!id)return;await run(async()=>{const response=await workspaceFetch(path,{method:'POST',headers:{'content-type':'application/json'},body:'{}'});if(!response.ok){const body=await response.json() as {error?:{message?:string}};throw new Error(body.error?.message??'The decision could not be saved.');}return request(`jobs/${id}`);});}
  async function preview(next=choices){setAck(false);setResult(undefined);setReviewChoices(JSON.stringify(next));await run(()=>{const asOf=upload?.asOf??new Date().toISOString();const body=new FormData();files.forEach(f=>body.append('files',f));body.set('options',JSON.stringify({choices:next,asOf,uploadIdentity:upload?.identity}));return request('preview',{method:'POST',body}).then(nextResult=>{if(!nextResult.uploadIdentity)throw new Error('Upload review identity is missing. Select the files again.');setUpload({asOf:nextResult.report.asOf,identity:nextResult.uploadIdentity});return nextResult;});});}
  async function apply(){if(!result||!upload||!ack||reviewChoices!==JSON.stringify(choices))return;const {asOf,fingerprint}=result.report;await run(()=>{const body=new FormData();files.forEach(f=>body.append('files',f));body.set('options',JSON.stringify({choices,asOf,fingerprint,acknowledged:ack,uploadIdentity:upload.identity}));return request('apply',{method:'POST',body});});}
  function update(next:Choices){setChoices(next);setAck(false);}
