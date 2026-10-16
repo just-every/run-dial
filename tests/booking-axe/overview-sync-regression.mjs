@@ -47,6 +47,7 @@ export async function overviewSynchronizationRegression(browser, origin, storage
 
     await page.getByRole("link", { name: "Settings", exact: true }).click();
     await page.getByRole("heading", { name: "Settings", exact: true }).waitFor();
+    await page.locator('[data-operator-ready="true"]').waitFor();
     await page.route("**/_serverFn/**", route => route.abort("failed"));
     await page.getByRole("link", { name: "Overview", exact: true }).click();
     await page.getByRole("heading", { name: "This page could not finish loading", exact: true }).waitFor();
