@@ -46,6 +46,17 @@ export const workspaceFetch: typeof fetch = (input, init) => {
     return globalThis.fetch(input, init);
   }
   const key = readKey(input instanceof Request ? input.url : String(input));
+  const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+  // Independently cancellable consumers must never share an aborted transport.
+  if (signal) {
+    if (signal.aborted) return Promise.reject(signal.reason);
+    const initial = remaining.get(key);
+    remaining.delete(key);
+    return initial ? Promise.resolve(initial).then(response => {
+      signal.throwIfAborted();
+      return new Response(response.body, { status: response.status, headers: response.headers });
+    }) : globalThis.fetch(input, init);
+  }
   const existing = pending.get(key);
   if (existing) return existing.then(response => response.clone());
   const initial = remaining.get(key);
