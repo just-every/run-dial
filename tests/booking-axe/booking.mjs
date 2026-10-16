@@ -3,6 +3,8 @@ import { auditor, keyboardActivate, trackPage } from "./audit.mjs";
 import { linkContrast } from "./link-contrast.mjs";
 export async function bookingJourney(browser, origin, scans, errors, widths = [1440, 390]) {
   for (const width of widths) {
+    // Faster private pages leave both complete public journeys inside one admission window.
+    if (width !== widths[0]) await new Promise(resolve => setTimeout(resolve, 60_000));
     const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 1024 }, locale: "de-DE", timezoneId: "America/New_York" });
     try {
       const page = await context.newPage(); trackPage(page, errors); const audit = auditor(page, width, scans);

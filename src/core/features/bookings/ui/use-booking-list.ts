@@ -7,6 +7,7 @@ import { bookingListQuery, bookingPageSize, type BookingFilters } from "./bookin
 export function useBookingList(filters: BookingFilters, page: number, moveToPage: (page: number) => Promise<void>) {
   const initialPath = "/api/app/bookings?" + new URLSearchParams(bookingListQuery(filters, page));
   const initialBookings = useWorkspaceRead<BookingRecord[]>(initialPath);
+  const hasInitialBookings = initialBookings !== undefined;
   const initialTotal = useWorkspaceHeader(initialPath, "x-total-count");
   const initialProfile = useWorkspaceRead<{ timezone: string }>("/api/app/profile");
   const [bookings, setBookings] = useState<BookingRecord[] | undefined>(initialBookings);
@@ -15,9 +16,10 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
   const [loading, setLoading] = useState(initialBookings === undefined);
   const [listError, setListError] = useState("");
   const latestRequest = useRef(0);
-  const load = useCallback(async () => {
+  const mounted = useRef(false);
+  const load = useCallback(async (showLoading = true) => {
     const requestId = ++latestRequest.current;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const response = await api.api.app.bookings.$get({ query: bookingListQuery(filters, page) });
       if (response.ok) {
@@ -55,9 +57,10 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
   }, [filters, page, moveToPage]);
 
   useEffect(() => {
-    setLoading(true);
-    const timer = window.setTimeout(() => { void load(); }, filters.query?.trim() ? 180 : 0);
+    const showLoading = mounted.current || !hasInitialBookings;
+    mounted.current = true;
+    const timer = window.setTimeout(() => { void load(showLoading); }, filters.query?.trim() ? 180 : 0);
     return () => { window.clearTimeout(timer); latestRequest.current += 1; };
-  }, [filters, load]);
+  }, [filters, load, hasInitialBookings]);
   return { bookings, totalCount, hostTimezone, loading, listError, load };
 }

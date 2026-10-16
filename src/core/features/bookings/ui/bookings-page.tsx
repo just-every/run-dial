@@ -96,7 +96,7 @@ export function BookingsPage() {
             <p className="mt-2 text-[15px] text-soft">{startTime(booking.occurrence.startAt, booking.hostTimezone)}</p>
           </button>)}
         </Card>
-        {active ? <BookingDetail key={active.id} booking={active} onChanged={async (message) => { setNotice(message ?? ""); await load(); }} onCancel={cancel} onAttendance={attendance} onErased={(message, id) => { setNotice(message); void navigate(filters, page, true, id).then(load); }} /> : null}
+        {active ? <BookingDetail key={active.id} booking={active} onChanged={async (message) => { setNotice(message ?? ""); await load(); }} onCancel={cancel} onAttendance={attendance} onErased={(message, id) => { setNotice(message); void navigate(filters, page, true, id).then(() => load()); }} /> : null}
       </div>}
   </div>;
 }

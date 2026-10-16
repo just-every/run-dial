@@ -15,6 +15,9 @@ export function withPrivateRequest<T>(request: Request, bindings: AppBindings, s
   const events = services.eventTypes.listEventTypes.bind(services.eventTypes);
   let eventRead: ReturnType<typeof events> | undefined;
   services.eventTypes.listEventTypes = () => eventRead ??= events();
+  const completion = services.hostSetup.completion.bind(services.hostSetup);
+  let completionRead: ReturnType<typeof completion> | undefined;
+  services.hostSetup.completion = () => completionRead ??= completion();
   return current.run({ request, bindings, services }, run);
 }
 

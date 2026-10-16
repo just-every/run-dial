@@ -3,5 +3,5 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CreateBookingPage } from "../core/features/bookings/ui/create-booking-page";
 
 
-export const Route = createFileRoute('/app/bookings_/new' )({ component: withEditorLeaf(CreateBookingPage) });
+export const Route = createFileRoute('/app/bookings_/new' )({ codeSplitGroupings: [], component: withEditorLeaf(CreateBookingPage) });
 

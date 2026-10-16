@@ -65,7 +65,7 @@ function AppShellContent() {
   }
 
   return (
-    <div data-operator-ready={hydrated} className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div data-operator-ready={hydrated} inert={!hydrated} className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
       {initial.editorConfigured ? <OwnerEditorShell /> : null}
       <div className="hidden border-r border-line bg-sidebar lg:block">
         <aside className="sticky top-0 flex h-screen flex-col overflow-y-auto px-5 py-6">

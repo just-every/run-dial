@@ -19,7 +19,7 @@ import { extensionRoutes } from "./mount.server";
 import { checkPlatformBindings } from "../platform/health";
 import { archiveStatus } from "../features/portability/admission";
 import { bookingListQuery, readBookingFilters, readBookingPage } from "../features/bookings/ui/booking-filters";
-import { readKey, type WorkspaceReads } from "./workspace-reads";
+import { readKey, type WorkspaceReads, type WorkspaceRead } from "./workspace-reads";
 
 /** Called only after the document/server function independently validates its native session. */
 export async function readWorkspaceReads(path: string, request: Request, bound: AppBindings, runtime: RuntimeEnvironment, services: AppServices, operator: SessionRecord, canInspectArchive: boolean) {
@@ -61,12 +61,18 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
   }
   if (name === "/app/bookings/new" && url.searchParams.get("requestId")) routes.push("/api/app/availability-requests/" + encodeURIComponent(url.searchParams.get("requestId")!));
   const eventId = /^\/app\/event-types\/([0-9A-Z]{26})$/.exec(name)?.[1];
-  if (eventId) routes.push(`/api/app/event-types/${eventId}`, `/api/app/event-types/${eventId}/readiness`, `/api/app/custom-fields/eventType/${eventId}`);
+  if (eventId) {
+    routes.push(`/api/app/event-types/${eventId}`, `/api/app/custom-fields/eventType/${eventId}`);
+    const endpoint = `/api/app/event-types/${eventId}/readiness`;
+    // Start streams this fresh result while the document's styles and scripts load.
+    // The document stream remains open until the native provider check finishes.
+    reads[endpoint] = Promise.resolve(app.fetch(new Request(new URL(endpoint, runtime.APP_URL), { headers: request.headers }), bound)).then(async response => ({ body: await response.text(), status: response.status, headers: Object.fromEntries(response.headers) } satisfies WorkspaceRead));
+  }
   if (name === "/app/settings") routes.push(...["session", "calendar/connection", "calendar/setup", "mail/connection", "mail/preferences", "operators", "embed-settings", "blocked-addresses", "custom-fields", "move-in/jobs", "move-in/switch-over"].map(p => "/api/app/" + p));
   const work = routes.map(read);
   if (name === "/app/settings" && canInspectArchive) work.push(archiveStatus(bound.DB).then(status => { reads["/api/portability/status"] = { status: 200, body: JSON.stringify(status), headers: { "cache-control": "no-store", "content-type": "application/json" } }; }));
   if (bookingList) work.push(read(bookingList).then(async () => {
-    const response = reads[readKey(bookingList!)];
+    const response = await reads[readKey(bookingList!)];
     if (response.status !== 200) return;
     const first = JSON.parse(response.body)[0] as { id: string; history: Array<{ actorType: string }> } | undefined;
     if (first) await Promise.all([read(`/api/app/bookings/${first.id}/deliveries`), read(`/api/app/custom-fields/booking/${first.id}`), ...(first.history.some(entry => entry.actorType === "operator") ? [read("/api/app/operators")] : [])]);

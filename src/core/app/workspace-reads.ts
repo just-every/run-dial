@@ -1,6 +1,7 @@
 import { useContext, createContext } from "react";
 
-export type WorkspaceReads = Record<string, { body: string; status: number; headers: Record<string, string> }>;
+export type WorkspaceRead = { body: string; status: number; headers: Record<string, string> };
+export type WorkspaceReads = Record<string, WorkspaceRead | Promise<WorkspaceRead>>;
 export const WorkspaceReadsContext = createContext<WorkspaceReads>({});
 
 export function readKey(input: string) {
@@ -12,11 +13,12 @@ export function readKey(input: string) {
 /** The current navigation's native responses, useful for populated first render. */
 export function useWorkspaceRead<T>(path: string): T | undefined {
   const response = useContext(WorkspaceReadsContext)[readKey(path)];
-  return response && response.status < 400 ? JSON.parse(response.body) as T : undefined;
+  return response && !(response instanceof Promise) && response.status < 400 ? JSON.parse(response.body) as T : undefined;
 }
 
 export function useWorkspaceHeader(path: string, name: string) {
-  return useContext(WorkspaceReadsContext)[readKey(path)]?.headers[name.toLowerCase()];
+  const response = useContext(WorkspaceReadsContext)[readKey(path)];
+  return response && !(response instanceof Promise) ? response.headers[name.toLowerCase()] : undefined;
 }
 
 let installed: WorkspaceReads | undefined;
@@ -49,7 +51,7 @@ export const workspaceFetch: typeof fetch = (input, init) => {
   const initial = remaining.get(key);
   remaining.delete(key);
   const request = initial
-    ? Promise.resolve(new Response(initial.body, { status: initial.status, headers: initial.headers }))
+    ? Promise.resolve(initial).then(response => new Response(response.body, { status: response.status, headers: response.headers }))
     : globalThis.fetch(input, init);
   pending.set(key, request);
   void request.finally(() => { if (pending.get(key) === request) pending.delete(key); }).catch(() => {});
