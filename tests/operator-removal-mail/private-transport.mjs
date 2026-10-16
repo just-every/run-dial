@@ -5,6 +5,8 @@ export async function verifyPrivateTransport({ origin, cookie }) {
   const { path } = await (await fetch(origin + "/__removal/private-function")).json();
   assert.ok(path.startsWith("/_serverFn/"), `Expected the actual generated function URL, received ${path}`);
   const endpoint = new URL(path, origin);
+  // The generated GET transport carries its validated input as a seroval payload.
+  endpoint.searchParams.set("payload", JSON.stringify({ t: { t: 10, i: 0, p: { k: ["data"], v: [{ t: 10, i: 1, p: { k: ["path"], v: [{ t: 1, s: "/app" }] }, o: 0 }] }, o: 0 }, f: 63, m: [] }));
   const headers = { "x-tsr-serverFn": "true", "sec-fetch-site": "same-origin", origin, referer: origin + "/app" };
   for (const [label, session] of [["missing", ""], ["forged", "operator_session_local=forged"], ["active", cookie]]) {
     const response = await fetch(endpoint, { headers: { ...headers, ...(session ? { cookie: session } : {}) }, redirect: "manual" });
