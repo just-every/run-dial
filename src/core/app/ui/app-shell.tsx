@@ -11,7 +11,6 @@ import { readProfile } from "../../features/host-profile/read-profile";
 import { Button, buttonClassName } from "./primitives";
 import { Icon, type IconName } from "../../shared/drawing/icons";
 import { BrandMark } from "../../features/public-booking";
-import { PlatformHealthProvider } from "../../features/host-setup/ui/platform-health";
 
 const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
   ["Overview", "/app", "home"],
@@ -33,7 +32,7 @@ export function AppShell() {
 function WorkspaceShell({ reads: pending }: { reads: WorkspaceReads | Promise<WorkspaceReads> }) {
   const reads = pending instanceof Promise ? use(pending) : pending;
   useInsertionEffect(() => { installWorkspaceReads(reads); }, [reads]);
-  return <WorkspaceReadsContext.Provider value={reads}><PlatformHealthProvider><AppShellContent /></PlatformHealthProvider></WorkspaceReadsContext.Provider>;
+  return <WorkspaceReadsContext.Provider value={reads}><AppShellContent /></WorkspaceReadsContext.Provider>;
 }
 
 function AppShellContent() {

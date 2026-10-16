@@ -52,10 +52,10 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     return job;
   };
   const url = new URL(path, runtime.APP_URL);
-  const routes = ["/api/app/profile", "/api/app/host-setup", "/api/app/platform-health"];
+  const routes = ["/api/app/profile", "/api/app/host-setup"];
   const name = url.pathname;
   if (["/app", "/app/", "/app/event-types", "/app/availability", "/app/bookings", "/app/bookings/new", "/app/settings"].includes(name)) routes.push("/api/app/event-types");
-  if (name === "/app" || name === "/app/") routes.push("/api/app/bookings?order=created&limit=3", "/api/app/availability-requests");
+  if (name === "/app" || name === "/app/") routes.push("/api/app/platform-health", "/api/app/bookings?order=created&limit=3", "/api/app/availability-requests");
   if (name === "/app/requests") routes.push("/api/app/availability-requests?state=submitted");
   let bookingList: string | undefined;
   if (name === "/app/bookings") {

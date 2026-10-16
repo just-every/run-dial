@@ -1,4 +1,4 @@
-import { useContext, createContext } from "react";
+import { useContext, createContext, useMemo } from "react";
 
 export type WorkspaceRead = { body: string; status: number; headers: Record<string, string> };
 export type WorkspaceReads = Record<string, WorkspaceRead | Promise<WorkspaceRead>>;
@@ -13,7 +13,7 @@ export function readKey(input: string) {
 /** The current navigation's native responses, useful for populated first render. */
 export function useWorkspaceRead<T>(path: string): T | undefined {
   const response = useContext(WorkspaceReadsContext)[readKey(path)];
-  return response && !(response instanceof Promise) && response.status < 400 ? JSON.parse(response.body) as T : undefined;
+  return useMemo(() => response && !(response instanceof Promise) && response.status < 400 ? JSON.parse(response.body) as T : undefined, [response]);
 }
 
 export function useWorkspaceHeader(path: string, name: string) {
