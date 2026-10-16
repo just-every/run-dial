@@ -15,8 +15,12 @@ export async function overviewSynchronizationRegression(browser, origin, storage
       await route.continue();
     });
     try {
-      await page.getByRole("link", { name: "Overview", exact: true }).click();
-      await intercepted.promise;
+      const navigation = page.getByRole("link", { name: "Overview", exact: true }).click();
+      const nativeRead = page.waitForRequest(request => new URL(request.url()).pathname.startsWith("/_serverFn/"), { timeout: 30_000 });
+      nativeRead.catch(() => {});
+      // Link activation can wait for its navigation; release the HTTP read independently.
+      await Promise.race([intercepted.promise, nativeRead]);
+      void navigation.catch(() => {});
       assert.equal(await page.getByText("0 bookings", { exact: true }).count(), 0, "an unfinished navigation never claims an empty booking list");
     } finally {
       held.resolve();
