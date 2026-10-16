@@ -7,6 +7,7 @@ export async function overviewSynchronizationRegression(browser, origin, storage
   try {
     const page = await context.newPage();
     await page.goto(origin + "/app/settings");
+    await page.locator('[data-operator-ready="true"]').waitFor();
     const held = Promise.withResolvers();
     const intercepted = Promise.withResolvers();
     await page.route("**/_serverFn/**", async route => {
@@ -15,9 +16,10 @@ export async function overviewSynchronizationRegression(browser, origin, storage
       await route.continue();
     });
     try {
-      const navigation = page.getByRole("link", { name: "Overview", exact: true }).click();
       const nativeRead = page.waitForRequest(request => new URL(request.url()).pathname.startsWith("/_serverFn/"), { timeout: 30_000 });
       nativeRead.catch(() => {});
+      const navigation = page.getByRole("link", { name: "Overview", exact: true }).click();
+      navigation.catch(() => {});
       // Link activation can wait for its navigation; release the HTTP read independently.
       await Promise.race([intercepted.promise, nativeRead]);
       void navigation.catch(() => {});
