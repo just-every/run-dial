@@ -8,7 +8,7 @@ import { moveInRoutes } from "../features/move-in/routes";
 import { hostSetupRoutes } from "../features/host-setup/routes";
 import { availabilityDiagnosticRoutes } from "../features/availability/routes";
 import { erasureRoutes } from "../features/erasure";
-import { Hono, type Context, type Next } from "hono";
+import { Hono, type Context, type Next, type ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { availabilityRequestRoutes } from "../features/availability-requests";
 import { bookingOperatorRoutes } from "../features/bookings";
@@ -93,7 +93,12 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .get("/setup/*", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
     .get("/signin", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw));
 
-  app.onError((error, context) => {
+  app.onError(appError);
+  return app;
+}
+
+/** Keep native error envelopes identical for HTTP and private document reads. */
+export const appError: ErrorHandler<AppEnvironment> = (error, context) => {
     if (error instanceof ArchiveMaintenance) return maintenanceResponse();
     if (error instanceof ErasureError) return apiError(context, error.status as 400, error.code, error.code === "native_session_required" ? "Sign in with your operator sign-in link to erase personal data." : error.code === "erasure_preview_changed" ? "The preview expired or matching records changed. Preview again before confirming." : error.code === "erasure_import_value_too_long" ? "A saved value for this person inside another person's imported booking is longer than 4,096 characters and cannot be matched exactly; no completed erasure receipt was issued." : "Erasure could not complete. Preview the email again to resume; no completed receipt was issued.");
     if (error instanceof AuthError) return context.json({ error: { code: error.code, message: error.code === "last_owner" ? "The last operator cannot be removed." : error.code === "operator_identity_overlap" ? "This operator also has bookings or requests. Use Erase personal data in Settings to erase every matching invitee record, then remove the operator separately." : "Operator access could not be changed. Reload and try again." } }, error.status as 400);
@@ -104,9 +109,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     if (error instanceof HTTPException && error.status === 400) return apiError(context, 400, "invalid_request", "The request contains invalid fields.");
     console.error("runtime_unavailable");
     return apiError(context, 503, "runtime_unavailable", "The Worker could not process this request.");
-  });
-  return app;
-}
+};
 
 export type AppType = ReturnType<typeof createApp>;
 

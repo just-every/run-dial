@@ -1,3 +1,4 @@
+import { appError } from "./hono";
 import { deferPrivateRead } from "./private-request.server";
 import { Hono } from "hono";
 import type { AppEnvironment } from "./context";
@@ -35,6 +36,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     .route("/", bookingOperatorRoutes).route("/", availabilityRequestRoutes).route("/", deliveryRoutes)
     .route("/", calendarConnectionRoutes).route("/", operatorManagementRoutes).route("/", embedRoutes)
     .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", extensionRoutes);
+  app.onError(appError);
   const reads: WorkspaceReads = {};
   const jobs = new Map<string, Promise<void>>();
   const read = (endpoint: string) => {
