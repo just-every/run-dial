@@ -102,7 +102,7 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
   assert.equal(missing.calls, 0);
   await missing.close();
 
-  browser = await chromium.launch();
+  browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
   context = await browser.newContext();
   let browserIp;
   await context.route('**/*', async route => {

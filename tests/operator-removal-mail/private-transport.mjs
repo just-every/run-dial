@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
+import { privateShellEndpoint } from "../start-transport.mjs";
 
 // Exercise the compiler-generated HTTP endpoint, not the handler as a local call.
 export async function verifyPrivateTransport({ origin, cookie }) {
   const { path } = await (await fetch(origin + "/__removal/private-function")).json();
   assert.ok(path.startsWith("/_serverFn/"), `Expected the actual generated function URL, received ${path}`);
-  const endpoint = new URL(path, origin);
+  const endpoint = await privateShellEndpoint(path, origin);
   const headers = { "x-tsr-serverFn": "true", "sec-fetch-site": "same-origin", origin, referer: origin + "/app" };
   for (const [label, session] of [["missing", ""], ["forged", "operator_session_local=forged"], ["active", cookie]]) {
     const response = await fetch(endpoint, { headers: { ...headers, ...(session ? { cookie: session } : {}) }, redirect: "manual" });
