@@ -28,7 +28,7 @@ export async function readPrivateShell(setup = false, path = "/app") {
   const pending = setup ? Promise.resolve({}) : readWorkspaceReads(path, request, bound, runtime, services, session, canInspectArchive);
   // Initial documents can send their head while fresh native reads finish.
   // Client navigation still waits for the populated destination before replacing it.
-  const document = /^\/(app|setup)(\/|$)/.test(new URL(request.url).pathname);
+  const document = !setup && /^\/app(\/|$)/.test(new URL(request.url).pathname);
   const reads = document ? deferPrivateRead(pending) : await pending;
   return {
     reads,
