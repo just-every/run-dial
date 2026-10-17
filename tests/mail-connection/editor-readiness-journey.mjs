@@ -8,7 +8,7 @@ export async function editorReadinessJourney({ page, origin, f, event, calls, sc
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     const readiness = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Event type readiness', exact: true }) });
     const name = page.getByLabel('Event name', { exact: true });
-    const description = page.getByRole('textbox', { name: /^Description\b/ });
+    const description = page.getByRole('textbox', { name: 'Description', exact: true });
     const save = page.getByRole('button', { name: 'Save changes', exact: true });
     const update = page.getByRole('button', { name: 'Update published event', exact: true });
     const checkedLabel = readiness.getByText(/^Connections last checked .+\.$/);

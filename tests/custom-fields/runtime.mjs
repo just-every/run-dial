@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { unstable_splitSqlQuery as splitSql } from 'wrangler';
 import { openInstall } from '../archive/operator-runtime.mjs';
-import { nativeFixture } from './fixture.mjs';
+import { nativeFixture, targets } from './fixture.mjs';
 import { quote, restoreStatements } from '../../scripts/archive/schema.mjs';
 import { exported, excluded } from '../../scripts/archive/policy.mjs';
 export async function fieldRuntime() {
@@ -33,6 +33,10 @@ export async function fieldRuntime() {
   // Prevent old synthetic fixture delivery work from being enqueued while proving private field writes.
   await db.prepare("UPDATE delivery_outbox SET state='succeeded'").run();
   const {cookie} = await runtime.signIn();
+  // The archive fixture plants unmatched capability placeholders. Issue a real
+  // capability through the native route before cancellation renders manage links.
+  const capability = await runtime.request(`/api/app/bookings/${targets.booking}/manage-link/rotate`,{body:{},cookie});
+  assert.equal(capability.status,200,`native manage capability: ${await capability.text()}`);
   const origin = new URL((await runtime.request('/health')).url).origin;
   const request = async(path,{method='GET',body,auth=true,originHeader=origin}={})=>fetch(origin+path,{method,redirect:'manual',headers:{origin:originHeader,'content-type':'application/json',...(auth?{cookie}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});
   const json = async(path,options,status=200)=>{const response=await request(path,options);assert.equal(response.status,status,`${options?.method??'GET'} ${path}: ${await response.clone().text()}`);return response.json();};
