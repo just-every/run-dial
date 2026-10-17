@@ -888,7 +888,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "f87e42227a1bbc78b252d572da6b6542edcbe198bc2980e324876b2bee0d5654",
+      "sha256": "7e1d9236f16c4b0bf4d8be94c8e40b6d1469fded083a49bead2a943feb7f21bc",
       "executable": false
     },
     "BASELINE.md": {
@@ -4236,7 +4236,7 @@
       "executable": false
     },
     "src/base/contract-style.ts": {
-      "sha256": "41afdf1cb60983b340283b13e414102387eb2a4af022d730220050a4384d0753",
+      "sha256": "4325f4eeabac2bef722808576605d7b657858b918729097c3412393fc6e4941f",
       "executable": false
     },
     "src/base/deployment-health.ts": {
@@ -6808,7 +6808,7 @@
       "executable": false
     },
     "tests/custom-fields/runtime.mjs": {
-      "sha256": "889482bdf46c126552f22d37f0903cf2ab81f65257dab329ef5c84fb3913b772",
+      "sha256": "f0fabecba431bbbf5ad7c30fa91d52a92eae755b461c34377b881b772f8fd6c6",
       "executable": false
     },
     "tests/custom-fields/worker.ts": {
@@ -7120,7 +7120,7 @@
       "executable": false
     },
     "tests/mail-connection/editor-readiness-journey.mjs": {
-      "sha256": "2c9783c314ddb843f044f3013dd0577fffd5c999c99cd85f1c9bc7e4aadcd264",
+      "sha256": "6ea6621b80176fc2f6106b85a0893ebd08f06eee5050a8d7a0f37e36f57368ab",
       "executable": false
     },
     "tests/mail-connection/fixture.mjs": {
