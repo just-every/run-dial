@@ -7,7 +7,7 @@ export function defaultEventQuestions(): EventQuestionInput[] {
 
 export function defaultEventTypeInput(): EventTypeInput {
   return {
-    slug: "", title: "", description: "", durationMinutes: 30, color: "#dcab3c",
+    slug: "", title: "", description: "", durationMinutes: 30, durationOptionsMinutes: [30], color: "#dcab3c",
     locationType: "fixed_link", locationLabel: "Fixed link", locationValue: "",
     listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 15,
     minimumNoticeMinutes: 240, bookingHorizonDays: 60, bookingHorizonMode: "calendar_days", bookingStartDate: null, bookingEndDate: null, beforeBufferMinutes: 0,

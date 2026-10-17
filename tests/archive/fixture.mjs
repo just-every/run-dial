@@ -30,7 +30,7 @@ const overrides = {
   operator_setup_identity: { operator_id: 'owner', onboarding_completed_at: instant },
   host_profiles: { singleton_key: 'default', handle: 'host', timezone: 'UTC' },
   host_link_copy_reports: copyReport,
-  event_types: { status: 'published', duration_minutes: 30, location_type: 'google_meet', slot_increment_minutes: 15, minimum_notice_minutes: 0, booking_horizon_days: 60 },
+  event_types: { status: 'published', duration_minutes: 30, location_type: 'google_meet', slot_increment_minutes: 15, minimum_notice_minutes: 0, booking_horizon_days: 60, duration_options_json: '[30,60]' },
   event_questions: { kind: 'text', options_json: '[]' },
   recurring_availability_windows: { weekday: 1, start_minute: 540, end_minute: 600 },
   availability_date_overrides: { host_date: '2026-10-07', mode: 'open' },

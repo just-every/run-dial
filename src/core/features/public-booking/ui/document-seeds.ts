@@ -24,7 +24,7 @@ function profile(value: PublicProfile): PublicProfile {
     focusAreas: value.focusAreas.map(({ label }) => ({ label })), socialProof: value.socialProof.map(({ quote, attribution }) => ({ quote, attribution })) };
 }
 function event(value: PublicEvent): PublicEvent {
-  return { requestOnly: value.requestOnly, slug: value.slug, title: value.title, description: value.description, bookingHorizonDays: value.bookingHorizonDays, bookingHorizonMode: value.bookingHorizonMode, bookingStartDate: value.bookingStartDate, bookingEndDate: value.bookingEndDate, durationMinutes: value.durationMinutes, color: value.color,
+  return { requestOnly: value.requestOnly, slug: value.slug, title: value.title, description: value.description, bookingHorizonDays: value.bookingHorizonDays, bookingHorizonMode: value.bookingHorizonMode, bookingStartDate: value.bookingStartDate, bookingEndDate: value.bookingEndDate, durationMinutes: value.durationMinutes, durationOptionsMinutes: value.durationOptionsMinutes, color: value.color,
     locationLabel: value.locationLabel, alternativeRequestsEnabled: value.alternativeRequestsEnabled,
     questions: value.questions.map(({ key, kind, label, required, options }) => ({ key, kind, label, required, options: options.map(({ value, label }) => ({ value, label })) })) };
 }

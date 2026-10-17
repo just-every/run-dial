@@ -46,6 +46,10 @@ export function validateRows(archive, model) {
     for (const row of table.rows) {
       if (!row || Array.isArray(row) || JSON.stringify(Object.keys(row).sort()) !== JSON.stringify([...model.columns[table.name]].sort()) || Object.values(row).some(value => !validSqlValue(value))) throw new Error('archive-invalid-row');
       if (table.name === 'bookings' && (row.invitee_name_folded !== foldBookingSearch(row.invitee_name) || row.invitee_email_folded !== foldBookingSearch(row.invitee_email))) throw new Error('archive-invalid-search-values');
+      if (table.name === 'event_types') {
+        const options = JSON.parse(row.duration_options_json);
+        if (!Array.isArray(options) || options.length < 1 || options.length > 4 || options.some(value => !Number.isInteger(value) || value < 5 || value > 480) || new Set(options).size !== options.length || !options.includes(row.duration_minutes)) throw new Error('archive-invalid-event-durations');
+      }
       for (const [column, value] of Object.entries(row)) if (column.endsWith('_json')) {
         let parsed; try { parsed = JSON.parse(value); } catch { throw new Error('archive-invalid-json-field'); }
         if (column === 'options_json' && (!Array.isArray(parsed) || parsed.some(option => typeof option !== 'string' && (!option || typeof option !== 'object' || typeof option.value !== 'string' || typeof option.label !== 'string'))) || column === 'value_json' && !(table.name === 'ext_custom_field_values' && typeof parsed === 'boolean' || typeof parsed === 'string' || Array.isArray(parsed) && parsed.every(value => typeof value === 'string')) || column === 'payload_json' && (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))) throw new Error('archive-invalid-json-field');

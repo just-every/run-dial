@@ -14,7 +14,10 @@ async function native(rt){return Object.fromEntries(await Promise.all(['host_pro
 async function ownedRows(rt){return Object.fromEntries(await Promise.all(['host_profiles','profile_focus_areas','social_proof_entries','event_types','event_questions','recurring_availability_windows','availability_date_overrides','availability_date_override_windows','bookings','booking_occurrences','booking_answers','booking_manage_tokens','booking_history','booking_attendance','booking_calendar_conflicts'].map(async table=>[table,(await rt.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results])));}
 async function databaseSnapshot(rt){
  const tables=(await rt.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' AND name NOT GLOB '_cf_*' ORDER BY name").all()).results;
- return Object.fromEntries(await Promise.all(tables.map(async({name})=>[name,(await rt.db.prepare(`SELECT * FROM "${name}" ORDER BY rowid`).all()).results])));
+ const records=[];
+ // Keep native RPC below its in-flight request bound while reading every table.
+ for(let offset=0;offset<tables.length;offset+=16)records.push(...await Promise.all(tables.slice(offset,offset+16).map(async({name})=>[name,(await rt.db.prepare(`SELECT * FROM "${name}" ORDER BY rowid`).all()).results])));
+ return Object.fromEntries(records);
 }
 async function effectCounts(rt){
  const tables=(await rt.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results.map(row=>row.name).filter(name=>/delivery|outbox|reminder|calendar|meeting|mail_dispatch|operator_mail_invocations/u.test(name));

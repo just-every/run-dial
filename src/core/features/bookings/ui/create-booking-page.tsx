@@ -25,6 +25,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
   const [events, setEvents] = useState<EventTypeRecord[]>();
   const [request, setRequest] = useState<OperatorRequest>();
   const [eventTypeId, setEventTypeId] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState<number>();
   const [startLocal, setStartLocal] = useState("");
   const [choice, setChoice] = useState("");
   const [name, setName] = useState("");
@@ -64,7 +65,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
     if (!ready || !selected || saving) return;
     setSaving(true); setNotice("");
     try {
-      const payload = { ...(requestId ? { requestId } : {}), eventTypeId, startAt: selected, inviteeTimezone, name, email, answers, overrideNoticeAndHorizon };
+      const payload = { ...(requestId ? { requestId } : {}), eventTypeId, durationMinutes, startAt: selected, inviteeTimezone, name, email, answers, overrideNoticeAndHorizon };
       const fingerprint = stableJson({ ...payload, name: payload.name.trim(), email: payload.email.trim().toLowerCase() });
       if (creationAttempt.current?.fingerprint !== fingerprint) creationAttempt.current = { key: crypto.randomUUID(), fingerprint };
       const response = await api.api.app.bookings.$post({ json: { ...payload, idempotencyKey: creationAttempt.current.key } });
@@ -84,8 +85,8 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
     <Card className="max-w-3xl p-5 sm:p-6"><form onSubmit={(formEvent) => void create(formEvent)}>
       <fieldset disabled={!hydrated || !ready || saving} className="border-0 p-0">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-[650] text-ink">Event type<Select value={eventTypeId} onChange={(entry) => { setNotice(""); setEventTypeId(entry.target.value); setAnswers({}); }} disabled={Boolean(request)}>{events?.map((entry) => <option key={entry.id} value={entry.id}>{entry.title} · {entry.durationMinutes} min</option>)}</Select></label>
-          <label className="grid gap-2 text-sm font-[650] text-ink">Editing time zone<Select aria-label="Editing time zone" value={timezone} onChange={(entry) => { setNotice(""); if (selected) setStartLocal(localInput(selected, entry.target.value)); setTimezone(entry.target.value); setChoice(""); }}>{zones.map((zone) => <option key={zone}>{zone}</option>)}</Select></label>
+          <label className="grid gap-2 text-sm font-[650] text-ink">Event type<Select value={eventTypeId} onChange={(entry) => { setNotice(""); setEventTypeId(entry.target.value); setDurationMinutes(undefined); setAnswers({}); }} disabled={Boolean(request)}>{events?.map((entry) => <option key={entry.id} value={entry.id}>{entry.title} · {entry.durationMinutes} min</option>)}</Select></label>
+          <label className="grid gap-2 text-sm font-[650] text-ink">Duration<Select value={durationMinutes ?? event?.durationMinutes ?? ""} onChange={entry => setDurationMinutes(Number(entry.target.value))}>{(event?.durationOptionsMinutes ?? (event ? [event.durationMinutes] : [])).map(value => <option key={value} value={value}>{value} minutes</option>)}</Select></label><label className="grid gap-2 text-sm font-[650] text-ink">Editing time zone<Select aria-label="Editing time zone" value={timezone} onChange={(entry) => { setNotice(""); if (selected) setStartLocal(localInput(selected, entry.target.value)); setTimezone(entry.target.value); setChoice(""); }}>{zones.map((zone) => <option key={zone}>{zone}</option>)}</Select></label>
           <label className="grid gap-2 text-sm font-[650] text-ink">Start time<Input type="datetime-local" step={60} value={startLocal} onChange={(entry) => { setNotice(""); setStartLocal(entry.target.value); setChoice(""); }} required /></label>
           <label className="grid gap-2 text-sm font-[650] text-ink">Invitee time zone<Select aria-label="Invitee time zone" value={inviteeTimezone} onChange={(entry) => { setNotice(""); setInviteeTimezone(entry.target.value); }}>{zones.map((zone) => <option key={zone}>{zone}</option>)}</Select></label>
           <p className="text-sm text-muted sm:col-span-2">The editing zone labels the time you enter. The invitee zone is used on their receipt and mail.</p>

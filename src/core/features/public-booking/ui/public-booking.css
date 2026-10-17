@@ -103,3 +103,8 @@
   .pb-theme .pb-picker-day { padding: 5px 2px; font-size: 11px; line-height: 1.2; }
   .pb-day-picker h2 { margin-top: 10px; }
 }
+
+.pb-duration-options { margin: 1.25rem 0; }
+.pb-duration-options > p { font-weight: 700; margin-bottom: .5rem; }
+.pb-duration-options > div { display: flex; flex-wrap: wrap; gap: .5rem; }
+.pb-duration-options button[aria-pressed="true"] { background: var(--pb-ink, #201f1b); color: #fff; }

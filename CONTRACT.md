@@ -272,8 +272,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 56 | 20 | 0 | 76 |
-| Target and push further | 1 | 17 | 76 | 94 |
-| All | 57 | 37 | 76 | 170 |
+| Target and push further | 1 | 18 | 75 | 94 |
+| All | 57 | 38 | 75 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -300,7 +300,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `PROFILE-001` | Host profile | published | partial | `src/core/features/host-profile/profile-writes.ts`, `tests/operator-management.test.mjs`, `tests/availability-diagnostics.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `PROFILE-002` | Public profile | published | done | `tests/booking-http.test.mjs`, `src/core/features/host-profile/public.ts` |  |
 | `PROFILE-003` | Avatar asset | published | done | `tests/avatar-upload.test.mjs`, `tests/avatar.test.mjs` |  |
-| `EVENT-001` | Event type lifecycle | published | partial | `tests/availability-diagnostics.test.mjs`, `tests/event-status-trigger.test.mjs` | Single duration; options are `EVENT-011`. |
+| `EVENT-001` | Event type lifecycle | published | partial | `tests/booking-wire/duration-journey.mjs`, `src/core/features/event-types/duplicate.ts`; `work/sd-cp-dial/shots/EVENT-001/` | Native event settings, independent draft duplication and one to four durations are implemented. Workspace/host capacity, reusable templates, workflow and shared-schedule dependencies remain absent. |
 | `EVENT-002` | Scheduling constraints | published | done | `scripts/verify-availability-diagnostics.mjs`, `tests/availability-diagnostics.test.mjs`, `migrations/core/0052_booking_horizons.sql`; browser: `work/sd-cp-dial/shots/EVENT-002/` |  |
 | `EVENT-003` | Invitee questions | published | partial | `scripts/verify-question-defaults.mjs`, `tests/availability-diagnostics.test.mjs`, `migrations/core/0051_phone_dropdown_questions.sql`; browser: `work/sd-cp-dial/shots/EVENT-003/` | All question kinds, stable dropdown options and E.164 phone normalization implemented; mapping to CRM phone fields awaits INTEG-002 to INTEG-004 and INTEG-008. |
 | `EVENT-004` | Locations | published | partial | `src/core/platform/calendar/google-managed-events.ts`, `tests/providers-d1.test.mjs`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
@@ -310,7 +310,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `EVENT-008` | Bookings that need host approval | target | missing |  | No implementing code yet. |
 | `EVENT-009` | Invitee guests | target | missing |  | No implementing code yet. |
 | `EVENT-010` | Recurring bookings | target | missing |  | No implementing code yet. |
-| `EVENT-011` | Invitee-selectable durations | target | missing |  | No implementing code yet. |
+| `EVENT-011` | Invitee-selectable durations | target | partial | `tests/booking-wire/duration-journey.mjs`, `tests/booking-wire/occurrence-duration-journey.mjs`, `tests/move-in-runtime.test.mjs`; `work/sd-cp-dial/shots/EVENT-011/` | One to four lengths, defaults, Calendly saved-file import, availability, booking, rescheduling, calendar, ICS, notices and reminders use the selected length. Duration-specific pricing, teams, webhooks and reports remain absent. |
 | `LINK-001` | Single-use links and one-off meetings | target | missing |  | No implementing code yet. |
 | `LINK-002` | Host-offered specific times | target | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `LINK-003` | Prefilled and tracked links | target | missing |  | No implementing code yet. |

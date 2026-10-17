@@ -64,6 +64,11 @@ export class EventTypesService {
     return this.repository.create(input);
   }
 
+  async duplicateEventType(id: string) {
+    const copyId = await this.repository.duplicate(id);
+    return copyId ? this.repository.get(copyId) : undefined;
+  }
+
   updateEventType(id: string, input: EventTypeInput) {
     return this.repository.update(id, input);
   }

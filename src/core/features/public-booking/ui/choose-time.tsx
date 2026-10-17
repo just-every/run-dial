@@ -1,3 +1,5 @@
+import { eventDurationOptions } from "../../../shared/event-duration";
+import { DurationChoice } from "./duration-choice";
 import { horizonLastDate } from "../../../shared/booking-horizon";
 import { useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -22,6 +24,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
   const [availability, setAvailability] = useState<Availability>();
   const [checking, setChecking] = useState(false);
   const [notice, setNotice] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState(data.eventType.durationMinutes);
   const [week, setWeek] = useState<string>();
   const [inviteeTimezone, setInviteeTimezone] = useState<string>();
   const [selecting, setSelecting] = useState<string>();
@@ -35,6 +38,8 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     const restore = () => {
       const query = new URLSearchParams(window.location.search);
       setHasRecoveryDraft(Boolean(readRecoveryDraft(data.profile.handle, data.eventType.slug)));
+      const savedDuration = Number(query.get("durationMinutes"));
+      setDurationMinutes(eventDurationOptions(data.eventType).includes(savedDuration) ? savedDuration : data.eventType.durationMinutes);
       const savedZone = query.get("timezone");
       const zone = savedZone && isCanonicalIanaTimeZone(savedZone) ? savedZone : deviceTimezone(data.profile.timezone);
       setLocalTimezone(zone);
@@ -53,7 +58,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     if (preview) return;
     const currentRead = reads.current.begin();
     setNotice(""); setChecking(true);
-    const query = { ...(nextWeek ? { week: nextWeek } : {}), ...(inviteeTimezone ? { inviteeTimezone } : {}) };
+    const query = { durationMinutes: String(durationMinutes), ...(nextWeek ? { week: nextWeek } : {}), ...(inviteeTimezone ? { inviteeTimezone } : {}) };
     try {
       const response = await publicApi.api.public.book[":handle"][":slug"].availability.$get({ param: { handle: data.profile.handle, slug: data.eventType.slug }, query });
       if (response.ok) { const received = await response.json() as Availability; if (currentRead()) setAvailability(received); return; }
@@ -61,10 +66,10 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     } catch { if (currentRead()) { setAvailability(undefined); setNotice("Availability could not be checked. Please retry."); } }
     finally { if (currentRead()) setChecking(false); }
 
-  }, [data.eventType.slug, data.profile.handle, inviteeTimezone, preview, week]);
+  }, [data.eventType.slug, data.profile.handle, inviteeTimezone, preview, week, durationMinutes]);
   useEffect(() => { const order = reads.current; void refreshAvailability(); return () => { order.invalidate(); }; }, [refreshAvailability]);
 
-  useEffect(() => { const order = selectionReads.current; return () => { order.invalidate(); }; }, [data.profile.handle, data.eventType.slug, displayTimezone]);
+  useEffect(() => { const order = selectionReads.current; return () => { order.invalidate(); }; }, [data.profile.handle, data.eventType.slug, displayTimezone, durationMinutes]);
 
   async function select(slot: Slot) {
     if (selectingNow.current || checking) return;
@@ -72,7 +77,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     selectingNow.current = true;
     setSelecting(slot.startAt); setNotice("");
     try {
-      const response = await publicApi.api.public.book[":handle"][":slug"].selection.$post({ param: { handle: data.profile.handle, slug: data.eventType.slug }, json: { startAt: slot.startAt, inviteeTimezone: displayTimezone } });
+      const response = await publicApi.api.public.book[":handle"][":slug"].selection.$post({ param: { handle: data.profile.handle, slug: data.eventType.slug }, json: { startAt: slot.startAt, inviteeTimezone: displayTimezone, durationMinutes } });
       if (!currentSelection()) return;
       if (!response.ok) {
         if (response.status === 409) { await refreshAvailability(); if (currentSelection()) setNotice("That time is no longer available. Choose from the current times."); return; }
@@ -81,18 +86,18 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
       const selected = await response.json() as PublicSelection;
       if (!currentSelection()) return;
       rememberSelection(data.profile.handle, data.eventType.slug, selected);
-      window.location.assign(bookingPath(data.profile.handle, data.eventType.slug, "/details", embedded, { nonce: selected.nonce, startAt: selected.selection.startAt, inviteeTimezone: selected.selection.inviteeTimezone, day: dateInZone(slot.startAt, displayTimezone), timezone: displayTimezone, ...(availability?.state === "available" ? { week: availability.week } : {}) }, window.location.search));
+      window.location.assign(bookingPath(data.profile.handle, data.eventType.slug, "/details", embedded, { nonce: selected.nonce, startAt: selected.selection.startAt, inviteeTimezone: selected.selection.inviteeTimezone, durationMinutes: String(durationMinutes), day: dateInZone(slot.startAt, displayTimezone), timezone: displayTimezone, ...(availability?.state === "available" ? { week: availability.week } : {}) }, window.location.search));
     } catch { if (currentSelection()) setNotice("That time could not be checked. Please retry."); }
     finally { selectingNow.current = false; setSelecting(undefined); }
   }
 
   const shownWeek = week ?? (availability?.state === "available" ? availability.week : undefined);
   const changeWeek = (days: number) => { if (shownWeek) { const next = days < 0 && shiftHostDate(shownWeek, days) < today ? today : shiftHostDate(shownWeek, days); setWeek(next); setSelectedDay(undefined); setInviteeTimezone(displayTimezone); remember({ week: next, timezone: displayTimezone, day: "" }); } };
-  return <FlowShell data={data} embedded={embedded} step={1}>
+  return <FlowShell data={{ ...data, eventType: { ...data.eventType, durationMinutes } }} embedded={embedded} step={1}>
     {preview ? <p className="pb-preview-banner">Operator preview — providers are not used from preview.</p> : null}
-    <div className="pb-event-heading"><div><p className="pb-eyebrow">{data.eventType.title} · {data.eventType.durationMinutes} minutes</p><h1>Choose a day and time.</h1><p>Times are checked against the host’s availability before confirmation.</p></div></div>
+    <div className="pb-event-heading"><div><p className="pb-eyebrow">{data.eventType.title} · {durationMinutes} minutes</p><h1>Choose a day and time.</h1><p>Times are checked against the host’s availability before confirmation.</p></div></div>
     {new URLSearchParams(search).get("notice") === "slot_changed" ? <p className="pb-request-notice" role="status">That time was just taken. Choose another time.{hasRecoveryDraft ? " Your details are saved for this booking." : null}</p> : null}
-    <TimezoneControl timezone={displayTimezone} hostTimezone={data.profile.timezone} disabled={Boolean(selecting)} onChange={zone => { setInviteeTimezone(zone); remember({ timezone: zone }); }} />
+    <DurationChoice options={eventDurationOptions(data.eventType)} selected={durationMinutes} disabled={Boolean(selecting) || checking} onChange={duration => { selectionReads.current.invalidate(); const day = selectedDay ?? (availability?.state === "available" && availability.slots[0] ? dateInZone(availability.slots[0].startAt, displayTimezone) : undefined); if (day) setSelectedDay(day); setDurationMinutes(duration); remember({ durationMinutes: String(duration), ...(day ? { day } : {}) }); }} /><TimezoneControl timezone={displayTimezone} hostTimezone={data.profile.timezone} disabled={Boolean(selecting)} onChange={zone => { setInviteeTimezone(zone); remember({ timezone: zone }); }} />
     {checking ? <p role="status">Checking current times…</p> : null}
     {availability?.state === "available" ? <><section className="pb-week-navigation" aria-label="Availability week"><button type="button" className="pb-secondary-button" disabled={Boolean(selecting) || availability.week <= today} onClick={() => changeWeek(-7)}>Previous week</button><p>{dayLabel(availability.week)} – {dayLabel(shiftHostDate(availability.week, 6))}</p><button type="button" className="pb-secondary-button" disabled={Boolean(selecting) || shiftHostDate(availability.week, 7) > horizonLastDate(data.eventType, today)} onClick={() => changeWeek(7)}>Next week</button></section><DayTimePicker availability={availability} timezone={displayTimezone} hostTimezone={data.profile.timezone} selectedDay={selectedDay} onDay={day => { setSelectedDay(day); remember({ day, timezone: displayTimezone, week: availability.week }); }} onSelect={slot => void select(slot)} disabled={Boolean(selecting) || checking} /></> : <section className="pb-unavailable" aria-live="polite"><div><p className="pb-eyebrow">{availability || notice ? "Booking temporarily unavailable" : "Availability"}</p><h2>{availability || notice ? "Times cannot be verified right now." : "Checking available times…"}</h2><p>{availability?.state === "temporarily_unavailable" ? "Availability cannot be verified, so no time is offered." : notice ? "Please retry when availability can be checked." : "This page will update when availability has been checked."}</p></div></section>}
     {data.eventType.alternativeRequestsEnabled ? <a className="pb-quiet-link" href={bookingPath(data.profile.handle, data.eventType.slug, "/request", embedded, {}, search)}>None of these work?</a> : null}

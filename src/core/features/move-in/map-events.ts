@@ -1,3 +1,4 @@
+import { eventDurationOptions } from "../../shared/event-duration";
 import manifest from '../../../../seed.json';
 import { hostDateSchema } from '../../shared/scheduling';
 import type { SourceData } from './source';
@@ -15,16 +16,18 @@ export function mapEvent(raw:SourceData['event_types'][number],data:SourceData,c
  try{
  const title=safeText(raw.name,120,'Event title'),description=safeText(raw.description_plain??'',4000,'Description');
  if(!Number.isInteger(raw.duration)||raw.duration<5||raw.duration>480)throw new Error('Duration must be 5–480 minutes.');
+ const durationOptions=eventDurationOptions({durationMinutes:raw.duration,durationOptionsMinutes:raw.duration_options??undefined});
+ if(durationOptions.length<1||durationOptions.length>4||new Set(durationOptions).size!==durationOptions.length||durationOptions.some(value=>!Number.isInteger(value)||value<5||value>480)||!durationOptions.includes(raw.duration))throw new Error('Duration options must contain one to four distinct lengths including the default.');
  if(!/^#[0-9a-f]{6}$/iu.test(raw.color))throw new Error('Colour must be a six-digit hexadecimal colour.');
  if(!raw.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(raw.slug)||raw.slug.length>80)throw new Error('Choose a valid event slug in the source before saving again.');
  let slug=raw.slug,n=2;while(snapshot.slugs.includes(slug)&&!snapshot.existing.has(id))slug=`${raw.slug.slice(0,70)}-${n++}`;
- add('eventTypes',title,'changed',`Imported as draft${!raw.active?'; source inactive':''}${slug!==raw.slug?`; slug changed to ${slug}`:''}${(raw.duration_options?.length??0)>1?`; additional durations dropped: ${raw.duration_options!.filter(v=>v!==raw.duration).join(', ')}`:''}.`);
+ add('eventTypes',title,'changed',`Imported as draft${!raw.active?'; source inactive':''}${slug!==raw.slug?`; slug changed to ${slug}`:''}.`);
  const {location,accounting:locations,eventReason}=mapLocations(raw.locations??[],choices.locations?.[raw.uri]);
  for(const item of locations)add('locations',item.name,item.outcome,item.reason);
  if(eventReason)accounting[0].reason+=` ${eventReason}`;
  safeText(location.value,1000,'Location');safeText(location.label,120,'Location label');
  if(location.type==='fixed_link'&&!/^https:\/\/[^\s]+$/u.test(location.value))throw new Error('Fixed location must be an HTTPS URL.');
- const tables:Record<string,Row[]>={event_types:[{id,status:'draft',slug,title,description,duration_minutes:raw.duration,color:raw.color,location_type:location.type,location_label:location.label,location_value:location.value,listed:raw.secret?0:1,alternative_requests_enabled:1,slot_increment_minutes:15,minimum_notice_minutes:240,booking_horizon_days:60,before_buffer_minutes:0,after_buffer_minutes:0,host_day_booking_limit:null,request_only:0,created_at:asOf,updated_at:asOf}],event_questions:[],recurring_availability_windows:[],availability_date_overrides:[],availability_date_override_windows:[]};
+ const tables:Record<string,Row[]>={event_types:[{id,status:'draft',slug,title,description,duration_minutes:raw.duration,duration_options_json:JSON.stringify(durationOptions),color:raw.color,location_type:location.type,location_label:location.label,location_value:location.value,listed:raw.secret?0:1,alternative_requests_enabled:1,slot_increment_minutes:15,minimum_notice_minutes:240,booking_horizon_days:60,before_buffer_minutes:0,after_buffer_minutes:0,host_day_booking_limit:null,request_only:0,created_at:asOf,updated_at:asOf}],event_questions:[],recurring_availability_windows:[],availability_date_overrides:[],availability_date_override_windows:[]};
  for(const name of ['start increment: 15 minutes','minimum notice: 240 minutes','horizon: 60 days','buffer before: 0 minutes','buffer after: 0 minutes','daily limit: unlimited'])add('settings',name,'changed','Set in Dial: not supplied by the documented event-type response.');
  for(const q of [...raw.custom_questions].sort((a,b)=>a.position-b.position)){
  if(!q.enabled||q.type==='phone_number'){add('questions',q.name,'skipped',!q.enabled?'Disabled in source.':'Dial never collects an invitee phone number.');continue;}

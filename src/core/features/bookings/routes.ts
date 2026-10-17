@@ -36,6 +36,7 @@ const operatorCreateSchema = z.object({
   idempotencyKey: z.string().uuid().optional(),
   requestId: z.string().length(26).optional(),
   eventTypeId: z.string().length(26),
+  durationMinutes: z.number().int().min(5).max(480).optional(),
   startAt: instantSchema,
   inviteeTimezone: ianaTimeZoneSchema,
   name: z.string().trim().min(1).max(160),
@@ -45,7 +46,7 @@ const operatorCreateSchema = z.object({
 });
 const cancellationSchema = z.object({ reason: z.string().trim().max(500).optional() });
 const deletionRetrySchema = z.object({ providerEventId: z.string().min(1).max(1024) }).strict();
-const rescheduleSchema = z.object({ startAt: instantSchema, inviteeTimezone: ianaTimeZoneSchema, reason: z.string().trim().max(500).optional(), overridePublishedAvailability: z.boolean().default(false) });
+const rescheduleSchema = z.object({ durationMinutes: z.number().int().min(5).max(480).optional(), startAt: instantSchema, inviteeTimezone: ianaTimeZoneSchema, reason: z.string().trim().max(500).optional(), overridePublishedAvailability: z.boolean().default(false) });
 const attendanceSchema = z.object({ status: z.enum(["attended", "no_show"]), note: z.string().trim().max(4_000) });
 
 /** Session-gated lifecycle endpoints. Booking IDs and delivery detail never cross this boundary. */
@@ -109,6 +110,7 @@ export const bookingOperatorRoutes = new Hono<AppEnvironment>()
   .post("/api/app/bookings/:id/reschedule", validate("param", bookingIdSchema), validate("json", rescheduleSchema), async (context) => {
     const body = context.req.valid("json");
     const result = await context.get("services").bookings.rescheduleForOperator({ id: context.req.valid("param").id, operatorId: context.get("session").id, ...body });
+    if (result.kind === "invalid_duration") return apiError(context, 400, "invalid_duration", "Choose a duration offered by this event.", ["durationMinutes"]);
     if (result.kind === "rescheduled") return context.json(result.booking);
     if (result.kind === "not_found") return apiError(context, 404, "booking_not_found", "The booking does not exist.");
     if (result.kind === "invalid_timezone") return apiError(context, 400, "invalid_booking", "Choose a valid IANA timezone.");
@@ -135,6 +137,7 @@ export const bookingOperatorRoutes = new Hono<AppEnvironment>()
   });
 
 function createResult(context: Context<AppEnvironment>, kind: Exclude<Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["createForOperator"]>>["kind"], "created" | "replayed">, exclusions?: SlotExclusion[]) {
+  if (kind === "invalid_duration") return apiError(context, 400, "invalid_duration", "Choose a duration offered by this event.", ["durationMinutes"]);
   if (kind === "attempt_erased") return apiError(context, 410, "booking_attempt_erased", "This booking was erased. Start a new booking to create another one.");
   if (kind === "payload_mismatch") return apiError(context, 409, "booking_attempt_changed", "The booking details changed. Start a new booking.");
   if (kind === "not_found") return apiError(context, 404, "event_not_found", "The event type does not exist.");

@@ -1,3 +1,4 @@
+import { resolveEventDuration } from "../../shared/event-duration";
 import { hasSupportedInstantPrecision } from "../../shared/instants";
 import type { EventTypeRecord, EventTypesService } from "../event-types";
 import type { HostProfileService } from "../host-profile";
@@ -28,34 +29,41 @@ export class AvailabilityService {
     private readonly calendar: CalendarBusyReader,
   ) {}
 
-  async listPublicWeek(handle: string, slug: string, week: string | undefined, inviteeTimeZone?: string, now = new Date()): Promise<AvailabilityResult | undefined> {
+  async listPublicWeek(handle: string, slug: string, week: string | undefined, inviteeTimeZone?: string, now = new Date(), durationMinutes?: number): Promise<AvailabilityResult | { kind: "invalid_duration" } | undefined> {
     const [profile, event] = await Promise.all([
       this.profiles.getPublicProfile(handle),
       this.eventTypes.resolvePublishedEventForPublicRequest(slug),
     ]);
     if (!profile || !event) return undefined;
+    const selectedDuration = resolveEventDuration(event, durationMinutes);
+    if (selectedDuration === undefined) return { kind: "invalid_duration" };
     const firstDate = week ?? hostDateAt(now, profile.timezone);
-    return this.listEventWeek(event, profile.timezone, firstDate, inviteeTimeZone, now);
+    return this.listEventWeek({ ...event, durationMinutes: selectedDuration }, profile.timezone, firstDate, inviteeTimeZone, now);
   }
 
-  async verifyPublicSelection(handle: string, slug: string, startAt: string, now = new Date(), excludedBookingId?: string) {
+  async verifyPublicSelection(handle: string, slug: string, startAt: string, now = new Date(), excludedBookingId?: string, durationMinutes?: number, retainedDurationMinutes?: number) {
     const [profile, event] = await Promise.all([
       this.profiles.getPublicProfile(handle),
       this.eventTypes.resolvePublishedEventForPublicRequest(slug),
     ]);
     if (!profile || !event) return { kind: "not_found" as const };
+    const selectedDuration = resolveEventDuration(event, durationMinutes ?? retainedDurationMinutes, retainedDurationMinutes);
+    if (selectedDuration === undefined) return { kind: "invalid_duration" as const };
+    const effectiveEvent = { ...event, durationMinutes: selectedDuration };
     const hostDate = hostDateForInstant(startAt, profile.timezone);
-    const selected = await this.listEventWeek(event, profile.timezone, hostDate, undefined, now, "fresh", excludedBookingId, { overrideNoticeAndHorizon: false, includeRecommendations: false }, 1);
+    const selected = await this.listEventWeek(effectiveEvent, profile.timezone, hostDate, undefined, now, "fresh", excludedBookingId, { overrideNoticeAndHorizon: false, includeRecommendations: false }, 1);
     if (selected.state === "temporarily_unavailable") return { kind: "calendar_unavailable" as const };
     const slot = selected.slots.find((candidate) => candidate.startAt === startAt);
-    return slot ? { kind: "valid" as const, profile, event, slot, calendarRequired: selected.calendarRequired } : { kind: "slot_invalid" as const };
+    return slot ? { kind: "valid" as const, profile, event: effectiveEvent, slot, calendarRequired: selected.calendarRequired } : { kind: "slot_invalid" as const };
   }
 
   /** The booking service resolves both IDs from a validated manage capability. */
-  async listRescheduleWeek(eventTypeId: string, excludedBookingId: string, week?: string, inviteeTimeZone?: string, now = new Date()): Promise<AvailabilityResult | undefined> {
+  async listRescheduleWeek(eventTypeId: string, excludedBookingId: string, week?: string, inviteeTimeZone?: string, now = new Date(), durationMinutes?: number, retainedDurationMinutes?: number): Promise<AvailabilityResult | { kind: "invalid_duration" } | undefined> {
     const [profile, event] = await Promise.all([this.profiles.getProfile(), this.eventTypes.getEventType(eventTypeId)]);
     if (!profile || !event || event.status !== "published") return undefined;
-    return this.listEventWeek(event, profile.timezone, week ?? hostDateAt(now, profile.timezone), inviteeTimeZone, now, "cached", excludedBookingId);
+    const selectedDuration = resolveEventDuration(event, durationMinutes ?? retainedDurationMinutes, retainedDurationMinutes);
+    if (selectedDuration === undefined) return { kind: "invalid_duration" };
+    return this.listEventWeek({ ...event, durationMinutes: selectedDuration }, profile.timezone, week ?? hostDateAt(now, profile.timezone), inviteeTimeZone, now, "cached", excludedBookingId);
   }
 
   /**
@@ -64,26 +72,31 @@ export class AvailabilityService {
    * BOOK-009 separately opts a reschedule out of published windows. Neither
    * path can bypass a busy interval, internal claim, buffer, or host-day cap.
    */
-  async verifyOperatorSelection(eventTypeId: string, startAt: string, options: { overrideNoticeAndHorizon: boolean; overridePublishedAvailability?: boolean }, now = new Date(), excludedBookingId?: string) {
+  async verifyOperatorSelection(eventTypeId: string, startAt: string, options: { overrideNoticeAndHorizon: boolean; overridePublishedAvailability?: boolean }, now = new Date(), excludedBookingId?: string, durationMinutes?: number, retainedDurationMinutes?: number) {
     if (!hasSupportedInstantPrecision(startAt)) return { kind: "slot_invalid" as const, exclusions: ["start_increment" as const] };
     const [profile, event] = await Promise.all([
       this.profiles.getProfile(),
       this.eventTypes.getEventType(eventTypeId),
     ]);
     if (!profile || !event) return { kind: "not_found" as const };
+    const selectedDuration = resolveEventDuration(event, durationMinutes ?? retainedDurationMinutes, retainedDurationMinutes);
+    if (selectedDuration === undefined) return { kind: "invalid_duration" as const };
+    const effectiveEvent = { ...event, durationMinutes: selectedDuration };
     const hostDate = hostDateForInstant(startAt, profile.timezone);
-    const loaded = await this.loadInput(event, profile.timezone, hostDate, 1, now, "fresh", options, excludedBookingId);
+    const loaded = await this.loadInput(effectiveEvent, profile.timezone, hostDate, 1, now, "fresh", options, excludedBookingId);
     if (!loaded) return { kind: "calendar_unavailable" as const };
     const slot = listAvailableSlots(loaded.input).find((candidate) => Date.parse(candidate.startAt) === Date.parse(startAt));
-    return slot ? { kind: "valid" as const, profile, event, slot, calendarRequired: loaded.calendarRequired }
+    return slot ? { kind: "valid" as const, profile, event: effectiveEvent, slot, calendarRequired: loaded.calendarRequired }
       : { kind: "slot_invalid" as const, exclusions: diagnoseAvailability(loaded.input, startAt, now).exclusions };
   }
 
-  async diagnoseOperatorTime(eventTypeId: string, startAt: string, options: { overrideNoticeAndHorizon: boolean } = { overrideNoticeAndHorizon: false }, now = new Date()) {
+  async diagnoseOperatorTime(eventTypeId: string, startAt: string, options: { overrideNoticeAndHorizon: boolean } = { overrideNoticeAndHorizon: false }, now = new Date(), durationMinutes?: number) {
     if (!hasSupportedInstantPrecision(startAt) || !Number.isFinite(Date.parse(startAt))) return { kind: "invalid_time" as const };
     const [profile, event] = await Promise.all([this.profiles.getProfile(), this.eventTypes.getEventType(eventTypeId)]);
     if (!profile || !event) return { kind: "not_found" as const };
-    const loaded = await this.loadInput(event, profile.timezone, hostDateForInstant(startAt, profile.timezone), 1, now, "fresh", options);
+    const selectedDuration = resolveEventDuration(event, durationMinutes);
+    if (selectedDuration === undefined) return { kind: "invalid_duration" as const };
+    const loaded = await this.loadInput({ ...event, durationMinutes: selectedDuration }, profile.timezone, hostDateForInstant(startAt, profile.timezone), 1, now, "fresh", options);
     return loaded ? { kind: "evaluated" as const, diagnosis: diagnoseAvailability(loaded.input, startAt, now) } : { kind: "calendar_unavailable" as const };
   }
 

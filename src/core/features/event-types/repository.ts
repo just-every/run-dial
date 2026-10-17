@@ -1,3 +1,4 @@
+import { duplicateEvent } from "./duplicate";
 import { hydrateEventTypes, readEventType } from "./hydration/repository";
 import { afterPersistedTimestampSql, nextEventTimestampSql } from "./revision";
 import { replaceDateOverride, deleteDateOverride } from "./override-writes";
@@ -44,6 +45,7 @@ export type EventTypeInput = {
   title: string;
   description: string;
   durationMinutes: number;
+  durationOptionsMinutes?: number[];
   color: string;
   locationType: EventLocationType;
   locationLabel: string;
@@ -150,6 +152,8 @@ export class EventTypesRepository {
     return result;
   }
 
+  duplicate(id: string) { return duplicateEvent(this.binding, id); }
+
   async update(id: string, input: EventTypeInput): Promise<EventTypeRecord | undefined> {
     const existing = await this.get(id);
     if (!existing) return undefined;
@@ -250,6 +254,7 @@ function eventColumns(input: EventTypeInput) {
     title: input.title,
     description: input.description,
     durationMinutes: input.durationMinutes,
+    durationOptionsJson: JSON.stringify(input.durationOptionsMinutes ?? [input.durationMinutes]),
     color: input.color,
     locationType: input.locationType,
     locationLabel: input.locationLabel,

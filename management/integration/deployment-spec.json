@@ -330,6 +330,12 @@
       "name": "0052_booking_horizons.sql",
       "sha256": "bfd44e7ac84da583877ecdc78b4ea07bae73222ff8a4decf682c133b51949d1a",
       "sql": "-- Preserve every event and its configured increment while widening the constraint.\nALTER TABLE event_types ADD COLUMN scheduling_increment INTEGER NOT NULL DEFAULT 15\n  CHECK (scheduling_increment IN (5, 10, 15, 30, 45, 60));\nUPDATE event_types SET scheduling_increment = slot_increment_minutes;\nALTER TABLE event_types DROP COLUMN slot_increment_minutes;\nALTER TABLE event_types RENAME COLUMN scheduling_increment TO slot_increment_minutes;\nALTER TABLE event_types ADD COLUMN booking_horizon_mode TEXT NOT NULL DEFAULT 'calendar_days'\n  CHECK (booking_horizon_mode IN ('calendar_days', 'weekdays', 'fixed_range', 'indefinite'));\nALTER TABLE event_types ADD COLUMN booking_start_date TEXT;\nALTER TABLE event_types ADD COLUMN booking_end_date TEXT;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0053_event_duration_options.sql",
+      "sha256": "c77ea4c00d463acc31a94bf525fbe98cc912c0ac2c0a0d535ee709ac872d02b6",
+      "sql": "ALTER TABLE event_types ADD COLUMN duration_options_json TEXT NOT NULL DEFAULT '[]'\n  CHECK (json_valid(duration_options_json) AND json_type(duration_options_json) = 'array');\nUPDATE event_types SET duration_options_json = json_array(duration_minutes);\n-- Existing import plans may omit the additive column; keep their saved duration.\nCREATE TRIGGER event_duration_options_insert AFTER INSERT ON event_types\nWHEN NEW.duration_options_json = '[]'\nBEGIN UPDATE event_types SET duration_options_json = json_array(NEW.duration_minutes) WHERE id = NEW.id; END;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

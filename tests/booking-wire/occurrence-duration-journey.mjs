@@ -44,7 +44,7 @@ export async function occurrenceDurationJourney(origin, t) {
   const next = (await availability()).slots.find(slot => slot.startAt !== startAt);
   assert.ok(next);
   const reason = "New duration <confirmed> & pending calendar";
-  const changed = await data(`/api/app/bookings/${booking.id}/reschedule`, { startAt: next.startAt, inviteeTimezone: "America/New_York", reason, overridePublishedAvailability: false });
+  const changed = await data(`/api/app/bookings/${booking.id}/reschedule`, { startAt: next.startAt, durationMinutes: 60, inviteeTimezone: "America/New_York", reason, overridePublishedAvailability: false });
   snapshot = await state();
   assert.equal(snapshot.bookings.find(item => item.id === booking.id).duration_minutes, 30, "the creation snapshot is deliberately unchanged");
   assert.equal(duration(changed.occurrence), 60);

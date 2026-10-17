@@ -27,7 +27,9 @@ function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
  // complete retained snapshot proves that representation. Authored edits stay visible.
  const eventTables=tables.event_types?.every(row=>row.booking_horizon_mode==='calendar_days'&&row.booking_start_date===null&&row.booking_end_date===null)
   ? {...tables,event_types:tables.event_types.map(row=>{const source={...row};delete source.booking_horizon_mode;delete source.booking_start_date;delete source.booking_end_date;return source;})}:null;
- for(const candidate of [tables,...(eventTables?[eventTables]:[])]){
+ const eventVersions:NativeValue['tables'][]=[tables,...(eventTables?[eventTables]:[])];
+ for(const candidate of [...eventVersions])if(candidate.event_types?.every(row=>row.duration_options_json===JSON.stringify([row.duration_minutes])))eventVersions.push({...candidate,event_types:candidate.event_types.map(row=>{const source={...row};delete source.duration_options_json;return source;})});
+ for(const candidate of eventVersions){
   const historical=candidate.bookings?.some(row=>row.calendar_required===1)
    ? {...candidate,bookings:candidate.bookings.map(row=>{const source={...row};if(source.calendar_required===1)delete source.calendar_required;return source;})}:null;
   for(const version of [candidate,...(historical?[historical]:[])]){const value=json({tables:version});if(sha256(canonicalJson(value))===appliedHash)return value;}
@@ -46,6 +48,7 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
   predicates.push(`actual.calendar_required IS CASE WHEN json_type(wanted.value,'$.calendar_required') IS NULL THEN 1 ELSE json_extract(wanted.value,'$.calendar_required') END`);
  }
  if(table==='event_types'){
+  if(!columns.includes('duration_options_json'))predicates.push("actual.duration_options_json IS json_array(actual.duration_minutes)");
   if(!columns.includes('booking_horizon_mode'))predicates.push("actual.booking_horizon_mode IS 'calendar_days'");
   for(const key of ['booking_start_date','booking_end_date'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
  }

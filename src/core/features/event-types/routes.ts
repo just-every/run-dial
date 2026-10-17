@@ -40,6 +40,7 @@ const eventTypeInputSchema = z
     title: z.string().min(1).max(160),
     description: z.string().min(1).max(4000),
     durationMinutes: z.number().int().min(5).max(480),
+    durationOptionsMinutes: z.array(z.number().int().min(5).max(480)).min(1).max(4).optional(),
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     locationType: z.enum(["google_meet", "fixed_link", "phone", "in_person"]),
     locationLabel: z.string().min(1).max(180),
@@ -66,7 +67,8 @@ const eventTypeInputSchema = z
 const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation);
 const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions) }).superRefine(requirePrivateLocation);
 
-function requirePrivateLocation(input: { locationType: string; locationValue: string; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {
+function requirePrivateLocation(input: { durationMinutes: number; durationOptionsMinutes?: number[]; locationType: string; locationValue: string; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {
+  if (input.durationOptionsMinutes && (new Set(input.durationOptionsMinutes).size !== input.durationOptionsMinutes.length || !input.durationOptionsMinutes.includes(input.durationMinutes))) context.addIssue({ code: "custom", path: ["durationOptionsMinutes"], message: "Choose distinct durations and include the default duration." });
   if (input.bookingHorizonMode === "fixed_range") {
     if (!input.bookingStartDate) context.addIssue({ code: "custom", path: ["bookingStartDate"], message: "Choose the first bookable date." });
     if (!input.bookingEndDate || (input.bookingStartDate && input.bookingEndDate < input.bookingStartDate)) context.addIssue({ code: "custom", path: ["bookingEndDate"], message: "Choose an end date on or after the first date." });
@@ -99,6 +101,10 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
     })
     .get("/api/app/event-types", async (context) => context.json(await context.get("services").eventTypes.listEventTypes()))
     .post("/api/app/event-types", validate("json", eventTypeCreationSchema), async (context) => context.json(await context.get("services").eventTypes.createEventType(context.req.valid("json")), 201))
+    .post("/api/app/event-types/:id/duplicate", validate("param", idSchema), async context => {
+      const event = await context.get("services").eventTypes.duplicateEventType(context.req.valid("param").id);
+      return event ? context.json(event, 201) : apiError(context, 404, "event_not_found", "The event type does not exist.");
+    })
     .get("/api/app/event-types/:id", validate("param", idSchema), async (context) => {
       const eventType = await context.get("services").eventTypes.getEventType(context.req.valid("param").id);
       return eventType ? context.json(eventType) : apiError(context, 404, "event_not_found", "The event type does not exist.");

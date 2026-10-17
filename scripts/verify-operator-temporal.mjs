@@ -56,7 +56,7 @@ const nativeBody = { eventTypeId: fixture.eventId, startAt: slots[16].startAt, i
 await call("/api/app/bookings", nativeBody, 401);
 mark("native operator creation requires a session");
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 let page;
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1024 }, timezoneId: "Australia/Brisbane" });
@@ -158,7 +158,7 @@ try {
   mark("occupied agreed time stays rejected despite override, preserves request and inputs, then valid retry links one booking and sends ordinary notices once");
 
   const configuration = await data(`/api/app/event-types/${fixture.eventId}`, undefined, 200, true);
-  await data(`/api/app/event-types/${fixture.eventId}`, { ...configuration, durationMinutes: 60 }, 200, true, "PATCH");
+  await data(`/api/app/event-types/${fixture.eventId}`, { ...configuration, durationMinutes: 60, durationOptionsMinutes: [30, 60] }, 200, true, "PATCH");
   for (const original of [operatorOriginal, inviteeOriginal]) {
     const receipt = await data(`/api/public/manage/${original.token}`);
     assert.equal(receipt.event.durationMinutes, 30); assert.equal(minutes(receipt.occurrence), 30);
@@ -178,30 +178,32 @@ try {
     return [table, { count: values.length, sha256: createHash("sha256").update(JSON.stringify(values)).digest("hex") }];
   }));
   const beforeTailRejection = safeEffects(await snapshot());
-  const operatorTailRefusal = await data(`/api/app/bookings/${operatorOriginal.id}/reschedule`, { startAt: oldThirtyMinuteTail.startAt, inviteeTimezone: "America/New_York", overridePublishedAvailability: false }, 409, true);
+  const operatorTailRefusal = await data(`/api/app/bookings/${operatorOriginal.id}/reschedule`, { startAt: oldThirtyMinuteTail.startAt, durationMinutes: 60, inviteeTimezone: "America/New_York", overridePublishedAvailability: false }, 409, true);
   assert.equal(operatorTailRefusal.error.code, "slot_unavailable");
   assert.deepEqual(operatorTailRefusal.error.details, ["schedule"]);
   assert.deepEqual(safeEffects(await snapshot()), beforeTailRejection, "operator refusal preserves both original occurrences and every booking, history, outbox, calendar and mail effect");
-  const publicTailRefusal = await data(`/api/public/manage/${inviteeOriginal.token}/reschedule/selection`, { startAt: oldThirtyMinuteTail.startAt, inviteeTimezone: "America/New_York" }, 409);
+  const publicTailRefusal = await data(`/api/public/manage/${inviteeOriginal.token}/reschedule/selection`, { startAt: oldThirtyMinuteTail.startAt, durationMinutes: 60, inviteeTimezone: "America/New_York" }, 409);
   assert.equal(publicTailRefusal.error.code, "slot_unavailable");
   assert.equal(Object.hasOwn(publicTailRefusal, "nonce"), false);
   assert.deepEqual(safeEffects(await snapshot()), beforeTailRejection, "public refusal issues no nonce and preserves every persisted booking and delivery effect");
   mark("an originally offered thirty-minute host-day tail is refused after the sixty-minute edit without changing occurrences, history, delivery effects or nonces");
 
   const operatorOriginalOccurrence = state.booking_occurrences.find((row) => row.id === operatorOriginal.current_occurrence_id);
-  const operatorAvailability = await data(`/api/public/manage/${operatorOriginal.token}/reschedule/availability?week=${week}&inviteeTimezone=America%2FNew_York`);
+  const retainedAvailability = await data(`/api/public/manage/${operatorOriginal.token}/reschedule/availability?week=${week}`);
+  assert.ok(retainedAvailability.slots.every(slot => minutes(slot) === 30), "rescheduling defaults to the booking's retained duration");
+  const operatorAvailability = await data(`/api/public/manage/${operatorOriginal.token}/reschedule/availability?week=${week}&inviteeTimezone=America%2FNew_York&durationMinutes=60`);
   assert.equal(operatorAvailability.state, "available"); assert.ok(operatorAvailability.slots.length > 0);
   const operatorSlot = operatorAvailability.slots.find((slot) => slot.startAt !== operatorOriginalOccurrence.start_at);
   assert.ok(operatorSlot); assert.equal(minutes(operatorSlot), 60);
   assert.notEqual(operatorSlot.startAt, operatorOriginalOccurrence.start_at);
-  await data(`/api/app/bookings/${operatorOriginal.id}/reschedule`, { startAt: operatorSlot.startAt, inviteeTimezone: "America/New_York", overridePublishedAvailability: false }, 200, true);
-  const inviteeAvailability = await data(`/api/public/manage/${inviteeOriginal.token}/reschedule/availability?week=${week}&inviteeTimezone=America%2FNew_York`);
+  await data(`/api/app/bookings/${operatorOriginal.id}/reschedule`, { startAt: operatorSlot.startAt, durationMinutes: 60, inviteeTimezone: "America/New_York", overridePublishedAvailability: false }, 200, true);
+  const inviteeAvailability = await data(`/api/public/manage/${inviteeOriginal.token}/reschedule/availability?week=${week}&inviteeTimezone=America%2FNew_York&durationMinutes=60`);
   assert.equal(inviteeAvailability.state, "available"); assert.ok(inviteeAvailability.slots.length > 0);
   assert.ok(inviteeAvailability.slots.every((slot) => Date.parse(slot.endAt) <= Date.parse(operatorSlot.startAt) || Date.parse(slot.startAt) >= Date.parse(operatorSlot.endAt)), "fresh invitee availability excludes the operator's new occurrence");
   const inviteeOriginalOccurrence = state.booking_occurrences.find((row) => row.id === inviteeOriginal.current_occurrence_id);
   const inviteeSlot = inviteeAvailability.slots.find((slot) => slot.startAt !== inviteeOriginalOccurrence.start_at && slot.startAt !== operatorSlot.startAt);
   assert.ok(inviteeSlot); assert.equal(minutes(inviteeSlot), 60);
-  const selection = await data(`/api/public/manage/${inviteeOriginal.token}/reschedule/selection`, { startAt: inviteeSlot.startAt, inviteeTimezone: "America/New_York" }, 201);
+  const selection = await data(`/api/public/manage/${inviteeOriginal.token}/reschedule/selection`, { startAt: inviteeSlot.startAt, durationMinutes: 60, inviteeTimezone: "America/New_York" }, 201);
   await data(`/api/public/manage/${inviteeOriginal.token}/reschedule`, { nonce: selection.nonce, startAt: inviteeSlot.startAt, inviteeTimezone: "America/New_York" });
   mark("both successful reschedules use freshly offered sixty-minute slots, including the operator's new occupancy in the invitee read");
   await deliver(); state = await snapshot();

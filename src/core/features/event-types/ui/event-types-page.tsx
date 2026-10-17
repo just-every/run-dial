@@ -2,12 +2,14 @@ import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { useHostSetup } from "../../host-setup";
 import { CopyBookingLink } from "../../host-setup";
 import type { BookingLink } from "../../host-setup";
-import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader } from "../../../app/ui/page-header";
-import { Badge, Card, buttonClassName } from "../../../app/ui/primitives";
+import { Badge, Button, Card, buttonClassName } from "../../../app/ui/primitives";
+import { useHydrated } from "../../../app/use-hydrated";
+import { hostSetupChanged } from "../../host-setup";
 import type { EventTypeRecord } from "../repository";
 
 export function EventTypesPage({ workspace = "/app" }: { workspace?: "/app" | "/setup" }) {
@@ -34,6 +36,20 @@ export function EventTypesPage({ workspace = "/app" }: { workspace?: "/app" | "/
 }
 
 function EventTypeRow({ eventType, link, workspace }: { workspace: "/app" | "/setup"; eventType: EventTypeRecord; link?: BookingLink }) {
+  const navigate = useNavigate(), hydrated = useHydrated(), inFlight = useRef(false);
+  const [duplicating, setDuplicating] = useState(false), [error, setError] = useState("");
+  async function duplicate() {
+    if (inFlight.current) return;
+    inFlight.current = true; setDuplicating(true); setError("");
+    try {
+      const response = await api.api.app["event-types"][":id"].duplicate.$post({ param: { id: eventType.id } });
+      if (response.status !== 201) { setError(await errorMessage(response)); return; }
+      const copied = await response.json();
+      hostSetupChanged();
+      await navigate({ to: `${workspace}/event-types/$id`, params: { id: copied.id } });
+    } catch { setError("The copy could not be opened. Reload the event list to check whether it was created."); }
+    finally { inFlight.current = false; setDuplicating(false); }
+  }
   const tone = eventType.status === "published" ? "success" : eventType.status === "disabled" ? "danger" : "warning";
-  return <Card className="p-5 sm:flex sm:p-6 sm:items-center sm:justify-between sm:gap-5"><div className="flex min-w-0 gap-4"><span aria-hidden="true" className="mt-1 h-10 w-2 shrink-0 rounded-full" style={{ backgroundColor: eventType.color }} /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="text-[19px] font-[750] tracking-[-.01em]">{eventType.title}</h2><Badge tone={tone}>{eventType.requestOnly && eventType.status === "published" ? "Requests only" : eventType.status}</Badge></div><p className="mt-1 max-w-2xl text-sm leading-6 text-soft">{eventType.description}</p><p className="mt-3 text-sm font-[650] text-ink">{eventType.durationMinutes} minutes · {eventType.locationLabel} · {eventType.listed ? "Listed on profile" : "Unlisted link only"}</p></div></div><div className="mt-4 flex shrink-0 flex-wrap gap-2 sm:mt-0">{link ? <CopyBookingLink link={link} /> : null}<Link to={`${workspace}/event-types/$id`} params={{ id: eventType.id }} className={buttonClassName("quiet")}>Edit</Link><Link to={`${workspace}/event-types/$id/availability`} params={{ id: eventType.id }} className={buttonClassName("quiet")}>Availability</Link></div></Card>;
+  return <Card className="p-5 sm:flex sm:p-6 sm:items-center sm:justify-between sm:gap-5"><div className="flex min-w-0 gap-4"><span aria-hidden="true" className="mt-1 h-10 w-2 shrink-0 rounded-full" style={{ backgroundColor: eventType.color }} /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="text-[19px] font-[750] tracking-[-.01em]">{eventType.title}</h2><Badge tone={tone}>{eventType.requestOnly && eventType.status === "published" ? "Requests only" : eventType.status}</Badge></div><p className="mt-1 max-w-2xl text-sm leading-6 text-soft">{eventType.description}</p><p className="mt-3 text-sm font-[650] text-ink">{eventType.durationMinutes} minutes · {eventType.locationLabel} · {eventType.listed ? "Listed on profile" : "Unlisted link only"}</p></div></div><div className="mt-4 flex shrink-0 flex-wrap gap-2 sm:mt-0">{link ? <CopyBookingLink link={link} /> : null}<Button type="button" variant="quiet" disabled={!hydrated || duplicating} aria-label={`Duplicate ${eventType.title}`} onClick={() => void duplicate()}>{duplicating ? "Duplicating…" : "Duplicate"}</Button><Link to={`${workspace}/event-types/$id`} params={{ id: eventType.id }} className={buttonClassName("quiet")}>Edit</Link><Link to={`${workspace}/event-types/$id/availability`} params={{ id: eventType.id }} className={buttonClassName("quiet")}>Availability</Link>{error ? <p role="alert" className="basis-full text-sm text-danger">{error}</p> : null}</div></Card>;
 }

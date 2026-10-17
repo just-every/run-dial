@@ -13,7 +13,7 @@ import { validateInvitee, type BookingEmail, type BookingRecord, type ValidatedI
 
 export type OperatorBookingCreateResult =
   | { kind: "created" | "replayed"; booking: BookingRecord }
-  | { kind: "not_found" | "invalid_timezone" | "invalid_answers" | "calendar_unavailable" | "slot_taken" | "blocked" | "payload_mismatch" | "attempt_erased" }
+  | { kind: "not_found" | "invalid_timezone" | "invalid_answers" | "calendar_unavailable" | "slot_taken" | "blocked" | "payload_mismatch" | "attempt_erased" | "invalid_duration" }
   | { kind: "slot_invalid"; exclusions: SlotExclusion[] };
 type CreationDependencies = {
   repository: BookingsRepository; availability: AvailabilityService; runtime: RuntimeEnvironment;
@@ -38,7 +38,7 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
   const prior = await recoverOperatorBooking(dependencies, input);
   if (prior) return prior;
   const creationIdentity = await operatorCreationIdentity(input, dependencies.runtime.SESSION_SECRET);
-  const selection = await dependencies.availability.verifyOperatorSelection(input.eventTypeId, input.startAt, { overrideNoticeAndHorizon: input.overrideNoticeAndHorizon }, new Date());
+  const selection = await dependencies.availability.verifyOperatorSelection(input.eventTypeId, input.startAt, { overrideNoticeAndHorizon: input.overrideNoticeAndHorizon }, new Date(), undefined, input.durationMinutes);
   if (selection.kind !== "valid") return await recoverOperatorBooking(dependencies, input) ?? selection;
   const invitee = validateInvitee(selection.event, { name: input.name, email: input.email, answers: input.answers });
   if (!invitee) return await recoverOperatorBooking(dependencies, input) ?? { kind: "invalid_answers" };
