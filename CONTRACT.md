@@ -332,8 +332,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 56 | 20 | 0 | 76 |
-| Target and push further | 2 | 25 | 67 | 94 |
-| All | 58 | 45 | 67 | 170 |
+| Target and push further | 3 | 24 | 67 | 94 |
+| All | 59 | 44 | 67 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -372,7 +372,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `EVENT-010` | Recurring bookings | target | missing |  | No implementing code yet. |
 | `EVENT-011` | Invitee-selectable durations | target | partial | `tests/booking-wire/duration-journey.mjs`, `tests/booking-wire/occurrence-duration-journey.mjs`, `tests/move-in-runtime.test.mjs`; `evidence/contract/2026-10-17/EVENT-011/` | One to four lengths, defaults, Calendly saved-file import, availability, booking, rescheduling, calendar, ICS, notices and reminders use the selected length. Duration-specific pricing, teams, webhooks and reports remain absent. |
 | `LINK-001` | Single-use links and one-off meetings | target | done | `tests/booking-wire/booking-links-journey.mjs`, `src/core/features/booking-links/` |  |
-| `LINK-002` | Host-offered specific times | target | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `LINK-002` | Host-offered specific times | target | done | `tests/offered-times.test.mjs`, `tests/booking-wire/offered-times-journey.mjs`, `src/core/features/booking-links/holds.ts` | Native live-time selection, copyable link/email, configurable or absent holds, exact private offers, atomic release on booking, expiry/revocation and fresh final validation. |
 | `LINK-003` | Prefilled and tracked links | target | partial | `tests/booking-wire/link-context-journey.mjs`, `src/core/features/public-booking/ui/link-context.ts`; `evidence/contract/2026-10-17/LINK-003/` | Editable name/email/answer suggestions work in links and embeds; bounded UTM/source values persist on the booking and appear in operator detail, export and erasure. Webhooks, CRM handoff and reports remain absent. |
 | `POLL-001` | Meeting polls | target | missing |  | No implementing code yet. |
 | `BRAND-001` | Branding and custom domain | target | partial | `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |

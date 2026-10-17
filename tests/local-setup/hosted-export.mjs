@@ -113,7 +113,7 @@ export async function hostedExportJourney(page, { openUrl, ownerGrant, hostedMig
   const claim = await targetPage.request.post(targetOrigin + '/auth/bootstrap', { headers: { origin: targetOrigin }, data: { token: values.SETUP_TOKEN, displayName: 'Replacement owner' } });
   assert.equal(claim.status(), 409, 'import preserves consumed first-owner authority');
   await context.close(); context = undefined;
-  await runRer(directory, ['dev', '--stop']); await destination.owned.stop(); destination = undefined;
+  await destination.owned.stop(); destination = undefined;
 
   await assert.rejects(fetch(origin + '/health'), 'source remains unavailable after target proof');
   Object.assign(evidence, { passed: true, completeTableCoverage: true, hostedTrackedLedgerToLocalRestore: true, tables: source.manifest.tables.length, objects: source.manifest.objects.length, contentHash: source.closing.contentHash, sourceArchiveSha256: createHash('sha256').update(source.bytes).digest('hex'), independentEmptyDestination: true, saltMismatchRefused: true, sessionAndOriginRefused: true, otherNativeOwnerRefused: true, remoteImportNotExposed: true, bytesAndMetadataEquivalent: true, publicBookingAndAnswer: true, freshRuntimeRestoredBooking: true, oldSessionRefused: true, nonemptyRestoreRefused: true, originalOwnerClaimPreserved: true });

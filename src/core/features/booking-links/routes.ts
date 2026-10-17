@@ -9,7 +9,15 @@ export const bookingLinkRoutes = new Hono<AppEnvironment>()
   .post("/api/app/booking-links", validate("json", createBookingLinkSchema), async context => {
     const services = context.get("services"), profile = await services.hostProfile.getProfile();
     if (!profile) return apiError(context,409,"profile_required","Configure your host profile first.");
-    const result = await services.bookingLinks.create(context.req.valid("json"));
+    const input=context.req.valid("json"), slots=[];
+    for (const start of input.offeredStarts ?? []) {
+      const startAt=new Date(start).toISOString();
+      const verified=await services.availability.verifyOperatorSelection(input.eventTypeId,startAt,{overrideNoticeAndHorizon:false});
+      if (verified.kind!=="valid") return apiError(context,409,"slot_unavailable","An offered time is no longer available. Refresh and choose again.");
+      slots.push({startAt,endAt:verified.slot.endAt,occupiedStartAt:new Date(Date.parse(startAt)-verified.event.beforeBufferMinutes*60000).toISOString(),occupiedEndAt:new Date(Date.parse(verified.slot.endAt)+verified.event.afterBufferMinutes*60000).toISOString()});
+    }
+    const result = await services.bookingLinks.create(input,input.offeredStarts ? slots : undefined);
+    if (result.kind === "slot_taken") return apiError(context,409,"slot_unavailable","An offered time was just taken. Refresh and choose again.");
     if (result.kind === "invalid_expiry") return apiError(context,400,"invalid_expiry","Choose a future expiry date.");
     if (result.kind === "not_found") return apiError(context,404,"event_not_available","Choose an available event type.");
     if (result.kind === "not_ready") return apiError(context,409,"event_not_ready",`This link is not ready: ${result.missing.join(", ")}.`,result.missing);

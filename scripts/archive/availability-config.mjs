@@ -1,5 +1,10 @@
 const date = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value + 'T00:00:00Z')) && new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) === value;
 export function validateAvailabilityConfig(name, row) {
+  if (name === 'booking_links' && row.offered_slots_json !== null) {
+    const slots = JSON.parse(row.offered_slots_json);
+    const instant = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+    if (!Array.isArray(slots) || !slots.length || slots.length > 12 || new Set(slots.map(s => s.startAt)).size !== slots.length || slots.some(s => !s || !['startAt','endAt','occupiedStartAt','occupiedEndAt'].every(k => instant(s[k])) || s.startAt >= s.endAt || s.occupiedStartAt > s.startAt || s.occupiedEndAt < s.endAt) || row.kind !== 'single_use' || row.hold_until !== null && (!instant(row.hold_until) || row.hold_until > row.expires_at)) throw new Error('archive-invalid-offered-times');
+  }
   if (name === 'availability_schedules') {
     const windows = JSON.parse(row.windows_json), reopened = JSON.parse(row.reopened_holidays_json), off = JSON.parse(row.time_off_json);
     if (typeof row.name !== 'string' || !row.name.trim() || row.name.length > 120 || ![0, 1].includes(row.block_us_holidays) || !Array.isArray(windows) || windows.length > 1000 || windows.some(w => !w || !Number.isInteger(w.weekday) || w.weekday < 0 || w.weekday > 6 || !Number.isInteger(w.startMinute) || !Number.isInteger(w.endMinute) || w.startMinute < 0 || w.endMinute > 1440 || w.startMinute >= w.endMinute)) throw new Error('archive-invalid-availability-schedule');

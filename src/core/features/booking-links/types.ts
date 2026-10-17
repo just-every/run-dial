@@ -22,13 +22,18 @@ export const createBookingLinkSchema = z.object({
   kind: z.enum(["single_use", "one_off"]),
   expiresAt: z.string().datetime({ offset: true }),
   overrides: oneOffOverridesSchema.optional(),
+  offeredStarts: z.array(z.string().datetime({offset:true})).min(1).max(12).optional(),
+  holdHours: z.number().int().min(0).max(168).optional(),
 }).superRefine((value, context) => {
+  if (value.offeredStarts && (value.kind !== "single_use" || new Set(value.offeredStarts.map(x=>new Date(x).toISOString())).size !== value.offeredStarts.length)) context.addIssue({code:"custom",path:["offeredStarts"],message:"Offer distinct times on a single-use link."});
+  if (value.holdHours && !value.offeredStarts) context.addIssue({code:"custom",path:["holdHours"],message:"Choose the times to hold."});
   if ((value.kind === "one_off") !== Boolean(value.overrides)) context.addIssue({ code: "custom", path: ["overrides"], message: "Only one-off meetings require their own meeting details." });
 });
 export type BookingLinkInput = z.infer<typeof createBookingLinkSchema>;
 export type BookingLinkRecord = {
   id: string; eventTypeId: string; kind: BookingLinkInput["kind"]; overridesJson: string | null;
   expiresAt: string; consumedAt: string | null; consumedBookingId: string | null; revokedAt: string | null;
+  offeredSlotsJson: string | null; holdUntil: string | null;
   createdAt: string; updatedAt: string; tokenHash: string | null;
 };
-export type LinkEvent = EventTypeRecord & { bookingLink?: { id: string; kind:BookingLinkInput["kind"]; expiresAt: string; dates?: z.infer<typeof oneOffOverridesSchema>["dates"] } };
+export type LinkEvent = EventTypeRecord & { bookingLink?: { id: string; kind:BookingLinkInput["kind"]; expiresAt: string; offeredStarts?: string[]; dates?: z.infer<typeof oneOffOverridesSchema>["dates"] } };

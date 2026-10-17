@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 export async function verifyEmptyWorkspace(origin) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
     const page = await context.newPage();

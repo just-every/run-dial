@@ -9,7 +9,7 @@ export class AvailabilityRepository {
     return new BookingLimits(this.binding).forRange(eventId, zone, date, days, excludedBookingId, inviteeEmail);
   }
 
-  async listInternalClaims(startAt: string, endAt: string, excludedBookingId?: string, capHostDates: string[] = []): Promise<InternalClaim[]> {
+  async listInternalClaims(startAt: string, endAt: string, excludedBookingId?: string, capHostDates: string[] = [], excludedLinkId?: string): Promise<InternalClaim[]> {
     // Persisted host dates also govern the atomic cap after profile-zone changes.
     const capDates = [...new Set(capHostDates)];
     const dateClause = capDates.length ? ` OR occurrence.host_date IN (${capDates.map(() => "?").join(", ")})` : "";
@@ -27,7 +27,11 @@ export class AvailabilityRepository {
       )
       .bind(endAt, startAt, ...capDates, excludedBookingId ?? null, excludedBookingId ?? null)
       .all<InternalClaim>();
-    return result.results;
+    const holds=await this.binding.prepare(`SELECT '' AS hostDate,json_extract(s.value,'$.occupiedStartAt') AS startAt,json_extract(s.value,'$.occupiedEndAt') AS endAt
+      FROM booking_links l JOIN booking_link_tokens t ON t.link_id=l.id,json_each(l.offered_slots_json) s
+      WHERE l.consumed_at IS NULL AND l.revoked_at IS NULL AND l.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now') AND l.hold_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')
+        AND json_extract(s.value,'$.occupiedStartAt')<? AND json_extract(s.value,'$.occupiedEndAt')>? AND (? IS NULL OR l.id<>?)`).bind(endAt,startAt,excludedLinkId ?? null,excludedLinkId ?? null).all<InternalClaim>();
+    return [...result.results,...holds.results];
   }
 
   /** Where Dial's own managed events sat when a busy read was observed: each booking's last confirmed placement (an

@@ -49,7 +49,7 @@ async function establishWorkspace(request) {
  assert.equal(empty.completedAt, completion.completedAt);
  assert.equal(empty.profileReady, false);assert.deepEqual(empty.links, []);
 }
-const browser=await chromium.launch({headless:true});const errors=[],scans=[];
+const browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]});const errors=[],scans=[];
 try{
  const context=await browser.newContext({viewport:{width,height:width===390?844:900},acceptDownloads:true});
  const bootstrap=await context.request.post(origin+'/auth/bootstrap',{data:{token:'dial-test-only-setup-token-at-least-32',displayName:'Import reviewer',returnTo:'/app'},headers:{Origin:origin},maxRedirects:0});assert.equal(bootstrap.status(),303);

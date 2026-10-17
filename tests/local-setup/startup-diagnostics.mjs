@@ -15,6 +15,8 @@ const fixedRefusals = new Map([
   ["The existing server is still starting. Wait for its ready output.", "existing_server_starting"],
 ]);
 const dynamicRefusals = [
+  [/^Not started: this computer is busy\. Its 1-minute load is (?:\d+(?:\.\d+)?|unknown) and a server starts only at (?:\d+(?:\.\d+)?) or below\.$/, "machine_load"],
+  [/^Server startup requires (?:\d+(?:\.\d+)?) GiB free on checkout and temporary volumes, and /, "insufficient_disk"],
   [/^Server startup requires machine load at or below (?:\d+(?:\.\d+)?)\. Retry when the machine is available\.$/, "machine_load"],
   [/^Requested port \d+ is unavailable\. Stop its owner or choose an explicit free port; rer does not drift\.$/, "port_unavailable"],
   [/^Server limit \d+ reached\. /, "server_limit"],
@@ -50,7 +52,16 @@ export function startupDiagnostic(output, exitCode) {
     }
     return diagnostic;
   }
-  for (const line of lines) {
+  const refusalLines = lines.flatMap(line => {
+    try {
+      const event = JSON.parse(line);
+      if (event?.version === 1 && ["dev", "preview"].includes(event.verb)
+          && event.event === "error" && event.code === "safety_refusal" && event.exitCode === 4
+          && typeof event.message === "string") return event.message.split(/\r?\n/);
+    } catch { /* Human output is classified by the same fixed categories. */ }
+    return [line];
+  });
+  for (const line of refusalLines) {
     const reason = fixedRefusals.get(line) ?? dynamicRefusals.find(([pattern]) => pattern.test(line))?.[1];
     if (reason) return { code: "safety_refusal", reason, exitCode };
   }

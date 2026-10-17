@@ -1,3 +1,5 @@
+import { setTimeout as delay } from "node:timers/promises";
+import { waitForServerLoad } from "./resource-wait.mjs";
 import { rerEntry, rerArguments } from '../rer-command.mjs';
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -35,8 +37,20 @@ export async function runRer(directory, args, { expected = 0, timeout = 180_000 
 }
 // Local owner journeys use the one-click dev identity.
 export async function start(directory, command, origin, flags = []) {
+  const env = environment(), deadline = Date.now() + 20 * 60_000;
+  for (;;) {
+    await waitForServerLoad(env, deadline);
+    try { return await startAdmitted(directory, command, origin, flags, env); }
+    catch (error) {
+      if (error.startupReason !== "machine_load" || Date.now() + 60_000 >= deadline) throw error;
+      console.log("Waiting one minute for the configured native server load admission.");
+      await delay(60_000);
+    }
+  }
+}
+async function startAdmitted(directory, command, origin, flags, env) {
   let output = "";
-  const owned = spawnOwned(process.execPath, rerArguments([rerEntry, command, ...flags, "--foreground"]), { cwd: directory, env: environment() }, { label: `rer ${command}`, onOutput: chunk => { output += chunk; } });
+  const owned = spawnOwned(process.execPath, rerArguments([rerEntry, command, ...flags, "--foreground"]), { cwd: directory, env }, { label: `rer ${command}`, onOutput: chunk => { output += chunk; } });
   try {
     for (let attempt = 0; attempt < 2400; attempt++) {
       owned.assertRunning();
@@ -54,7 +68,10 @@ export async function start(directory, command, origin, flags = []) {
     throw new Error(`rer ${command} did not become ready`);
   } catch (error) {
     await owned.stop();
-    throw new Error(`${error.message}; native startup: ${JSON.stringify(startupDiagnostic(output, owned.state.code))}`, { cause: error });
+    const diagnostic = startupDiagnostic(output, owned.state.code);
+    const failure = new Error(`${error.message}; native startup: ${JSON.stringify(diagnostic)}`, { cause: error });
+    failure.startupReason = diagnostic.reason;
+    throw failure;
   }
 }
 export async function variables(directory) {

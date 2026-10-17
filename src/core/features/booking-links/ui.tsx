@@ -4,7 +4,7 @@ import { Badge, Button, Card, Input, Select } from "../../app/ui/primitives";
 import { useHydrated } from "../../app/use-hydrated";
 import type { EventTypeRecord } from "../event-types";
 import type { BookingLinkInput } from "./types";
-type ListedLink = { id:string; eventTypeId:string; kind:string; expiresAt:string; state:string };
+type ListedLink = { id:string; eventTypeId:string; kind:string; offeredStarts?:string[]; holdUntil?:string|null; expiresAt:string; state:string };
 
 export function BookingLinksPanel({ events }: {events:EventTypeRecord[]}) {
   const hydrated = useHydrated(), busy = useRef(false);
@@ -52,6 +52,6 @@ export function BookingLinksPanel({ events }: {events:EventTypeRecord[]}) {
     </form> : <p className="mt-4 text-sm">Create an event type first.</p>}
     {url ? <div className="mt-4 grid gap-2" role="status"><label>Copy this private link now. It is shown once.<Input readOnly value={url} onFocus={event=>event.target.select()} /></label><Button type="button" variant="secondary" onClick={()=>void navigator.clipboard.writeText(url).catch(()=>setError("Select and copy the link from the field above."))}>Copy link</Button></div> : null}
     {error ? <p role="alert" className="mt-4 text-sm text-danger">{error}</p> : null}
-    <ul className="mt-6 grid gap-3">{links.map(link=><li key={link.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3"><div><p className="font-semibold">{events.find(event=>event.id===link.eventTypeId)?.title ?? "Meeting"} · {link.kind === "one_off" ? "One-off" : "Single-use"}</p><p className="text-sm text-soft">Expires {link.expiresAt.replace("T"," ").replace(".000Z"," UTC")}</p></div><Badge>{link.state}</Badge>{link.state === "active" ? <Button type="button" variant="quiet" disabled={!hydrated || pending} onClick={()=>void revoke(link.id)}>Revoke</Button> : null}</li>)}</ul>
+    <ul className="mt-6 grid gap-3">{links.map(link=><li key={link.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3"><div><p className="font-semibold">{events.find(event=>event.id===link.eventTypeId)?.title ?? "Meeting"} · {link.offeredStarts ? "Offered times" : link.kind === "one_off" ? "One-off" : "Single-use"}</p><p className="text-sm text-soft">Expires {link.expiresAt.replace("T"," ").replace(".000Z"," UTC")}</p></div><Badge>{link.state}</Badge>{link.state === "active" ? <Button type="button" variant="quiet" disabled={!hydrated || pending} onClick={()=>void revoke(link.id)}>Revoke</Button> : null}</li>)}</ul>
   </Card>;
 }
