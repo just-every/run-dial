@@ -1,7 +1,9 @@
 import { ensureTestOperator } from "./auth-fixture";
 import { Hono } from "hono";
 import { AvailabilityRepository, AvailabilityService, type CalendarBusyReader } from "../src/core/features/availability";
-import { BookingsRepository, BookingsService } from "../src/core/features/bookings";
+import { BookingLinksRepository } from "../src/core/features/booking-links/repository";
+import { BookingLinksService } from "../src/core/features/booking-links/service";
+import { BookingsRepository, BookingsService, CalendarDeletionProbesRepository } from "../src/core/features/bookings";
 import type { AppEnvironment } from "../src/core/app/context";
 import type { AppServices } from "../src/core/app/services";
 import { EventTypesRepository, EventTypesService } from "../src/core/features/event-types";
@@ -46,13 +48,17 @@ export default {
 function servicesFor(binding: D1Database) {
   const hostProfile = new HostProfileService(new HostProfileRepository(binding));
   const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile);
-  const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar);
+  const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
+  const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
   return {
     operators: new OperatorsService(binding, runtime),
     hostProfile,
     eventTypes,
+    bookingLinks,
     availability,
-    bookings: new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime),
+    bookings: new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime, {
+      probes: new CalendarDeletionProbesRepository(binding), inspect: async () => { throw new Error("The booking HTTP Worker has no calendar provider."); },
+    }, bookingLinks),
     spaSurface: { async serve(_request: Request, status: number) { return new Response("surface", { status }); } },
   };
 }

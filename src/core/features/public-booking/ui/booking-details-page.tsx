@@ -44,7 +44,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
   const [answers, setAnswers] = useState<Record<string, string | string[]>>(() => initial ? prefilledAnswers(initial.event.questions, linkContext) : {});
   const [name, setName] = useState(linkContext.name ?? "");
   const [email, setEmail] = useState(linkContext.email ?? "");
-  const [locationId, setLocationId] = useState(initial?.event.locations?.length === 1 ? initial.event.locations[0].id : "");
+  const [locationId, setLocationId] = useState(initial?.event.locations?.length === 1 ? initial.event.locations[0].key : "");
   const [locationInput, setLocationInput] = useState("");
   const link = new URLSearchParams(search).get("link") || undefined;
   const [notice, setNotice] = useState("");
@@ -67,7 +67,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
       if (!currentRead() || attempt.current.pending) return;
       if (!current) { setSelectionError("Your selected time could not be loaded. Please retry."); return; }
       rememberSelection(handle, slug, current);
-      setLocationId(previous => current.event.locations?.some(location => location.id === previous) ? previous : current.event.locations?.length === 1 ? current.event.locations[0].id : "");
+      setLocationId(previous => current.event.locations?.some(location => location.key === previous) ? previous : current.event.locations?.length === 1 ? current.event.locations[0].key : "");
       setMissing(false); setSelection(current); setData({ profile: current.host, eventType: current.event });
       const initialize = !initializedQuestions.current;
       initializedQuestions.current = true;

@@ -1,6 +1,5 @@
 import { defaultCorrespondenceConfig, renderMailCorrespondence } from "../../shared/correspondence";
-import { formatTimeRange } from "../delivery";
-import { renderBrandedMail } from "../delivery";
+import { formatTimeRange, renderBrandedMail } from "../delivery/mail";
 import type { BookingRecord } from "./types";
 
 export function requestEmail(b:BookingRecord,hostName:string,manageUrl:string,message:string,reminder=false) {

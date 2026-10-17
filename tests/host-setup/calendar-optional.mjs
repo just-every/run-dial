@@ -82,7 +82,7 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     assert.equal(afterCancel.fixture_activity.filter(item => ["busy", "check", "upsert", "cancel"].includes(item.kind)).length, 0, "no calendar provider is contacted in the absent mode");
     // Google Meet remains a provider capability, even though fixed locations work.
     const source = await (await owner.request.get(origin + `/api/app/event-types/${eventId}`)).json();
-    const created = await owner.request.post(origin + "/api/app/event-types", { headers, data: { ...source, slug: "needs-meet", locationType: "google_meet", locationValue: "" } });
+    const created = await owner.request.post(origin + "/api/app/event-types", { headers, data: { ...source, slug: "needs-meet", locationType: "google_meet", locationLabel: "Google Meet", locationValue: "", locations: [{ id: "default", type: "google_meet", label: "Google Meet", value: "" }] } });
     assert.equal(created.status(), 201);
     const meet = await created.json();
     const refused = await owner.request.post(origin + `/api/app/event-types/${meet.id}/publish`, { headers });
