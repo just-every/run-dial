@@ -1,3 +1,4 @@
+import { nameAssetFailure } from './diagnostics.mjs';
 import { extname } from 'node:path';
 import { assert, hash, hexId, uuid } from './validation.mjs';
 import { moduleType, assetType } from './artifact.mjs';
@@ -45,14 +46,17 @@ export async function secretBindings(api, worker, plan, env, exists) {
   const present = exists ? await api.request(`/workers/scripts/${worker}/secrets`) : [];
   assert(Array.isArray(present) && present.every(x => typeof x.name === 'string' && x.type === 'secret_text'),'invalid-secret-list');
   const bindings = []; const names = present.map(x => x.name);
+  const supplied = item => typeof env[item.environment] === 'string' && env[item.environment].trim();
+  // An optional secret neither held nor supplied stays unbound; the app treats it as not connected.
+  const unset = plan.secrets.filter(item => item.optional && !names.includes(item.binding) && !supplied(item)).map(item => item.binding);
   for (const item of plan.secrets) {
     if (names.includes(item.binding)) bindings.push({type:'inherit',name:item.binding});
-    else {
-      assert(typeof env[item.environment] === 'string' && env[item.environment].trim(), `missing-secret-${item.environment}`);
+    else if (!unset.includes(item.binding)) {
+      assert(supplied(item), `missing-secret-${item.environment}`);
       bindings.push({type:'secret_text',name:item.binding,text:env[item.environment]});
     }
   }
-  return {bindings,names,missing:plan.secrets.filter(x => !names.includes(x.binding)).map(x => x.binding)};
+  return {bindings,names,unset,missing:plan.secrets.filter(x => !names.includes(x.binding) && !unset.includes(x.binding)).map(x => x.binding)};
 }
 export async function uploadAssets(api, worker, files) {
   const manifest = {}; const byHash = new Map();
@@ -61,7 +65,8 @@ export async function uploadAssets(api, worker, files) {
     manifest[`/${file.path}`] = {hash:digest,size:Buffer.from(file.base64,'base64').length};
     byHash.set(digest,file);
   }
-  const session = await api.request(`/workers/scripts/${worker}/assets-upload-session`,{method:'POST',body:{manifest}});
+  const session = await api.request(`/workers/scripts/${worker}/assets-upload-session`,{method:'POST',body:{manifest}})
+    .catch(error => { throw nameAssetFailure(error,files.map(file => file.path)); });
   assert(typeof session.jwt === 'string' && session.jwt && Array.isArray(session.buckets),'invalid-asset-session');
   let completion = session.buckets.length ? null : session.jwt;
   const seen = new Set();
@@ -72,7 +77,8 @@ export async function uploadAssets(api, worker, files) {
       assert(byHash.has(key) && !seen.has(key),'invalid-asset-request'); seen.add(key);
       const file = byHash.get(key); data.set(key,new Blob([file.base64],{type:assetType(file.path)}),file.path.split('/').at(-1));
     }
-    const uploaded = await api.request('/workers/assets/upload?base64=true',{method:'POST',body:data,assetToken:session.jwt});
+    const uploaded = await api.request('/workers/assets/upload?base64=true',{method:'POST',body:data,assetToken:session.jwt})
+      .catch(error => { throw nameAssetFailure(error,bucket.map(key => byHash.get(key).path)); });
     if (uploaded.jwt) completion = uploaded.jwt;
   }
   assert(typeof completion === 'string' && completion,'incomplete-asset-upload');

@@ -1,5 +1,8 @@
+# Adoption note: add it only when the seed's demo is adopted (DEMO.md "Hosting the demo")
 name: Run demo
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       test_only:
@@ -36,23 +39,36 @@ jobs:
       - name: Scope the test host
         if: inputs.test_only
         run: node --input-type=module -e "import fs from 'node:fs'; const d=JSON.parse(fs.readFileSync('deploy-demo.json','utf8')); d.domain='test.'+d.domain; fs.writeFileSync('deploy-demo.json',JSON.stringify(d));"
-      # Wrangler builds the container image with the runner's Docker and pushes it to the account.
-      - name: Render the app runtime configuration
-        if: ${{ !inputs.remove }}
-        run: node scripts/render-wrangler.mjs --container
+      # Wrangler deploys the native Worker bundle and edge assets.
       - if: ${{ !inputs.remove }}
         run: pnpm exec rer deploy --demo --environment "$DEMO_ENVIRONMENT"
         env:
-          CLOUDFLARE_ACCOUNT_ID: b20c0ca9cab0c2b70e13d7cf724b89bd
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TURNSTILE_SITE_KEY: ${{ inputs.test_only && '1x00000000000000000000AA' || vars.TURNSTILE_SITE_KEY }}
           TURNSTILE_SECRET_KEY: ${{ inputs.test_only && '1x0000000000000000000000000000000AA' || secrets.TURNSTILE_SECRET_KEY }}
           RER_DEMO_OPERATOR_TOKEN: ${{ secrets.RER_DEMO_OPERATOR_TOKEN }}
+          # Starts on the test host must carry this token; unset, the token stays on the runner and no start is admitted.
+          RER_DEMO_MEASUREMENT_TOKEN: ${{ inputs.test_only && secrets.RER_DEMO_MEASUREMENT_TOKEN || '' }}
       # Deletes only what the demo's deploy recorded; a second run finds nothing and changes nothing.
       - if: inputs.remove
-        run: pnpm exec rer deploy --demo --remove --yes --environment "$DEMO_ENVIRONMENT"
+        run: |
+          log=$(mktemp "$RUNNER_TEMP/run-demo-remove.XXXXXX")
+          trap 'rm -f "$log"' EXIT
+          if pnpm exec rer deploy --demo --remove --yes --environment "$DEMO_ENVIRONMENT" >"$log" 2>&1; then
+            cat "$log"
+          else
+            status=$?
+            cat "$log"
+            if grep -Eq 'malformed-response|provider-http-5[0-9]{2}([^0-9]|$)' "$log"; then
+              echo "Retrying demo removal once after a transient provider failure"
+              pnpm exec rer deploy --demo --remove --yes --environment "$DEMO_ENVIRONMENT"
+            else
+              exit "$status"
+            fi
+          fi
         env:
-          CLOUDFLARE_ACCOUNT_ID: b20c0ca9cab0c2b70e13d7cf724b89bd
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       # A first deploy's hostname is new: wait until public DNS answers for it, then
       # read the start page back through that resolver, so the runner's own resolver

@@ -1,9 +1,27 @@
 import { createHash } from 'node:crypto';
 import { assert, uuid } from './validation.mjs';
+import { recordDeployFailure } from './diagnostics.mjs';
 
 // Wrangler's remote --file protocol. D1 imports execute the whole file atomically,
 // including trigger bodies; the query endpoint's semicolon splitting cannot.
-export async function importD1({ envelope, upload }, id, sql) {
+// Cloudflare's own reason for an import that failed or did not finish, kept on the
+// error as providerRefusal (rer deploy names it) and in the deploy diagnostic: its
+// codes and messages without credentials, URLs (signed upload destinations) or
+// control characters, each cut to 300 characters.
+function importFailure(code, id, response, redact) {
+  const clean = text => redact(text).replace(/\bhttps?:\/\/\S+/gi, '[URL omitted]').replace(/[\x00-\x1f\x7f-\x9f]+/g, ' ').trim().slice(0, 300);
+  const said = [response?.error, ...(Array.isArray(response?.errors) ? response.errors : [])]
+    .map(item => typeof item === 'string' ? { message:item } : item)
+    .filter(item => Number.isSafeInteger(item?.code) || typeof item?.message === 'string' && item.message.trim()).slice(0, 3)
+    .map(item => ({ ...(Number.isSafeInteger(item.code) ? { code:item.code } : {}), ...(typeof item.message === 'string' ? { message:clean(item.message) } : {}) }));
+  const status = typeof response?.status === 'string' && /^[a-z_]{1,40}$/.test(response.status) ? response.status : undefined;
+  const errors = said.length ? said : status ? [{ message:`import status ${status}` }] : [];
+  const error = new Error(code);
+  error.providerRefusal = { operation:`POST /d1/database/${id}/import`, errors };
+  return recordDeployFailure(error, { providerCodes:errors.filter(item => item.code !== undefined).map(item => item.code), output:errors.map(item => item.message).filter(Boolean).join('\n') });
+}
+
+export async function importD1({ envelope, upload, redact = String }, id, sql) {
   assert(uuid(id) && typeof sql === 'string' && Buffer.byteLength(sql) <= 4 * 1024 * 1024, 'invalid-d1-import');
   const bytes = Buffer.from(sql), etag = createHash('md5').update(bytes).digest('hex');
   const post = async body => (await envelope(`/d1/database/${id}/import`, { method:'POST', body })).result;
@@ -15,12 +33,12 @@ export async function importD1({ envelope, upload }, id, sql) {
   }
   for (let polls = 0; polls < 100; polls++) {
     // REST places errors on the envelope; validate nested errors when supplied.
-    assert(response?.success === true && response.type === 'import' && (!Object.hasOwn(response, 'errors') || Array.isArray(response.errors) && !response.errors.length), 'd1-import-failed');
+    if (!(response?.success === true && response.type === 'import' && response.status !== 'error' && (!Object.hasOwn(response, 'errors') || Array.isArray(response.errors) && !response.errors.length))) throw importFailure('d1-import-failed', id, response, redact);
     if (response.status === 'complete') {
-      assert(Number.isSafeInteger(response.result?.num_queries) && response.result.num_queries > 0 && typeof response.result.final_bookmark === 'string' && response.result.final_bookmark.length > 0, 'd1-import-invalid-result');
+      if (!(Number.isSafeInteger(response.result?.num_queries) && response.result.num_queries > 0 && typeof response.result.final_bookmark === 'string' && response.result.final_bookmark.length > 0)) throw importFailure('d1-import-invalid-result', id, response, redact);
       return;
     }
-    assert(response.status === 'active' && typeof response.at_bookmark === 'string' && response.at_bookmark.length > 0 && response.at_bookmark.length <= 1024, 'd1-import-uncertain');
+    if (!(response.status === 'active' && typeof response.at_bookmark === 'string' && response.at_bookmark.length > 0 && response.at_bookmark.length <= 1024)) throw importFailure('d1-import-uncertain', id, response, redact);
     response = await post({ action:'poll', current_bookmark:response.at_bookmark });
   }
   throw new Error('d1-import-poll-limit');

@@ -12,6 +12,7 @@ import { validateMigrations } from './migrations.mjs';
 import { deploy } from './deploy.mjs';
 import { verifyHealth } from './health.mjs';
 import { validSecretNames, secretNames, pendingSecretNames } from './owner-secret-names.mjs';
+import { publicOrigin } from './public-origin.mjs';
 
 /* Owner-account mode: the owner's own Cloudflare account, token and account id.
  * Names are derived from the project id and the owner's environment. A local
@@ -21,8 +22,8 @@ import { validSecretNames, secretNames, pendingSecretNames } from './owner-secre
 const segment = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const STATE_KIND = 'rer-deploy-owner-state';
 export const KINDS = ['d1','r2','kv','queues'];
-const DECLARATION_KEYS = ['version','project','compatibilityDate','compatibilityFlags','d1','r2','kv','queues','durableObjects','secrets','crons','vars','originVar','services','workersDev','platforms','container'];
-const ENTRY_KEYS = {d1:['binding'],r2:['binding','locationHint'],kv:['binding'],queues:['binding','consumer','deadLetterQueue'],durableObjects:['binding','className','storage'],secrets:['binding','environment','verifyStandIn'],services:['binding','project','entrypoint','allowedHosts','grant']};
+const DECLARATION_KEYS = ['version','project','compatibilityDate','compatibilityFlags','d1','r2','kv','queues','durableObjects','secrets','crons','vars','originVar','publicOriginSetting','publicSettings','services','workersDev','platforms','container','deployGuide'];
+const ENTRY_KEYS = {d1:['binding'],r2:['binding','locationHint'],kv:['binding'],queues:['binding','consumer','deadLetterQueue'],durableObjects:['binding','className','storage'],secrets:['binding','environment','verifyStandIn','optional'],services:['binding','project','entrypoint','allowedHosts','grant']};
 
 export function refuse(code, kind, name) { const error = new Error(code); error.resource = `${kind}:${name}`; return error; }
 
@@ -107,12 +108,13 @@ function entries(declaration, key) {
 export const LOCAL_ONLY_KEYS = Object.freeze(['RER_DEV_KEY', 'RER_DEMO', 'RER_MODELS_KEY', 'RER_MODELS_SERVICE', '.rer/local/models.json']);
 export function localOnlyBinding(declaration, localOnlyKeys = []) {
   const refused = new Set([...LOCAL_ONLY_KEYS, ...localOnlyKeys]);
-  const names = [...Object.keys(declaration?.vars ?? {}), declaration?.originVar, ...(Array.isArray(declaration?.secrets) ? declaration.secrets.flatMap(item => [item?.binding, item?.environment]) : [])];
+  const names = [...Object.keys(declaration?.vars ?? {}), declaration?.originVar, declaration?.publicOriginSetting, ...(Array.isArray(declaration?.secrets) ? declaration.secrets.flatMap(item => [item?.binding, item?.environment]) : [])];
   return names.find(name => refused.has(name)) ?? null;
 }
 /** A seed declares bindings, never names. Migrations come from the packaged artifact. */
-export function ownerPlan(target, declaration, artifact, { localOnlyKeys = [] } = {}) {
+export function ownerPlan(target, declaration, artifact, { localOnlyKeys = [], env = {} } = {}) {
   assert(declaration?.version === 1 && typeof declaration === 'object' && Object.keys(declaration).every(key => DECLARATION_KEYS.includes(key)), 'invalid-owner-declaration');
+  assert(declaration.publicSettings === undefined || Array.isArray(declaration.publicSettings) && new Set(declaration.publicSettings).size === declaration.publicSettings.length && declaration.publicSettings.every(name => typeof name === 'string' && /^[A-Z][A-Z0-9_]*$/.test(name)), 'invalid-public-settings');
   if (declaration.platforms !== undefined) assert(Array.isArray(declaration.platforms) && declaration.platforms.length > 0 && new Set(declaration.platforms).size === declaration.platforms.length && declaration.platforms.every(item => ['workers','container'].includes(item)), 'invalid-platforms');
   if (declaration.container !== undefined) {
     const config=declaration.container;
@@ -131,9 +133,10 @@ export function ownerPlan(target, declaration, artifact, { localOnlyKeys = [] } 
   const queues = entries(declaration,'queues');
   for (const item of queues) assert(item.deadLetterQueue === undefined || queues.some(other => other.binding === item.deadLetterQueue), 'invalid-dead-letter-queue');
   const vars = {...(declaration.vars ?? {})};
+  const origin = publicOrigin(declaration, env);
   if (declaration.originVar !== undefined) {
     assert(identifier(declaration.originVar) && !Object.hasOwn(vars,declaration.originVar), 'invalid-owner-origin-variable');
-    vars[declaration.originVar] = target.origin;
+    vars[declaration.originVar] = origin ?? target.origin;
   }
   const kv = entries(declaration,'kv').map(({binding}) => ({binding,name:name(binding)}));
   // A service binding names another project; its Worker name derives from the same environment.
@@ -147,6 +150,7 @@ export function ownerPlan(target, declaration, artifact, { localOnlyKeys = [] } 
     queues:queues.map(item => ({...item,name:name(item.binding),...(item.deadLetterQueue === undefined ? {} : {deadLetterQueue:name(item.deadLetterQueue)})})),
     durableObjects:entries(declaration,'durableObjects').map(item => ({...item})),
     // verifyStandIn is only `rer verify`'s hosted-check value: never planned, sent or stored.
+    // An optional secret (`"optional": true`, an integration's credential) may stay unset: it is bound only once supplied.
     secrets:entries(declaration,'secrets').map(({verifyStandIn,...item}) => { assert(verifyStandIn === undefined || typeof verifyStandIn === 'string' && verifyStandIn.length > 0 && verifyStandIn.length <= 1024, 'invalid-verify-stand-in'); return item; }),
     crons:[...(declaration.crons ?? [])],vars,
     // Only declarations using these add the keys, so earlier plans and fingerprints are unchanged.
@@ -169,7 +173,7 @@ export async function readOwnerState(path, target) {
   assert(state?.version === 1 && state.kind === STATE_KIND && state.owned && typeof state.owned === 'object'
     && (state.owned.worker === null || ['pending','created'].includes(state.owned.worker?.status))
     && KINDS.every(kind => state.owned[kind] && typeof state.owned[kind] === 'object' && Object.values(state.owned[kind]).every(entry => ['pending','created'].includes(entry?.status))), 'invalid-owner-state');
-  assert(state.pendingUpload === undefined || typeof state.pendingUpload?.fingerprint === 'string' && typeof state.pendingUpload?.build === 'string', 'invalid-owner-state');
+  assert(state.pendingUpload === undefined || typeof state.pendingUpload?.fingerprint === 'string', 'invalid-owner-state');
   // Declared secrets rer removed on purpose (the spent setup token): later plans omit them.
   assert(state.pendingSecret === undefined || identifier(state.pendingSecret?.binding) && typeof state.pendingSecret?.present === 'boolean'
     && (state.pendingSecret.versionId === undefined || uuid(state.pendingSecret.versionId))
@@ -300,28 +304,32 @@ export async function settleOwnerState({api: provider, target, statePath}) {
 }
 export const sameDeployment = (a, b) => a?.versionId === b?.versionId && a?.deploymentId === b?.deploymentId && a?.etag === b?.etag;
 
+/** Both marks rer's upload puts on a version: the build binding and the version annotation. */
+const carriesUpload = (live, fingerprint) => deployedFingerprint(live?.settings) === fingerprint && live.version?.annotations?.['workers/message'] === `rer-deploy:${fingerprint}`;
 /** A completed receipt or the exact identity of an interrupted successful upload proves ownership.
- * Only the first upload, with no receipt, may recover a lost response by its pending build. */
-async function checkWorkerIdentity(api, plan, artifact, state) {
+ * An upload whose response or readback was lost is this deploy's own when the live version carries
+ * the fingerprint saved just before its PUT: rer records its ids, as a completed readback would. */
+async function checkWorkerIdentity(api, plan, state, save) {
   const live = await activeWorker(api, plan.worker);
   const pending = state.pendingUpload;
-  const expected = pending?.provider ?? state.receipt?.provider;
-  if (expected) {
-    if (!sameDeployment(live, expected)) throw refuse('owned-resource-replaced','worker',plan.worker);
-  } else {
-    const mine = state.owned.worker?.status === 'pending' && pending?.build === hash({plan,artifact}) && pending.fingerprint === deployedFingerprint(live?.settings);
-    if (!mine) throw refuse('uncertain-resource-create','worker',plan.worker);
+  if (pending && !pending.provider && carriesUpload(live, pending.fingerprint)) {
+    pending.provider = {versionId:live.versionId,deploymentId:live.deploymentId,etag:live.etag};
+    state.owned.worker = {status:'created'}; await save();
+    return live;
   }
+  const expected = pending?.provider ?? state.receipt?.provider;
+  if (!expected) throw refuse('uncertain-resource-create','worker',plan.worker);
+  if (!sameDeployment(live, expected)) throw refuse('owned-resource-replaced','worker',plan.worker);
   return live;
 }
-async function checkOwnedWorker(api, plan, artifact, state) {
+async function checkOwnedWorker(api, plan, state, save) {
   const settings = await workerSettings(api, plan.worker);
   if (settings === null) {
     if (state.owned.worker?.status === 'created') throw refuse('owned-resource-missing','worker',plan.worker);
     return null;
   }
   if (!state.owned.worker) throw refuse('resource-name-collision','worker',plan.worker);
-  return checkWorkerIdentity(api, plan, artifact, state);
+  return checkWorkerIdentity(api, plan, state, save);
 }
 
 /** One deploy at a time per state file: an exclusive lock file for the whole run. */
@@ -353,13 +361,13 @@ async function deployLocked({api, target, plan, artifact, statePath, env, fetch,
   const save = () => writeOwnerState(statePath, state);
   if (await settlePendingSecret(api, target.worker, state, {preflight:true})) await save();
   await checkServiceWorkers(api, plan);
-  const priorWorker = await checkOwnedWorker(api, plan, artifact, state);
+  const priorWorker = await checkOwnedWorker(api, plan, state, save);
   assert(!state.pendingSecret, 'secret-change-unsettled');
   const exists = priorWorker !== null;
   const create = await ownedResourcesToCreate(api, plan, state);
   if (exists) await checkCronOwnership(api, plan);
   // The declared secrets this run uploads; every other one is inherited unchanged.
-  const {missing:sentSecrets} = await secretBindings(api, plan.worker, plan, env, exists);
+  const {missing:sentSecrets,unset:unsetSecrets} = await secretBindings(api, plan.worker, plan, env, exists);
   // Record intent before each create. A failed or lost response leaves it pending:
   // absent on resume means create again; present means an uncertain outcome to inspect.
   for (const {kind,item} of create) {
@@ -382,9 +390,9 @@ async function deployLocked({api, target, plan, artifact, statePath, env, fetch,
     const sending = path === upload && options?.method === 'PUT';
     if (sending) {
       await checkSavedResourceIdentities(api, state);
-      const current = await checkOwnedWorker(api, plan, artifact, state);
+      const current = await checkOwnedWorker(api, plan, state, save);
       if (!sameDeployment(priorWorker,current)) throw refuse('owned-resource-replaced','worker',plan.worker);
-      state.pendingUpload = {fingerprint:await uploadFingerprint(options.body),build:hash({plan,artifact})}; await save();
+      state.pendingUpload = {fingerprint:await uploadFingerprint(options.body)}; await save();
     }
     const result = await api.request(path, options);
     if (sending) {
@@ -402,7 +410,7 @@ async function deployLocked({api, target, plan, artifact, statePath, env, fetch,
     onReceipt: async candidate => { if (candidate.changed || !state.receipt) { state.receipt = candidate; delete state.pendingUpload; delete state.pendingSecret; await save(); } },
     // Keep each first-health attempt beside the identity it belongs to.
     onHealth: async candidate => { if (candidate.changed) { state.receipt = candidate; await save(); } }});
-  return {receipt, created:create.map(({kind,item}) => `${kind}:${item.name}`), sentSecrets, freshUpload:!exists && receipt.changed};
+  return {receipt, created:create.map(({kind,item}) => `${kind}:${item.name}`), sentSecrets, unsetSecrets, freshUpload:!exists && receipt.changed};
 }
 
 /** Independent read-only health of the last owner deployment recorded in the state file. */

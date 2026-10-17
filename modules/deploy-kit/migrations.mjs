@@ -4,6 +4,7 @@ import { regularBytes } from './artifact.mjs';
 import { assertMigrationSqlSafe } from './sql-safety.mjs';
 import { sqlTokens } from './sql-tokens.mjs';
 import { ledger, literal, createLedger, readLedger, recorded } from './migration-ledger.mjs';
+import { assertRetryable } from './migration-retry.mjs';
 export function validateMigrations(migrations) {
   let previous = '';
   for (const migration of migrations) {
@@ -54,7 +55,7 @@ export async function query(api, id, sql) {
 }
 export async function migrate(api, id, migrations, { apply = true, upgrade = apply } = {}) {
   validateMigrations(migrations);
-  const { applied, transition, exists } = await readLedger(api, id, migrations, query);
+  const { applied, transition, exists, claimed } = await readLedger(api, id, migrations, query);
   const pending = migrations.slice(applied.length);
   assert(apply || pending.length === 0,'pending-migrations');
   if (transition && upgrade) {
@@ -63,14 +64,17 @@ export async function migrate(api, id, migrations, { apply = true, upgrade = app
     assert(!verified.transition && verified.applied.length === applied.length, 'migration-readback-mismatch');
   }
   if (pending.length && !exists) await query(api,id,createLedger);
-  for (const migration of pending) {
-    // Claim before execution. A lost response/partial provider failure is never automatically replayed.
-    await query(api,id,`INSERT INTO ${ledger}(name,sha256,state) VALUES (${literal(migration.name)},${literal(migration.sha256)},'applying')`);
+  for (const [index, migration] of pending.entries()) {
+    // Claim before execution. A claim left by an import that did not complete runs
+    // again only when its effects are provably absent; otherwise it stays refused.
+    if (claimed && index === 0) await assertRetryable(async sql => (await query(api,id,sql))[0].results, migration);
+    else await query(api,id,`INSERT INTO ${ledger}(name,sha256,state) VALUES (${literal(migration.name)},${literal(migration.sha256)},'applying')`);
     const last = sqlTokens(migration.sql).at(-1);
     // A second terminator after trailing comments creates an empty D1 statement.
     // Keep the newline even when terminated: a final line comment must end.
     const separator = last?.kind === 'symbol' && last.value === ';' ? '' : '; ';
-    await api.importSql(id,`${migration.sql}\n${separator}UPDATE ${ledger} SET state='applied' WHERE name=${literal(migration.name)} AND sha256=${literal(migration.sha256)};`);
+    await api.importSql(id,`${migration.sql}\n${separator}UPDATE ${ledger} SET state='applied' WHERE name=${literal(migration.name)} AND sha256=${literal(migration.sha256)};`)
+      .catch(error => { error.migration ??= migration.name; throw error; });
   }
   if (pending.length) {
     const final = (await query(api,id,`SELECT name, sha256, state FROM ${ledger} ORDER BY id`))[0].results;

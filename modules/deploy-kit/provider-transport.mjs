@@ -1,3 +1,5 @@
+import { setTimeout as pause } from 'node:timers/promises';
+
 // A missing HTTP status does not prove that a write never reached Cloudflare.
 // Only these connection-establishment failures make replaying a write safe.
 const UNSENT = new Set(['ENOTFOUND', 'EAI_AGAIN', 'ECONNREFUSED', 'UND_ERR_CONNECT_TIMEOUT']);
@@ -9,11 +11,13 @@ function unsent(error, seen = new Set()) {
   return unsent(error.cause, seen);
 }
 
-/** Retry only before a response, once, sharing the original deadline and budget. */
-export async function providerResponse({send, method, timeoutMs, callerSignal, reserveRetry, failure}) {
+/** Scoped safe replays share the original deadline and request budget. */
+export async function providerResponse({send, method, timeoutMs, callerSignal, reserveRetry, failure, removal = false, replayableAsset = false, consume}) {
   const timeout = AbortSignal.timeout(timeoutMs);
   const signal = callerSignal ? AbortSignal.any([callerSignal, timeout]) : timeout;
   const read = method === 'GET' || method === 'HEAD';
+  const removalReplay = removal && ['GET','DELETE'].includes(method);
+  const maxAttempts = removalReplay ? 3 : 2;
   for (let attempt = 1; ; attempt++) {
     // Leave time for a second read when the first one times out. Caller deadlines
     // remain authoritative and are never reset by a retry.
@@ -21,12 +25,31 @@ export async function providerResponse({send, method, timeoutMs, callerSignal, r
     const timer = firstRead ? setTimeout(() => firstRead.abort(new DOMException('Provider read timed out','TimeoutError')), Math.max(1, Math.ceil(timeoutMs / 2))) : undefined;
     timer?.unref();
     const attemptSignal = firstRead ? AbortSignal.any([signal, firstRead.signal]) : signal;
-    try { return {response:await send(attemptSignal),attempts:attempt}; }
+    let readingBody = false;
+    try {
+      const response = await send(attemptSignal);
+      clearTimeout(timer);
+      // A retried delete can observe the first attempt's committed deletion.
+      if (removalReplay && method === 'DELETE' && attempt > 1 && response.status === 404) {
+        void response.body?.cancel().catch(() => {});
+        return {response:new Response(null,{status:204}),attempts:attempt};
+      }
+      if ((removalReplay || replayableAsset) && response.status >= 500 && response.status <= 599 && attempt < maxAttempts && !signal.aborted && reserveRetry()) {
+        void response.body?.cancel().catch(() => {});
+        await pause(250 * 2 ** (attempt - 1),undefined,{signal});
+        continue;
+      }
+      readingBody = true;
+      const output = consume ? await consume(response,attempt) : undefined;
+      return {response,attempts:attempt,output};
+    }
     catch (cause) {
-      if (attempt === 1 && !signal.aborted && (read || unsent(cause)) && reserveRetry()) continue;
+      const bodyReset = readingBody && replayableAsset && cause.message === 'provider-transport-failed';
+      if (attempt === 1 && !signal.aborted && (bodyReset || !readingBody && (read || replayableAsset || unsent(cause))) && reserveRetry()) continue;
+      if (readingBody) throw cause;
       throw failure(cause, attempt);
     }
-    // Headers end the retry window; body consumption keeps the total deadline.
+    // Body consumption and scoped asset replays keep the total deadline.
     finally { clearTimeout(timer); }
   }
 }

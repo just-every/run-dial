@@ -18,7 +18,7 @@ export async function ownerSignin({ api, target, statePath, clock = Date.now }) 
   const ids = Object.values(state.owned.d1).filter(entry => entry.status === 'created' && entry.id).map(entry => entry.id);
   const holding = [];
   for (const id of ids) if ((await query(api, id, "SELECT name FROM sqlite_master WHERE type='table' AND name='oa_owner_signins'"))[0].results.length) holding.push(id);
-  assert(holding.length > 0, 'owner-signin-unsupported');
+  if (!holding.length) throw Object.assign(new Error('owner-signin-unsupported'), { origin: target.origin });
   assert(holding.length === 1, 'owner-signin-ambiguous');
   const token = randomBytes(32).toString('base64url'), id = randomUUID(), now = clock();
   // The recorded owner: the claimed (bootstrap) owner first, as operator-auth's own owner() reads it.

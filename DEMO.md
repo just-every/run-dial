@@ -1,7 +1,7 @@
 # Dial demo
 
 After the ordinary `rer setup`, run `rer demo` (`rer dev --demo`) and open its
-private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.20 release
+private `RER_OPEN` link. The pinned, unmodified `@runeditrun/rer` 0.2.40 release
 includes demo mode. `rer demo --stop`, Ctrl-C, or its end (one hour) stops it and
 deletes `.rer/demo/<start>/`; the next demo starts afresh. Stop `rer dev` first:
 one server runs per checkout.
@@ -41,19 +41,21 @@ to suppress mail.
 ## Hosted demo
 
 `deploy-demo.json` declares the demo at `demo.run-dial.com` with plain settings
-(`MAIL_PROVIDER=development`, `MAIL_FROM=noreply@demo.invalid`); `deploy.json`
-lists the `container` platform (workerd engine). Under `RER_DEMO=1` Dial accepts
-silent development mail on the demo's https origin, and the owner claim's
-audience is the front-supplied `APP_URL`; production still requires its explicit
-claim origin and a loopback install for development mail.
+(`MAIL_PROVIDER=development`, `MAIL_FROM=noreply@demo.invalid`). Under
+`RER_DEMO=1` Dial accepts silent development mail on the demo's https origin,
+and the owner claim's audience is the front-supplied `APP_URL`; production still
+requires its explicit claim origin and a loopback install for development mail.
 
-`.github/workflows/run-demo.yml` (manual dispatch only, environment `run-demo`,
-the RunEditRun account) runs `rer deploy --demo`. `test_only` deploys the
-separate `demo-test` host at `demo.test.run-dial.com` with Cloudflare's
-always-passing Turnstile test keys; `remove` removes the selected host. No
-repository variable is needed. The run-site homepage links to the production
-demo with **Try the demo** beside **Run Dial**.
+`rer deploy --demo` runs Dial on rer's native Worker Loader host: each visitor
+gets their own isolate with `DB` and the `BookingCoordinator` Durable Object as
+SQLite facets, `FILES` (R2) in the visitor's own storage, `JOBS` and
+`JOBS_DEAD` as durable queue records and the every-minute cron by alarm. A copy
+ends after 60 minutes or 15 idle minutes and its storage is erased.
+`deploy.json`'s `container` platform is portable container hosting, not the demo.
 
-The pinned rer release admits Dial’s `cloudflare:workers` imports,
-`BookingCoordinator` Durable Object and `passThroughOnException` forwarding
-for the workerd container engine.
+`.github/workflows/run-demo.yml` is Base's template (manual dispatch only,
+environment `run-demo`, the RunEditRun account; variable `CLOUDFLARE_ACCOUNT_ID`).
+`test_only` deploys the separate `demo-test` host at `demo.test.run-dial.com`
+with Cloudflare's always-passing Turnstile test keys; starts there need the
+private measurement token. `remove` removes the selected host. The run-site
+homepage links to the production demo with **Try the demo** beside **Run Dial**.

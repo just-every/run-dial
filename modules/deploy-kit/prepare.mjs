@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { assert, hash, localPath } from './validation.mjs';
 import { assetsIgnore, collectFiles, regularBytes, validateArtifact, MAX_ARTIFACT } from './artifact.mjs';
 import { collectBuildModules } from './build-modules.mjs';
-import { refuseLocalModels } from './local-only.mjs';
+import { refuseLocalEnvFiles, refuseLocalModels } from './local-only.mjs';
 import { readMigrationRewrites, withRewrites } from './migrations.mjs';
 
 export function assertCredentialFree(env) {
@@ -21,6 +21,7 @@ export async function packageBuild({root,source,runIdentity,productDirectory = '
   const product = join(root,productDirectory);
   await refuseLocalModels(root);
   if (product !== root) await refuseLocalModels(product);
+  await refuseLocalEnvFiles(root, [join(productDirectory,'dist/server'), join(productDirectory,'dist/client')]);
   const build = join(product,'dist/server');
   const config = JSON.parse(await regularBytes(join(build,'wrangler.json'),1024*1024));
   const main = localPath(relative(build,resolve(build,config.main)));

@@ -1,8 +1,12 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { assert, hash, resourceName } from './validation.mjs';
-import { ownerWorkerName, workerSettings } from './owner.mjs';
+import { ownerWorkerName } from './owner.mjs';
 import { uploadAssets, workerOrigin } from './worker.mjs';
+import { readinessWindow, readinessAPI } from './readiness-window.mjs';
+import { uploadVersionId } from './uploaded-worker.mjs';
+import { ownedSiteVersion, waitForSiteUpload } from './site-readback.mjs';
+export { servedVersion, siteReadbackSummary } from './site-readback.mjs';
 
 /* A seed's run site (run-<seed>.com): the folder `rer build --site` writes,
  * served on the owner's own account by a Base-generated module Worker (fixed
@@ -24,7 +28,6 @@ import { uploadAssets, workerOrigin } from './worker.mjs';
 
 const RECEIPT_KIND = 'rer-deploy-site-receipt';
 const APEX = /^(?!www\.)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$/;
-const ANNOTATION = /^rer-site:[0-9a-f]{64}$/;
 export const SITE_ASSETS_CONFIG = Object.freeze({ html_handling: 'auto-trailing-slash', not_found_handling: '404-page' });
 export const SITE_MODULE = 'site-worker.mjs';
 /** The site Worker. It names no domain: only the site's two Custom Domains route to it. */
@@ -65,28 +68,6 @@ export function sitePlan({ project, environment, compatibilityDate, declaration,
     redirects: [{ from: `https://www.${domain}/*`, to: `https://${domain}/`, status: 301, keeps: ['path', 'query'] }] };
 }
 
-/** The version the Worker's latest deployment serves, as the kit reads ownership: null when there is no Worker. */
-export async function servedVersion(api, worker) {
-  if (!await workerSettings(api, worker)) return null;
-  const { deployments } = await api.request(`/workers/scripts/${worker}/deployments`);
-  assert(Array.isArray(deployments) && deployments.length > 0, 'invalid-deployments');
-  const [latest] = deployments, single = latest.versions?.length === 1 && latest.versions[0].percentage === 100 ? latest.versions[0].version_id : null;
-  const newest = (await api.request(`/workers/scripts/${worker}/versions`))?.items?.[0]?.id;
-  const version = single ? await api.request(`/workers/scripts/${worker}/versions/${single}`) : null;
-  const annotation = version?.annotations?.['workers/message'];
-  return { kit: typeof annotation === 'string' && ANNOTATION.test(annotation), annotation, current: Boolean(single) && single === newest };
-}
-/** The Worker is absent (false) or the kit's (true); anything else is refused. */
-async function ownWorker(api, worker) {
-  const served = await servedVersion(api, worker);
-  if (!served) return false;
-  // Someone else's Worker of this name, or one whose live version the kit did not upload.
-  if (!served.kit) throw refuse('resource-name-collision', 'worker', worker);
-  // A kit version that is no longer the newest one served alone: a dashboard rollback or a split deployment.
-  if (!served.current) throw refuse('owned-resource-replaced', 'worker', worker);
-  return true;
-}
-
 async function writeReceipt(path, receipt) {
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const temporary = `${path}.${process.pid}.tmp`;
@@ -95,19 +76,19 @@ async function writeReceipt(path, receipt) {
 }
 
 /** Read-only preflight, then the site Worker upload and both Custom Domains, then readback. */
-export async function siteDeploy({ api, plan, files, receiptPath }) {
+export async function siteDeploy({ api, plan, files, receiptPath, readiness = {} }) {
   assert(typeof receiptPath === 'string' && receiptPath.length, 'missing-receipt-path');
   assert(plan?.module === SITE_MODULE && Array.isArray(files) && files.some(file => file.path === 'index.html'), 'invalid-site-assets');
   const zones = await api.zoneRequest(`/zones?name=${plan.domain}&account.id=${api.accountId}`);
   const zone = Array.isArray(zones) ? zones.find(row => row?.name === plan.domain && row.account?.id === api.accountId) : null;
   if (!zone) throw refuse('site-zone-missing', 'zone', plan.domain);
   // Preflight: the Worker and each hostname are the kit's own or absent before any write.
-  const existed = await ownWorker(api, plan.worker);
+  const previous = await ownedSiteVersion(api, plan.worker);
   const attached = await api.request(`/workers/domains?zone_id=${zone.id}`);
   assert(Array.isArray(attached), 'invalid-domain-list');
   for (const hostname of plan.hostnames) {
     const row = attached.find(item => item?.hostname === hostname);
-    if (row && (!existed || row.service !== plan.worker)) throw refuse('resource-name-collision', 'domain', hostname);
+    if (row && (!previous || row.service !== plan.worker)) throw refuse('resource-name-collision', 'domain', hostname);
   }
 
   const fingerprint = hash({ files: files.map(({ path, sha256 }) => ({ path, sha256 })), config: plan.assetsConfig, module: hash(SITE_WORKER), compatibilityDate: plan.compatibilityDate });
@@ -116,9 +97,14 @@ export async function siteDeploy({ api, plan, files, receiptPath }) {
   body.set('metadata', new Blob([JSON.stringify({ main_module: SITE_MODULE, compatibility_date: plan.compatibilityDate, bindings: [{ type: 'assets', name: 'ASSETS' }],
     assets: { jwt, config: { ...plan.assetsConfig, run_worker_first: true } }, annotations: { 'workers/message': `rer-site:${fingerprint}` } })], { type: 'application/json' }));
   body.set(SITE_MODULE, new Blob([SITE_WORKER], { type: 'application/javascript+module' }), SITE_MODULE);
-  await api.request(`/workers/scripts/${plan.worker}`, { method: 'PUT', body });
-  const uploaded = await servedVersion(api, plan.worker);
-  assert(uploaded?.current && uploaded.annotation === `rer-site:${fingerprint}`, 'site-upload-not-live');
+  const window = readiness.window ?? readinessWindow(readiness);
+  window.start();
+  api = readinessAPI(api, window, 'site-upload-timeout');
+  const upload = await api.request(`/workers/scripts/${plan.worker}`, { method: 'PUT', body });
+  const versionId = uploadVersionId(upload);
+  assert(versionId, 'invalid-upload-version');
+  const readback = () => waitForSiteUpload({ api, worker: plan.worker, versionId, fingerprint, previous, window });
+  await readback();
   await workerOrigin(api, plan.worker, { enable: true, workersDev: false });
   for (const hostname of plan.hostnames) {
     if (attached.some(row => row?.hostname === hostname)) continue;
@@ -126,7 +112,7 @@ export async function siteDeploy({ api, plan, files, receiptPath }) {
     assert(row?.hostname === hostname && row.service === plan.worker && typeof row.id === 'string', 'invalid-domain-attach');
   }
   // Readback: the kit's Worker live and both domains on it.
-  assert(await ownWorker(api, plan.worker), 'site-worker-missing');
+  await readback();
   const domains = await api.request(`/workers/domains?zone_id=${zone.id}`);
   for (const hostname of plan.hostnames) assert(domains.some(row => row.hostname === hostname && row.service === plan.worker), 'domain-readback-mismatch');
   const receipt = { worker: plan.worker, domain: plan.domain, zoneId: zone.id, fingerprint, files: files.length, hostnames: plan.hostnames, redirect: plan.redirects[0] };

@@ -1,0 +1,35 @@
+{
+  "key": "c025c9cc0a709c26b180987088883e148de1f4bae4f432cada15d1ed31b97a4b",
+  "origin": {
+    "repository": "git@github.com:runeditrun/base.git",
+    "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+    "path": "default-seed/src/core/platform/auth",
+    "paths": [
+      "local.server.d.mts",
+      "local.server.mjs",
+      "signin-options.server.d.mts",
+      "signin-options.server.mjs"
+    ],
+    "excludeSnapshots": false
+  },
+  "digest": "6ec7be4a0a660111f1042190efba2d2808be19a4906a461e3c17ba0f446e0068",
+  "files": {
+    "local.server.d.mts": {
+      "data": "aW1wb3J0IHR5cGUgeyBCaW5kaW5ncyB9IGZyb20gJy4uL2JpbmRpbmdzLnNlcnZlcicKZXhwb3J0IGZ1bmN0aW9uIGxvY2FsRGV2ZWxvcG1lbnRFbmFibGVkKGVudjogUGljazxCaW5kaW5ncywgJ0FVVEhfTE9DQUwnIHwgJ0FVVEhfT1JJR0lOJz4pOiBib29sZWFuOwo=",
+      "executable": false
+    },
+    "local.server.mjs": {
+      "data": "aW1wb3J0IHsgaXNMb29wYmFja0hvc3QgfSBmcm9tICcuLi8uLi8uLi8uLi8uLi9tb2R1bGVzL29wZXJhdG9yLWF1dGgvbG9vcGJhY2subWpzJwoKLyoqIExvY2FsIGNhcGFiaWxpdGllcyByZXF1aXJlIGFuIGV4cGxpY2l0bHkgY29uZmlndXJlZCwgZXhhY3QgbG9vcGJhY2sgb3JpZ2luLiAqLwpleHBvcnQgZnVuY3Rpb24gbG9jYWxEZXZlbG9wbWVudEVuYWJsZWQoZW52KSB7CiAgaWYgKGVudi5BVVRIX0xPQ0FMICE9PSAndHJ1ZScgfHwgdHlwZW9mIGVudi5BVVRIX09SSUdJTiAhPT0gJ3N0cmluZycpIHJldHVybiBmYWxzZQogIHRyeSB7CiAgICBjb25zdCB1cmwgPSBuZXcgVVJMKGVudi5BVVRIX09SSUdJTikKICAgIHJldHVybiB1cmwub3JpZ2luID09PSBlbnYuQVVUSF9PUklHSU4gJiYgIXVybC51c2VybmFtZSAmJiAhdXJsLnBhc3N3b3JkICYmCiAgICAgIFsnaHR0cDonLCAnaHR0cHM6J10uaW5jbHVkZXModXJsLnByb3RvY29sKSAmJgogICAgICBpc0xvb3BiYWNrSG9zdCh1cmwuaG9zdG5hbWUpCiAgfSBjYXRjaCB7IHJldHVybiBmYWxzZSB9Cn0K",
+      "executable": false
+    },
+    "signin-options.server.d.mts": {
+      "data": "aW1wb3J0IHR5cGUgeyBCaW5kaW5ncyB9IGZyb20gJy4uL2JpbmRpbmdzLnNlcnZlcicKCmV4cG9ydCBmdW5jdGlvbiBzaWduaW5QcmVzZW50YXRpb24oYmluZGluZ3M6IFBpY2s8QmluZGluZ3MsICdBVVRIX0xPQ0FMJyB8ICdBVVRIX09SSUdJTic+KTogewogIGxvY2FsOiBib29sZWFuOwogIHNldHVwSW5zdHJ1Y3Rpb25zOiBzdHJpbmc7Cn07Cg==",
+      "executable": false
+    },
+    "signin-options.server.mjs": {
+      "data": "aW1wb3J0IHsgbG9jYWxEZXZlbG9wbWVudEVuYWJsZWQgfSBmcm9tICcuL2xvY2FsLnNlcnZlci5tanMnCgovKiogUHVibGljIHByZXNlbnRhdGlvbiBvbmx5OyBhdXRoZW50aWNhdGlvbiBlbmZvcmNlcyBpdHMgb3duIGd1YXJkcy4gKi8KZXhwb3J0IGZ1bmN0aW9uIHNpZ25pblByZXNlbnRhdGlvbihiaW5kaW5ncykgewogIGNvbnN0IGxvY2FsID0gbG9jYWxEZXZlbG9wbWVudEVuYWJsZWQoYmluZGluZ3MpCiAgcmV0dXJuIHsKICAgIGxvY2FsLAogICAgc2V0dXBJbnN0cnVjdGlvbnM6IGxvY2FsCiAgICAgID8gJ09wZW4gLmRldi52YXJzIGluIHlvdXIgbG9jYWwgcHJvamVjdCBhbmQgY29weSB0aGUgU0VUVVBfVE9LRU4gdmFsdWUuIFRoaXMgc2lnbnMgaW4gdGhlIGNvbmZpZ3VyZWQgb3duZXIgd2l0aG91dCBzZW5kaW5nIGVtYWlsLicKICAgICAgOiAnVXNlIHRoZSBzZXR1cCB0b2tlbiBmcm9tIHlvdXIgZGVwbG95bWVudC4gVGhpcyBzaWducyBpbiB0aGUgY29uZmlndXJlZCBvd25lciB3aXRob3V0IHNlbmRpbmcgZW1haWwuJywKICB9Cn0K",
+      "executable": false
+    }
+  },
+  "dependencies": []
+}

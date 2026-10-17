@@ -5,6 +5,5 @@
   "settings": {
     "MAIL_PROVIDER": "development",
     "MAIL_FROM": "noreply@demo.invalid"
-  },
-  "instanceType": "basic"
+  }
 }

@@ -1,3 +1,4 @@
+import { servedAsset } from './asset-health.mjs';
 import { readinessAPI } from './readiness-window.mjs';
 import { verifyServiceGrants } from './service-grants.mjs';
 import { assert, stable } from './validation.mjs';
@@ -47,32 +48,10 @@ export async function waitForDeploymentHealth(url, {
   throw healthError(`Deployment did not become healthy at ${url} within ${timeoutMs}ms; last result: ${lastResult}.`, lastResult === 'network error' ? 'health-transport-failed' : 'health-http-failed', lastResult);
 }
 
-/** An unauthenticated GET of a built file; anything but 200 means the browser gets no assets.
- * After an upload (`windowMs`), an edge still serving the previous version answers 404 for
- * the new build's hashed files: 404, 5xx and transport failures are retried within the window. */
-async function servedAsset(origin, path, request, timeoutMs, {window, windowMs = 0, clock = () => performance.now(), sleep = ms => new Promise(resolve => setTimeout(resolve, ms))} = {}) {
-  const start = clock();
-  for (;;) {
-    let response, failure;
-    const remaining = window?.remaining() ?? timeoutMs;
-    assert(remaining > 0, 'asset-readiness-timeout');
-    try { response = await request(`${origin}/${path.split('/').map(encodeURIComponent).join('/')}`,{redirect:'manual',signal:AbortSignal.timeout(Math.max(1, Math.ceil(Math.min(timeoutMs,remaining)))),headers:{'Cache-Control':'no-cache'}}); }
-    catch { failure = 'asset-transport-failed'; }
-    if (response) {
-      await response.body?.cancel().catch(() => {});
-      if (response.status === 200 && !response.redirected) return {path,status:response.status};
-      failure = 'asset-http-failed';
-      if (response.redirected || response.status !== 404 && response.status < 500) throw new Error(failure);
-    }
-    if (clock() - start + 2000 > windowMs) throw new Error(failure);
-    await sleep(Math.min(2000,window?.remaining() ?? 2000));
-  }
-}
-
 /** Authenticated provider readback, then the unauthenticated account-derived /health.
  * Without `readiness`, /health gets the single bounded window of waitForDeploymentHealth.
  * With `readiness` (deploy after an upload) it gets the recorded 90-second wait of health-request.mjs.
- * `asset`, a built file's path, is then requested once and must answer 200. */
+ * `asset`, a built file's path, must answer 200 after at most one transient replay. */
 export async function verifyHealth({api,plan,receipt,fetch:request=globalThis.fetch,timeoutMs=30000,intervalMs=2000,now,sleep,readiness,asset}) {
   if (readiness?.window) api = readinessAPI(api, readiness.window);
   assert(receipt?.version === 1 && receipt.accountId === api.accountId && receipt.worker === plan.worker,'receipt-target-mismatch');
@@ -93,7 +72,7 @@ export async function verifyHealth({api,plan,receipt,fetch:request=globalThis.fe
     assert(!readiness?.window || readiness.window.remaining() > 0, 'missing-deployed-secret');
     const secrets = await api.request(`/workers/scripts/${plan.worker}/secrets`);
     assert(Array.isArray(secrets) && secrets.every(row => typeof row?.name === 'string' && row.type === 'secret_text'), 'invalid-secret-list');
-    if (plan.secrets.every(x => secrets.some(y => y.name === x.binding && y.type === 'secret_text'))) break;
+    if (plan.secrets.every(x => x.optional || secrets.some(y => y.name === x.binding && y.type === 'secret_text'))) break;
     assert(readiness?.freshUpload && readiness.window?.remaining() > 0, 'missing-deployed-secret');
     await readiness.window.pause();
   }

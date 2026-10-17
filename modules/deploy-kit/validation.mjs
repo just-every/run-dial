@@ -31,6 +31,7 @@ export function validatePlan(plan) {
   for (const entry of plan.d1) assert(Array.isArray(entry.migrations), 'invalid-migrations');
   for (const entry of plan.durableObjects) assert(identifier(entry.className) && ['sqlite','classic'].includes(entry.storage), 'invalid-durable-object');
   for (const secret of plan.secrets) assert(identifier(secret.environment), 'invalid-secret-environment');
+  for (const secret of plan.secrets) assert(secret.optional === undefined || secret.optional === true, 'invalid-optional-secret');
   for (const item of plan.services ?? []) assert(Object.keys(item).every(k => ['binding','service','entrypoint','props','grant'].includes(k)) && resourceName(item.service) && item.service !== plan.worker
     && (item.entrypoint === undefined || identifier(item.entrypoint))
     && (item.props === undefined || Object.keys(item.props).join() === 'allowedHosts' && Array.isArray(item.props.allowedHosts)

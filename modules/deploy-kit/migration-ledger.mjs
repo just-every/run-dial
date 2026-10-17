@@ -47,7 +47,7 @@ const same = (a, b) => a.length === b.length && a.every((row, index) => row.name
 export async function readLedger(api, id, migrations, query) {
   const read = async sql => (await query(api, id, sql))[0].results;
   const tables = (await read(`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('${legacy}','${ledger}')`)).map(row => row.name);
-  let old = [], applied = [], transition = '';
+  let old = [], applied = [], transition = '', claimed = false;
   if (tables.includes(legacy)) {
     const columns = await read(`SELECT name FROM pragma_table_info('${legacy}')`);
     assert(columns.length === 3 && columns.every(row => ['name','sha256','state'].includes(row.name)), 'invalid-migration-ledger');
@@ -59,6 +59,10 @@ export async function readLedger(api, id, migrations, query) {
     assert(['id','name','applied_at'].every(name => columns.includes(name)), 'invalid-migration-ledger');
     if (columns.includes('sha256') && columns.includes('state')) {
       applied = await read(`SELECT name, sha256, state FROM ${ledger} ORDER BY id`);
+      // The last row may claim this build's next migration, exact bytes, whose import
+      // did not complete; migrate re-runs it only on proof (migration-retry.mjs).
+      const last = applied.at(-1);
+      if (!tables.includes(legacy) && last?.state === 'applying' && last.name === migrations[applied.length - 1]?.name && last.sha256 === migrations[applied.length - 1].sha256) claimed = Boolean(applied.pop());
       assert(validPrefix(applied, migrations), 'changed-or-uncertain-migration-history');
       if (tables.includes(legacy)) assert(same(applied, old), 'changed-or-uncertain-migration-history');
     } else {
@@ -78,7 +82,7 @@ export async function readLedger(api, id, migrations, query) {
     applied = old;
   }
   if (tables.includes(legacy)) transition += `DROP TABLE ${legacy};`;
-  return { applied, transition, exists:tables.includes(ledger) || tables.includes(legacy) };
+  return { applied, transition, claimed, exists:tables.includes(ledger) || tables.includes(legacy) };
 }
 function insert(row) {
   return `INSERT INTO ${ledger}(name,sha256,state) VALUES (${literal(row.name)},${literal(row.sha256)},'applied');\n`;
