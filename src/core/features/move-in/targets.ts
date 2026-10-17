@@ -3,10 +3,11 @@ import { insertJsonRows } from '../../../../modules/import-kit/src/d1/sets.ts';
 import { canonicalJson, sha256 } from '../../../../modules/import-kit/src/provenance/identity.ts';
 import { json, type NativeValue, type Row } from './model';
 import { conjunction } from './native-predicates';
+import { assertCustodyColumns, includeCustodyTable } from './custody-tables';
 const groups:Record<string,Record<string,string>>={
  profile:{host_profiles:'id',profile_focus_areas:'profile_id',social_proof_entries:'profile_id'},
- event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id'},
- booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id'},
+ event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id',event_schedule_bindings:'event_type_id',booking_limit_policies:'scope',event_booking_policies:'event_type_id'},
+ booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id',booking_presentation:'booking_id'},
 };
 function scope(kind:string,table:string){const key=groups[kind]?.[table];if(!key)throw new Error('Unsupported import native table.');return key.includes(' IN ')?`${key}=?)`:`${key}=?`;}
 // Search columns are a deterministic projection, not source-owned content.
@@ -47,6 +48,7 @@ function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
 type Marker={kind:string;id:string;revision:string;valueHash:string|null};
 const markersSql=`SELECT m.kind,m.id,m.revision,json_extract(p.record_json,'$.valueHash') AS valueHash FROM move_in_targets m LEFT JOIN ik_provenance p ON p.destination=? AND p.target_kind=m.kind AND p.target_id=m.id AND p.reversed=0 AND json_extract(p.record_json,'$.appliedRevision')=m.revision`;
 function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
+ assertCustodyColumns(table,rows);
  const columns=[...new Set(rows.flatMap(row=>Object.keys(row)))];if(columns.some(key=>!/^\w+$/u.test(key)))throw new Error('Invalid native column.');
  const predicates=columns.map(key=>`actual.${key} IS json_extract(wanted.value,'$.${key}')`);
  // Missing means the historical default, never an unguarded column. Keep the
@@ -71,7 +73,7 @@ export const importTargets:D1TargetAdapter={
  async read(db,destination,kind,id){
   const marker=await db.prepare(`${markersSql} WHERE m.kind=? AND m.id=?`).bind(destination,kind,id).first<Marker>();
   if(!marker)return undefined;
-  const tables:NativeValue['tables']={};for(const table of Object.keys(groups[kind]??{})){const {results}=await db.prepare(`SELECT * FROM ${table} WHERE ${scope(kind,table)} ORDER BY rowid`).bind(id).all<Row>();if(table!=='ext_custom_field_values'||results.length)tables[table]=sourceRows(table,results);}
+  const tables:NativeValue['tables']={};for(const table of Object.keys(groups[kind]??{})){const {results}=await db.prepare(`SELECT * FROM ${table} WHERE ${scope(kind,table)} ORDER BY rowid`).bind(id).all<Row>();if(includeCustodyTable(table,results))tables[table]=sourceRows(table,results);}
   return {destination,targetKind:kind,targetId:id,value:snapshot(tables,marker.valueHash),revision:marker.revision};
  },
  matches(row,destination,kind,id){const parts=this.matchesParts!(row,destination,kind,id);return {sql:conjunction(parts.map(part=>part.sql)),params:parts.flatMap(part=>part.params??[])};},
@@ -84,6 +86,7 @@ export const importTargets:D1TargetAdapter={
   const statements:D1Sql[]=[];
   for(const table of Object.keys(groups[row.targetKind]??{})){
    const records=value(row).tables[table]??[];if(!records.length)continue;
+   assertCustodyColumns(table,records);
    const keys=Object.keys(records[0]);
    if(keys.some(key=>!/^\w+$/u.test(key))||records.some(record=>Object.keys(record).length!==keys.length||keys.some(key=>!(key in record))))throw new Error('Invalid native columns.');
    // A source entity can own hundreds of windows. Bound SQL expansion by
@@ -106,7 +109,7 @@ export const importTargets:D1TargetAdapter={
    const where=key.includes(' IN ')?`override_id IN(SELECT id FROM availability_date_overrides WHERE event_type_id IN(SELECT id FROM move_in_targets WHERE kind='event'))`:`${key} IN(SELECT id FROM move_in_targets WHERE kind='${kind}')`;
    sets.set(`${kind}:${table}`,sourceRows(table,(await db.prepare(`SELECT * FROM ${table} WHERE ${where} ORDER BY rowid`).all<Row>()).results));
   }
-  return markers.map(marker=>{const tables:NativeValue['tables']={};for(const [table,key]of Object.entries(groups[marker.kind])){const rows=(sets.get(`${marker.kind}:${table}`)??[]).filter(row=>key.includes(' IN ')?(sets.get(`${marker.kind}:availability_date_overrides`)??[]).some(o=>o.id===row.override_id&&o.event_type_id===marker.id):row[key]===marker.id);if(table!=='ext_custom_field_values'||rows.length)tables[table]=rows;}return {destination,targetKind:marker.kind,targetId:marker.id,revision:marker.revision,value:snapshot(tables,marker.valueHash)};});
+  return markers.map(marker=>{const tables:NativeValue['tables']={};for(const [table,key]of Object.entries(groups[marker.kind])){const rows=(sets.get(`${marker.kind}:${table}`)??[]).filter(row=>key.includes(' IN ')?(sets.get(`${marker.kind}:availability_date_overrides`)??[]).some(o=>o.id===row.override_id&&o.event_type_id===marker.id):row[key]===marker.id);if(includeCustodyTable(table,rows))tables[table]=rows;}return {destination,targetKind:marker.kind,targetId:marker.id,revision:marker.revision,value:snapshot(tables,marker.valueHash)};});
  },
  matchesCount(count){return {sql:'(SELECT count(*) FROM move_in_targets)=?',params:[count]};},
  // A native value is {tables}: a selector outside `tables` (an invitee inside a

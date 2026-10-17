@@ -1,6 +1,8 @@
 import { calendarStatus } from "../../shared/booking-status";
 import { inviteeCalendarUrl, renderBrandedMail, type BrandedMailAction, type BrandedMailFact } from "./branded-layout";
 import { mailJoinActions } from "./mail-action-url";
+import { bookingTimeFacts, previousBookingTimeFacts, timeFactsText } from "./booking-mail-times";
+export { formatTimeRange } from "./booking-mail-times";
 
 export type BookingMailDetails = {
   hostName: string;
@@ -10,6 +12,8 @@ export type BookingMailDetails = {
   durationMinutes: number;
   inviteeTimezone: string;
   hostTimezone: string;
+  lockedTimezone?: string;
+  browserTimezone?: string | null;
   locationType: string;
   locationLabel: string;
   locationValue: string;
@@ -34,10 +38,10 @@ export function bookingConfirmationMail(input: BookingMailDetails & {
 }) {
   if (input.recipientRole === "invitee" && !input.manageUrl) throw new TypeError("Invitee confirmation requires its manage capability");
   const location = locationText(input);
+  const timeFacts = bookingTimeFacts(input);
   const facts: BrandedMailFact[] = [
     { label: "Event", value: input.eventTitle },
-    { label: "Invitee time", value: formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone) },
-    { label: "Host time", value: formatTimeRange(input.startAt, input.endAt, input.hostTimezone) },
+    ...timeFacts,
     { label: "Duration", value: `${input.durationMinutes} minutes` },
     { label: "Location", value: `${bookingLocationLabel(input)}: ${location}` },
     ...(input.recipientRole === "operator" ? [{ label: "Calendar setup", value: calendarStatus(input.calendarState) }] : []),
@@ -51,7 +55,7 @@ export function bookingConfirmationMail(input: BookingMailDetails & {
   }
   const answerText = input.answers.length ? `\n\nAnswers:\n${input.answers.map(({ label, value }) => `${label}: ${value}`).join("\n")}` : "";
   const joinText = bookingJoinUrl(input) ? `\n\nJoin session: ${bookingJoinUrl(input)}` : "";
-  const summary = `${input.eventTitle} with ${input.hostName}\nInvitee time: ${formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone)}\nHost time: ${formatTimeRange(input.startAt, input.endAt, input.hostTimezone)}\nDuration: ${input.durationMinutes} minutes\nLocation: ${bookingLocationLabel(input)}: ${location}${input.recipientRole === "operator" ? `\nCalendar setup: ${calendarStatus(input.calendarState)}.` : ""}`;
+  const summary = `${input.eventTitle} with ${input.hostName}\n${timeFactsText(timeFacts)}\nDuration: ${input.durationMinutes} minutes\nLocation: ${bookingLocationLabel(input)}: ${location}${input.recipientRole === "operator" ? `\nCalendar setup: ${calendarStatus(input.calendarState)}.` : ""}`;
   const text = input.recipientRole === "invitee"
     ? `${summary}${answerText}${joinText}\n\nManage this booking: ${input.manageUrl}\nAdd to calendar: ${input.manageUrl ? inviteeCalendarUrl(input.manageUrl) : ""}`
     : `${summary}${answerText}\n\nInvitee: ${input.inviteeName} <${input.inviteeEmail}>${joinText}`;
@@ -66,13 +70,13 @@ export function bookingConfirmationMail(input: BookingMailDetails & {
 }
 
 export function bookingLinkReadyMail(input: BookingMailDetails & { manageUrl: string; meetingUrl: string }) {
+  const timeFacts = bookingTimeFacts(input);
   const text = [
     `Your meeting link is ready: ${input.meetingUrl}`,
     "",
     `Event: ${input.eventTitle}`,
     `Host: ${input.hostName}`,
-    `Invitee time: ${formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone)}`,
-    `Host time: ${formatTimeRange(input.startAt, input.endAt, input.hostTimezone)}`,
+    timeFactsText(timeFacts),
     `Duration: ${input.durationMinutes} minutes`,
     `Location: ${bookingLocationLabel(input)}: ${input.meetingUrl}`,
     `Join session: ${input.meetingUrl}`,
@@ -85,8 +89,7 @@ export function bookingLinkReadyMail(input: BookingMailDetails & { manageUrl: st
     intro: "Join the confirmed booking using the meeting link below.",
     facts: [
       { label: "Event", value: input.eventTitle },
-      { label: "Invitee time", value: formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone) },
-      { label: "Host time", value: formatTimeRange(input.startAt, input.endAt, input.hostTimezone) },
+      ...timeFacts,
       { label: "Duration", value: `${input.durationMinutes} minutes` },
       { label: "Location", value: `${bookingLocationLabel(input)}: ${input.meetingUrl}` },
     ],
@@ -116,7 +119,7 @@ export function bookingReminderHtml(input: BookingMailDetails & {
     intro: "Booking reminder",
     facts: [
       { label: "Host", value: input.hostName },
-      { label: `Time (${input.recipientRole === "invitee" ? input.inviteeTimezone : input.hostTimezone})`, value: input.timeRange },
+      { label: `Time (${input.lockedTimezone ?? (input.recipientRole === "invitee" ? input.inviteeTimezone : input.hostTimezone)})`, value: input.timeRange },
       { label: "Duration", value: `${input.durationMinutes} minutes` },
       { label: bookingLocationLabel(input), value: input.location },
       ...(input.recipientRole === "operator" ? [{ label: "Calendar setup", value: calendarStatus(input.calendarState) }] : []),
@@ -129,18 +132,17 @@ export function bookingChangeHtml(input: BookingMailDetails & {
   actor: string;
   previousInviteeTime: string;
   previousHostTime: string;
+  previousLockedTime?: string;
   reason?: string;
   recipientRole: "invitee" | "operator";
   inviteeName: string;
   inviteeEmail: string;
   manageUrl?: string;
 }) {
+  const timeFacts = [...previousBookingTimeFacts(input), ...bookingTimeFacts(input, "New")];
   const facts: BrandedMailFact[] = [
     { label: "Event", value: input.eventTitle },
-    { label: "Previous invitee time", value: input.previousInviteeTime },
-    { label: "Previous host time", value: input.previousHostTime },
-    { label: "New invitee time", value: formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone) },
-    { label: "New host time", value: formatTimeRange(input.startAt, input.endAt, input.hostTimezone) },
+    ...timeFacts,
     { label: "Duration", value: `${input.durationMinutes} minutes` },
     { label: bookingLocationLabel(input), value: locationText(input) },
   ];
@@ -154,10 +156,7 @@ export function bookingChangeHtml(input: BookingMailDetails & {
   }
   const text = [
     `${input.eventTitle} with ${input.hostName} was rescheduled by ${input.actor}.`,
-    `Previous invitee time: ${input.previousInviteeTime}`,
-    `Previous host time: ${input.previousHostTime}`,
-    `New invitee time: ${formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone)}`,
-    `New host time: ${formatTimeRange(input.startAt, input.endAt, input.hostTimezone)}`,
+    timeFactsText(timeFacts),
     ...(input.reason ? [`Reason: ${input.reason}`] : []),
     ...(input.recipientRole === "operator" ? [`Calendar state: ${calendarStatus(input.calendarState)}.`] : []),
     `Duration: ${input.durationMinutes} minutes`,
@@ -184,13 +183,11 @@ export function bookingCancellationMail(input: BookingMailDetails & {
   inviteeEmail: string;
 }) {
   const reasonLine = `Reason: ${input.reason?.trim() || "No reason provided"}.`;
-  const previousInviteeTime = formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone);
-  const previousHostTime = formatTimeRange(input.startAt, input.endAt, input.hostTimezone);
+  const timeFacts = bookingTimeFacts(input, "Previous");
   const location = locationText(input);
   const facts: BrandedMailFact[] = [
     { label: "Event", value: input.eventTitle },
-    { label: "Previous invitee time", value: previousInviteeTime },
-    { label: "Previous host time", value: previousHostTime },
+    ...timeFacts,
     { label: "Duration", value: `${input.durationMinutes} minutes` },
     { label: "Location", value: `${bookingLocationLabel(input)}: ${location}` },
     ...(input.recipientRole === "operator" ? [{ label: "Calendar state", value: calendarStatus(input.calendarState) }] : []),
@@ -200,8 +197,7 @@ export function bookingCancellationMail(input: BookingMailDetails & {
     `Booking cancelled by ${input.actor}.`,
     `Event: ${input.eventTitle}`,
     `Host: ${input.hostName}`,
-    `Previous invitee time: ${previousInviteeTime}`,
-    `Previous host time: ${previousHostTime}`,
+    timeFactsText(timeFacts),
     `Duration: ${input.durationMinutes} minutes`,
     `Location: ${bookingLocationLabel(input)}: ${location}`,
     reasonLine,
@@ -221,11 +217,6 @@ export function bookingCancellationMail(input: BookingMailDetails & {
 export function bookingJoinUrl(input: Pick<BookingMailDetails, "locationType" | "locationValue" | "meetingUrl">) {
   return input.locationType === "google_meet" ? input.meetingUrl ?? undefined
     : input.locationType === "fixed_link" ? input.locationValue : undefined;
-}
-
-export function formatTimeRange(startAt: string, endAt: string, timeZone: string) {
-  const formatter = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "shortOffset" });
-  return `${formatter.format(new Date(startAt))}–${formatter.format(new Date(endAt))} (${timeZone})`;
 }
 
 function joinAction(input: BookingMailDetails): BrandedMailAction[] {

@@ -57,6 +57,9 @@ export type BookingCalendarConflict = {
   createdAt: string;
 };
 export type BookingRecord = {
+  changePolicy?: import("../../shared/change-policy").ChangePolicyDecision;
+  lockedTimezone?: string;
+  browserTimezone?: string | null;
   imported?: number;
   attribution: BookingAttribution;
   postBookingRedirectUrl: string | null;
@@ -95,6 +98,9 @@ export type BookingSelection = { startAt: string; endAt: string; inviteeTimezone
 export type BookingNonce = { nonce: string; expiresAt: string; selection: BookingSelection };
 export type BookingActor = { type: "invitee" } | { type: "operator"; operatorId: string } | { type: "calendar_provider" };
 export type BookingConfirmation = {
+  lockedTimezone?: string;
+  browserTimezone?: string | null;
+  changePolicy?: import("../../shared/change-policy").ChangePolicyDecision;
   postBookingRedirectUrl?: string;
   bookingReference?: string;
   event: Pick<BookingRecord, "eventTitle" | "durationMinutes">;

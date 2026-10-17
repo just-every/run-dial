@@ -1,3 +1,5 @@
+import { eventBookingPolicies } from "../../../platform/db/booking-policy-schema";
+import type { EventBookingPolicy } from "../../../shared/booking-policy";
 import { redirectConfigIssue, type PostBookingRedirect } from "../redirect-policy.mjs";
 import { asc, eq, sql } from "drizzle-orm";
 import type { createDatabase } from "../../../platform/db/client";
@@ -6,30 +8,32 @@ import type { EventLocationType, EventQuestionKind, EventQuestionOptionInput, Ev
 
 /** The known ID lets parent and children share one fresh D1 transaction. */
 export async function readEventType(db: ReturnType<typeof createDatabase>, id: string): Promise<EventTypeRecord | undefined> {
-  const [records, questions, availability] = await db.batch([
+  const [records, questions, availability, policies] = await db.batch([
     db.select().from(eventTypes).where(eq(eventTypes.id, id)),
     db.select().from(eventQuestions).where(eq(eventQuestions.eventTypeId, id)).orderBy(asc(eventQuestions.position)),
     db.select().from(recurringAvailabilityWindows).where(eq(recurringAvailabilityWindows.eventTypeId, id))
       .orderBy(asc(recurringAvailabilityWindows.weekday), asc(recurringAvailabilityWindows.startMinute)),
+    db.select().from(eventBookingPolicies).where(eq(eventBookingPolicies.eventTypeId, id)),
   ]);
-  return records[0] ? eventRecord(records[0], questions, availability) : undefined;
+  return records[0] ? eventRecord(records[0], questions, availability, policies[0]) : undefined;
 }
 
 /** One bound JSON array avoids D1's SQL parameter limit for larger event lists. */
 export async function hydrateEventTypes(db: ReturnType<typeof createDatabase>, records: (typeof eventTypes.$inferSelect)[]): Promise<EventTypeRecord[]> {
   if (records.length === 0) return [];
   const ids = JSON.stringify(records.map(record => record.id));
-  const [questions, availability] = await Promise.all([
+  const [questions, availability, policies] = await Promise.all([
     db.select().from(eventQuestions)
       .where(sql`${eventQuestions.eventTypeId} IN (SELECT value FROM json_each(${ids}))`)
       .orderBy(asc(eventQuestions.position)),
     db.select().from(recurringAvailabilityWindows)
       .where(sql`${recurringAvailabilityWindows.eventTypeId} IN (SELECT value FROM json_each(${ids}))`)
       .orderBy(asc(recurringAvailabilityWindows.weekday), asc(recurringAvailabilityWindows.startMinute)),
+    db.select().from(eventBookingPolicies).where(sql`${eventBookingPolicies.eventTypeId} IN (SELECT value FROM json_each(${ids}))`),
   ]);
   const questionsByEvent = groupByEvent(questions);
   const availabilityByEvent = groupByEvent(availability);
-  return records.map(record => eventRecord(record, questionsByEvent.get(record.id) ?? [], availabilityByEvent.get(record.id) ?? []));
+  return records.map(record => eventRecord(record, questionsByEvent.get(record.id) ?? [], availabilityByEvent.get(record.id) ?? [], policies.find(policy => policy.eventTypeId === record.id)));
 }
 
 function groupByEvent<T extends { eventTypeId: string }>(records: T[]) {
@@ -42,8 +46,9 @@ function groupByEvent<T extends { eventTypeId: string }>(records: T[]) {
   return groups;
 }
 
-function eventRecord(record: typeof eventTypes.$inferSelect, questions: (typeof eventQuestions.$inferSelect)[], availability: (typeof recurringAvailabilityWindows.$inferSelect)[]): EventTypeRecord {
+function eventRecord(record: typeof eventTypes.$inferSelect, questions: (typeof eventQuestions.$inferSelect)[], availability: (typeof recurringAvailabilityWindows.$inferSelect)[], policy?: EventBookingPolicy): EventTypeRecord {
   return {
+    ...(policy ? { bookingPolicy: { lockedTimezone: policy.lockedTimezone, rescheduleCutoffMinutes: policy.rescheduleCutoffMinutes, cancellationCutoffMinutes: policy.cancellationCutoffMinutes, maxInviteeReschedules: policy.maxInviteeReschedules } } : {}),
     id: record.id,
     status: record.status,
     requestOnly: record.requestOnly,

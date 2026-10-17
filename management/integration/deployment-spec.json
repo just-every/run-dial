@@ -348,6 +348,12 @@
       "name": "0055_availability_controls.sql",
       "sha256": "461eb284bd3d80bd7a5fd4b0d90bd00d4bac41b8c09d610dc9a5e1f461a06f0f",
       "sql": "CREATE TABLE availability_schedules (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL,\n  windows_json TEXT NOT NULL CHECK (json_valid(windows_json)),\n  block_us_holidays INTEGER NOT NULL DEFAULT 0 CHECK (block_us_holidays IN (0,1)),\n  reopened_holidays_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(reopened_holidays_json)),\n  time_off_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(time_off_json)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE event_schedule_bindings (\n  event_type_id TEXT PRIMARY KEY REFERENCES event_types(id) ON DELETE CASCADE,\n  schedule_id TEXT NOT NULL REFERENCES availability_schedules(id),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE INDEX event_schedule_bindings_schedule ON event_schedule_bindings(schedule_id);\nCREATE TABLE booking_limit_policies (\n  scope TEXT PRIMARY KEY,\n  limits_json TEXT NOT NULL CHECK (json_valid(limits_json)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE INDEX booking_occurrences_limits_start ON booking_occurrences(start_at) WHERE is_current=1;\nCREATE INDEX bookings_limits_invitee ON bookings(lower(trim(invitee_email)),state);\nCREATE TRIGGER event_booking_limits_delete AFTER DELETE ON event_types BEGIN\n  DELETE FROM booking_limit_policies WHERE scope=OLD.id;\nEND;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0056_booking_policy.sql",
+      "sha256": "050540712f101de97a473abb014c10baf1c1b6d1d7dc5e5e6426e6038b518003",
+      "sql": "CREATE TABLE event_booking_policies (\n  event_type_id TEXT PRIMARY KEY REFERENCES event_types(id) ON DELETE CASCADE,\n  locked_timezone TEXT,\n  reschedule_cutoff_minutes INTEGER CHECK(reschedule_cutoff_minutes IS NULL OR reschedule_cutoff_minutes BETWEEN 0 AND 2147483647),\n  cancellation_cutoff_minutes INTEGER CHECK(cancellation_cutoff_minutes IS NULL OR cancellation_cutoff_minutes BETWEEN 0 AND 2147483647),\n  reschedule_cap INTEGER CHECK(reschedule_cap IS NULL OR reschedule_cap BETWEEN 0 AND 2147483647),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE booking_presentation (\n  booking_id TEXT PRIMARY KEY REFERENCES bookings(id) ON DELETE CASCADE,\n  locked_timezone TEXT NOT NULL,\n  browser_timezone TEXT,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

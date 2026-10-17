@@ -1,3 +1,4 @@
+import type { EventBookingPolicy } from "../../shared/booking-policy";
 import { duplicateEvent } from "./duplicate";
 import { eventScheduleBindings } from "../../platform/db/availability-schema";
 import { NamedSchedules } from "../availability";
@@ -74,7 +75,7 @@ export type EventTypeInput = {
 };
 export type EventDetailsInput = Omit<EventTypeInput, "availability" | "alternativeRequestsEnabled">;
 
-export type EventTypeRecord = EventTypeInput & { id: string; requestOnly?: boolean; status: EventStatus; createdAt: string; updatedAt: string };
+export type EventTypeRecord = EventTypeInput & { bookingPolicy?: EventBookingPolicy; id: string; requestOnly?: boolean; status: EventStatus; createdAt: string; updatedAt: string };
 export type { PublicEventTypeRecord } from "./public";
 
 const nextEventTimestamp = (timestamp: string) => sql`max(${timestamp}, ${sql.raw(afterPersistedTimestampSql)})`;

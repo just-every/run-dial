@@ -2,7 +2,7 @@
 
 Implementation candidate with native route, migration and CLI evidence below. The native rate-attribution gap is closed; deployment-wide erasure is not claimed because physical SQLite sanitization, external provider/log copies and deployed acceptance remain unproved. The verified local SDK retention fix is integrated. This document distinguishes verified behavior from remaining work. It supersedes the pinned 91c27cd draft census in an earlier private draft.
 
-The migrated schema has **118 application tables, eight static portability tables and SQLite's `sqlite_sequence`**: 127 tables before runtime-created copies or platform metadata, after 46 core migrations. This includes auth 0030/0031, avatar 0032, Unicode search 0033, custom fields 0034, additive erasure 0035/0036, erasure scope and rate correlation 0037/0038, import-custody retirement 0041, hosted portability 0043, local dependency setup 0044, and import preparation steps and stream sources 0045/0046. `booking_search_casefold` is included in the application census and classified as non-personal normative data; archive policy treats it as destination-installed internal data. This corrects the historical 53-table statement.
+The migrated schema census has **130 application tables, eight static portability tables and SQLite's `sqlite_sequence`**: 139 tables before runtime-created copies or platform metadata, after 56 core migrations. This includes auth 0030/0031, avatar 0032, Unicode search 0033, custom fields 0034, additive erasure 0035/0036, erasure scope and rate correlation 0037/0038, import-custody retirement 0041, hosted portability 0043, local dependency setup 0044, import preparation steps and stream sources 0045/0046, availability controls 0055 and booking policy 0056. `booking_search_casefold` is included in the application census and classified as non-personal normative data; archive policy treats it as destination-installed internal data. This corrects the historical 53-table statement.
 
 ## Operator flow and guarantees
 
@@ -22,6 +22,10 @@ EVENT-005 deliberately supersedes BASE-DATA-003's event-type cascade: deleting o
 
 Availability controls added in migration 0055 retain `availability_schedules`, `event_schedule_bindings` and `booking_limit_policies` as shared host configuration (H), exported (E). They contain no invitee identity or booking answers; invitee erasure leaves them intact. Their persisted JSON is validated on archive restore.
 
+Migration 0056 retains `event_booking_policies` as exported host configuration (H/E). `booking_presentation` holds a booking's locked display zone and nullable browser zone (B/E): the booking graph explicitly discovers, fences and deletes it, and its booking foreign key also cascades on deletion. Restore requires canonical IANA zones (including UTC), nullable integer policy values from 0 to 2147483647, and existing event/booking references. It preserves an unlocked event policy as a null lock; presentation rows always require a locked zone.
+
+Move-in undo includes event schedule bindings, event-scoped booking limits and event booking policies in exact event custody, and presentation rows in booking custody. A later owner edit prevents removal of that imported entity. Empty additive sidecars are absent from custody snapshots, preserving historical applied hashes; nonempty sidecars include every persisted column.
+
 B = booking graph; Q = request graph; P = final email remainders; O = operator identity graph; I = maintained import-kit erasure with `withdraw-all-job-artifacts`; T = maintained portability transfer invalidation; H = retained shared host/configuration; A = anonymous receipt/audit; F = intentional opaque anti-replay fence. E = exported; X = excluded; N = destination-installed/platform internal. A personal classification includes pseudonymous links, capabilities and provider identifiers. Host data is personal to the host, not automatically owned by every invitee or operator sharing it.
 
 Every table is listed below. Native B/Q/O children are explicitly discovered and deleted with portability statements; retained facts, temporary copies and external stores are detailed after the table.
@@ -34,6 +38,7 @@ Every table is listed below. Native B/Q/O children are explicitly discovered and
 | `availability_request_review_nonces` | Yes: Q removes linked reviews; P removes email-associated unsubmitted reviews and legacy unlinked reviews with unknown ownership. | X | `migrations/core/0006_requests_embeds.sql` |
 | `availability_request_windows` | Yes: Q explicitly deletes subject dates and windows. | E | `migrations/core/0006_requests_embeds.sql` |
 | `availability_requests` | Yes: Q deletes name/email/note/composition hash. B unlinks only its booking reference on an unrelated retained request. | E | `migrations/core/0006_requests_embeds.sql` |
+| `availability_schedules` | Host-authored availability and closure configuration: H; retained. | E | `migrations/core/0055_availability_controls.sql` |
 | `avatar_object_deletions` | Host object key: H; existing avatar cleanup deletes replaced/removed R2 bytes, then clears this resumable queue. | E | `migrations/core/0032_host_avatar.sql` |
 | `base_mail_dispatch` | Yes: B/Q/P/O delete associated delivery IDs, payload hashes and provider receipts. | E | `migrations/core/0017_base_mail_dispatch.sql` |
 | `blocked_address_rules` | Yes: P/O delete matching email rules; B/Q delete the last matching address rule. Shared domain rules and unrelated author facts remain. | E | `migrations/core/0005_booking_lifecycle.sql` |
@@ -41,9 +46,11 @@ Every table is listed below. Native B/Q/O children are explicitly discovered and
 | `booking_attendance` | Yes: B explicitly fences and deletes linked answers/notes/times/history or capabilities; safe history facts are copied to A first. | E | `migrations/core/0005_booking_lifecycle.sql` |
 | `booking_calendar_conflicts` | Yes: B explicitly fences and deletes linked answers/notes/times/history or capabilities; safe history facts are copied to A first. | E | `migrations/core/0007_calendar_reconciliation.sql` |
 | `booking_history` | Yes: B explicitly fences and deletes linked answers/notes/times/history or capabilities; safe history facts are copied to A first. | E | `migrations/core/0005_booking_lifecycle.sql` |
+| `booking_limit_policies` | Host and event booking limits: H; retained during invitee erasure. | E | `migrations/core/0055_availability_controls.sql` |
 | `booking_manage_tokens` | Yes: B explicitly fences and deletes linked answers/notes/times/history or capabilities; safe history facts are copied to A first. | X | `migrations/core/0005_booking_lifecycle.sql` |
 | `booking_nonces` | Yes: B explicitly fences and deletes linked answers/notes/times/history or capabilities; safe history facts are copied to A first. | X | `migrations/core/0005_booking_lifecycle.sql` |
 | `booking_occurrences` | Yes: B explicitly fences and deletes linked answers/notes/times/history or capabilities; safe history facts are copied to A first. | E | `migrations/core/0005_booking_lifecycle.sql` |
+| `booking_presentation` | Yes: B explicitly fences and deletes the booking's locked display and browser timezone observations; booking FK also cascades. | E | `migrations/core/0056_booking_policy.sql` |
 | `booking_search_casefold` | No: normative Unicode case-fold mapping installed by migration; retained. | N | `migrations/core/0033_booking_search.sql` |
 | `bookings` | Yes: B deletes the row, including derived folded name/email, cancellation reason and snapshots. | E | `migrations/core/0005_booking_lifecycle.sql` |
 | `calendar_busy_intervals` | Host-authored configuration, schedule or calendar data: H; retained, not invitee-owned. No invitee attachment ownership. | E | `migrations/core/0004_provider_delivery.sql` |
@@ -58,7 +65,9 @@ Every table is listed below. Native B/Q/O children are explicitly discovered and
 | `dial_portability_admission` | Source runtime admission receipts and temporary hosted-export lease; no restore authority travels. | X | `migrations/core/0043_hosted_portability.sql` |
 | `embed_allowed_origins` | No person identifier: shared public framing allow-list retained. | E | `migrations/core/0006_requests_embeds.sql` |
 | `erased_calendar_targets` | Opaque former booking lookup ID required for remote cleanup; A/F. No name/email/provider body; completed/error status remains visible. | E | `migrations/core/0008_delivery_recovery_erasure.sql` |
+| `event_booking_policies` | Event timezone lock, invitee change cutoffs and reschedule cap: H; retained during invitee erasure. | E | `migrations/core/0056_booking_policy.sql` |
 | `event_questions` | Host-authored configuration, schedule or calendar data: H; retained, not invitee-owned. No invitee attachment ownership. | E | `migrations/core/0001_configuration_spine.sql` |
+| `event_schedule_bindings` | Host-authored event schedule assignment: H; retained. | E | `migrations/core/0055_availability_controls.sql` |
 | `event_types` | Host-authored configuration, schedule or calendar data: H; retained, not invitee-owned. No invitee attachment ownership. | E | `migrations/core/0001_configuration_spine.sql` |
 | `ext_custom_field_definitions` | Host-authored labels/options: H; no per-invitee values. Retained. | E | `migrations/core/0034_extension_custom_fields.sql` |
 | `ext_custom_field_values` | Yes: B/Q explicitly delete subject annotations. Event-type and control-person values remain. | E | `migrations/core/0034_extension_custom_fields.sql` |

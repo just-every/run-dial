@@ -34,7 +34,7 @@ export class DeliveryRepository {
   }
 
   async reminderBooking(record: DeliveryOutboxRecord, now: string) {
-    return this.binding.prepare("SELECT b.event_title AS title, p.name AS hostName, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, o.start_at AS startAt, o.end_at AS endAt, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.location_type AS locationType, b.location_value AS locationValue, b.location_label AS locationLabel, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE b.calendar_state END AS calendarState FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id JOIN host_profiles p ON 1 = 1 WHERE b.id = ? AND o.id = ? AND o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.start_at > ?").bind(record.bookingId, record.occurrenceId, now).first<import("./reminders").ReminderBooking>();
+    return this.binding.prepare("SELECT b.event_title AS title, p.name AS hostName, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, o.start_at AS startAt, o.end_at AS endAt, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, presentation.locked_timezone AS lockedTimezone, presentation.browser_timezone AS browserTimezone, b.location_type AS locationType, b.location_value AS locationValue, b.location_label AS locationLabel, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE b.calendar_state END AS calendarState FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id LEFT JOIN booking_presentation presentation ON presentation.booking_id = b.id JOIN host_profiles p ON 1 = 1 WHERE b.id = ? AND o.id = ? AND o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.start_at > ?").bind(record.bookingId, record.occurrenceId, now).first<import("./reminders").ReminderBooking>();
   }
 
   async dueIds(now: string, limit: number) {
@@ -181,8 +181,9 @@ export class DeliveryRepository {
     return result.meta.changes > 0;
   }
 
-  async currentBookingMail(record: DeliveryOutboxRecord, cancelled: boolean) {
+  async currentBookingMail(record: DeliveryOutboxRecord, cancelled: boolean, directContact = false) {
     if (!record.bookingId) return true;
+    if (directContact && record.occurrenceId === null) return Boolean(await this.binding.prepare("SELECT 1 FROM bookings WHERE id=?").bind(record.bookingId).first());
     return Boolean(await this.binding.prepare("SELECT 1 FROM bookings WHERE id = ? AND current_occurrence_id = ? AND ((? = 1 AND state = 'cancelled') OR (? = 0 AND state IN ('confirmed', 'rescheduled')))").bind(record.bookingId, record.occurrenceId, cancelled ? 1 : 0, cancelled ? 1 : 0).first());
   }
 
@@ -203,7 +204,7 @@ export class DeliveryRepository {
 
   async cancellationMailSnapshot(record: DeliveryOutboxRecord) {
     if (!record.bookingId || !record.occurrenceId) return undefined;
-    return this.binding.prepare("SELECT b.event_title AS eventTitle, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, b.invitee_name AS inviteeName, b.invitee_email AS inviteeEmail, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.location_type AS locationType, b.location_label AS locationLabel, b.location_value AS locationValue, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE 'pending' END AS calendarState, o.start_at AS startAt, o.end_at AS endAt FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id WHERE b.id = ? AND o.id = ? AND b.state = 'cancelled'").bind(record.bookingId, record.occurrenceId).first<Pick<BookingMailDetails, "eventTitle" | "durationMinutes" | "hostTimezone" | "inviteeTimezone" | "locationType" | "locationLabel" | "locationValue" | "meetingUrl" | "calendarState" | "meetingState" | "startAt" | "endAt"> & { inviteeName: string; inviteeEmail: string }>();
+    return this.binding.prepare("SELECT b.event_title AS eventTitle, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, b.invitee_name AS inviteeName, b.invitee_email AS inviteeEmail, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, presentation.locked_timezone AS lockedTimezone, presentation.browser_timezone AS browserTimezone, b.location_type AS locationType, b.location_label AS locationLabel, b.location_value AS locationValue, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE 'pending' END AS calendarState, o.start_at AS startAt, o.end_at AS endAt FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id LEFT JOIN booking_presentation presentation ON presentation.booking_id = b.id WHERE b.id = ? AND o.id = ? AND b.state = 'cancelled'").bind(record.bookingId, record.occurrenceId).first<Pick<BookingMailDetails, "eventTitle" | "durationMinutes" | "hostTimezone" | "inviteeTimezone" | "lockedTimezone" | "browserTimezone" | "locationType" | "locationLabel" | "locationValue" | "meetingUrl" | "calendarState" | "meetingState" | "startAt" | "endAt"> & { inviteeName: string; inviteeEmail: string }>();
   }
 
   async freezeMail(record: DeliveryOutboxRecord, message: unknown, manageUrl?: string) {
@@ -261,7 +262,7 @@ export class DeliveryRepository {
       const snapshot = await this.binding.prepare(`SELECT b.state, b.current_occurrence_id AS currentOccurrenceId,
           o.is_current AS occurrenceIsCurrent, b.event_title AS eventTitle, b.invitee_email AS inviteeEmail,
           p.name AS hostName, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, o.start_at AS startAt, o.end_at AS endAt,
-          b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.location_type AS locationType,
+          b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, presentation.locked_timezone AS lockedTimezone, presentation.browser_timezone AS browserTimezone, b.location_type AS locationType,
           b.location_label AS locationLabel, b.location_value AS locationValue,
           (SELECT json_extract(payload_json, '$.manageUrl') FROM delivery_outbox
             WHERE booking_id = b.id AND occurrence_id = o.id AND kind = 'mail_send'
@@ -269,12 +270,13 @@ export class DeliveryRepository {
               AND json_type(payload_json, '$.manageUrl') = 'text'
             ORDER BY updated_at DESC LIMIT 1) AS manageUrl
         FROM bookings b
+        LEFT JOIN booking_presentation presentation ON presentation.booking_id = b.id
         LEFT JOIN booking_occurrences o ON o.id = b.current_occurrence_id AND o.id = ?
         LEFT JOIN host_profiles p ON 1 = 1
         WHERE b.id = ?`).bind(record.occurrenceId, record.bookingId).first<{
           state: string; currentOccurrenceId: string; occurrenceIsCurrent: number | null; eventTitle: string;
           inviteeEmail: string; hostName: string | null; durationMinutes: number; startAt: string | null; endAt: string | null;
-          hostTimezone: string; inviteeTimezone: string; locationType: string; locationLabel: string; locationValue: string;
+          hostTimezone: string; inviteeTimezone: string; lockedTimezone: string | null; browserTimezone: string | null; locationType: string; locationLabel: string; locationValue: string;
           manageUrl: string | null;
         }>();
       const current = snapshot && snapshot.currentOccurrenceId === record.occurrenceId && snapshot.occurrenceIsCurrent === 1
@@ -292,6 +294,8 @@ export class DeliveryRepository {
           endAt: snapshot.endAt,
           hostTimezone: snapshot.hostTimezone,
           inviteeTimezone: snapshot.inviteeTimezone,
+          lockedTimezone: snapshot.lockedTimezone ?? undefined,
+          browserTimezone: snapshot.browserTimezone,
           locationType: snapshot.locationType,
           locationLabel: snapshot.locationLabel,
           locationValue: snapshot.locationValue,

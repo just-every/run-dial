@@ -67,7 +67,7 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
     occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
     occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
     now,
-    calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, invitee: { name: invitee.name, email: invitee.email }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
+    calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, lockedTimezone: selection.event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
     emails: await dependencies.confirmationEmails({ profile: selection.profile, event: selection.event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired }),
   }, input.operatorId);
   if (claim !== "claimed") return await recoverOperatorBooking(dependencies, input) ?? { kind: claim };

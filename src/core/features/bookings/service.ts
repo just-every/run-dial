@@ -1,3 +1,4 @@
+import { suppressesMail } from "../../platform/mail/development";
 import { bookingRedirect, cleanAttribution, type BookingAttribution } from "./link-context";
 import { resolveEventDuration } from "../../shared/event-duration";
 import { intervalDuration } from "./duration";
@@ -26,7 +27,8 @@ const manageTokenLifetimeMs = 90 * 24 * 60 * 60 * 1000;
 
 export type BookingSelectionResult =
   | { kind: "issued"; nonce: BookingNonce }
-  | { kind: "not_found" | "slot_invalid" | "calendar_unavailable" | "invalid_timezone" | "invalid_duration" };
+  | { kind: "not_found" | "slot_invalid" | "calendar_unavailable" | "invalid_timezone" | "invalid_duration" }
+  | { kind: "policy_blocked"; reason?: string };
 export type BookingConfirmationResult =
   | { kind: "created"; booking: BookingConfirmation }
   | { kind: "replayed"; booking: BookingConfirmation }
@@ -164,7 +166,7 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
       now,
-      calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
+      calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, lockedTimezone: event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
       emails,
     });
     if (claim === "blocked" || claim === "slot_taken") {
@@ -187,6 +189,7 @@ export class BookingsService {
     const access = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
     if (!access) return { kind: "not_found" as const };
     if (access.status !== "active") return { kind: "expired" as const };
+    if (access.booking.changePolicy?.rescheduleReason) return { kind: "policy_blocked" as const, reason: access.booking.changePolicy.rescheduleReason };
     if (access.booking.state === "cancelled" || Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
     if (!access.booking.eventTypeId) return { kind: "not_found" as const };
     const availability = await this.availability.listRescheduleWeek(access.booking.eventTypeId, access.booking.id, week, inviteeTimezone, new Date(), durationMinutes, access.booking.durationMinutes);
@@ -271,7 +274,7 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
       now: nowIso(),
-      calendarPayload: selection.calendarRequired !== false ? { bookingId: booking.id, icalUid: booking.icalUid, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, invitee: { name: booking.inviteeName, email: booking.inviteeEmail }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
+      calendarPayload: selection.calendarRequired !== false ? { bookingId: booking.id, icalUid: booking.icalUid, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, lockedTimezone: booking.lockedTimezone, invitee: { name: booking.inviteeName, email: booking.inviteeEmail }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
       emails: await this.changeEmails(selection.profile, booking, "booking_changed", input.reason, { actor: "an operator", newStartAt: selection.slot.startAt, newEndAt: selection.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl, calendarRequired: selection.calendarRequired }),
     });
     if (outcome === "slot_taken") return { kind: "slot_taken" as const };
@@ -351,15 +354,26 @@ export class BookingsService {
     return { kind: "found" as const, ics: bookingIcs(result.booking) };
   }
 
+  async contactHost(token: string, idempotencyKey: string, message?: string) {
+    const access = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
+    if (!access) return { kind: "not_found" as const };
+    if (access.status !== "active") return { kind: "expired" as const };
+    if (this.runtime.MAIL_PROVIDER === "rer" && !suppressesMail(this.runtime)) return { kind: "contact_unavailable" as const };
+    await this.repository.contactHost(access.booking, idempotencyKey, message?.trim(), nowIso());
+    return { kind: "sent" as const };
+  }
+
   async cancelByManageToken(token: string, reason?: string) {
     const result = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
     if (!result) return { kind: "not_found" as const };
     if (result.status !== "active") return { kind: "expired" as const };
+    if (result.booking.state !== "cancelled" && result.booking.changePolicy?.cancellationReason) return { kind: "policy_blocked" as const, reason: result.booking.changePolicy.cancellationReason };
     if (result.booking.state !== "cancelled" && Date.parse(result.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
     const profile = await this.profiles.getProfile();
     if (!profile) return { kind: "not_found" as const };
     const emails = await this.changeEmails(profile, result.booking, "booking_cancelled", reason, { actor: "the invitee" });
     const booking = await this.repository.cancel(result.booking, { type: "invitee" }, reason?.trim() || undefined, nowIso(), emails);
+    if (booking && booking.state !== "cancelled") return { kind: "policy_blocked" as const, reason: booking.changePolicy?.cancellationReason ?? "cancellation_cutoff" };
     return booking ? { kind: "cancelled" as const, booking: this.toConfirmation(booking, profile, token) } : { kind: "not_found" as const };
   }
 
@@ -368,7 +382,8 @@ export class BookingsService {
     const access = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
     if (!access) return { kind: "not_found" };
     if (access.status !== "active") return { kind: "expired" };
-    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "slot_invalid" };
+    if (access.booking.changePolicy?.rescheduleReason) return { kind: "policy_blocked", reason: access.booking.changePolicy.rescheduleReason };
+    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" };
     const [profile, event] = await Promise.all([this.profiles.getProfile(), access.booking.eventTypeId ? this.eventTypes.getEventType(access.booking.eventTypeId) : undefined]);
     if (!profile || !event || event.status !== "published") return { kind: "slot_invalid" };
     const verified = await this.availability.verifyPublicSelection(profile.handle, event.slug, startAt, new Date(), access.booking.id, durationMinutes, access.booking.durationMinutes);
@@ -385,10 +400,13 @@ export class BookingsService {
     const access = await this.repository.findManageToken(await hashToken(input.token, this.runtime.SESSION_SECRET), nowIso());
     if (!access) return { kind: "not_found" as const };
     if (access.status !== "active") return { kind: "expired" as const };
-    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
     const now = nowIso();
+    if (!nonce?.consumedAt) {
+    if (access.booking.changePolicy?.rescheduleReason) return { kind: "policy_blocked" as const, reason: access.booking.changePolicy.rescheduleReason };
+    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
+    }
     if (!nonce) return { kind: "invalid_nonce" as const };
     if (nonce.purpose !== "reschedule" || nonce.bookingId !== access.booking.id || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" as const };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" as const };
@@ -420,10 +438,14 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(verified.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(verified.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
       now,
-      calendarPayload: verified.calendarRequired !== false ? { bookingId: access.booking.id, icalUid: access.booking.icalUid, eventTitle: event.title, startAt: verified.slot.startAt, endAt: verified.slot.endAt, hostTimezone: profile.timezone, invitee: { name: access.booking.inviteeName, email: access.booking.inviteeEmail }, location: event.locationValue, locationType: event.locationType } : undefined,
+      calendarPayload: verified.calendarRequired !== false ? { bookingId: access.booking.id, icalUid: access.booking.icalUid, eventTitle: event.title, startAt: verified.slot.startAt, endAt: verified.slot.endAt, hostTimezone: profile.timezone, lockedTimezone: access.booking.lockedTimezone, invitee: { name: access.booking.inviteeName, email: access.booking.inviteeEmail }, location: event.locationValue, locationType: event.locationType } : undefined,
       emails,
     });
-    if (outcome === "slot_taken") return { kind: "slot_taken" as const };
+    if (outcome === "slot_taken") {
+      const current = await this.repository.getById(access.booking.id);
+      if (current?.changePolicy?.rescheduleReason) return { kind: "policy_blocked" as const, reason: current.changePolicy.rescheduleReason };
+      return { kind: "slot_taken" as const };
+    }
     const booking = await this.repository.getById(access.booking.id);
     return booking ? { kind: "rescheduled" as const, booking: this.toConfirmation(booking, profile, input.token) } : { kind: "slot_taken" as const };
   }
@@ -445,6 +467,8 @@ export class BookingsService {
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     return {
       bookingReference: booking.id,
+      ...(booking.lockedTimezone ? { lockedTimezone: booking.lockedTimezone, browserTimezone: booking.browserTimezone ?? null } : {}),
+      ...(booking.changePolicy ? { changePolicy: booking.changePolicy } : {}),
       event: { eventTitle: booking.eventTitle, durationMinutes: booking.durationMinutes },
       host: { name: profile.name, timezone: booking.hostTimezone, avatarKey: profile.avatarKey },
       occurrence: { startAt: booking.occurrence.startAt, endAt: booking.occurrence.endAt },
@@ -468,10 +492,11 @@ export class BookingsService {
     });
     // Managed mail carries the private Add to calendar link in both mail parts;
     // its relay does not accept attachments. Direct providers also carry the file.
-    const calendarFile = this.runtime.MAIL_PROVIDER === "rer" ? {} : { attachments: [{ filename: "booking.ics", contentBase64: base64(initialBookingIcs({ bookingId, eventTitle: event.title, startAt, endAt, location, createdAt: nowIso() })), contentType: "text/calendar" }] };
+    const calendarFile = this.runtime.MAIL_PROVIDER === "rer" ? {} : { attachments: [{ filename: "booking.ics", contentBase64: base64(initialBookingIcs({ bookingId, lockedTimezone: event.bookingPolicy?.lockedTimezone ?? undefined, eventTitle: event.title, startAt, endAt, location, createdAt: nowIso() })), contentType: "text/calendar" }] };
     const operators = await this.repository.listOperatorRecipients();
     const details = {
       hostName: profile.name, eventTitle: event.title, startAt, endAt, durationMinutes: (Date.parse(endAt) - Date.parse(startAt)) / 60_000,
+      lockedTimezone: event.bookingPolicy?.lockedTimezone ?? undefined, browserTimezone: inviteeTimezone,
       inviteeTimezone, hostTimezone: profile.timezone, locationType: event.locationType, locationLabel: event.locationLabel,
       locationValue: event.locationValue, calendarState: input.calendarRequired === false ? "not_required" : "pending",
       inviteeName: invitee.name, inviteeEmail: invitee.email, answers: answerDetails,
@@ -490,6 +515,8 @@ export class BookingsService {
     const startAt = change.newStartAt ?? booking.occurrence.startAt;
     const endAt = change.newEndAt ?? booking.occurrence.endAt;
     const mailDetails = {
+      lockedTimezone: booking.lockedTimezone, browserTimezone: booking.browserTimezone,
+      previousLockedTime: booking.lockedTimezone ? formatTimeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.lockedTimezone, true) : undefined,
       hostName: profile.name,
       eventTitle: booking.eventTitle,
       startAt,

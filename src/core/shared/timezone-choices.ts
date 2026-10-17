@@ -1,4 +1,4 @@
-import { isCanonicalIanaTimeZone } from "../../../shared/scheduling";
+import { isCanonicalIanaTimeZone } from "./scheduling";
 
 export function searchTimezones(query: string, zones = Intl.supportedValuesOf("timeZone")) {
   const words = query.trim().toLowerCase().replace(/[_/]+/g, " ").split(/\s+/).filter(Boolean);

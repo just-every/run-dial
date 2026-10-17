@@ -13,3 +13,5 @@ export type {
   PostBookingRedirect,
 } from "./repository";
 export type { PublicEventQuestion, PublicEventTypeRecord } from "./public";
+
+export { EventBookingPolicyRepository, inviteeChangePolicyPredicate } from "./booking-policy-repository";

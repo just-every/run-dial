@@ -63,6 +63,13 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
       ? apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.")
       : apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
   })
+  .post("/api/public/manage/:token/contact-host", validate("param", recoverySchema), validate("json", z.object({ idempotencyKey: z.string().min(16).max(80).regex(/^[A-Za-z0-9_-]+$/), message: z.string().trim().max(1000).optional() }).strict()), async context => {
+    const body = context.req.valid("json");
+    const result = await context.get("services").bookings.contactHost(context.req.valid("param").token, body.idempotencyKey, body.message);
+    if (result.kind === "sent") return context.json({ sent: true });
+    if (result.kind === "contact_unavailable") return apiError(context, 503, "contact_host_unavailable", "Contact messages need a mail provider that supports replies. The current managed relay does not support Reply-To.");
+    return result.kind === "expired" ? apiError(context, 410, "manage_token_expired", "This management link has expired.") : apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
+  })
   .get("/api/public/manage/:token/calendar.ics", validate("param", recoverySchema), async (context) => {
     const result = await context.get("services").bookings.getCalendarFile(context.req.valid("param").token);
     if (result.kind === "found") {
@@ -80,7 +87,7 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
     if (result.kind === "invalid_duration") return invalidDuration(context);
     if (result.kind === "found") return context.json(result.availability);
     if (result.kind === "expired") return apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.");
-    if (result.kind === "policy_blocked") return apiError(context, 409, "reschedule_window_closed", "This booking can no longer be rescheduled online.");
+    if (result.kind === "policy_blocked") return apiError(context, 409, "reason" in result && typeof result.reason === "string" ? result.reason : "reschedule_window_closed", "This booking can no longer be rescheduled online.");
     return apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
   })
   .post("/api/public/manage/:token/reschedule/selection", validate("param", recoverySchema), validate("json", selectionSchema), async (context) => {
@@ -96,7 +103,7 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
     const result = await context.get("services").bookings.cancelByManageToken(context.req.valid("param").token, context.req.valid("json").reason);
     if (result.kind === "cancelled") return context.json(result.booking);
     if (result.kind === "expired") return apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.");
-    if (result.kind === "policy_blocked") return apiError(context, 409, "cancellation_window_closed", "This booking can no longer be cancelled online.");
+    if (result.kind === "policy_blocked") return apiError(context, 409, "reason" in result && typeof result.reason === "string" ? result.reason : "cancellation_window_closed", "This booking can no longer be cancelled online.");
     return apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
   })
   .get("/book/:handle/:slug/details", validate("param", eventSchema), validate("query", selectionLookupSchema), async (context) => {
@@ -151,6 +158,7 @@ async function recoverySurface(context: Context<AppEnvironment>, options?: { blo
 
 function selectionResult(context: Context<AppEnvironment>, result: Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["issuePublicSelection"]>> | Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["issueRescheduleSelection"]>>) {
   if (result.kind === "invalid_duration") return invalidDuration(context);
+  if (result.kind === "policy_blocked") return apiError(context, 409, result.reason ?? "reschedule_window_closed", "This booking can no longer be rescheduled online.");
   if (result.kind === "issued") return context.json(result.nonce, 201);
   if (result.kind === "not_found") return apiError(context, 404, "event_not_available", "This booking link is not available.");
   if (result.kind === "expired") return apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.");
@@ -177,7 +185,7 @@ function rescheduleResult(context: Context<AppEnvironment>, result: Awaited<Retu
   if (result.kind === "rescheduled" || result.kind === "replayed") return context.json(result.booking);
   if (result.kind === "not_found" || result.kind === "invalid_nonce") return apiError(context, 404, "booking_nonce_not_found", "This booking selection is not valid.");
   if (result.kind === "expired" || result.kind === "expired_nonce") return apiError(context, 410, "booking_nonce_expired", "This booking selection has expired. Choose a new time.");
-  if (result.kind === "policy_blocked") return apiError(context, 409, "reschedule_window_closed", "This booking can no longer be rescheduled online.");
+  if (result.kind === "policy_blocked") return apiError(context, 409, "reason" in result && typeof result.reason === "string" ? result.reason : "reschedule_window_closed", "This booking can no longer be rescheduled online.");
   if (result.kind === "calendar_unavailable") return context.json(availabilityResponseSchema.parse({ state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] }), 503);
   if (result.kind === "payload_mismatch") return apiError(context, 409, "booking_replay_mismatch", "This booking selection was already used with different details.");
   return apiError(context, 409, result.kind === "slot_taken" ? "slot_taken" : "slot_unavailable", "That time is no longer available. Choose another time.");

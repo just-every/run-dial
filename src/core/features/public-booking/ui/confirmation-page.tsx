@@ -1,3 +1,5 @@
+import { BookingChangeTerms } from "./booking-change-terms";
+import { LockedBookingTime, LockedTimezoneNotice, useBrowserTimezone } from "./locked-timezone";
 import { HostAvatar } from "../../host-profile";
 import { format, formatTime } from "./flow-shell";
 import { useRouterState } from "@tanstack/react-router";
@@ -10,6 +12,7 @@ import { embedManageUrl } from "./navigation";
 import type { Confirmation } from "./types";
 
 export function BookingConfirmationPage({ token, embedded = false }: { token: string; embedded?: boolean }) {
+  const browserTimezone = useBrowserTimezone();
   const search = useRouterState({ select: (state) => state.location.searchStr });
   const [booking, setBooking] = useState<Confirmation | undefined>(useDocumentData<Confirmation>());
   const [unavailable, setUnavailable] = useState(false);
@@ -41,8 +44,9 @@ export function BookingConfirmationPage({ token, embedded = false }: { token: st
     <p className="pb-eyebrow">{cancelled ? "Booking cancelled" : "Booking receipt"}</p>
     <h1>{cancelled ? "This booking is cancelled." : "Booking confirmed."}</h1>
     <p>{booking.event.eventTitle} with {booking.host.name}</p>
-    <p>{format(booking.occurrence.startAt, booking.inviteeTimezone)} – {formatTime(booking.occurrence.endAt, booking.inviteeTimezone)} · {booking.inviteeTimezone} · {booking.event.durationMinutes} minutes</p>
-    <p>Host time: {format(booking.occurrence.startAt, booking.host.timezone)} – {formatTime(booking.occurrence.endAt, booking.host.timezone)} · {booking.host.timezone}</p>
+    {booking.lockedTimezone ? <><LockedTimezoneNotice timezone={booking.lockedTimezone} /><LockedBookingTime startAt={booking.occurrence.startAt} endAt={booking.occurrence.endAt} timezone={booking.lockedTimezone} browserTimezone={browserTimezone} /><p>{booking.event.durationMinutes} minutes</p></> : <><p>{format(booking.occurrence.startAt, booking.inviteeTimezone)} – {formatTime(booking.occurrence.endAt, booking.inviteeTimezone)} · {booking.inviteeTimezone} · {booking.event.durationMinutes} minutes</p>
+    <p>Host time: {format(booking.occurrence.startAt, booking.host.timezone)} – {formatTime(booking.occurrence.endAt, booking.host.timezone)} · {booking.host.timezone}</p></>}
+    <BookingChangeTerms policy={booking.changePolicy?.effectivePolicy} />
     {!cancelled && booking.location.state === "ready" ? <p>{booking.location.label}{booking.location.value && !joinUrl ? <>: {booking.location.value}</> : null}</p> : null}
     {!cancelled && booking.location.state === "ready" && joinUrl ? <a className="pb-primary-link" href={joinUrl}>Join session</a> : null}
     {(!cancelled && setupNotice) || refreshError ? <p className="pb-request-notice" role="status">{!cancelled ? setupNotice : null}{refreshError ? <> These are your last verified details. <button className="pb-quiet-button" onClick={() => void refreshReceipt()}>Reload receipt</button></> : null}</p> : null}

@@ -165,7 +165,7 @@ export class ProviderDeliveryService {
       if (!reminder) throw new ProviderFailure("invalid_delivery_payload", false);
       payload = { ...payload, ...reminder };
     }
-    if (record.kind === "mail_send" && !await this.repository.currentBookingMail(record, payload.bookingState === "cancelled")) throw new ProviderFailure("superseded_occurrence", false);
+    if (record.kind === "mail_send" && !await this.repository.currentBookingMail(record, payload.bookingState === "cancelled", payload.messageKind === "host_contact")) throw new ProviderFailure("superseded_occurrence", false);
     const providerKey = string(payload.providerIdempotencyKey) ?? record.idempotencyKey;
     // Freeze the exact provider bytes before the effect. An ambiguous explicit
     // retry retains both those bytes and the original provider identity.
@@ -238,7 +238,7 @@ function calendarEventFrom(payload: Record<string, unknown>, record: DeliveryOut
   const eventTitle = string(payload.eventTitle);
   const startAt = string(payload.startAt);
   const endAt = string(payload.endAt);
-  const timeZone = string(payload.hostTimezone);
+  const timeZone = string(payload.lockedTimezone) ?? string(payload.hostTimezone);
   const inviteeName = string(invitee?.name);
   const inviteeEmail = string(invitee?.email);
   const location = string(payload.location);
@@ -338,7 +338,7 @@ function refreshActionHref(html: string, label: string, href: string) {
 }
 
 function isOperatorBookingMail(record: DeliveryOutboxRecord, payload: Record<string, unknown>) {
-  return record.bookingId !== null && (record.kind === "mail_send" || record.kind === "reminder") && payload.recipientRole === "operator";
+  return payload.messageKind !== "host_contact" && record.bookingId !== null && (record.kind === "mail_send" || record.kind === "reminder") && payload.recipientRole === "operator";
 }
 
 function string(value: unknown) {

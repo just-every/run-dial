@@ -1,3 +1,4 @@
+import { LockedBookingTime, LockedTimezoneNotice } from "./locked-timezone";
 import { DurationChoice } from "./duration-choice";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { errorMessage, publicApi } from "../../../api/client";
@@ -13,6 +14,7 @@ import type { Confirmation } from "./types";
 type Change = { nonce: string; startAt: string; inviteeTimezone: string; reason?: string };
 export function ManageReschedule({ token, booking, timezone, onTimezoneChange, reason, onBooked, onBusy, onPending }: { token: string; booking: Confirmation; timezone: string; onTimezoneChange: (zone: string) => void; reason: string; onBooked: (booking: Confirmation) => void; onBusy: (busy: boolean) => void; onPending: (pending: boolean) => void }) {
   const instant = useDocumentInstant();
+  const displayTimezone = booking.lockedTimezone ?? timezone;
   const [durationMinutes, setDurationMinutes] = useState(booking.event.durationMinutes);
   const [week, setWeek] = useState<string>(), [day, setDay] = useState<string>();
   const [availability, setAvailability] = useState<PickerAvailability & { durationOptionsMinutes?: number[] }>(), [selection, setSelection] = useState<PublicSelection>();
@@ -20,20 +22,22 @@ export function ManageReschedule({ token, booking, timezone, onTimezoneChange, r
   const reads = useRef(new RequestOrder()), selections = useRef(new RequestOrder()), posting = useRef(false), attempt = useRef<Change | undefined>(undefined), uncertain = useRef(false);
   const today = dateInZone(instant, booking.host.timezone);
   const refresh = useCallback(async () => {
+    if (booking.changePolicy?.rescheduleAllowed === false) return;
     const current = reads.current.begin(); setChecking(true); setNotice("");
     try {
-      const response = await publicApi.api.public.manage[":token"].reschedule.availability.$get({ param: { token }, query: { durationMinutes: String(durationMinutes), inviteeTimezone: timezone, ...(week ? { week } : {}) } });
+      const response = await publicApi.api.public.manage[":token"].reschedule.availability.$get({ param: { token }, query: { durationMinutes: String(durationMinutes), ...(!booking.lockedTimezone ? { inviteeTimezone: timezone } : {}), ...(week ? { week } : {}) } });
       if (!current()) return;
       if (response.ok) { const value = await response.json() as PickerAvailability & { durationOptionsMinutes?: number[] }; if (current()) setAvailability(value); }
       else { const message = await errorMessage(response); if (current()) { setAvailability(undefined); setNotice(message); } }
     } catch { if (current()) { setAvailability(undefined); setNotice("Available times could not be checked. Please retry."); } }
     finally { if (current()) setChecking(false); }
-  }, [token, timezone, week, durationMinutes]);
+  }, [token, timezone, week, durationMinutes, booking.lockedTimezone, booking.changePolicy?.rescheduleAllowed]);
   useEffect(() => { void refresh(); const order = reads.current; return () => order.invalidate(); }, [refresh]);
   useEffect(() => { const order = selections.current; return () => order.invalidate(); }, []);
   function change(clear: () => void) { if (attempt.current || posting.current) return; selections.current.invalidate(); setSelection(undefined); clear(); }
   async function select(slot: PickerSlot) {
-    if (posting.current || checking || attempt.current) return;
+    if (booking.changePolicy?.rescheduleAllowed === false || posting.current || checking || attempt.current) return;
+    if (booking.lockedTimezone && !timezone) { setNotice("Your browser timezone could not be detected. Check your device timezone and reload this page."); return; }
     const current = selections.current.begin(); posting.current = true; setWorking(true); onBusy(true); setNotice("");
     try {
       const response = await publicApi.api.public.manage[":token"].reschedule.selection.$post({ param: { token }, json: { startAt: slot.startAt, inviteeTimezone: timezone, durationMinutes } });
@@ -44,7 +48,7 @@ export function ManageReschedule({ token, booking, timezone, onTimezoneChange, r
     finally { posting.current = false; setWorking(false); onBusy(false); }
   }
   async function confirm() {
-    if (!selection || posting.current) return;
+    if (booking.changePolicy?.rescheduleAllowed === false || !selection || posting.current) return;
     attempt.current ??= { nonce: selection.nonce, startAt: selection.selection.startAt, inviteeTimezone: selection.selection.inviteeTimezone, reason: reason || undefined };
     setPending(true); onPending(true);
     posting.current = true; setWorking(true); onBusy(true); setNotice("");
@@ -58,6 +62,7 @@ export function ManageReschedule({ token, booking, timezone, onTimezoneChange, r
     } catch { uncertain.current = true; setNotice("The result could not be received. Confirm again to retrieve the same reschedule; your original booking stays visible until its result is verified."); }
     finally { posting.current = false; setWorking(false); onBusy(false); }
   }
+  if (booking.changePolicy?.rescheduleAllowed === false) return null;
   const blocked = working || checking || pending;
-  return <div className="pb-manage-picker"><h2>Choose a new day and time</h2><p>Currently: {format(booking.occurrence.startAt, timezone)}, {timezone}</p><p>Your current time stays reserved until the new booking is confirmed.</p><DurationChoice options={[...new Set([booking.event.durationMinutes, ...(availability?.durationOptionsMinutes ?? [])])]} selected={durationMinutes} disabled={blocked} onChange={duration => change(() => { if (!day && availability?.state === "available" && availability.slots[0]) setDay(dateInZone(availability.slots[0].startAt, timezone)); setDurationMinutes(duration); })} /><TimezoneControl timezone={timezone} hostTimezone={booking.host.timezone} disabled={blocked} onChange={zone => change(() => { onTimezoneChange(zone); setDay(undefined); })} />{checking || (working && !pending) ? <p role="status">{checking ? "Checking current times…" : "Checking your selected time…"}</p> : null}{availability?.state === "available" ? <><nav className="pb-week-navigation" aria-label="Reschedule week"><button type="button" className="pb-secondary-button" disabled={blocked || availability.week <= today} onClick={() => change(() => { setWeek(shiftHostDate(availability.week, -7) < today ? today : shiftHostDate(availability.week, -7)); setDay(undefined); })}>Previous week</button><p>{dayLabel(availability.week)} – {dayLabel(shiftHostDate(availability.week, 6))}</p><button type="button" className="pb-secondary-button" disabled={blocked} onClick={() => change(() => { setWeek(shiftHostDate(availability.week, 7)); setDay(undefined); })}>Next week</button></nav><DayTimePicker availability={availability} timezone={timezone} hostTimezone={booking.host.timezone} selectedDay={day} onDay={value => change(() => setDay(value))} onSelect={slot => void select(slot)} disabled={blocked} /></> : !checking ? <div><p>{availability?.state === "temporarily_unavailable" ? "The connected calendar cannot be read, so no time is offered." : "No verified time can be offered right now."}</p><button type="button" className="pb-secondary-button" disabled={working || pending} onClick={() => void refresh()}>Reload times</button></div> : null}{selection ? <div className="pb-reschedule-review"><p>New time: {format(selection.selection.startAt, selection.selection.inviteeTimezone)}, {selection.selection.inviteeTimezone}</p><button type="button" className="pb-primary-button" disabled={working} onClick={() => void confirm()}>{working ? "Rescheduling…" : pending ? "Check reschedule result" : "Confirm reschedule"}</button>{working ? <p role="status">Rescheduling your booking. Please keep this page open while the new time is confirmed.</p> : null}</div> : null}{notice ? <p role="status">{notice}</p> : null}</div>;
+  return <div className="pb-manage-picker"><h2>Choose a new day and time</h2>{booking.lockedTimezone ? <LockedBookingTime startAt={booking.occurrence.startAt} endAt={booking.occurrence.endAt} timezone={booking.lockedTimezone} browserTimezone={timezone} /> : <p>Currently: {format(booking.occurrence.startAt, timezone)}, {timezone}</p>}<p>Your current time stays reserved until the new booking is confirmed.</p><DurationChoice options={[...new Set([booking.event.durationMinutes, ...(availability?.durationOptionsMinutes ?? [])])]} selected={durationMinutes} disabled={blocked} onChange={duration => change(() => { if (!day && availability?.state === "available" && availability.slots[0]) setDay(dateInZone(availability.slots[0].startAt, displayTimezone)); setDurationMinutes(duration); })} />{booking.lockedTimezone ? <LockedTimezoneNotice timezone={booking.lockedTimezone} /> : <TimezoneControl timezone={timezone} hostTimezone={booking.host.timezone} disabled={blocked} onChange={zone => change(() => { onTimezoneChange(zone); setDay(undefined); })} />}{checking || (working && !pending) ? <p role="status">{checking ? "Checking current times…" : "Checking your selected time…"}</p> : null}{availability?.state === "available" ? <><nav className="pb-week-navigation" aria-label="Reschedule week"><button type="button" className="pb-secondary-button" disabled={blocked || availability.week <= today} onClick={() => change(() => { setWeek(shiftHostDate(availability.week, -7) < today ? today : shiftHostDate(availability.week, -7)); setDay(undefined); })}>Previous week</button><p>{dayLabel(availability.week)} – {dayLabel(shiftHostDate(availability.week, 6))}</p><button type="button" className="pb-secondary-button" disabled={blocked} onClick={() => change(() => { setWeek(shiftHostDate(availability.week, 7)); setDay(undefined); })}>Next week</button></nav><DayTimePicker lockedTimezone={booking.lockedTimezone} availability={availability} timezone={displayTimezone} hostTimezone={booking.host.timezone} selectedDay={day} onDay={value => change(() => setDay(value))} onSelect={slot => void select(slot)} disabled={blocked} /></> : !checking ? <div><p>{availability?.state === "temporarily_unavailable" ? "The connected calendar cannot be read, so no time is offered." : "No verified time can be offered right now."}</p><button type="button" className="pb-secondary-button" disabled={working || pending} onClick={() => void refresh()}>Reload times</button></div> : null}{selection ? <div className="pb-reschedule-review">{booking.lockedTimezone ? <><p>New time:</p><LockedBookingTime startAt={selection.selection.startAt} endAt={selection.selection.endAt} timezone={booking.lockedTimezone} browserTimezone={timezone} /></> : <p>New time: {format(selection.selection.startAt, selection.selection.inviteeTimezone)}, {selection.selection.inviteeTimezone}</p>}<button type="button" className="pb-primary-button" disabled={working} onClick={() => void confirm()}>{working ? "Rescheduling…" : pending ? "Check reschedule result" : "Confirm reschedule"}</button>{working ? <p role="status">Rescheduling your booking. Please keep this page open while the new time is confirmed.</p> : null}</div> : null}{notice ? <p role="status">{notice}</p> : null}</div>;
 }

@@ -1,3 +1,4 @@
+import { EventBookingPolicyRepository } from "../features/event-types/booking-policy-repository";
 import { PersonErasure } from "../features/erasure/person";
 import { NamedSchedules } from "../features/availability/named-schedules";
 import { BookingLimits } from "../features/availability/booking-limits";
@@ -53,6 +54,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    bookingPolicies: new EventBookingPolicyRepository(binding),
     namedSchedules: new NamedSchedules(binding),
     bookingLimits: new BookingLimits(binding),
     customFields: createCustomFields(binding),

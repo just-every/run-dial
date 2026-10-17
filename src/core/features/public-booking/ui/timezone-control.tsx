@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { deviceTimezone, searchTimezones, validTimezone } from "./timezone-search";
+import { deviceTimezone, searchTimezones, validTimezone } from "../../../shared/timezone-choices";
 
 export function TimezoneControl({ timezone, hostTimezone, onChange, disabled = false }: { timezone: string; hostTimezone: string; onChange: (zone: string) => void; disabled?: boolean }) {
   const id = useId();

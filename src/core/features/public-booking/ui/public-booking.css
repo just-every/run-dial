@@ -108,3 +108,6 @@
 .pb-duration-options > p { font-weight: 700; margin-bottom: .5rem; }
 .pb-duration-options > div { display: flex; flex-wrap: wrap; gap: .5rem; }
 .pb-duration-options button[aria-pressed="true"] { background: var(--pb-ink, #201f1b); color: #fff; }
+
+.pb-locked-timezone { display: block; }
+.pb-locked-timezone > p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }

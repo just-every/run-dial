@@ -1,3 +1,4 @@
+import { bookingPolicyRoutes } from "../features/event-types/booking-policy-routes";
 import { personErasureRoutes } from "../features/erasure/person-routes";
 import { availabilityControlRoutes } from "../features/availability/control-routes";
 import { ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
@@ -77,6 +78,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", hostProfileRoutes)
     .route("/", avatarRoutes)
     .route("/", eventTypeRoutes)
+    .route("/", bookingPolicyRoutes)
     .route("/", hostSetupRoutes)
     .route("/", availabilityDiagnosticRoutes)
     .route("/", availabilityControlRoutes)
