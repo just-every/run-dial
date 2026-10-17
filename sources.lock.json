@@ -766,7 +766,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "0531d7974fda3bd18842dded7953c8c346112f023d0d046b6d41a86f941b0896",
+      "sha256": "fdee57ce067ccced1ba79ab9e771f59b2cd62e0b3bee4e9173912f54522e85a9",
       "executable": false
     },
     "BASELINE.md": {
@@ -782,7 +782,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d7d12ebef89bb7eb2718c7eb24a03244b37f1e8c043d60676b487f92aa09f11b",
+      "sha256": "e2c71a0db4b7b87fb3dc7c516c7487f3542ecfbdebc71a510c3c8230be825a7b",
       "executable": false
     },
     "DEMO.md": {
@@ -830,7 +830,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "682531e8b6e9e8df6cfb73770b8b427c80e3afd6daafe6b3c5e3196e509cbb74",
+      "sha256": "7dc3729801af6d39f55a16939832e58b7f693475ea1c78c24a7e65585fda1bae",
       "executable": false
     },
     "docs/overview.md": {
@@ -1094,15 +1094,15 @@
       "executable": false
     },
     "modules/demo/label.mjs": {
-      "sha256": "52f8c4537b0bb71b17d64ffd35e6d06f8ed8528ca5addbb8ae6c13a67dcae53a",
+      "sha256": "5a879dba78bcebfa5f12ce79856998ac1f54706955a0346b94babed7da5a8cf5",
       "executable": false
     },
     "modules/demo/README.md": {
-      "sha256": "b00a8aa86d6a0df3c7ce904c3fa3bbb18b0b25a5fac722b4d7beafad183ae74f",
+      "sha256": "8fb9b98295fa59c8d4bdd6bd0d0b9940dc1113bb4a6d01813e76b5c878a445fc",
       "executable": false
     },
     "modules/demo/responses.mjs": {
-      "sha256": "e375b801d6f7787b8f42bb0253018b4b06fc9bc2ddaa5d3da626c3d58184b91a",
+      "sha256": "f91b6cb14dfde5c30750e6d248820f7218a855353e43e2defbc10fcc25fedc5d",
       "executable": false
     },
     "modules/demo/sockets.mjs": {
@@ -2758,7 +2758,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "7f3e7d91bbcd8592683dc9bfb5bedbf92c966ddca283bffdcaa86034cc984071",
+      "sha256": "292af977c3ebe033056a3e6d44b7baa659e540724c170127d17d97be5e6d4d76",
       "executable": false
     },
     "RELEASE.json": {
@@ -2782,7 +2782,7 @@
       "executable": false
     },
     "RUN-LOCALLY.md": {
-      "sha256": "71721cfd217f86019fe7177190f13f4ed28b8e4c1f3bb292ba11e96ef16323e8",
+      "sha256": "1704ee354abc328d4fdba1b731eb202bacf247f8840e96bc88dfbda8bdfe967b",
       "executable": false
     },
     "sample-data/dial-demo.ts": {

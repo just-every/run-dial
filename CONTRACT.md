@@ -12,6 +12,16 @@ Sibling products stay separate and are linked, not rebuilt: Orbit is the CRM, Ma
 
 The clauses below keep every existing ID. Clauses whose scope widened (`AUTH-001`, `OPER-001`, `PROFILE-001`, `EVENT-004`, `CAL-001`) were rewritten; every other existing clause keeps its text and adds its acceptance evidence. The earlier exclusions of multiple hosts, roles, team scheduling, group events, guests, approval bookings, payments, recurring series, polls, SMS and CRM handoff, and native apps are withdrawn: each is now a clause. The round-1 buyer review (17 October 2026) added `NOTIFY-008`, `NOTIFY-009`, `EVENT-011`, `BOOK-013`, `FLOW-006`, `EMBED-003`, `EMBED-004`, `INTEG-007` and `INTEG-008`, and sharpened the clauses they touch. The round-2 buyer review (17 October 2026) added `BOOK-014` (asking the invitee to pick a new time) and `OPER-006` (editing a member's availability and event types on their behalf), set RER Managed SMS's allowance and its exhaustion behaviour in `FLOW-006`, bound each imported Calendly event type to its own schedule in `MIGRATE-001`, and sharpened `NOTIFY-009`, `LOCALE-001`, `EVENT-001`, `BOOK-009`, `AVAIL-011` and `API-002` to match. The round-3 buyer review (17 October 2026) added `NOTIFY-010` (Reply-To and sender identity on every booking email, with a per-event-type No-reply choice and optional sending from the host's own mailbox), `AVAIL-012` (locked timezone) and `BOOK-015` (per-event-type invitee change cut-off), and sharpened `NOTIFY-006`, `NOTIFY-008`, `NOTIFY-009`, `BOOK-014`, `FLOW-001` and `EVENT-004` (an "Ask invitee" location) to match. The round-4 buyer review (17 October 2026) added `OPER-007` (workspace capacity: 300 people of any role, every one of whom may host, 50 personal event types per host, 5,000 event types and 100 teams per workspace, and the 1,000,000-booking volume the performance bounds hold at, with typed refusal past each cap and use shown in Settings), and sharpened `OPER-001`, `OPER-003`, `TEAM-001`, `TEAM-003`, `ADMIN-001`, `EVENT-001`, `EVENT-002` (a 45-minute start increment), `AVAIL-008` and `MIGRATE-001` (an over-capacity organisation is a blocking preview step, never a partial import) to match.
 
+## Product target
+
+Dial is the scheduling and appointment-booking platform a US independent professional, service business or team buys instead of Calendly, Acuity Scheduling or Microsoft Bookings, and it goes beyond Cal.com, SavvyCal and Reclaim. This contract describes that product.
+
+| | |
+| --- | --- |
+| Category | Scheduling and appointment booking software |
+| Incumbents a buyer switches from | Calendly, Acuity Scheduling, Microsoft Bookings (up-and-comers it must also beat: Cal.com, SavvyCal, Reclaim) |
+| First buyer | A US independent professional, service business or team moving its booking links, calendars and client scheduling off Calendly, Acuity Scheduling or Microsoft Bookings; costs in USD, in the buyer's own Cloudflare account |
+
 ## Authorisation
 
 - **AUTH-001 — Public authority.** Supersedes `BASE-ACCESS-004` for the paths listed in `seed.json → deploy.publicPaths` and for no others. Those paths authorise the caller by the capability material named in `AUTH-002` to `AUTH-007` instead of an operator session, each capability grants exactly the one action or record it names, and a request carrying no valid capability material changes nothing. Every other mutation requires a valid operator session, or an API credential under `AUTH-008`, and a server-side ownership and role check under `OPER-001`. *Acceptance:* `tests/operator-auth-boundary.test.mjs` and `tests/booking-http.test.mjs` drive anonymous and cross-capability requests against every declared public path and private route; a new public surface (routing form, poll, single-use link, payment return) joins this test before it ships.
@@ -253,181 +263,187 @@ What Dial does not do, and how a buyer gets it:
 - **Ranking without a model.** Slot recommendations stay deterministic (`AVAIL-007`); agents propose to people and never re-rank public slots.
 - **US first.** Prices and payments are USD; SMS follows US TCPA, CTIA and A2P 10DLC rules; holidays are US federal holidays; invitee-facing languages are the seven of `LOCALE-001`, and the operator app is English. Other currencies, tax regimes and messaging rules come after.
 
-## Clause status
+## Status
 
-Judged on 16 October 2026 against `main` at `371b374` from the code and tests at the cited paths. Done means implemented with a test exercising the clause through its public or operator door on the local runtime with providers synthetic at the HTTP edge; live provider acceptance is tracked separately in `ACCEPTANCE.md`. Partial cites what exists today; missing has no implementing code. The round-1 and round-2 buyer-review revisions were judged on 17 October 2026 against the same code: `main` has since gained only install, demo and site changes, none touching a clause revised here. The round-4 revision (17 October 2026, same code) added `OPER-007`, which has no implementing code: no route counts people or event types against a capacity, and `seed.json → limits` still carries the single-host estimates `maxOperators: 10`, `maxEventTypes: 100`, `maxBookings: 100000` and `maxBookingsPerMonth: 10000`, which the build round raises to the clause's floors. `OPER-003` and `AVAIL-008` move from done to partial because their bounds now hold at that capacity and are proven only on the single-host fixture. The round-5 revision (17 October 2026, same code) states which roles may use every workspace-wide power and act on another host's bookings and requests (`OPER-001` (a) to (d) and the clauses it names); `src/core/features/operators/service.ts` admits only the owner role (`equalOperatorPolicy`), so `EDITOR-001`, `OPER-002`, `DATA-002`, `DATA-003`, `PUBLIC-006`, `CUSTOM-001`, `BOOK-009`, `BOOK-011`, `BOOK-012` and `REQUEST-003` move from done to partial: their single-host owner case stays proven by the cited tests and their role refusals have no code yet. The round-2 additions `BOOK-014` and `OPER-006` have no implementing code yet (today every operator of a single-host install edits that one host's settings, which is `OPER-001`'s single-host case, not cross-member reach).
+Judged from the code and tests at commit `371b374162f444a9145b6bd9e3104468a6986674` (16 October 2026).
 
-Totals: **170 clauses — 56 done, 38 partial, 76 missing.**
+Done means implemented with a test exercising the clause through its public or operator door on the local runtime with providers synthetic at the HTTP edge; live provider acceptance is tracked separately in `ACCEPTANCE.md`. Partial cites what exists today; missing has no implementing code. The round-1 and round-2 buyer-review revisions were judged on 17 October 2026 against the same code: `main` has since gained only install, demo and site changes, none touching a clause revised here. The round-4 revision (17 October 2026, same code) added `OPER-007`, which has no implementing code: no route counts people or event types against a capacity, and `seed.json → limits` still carries the single-host estimates `maxOperators: 10`, `maxEventTypes: 100`, `maxBookings: 100000` and `maxBookingsPerMonth: 10000`, which the build round raises to the clause's floors. `OPER-003` and `AVAIL-008` move from done to partial because their bounds now hold at that capacity and are proven only on the single-host fixture. The round-5 revision (17 October 2026, same code) states which roles may use every workspace-wide power and act on another host's bookings and requests (`OPER-001` (a) to (d) and the clauses it names); `src/core/features/operators/service.ts` admits only the owner role (`equalOperatorPolicy`), so `EDITOR-001`, `OPER-002`, `DATA-002`, `DATA-003`, `PUBLIC-006`, `CUSTOM-001`, `BOOK-009`, `BOOK-011`, `BOOK-012` and `REQUEST-003` move from done to partial: their single-host owner case stays proven by the cited tests and their role refusals have no code yet. The round-2 additions `BOOK-014` and `OPER-006` have no implementing code yet (today every operator of a single-host install edits that one host's settings, which is `OPER-001`'s single-host case, not cross-member reach).
 
-| Clause | Status | Evidence |
-| --- | --- | --- |
-| AUTH-001 — Public authority | done | `tests/operator-auth-boundary.test.mjs`, `tests/booking-http.test.mjs` |
-| AUTH-002 — Booking nonce | done | `tests/booking-http.test.mjs` |
-| AUTH-003 — Booking access | done | `tests/embed-document-authorization.test.mjs` |
-| AUTH-004 — Calendar authorisation callback | done | `tests/providers-runtime.test.mjs` |
-| AUTH-005 — Provider callbacks | done | `tests/providers-runtime.test.mjs`, `tests/mail-connection.test.mjs` |
-| AUTH-006 — First-owner admission | done | `tests/owner-signin.test.mjs`, `tests/managed-admission.test.mjs` |
-| AUTH-007 — Capabilities for new public surfaces | missing | — |
-| AUTH-008 — API credentials and connected apps | missing | — |
-| OPER-001 — Roles and permissions | partial | `tests/operator-management.test.mjs`, `tests/local-setup-journey.test.mjs`, `src/core/features/operators/service.ts` |
-| OPER-002 — Operator management | partial | `tests/operator-management.test.mjs`, `tests/operator-removal-mail.test.mjs`, `tests/operator-access-migration.test.mjs` (equal-owner case; role scope missing) |
-| OPER-003 — Booking workspace | partial | `tests/bookings-filters.test.mjs`, `tests/bookings-search-upgrade.test.mjs` (single-host 100,000-booking fixture; capacity fixture missing) |
-| OPER-004 — Booking record | done | `tests/booking-axe/acceptance-records.mjs`, `tests/booking-axe.test.mjs` |
-| EDITOR-001 — Owner editor | partial | `scripts/verify-managed-editor.mjs` (owner case; non-owner refusal missing) |
-| OPER-005 — Durable first run | done | `tests/first-run.test.mjs`, `tests/host-setup-journey.test.mjs` |
-| OPER-006 — Editing a member's availability and event types | missing | — |
-| OPER-007 — Workspace capacity | missing | — |
-| TEAM-001 — Hosts as independent schedulers | missing | — |
-| TEAM-002 — Teams and team pages | missing | — |
-| ADMIN-001 — Single sign-on and provisioning | missing | — |
-| ADMIN-002 — Admin audit log | partial | `src/core/features/bookings/service.ts`, `tests/person-erasure.test.mjs` |
-| PROFILE-001 — Host profile | partial | `src/core/features/host-profile/profile-writes.ts`, `tests/operator-management.test.mjs`, `tests/availability-diagnostics.test.mjs` |
-| PROFILE-002 — Public profile | done | `tests/booking-http.test.mjs`, `src/core/features/host-profile/public.ts` |
-| PROFILE-003 — Avatar asset | done | `tests/avatar-upload.test.mjs`, `tests/avatar.test.mjs` |
-| EVENT-001 — Event type lifecycle | partial | `tests/availability-diagnostics.test.mjs`, `tests/event-status-trigger.test.mjs` (single duration; options are `EVENT-011`) |
-| EVENT-002 — Scheduling constraints | partial | `tests/availability-diagnostics.test.mjs`, `src/core/features/availability/engine.ts` (rolling calendar-day horizon only) |
-| EVENT-003 — Invitee questions | partial | `tests/availability-diagnostics.test.mjs` (phone and dropdown types missing) |
-| EVENT-004 — Locations | partial | `src/core/platform/calendar/google-managed-events.ts`, `tests/providers-d1.test.mjs`, `tests/booking-wire.test.mjs` |
-| EVENT-005 — Removing an event type | done | `tests/event-status-trigger.test.mjs` |
-| EVENT-006 — Publication readiness | done | `tests/availability-diagnostics.test.mjs`, `tests/host-setup-journey.test.mjs`, `tests/booking-axe/request-only.mjs` |
-| EVENT-007 — Group events and capacity | missing | — |
-| EVENT-008 — Bookings that need host approval | missing | — |
-| EVENT-009 — Invitee guests | missing | — |
-| EVENT-010 — Recurring bookings | missing | — |
-| EVENT-011 — Invitee-selectable durations | missing | — |
-| LINK-001 — Single-use links and one-off meetings | missing | — |
-| LINK-002 — Host-offered specific times | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` |
-| LINK-003 — Prefilled and tracked links | missing | — |
-| POLL-001 — Meeting polls | missing | — |
-| BRAND-001 — Branding and custom domain | partial | `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs` |
-| LOCALE-001 — Languages and time formats | missing | — |
-| TEAM-003 — Round-robin events | missing | — |
-| TEAM-004 — Fairness reporting and rebalancing | missing | — |
-| TEAM-005 — Collective events | missing | — |
-| TEAM-006 — Managed event templates | missing | — |
-| TEAM-007 — Reassignment, absence and delegation | missing | — |
-| ROUTE-001 — Routing forms | missing | — |
-| ROUTE-002 — Routing rules and outcomes | missing | — |
-| ROUTE-003 — CRM-owner routing and lookup | missing | — |
-| ROUTE-004 — Routing from existing website forms | missing | — |
-| ROUTE-005 — Routing outcomes and follow-up | missing | — |
-| HOME-001 — Product landing | done | `tests/booking-axe.test.mjs`, `tests/booking-axe/public-site.mjs`, `tests/runtime.test.mjs` |
-| DOCS-001 — Public documentation | done | `tests/booking-axe.test.mjs`, `src/core/features/public-site/docs/build/manifest.ts` |
-| PUBLIC-001 — Event presentation | done | `tests/booking-axe.test.mjs`, `tests/booking-axe/day-picker.mjs` |
-| PUBLIC-002 — Invitee-first flow | done | `tests/embed-document-authorization.test.mjs` |
-| PUBLIC-003 — Progress and recovery | done | `tests/host-setup-journey.test.mjs`, `tests/ux-simplification.test.mjs` |
-| PUBLIC-004 — Embed | done | `tests/embed-document-authorization.test.mjs`, `src/core/features/embeds/snippet.ts` |
-| PUBLIC-005 — Unavailable pages | done | `tests/embed-document-authorization.test.mjs` |
-| PUBLIC-006 — Abuse | partial | `tests/public-blocking.test.mjs`, `tests/public-admission.test.mjs` (owner case; role scope missing) |
-| EMBED-001 — Website embeds and builder plugins | partial | `src/core/features/embeds/snippet.ts`, `src/core/features/embeds/service.ts`, `tests/embed-document-authorization.test.mjs` |
-| EMBED-002 — Browser extension | missing | — |
-| EMBED-003 — Outlook add-in | missing | — |
-| EMBED-004 — Gmail add-on | missing | — |
-| MOBILE-001 — Mobile web booking and operation | done | `tests/booking-axe.test.mjs`, `src/core/features/public-booking/ui/event-page.tsx` |
-| MOBILE-002 — Native iOS and Android apps | missing | — |
-| AVAIL-001 — Schedule and overrides | done | `tests/availability-diagnostics.test.mjs`, `src/core/features/event-types/recurring-writes.ts`, `src/core/features/event-types/override-writes.ts` |
-| AVAIL-002 — Valid slots | done | `tests/dst-native.test.mjs`, `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs` |
-| AVAIL-003 — Buffers | done | `tests/availability-diagnostics.test.mjs`, `src/core/features/availability/engine.ts` |
-| AVAIL-004 — Freshness and failure | done | `tests/lifecycle-journey.test.mjs`, `tests/host-setup-journey.test.mjs` |
-| AVAIL-005 — Timezones | done | `tests/booking-axe.test.mjs`, `tests/booking-axe/timezone.mjs` |
-| AVAIL-006 — Daylight saving time | done | `tests/dst-native.test.mjs`, `src/core/features/availability/timezone.ts` |
-| AVAIL-007 — Recommendations and filters | done | `tests/booking-axe/day-picker.mjs` |
-| AVAIL-008 — Response time | partial | `tests/booking-axe/acceptance-capacity.mjs` (single event type; team kinds at capacity missing) |
-| AVAIL-009 — Operator diagnostics | done | `tests/availability-diagnostics.test.mjs` |
-| AVAIL-010 — Booking frequency and meeting-time limits | partial | `src/core/features/availability/engine.ts`, `tests/availability-diagnostics.test.mjs` |
-| AVAIL-011 — Named schedules and holidays | partial | `src/core/features/event-types/recurring-writes.ts`, `src/core/features/event-types/override-writes.ts`, `tests/availability-diagnostics.test.mjs` |
-| AVAIL-012 — Locked timezone | missing | — |
-| BOOK-001 — Final validation | done | `tests/lifecycle-journey.test.mjs`, `tests/availability-diagnostics.test.mjs` |
-| BOOK-002 — Atomic claim | done | `tests/booking-lifecycle.test.mjs` |
-| BOOK-003 — Idempotent confirmation | done | `tests/lifecycle-journey.test.mjs` |
-| BOOK-004 — States and occurrences | done | `tests/occurrence-mail-duration.test.mjs`, `tests/booking-wire.test.mjs` |
-| BOOK-005 — Confirmation receipt | done | `tests/booking-wire.test.mjs`, `tests/booking-axe/booking.mjs` |
-| BOOK-006 — Manage link | done | `tests/embed-document-authorization.test.mjs`, `src/core/features/bookings/manage-capability.ts` |
-| BOOK-007 — Invitee rescheduling | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |
-| BOOK-008 — Invitee cancellation | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |
-| BOOK-009 — Operator changes | partial | `tests/operator-change.test.mjs`, `tests/move-in-booking-actions.test.mjs` (single-host case; host scope missing) |
-| BOOK-010 — History | done | `tests/booking-wire.test.mjs`, `src/core/features/bookings/service.ts` |
-| BOOK-011 — Attendance | partial | `tests/booking-axe/keyboard-bookings.mjs`, `tests/person-erasure.test.mjs` (single-host case; host scope missing) |
-| BOOK-012 — Operator-created booking | partial | `tests/operator-creation-recovery.test.mjs` (single-host case; host scope missing) |
-| BOOK-013 — Redirect after booking | missing | — |
-| BOOK-014 — Ask the invitee to pick a new time | missing | — |
-| BOOK-015 — Per-event-type invitee change cut-off | missing | — |
-| CAL-001 — Calendar connections | partial | `src/core/features/calendar-connection/service.ts`, `src/core/platform/calendar/google.ts`, `tests/lifecycle-journey.test.mjs`, `tests/providers-d1.test.mjs` |
-| CAL-002 — Busy privacy | done | `tests/providers-d1.test.mjs`, `src/core/features/calendar-connection/busy-reader.ts` |
-| CAL-003 — Managed event | partial | `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs`, `tests/lifecycle-journey.test.mjs` (title is the event title; templates are `NOTIFY-009`) |
-| CAL-004 — Idempotent side effects | done | `tests/booking-wire.test.mjs` |
-| CAL-005 — Provider failure | done | `tests/booking-wire.test.mjs` |
-| CAL-006 — Connection health | done | `tests/lifecycle-journey.test.mjs`, `tests/export-restored-behavior.test.mjs` |
-| CAL-007 — Provider callbacks | done | `tests/deletion-ordering.test.mjs`, `tests/coordination.test.mjs` |
-| CAL-008 — External deletion and edits | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-wire.test.mjs` |
-| CAL-009 — Calendar file | done | `tests/calendar-file.test.mjs`, `src/core/features/bookings/calendar-file.ts` |
-| CAL-010 — Microsoft 365 and Outlook calendars | missing | — |
-| CAL-011 — iCloud and CalDAV calendars | missing | — |
-| CAL-012 — Busy-time copies across calendars | missing | — |
-| MEET-001 — Zoom meetings | missing | — |
-| MEET-002 — Microsoft Teams meetings | missing | — |
-| MEET-003 — Other conferencing and readiness | missing | — |
-| MEET-004 — Attendance facts from conferencing | missing | — |
-| PAY-001 — Paid bookings with Stripe | missing | — |
-| PAY-002 — PayPal and Venmo | missing | — |
-| PAY-003 — Deposits, refunds and cancellation or no-show fees | missing | — |
-| PAY-004 — Packages, coupons and gift certificates | missing | — |
-| PAY-005 — Sales tax, receipts and invoices | missing | — |
-| PAY-006 — Payment reconciliation and accounting export | missing | — |
-| REQUEST-001 — Compose | done | `tests/requests.test.mjs`, `src/core/features/availability-requests/service.ts` |
-| REQUEST-002 — Submit | done | `tests/requests.test.mjs` |
-| REQUEST-003 — Operator workflow | partial | `tests/requests.test.mjs`, `tests/requests/runtime.mjs` (single-host case; host scope missing) |
-| REQUEST-004 — Routing | done | `tests/requests.test.mjs` (single-host recipients; two-host scoping is `NOTIFY-008`) |
-| REQUEST-005 — Invitee updates | done | `tests/requests.test.mjs` |
-| NOTIFY-001 — Booking confirmation | partial | `tests/booking-wire.test.mjs`, `tests/mail-preferences.test.mjs`, `tests/lifecycle-journey.test.mjs` (template and invitee-confirmation switch missing) |
-| NOTIFY-002 — Link completion | done | `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs` |
-| NOTIFY-003 — Reminders | done | `tests/lifecycle-journey.test.mjs`, `tests/coordination.test.mjs`, `src/core/features/bookings/reminder-commands.ts` (single-host recipients; two-host scoping is `NOTIFY-008`) |
-| NOTIFY-004 — Changes | done | `tests/lifecycle-journey.test.mjs`, `tests/move-in-catch-up.test.mjs` (single-host recipients; two-host scoping is `NOTIFY-008`) |
-| NOTIFY-005 — Delivery failure | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-wire.test.mjs` |
-| NOTIFY-006 — No mail loops | done | `tests/deploy-adoption.test.mjs`, `tests/mail-readiness-workerd.test.mjs` |
-| NOTIFY-007 — Connection alerts | done | `tests/lifecycle-journey.test.mjs`, `scripts/lifecycle/connection-alert-timing.mjs` (single-host: every operator is an owner) |
-| NOTIFY-008 — Notification recipients | partial | `src/core/features/delivery/booking-mails.ts`, `tests/mail-preferences.test.mjs`, `tests/booking-wire.test.mjs`, `tests/requests.test.mjs` (single-host case) |
-| NOTIFY-009 — Invitation and message templates | missing | — |
-| NOTIFY-010 — Reply-To and sender identity | missing | — |
-| FLOW-001 — Workflow builder | partial | `src/core/features/bookings/reminder-commands.ts`, `src/core/features/delivery/booking-mails.ts`, `tests/coordination.test.mjs`, `tests/lifecycle-journey.test.mjs` |
-| FLOW-002 — SMS reminders and confirmations | missing | — |
-| FLOW-003 — Post-meeting follow-ups | missing | — |
-| FLOW-004 — No-show handling | missing | — |
-| FLOW-005 — Host notifications in Slack and Microsoft Teams | missing | — |
-| FLOW-006 — RER Managed SMS | missing | — |
-| CLIENT-001 — Client records | missing | — |
-| REPORT-001 — Scheduling analytics | missing | — |
-| REPORT-002 — Host calendar view and booking workspace | partial | `src/core/features/bookings/ui/bookings-page.tsx`, `tests/bookings-filters.test.mjs` |
-| REPORT-003 — Exports and scheduled reports | partial | `src/core/features/portability/routes.ts`, `tests/export-base-adoption.test.mjs` |
-| API-001 — Public REST API | partial | `src/core/features/bookings/routes.ts`, `src/core/features/public-booking/routes.ts` |
-| API-002 — Webhooks | missing | — |
-| INTEG-001 — Zapier, Make and Crank | missing | — |
-| INTEG-002 — HubSpot | missing | — |
-| INTEG-003 — Salesforce | missing | — |
-| INTEG-004 — Orbit and Pipedrive | missing | — |
-| INTEG-005 — Calendar and conferencing marketplace presence | missing | — |
-| INTEG-006 — Analytics and conversion tracking | missing | — |
-| INTEG-007 — Intercom | missing | — |
-| INTEG-008 — Microsoft Dynamics 365 Sales | missing | — |
-| DATA-001 — Export contents | done | `tests/export-base-adoption.test.mjs`, `tests/export-redaction.test.mjs`, `tests/export-restored-behavior.test.mjs`, `tests/local-setup-journey.test.mjs` |
-| DATA-002 — Destructive personal erasure | partial | `tests/person-erasure.test.mjs`, `tests/import-custody-erasure.test.mjs`, `ERASURE.md` (owner case; role scope missing) |
-| DATA-003 — Move-in import | partial | `tests/move-in-runtime.test.mjs`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs` (owner case; role scope missing) |
-| DATA-004 — Full-scope portability and erasure | partial | `ERASURE.md`, `tests/person-erasure.test.mjs`, `tests/export-base-adoption.test.mjs` |
-| MIGRATE-001 — Calendly move-in, connected | partial | `src/core/features/move-in/service.ts`, `src/core/features/move-in/map-events.ts`, `scripts/move-in/download-calendly.mjs`, `tests/move-in-runtime.test.mjs`, `tests/move-in-catch-up.test.mjs` |
-| MIGRATE-002 — Acuity Scheduling move-in | missing | — |
-| MIGRATE-003 — Microsoft Bookings move-in | missing | — |
-| MIGRATE-004 — Cal.com, SavvyCal, Doodle and generic move-in | missing | — |
-| MIGRATE-005 — Cutover and old links | partial | `src/core/features/move-in/switch-over.ts`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs` |
-| CUSTOM-001 — Operator annotations | partial | `tests/custom-fields.test.mjs` (owner case; role scope missing) |
-| CUSTOM-002 — Annotation privacy and portability | done | `tests/custom-fields.test.mjs` |
-| AGENT-001 — Agent authority, limits and audit | missing | — |
-| AGENT-002 — Exception negotiator | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` |
-| AGENT-003 — Unanswered-thread follow-up | missing | — |
-| AGENT-004 — Calendar drift reconciler | partial | `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs` |
-| AGENT-005 — Meeting happened check | partial | `src/core/features/bookings/service.ts`, `tests/booking-axe/keyboard-bookings.mjs` |
-| AGENT-006 — No-show recovery | missing | — |
-| AGENT-007 — Meeting follow-through | missing | — |
-| AGENT-008 — Pre-meeting brief | missing | — |
-| AGENT-009 — Scheduling assistant in email threads | missing | — |
-| AGENT-010 — Flexible holds and availability tuning | missing | — |
-| AGENT-011 — Voice booking through a contracted provider | missing | — |
+| Clauses | Done | Partial | Missing | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Published | 55 | 21 | 0 | 76 |
+| Target and push further | 1 | 17 | 76 | 94 |
+| All | 56 | 38 | 76 | 170 |
+
+| Clause | Title | Kind | Status | Evidence | Gap |
+| --- | --- | --- | --- | --- | --- |
+| `AUTH-001` | Public authority | published | done | `tests/operator-auth-boundary.test.mjs`, `tests/booking-http.test.mjs` |  |
+| `AUTH-002` | Booking nonce | published | done | `tests/booking-http.test.mjs` |  |
+| `AUTH-003` | Booking access | published | done | `tests/embed-document-authorization.test.mjs` |  |
+| `AUTH-004` | Calendar authorisation callback | published | done | `tests/providers-runtime.test.mjs` |  |
+| `AUTH-005` | Provider callbacks | published | done | `tests/providers-runtime.test.mjs`, `tests/mail-connection.test.mjs` |  |
+| `AUTH-006` | First-owner admission | published | done | `tests/owner-signin.test.mjs`, `tests/managed-admission.test.mjs` |  |
+| `AUTH-007` | Capabilities for new public surfaces | target | missing |  | No implementing code yet. |
+| `AUTH-008` | API credentials and connected apps | target | missing |  | No implementing code yet. |
+| `OPER-001` | Roles and permissions | published | partial | `tests/operator-management.test.mjs`, `tests/local-setup-journey.test.mjs`, `src/core/features/operators/service.ts` | The cited paths cover part of the clause; the rest is still to build. |
+| `OPER-002` | Operator management | published | partial | `tests/operator-management.test.mjs`, `tests/operator-removal-mail.test.mjs`, `tests/operator-access-migration.test.mjs` | Equal-owner case; role scope missing. |
+| `OPER-003` | Booking workspace | published | partial | `tests/bookings-filters.test.mjs`, `tests/bookings-search-upgrade.test.mjs` | Single-host 100,000-booking fixture; capacity fixture missing. |
+| `OPER-004` | Booking record | published | done | `tests/booking-axe/acceptance-records.mjs`, `tests/booking-axe.test.mjs` |  |
+| `EDITOR-001` | Owner editor | published | partial | `scripts/verify-managed-editor.mjs` | Owner case; non-owner refusal missing. |
+| `OPER-005` | Durable first run | published | done | `tests/first-run.test.mjs`, `tests/host-setup-journey.test.mjs` |  |
+| `OPER-006` | Editing a member's availability and event types | target | missing |  | No implementing code yet. |
+| `OPER-007` | Workspace capacity | target | missing |  | No implementing code yet. |
+| `TEAM-001` | Hosts as independent schedulers | target | missing |  | No implementing code yet. |
+| `TEAM-002` | Teams and team pages | target | missing |  | No implementing code yet. |
+| `ADMIN-001` | Single sign-on and provisioning | target | missing |  | No implementing code yet. |
+| `ADMIN-002` | Admin audit log | target | partial | `src/core/features/bookings/service.ts`, `tests/person-erasure.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `PROFILE-001` | Host profile | published | partial | `src/core/features/host-profile/profile-writes.ts`, `tests/operator-management.test.mjs`, `tests/availability-diagnostics.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `PROFILE-002` | Public profile | published | done | `tests/booking-http.test.mjs`, `src/core/features/host-profile/public.ts` |  |
+| `PROFILE-003` | Avatar asset | published | done | `tests/avatar-upload.test.mjs`, `tests/avatar.test.mjs` |  |
+| `EVENT-001` | Event type lifecycle | published | partial | `tests/availability-diagnostics.test.mjs`, `tests/event-status-trigger.test.mjs` | Single duration; options are `EVENT-011`. |
+| `EVENT-002` | Scheduling constraints | published | partial | `tests/availability-diagnostics.test.mjs`, `src/core/features/availability/engine.ts` | Rolling calendar-day horizon only. |
+| `EVENT-003` | Invitee questions | published | partial | `tests/availability-diagnostics.test.mjs` | Phone and dropdown types missing. |
+| `EVENT-004` | Locations | published | partial | `src/core/platform/calendar/google-managed-events.ts`, `tests/providers-d1.test.mjs`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `EVENT-005` | Removing an event type | published | done | `tests/event-status-trigger.test.mjs` |  |
+| `EVENT-006` | Publication readiness | published | done | `tests/availability-diagnostics.test.mjs`, `tests/host-setup-journey.test.mjs`, `tests/booking-axe/request-only.mjs` |  |
+| `EVENT-007` | Group events and capacity | target | missing |  | No implementing code yet. |
+| `EVENT-008` | Bookings that need host approval | target | missing |  | No implementing code yet. |
+| `EVENT-009` | Invitee guests | target | missing |  | No implementing code yet. |
+| `EVENT-010` | Recurring bookings | target | missing |  | No implementing code yet. |
+| `EVENT-011` | Invitee-selectable durations | target | missing |  | No implementing code yet. |
+| `LINK-001` | Single-use links and one-off meetings | target | missing |  | No implementing code yet. |
+| `LINK-002` | Host-offered specific times | target | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `LINK-003` | Prefilled and tracked links | target | missing |  | No implementing code yet. |
+| `POLL-001` | Meeting polls | target | missing |  | No implementing code yet. |
+| `BRAND-001` | Branding and custom domain | target | partial | `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `LOCALE-001` | Languages and time formats | target | missing |  | No implementing code yet. |
+| `TEAM-003` | Round-robin events | target | missing |  | No implementing code yet. |
+| `TEAM-004` | Fairness reporting and rebalancing | target | missing |  | No implementing code yet. |
+| `TEAM-005` | Collective events | target | missing |  | No implementing code yet. |
+| `TEAM-006` | Managed event templates | target | missing |  | No implementing code yet. |
+| `TEAM-007` | Reassignment, absence and delegation | target | missing |  | No implementing code yet. |
+| `ROUTE-001` | Routing forms | target | missing |  | No implementing code yet. |
+| `ROUTE-002` | Routing rules and outcomes | target | missing |  | No implementing code yet. |
+| `ROUTE-003` | CRM-owner routing and lookup | target | missing |  | No implementing code yet. |
+| `ROUTE-004` | Routing from existing website forms | target | missing |  | No implementing code yet. |
+| `ROUTE-005` | Routing outcomes and follow-up | target | missing |  | No implementing code yet. |
+| `HOME-001` | Product landing | published | done | `tests/booking-axe.test.mjs`, `tests/booking-axe/public-site.mjs`, `tests/runtime.test.mjs` |  |
+| `DOCS-001` | Public documentation | published | done | `tests/booking-axe.test.mjs`, `src/core/features/public-site/docs/build/manifest.ts` |  |
+| `PUBLIC-001` | Event presentation | published | done | `tests/booking-axe.test.mjs`, `tests/booking-axe/day-picker.mjs` |  |
+| `PUBLIC-002` | Invitee-first flow | published | done | `tests/embed-document-authorization.test.mjs` |  |
+| `PUBLIC-003` | Progress and recovery | published | done | `tests/host-setup-journey.test.mjs`, `tests/ux-simplification.test.mjs` |  |
+| `PUBLIC-004` | Embed | published | done | `tests/embed-document-authorization.test.mjs`, `src/core/features/embeds/snippet.ts` |  |
+| `PUBLIC-005` | Unavailable pages | published | done | `tests/embed-document-authorization.test.mjs` |  |
+| `PUBLIC-006` | Abuse | published | partial | `tests/public-blocking.test.mjs`, `tests/public-admission.test.mjs` | Owner case; role scope missing. |
+| `EMBED-001` | Website embeds and builder plugins | target | partial | `src/core/features/embeds/snippet.ts`, `src/core/features/embeds/service.ts`, `tests/embed-document-authorization.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `EMBED-002` | Browser extension | target | missing |  | No implementing code yet. |
+| `EMBED-003` | Outlook add-in | target | missing |  | No implementing code yet. |
+| `EMBED-004` | Gmail add-on | target | missing |  | No implementing code yet. |
+| `MOBILE-001` | Mobile web booking and operation | target | done | `tests/booking-axe.test.mjs`, `src/core/features/public-booking/ui/event-page.tsx` |  |
+| `MOBILE-002` | Native iOS and Android apps | target | missing |  | No implementing code yet. |
+| `AVAIL-001` | Schedule and overrides | published | done | `tests/availability-diagnostics.test.mjs`, `src/core/features/event-types/recurring-writes.ts`, `src/core/features/event-types/override-writes.ts` |  |
+| `AVAIL-002` | Valid slots | published | done | `tests/dst-native.test.mjs`, `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs` |  |
+| `AVAIL-003` | Buffers | published | done | `tests/availability-diagnostics.test.mjs`, `src/core/features/availability/engine.ts` |  |
+| `AVAIL-004` | Freshness and failure | published | done | `tests/lifecycle-journey.test.mjs`, `tests/host-setup-journey.test.mjs` |  |
+| `AVAIL-005` | Timezones | published | done | `tests/booking-axe.test.mjs`, `tests/booking-axe/timezone.mjs` |  |
+| `AVAIL-006` | Daylight saving time | published | done | `tests/dst-native.test.mjs`, `src/core/features/availability/timezone.ts` |  |
+| `AVAIL-007` | Recommendations and filters | published | done | `tests/booking-axe/day-picker.mjs` |  |
+| `AVAIL-008` | Response time | published | partial | `tests/booking-axe/acceptance-capacity.mjs` | Single event type; team kinds at capacity missing. |
+| `AVAIL-009` | Operator diagnostics | published | done | `tests/availability-diagnostics.test.mjs` |  |
+| `AVAIL-010` | Booking frequency and meeting-time limits | target | partial | `src/core/features/availability/engine.ts`, `tests/availability-diagnostics.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `AVAIL-011` | Named schedules and holidays | target | partial | `src/core/features/event-types/recurring-writes.ts`, `src/core/features/event-types/override-writes.ts`, `tests/availability-diagnostics.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `AVAIL-012` | Locked timezone | target | missing |  | No implementing code yet. |
+| `BOOK-001` | Final validation | published | done | `tests/lifecycle-journey.test.mjs`, `tests/availability-diagnostics.test.mjs` |  |
+| `BOOK-002` | Atomic claim | published | done | `tests/booking-lifecycle.test.mjs` |  |
+| `BOOK-003` | Idempotent confirmation | published | done | `tests/lifecycle-journey.test.mjs` |  |
+| `BOOK-004` | States and occurrences | published | done | `tests/occurrence-mail-duration.test.mjs`, `tests/booking-wire.test.mjs` |  |
+| `BOOK-005` | Confirmation receipt | published | done | `tests/booking-wire.test.mjs`, `tests/booking-axe/booking.mjs` |  |
+| `BOOK-006` | Manage link | published | done | `tests/embed-document-authorization.test.mjs`, `src/core/features/bookings/manage-capability.ts` |  |
+| `BOOK-007` | Invitee rescheduling | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |  |
+| `BOOK-008` | Invitee cancellation | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |  |
+| `BOOK-009` | Operator changes | published | partial | `tests/operator-change.test.mjs`, `tests/move-in-booking-actions.test.mjs` | Single-host case; host scope missing. |
+| `BOOK-010` | History | published | done | `tests/booking-wire.test.mjs`, `src/core/features/bookings/service.ts` |  |
+| `BOOK-011` | Attendance | published | partial | `tests/booking-axe/keyboard-bookings.mjs`, `tests/person-erasure.test.mjs` | Single-host case; host scope missing. |
+| `BOOK-012` | Operator-created booking | published | partial | `tests/operator-creation-recovery.test.mjs` | Single-host case; host scope missing. |
+| `BOOK-013` | Redirect after booking | target | missing |  | No implementing code yet. |
+| `BOOK-014` | Ask the invitee to pick a new time | target | missing |  | No implementing code yet. |
+| `BOOK-015` | Per-event-type invitee change cut-off | target | missing |  | No implementing code yet. |
+| `CAL-001` | Calendar connections | published | partial | `src/core/features/calendar-connection/service.ts`, `src/core/platform/calendar/google.ts`, `tests/lifecycle-journey.test.mjs`, `tests/providers-d1.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `CAL-002` | Busy privacy | published | done | `tests/providers-d1.test.mjs`, `src/core/features/calendar-connection/busy-reader.ts` |  |
+| `CAL-003` | Managed event | published | partial | `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs`, `tests/lifecycle-journey.test.mjs` | Title is the event title; templates are `NOTIFY-009`. |
+| `CAL-004` | Idempotent side effects | published | done | `tests/booking-wire.test.mjs` |  |
+| `CAL-005` | Provider failure | published | done | `tests/booking-wire.test.mjs` |  |
+| `CAL-006` | Connection health | published | done | `tests/lifecycle-journey.test.mjs`, `tests/export-restored-behavior.test.mjs` |  |
+| `CAL-007` | Provider callbacks | published | done | `tests/deletion-ordering.test.mjs`, `tests/coordination.test.mjs` |  |
+| `CAL-008` | External deletion and edits | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-wire.test.mjs` |  |
+| `CAL-009` | Calendar file | published | done | `tests/calendar-file.test.mjs`, `src/core/features/bookings/calendar-file.ts` |  |
+| `CAL-010` | Microsoft 365 and Outlook calendars | target | missing |  | No implementing code yet. |
+| `CAL-011` | iCloud and CalDAV calendars | target | missing |  | No implementing code yet. |
+| `CAL-012` | Busy-time copies across calendars | target | missing |  | No implementing code yet. |
+| `MEET-001` | Zoom meetings | target | missing |  | No implementing code yet. |
+| `MEET-002` | Microsoft Teams meetings | target | missing |  | No implementing code yet. |
+| `MEET-003` | Other conferencing and readiness | target | missing |  | No implementing code yet. |
+| `MEET-004` | Attendance facts from conferencing | target | missing |  | No implementing code yet. |
+| `PAY-001` | Paid bookings with Stripe | target | missing |  | No implementing code yet. |
+| `PAY-002` | PayPal and Venmo | target | missing |  | No implementing code yet. |
+| `PAY-003` | Deposits, refunds and cancellation or no-show fees | target | missing |  | No implementing code yet. |
+| `PAY-004` | Packages, coupons and gift certificates | target | missing |  | No implementing code yet. |
+| `PAY-005` | Sales tax, receipts and invoices | target | missing |  | No implementing code yet. |
+| `PAY-006` | Payment reconciliation and accounting export | target | missing |  | No implementing code yet. |
+| `REQUEST-001` | Compose | published | done | `tests/requests.test.mjs`, `src/core/features/availability-requests/service.ts` |  |
+| `REQUEST-002` | Submit | published | done | `tests/requests.test.mjs` |  |
+| `REQUEST-003` | Operator workflow | published | partial | `tests/requests.test.mjs`, `tests/requests/runtime.mjs` | Single-host case; host scope missing. |
+| `REQUEST-004` | Routing | published | done | `tests/requests.test.mjs` | Single-host recipients; two-host scoping is `NOTIFY-008`. |
+| `REQUEST-005` | Invitee updates | published | done | `tests/requests.test.mjs` |  |
+| `NOTIFY-001` | Booking confirmation | published | partial | `tests/booking-wire.test.mjs`, `tests/mail-preferences.test.mjs`, `tests/lifecycle-journey.test.mjs` | Template and invitee-confirmation switch missing. |
+| `NOTIFY-002` | Link completion | published | done | `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs` |  |
+| `NOTIFY-003` | Reminders | published | done | `tests/lifecycle-journey.test.mjs`, `tests/coordination.test.mjs`, `src/core/features/bookings/reminder-commands.ts` | Single-host recipients; two-host scoping is `NOTIFY-008`. |
+| `NOTIFY-004` | Changes | published | done | `tests/lifecycle-journey.test.mjs`, `tests/move-in-catch-up.test.mjs` | Single-host recipients; two-host scoping is `NOTIFY-008`. |
+| `NOTIFY-005` | Delivery failure | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-wire.test.mjs` |  |
+| `NOTIFY-006` | No mail loops | published | done | `tests/deploy-adoption.test.mjs`, `tests/mail-readiness-workerd.test.mjs` |  |
+| `NOTIFY-007` | Connection alerts | published | done | `tests/lifecycle-journey.test.mjs`, `scripts/lifecycle/connection-alert-timing.mjs` | Single-host: every operator is an owner. |
+| `NOTIFY-008` | Notification recipients | target | partial | `src/core/features/delivery/booking-mails.ts`, `tests/mail-preferences.test.mjs`, `tests/booking-wire.test.mjs`, `tests/requests.test.mjs` | Single-host case. |
+| `NOTIFY-009` | Invitation and message templates | target | missing |  | No implementing code yet. |
+| `NOTIFY-010` | Reply-To and sender identity | target | missing |  | No implementing code yet. |
+| `FLOW-001` | Workflow builder | target | partial | `src/core/features/bookings/reminder-commands.ts`, `src/core/features/delivery/booking-mails.ts`, `tests/coordination.test.mjs`, `tests/lifecycle-journey.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `FLOW-002` | SMS reminders and confirmations | target | missing |  | No implementing code yet. |
+| `FLOW-003` | Post-meeting follow-ups | target | missing |  | No implementing code yet. |
+| `FLOW-004` | No-show handling | target | missing |  | No implementing code yet. |
+| `FLOW-005` | Host notifications in Slack and Microsoft Teams | target | missing |  | No implementing code yet. |
+| `FLOW-006` | RER Managed SMS | target | missing |  | No implementing code yet. |
+| `CLIENT-001` | Client records | target | missing |  | No implementing code yet. |
+| `REPORT-001` | Scheduling analytics | target | missing |  | No implementing code yet. |
+| `REPORT-002` | Host calendar view and booking workspace | target | partial | `src/core/features/bookings/ui/bookings-page.tsx`, `tests/bookings-filters.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `REPORT-003` | Exports and scheduled reports | target | partial | `src/core/features/portability/routes.ts`, `tests/export-base-adoption.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `API-001` | Public REST API | target | partial | `src/core/features/bookings/routes.ts`, `src/core/features/public-booking/routes.ts` | The cited paths cover part of the clause; the rest is still to build. |
+| `API-002` | Webhooks | target | missing |  | No implementing code yet. |
+| `INTEG-001` | Zapier, Make and Crank | target | missing |  | No implementing code yet. |
+| `INTEG-002` | HubSpot | target | missing |  | No implementing code yet. |
+| `INTEG-003` | Salesforce | target | missing |  | No implementing code yet. |
+| `INTEG-004` | Orbit and Pipedrive | target | missing |  | No implementing code yet. |
+| `INTEG-005` | Calendar and conferencing marketplace presence | target | missing |  | No implementing code yet. |
+| `INTEG-006` | Analytics and conversion tracking | target | missing |  | No implementing code yet. |
+| `INTEG-007` | Intercom | target | missing |  | No implementing code yet. |
+| `INTEG-008` | Microsoft Dynamics 365 Sales | target | missing |  | No implementing code yet. |
+| `DATA-001` | Export contents | published | done | `tests/export-base-adoption.test.mjs`, `tests/export-redaction.test.mjs`, `tests/export-restored-behavior.test.mjs`, `tests/local-setup-journey.test.mjs` |  |
+| `DATA-002` | Destructive personal erasure | published | partial | `tests/person-erasure.test.mjs`, `tests/import-custody-erasure.test.mjs`, `ERASURE.md` | Owner case; role scope missing. |
+| `DATA-003` | Move-in import | published | partial | `tests/move-in-runtime.test.mjs`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs` | Owner case; role scope missing. |
+| `DATA-004` | Full-scope portability and erasure | target | partial | `ERASURE.md`, `tests/person-erasure.test.mjs`, `tests/export-base-adoption.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `MIGRATE-001` | Calendly move-in, connected | target | partial | `src/core/features/move-in/service.ts`, `src/core/features/move-in/map-events.ts`, `scripts/move-in/download-calendly.mjs`, `tests/move-in-runtime.test.mjs`, `tests/move-in-catch-up.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `MIGRATE-002` | Acuity Scheduling move-in | target | missing |  | No implementing code yet. |
+| `MIGRATE-003` | Microsoft Bookings move-in | target | missing |  | No implementing code yet. |
+| `MIGRATE-004` | Cal.com, SavvyCal, Doodle and generic move-in | target | missing |  | No implementing code yet. |
+| `MIGRATE-005` | Cutover and old links | target | partial | `src/core/features/move-in/switch-over.ts`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `CUSTOM-001` | Operator annotations | published | partial | `tests/custom-fields.test.mjs` | Owner case; role scope missing. |
+| `CUSTOM-002` | Annotation privacy and portability | published | done | `tests/custom-fields.test.mjs` |  |
+| `AGENT-001` | Agent authority, limits and audit | push-further | missing |  | No implementing code yet. |
+| `AGENT-002` | Exception negotiator | push-further | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `AGENT-003` | Unanswered-thread follow-up | push-further | missing |  | No implementing code yet. |
+| `AGENT-004` | Calendar drift reconciler | push-further | partial | `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `AGENT-005` | Meeting happened check | push-further | partial | `src/core/features/bookings/service.ts`, `tests/booking-axe/keyboard-bookings.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `AGENT-006` | No-show recovery | push-further | missing |  | No implementing code yet. |
+| `AGENT-007` | Meeting follow-through | push-further | missing |  | No implementing code yet. |
+| `AGENT-008` | Pre-meeting brief | push-further | missing |  | No implementing code yet. |
+| `AGENT-009` | Scheduling assistant in email threads | push-further | missing |  | No implementing code yet. |
+| `AGENT-010` | Flexible holds and availability tuning | push-further | missing |  | No implementing code yet. |
+| `AGENT-011` | Voice booking through a contracted provider | push-further | missing |  | No implementing code yet. |
