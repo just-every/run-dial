@@ -23,10 +23,11 @@ export async function admissionRuntime({ managed = true, managementOrigin = 'htt
       RER_OWNER_CLAIM_PUBLIC_KEYS: JSON.stringify({ current: keys.publicKey.export({ format: 'jwk' }) }) } : {}),
   };
   const template = await readFile(join(root, 'deploy/wrangler.template.toml'), 'utf8');
-  const source = template.replace('[vars]\nENVIRONMENT = "production"\n\n', '').replace(/^main = .+$/m, `main = ${JSON.stringify(join(root, 'tests/managed-admission/worker.ts'))}`)
+  let source = template.replace('[vars]\nENVIRONMENT = "production"\n\n', '').replace(/^main = .+$/m, `main = ${JSON.stringify(join(root, 'tests/managed-admission/worker.ts'))}`)
     .replace(/^migrations_dir = .+$/m, `migrations_dir = ${JSON.stringify(join(root, 'migrations/core'))}`)
-    .replace('[triggers]\ncrons = ["* * * * *"]', '')
-    .replace(/\[\[queues.consumers\]\][\s\S]*?(?=\[\[durable_objects)/, '');
+    .replace('[triggers]\ncrons = ["* * * * *"]', '');
+  // Producers stay; the real queue consumer starts only with DIAL_TEST_QUEUE_CONSUMERS=1.
+  if (process.env.DIAL_TEST_QUEUE_CONSUMERS !== '1') source = source.replace(/\[\[queues.consumers\]\][\s\S]*?(?=\[\[durable_objects)/, '');
   await writeFile(config, source + '\n[vars]\n' + Object.entries(variables).map(([key, value]) => `${key} = ${JSON.stringify(value)}`).join('\n') + '\n', { mode: 0o600 });
   const env = Object.fromEntries(['PATH','HOME','TMPDIR','TMP','TEMP','CI'].filter(key => process.env[key]).map(key => [key, process.env[key]]));
   Object.assign(env, { CI: '1', DIAL_WRANGLER_CONFIG_PATH: config, DIAL_PERSIST_STATE_DIR: persist, DIAL_DISABLE_INSPECTOR: '1', WRANGLER_SEND_METRICS: 'false' });

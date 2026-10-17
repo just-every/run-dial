@@ -16,8 +16,10 @@ if (wranglerConfig !== requestedConfig) await run("pnpm", ["runtime:config"]);
 await run("node", ["tests/runtime-vars.mjs"]);
 // Test mail lives at a paid-edge adapter, never in the product's dev runtime.
 if (!process.env.RER_DEV_ORIGIN) {
-  const source = await readFile(wranglerConfig, "utf8");
-  await writeFile(wranglerConfig, source.replace(/^main = .+$/m, `main = ${JSON.stringify(resolve("tests/mail-runtime.worker.ts"))}`));
+  const source = (await readFile(wranglerConfig, "utf8")).replace(/^main = .+$/m, `main = ${JSON.stringify(resolve("tests/mail-runtime.worker.ts"))}`);
+  // Producers stay so code that enqueues still works; the real queue consumer does not start unless
+  // DIAL_TEST_QUEUE_CONSUMERS=1, because a job a test leaves on the queue is then delivered mid-test (gr-base-215).
+  await writeFile(wranglerConfig, process.env.DIAL_TEST_QUEUE_CONSUMERS === "1" ? source : source.replace(/^\[\[queues\.consumers\]\]\n(?:(?!\[).*\n)*/gm, ""));
 }
 const migrationArguments = ["exec", "wrangler", "d1", "migrations", "apply", "dial-local", "--local"];
 if (process.env.DIAL_PERSIST_STATE_DIR) migrationArguments.push("--persist-to", process.env.DIAL_PERSIST_STATE_DIR);
