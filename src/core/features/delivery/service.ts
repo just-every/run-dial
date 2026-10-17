@@ -1,3 +1,4 @@
+import { templatedCalendar, templatedMail } from "./correspondence";
 import { reminderMessage } from "./reminders";
 import type { CalendarConnectionService } from "../calendar-connection";
 import { ProviderFailure } from "../../platform/calendar";
@@ -145,7 +146,8 @@ export class ProviderDeliveryService {
     let payload = parsePayload(record.payloadJson);
     if (record.kind === "calendar_upsert") {
       if (await this.repository.calendarCommandState(record) !== "current") return undefined;
-      const event = calendarEventFrom(payload, record);
+      if (record.bookingId) payload = { ...payload, lockedTimezone: await this.repository.calendarPresentationZone(record.bookingId) };
+      const event = templatedCalendar(calendarEventFrom(payload, record), record.bookingId && record.occurrenceId ? await this.repository.correspondence(record.bookingId, record.occurrenceId) : undefined);
       const result = await this.calendar.upsertManagedEvent(event);
       const delivered = await this.repository.markCalendarDelivered(record, result);
       if (delivered.meetingFailed) throw new ProviderFailure("meeting_creation_failed", false);
@@ -191,6 +193,13 @@ export class ProviderDeliveryService {
       const manageUrl = await this.currentInviteeManageUrl(record, now);
       payload.manageUrl = manageUrl;
       refreshInviteeManageLinks(payload, manageUrl);
+    }
+    if (!frozen && payload.recipientRole === "invitee" && record.bookingId && record.occurrenceId) {
+      const kind = record.kind === "reminder" ? "reminder" : payload.messageKind;
+      if (kind === "confirmation" || kind === "reschedule" || kind === "cancellation" || kind === "reminder") {
+        const data = await this.repository.correspondence(record.bookingId, record.occurrenceId);
+        if (data) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now));
+      }
     }
     const message = toMailMessage(frozen ?? payload, providerKey);
     if (!message) throw new ProviderFailure("invalid_delivery_payload", false);

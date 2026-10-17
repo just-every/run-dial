@@ -1,3 +1,4 @@
+import { correspondenceJourney } from "./correspondence-journey.mjs";
 import { bookingPolicyJourney } from "./booking-policy-journey.mjs";
 import { linkContextJourney } from "./link-context-journey.mjs";
 import { durationJourney } from "./duration-journey.mjs";
@@ -216,6 +217,7 @@ await deletionJourney({ data, state, book, deliver, checks });
 await durationJourney({ data, call, state, deliver, future, checks });
 await linkContextJourney({ data, call, state, deliver, future, checks });
 await bookingPolicyJourney({ data, call, state, deliver, checks });
+await correspondenceJourney({ data, call, state, deliver, future, checks });
 await data("/wire/ambiguous", {});
 await book(12); await deliver(); snap = await state();
 assert.ok(snap.base_mail_dispatch.some(row => row.state === "uncertain"));

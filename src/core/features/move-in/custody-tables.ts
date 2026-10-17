@@ -5,6 +5,8 @@ const additiveColumns:Record<string,string[]>={
  booking_limit_policies:['scope','limits_json','created_at','updated_at'],
  event_booking_policies:['event_type_id','locked_timezone','reschedule_cutoff_minutes','cancellation_cutoff_minutes','reschedule_cap','created_at','updated_at'],
  booking_presentation:['booking_id','locked_timezone','browser_timezone','created_at','updated_at'],
+ event_correspondence:['event_type_id','templates_json','created_at','updated_at'],
+ booking_correspondence:['booking_id','templates_json','created_at','updated_at'],
 };
 
 // Older retained source snapshots have no additive sidecars. Only empty tables

@@ -10,11 +10,25 @@ export const copyReport = {
   accepted_at: '2026-10-07T00:01:02.003Z', created_at: '2026-10-06T23:58:59.001Z', updated_at: '2026-10-07T00:01:02.003Z',
 };
 const end = '2026-10-07T01:00:00.000Z';
+const correspondence = JSON.stringify({ templates: {
+  calendarTitle: '{event name} with {invitee full name}',
+  calendarDescription: '{date and time}\n{duration}\n{location}',
+  confirmationSubject: 'Confirmed: {event name}',
+  confirmationBody: 'Hello {invitee first name},\nMeet {host name}: {manage link}',
+  rescheduleSubject: 'Rescheduled: {event name}',
+  rescheduleBody: '{date and time}\n{message}\n{manage link}',
+  cancellationSubject: 'Cancelled: {event name}',
+  cancellationBody: '{message}',
+  reminderSubject: 'Reminder: {event name}',
+  reminderBody: null,
+} });
 const overrides = {
   availability_schedules: { name: 'Working hours', windows_json: '[{"weekday":1,"startMinute":540,"endMinute":600}]', block_us_holidays: 1, reopened_holidays_json: '["2026-11-11"]', time_off_json: '[{"startDate":"2026-12-23","endDate":"2026-12-27"}]' },
   booking_limit_policies: { scope: 'host', limits_json: '{"dayCount":null,"weekCount":null,"monthCount":10,"dayMinutes":null,"weekMinutes":240,"monthMinutes":null,"inviteeGapMinutes":120}' },
   event_booking_policies: { locked_timezone: 'Australia/Brisbane', reschedule_cutoff_minutes: 120, cancellation_cutoff_minutes: 60, reschedule_cap: 3 },
   booking_presentation: { locked_timezone: 'Australia/Brisbane', browser_timezone: 'America/New_York' },
+  event_correspondence: { templates_json: correspondence },
+  booking_correspondence: { templates_json: correspondence },
   // A historical header-only job was retired; its anonymous receipt outlives the job.
   ik_d1_erasure_journal: { id: 'ik_d1_erasure_journal-1', destination: 'archive-history', recorded_at: instant, records_erased: 0, jobs_retired: 1, streams_retired: 0, stores_json: JSON.stringify([{ store: 'ik_jobs', rows: 1 }]) },
   ik_d1_retirements: { id: 'ik_jobs-retired-1', kind: 'job', destination: 'archive-history', receipt_id: 'ik_d1_erasure_journal-1', retired_at: instant },

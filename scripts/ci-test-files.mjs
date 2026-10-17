@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
-export const shardCount = 8;
+export const shardCount = 22;
 
 export async function testPartitions() {
   const files = (await readdir(new URL("../tests/", import.meta.url)))

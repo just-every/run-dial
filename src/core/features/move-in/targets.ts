@@ -6,8 +6,8 @@ import { conjunction } from './native-predicates';
 import { assertCustodyColumns, includeCustodyTable } from './custody-tables';
 const groups:Record<string,Record<string,string>>={
  profile:{host_profiles:'id',profile_focus_areas:'profile_id',social_proof_entries:'profile_id'},
- event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id',event_schedule_bindings:'event_type_id',booking_limit_policies:'scope',event_booking_policies:'event_type_id'},
- booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id',booking_presentation:'booking_id'},
+ event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id',event_schedule_bindings:'event_type_id',booking_limit_policies:'scope',event_booking_policies:'event_type_id',event_correspondence:'event_type_id'},
+ booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id',booking_presentation:'booking_id',booking_correspondence:'booking_id'},
 };
 function scope(kind:string,table:string){const key=groups[kind]?.[table];if(!key)throw new Error('Unsupported import native table.');return key.includes(' IN ')?`${key}=?)`:`${key}=?`;}
 // Search columns are a deterministic projection, not source-owned content.

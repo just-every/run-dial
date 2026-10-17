@@ -1,3 +1,4 @@
+import { BookingCorrespondenceRepository } from "./correspondence-repository";
 import { and, asc, eq, isNull, lte, sql } from "drizzle-orm";
 import { createDatabase } from "../../platform/db/client";
 import { deliveryOutbox, operatorDeliveryPreferences, providerConnectionHealth, providerWebhookEvents } from "../../platform/db/provider-schema";
@@ -32,6 +33,11 @@ export class DeliveryRepository {
     const cutoff = new Date(Date.parse(now) - 60_000).toISOString();
     await this.binding.prepare("UPDATE delivery_outbox SET state = 'pending', next_attempt_at = ?, last_error_code = 'interrupted_delivery', updated_at = ? WHERE state = 'processing' AND updated_at < ? AND CASE WHEN json_valid(payload_json) THEN json_extract(payload_json, '$.archiveHistorical') END IS NOT 1").bind(now, now, cutoff).run();
   }
+
+  async calendarPresentationZone(bookingId: string) {
+    return (await this.binding.prepare("SELECT locked_timezone AS zone FROM booking_presentation WHERE booking_id=?").bind(bookingId).first<{ zone: string }>())?.zone;
+  }
+  correspondence(bookingId: string, occurrenceId: string) { return new BookingCorrespondenceRepository(this.binding).read(bookingId, occurrenceId); }
 
   async reminderBooking(record: DeliveryOutboxRecord, now: string) {
     return this.binding.prepare("SELECT b.event_title AS title, p.name AS hostName, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, o.start_at AS startAt, o.end_at AS endAt, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, presentation.locked_timezone AS lockedTimezone, presentation.browser_timezone AS browserTimezone, b.location_type AS locationType, b.location_value AS locationValue, b.location_label AS locationLabel, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE b.calendar_state END AS calendarState FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id LEFT JOIN booking_presentation presentation ON presentation.booking_id = b.id JOIN host_profiles p ON 1 = 1 WHERE b.id = ? AND o.id = ? AND o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.start_at > ?").bind(record.bookingId, record.occurrenceId, now).first<import("./reminders").ReminderBooking>();

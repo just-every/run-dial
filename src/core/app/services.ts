@@ -1,3 +1,4 @@
+import { EventCorrespondenceRepository } from "../features/event-types/correspondence-repository";
 import { EventBookingPolicyRepository } from "../features/event-types/booking-policy-repository";
 import { PersonErasure } from "../features/erasure/person";
 import { NamedSchedules } from "../features/availability/named-schedules";
@@ -54,6 +55,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    correspondence: new EventCorrespondenceRepository(binding),
     bookingPolicies: new EventBookingPolicyRepository(binding),
     namedSchedules: new NamedSchedules(binding),
     bookingLimits: new BookingLimits(binding),

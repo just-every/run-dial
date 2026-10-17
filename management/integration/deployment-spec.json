@@ -354,6 +354,12 @@
       "name": "0056_booking_policy.sql",
       "sha256": "050540712f101de97a473abb014c10baf1c1b6d1d7dc5e5e6426e6038b518003",
       "sql": "CREATE TABLE event_booking_policies (\n  event_type_id TEXT PRIMARY KEY REFERENCES event_types(id) ON DELETE CASCADE,\n  locked_timezone TEXT,\n  reschedule_cutoff_minutes INTEGER CHECK(reschedule_cutoff_minutes IS NULL OR reschedule_cutoff_minutes BETWEEN 0 AND 2147483647),\n  cancellation_cutoff_minutes INTEGER CHECK(cancellation_cutoff_minutes IS NULL OR cancellation_cutoff_minutes BETWEEN 0 AND 2147483647),\n  reschedule_cap INTEGER CHECK(reschedule_cap IS NULL OR reschedule_cap BETWEEN 0 AND 2147483647),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE booking_presentation (\n  booking_id TEXT PRIMARY KEY REFERENCES bookings(id) ON DELETE CASCADE,\n  locked_timezone TEXT NOT NULL,\n  browser_timezone TEXT,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0057_correspondence.sql",
+      "sha256": "8a7c174f8866612de404c1c6e852be7f36817ad24085dd8926b3a9ba7b7063a0",
+      "sql": "CREATE TABLE event_correspondence (\n  event_type_id TEXT PRIMARY KEY REFERENCES event_types(id) ON DELETE CASCADE,\n  templates_json TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE booking_correspondence (\n  booking_id TEXT PRIMARY KEY REFERENCES bookings(id) ON DELETE CASCADE,\n  templates_json TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\n-- Deleting an offer must preserve its last correspondence settings for surviving bookings.\nCREATE TRIGGER retain_deleted_event_correspondence BEFORE DELETE ON event_types BEGIN\n  INSERT INTO booking_correspondence (booking_id,templates_json,created_at,updated_at)\n  SELECT b.id,c.templates_json,c.created_at,c.updated_at FROM bookings b\n    JOIN event_correspondence c ON c.event_type_id=b.event_type_id\n    WHERE b.event_type_id=OLD.id\n  ON CONFLICT(booking_id) DO UPDATE SET templates_json=excluded.templates_json,updated_at=excluded.updated_at;\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

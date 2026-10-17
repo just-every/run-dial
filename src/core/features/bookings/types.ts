@@ -116,6 +116,8 @@ export type BookingConfirmation = {
 };
 
 export type BookingEmail = {
+  changeReason?: string;
+  messageKind?: "confirmation" | "reschedule" | "cancellation";
   operatorAccess?: { id: string; generation: number };
   manageUrl?: string;
   to: string;

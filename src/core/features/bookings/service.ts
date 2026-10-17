@@ -502,7 +502,7 @@ export class BookingsService {
       inviteeName: invitee.name, inviteeEmail: invitee.email, answers: answerDetails,
     };
     return [
-      { to: invitee.email, recipientRole: "invitee", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), ...calendarFile },
+      { to: invitee.email, recipientRole: "invitee", messageKind: "confirmation", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), ...calendarFile },
       ...operators.map(({ email: to, id, generation }) => ({ to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `New booking: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "operator" }) })),
     ];
   }
@@ -540,7 +540,7 @@ export class BookingsService {
       const template = { kind: "booking-cancellation" as const, hostName: profile.name, actor: change.actor, ...(normalizedReason ? { reason: normalizedReason } : {}) };
       const inviteeMail = bookingCancellationMail({ ...mailDetails, calendarState: (change.calendarRequired ?? (booking.calendarState !== "not_required")) ? "pending" : "not_required", actor: template.actor, reason: template.reason, recipientRole: "invitee", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
       return [
-        { to: booking.inviteeEmail, recipientRole: "invitee" as const, subject: inviteeMail.subject, text: inviteeMail.text, html: inviteeMail.html, mailTemplate: template },
+        { to: booking.inviteeEmail, recipientRole: "invitee" as const, messageKind: "cancellation", subject: inviteeMail.subject, text: inviteeMail.text, html: inviteeMail.html, mailTemplate: template },
         ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
           const operatorMail = bookingCancellationMail({ ...mailDetails, calendarState: (change.calendarRequired ?? (booking.calendarState !== "not_required")) ? "pending" : "not_required", actor: template.actor, reason: template.reason, recipientRole: "operator", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
           return { to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: operatorMail.subject, text: operatorMail.text, html: operatorMail.html, mailTemplate: template };
@@ -549,7 +549,7 @@ export class BookingsService {
     }
     const inviteeMail = bookingChangeHtml({ ...mailDetails, recipientRole: "invitee", ...(inviteeManageUrl ? { manageUrl: inviteeManageUrl } : {}) });
     return [
-      { to: booking.inviteeEmail, recipientRole: "invitee", subject: `Rescheduled: ${booking.eventTitle}`, text: inviteeMail.text, ...(inviteeManageUrl ? { manageUrl: inviteeManageUrl } : {}), html: inviteeMail.html },
+      { to: booking.inviteeEmail, recipientRole: "invitee", messageKind: "reschedule", changeReason: normalizedReason, subject: `Rescheduled: ${booking.eventTitle}`, text: inviteeMail.text, ...(inviteeManageUrl ? { manageUrl: inviteeManageUrl } : {}), html: inviteeMail.html },
       ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
         const operatorMail = bookingChangeHtml({ ...mailDetails, recipientRole: "operator" });
         return { to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `Rescheduled: ${booking.eventTitle}`, text: operatorMail.text, html: operatorMail.html };

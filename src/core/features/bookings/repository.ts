@@ -1,3 +1,4 @@
+import { bookingCorrespondenceStatements } from "./booking-correspondence";
 import { contactHost } from "./contact-host";
 import { inviteeChangePolicyPredicate } from "../event-types";
 import { bookingPresentationStatements } from "./booking-presentation";
@@ -112,6 +113,7 @@ export class BookingsRepository {
         "INSERT INTO booking_occurrences (id, booking_id, sequence, start_at, end_at, occupied_start_at, occupied_end_at, host_date, state, is_current, created_at) SELECT ?, ?, 0, ?, ?, ?, ?, ?, 'current', 1, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)",
       ).bind(input.occurrenceId, input.bookingId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.bookingId),
       this.binding.prepare("UPDATE bookings SET current_occurrence_id = ? WHERE id = ? AND current_occurrence_id IS NULL").bind(input.occurrenceId, input.bookingId),
+      ...bookingCorrespondenceStatements(this.binding, input.bookingId, event.id, input.now),
       ...bookingPresentationStatements(this.binding, input, true),
       ...answerStatements(this.binding, input.bookingId, event.questions, input.invitee.answers, input.now),
       this.binding.prepare(
@@ -160,6 +162,7 @@ export class BookingsRepository {
         "INSERT INTO booking_occurrences (id, booking_id, sequence, start_at, end_at, occupied_start_at, occupied_end_at, host_date, state, is_current, created_at) SELECT ?, ?, 0, ?, ?, ?, ?, ?, 'current', 1, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)",
       ).bind(input.occurrenceId, input.bookingId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.bookingId),
       this.binding.prepare("UPDATE bookings SET current_occurrence_id = ? WHERE id = ? AND current_occurrence_id IS NULL").bind(input.occurrenceId, input.bookingId),
+      ...bookingCorrespondenceStatements(this.binding, input.bookingId, event.id, input.now),
       ...bookingPresentationStatements(this.binding, input, false),
       ...answerStatements(this.binding, input.bookingId, event.questions, input.invitee.answers, input.now),
       this.binding.prepare(

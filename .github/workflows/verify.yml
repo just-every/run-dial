@@ -28,22 +28,50 @@ jobs:
             args: build
           - name: Managed editor
             args: editor
-          - name: Tests 1 of 8
+          - name: Tests 1 of 22
             args: test 0
-          - name: Tests 2 of 8
+          - name: Tests 2 of 22
             args: test 1
-          - name: Tests 3 of 8
+          - name: Tests 3 of 22
             args: test 2
-          - name: Tests 4 of 8
+          - name: Tests 4 of 22
             args: test 3
-          - name: Tests 5 of 8
+          - name: Tests 5 of 22
             args: test 4
-          - name: Tests 6 of 8
+          - name: Tests 6 of 22
             args: test 5
-          - name: Tests 7 of 8
+          - name: Tests 7 of 22
             args: test 6
-          - name: Tests 8 of 8
+          - name: Tests 8 of 22
             args: test 7
+          - name: Tests 9 of 22
+            args: test 8
+          - name: Tests 10 of 22
+            args: test 9
+          - name: Tests 11 of 22
+            args: test 10
+          - name: Tests 12 of 22
+            args: test 11
+          - name: Tests 13 of 22
+            args: test 12
+          - name: Tests 14 of 22
+            args: test 13
+          - name: Tests 15 of 22
+            args: test 14
+          - name: Tests 16 of 22
+            args: test 15
+          - name: Tests 17 of 22
+            args: test 16
+          - name: Tests 18 of 22
+            args: test 17
+          - name: Tests 19 of 22
+            args: test 18
+          - name: Tests 20 of 22
+            args: test 19
+          - name: Tests 21 of 22
+            args: test 20
+          - name: Tests 22 of 22
+            args: test 21
     env:
       CI: "true"
     steps:

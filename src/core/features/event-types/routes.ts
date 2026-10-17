@@ -113,6 +113,8 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       return eventType ? context.json(eventType) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })
     .patch("/api/app/event-types/:id/details", validate("param", idSchema), validate("json", eventDetailsInputSchema), async (context) => {
+      const config = await context.get("services").correspondence.read(context.req.valid("param").id);
+      if (config && !context.get("services").correspondence.validateQuestions(config, context.req.valid("json").questions).success) return apiError(context, 400, "template_question_in_use", "Edit invitation and email templates before removing a referenced question or making its calendar answer private.");
       const event = await context.get("services").eventTypes.updateEventDetails(context.req.valid("param").id, context.req.valid("json"));
       return event ? context.json(event) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })
@@ -164,6 +166,8 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       return apiError(context, 409, "profile_not_configured", "Configure a valid host timezone before editing availability overrides.");
     })
     .patch("/api/app/event-types/:id", validate("param", idSchema), validate("json", eventTypeInputSchema), async (context) => {
+      const config = await context.get("services").correspondence.read(context.req.valid("param").id);
+      if (config && !context.get("services").correspondence.validateQuestions(config, context.req.valid("json").questions).success) return apiError(context, 400, "template_question_in_use", "Edit invitation and email templates before removing a referenced question or making its calendar answer private.");
       const eventType = await context.get("services").eventTypes.updateEventType(context.req.valid("param").id, context.req.valid("json"));
       return eventType ? context.json(eventType) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })

@@ -11,7 +11,7 @@ const mailEdges: Edge[] = [
 export function bookingGraph(statements?: Declaration["statements"]) {
   return defineErasure({ entity: "booking", root: { table: "bookings" }, statements,
     edges: [
-      ...["booking_answers", "booking_attendance", "booking_calendar_conflicts", "booking_history", "booking_manage_tokens", "booking_nonces", "booking_occurrences", "booking_presentation", "calendar_deletion_probes", "operator_creation_receipts", "ext_custom_field_values", "move_in_differences"].map(table => child(table, "bookings", "booking_id")),
+      ...["booking_answers", "booking_attendance", "booking_calendar_conflicts", "booking_correspondence", "booking_history", "booking_manage_tokens", "booking_nonces", "booking_occurrences", "booking_presentation", "calendar_deletion_probes", "operator_creation_receipts", "ext_custom_field_values", "move_in_differences"].map(table => child(table, "bookings", "booking_id")),
       // The erasure's own provider cleanup command (calendar_cancel without an occurrence) keeps only the
       // booking lookup key; the helper's completion pass must not treat it as a late copy and delete it.
       { table: "delivery_outbox", from: "bookings", where: "booking_id=? AND NOT (kind='calendar_cancel' AND occurrence_id IS NULL)", params: ["id"] },

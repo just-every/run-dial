@@ -1,6 +1,7 @@
 import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
 import { validateAvailabilityConfig, validateAvailabilityReferences } from './availability-config.mjs';
 import { validateBookingPolicy } from './booking-policy.mjs';
+import { validateCorrespondence } from './correspondence.mjs';
 import { redirectConfigIssue, redirectUrlIssue } from '../../src/core/features/event-types/redirect-policy.mjs';
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
@@ -60,6 +61,7 @@ export function validateRows(archive, model) {
       if (table.name === 'event_questions' && ![0, 1].includes(row.private)) throw new Error('archive-invalid-question-privacy');
       validateAvailabilityConfig(table.name, row);
       validateBookingPolicy(table.name, row);
+      validateCorrespondence(table.name, row);
       if (table.name === 'bookings') {
         const attribution = JSON.parse(row.attribution_json);
         if (!attribution || typeof attribution !== 'object' || Array.isArray(attribution) || Object.entries(attribution).some(([key, value]) => !['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'source'].includes(key) || typeof value !== 'string' || value.length > 500)) throw new Error('archive-invalid-booking-attribution');
