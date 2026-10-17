@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "c65f726cc043a0299dae692c8966951004f13a72be2ed580015e7e8bc83bd3db",
+      "sha256": "e1cfb3feeeec905f7f5b084b6532b3a4ccb89074f03df02bb6ce9519bdcc02b6",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "af911f54d98ab0a90aea1e5eef71e6b7385e57d3f239cb9e66e336516ad6351c",
+      "sha256": "21cbbf442ff544ed8e33f0a0f4440637cea422516affcdbfe94f4256ff07c5fa",
       "executable": false
     },
     "DEMO.md": {
@@ -1937,6 +1937,10 @@
     },
     "modules/deploy-kit/owner-remove.mjs": {
       "sha256": "a564f995b582812f98908310fa71aa040eda9835114eabbc93bb3ec611cb462a",
+      "executable": false
+    },
+    "modules/deploy-kit/owner-secret-copy.mjs": {
+      "sha256": "5c9f5331d123487c5cfaf13be5c61cfec24848208b89b7b0d107930a720b80c3",
       "executable": false
     },
     "modules/deploy-kit/owner-secret-names.mjs": {
@@ -4240,7 +4244,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "6b189adfb3b920e1330d9a4a9dc4b1613473876fbbd04fe7909398d8fb94f9e9",
+      "sha256": "8f9b9be83090f40270d42aba2c0e8678d28504962453c568716043822d2a03f3",
       "executable": false
     },
     "src/base/contract-filter.ts": {

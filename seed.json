@@ -13,7 +13,7 @@
     "Acuity Scheduling",
     "SavvyCal"
   ],
-  "description": "An invitee-first, self-hosted scheduler for one business or independent host.",
+  "description": "Let clients book appointments around your availability without the scheduling back and forth.",
   "capabilities": [
     {
       "id": "public-home",
