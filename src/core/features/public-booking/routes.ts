@@ -1,3 +1,4 @@
+import { attributionSchema } from "../bookings";
 import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
@@ -19,7 +20,7 @@ const selectionLookupSchema = z.object({
 });
 const confirmedLookupSchema = z.object({ token: z.string().min(1).max(512).optional() });
 const answerValueSchema = z.union([z.string().max(4_000), z.array(z.string().max(500)).max(50)]);
-const confirmationSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema) });
+const confirmationSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema), attribution: attributionSchema.optional() });
 const manageRescheduleSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), reason: z.string().trim().max(500).optional() });
 const cancelSchema = z.object({ reason: z.string().trim().max(500).optional() });
 

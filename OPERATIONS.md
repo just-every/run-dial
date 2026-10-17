@@ -427,3 +427,33 @@ hosted management, stage/production installation or provider acceptance.
 Imported native bookings, identity markers and permanent erased-source/target guards are exported. Exact source captures, import plans, originals, provenance, before-images and staging are excluded because they can carry private links that cancel or reschedule source bookings and stale replay authority. The original installation retains resume and undo; restored native bookings keep their Imported mark and slot occupancy, without restoring import jobs or provider effects.
 
 Base authentication migration `0031_auth_domain_rules_step_up.sql` is additive: preserve existing migration bytes and back up before applying it. Native sessions and sign-in links remain valid. Archives retain durable domain rules and exclude session-bound step-up proofs; request a new proof after restore. Recover an interrupted upgrade from the prior backup with its matching revision, without resetting a populated installation.
+
+### Prefilled booking links and thank-you pages
+
+Append `name`, `email`, and `answer.<question key>` to a booking link. Repeat an
+answer parameter for a multiple-choice question. These are editable suggestions,
+not verified identity. The booking stores only submitted answers and the six
+bounded source fields `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`,
+`utm_content`, and `source`; each source value allows up to 500 characters.
+Source fields appear in the operator booking detail and follow the booking in
+portable exports and person erasure. Webhook, CRM and reporting handoff remain
+unimplemented.
+
+In an event editor, turn on **Redirect after booking**, enter an absolute HTTPS
+URL, and select each field to share with that page. Exclude a question from
+redirects to keep its answer out of this projection. The committed URL remains
+stable if an uncertain confirmation is retried after settings change. Receipt
+and manage-link reads, reschedules and cancellations do not trigger redirects;
+the confirmation email retains the private manage link. No booking capability
+or payment field is a redirect selector. The destination's own retention is
+controlled by its operator; Dial cannot erase data already received there.
+
+For an embed, supply the same bounded prefill/source parameters in the
+`/embed/dial.js` script's `src` query; keep the existing `data-dial-handle`,
+`data-dial-embed` and optional `data-dial-mode="modal"` attributes. The script
+copies only those supported fields into its frame. On committed confirmation,
+the parent receives a `dial:booked` window event whose `detail.bookingReference`
+is a non-capability reference. The bootstrap dispatches that event before
+navigating the parent to a configured thank-you URL. Receipt/manage reads do not
+emit this event. Listen with `window.addEventListener('dial:booked', handler)`;
+the event never contains a manage token, nonce, submitted identity or answers.

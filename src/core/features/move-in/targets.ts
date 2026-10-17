@@ -29,6 +29,14 @@ function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
   ? {...tables,event_types:tables.event_types.map(row=>{const source={...row};delete source.booking_horizon_mode;delete source.booking_start_date;delete source.booking_end_date;return source;})}:null;
  const eventVersions:NativeValue['tables'][]=[tables,...(eventTables?[eventTables]:[])];
  for(const candidate of [...eventVersions])if(candidate.event_types?.every(row=>row.duration_options_json===JSON.stringify([row.duration_minutes])))eventVersions.push({...candidate,event_types:candidate.event_types.map(row=>{const source={...row};delete source.duration_options_json;return source;})});
+ // Migration 0054's empty link context is absent from retained source snapshots.
+ // Try the prior shape only; the full custody hash below must prove the match.
+ for(const candidate of [...eventVersions]){
+  const defaults:Record<string,Record<string,unknown>>={event_types:{post_booking_redirect_json:null},event_questions:{private:0},bookings:{attribution_json:'{}',post_booking_redirect_url:null}};
+  const historical={...candidate};let changed=false;
+  for(const [table,columns]of Object.entries(defaults))if(candidate[table]?.every(row=>Object.entries(columns).every(([key,value])=>row[key]===value))){historical[table]=candidate[table].map(row=>{const source={...row};for(const key of Object.keys(columns))delete source[key];return source;});changed=true;}
+  if(changed)eventVersions.push(historical);
+ }
  for(const candidate of eventVersions){
   const historical=candidate.bookings?.some(row=>row.calendar_required===1)
    ? {...candidate,bookings:candidate.bookings.map(row=>{const source={...row};if(source.calendar_required===1)delete source.calendar_required;return source;})}:null;
@@ -46,12 +54,16 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
  if(table==='bookings'){
   const index=columns.indexOf('calendar_required');if(index!==-1)predicates.splice(index,1);
   predicates.push(`actual.calendar_required IS CASE WHEN json_type(wanted.value,'$.calendar_required') IS NULL THEN 1 ELSE json_extract(wanted.value,'$.calendar_required') END`);
+  if(!columns.includes('attribution_json'))predicates.push("actual.attribution_json IS '{}'");
+  if(!columns.includes('post_booking_redirect_url'))predicates.push('actual.post_booking_redirect_url IS NULL');
  }
  if(table==='event_types'){
   if(!columns.includes('duration_options_json'))predicates.push("actual.duration_options_json IS json_array(actual.duration_minutes)");
   if(!columns.includes('booking_horizon_mode'))predicates.push("actual.booking_horizon_mode IS 'calendar_days'");
   for(const key of ['booking_start_date','booking_end_date'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
+  if(!columns.includes('post_booking_redirect_json'))predicates.push('actual.post_booking_redirect_json IS NULL');
  }
+ if(table==='event_questions'&&!columns.includes('private'))predicates.push('actual.private IS 0');
  if(table==='host_profiles')for(const key of ['avatar_key','avatar_content_type'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
  return {sql:`(SELECT count(*) FROM ${table} WHERE ${where})=? AND NOT EXISTS(SELECT 1 FROM json_each(?) wanted WHERE NOT EXISTS(SELECT 1 FROM ${table} actual WHERE ${conjunction(predicates)}))`,params:[id,rows.length,JSON.stringify(rows)]};
 }

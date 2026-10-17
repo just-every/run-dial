@@ -23,12 +23,12 @@ export async function duplicateEvent(binding: D1Database, id: string): Promise<s
     INSERT INTO event_types (id, status, slug, title, description, duration_minutes, duration_options_json,
       color, location_type, location_label, location_value, listed, request_only, alternative_requests_enabled,
       slot_increment_minutes, minimum_notice_minutes, booking_horizon_days, booking_horizon_mode,
-      booking_start_date, booking_end_date, before_buffer_minutes, after_buffer_minutes, host_day_booking_limit,
+      booking_start_date, booking_end_date, before_buffer_minutes, after_buffer_minutes, host_day_booking_limit, post_booking_redirect_json,
       created_at, updated_at)
     SELECT ?, 'draft', ?, ?, description, duration_minutes, duration_options_json,
       color, location_type, location_label, location_value, listed, 0, alternative_requests_enabled,
       slot_increment_minutes, minimum_notice_minutes, booking_horizon_days, booking_horizon_mode,
-      booking_start_date, booking_end_date, before_buffer_minutes, after_buffer_minutes, host_day_booking_limit,
+      booking_start_date, booking_end_date, before_buffer_minutes, after_buffer_minutes, host_day_booking_limit, post_booking_redirect_json,
       ?, ? FROM event_types WHERE id = ? AND updated_at = ? RETURNING id
   `).bind(duplicateId, slug, title, timestamp, timestamp, id, source.updated_at)];
   const guard = "AND EXISTS (SELECT 1 FROM event_types WHERE id = ?)";
@@ -36,8 +36,8 @@ export async function duplicateEvent(binding: D1Database, id: string): Promise<s
   for (const child of children.results.filter(child => child.kind !== "window")) {
     const rowId = child.kind === "override" ? overrideIds.get(child.id)! : createId();
     if (child.kind === "question") statements.push(binding.prepare(`
-      INSERT INTO event_questions (id, event_type_id, public_key, position, kind, label, required, options_json, created_at, updated_at)
-      SELECT ?, ?, public_key, position, kind, label, required, options_json, ?, ?
+      INSERT INTO event_questions (id, event_type_id, public_key, position, kind, label, required, private, options_json, created_at, updated_at)
+      SELECT ?, ?, public_key, position, kind, label, required, private, options_json, ?, ?
       FROM event_questions WHERE id = ? AND event_type_id = ? ${guard}
     `).bind(rowId, duplicateId, timestamp, timestamp, child.id, id, duplicateId));
     if (child.kind === "recurring") statements.push(binding.prepare(`

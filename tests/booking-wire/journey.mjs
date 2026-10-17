@@ -1,3 +1,4 @@
+import { linkContextJourney } from "./link-context-journey.mjs";
 import { durationJourney } from "./duration-journey.mjs";
 import { recoveryJourney } from "./recovery-journey.mjs";
 import { deletionJourney } from "./deletion-journey.mjs";
@@ -212,6 +213,7 @@ checks.push("authoritative Google deletion sends exact invitee/operator cancella
 await recoveryJourney({ data, call, state, book, deliver, future, checks });
 await deletionJourney({ data, state, book, deliver, checks });
 await durationJourney({ data, call, state, deliver, future, checks });
+await linkContextJourney({ data, call, state, deliver, future, checks });
 await data("/wire/ambiguous", {});
 await book(12); await deliver(); snap = await state();
 assert.ok(snap.base_mail_dispatch.some(row => row.state === "uncertain"));

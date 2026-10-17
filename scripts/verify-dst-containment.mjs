@@ -9,8 +9,8 @@ await authenticate(fixture.operatorEmail);
 const profile = await data("/api/app/profile", undefined, 200, true);
 await data("/api/app/profile", { ...profile, timezone: "America/New_York" }, 200, true, "PATCH");
 const event = await data(`/api/app/event-types/${fixture.eventId}`, undefined, 200, true);
-const input = { ...event, durationMinutes: 120, slotIncrementMinutes: 15, bookingHorizonDays: 365, minimumNoticeMinutes: 0, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: [{ weekday: 0, startMinute: 90, endMinute: 210 }] };
-const update = async (patch) => { Object.assign(input, patch); await data(`/api/app/event-types/${fixture.eventId}`, input, 200, true, "PATCH"); };
+const input = { ...event, durationMinutes: 120, durationOptionsMinutes: [120], slotIncrementMinutes: 15, bookingHorizonDays: 365, minimumNoticeMinutes: 0, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: [{ weekday: 0, startMinute: 90, endMinute: 210 }] };
+const update = async (patch) => { Object.assign(input, patch, { durationOptionsMinutes: [patch.durationMinutes ?? input.durationMinutes] }); await data(`/api/app/event-types/${fixture.eventId}`, input, 200, true, "PATCH"); };
 const slots = async (week) => (await data(`/api/public/book/dial-host/intro/availability?week=${week}`)).slots.filter((slot) => slot.hostDate === week);
 const select = (startAt, expected) => call("/api/public/book/dial-host/intro/selection", { startAt, inviteeTimezone: "UTC" }, expected);
 const unchanged = async (before) => {

@@ -8,6 +8,7 @@ export function createSpaSurface(assets: Fetcher): SpaSurface {
       const asset = await assets.fetch(request);
       const headers = new Headers(asset.headers);
       headers.set("Cache-Control", "no-store");
+      if (/^\/(?:book|embed|manage)(?:\/|$)/u.test(new URL(request.url).pathname)) headers.set("Referrer-Policy", "no-referrer");
       if (options.blockFraming) {
         headers.set("Content-Security-Policy", "frame-ancestors 'none'");
         headers.set("X-Frame-Options", "DENY");

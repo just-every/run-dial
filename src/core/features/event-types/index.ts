@@ -10,5 +10,6 @@ export type {
   EventQuestionInput,
   EventTypeInput,
   EventTypeRecord,
+  PostBookingRedirect,
 } from "./repository";
 export type { PublicEventQuestion, PublicEventTypeRecord } from "./public";

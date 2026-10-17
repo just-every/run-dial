@@ -1,3 +1,4 @@
+import { redirectConfigIssue, type PostBookingRedirect } from "../redirect-policy.mjs";
 import { asc, eq, sql } from "drizzle-orm";
 import type { createDatabase } from "../../../platform/db/client";
 import { eventQuestions, eventTypes, recurringAvailabilityWindows } from "../../../platform/db/schema";
@@ -66,11 +67,13 @@ function eventRecord(record: typeof eventTypes.$inferSelect, questions: (typeof 
     beforeBufferMinutes: record.beforeBufferMinutes,
     afterBufferMinutes: record.afterBufferMinutes,
     hostDayBookingLimit: record.hostDayBookingLimit,
+    postBookingRedirect: parseRedirect(record.postBookingRedirectJson),
     questions: questions.map((question) => ({
       key: question.publicKey ?? `q_${question.id}`,
       kind: question.kind as EventQuestionKind,
       label: question.label,
       required: question.required,
+      private: question.private,
       options: parseQuestionOptions(question.optionsJson),
     })),
     availability: availability.map(({ weekday, startMinute, endMinute }) => ({ weekday, startMinute, endMinute })),
@@ -92,4 +95,11 @@ function parseQuestionOptions(value: string): EventQuestionOptionInput[] {
     }
     throw new Error("Persisted event question has invalid options");
   });
+}
+
+function parseRedirect(value: string | null): PostBookingRedirect | null {
+  if (value === null) return null;
+  const parsed: unknown = JSON.parse(value);
+  if (parsed === null || redirectConfigIssue(parsed)) throw new Error("Persisted postBookingRedirect is invalid");
+  return parsed as PostBookingRedirect;
 }

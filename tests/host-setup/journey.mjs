@@ -12,7 +12,7 @@ import { localSignIn } from "./local-signin.mjs";
 const safeRequestPath = url => new URL(url).pathname.replace(/(\/(?:manage|review|alternative-time)\/)[^/]+/g, "$1[redacted]");
 
 export async function hostJourneys(origin, scenario) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   let scans = 0;
   try {
     {
@@ -81,13 +81,13 @@ export async function hostJourneys(origin, scenario) {
         await page.goto(origin + "/setup"); await expect(page.locator('[data-step="mail"]')).toContainText("Done"); if (requestsOnly) { await expect(page.locator('[data-step="calendar"]')).toContainText("Optional"); await overviewHealth(page, origin, { calendar: "disconnected", mail: "healthy" }); await scan("mail-without-calendar"); }
         step = "event editor"; await page.getByRole("link", { name: "New event type", exact: true }).first().click();
         const more = page.locator("details").filter({ has: page.locator("summary", { hasText: "More options" }) }); await expect(more).not.toHaveAttribute("open");
-        await page.getByLabel("Event name", { exact: true }).fill("First event"); await page.getByLabel("Duration (minutes)", { exact: true }).fill("30");
+        await page.getByLabel("Event name", { exact: true }).fill("First event"); await page.getByLabel("Duration 1 (minutes)", { exact: true }).fill("30");
         assert.equal(await page.getByLabel("Event name", { exact: true }).evaluate(node => Boolean(node.compareDocumentPosition(globalThis.document.querySelector('input[type="number"]')) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING)), true);
         await page.getByRole("combobox", { name: "Location kind", exact: true }).selectOption("phone"); await page.getByLabel("Private link, number, or address", { exact: true }).fill("+1 202 555 0100"); await page.getByRole("button", { name: "Save changes", exact: true }).click();
         assert.equal(await page.getByLabel("Description", { exact: true }).evaluate(node => node.validity.valueMissing), true);
         assert.deepEqual(await (await page.request.get(origin + "/api/app/event-types")).json(), [], "invalid new event creates nothing");
         await page.getByLabel("Description", { exact: true }).fill("A useful first meeting.");
-        assert.equal(await page.getByLabel("Duration (minutes)", { exact: true }).evaluate(node => Boolean(node.compareDocumentPosition(globalThis.document.querySelector("select")) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING)), true, "duration precedes location");
+        assert.equal(await page.getByLabel("Duration 1 (minutes)", { exact: true }).evaluate(node => Boolean(node.compareDocumentPosition(globalThis.document.querySelector("select")) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING)), true, "duration precedes location");
         await page.getByRole("combobox", { name: "Question 1 type", exact: true }).selectOption("text");
         await page.getByRole("textbox", { name: "Question 1 label", exact: true }).fill("Meeting goals");
         await page.getByRole("checkbox", { name: "Question 1 is required", exact: true }).uncheck();

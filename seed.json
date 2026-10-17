@@ -8,7 +8,11 @@
     "id": "scheduling",
     "record": "booking against an availability rule"
   },
-  "replaces": ["Calendly", "Acuity Scheduling", "SavvyCal"],
+  "replaces": [
+    "Calendly",
+    "Acuity Scheduling",
+    "SavvyCal"
+  ],
   "description": "An invitee-first, self-hosted scheduler for one business or independent host.",
   "capabilities": [
     {
@@ -19,7 +23,9 @@
     },
     {
       "id": "public-documentation",
-      "clauses": ["DOCS-001"]
+      "clauses": [
+        "DOCS-001"
+      ]
     },
     {
       "id": "access-and-authorisation",
@@ -415,6 +421,17 @@
       "adapters": [
         "mail.sender.v1"
       ]
+    },
+    {
+      "id": "operator-thank-you-page",
+      "required": false,
+      "why": "After a committed booking, an event may navigate to the operator-configured HTTPS thank-you page. Only fields explicitly selected by the operator are appended; private answers and booking capabilities are excluded. This is browser navigation, not a server request or telemetry.",
+      "data": [
+        "operator-selected booking fields",
+        "operator-selected non-private answers",
+        "operator-selected UTM and source values"
+      ],
+      "adapters": []
     }
   ],
   "env": [
@@ -650,10 +667,10 @@
     "status": "estimated",
     "estimatedAt": "2026-10-14",
     "currency": "USD",
-    "basis": "One host and operator, 1,000 unchanged bookings per month, four to six transactional emails per booking including the default reminders when both offsets apply (4,000–6,000 sends/month), with Google Calendar and Cloudflare usage inside the stated allowances.",
+    "basis": "One host and operator, 1,000 unchanged bookings per month, four to six transactional emails per booking including the default reminders when both offsets apply (4,000\u20136,000 sends/month), with Google Calendar and Cloudflare usage inside the stated allowances.",
     "lowMonthly": 19.95,
     "typicalMonthly": 24.95,
-    "notes": "Twilio SendGrid Essentials 50k was $19.95/month on 2026-10-14; 4,000–6,000 sends use 8–12% of its 50,000 monthly allowance. The low estimate assumes the full Cloudflare runtime fits available free allowances. The typical estimate adds $5/month for Cloudflare Workers Paid, conditional on all metered use staying within included allowances; an owner already paying for that Cloudflare account may incur no additional $5 for Dial. Google Calendar standard use and first-tier R2 usage are assumed within their published free allowances. Estimates exclude overages, domains, taxes, optional tools and paid Google Workspace. The SendGrid trial is limited to 60 days and 100 emails/day, so it is not recurring free service. Extra operators, sign-ins, requests, changes, late Meet links, retries and alerts increase mail volume.",
+    "notes": "Twilio SendGrid Essentials 50k was $19.95/month on 2026-10-14; 4,000\u20136,000 sends use 8\u201312% of its 50,000 monthly allowance. The low estimate assumes the full Cloudflare runtime fits available free allowances. The typical estimate adds $5/month for Cloudflare Workers Paid, conditional on all metered use staying within included allowances; an owner already paying for that Cloudflare account may incur no additional $5 for Dial. Google Calendar standard use and first-tier R2 usage are assumed within their published free allowances. Estimates exclude overages, domains, taxes, optional tools and paid Google Workspace. The SendGrid trial is limited to 60 days and 100 emails/day, so it is not recurring free service. Extra operators, sign-ins, requests, changes, late Meet links, retries and alerts increase mail volume.",
     "sources": [
       "https://www.twilio.com/en-us/products/email-api/pricing",
       "https://developers.cloudflare.com/workers/platform/pricing/",

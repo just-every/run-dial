@@ -207,3 +207,10 @@ Additional native proof: late observed custom annotations refuse stale undo with
 The anonymous person receipt proof recorded three bookings and one request: successful local resume 318 ms, calendar completion 1444 ms after that resume, and 4990 ms from the first attempt including deliberate failure injections. The scan covered 114 readable tables (1898 rows after local deletion, 1900 after calendar cleanup), the one retained shared-host R2 object and three known subject hashes. Native expiry rollback compared 112 tables and 1624 rows. These are local test-adapter measurements, not live-provider or deployment claims.
 
 0036 overlap repair proof: the existing tagged native person journey confirms an ordinary operator through the actual invitation link, then erases that operator's one confirmed booking and one request with one email preview and one confirmation. It repeats the journey for the acting protected setup owner. Both leave zero matching records, retain native accounts, tokens, sessions and setup rows byte-for-byte, return anonymous retained-identity receipts, remove matching audit actor references, retire invitee capabilities and exclude private invitee canaries from readable application storage, R2 and native exports. Shared host/avatar data survives. Separate operator removal still holds before invitee cleanup; self/setup/last-owner protection and subsequent ordinary account removal are verified. Populated native 0035→0036 preserves all prior rows/columns and avatar bytes across 114 readable tables. This closes the aggregate-record overlap gap; physical SQLite sanitization, external records and deployed acceptance remain outside this proof.
+
+Booking link attribution and the committed post-booking redirect URL are columns
+on the booking root (`0054_booking_link_context.sql`), so the existing fenced
+booking deletion removes them and portability includes them. Prefill suggestions
+are not separate records. An operator-selected HTTPS thank-you destination may
+receive selected submitted fields by browser navigation; its external copies,
+browser history and logs are outside Dial's native deletion boundary.

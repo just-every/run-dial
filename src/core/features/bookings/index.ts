@@ -7,3 +7,5 @@ export type { CalendarReconciliationChange } from "./calendar-reconciliation";
 export { validateInvitee } from "./types";
 export type { BookingAttendance, BookingCalendarConflict, BookingConfirmation, BookingDelivery, BookingHistoryEntry, BookingNonce, BookingRecord, BookingSelection, InviteeAnswers } from "./types";
 export { foldBookingSearch } from "./search/case-fold.mjs";
+
+export { attributionSchema } from "./link-context";

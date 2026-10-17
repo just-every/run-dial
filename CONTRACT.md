@@ -272,8 +272,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 56 | 20 | 0 | 76 |
-| Target and push further | 1 | 18 | 75 | 94 |
-| All | 57 | 38 | 75 | 170 |
+| Target and push further | 1 | 20 | 73 | 94 |
+| All | 57 | 40 | 73 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -313,7 +313,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `EVENT-011` | Invitee-selectable durations | target | partial | `tests/booking-wire/duration-journey.mjs`, `tests/booking-wire/occurrence-duration-journey.mjs`, `tests/move-in-runtime.test.mjs`; `evidence/contract/2026-10-17/EVENT-011/` | One to four lengths, defaults, Calendly saved-file import, availability, booking, rescheduling, calendar, ICS, notices and reminders use the selected length. Duration-specific pricing, teams, webhooks and reports remain absent. |
 | `LINK-001` | Single-use links and one-off meetings | target | missing |  | No implementing code yet. |
 | `LINK-002` | Host-offered specific times | target | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
-| `LINK-003` | Prefilled and tracked links | target | missing |  | No implementing code yet. |
+| `LINK-003` | Prefilled and tracked links | target | partial | `tests/booking-wire/link-context-journey.mjs`, `src/core/features/public-booking/ui/link-context.ts`; `evidence/contract/2026-10-17/LINK-003/` | Editable name/email/answer suggestions work in links and embeds; bounded UTM/source values persist on the booking and appear in operator detail, export and erasure. Webhooks, CRM handoff and reports remain absent. |
 | `POLL-001` | Meeting polls | target | missing |  | No implementing code yet. |
 | `BRAND-001` | Branding and custom domain | target | partial | `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `LOCALE-001` | Languages and time formats | target | missing |  | No implementing code yet. |
@@ -365,7 +365,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `BOOK-010` | History | published | done | `tests/booking-wire.test.mjs`, `src/core/features/bookings/service.ts` |  |
 | `BOOK-011` | Attendance | published | partial | `tests/booking-axe/keyboard-bookings.mjs`, `tests/person-erasure.test.mjs` | Single-host case; host scope missing. |
 | `BOOK-012` | Operator-created booking | published | partial | `tests/operator-creation-recovery.test.mjs` | Single-host case; host scope missing. |
-| `BOOK-013` | Redirect after booking | target | missing |  | No implementing code yet. |
+| `BOOK-013` | Redirect after booking | target | partial | `tests/booking-wire/link-context-journey.mjs`, `src/core/features/bookings/link-context.ts`, `src/core/features/embeds/embed-bootstrap.ts`; `evidence/contract/2026-10-17/BOOK-013/` | Per-event HTTPS redirects project only selected committed fields, exclude private answers/capabilities, preserve email manage links and confirmation replay, and navigate the embed parent after dial:booked. Per-routing-route configuration and popup embeds remain absent; thank-you navigation is proven with a browser network fixture, not a hosted destination. |
 | `BOOK-014` | Ask the invitee to pick a new time | target | missing |  | No implementing code yet. |
 | `BOOK-015` | Per-event-type invitee change cut-off | target | missing |  | No implementing code yet. |
 | `CAL-001` | Calendar connections | published | partial | `src/core/features/calendar-connection/service.ts`, `src/core/platform/calendar/google.ts`, `tests/lifecycle-journey.test.mjs`, `tests/providers-d1.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |

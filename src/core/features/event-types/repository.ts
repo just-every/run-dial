@@ -16,6 +16,9 @@ import {
 import { createId, nowIso } from "../../shared/ids";
 import { toPublicEventType, type PublicEventTypeRecord } from "./public";
 
+import type { PostBookingRedirect } from "./redirect-policy.mjs";
+export type { PostBookingRedirect } from "./redirect-policy.mjs";
+
 export type EventStatus = "draft" | "published" | "disabled";
 export type EventLocationType = "google_meet" | "fixed_link" | "phone" | "in_person";
 export type EventQuestionKind = "text" | "textarea" | "phone" | "dropdown" | "single_choice" | "multiple_choice" | "checkbox";
@@ -26,6 +29,7 @@ export type EventQuestionInput = {
   kind: EventQuestionKind;
   label: string;
   required: boolean;
+  private?: boolean;
   options: EventQuestionOptionInput[];
 };
 export type AvailabilityWindowInput = { weekday: number; startMinute: number; endMinute: number };
@@ -62,6 +66,7 @@ export type EventTypeInput = {
   beforeBufferMinutes: number;
   afterBufferMinutes: number;
   hostDayBookingLimit: number | null;
+  postBookingRedirect?: PostBookingRedirect | null;
   questions: EventQuestionInput[];
   availability: AvailabilityWindowInput[];
 };
@@ -229,6 +234,7 @@ function childWrites(db: ReturnType<typeof createDatabase>, id: string, input: E
         kind: question.kind,
         label: question.label,
         required: question.required,
+        private: question.private ?? false,
         optionsJson: JSON.stringify(question.options),
         createdAt: timestamp,
         updatedAt: timestamp,
@@ -270,5 +276,6 @@ function eventColumns(input: EventTypeInput) {
     beforeBufferMinutes: input.beforeBufferMinutes,
     afterBufferMinutes: input.afterBufferMinutes,
     hostDayBookingLimit: input.hostDayBookingLimit,
+    postBookingRedirectJson: input.postBookingRedirect ? JSON.stringify(input.postBookingRedirect) : null,
   };
 }

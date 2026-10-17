@@ -1,3 +1,4 @@
+import { postBookingRedirectSchema, validateEventRedirect } from "./redirect-validation";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
@@ -14,6 +15,7 @@ const questionSchema = z
     kind: z.enum(["text", "textarea", "phone", "dropdown", "single_choice", "multiple_choice", "checkbox"]),
     label: z.string().min(1).max(500),
     required: z.boolean(),
+    private: z.boolean().default(false),
     options: z.array(optionSchema).max(50),
   })
   .superRefine((question, context) => {
@@ -56,16 +58,17 @@ const eventTypeInputSchema = z
     beforeBufferMinutes: z.number().int().min(0).max(120),
     afterBufferMinutes: z.number().int().min(0).max(120),
     hostDayBookingLimit: z.number().int().positive().nullable(),
+    postBookingRedirect: postBookingRedirectSchema,
     questions: z.array(questionSchema).max(25).superRefine((questions, context) => {
       const keys = questions.flatMap((question) => question.key ? [question.key] : []);
       if (new Set(keys).size !== keys.length) context.addIssue({ code: "custom", message: "Question keys must be unique." });
     }),
     availability: recurringAvailabilitySchema,
   })
-  .superRefine(requirePrivateLocation);
+  .superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
 
-const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation);
-const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions) }).superRefine(requirePrivateLocation);
+const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
+const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions) }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
 
 function requirePrivateLocation(input: { durationMinutes: number; durationOptionsMinutes?: number[]; locationType: string; locationValue: string; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {
   if (input.durationOptionsMinutes && (new Set(input.durationOptionsMinutes).size !== input.durationOptionsMinutes.length || !input.durationOptionsMinutes.includes(input.durationMinutes))) context.addIssue({ code: "custom", path: ["durationOptionsMinutes"], message: "Choose distinct durations and include the default duration." });

@@ -1,4 +1,5 @@
 import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
+import { redirectConfigIssue, redirectUrlIssue } from '../../src/core/features/event-types/redirect-policy.mjs';
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
@@ -49,6 +50,16 @@ export function validateRows(archive, model) {
       if (table.name === 'event_types') {
         const options = JSON.parse(row.duration_options_json);
         if (!Array.isArray(options) || options.length < 1 || options.length > 4 || options.some(value => !Number.isInteger(value) || value < 5 || value > 480) || new Set(options).size !== options.length || !options.includes(row.duration_minutes)) throw new Error('archive-invalid-event-durations');
+        if (row.post_booking_redirect_json !== null) {
+          const redirect = JSON.parse(row.post_booking_redirect_json);
+          if (!redirect || redirectConfigIssue(redirect)) throw new Error('archive-invalid-post-booking-redirect');
+        }
+      }
+      if (table.name === 'event_questions' && ![0, 1].includes(row.private)) throw new Error('archive-invalid-question-privacy');
+      if (table.name === 'bookings') {
+        const attribution = JSON.parse(row.attribution_json);
+        if (!attribution || typeof attribution !== 'object' || Array.isArray(attribution) || Object.entries(attribution).some(([key, value]) => !['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'source'].includes(key) || typeof value !== 'string' || value.length > 500)) throw new Error('archive-invalid-booking-attribution');
+        if (row.post_booking_redirect_url !== null && redirectUrlIssue(row.post_booking_redirect_url)) throw new Error('archive-invalid-post-booking-redirect');
       }
       for (const [column, value] of Object.entries(row)) if (column.endsWith('_json')) {
         let parsed; try { parsed = JSON.parse(value); } catch { throw new Error('archive-invalid-json-field'); }

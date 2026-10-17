@@ -2,6 +2,8 @@ import type { BookingCalendarConflict, BookingDelivery, BookingHistoryEntry, Boo
 
 export type OperatorBookingRow = {
   imported: number;
+  attributionJson: string;
+  postBookingRedirectUrl: string | null;
   id: string;
   eventTypeId: string | null;
   eventSlug: string;
@@ -87,6 +89,7 @@ export async function hydrateOperatorBookings(binding: D1Database, rows: Operato
 function toBookingRecord(row: OperatorBookingRow, data: BookingHydrationData): BookingRecord {
   // Event edits preserve the creation snapshot; the current occurrence owns its verified duration.
   return {
+    attribution: JSON.parse(row.attributionJson), postBookingRedirectUrl: row.postBookingRedirectUrl,
     imported: row.imported, id: row.id, eventTypeId: row.eventTypeId, eventSlug: row.eventSlug, eventTitle: row.eventTitle, durationMinutes: (Date.parse(row.occurrenceEndAt) - Date.parse(row.occurrenceStartAt)) / 60_000, locationType: row.locationType, locationLabel: row.locationLabel, locationValue: row.locationValue,
     inviteeName: row.inviteeName, inviteeEmail: row.inviteeEmail, hostTimezone: row.hostTimezone, inviteeTimezone: row.inviteeTimezone, state: row.state, icalUid: row.icalUid, calendarState: row.calendarState, meetingState: row.meetingState, meetingUrl: row.meetingUrl, calendarProviderEventId: row.calendarProviderEventId, calendarProviderUpdatedAt: row.calendarProviderUpdatedAt,
     createdAt: row.createdAt, updatedAt: row.updatedAt, cancelledAt: row.cancelledAt, cancelledReason: row.cancelledReason,

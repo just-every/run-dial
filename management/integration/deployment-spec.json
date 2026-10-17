@@ -336,6 +336,12 @@
       "name": "0053_event_duration_options.sql",
       "sha256": "c77ea4c00d463acc31a94bf525fbe98cc912c0ac2c0a0d535ee709ac872d02b6",
       "sql": "ALTER TABLE event_types ADD COLUMN duration_options_json TEXT NOT NULL DEFAULT '[]'\n  CHECK (json_valid(duration_options_json) AND json_type(duration_options_json) = 'array');\nUPDATE event_types SET duration_options_json = json_array(duration_minutes);\n-- Existing import plans may omit the additive column; keep their saved duration.\nCREATE TRIGGER event_duration_options_insert AFTER INSERT ON event_types\nWHEN NEW.duration_options_json = '[]'\nBEGIN UPDATE event_types SET duration_options_json = json_array(NEW.duration_minutes) WHERE id = NEW.id; END;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0054_booking_link_context.sql",
+      "sha256": "ca04428200cb27c519c7fce715c4c061e5d72cc852202e33dc437f279f2047be",
+      "sql": "ALTER TABLE event_types ADD COLUMN post_booking_redirect_json TEXT DEFAULT NULL\n  CHECK (post_booking_redirect_json IS NULL OR (json_valid(post_booking_redirect_json) AND json_type(post_booking_redirect_json) = 'object'));\nALTER TABLE event_questions ADD COLUMN private INTEGER NOT NULL DEFAULT 0 CHECK (private IN (0, 1));\nALTER TABLE bookings ADD COLUMN attribution_json TEXT NOT NULL DEFAULT '{}'\n  CHECK (json_valid(attribution_json) AND json_type(attribution_json) = 'object');\nALTER TABLE bookings ADD COLUMN post_booking_redirect_url TEXT DEFAULT NULL;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

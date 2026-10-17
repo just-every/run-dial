@@ -1,3 +1,4 @@
+import { bookingRedirect, cleanAttribution, type BookingAttribution } from "./link-context";
 import { resolveEventDuration } from "../../shared/event-duration";
 import { intervalDuration } from "./duration";
 import { createOperatorBooking, recoverOperatorBooking, type OperatorBookingCreateResult } from "./operator-creation";
@@ -96,14 +97,15 @@ export class BookingsService {
     };
   }
 
-  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; durationMinutes?: number }): Promise<BookingConfirmationResult> {
+  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; durationMinutes?: number; attribution?: BookingAttribution }): Promise<BookingConfirmationResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
     const now = nowIso();
     if (!nonce) return { kind: "invalid_nonce" };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
-    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }) });
+    const attribution = cleanAttribution(input.attribution);
+    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }) });
     const profile = await this.profiles.getPublicProfile(input.handle);
     if (!profile) return { kind: "invalid_nonce" };
     const event = await this.eventTypes.getEventType(nonce.eventTypeId);
@@ -112,7 +114,7 @@ export class BookingsService {
       if (nonce.payloadHash !== payloadHash) return { kind: "payload_mismatch" };
       const booking = await this.repository.getByConsumedNonce(nonce);
       if (!booking) return { kind: "invalid_nonce" };
-      return { kind: "replayed", booking: this.toConfirmation(booking, profile, await this.managedTokenFromNonce(input.nonce)) };
+      return { kind: "replayed", booking: this.toInitialConfirmation(booking, profile, await this.managedTokenFromNonce(input.nonce)) };
     }
     if (nonce.purpose !== "confirm" || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" };
     if (event.status !== "published") return { kind: "slot_invalid" };
@@ -143,6 +145,8 @@ export class BookingsService {
     const expiresAt = new Date(Date.parse(selection.slot.startAt) + manageTokenLifetimeMs).toISOString();
     const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired });
     const claim = await this.repository.claim({
+      attribution,
+      postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution }),
       bookingId,
       occurrenceId,
       nonceId: nonce.id,
@@ -166,7 +170,7 @@ export class BookingsService {
       return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: claim };
     }
     const booking = await this.repository.getById(bookingId);
-    return booking ? { kind: "created", booking: this.toConfirmation(booking, profile, manageToken) } : { kind: "slot_taken" };
+    return booking ? { kind: "created", booking: this.toInitialConfirmation(booking, profile, manageToken) } : { kind: "slot_taken" };
   }
 
   async getManageBooking(token: string) {
@@ -175,9 +179,7 @@ export class BookingsService {
     if (result.status !== "active") return { kind: "expired" as const };
     const profile = await this.profiles.getProfile();
     if (!profile) return { kind: "not_found" as const };
-    const event = result.booking.eventTypeId ? await this.eventTypes.getEventType(result.booking.eventTypeId) : undefined;
-    const confirmation = this.toConfirmation(result.booking, profile, token);
-    return { kind: "found" as const, booking: { ...confirmation, event: { ...confirmation.event, durationOptionsMinutes: event?.durationOptionsMinutes } } };
+    return { kind: "found" as const, booking: this.toConfirmation(result.booking, profile, token) };
   }
 
   async getRescheduleAvailability(token: string, week?: string, inviteeTimezone?: string, durationMinutes?: number) {
@@ -188,7 +190,8 @@ export class BookingsService {
     if (!access.booking.eventTypeId) return { kind: "not_found" as const };
     const availability = await this.availability.listRescheduleWeek(access.booking.eventTypeId, access.booking.id, week, inviteeTimezone, new Date(), durationMinutes, access.booking.durationMinutes);
     if (availability && "kind" in availability) return availability;
-    return availability ? { kind: "found" as const, availability } : { kind: "not_found" as const };
+    const event = await this.eventTypes.getEventType(access.booking.eventTypeId);
+    return availability && event ? { kind: "found" as const, availability: { ...availability, durationOptionsMinutes: event.durationOptionsMinutes } } : { kind: "not_found" as const };
   }
 
   /** A receipt URL is bound to the public host and event route, not just its capability. */
@@ -426,7 +429,11 @@ export class BookingsService {
     const consumed = await this.repository.getNonce(nonceHash);
     if (!consumed?.consumedAt || consumed.payloadHash !== payloadHash) return undefined;
     const stored = await this.repository.getByConsumedNonce(consumed);
-    return stored ? { kind: "replayed" as const, booking: this.toConfirmation(stored, profile, await this.managedTokenFromNonce(nonce)) } : undefined;
+    return stored ? { kind: "replayed" as const, booking: this.toInitialConfirmation(stored, profile, await this.managedTokenFromNonce(nonce)) } : undefined;
+  }
+
+  private toInitialConfirmation(booking: BookingRecord, profile: ProfileRecord, token: string): BookingConfirmation {
+    return { ...this.toConfirmation(booking, profile, token), bookingReference: booking.id, ...(booking.postBookingRedirectUrl ? { postBookingRedirectUrl: booking.postBookingRedirectUrl } : {}) };
   }
 
   private toConfirmation(booking: BookingRecord, profile: ProfileRecord, manageToken: string): BookingConfirmation {
@@ -434,6 +441,7 @@ export class BookingsService {
     const locationState = locationValue ? "ready" as const : "pending" as const;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     return {
+      bookingReference: booking.id,
       event: { eventTitle: booking.eventTitle, durationMinutes: booking.durationMinutes },
       host: { name: profile.name, timezone: booking.hostTimezone, avatarKey: profile.avatarKey },
       occurrence: { startAt: booking.occurrence.startAt, endAt: booking.occurrence.endAt },
@@ -524,7 +532,7 @@ function isIsoInstant(value: string) {
   return Number.isFinite(Date.parse(value)) && value.endsWith("Z");
 }
 
-async function hashPayload(payload: { startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; durationMinutes?: number }) {
+async function hashPayload(payload: { startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; durationMinutes?: number; attribution?: BookingAttribution }) {
   const source = new TextEncoder().encode(stableJson(payload));
   const digest = await crypto.subtle.digest("SHA-256", source);
   return btoa(String.fromCharCode(...new Uint8Array(digest))).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");

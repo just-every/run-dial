@@ -74,6 +74,7 @@ export const eventTypes = sqliteTable("event_types", {
   beforeBufferMinutes: integer("before_buffer_minutes").notNull(),
   afterBufferMinutes: integer("after_buffer_minutes").notNull(),
   hostDayBookingLimit: integer("host_day_booking_limit"),
+  postBookingRedirectJson: text("post_booking_redirect_json"),
   ...timestamps,
 });
 
@@ -85,7 +86,40 @@ export const eventQuestions = sqliteTable("event_questions", {
   kind: text("kind", { enum: ["text", "textarea", "phone", "dropdown", "single_choice", "multiple_choice", "checkbox"] }).notNull(),
   label: text("label").notNull(),
   required: integer("required", { mode: "boolean" }).notNull(),
+  private: integer("private", { mode: "boolean" }).notNull().default(false),
   optionsJson: text("options_json").notNull(),
+  ...timestamps,
+});
+
+export const bookings = sqliteTable("bookings", {
+  id: text("id").primaryKey(),
+  eventTypeId: text("event_type_id"),
+  eventSlug: text("event_slug").notNull(),
+  eventTitle: text("event_title").notNull(),
+  durationMinutes: integer("duration_minutes").notNull(),
+  locationType: text("location_type").notNull(),
+  locationLabel: text("location_label").notNull(),
+  locationValue: text("location_value").notNull(),
+  inviteeName: text("invitee_name").notNull(),
+  inviteeEmail: text("invitee_email").notNull(),
+  inviteeNameFolded: text("invitee_name_folded").notNull().default(""),
+  inviteeEmailFolded: text("invitee_email_folded").notNull().default(""),
+  hostTimezone: text("host_timezone").notNull(),
+  inviteeTimezone: text("invitee_timezone").notNull(),
+  state: text("state", { enum: ["confirmed", "cancelled", "rescheduled"] }).notNull(),
+  icalUid: text("ical_uid").notNull().unique(),
+  calendarState: text("calendar_state", { enum: ["pending", "succeeded", "failed"] }).notNull(),
+  calendarRequired: integer("calendar_required", { mode: "boolean" }).notNull().default(true),
+  calendarProviderEventId: text("calendar_provider_event_id"),
+  calendarProviderUpdatedAt: text("calendar_provider_updated_at"),
+  meetingState: text("meeting_state", { enum: ["pending", "succeeded", "failed", "not_required"] }).notNull(),
+  meetingUrl: text("meeting_url"),
+  currentOccurrenceId: text("current_occurrence_id"),
+  imported: integer("imported", { mode: "boolean" }).notNull().default(false),
+  attributionJson: text("attribution_json").notNull().default("{}"),
+  postBookingRedirectUrl: text("post_booking_redirect_url"),
+  cancelledAt: text("cancelled_at"),
+  cancelledReason: text("cancelled_reason"),
   ...timestamps,
 });
 

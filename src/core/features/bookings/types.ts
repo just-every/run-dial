@@ -1,3 +1,4 @@
+import type { BookingAttribution } from "./link-context";
 import type { EventQuestionInput, EventTypeRecord } from "../event-types";
 import type { MailAttachment } from "../../platform/mail";
 import type { BookingCancellationTemplate } from "../delivery";
@@ -57,6 +58,8 @@ export type BookingCalendarConflict = {
 };
 export type BookingRecord = {
   imported?: number;
+  attribution: BookingAttribution;
+  postBookingRedirectUrl: string | null;
   id: string;
   eventTypeId: string | null;
   eventSlug: string;
@@ -92,6 +95,8 @@ export type BookingSelection = { startAt: string; endAt: string; inviteeTimezone
 export type BookingNonce = { nonce: string; expiresAt: string; selection: BookingSelection };
 export type BookingActor = { type: "invitee" } | { type: "operator"; operatorId: string } | { type: "calendar_provider" };
 export type BookingConfirmation = {
+  postBookingRedirectUrl?: string;
+  bookingReference?: string;
   event: Pick<BookingRecord, "eventTitle" | "durationMinutes">;
   host: { name: string; timezone: string; avatarKey?: string | null };
   occurrence: Pick<BookingOccurrence, "startAt" | "endAt">;
@@ -118,6 +123,8 @@ export type BookingEmail = {
 };
 
 export type BookingClaim = {
+  attribution?: BookingAttribution;
+  postBookingRedirectUrl?: string | null;
   bookingId: string;
   occurrenceId: string;
   nonceId: string;

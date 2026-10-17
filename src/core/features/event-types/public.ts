@@ -1,6 +1,6 @@
 import type { EventQuestionInput, EventTypeRecord } from "./repository";
 
-export type PublicEventQuestion = Required<Pick<EventQuestionInput, "key">> & Omit<EventQuestionInput, "key">;
+export type PublicEventQuestion = Required<Pick<EventQuestionInput, "key">> & Omit<EventQuestionInput, "key" | "private">;
 
 export type PublicEventTypeRecord = Pick<
   EventTypeRecord,
@@ -25,7 +25,7 @@ export function toPublicEventType(eventType: EventTypeRecord): PublicEventTypeRe
     alternativeRequestsEnabled: eventType.alternativeRequestsEnabled,
     questions: eventType.questions.map((question) => {
       if (!question.key) throw new Error("Persisted event question is missing its public key");
-      return { ...question, key: question.key };
+      return { key: question.key, kind: question.kind, label: question.label, required: question.required, options: question.options };
     }),
   };
 }

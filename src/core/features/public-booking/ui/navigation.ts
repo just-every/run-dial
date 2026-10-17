@@ -1,8 +1,11 @@
+import { appendLinkContext } from "./link-context";
+
 /** Embedded navigation retains the explicitly supplied parent without reading browser state during SSR. */
 export function bookingPath(handle: string, slug: string, suffix: "" | "/details" | "/confirmed" | "/request", embedded: boolean, params: Record<string, string> = {}, currentSearch = "") {
   const search = new URLSearchParams(params);
   const current = new URLSearchParams(currentSearch);
   if (suffix !== "/confirmed") {
+    appendLinkContext(search, currentSearch);
     for (const key of ["week", "day", "timezone"]) {
       const value = current.get(key);
       if (value && !search.has(key)) search.set(key, value);

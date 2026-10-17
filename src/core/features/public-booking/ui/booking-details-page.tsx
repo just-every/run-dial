@@ -16,7 +16,9 @@ import { detailsErrors, questionErrorKey } from "./details-validation";
 import { Question } from "./public-question";
 import { forgetRecoveryDraft, readRecoveryDraft, rememberRecoveryDraft } from "./booking-recovery-draft";
 import { dateInZone } from "./day-picker-model";
-import type { Confirmation, PublicEventPayload } from "./types";
+import { prefilledAnswers, readLinkContext } from "./link-context";
+import { completeBooking, type CommittedConfirmation } from "./booking-completion";
+import type { PublicEventPayload } from "./types";
 import type { BookingDetailsCapability, PublicSelection } from "./selection-types";
 
 export function BookingDetailsPage({ handle, slug, capability, embedded = false }: { handle: string; slug: string; capability: BookingDetailsCapability; embedded?: boolean }) {
@@ -29,12 +31,14 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
   const search = useRouterState({ select: (state) => state.location.searchStr });
   const { nonce, startAt, inviteeTimezone } = capability;
   const initial = seedSelection(useDocumentData<unknown>(), handle, slug, capability);
+  const [linkContext] = useState(() => readLinkContext(search));
+  const initializedQuestions = useRef(Boolean(initial));
   const [selection, setSelection] = useState<PublicSelection | undefined>(initial);
   const [data, setData] = useState<PublicEventPayload | undefined>(initial ? { profile: initial.host, eventType: initial.event } : undefined);
   const [missing, setMissing] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>(() => initial ? prefilledAnswers(initial.event.questions, linkContext) : {});
+  const [name, setName] = useState(linkContext.name ?? "");
+  const [email, setEmail] = useState(linkContext.email ?? "");
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const [selectionError, setSelectionError] = useState("");
@@ -56,13 +60,15 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
       if (!current) { setSelectionError("Your selected time could not be loaded. Please retry."); return; }
       rememberSelection(handle, slug, current);
       setMissing(false); setSelection(current); setData({ profile: current.host, eventType: current.event });
-      setAnswers((previous) => retainConfiguredAnswers(current.event.questions, previous));
+      const initialize = !initializedQuestions.current;
+      initializedQuestions.current = true;
+      setAnswers((previous) => initialize ? prefilledAnswers(current.event.questions, linkContext) : retainConfiguredAnswers(current.event.questions, previous));
     } catch { if (currentRead() && !attempt.current.pending) setSelectionError("Your selected time could not be refreshed. Your details are kept; reload it to retry."); }
-  }, [handle, inviteeTimezone, nonce, slug, startAt]);
+  }, [handle, inviteeTimezone, nonce, slug, startAt, linkContext]);
   useEffect(() => {
     const reads = order.current, writes = submissions.current;
     const draft = readRecoveryDraft(handle, slug);
-    if (draft) { setName(draft.name); setEmail(draft.email); setAnswers(draft.answers); }
+    if (draft) { initializedQuestions.current = true; setName(draft.name); setEmail(draft.email); setAnswers(initial ? retainConfiguredAnswers(initial.event.questions, draft.answers) : draft.answers); }
     void refreshSelection();
     return () => { reads.invalidate(); writes.invalidate(); };
   }, [handle, slug, refreshSelection]);
@@ -79,7 +85,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
     }
     submitting.current = true; order.current.invalidate();
     const currentSubmission = submissions.current.begin();
-    const input = attempt.current.begin({ nonce: currentSelection.nonce, startAt: currentSelection.selection.startAt, inviteeTimezone: currentSelection.selection.inviteeTimezone, name, email, answers });
+    const input = attempt.current.begin({ nonce: currentSelection.nonce, startAt: currentSelection.selection.startAt, inviteeTimezone: currentSelection.selection.inviteeTimezone, name, email, answers, ...(Object.keys(linkContext.attribution).length ? { attribution: linkContext.attribution } : {}) });
     setPending(true); setSaving(true); setNotice("");
     try {
       const response = await publicApi.api.public.book[":handle"][":slug"].confirm.$post({
@@ -94,9 +100,9 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
         if (!currentSubmission()) return;
         const refused = attempt.current.refuse(response.status, failure?.error?.code);
         setPending(attempt.current.pending);
-        if (refused && response.status === 409 && ["slot_taken", "slot_unavailable"].includes(failure?.error?.code ?? "")) {
+        if (refused && ((response.status === 409 && ["slot_taken", "slot_unavailable"].includes(failure?.error?.code ?? "")) || failure?.error?.code === "invalid_duration")) {
           if (!rememberRecoveryDraft(handle, slug, { name: input.name, email: input.email, answers: input.answers })) {
-            setNotice("That time was just taken. Your browser could not save your details. Allow session storage, then confirm again to choose another time.");
+            setNotice("That choice is no longer available. Your browser could not save your details. Allow session storage, then confirm again to choose another time.");
             return;
           }
           forgetSelection(handle, slug, capability);
@@ -112,9 +118,10 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
         return;
       }
       attempt.current.unknown();
-      const confirmation = await response.json() as Confirmation;
+      const confirmation = await response.json() as CommittedConfirmation;
       if (!currentSubmission()) return;
       forgetRecoveryDraft(handle, slug);
+      if (completeBooking(confirmation, embedded, search)) return;
       const token = manageToken(confirmation.manageUrl);
       if (!token) { setNotice("Your booking was recorded, but its receipt could not be opened. Check your confirmation email."); return; }
       window.location.assign(bookingPath(handle, slug, "/confirmed", embedded, { token }, search));
@@ -122,5 +129,5 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
     finally { submitting.current = false; setSaving(false); }
   }
 
-  return <FlowShell data={data} embedded={embedded} step={2}><section className="pb-request-form"><p className="pb-eyebrow">Your details</p><h1>Confirm this time.</h1><p>{format(currentSelection.selection.startAt, currentSelection.selection.inviteeTimezone)} · {currentSelection.selection.inviteeTimezone}. The host receives the answers below. When the host has connected a calendar, that provider also receives them.</p><p>Host time: {format(currentSelection.selection.startAt, data.profile.timezone)} · {data.profile.timezone}</p><form noValidate onSubmit={(event) => { event.preventDefault(); void confirm(); }}><fieldset className="pb-request-fields" disabled={!hydrated || saving || pending} aria-busy={!hydrated || saving}><legend>About you</legend><p>Fields marked * are required.</p><label><span className="pb-label-text">Name<span aria-hidden="true"> *</span></span><input aria-label="Name" aria-invalid={Boolean(fields.name)} aria-describedby={fields.name ? "booking-name-error" : undefined} required maxLength={160} autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setFields(current => ({ ...current, name: "" })); }} />{fields.name ? <p id="booking-name-error" className="pb-field-error">{fields.name}</p> : null}</label><label><span className="pb-label-text">Email<span aria-hidden="true"> *</span></span><input aria-label="Email" aria-invalid={Boolean(fields.email)} aria-describedby={fields.email ? "booking-email-error" : undefined} required maxLength={320} type="email" autoComplete="email" value={email} onChange={(event) => { setEmail(event.target.value); setFields(current => ({ ...current, email: "" })); }} />{fields.email ? <p id="booking-email-error" className="pb-field-error">{fields.email}</p> : null}</label>{data.eventType.questions.map((question) => <Question key={question.key} question={question} error={fields[questionErrorKey(question.key)]} value={answers[question.key] ?? ""} onChange={(value) => { setAnswers((current) => ({ ...current, [question.key]: value })); setFields(current => ({ ...current, [questionErrorKey(question.key)]: "" })); }} />)}</fieldset>{selectionError ? <p className="pb-request-notice" role="alert">{selectionError} <button type="button" className="pb-quiet-button" disabled={!hydrated || saving || pending} onClick={() => void refreshSelection()}>Reload selected time</button></p> : null}{pending && !saving ? <p className="pb-request-notice" role="status">Your confirmation is unconfirmed. Retry the original details to retrieve its result.</p> : null}{notice ? <p className="pb-request-notice" role="alert">{notice}</p> : null}<button className="pb-primary-button mt-5" disabled={!hydrated || saving}>{saving ? "Confirming…" : pending ? "Retry confirmation" : "Confirm booking"}</button></form></section></FlowShell>;
+  return <FlowShell data={data} embedded={embedded} step={2}><section className="pb-request-form"><p className="pb-eyebrow">Your details</p><h1>Confirm this time.</h1><p>{format(currentSelection.selection.startAt, currentSelection.selection.inviteeTimezone)} · {currentSelection.selection.inviteeTimezone}. The host receives the answers below. When the host has connected a calendar, that provider also receives them.</p><p>Link source information is saved with your booking. If the host uses a thank-you page, selected booking details and source information may be shared with that page. <a href="/privacy">Read the privacy notice.</a></p><p>Host time: {format(currentSelection.selection.startAt, data.profile.timezone)} · {data.profile.timezone}</p><form noValidate onSubmit={(event) => { event.preventDefault(); void confirm(); }}><fieldset className="pb-request-fields" disabled={!hydrated || saving || pending} aria-busy={!hydrated || saving}><legend>About you</legend><p>Fields marked * are required.</p><label><span className="pb-label-text">Name<span aria-hidden="true"> *</span></span><input aria-label="Name" aria-invalid={Boolean(fields.name)} aria-describedby={fields.name ? "booking-name-error" : undefined} required maxLength={160} autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setFields(current => ({ ...current, name: "" })); }} />{fields.name ? <p id="booking-name-error" className="pb-field-error">{fields.name}</p> : null}</label><label><span className="pb-label-text">Email<span aria-hidden="true"> *</span></span><input aria-label="Email" aria-invalid={Boolean(fields.email)} aria-describedby={fields.email ? "booking-email-error" : undefined} required maxLength={320} type="email" autoComplete="email" value={email} onChange={(event) => { setEmail(event.target.value); setFields(current => ({ ...current, email: "" })); }} />{fields.email ? <p id="booking-email-error" className="pb-field-error">{fields.email}</p> : null}</label>{data.eventType.questions.map((question) => <Question key={question.key} question={question} error={fields[questionErrorKey(question.key)]} value={answers[question.key] ?? ""} onChange={(value) => { setAnswers((current) => ({ ...current, [question.key]: value })); setFields(current => ({ ...current, [questionErrorKey(question.key)]: "" })); }} />)}</fieldset>{selectionError ? <p className="pb-request-notice" role="alert">{selectionError} <button type="button" className="pb-quiet-button" disabled={!hydrated || saving || pending} onClick={() => void refreshSelection()}>Reload selected time</button></p> : null}{pending && !saving ? <p className="pb-request-notice" role="status">Your confirmation is unconfirmed. Retry the original details to retrieve its result.</p> : null}{notice ? <p className="pb-request-notice" role="alert">{notice}</p> : null}<button className="pb-primary-button mt-5" disabled={!hydrated || saving}>{saving ? "Confirming…" : pending ? "Retry confirmation" : "Confirm booking"}</button></form></section></FlowShell>;
 }
