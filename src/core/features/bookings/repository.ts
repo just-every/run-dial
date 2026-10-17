@@ -1,3 +1,4 @@
+import { BookingLimits } from "../availability";
 import { foldBookingSearch } from "./search/case-fold.mjs";
 import { PublicAbuseRepository, blockedAddressSql, blockedAddressValues } from "../public-abuse";
 import { linkedBookingAcknowledgement } from "../availability-requests";
@@ -88,6 +89,7 @@ export class BookingsRepository {
   async claim(input: BookingClaim): Promise<"claimed" | "slot_taken" | "blocked"> {
     const event = input.event;
     const meetingState = event.locationType === "google_meet" ? "pending" : "not_required";
+    const limits = await new BookingLimits(this.binding).predicate(event.id, input.hostTimezone, input.selection.startAt, input.selection.endAt, input.invitee.email, undefined);
     const statements: D1PreparedStatement[] = [
       this.binding.prepare(
         `INSERT INTO bookings (id, event_type_id, event_slug, event_title, duration_minutes, location_type, location_label, location_value, invitee_name, invitee_email, host_timezone, invitee_timezone, state, ical_uid, calendar_required, calendar_state, meeting_state, meeting_url, created_at, updated_at, attribution_json, post_booking_redirect_url)
@@ -101,8 +103,8 @@ export class BookingsRepository {
                AND existing.state IN ('confirmed', 'rescheduled')
                AND occurrence.occupied_start_at < ?
                AND occurrence.occupied_end_at > ?
-           ) AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?)`,
-      ).bind(input.bookingId, event.id, event.slug, event.title, (Date.parse(input.selection.endAt) - Date.parse(input.selection.startAt)) / 60_000, event.locationType, event.locationLabel, event.locationValue, input.invitee.name, input.invitee.email, input.hostTimezone, input.selection.inviteeTimezone, `dial-${input.bookingId}@dial`, input.calendarPayload ? 1 : 0, meetingState, input.now, input.now, JSON.stringify(input.attribution ?? {}), input.postBookingRedirectUrl ?? null, ...blockedAddressValues(input.invitee.email), input.nonceId, input.nonceHash, input.now, input.occupiedEndAt, input.occupiedStartAt, event.hostDayBookingLimit, input.hostDate, event.hostDayBookingLimit),
+           ) AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?) AND ${limits.sql}`,
+      ).bind(input.bookingId, event.id, event.slug, event.title, (Date.parse(input.selection.endAt) - Date.parse(input.selection.startAt)) / 60_000, event.locationType, event.locationLabel, event.locationValue, input.invitee.name, input.invitee.email, input.hostTimezone, input.selection.inviteeTimezone, `dial-${input.bookingId}@dial`, input.calendarPayload ? 1 : 0, meetingState, input.now, input.now, JSON.stringify(input.attribution ?? {}), input.postBookingRedirectUrl ?? null, ...blockedAddressValues(input.invitee.email), input.nonceId, input.nonceHash, input.now, input.occupiedEndAt, input.occupiedStartAt, event.hostDayBookingLimit, input.hostDate, event.hostDayBookingLimit, ...limits.params),
       this.binding.prepare(
         "INSERT INTO booking_occurrences (id, booking_id, sequence, start_at, end_at, occupied_start_at, occupied_end_at, host_date, state, is_current, created_at) SELECT ?, ?, 0, ?, ?, ?, ?, ?, 'current', 1, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)",
       ).bind(input.occurrenceId, input.bookingId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.bookingId),
@@ -135,6 +137,7 @@ export class BookingsRepository {
       ? await this.binding.prepare("SELECT event_title AS eventTitle FROM availability_requests WHERE id = ?").bind(input.requestId).first<{ eventTitle: string }>()
       : undefined;
     const meetingState = event.locationType === "google_meet" ? "pending" : "not_required";
+    const limits = await new BookingLimits(this.binding).predicate(event.id, input.hostTimezone, input.selection.startAt, input.selection.endAt, input.invitee.email, undefined);
     const statements: D1PreparedStatement[] = [
       this.binding.prepare(
         `INSERT INTO bookings (id, event_type_id, event_slug, event_title, duration_minutes, location_type, location_label, location_value, invitee_name, invitee_email, host_timezone, invitee_timezone, state, ical_uid, calendar_required, calendar_state, meeting_state, meeting_url, created_at, updated_at)
@@ -147,8 +150,8 @@ export class BookingsRepository {
              AND existing.state IN ('confirmed', 'rescheduled')
              AND occurrence.occupied_start_at < ?
              AND occurrence.occupied_end_at > ?
-         ) AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?)`,
-      ).bind(input.bookingId, event.id, event.slug, event.title, (Date.parse(input.selection.endAt) - Date.parse(input.selection.startAt)) / 60_000, event.locationType, event.locationLabel, event.locationValue, input.invitee.name, input.invitee.email, input.hostTimezone, input.selection.inviteeTimezone, `dial-${input.bookingId}@dial`, input.calendarPayload ? 1 : 0, meetingState, input.now, input.now, ...blockedAddressValues(input.invitee.email), input.creationIdentity?.keyHash ?? null, input.creationIdentity?.keyHash ?? null, input.creationIdentity?.keyHash ?? null, input.requestId ?? null, input.requestId ?? null, event.id, input.invitee.email, input.occupiedEndAt, input.occupiedStartAt, event.hostDayBookingLimit, input.hostDate, event.hostDayBookingLimit),
+         ) AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?) AND ${limits.sql}`,
+      ).bind(input.bookingId, event.id, event.slug, event.title, (Date.parse(input.selection.endAt) - Date.parse(input.selection.startAt)) / 60_000, event.locationType, event.locationLabel, event.locationValue, input.invitee.name, input.invitee.email, input.hostTimezone, input.selection.inviteeTimezone, `dial-${input.bookingId}@dial`, input.calendarPayload ? 1 : 0, meetingState, input.now, input.now, ...blockedAddressValues(input.invitee.email), input.creationIdentity?.keyHash ?? null, input.creationIdentity?.keyHash ?? null, input.creationIdentity?.keyHash ?? null, input.requestId ?? null, input.requestId ?? null, event.id, input.invitee.email, input.occupiedEndAt, input.occupiedStartAt, event.hostDayBookingLimit, input.hostDate, event.hostDayBookingLimit, ...limits.params),
       this.binding.prepare(
         "INSERT INTO booking_occurrences (id, booking_id, sequence, start_at, end_at, occupied_start_at, occupied_end_at, host_date, state, is_current, created_at) SELECT ?, ?, 0, ?, ?, ?, ?, ?, 'current', 1, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)",
       ).bind(input.occurrenceId, input.bookingId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.bookingId),
@@ -279,6 +282,9 @@ export class BookingsRepository {
   }
 
   isBlocked(email: string) { return new PublicAbuseRepository(this.binding).isBlocked(email); }
+  limitExclusions(eventId: string, zone: string, startAt: string, endAt: string, email: string, excludedBookingId?: string) {
+    return new BookingLimits(this.binding).evaluate(eventId, zone, startAt, endAt, email, excludedBookingId);
+  }
 
   async cancel(booking: BookingRecord, actor: { type: "invitee" | "operator" | "calendar_provider"; id?: string }, reason: string | undefined, now: string, emails: BookingEmail[]) {
     if (booking.state === "cancelled") return booking;
@@ -326,6 +332,7 @@ export class BookingsRepository {
     reason?: string;
     selection: BookingSelection;
     hostDate: string;
+    hostTimezone: string;
     occupiedStartAt: string;
     occupiedEndAt: string;
     now: string;
@@ -334,6 +341,7 @@ export class BookingsRepository {
   }): Promise<"rescheduled" | "slot_taken"> {
     const occurrenceId = createId();
     const nextSequence = input.booking.occurrence.sequence + 1;
+    const limits = await new BookingLimits(this.binding).predicate(input.booking.eventTypeId!, input.hostTimezone, input.selection.startAt, input.selection.endAt, input.booking.inviteeEmail, input.booking.id);
     const statements: D1PreparedStatement[] = [
       this.binding.prepare(
         `INSERT INTO booking_occurrences (id, booking_id, sequence, start_at, end_at, occupied_start_at, occupied_end_at, host_date, state, is_current, created_at)
@@ -344,8 +352,8 @@ export class BookingsRepository {
              SELECT 1 FROM booking_occurrences occurrence JOIN bookings existing ON existing.id = occurrence.booking_id
              WHERE occurrence.is_current = 1 AND existing.state IN ('confirmed', 'rescheduled')
                AND existing.id <> ? AND occurrence.occupied_start_at < ? AND occurrence.occupied_end_at > ?
-           ) AND NOT EXISTS (SELECT 1 FROM event_types et WHERE et.id = ? AND et.host_day_booking_limit IS NOT NULL AND (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND b.id <> ? AND o.host_date = ?) >= et.host_day_booking_limit)`,
-      ).bind(occurrenceId, input.booking.id, nextSequence, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.nonceId, input.nonceHash, input.now, input.booking.id, input.booking.id, input.booking.occurrence.id, input.booking.id, input.occupiedEndAt, input.occupiedStartAt, input.booking.eventTypeId, input.booking.id, input.hostDate),
+           ) AND NOT EXISTS (SELECT 1 FROM event_types et WHERE et.id = ? AND et.host_day_booking_limit IS NOT NULL AND (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND b.id <> ? AND o.host_date = ?) >= et.host_day_booking_limit) AND ${limits.sql}`,
+      ).bind(occurrenceId, input.booking.id, nextSequence, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.nonceId, input.nonceHash, input.now, input.booking.id, input.booking.id, input.booking.occurrence.id, input.booking.id, input.occupiedEndAt, input.occupiedStartAt, input.booking.eventTypeId, input.booking.id, input.hostDate, ...limits.params),
       this.binding.prepare("UPDATE booking_occurrences SET state = 'rescheduled', is_current = 0, replaced_by_occurrence_id = ?, closed_at = ? WHERE id = ? AND EXISTS (SELECT 1 FROM booking_occurrences WHERE id = ? AND booking_id = ?)").bind(occurrenceId, input.now, input.booking.occurrence.id, occurrenceId, input.booking.id),
       this.binding.prepare("UPDATE delivery_outbox SET state = 'failed', last_error_code = 'superseded_occurrence', updated_at = ? WHERE booking_id = ? AND occurrence_id = ? AND kind IN ('calendar_upsert', 'reminder') AND state = 'pending' AND EXISTS (SELECT 1 FROM booking_occurrences WHERE id = ? AND booking_id = ?)").bind(input.now, input.booking.id, input.booking.occurrence.id, occurrenceId, input.booking.id),
       this.binding.prepare("UPDATE booking_occurrences SET is_current = 1 WHERE id = ? AND EXISTS (SELECT 1 FROM booking_occurrences WHERE id = ? AND is_current = 0 AND state = 'rescheduled')").bind(occurrenceId, input.booking.occurrence.id),
@@ -366,6 +374,7 @@ export class BookingsRepository {
     reason?: string;
     selection: BookingSelection;
     hostDate: string;
+    hostTimezone: string;
     occupiedStartAt: string;
     occupiedEndAt: string;
     now: string;
@@ -374,6 +383,7 @@ export class BookingsRepository {
   }): Promise<"rescheduled" | "slot_taken"> {
     const occurrenceId = createId();
     const nextSequence = input.booking.occurrence.sequence + 1;
+    const limits = await new BookingLimits(this.binding).predicate(input.booking.eventTypeId!, input.hostTimezone, input.selection.startAt, input.selection.endAt, input.booking.inviteeEmail, input.booking.id);
     const statements: D1PreparedStatement[] = [
       this.binding.prepare(
         `INSERT INTO booking_occurrences (id, booking_id, sequence, start_at, end_at, occupied_start_at, occupied_end_at, host_date, state, is_current, created_at)
@@ -389,8 +399,8 @@ export class BookingsRepository {
              SELECT 1 FROM booking_occurrences occurrence JOIN bookings existing ON existing.id = occurrence.booking_id
              WHERE occurrence.is_current = 1 AND existing.state IN ('confirmed', 'rescheduled')
                AND existing.id <> ? AND occurrence.occupied_start_at < ? AND occurrence.occupied_end_at > ?
-           ) AND NOT EXISTS (SELECT 1 FROM event_types et WHERE et.id = ? AND et.host_day_booking_limit IS NOT NULL AND (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND b.id <> ? AND o.host_date = ?) >= et.host_day_booking_limit)`,
-      ).bind(occurrenceId, input.booking.id, nextSequence, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.booking.occurrence.id, input.booking.id, input.manageCapability ? 1 : 0, input.booking.id, input.manageCapability?.previousTokenId ?? "", input.booking.id, input.occupiedEndAt, input.occupiedStartAt, input.booking.eventTypeId, input.booking.id, input.hostDate),
+           ) AND NOT EXISTS (SELECT 1 FROM event_types et WHERE et.id = ? AND et.host_day_booking_limit IS NOT NULL AND (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND b.id <> ? AND o.host_date = ?) >= et.host_day_booking_limit) AND ${limits.sql}`,
+      ).bind(occurrenceId, input.booking.id, nextSequence, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.booking.occurrence.id, input.booking.id, input.manageCapability ? 1 : 0, input.booking.id, input.manageCapability?.previousTokenId ?? "", input.booking.id, input.occupiedEndAt, input.occupiedStartAt, input.booking.eventTypeId, input.booking.id, input.hostDate, ...limits.params),
       this.binding.prepare("UPDATE booking_occurrences SET state = 'rescheduled', is_current = 0, replaced_by_occurrence_id = ?, closed_at = ? WHERE id = ? AND is_current = 1 AND EXISTS (SELECT 1 FROM booking_occurrences WHERE id = ? AND booking_id = ?)").bind(occurrenceId, input.now, input.booking.occurrence.id, occurrenceId, input.booking.id),
       this.binding.prepare("UPDATE delivery_outbox SET state = 'failed', last_error_code = 'superseded_occurrence', updated_at = ? WHERE booking_id = ? AND occurrence_id = ? AND kind IN ('calendar_upsert', 'reminder') AND state = 'pending' AND EXISTS (SELECT 1 FROM booking_occurrences WHERE id = ? AND booking_id = ?)").bind(input.now, input.booking.id, input.booking.occurrence.id, occurrenceId, input.booking.id),
       this.binding.prepare("UPDATE booking_occurrences SET is_current = 1 WHERE id = ? AND EXISTS (SELECT 1 FROM booking_occurrences WHERE id = ? AND state = 'rescheduled' AND is_current = 0)").bind(occurrenceId, input.booking.occurrence.id),

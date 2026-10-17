@@ -1,4 +1,4 @@
-import { nextEventTimestampSql } from "./revision";
+import { nextEventTimestampSql } from "../../shared/event-revision";
 import { createId, nowIso } from "../../shared/ids";
 import type { EventDetailsInput } from "./repository";
 

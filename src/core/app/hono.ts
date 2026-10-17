@@ -1,4 +1,5 @@
 import { personErasureRoutes } from "../features/erasure/person-routes";
+import { availabilityControlRoutes } from "../features/availability/control-routes";
 import { ArchiveMaintenance, maintenanceResponse } from "../features/portability/admission";
 import { ErasureError } from "../../modules/erasure/index.mjs";
 import { extensionRoutes } from "./mount.server";
@@ -78,6 +79,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", eventTypeRoutes)
     .route("/", hostSetupRoutes)
     .route("/", availabilityDiagnosticRoutes)
+    .route("/", availabilityControlRoutes)
     .route("/", availabilityRequestRoutes)
     .route("/", calendarConnectionRoutes)
     .route("/", deliveryRoutes)

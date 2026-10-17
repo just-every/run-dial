@@ -1,8 +1,13 @@
 import type { BusyInterval, InternalClaim } from "./engine";
+import { BookingLimits } from "./booking-limits";
 
 /** Database reads required by availability; calendar reads stay in the adapter. */
 export class AvailabilityRepository {
   constructor(private readonly binding: D1Database) {}
+  async limitsForRange(eventId: string, zone: string, date: string, days: number, excludedBookingId?: string, inviteeEmail?: string) {
+    if (excludedBookingId && !inviteeEmail) inviteeEmail = (await this.binding.prepare("SELECT invitee_email AS email FROM bookings WHERE id=?").bind(excludedBookingId).first<{ email: string }>())?.email;
+    return new BookingLimits(this.binding).forRange(eventId, zone, date, days, excludedBookingId, inviteeEmail);
+  }
 
   async listInternalClaims(startAt: string, endAt: string, excludedBookingId?: string, capHostDates: string[] = []): Promise<InternalClaim[]> {
     // Persisted host dates also govern the atomic cap after profile-zone changes.

@@ -11,6 +11,7 @@ export const exported = [
   'ext_custom_field_definitions', 'ext_custom_field_values',
   'avatar_object_deletions', 'operators', 'host_profiles', 'host_link_copy_reports', 'profile_focus_areas', 'social_proof_entries', 'event_types',
   'event_questions', 'recurring_availability_windows', 'availability_date_overrides',
+  'availability_schedules', 'event_schedule_bindings', 'booking_limit_policies',
   'availability_date_override_windows', 'calendar_connections', 'calendar_connection_calendars',
   'provider_connection_health', 'calendar_busy_intervals', 'calendar_busy_read_windows',
   'delivery_outbox', 'delivery_attempts', 'provider_webhook_events', 'operator_delivery_preferences',

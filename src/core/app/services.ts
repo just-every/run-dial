@@ -1,4 +1,6 @@
 import { PersonErasure } from "../features/erasure/person";
+import { NamedSchedules } from "../features/availability/named-schedules";
+import { BookingLimits } from "../features/availability/booking-limits";
 import { createCustomFields } from "./mount.server";
 import { MoveInService, eraseImportedBooking } from "../features/move-in";
 import type { SessionRecord } from "../features/operators";
@@ -51,6 +53,8 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    namedSchedules: new NamedSchedules(binding),
+    bookingLimits: new BookingLimits(binding),
     customFields: createCustomFields(binding),
     moveIn: new MoveInService(binding, runtime.SESSION_SECRET),
     switchOver: new SwitchOverService(binding, eventTypes, hostProfile, installPublicOrigin(runtime.APP_URL)),

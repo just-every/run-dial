@@ -20,14 +20,16 @@ export async function loadAvailabilityInput(
   if (!rangeStart || !rangeEnd) return undefined;
   const busyStart = new Date(rangeStart.getTime() - event.beforeBufferMinutes * 60_000).toISOString();
   const busyEnd = new Date(rangeEnd.getTime() + event.afterBufferMinutes * 60_000).toISOString();
-  const [busy, internalClaims, overrides] = await Promise.all([
+  const [busy, internalClaims, overrides, limitExclusions] = await Promise.all([
     dependencies.calendar.readBusy({ startAt: busyStart, endAt: busyEnd, freshness }),
     dependencies.repository.listInternalClaims(busyStart, busyEnd, excludedBookingId, event.hostDayBookingLimit === null ? [] : Array.from({ length: days }, (_, day) => datePlus(firstDate, day))),
-    dependencies.eventTypes.listDateAvailabilityOverrides(event.id),
+    dependencies.eventTypes.effectiveDateOverrides(event.id, firstDate, days),
+    dependencies.repository.limitsForRange(event.id, hostTimeZone, firstDate, days, excludedBookingId),
   ]);
   if (busy.kind !== "ok" || !overrides || (event.locationType === "google_meet" && busy.calendarRequired === false)) return undefined;
   const ownEvents = await dependencies.repository.listOwnCalendarEvents(busyStart, busyEnd, busy.observedAt);
   const input: SlotEngineInput = {
+    additionalExclusions: limitExclusions,
     hostTimeZone,
     recurringWindows: operatorOverride.overridePublishedAvailability ? allDayWindows : event.availability,
     overrides: operatorOverride.overridePublishedAvailability ? [] : overrides,

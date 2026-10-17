@@ -136,6 +136,7 @@ export class BookingsService {
       return { kind: "slot_invalid" };
     }
     if (selection.event.id !== event.id || selection.slot.endAt !== nonce.selectionEndAt) return { kind: "slot_invalid" };
+    if ((await this.repository.limitExclusions(event.id, profile.timezone, selection.slot.startAt, selection.slot.endAt, invitee.email)).length) return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: "slot_invalid" };
     const bookingId = createId();
     const occurrenceId = createId();
     const manageTokenId = createId();
@@ -266,6 +267,7 @@ export class BookingsService {
       reason: input.reason?.trim() || undefined,
       selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone },
       hostDate: hostDateForInstant(selection.slot.startAt, selection.profile.timezone),
+      hostTimezone: selection.profile.timezone,
       occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
       now: nowIso(),
@@ -414,6 +416,7 @@ export class BookingsService {
       booking: access.booking, nonceId: nonce.id, nonceHash, payloadHash, reason: input.reason?.trim() || undefined,
       selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone: input.inviteeTimezone },
       hostDate: hostDateForInstant(verified.slot.startAt, profile.timezone),
+      hostTimezone: profile.timezone,
       occupiedStartAt: new Date(Date.parse(verified.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(verified.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
       now,

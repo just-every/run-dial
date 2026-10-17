@@ -83,7 +83,7 @@ export default {
     }
     if (url.pathname === "/__fixtures/diagnostics/state" && request.method === "GET") {
       const state = await status(env.DB);
-      for (const table of ["host_profiles", "profile_focus_areas", "social_proof_entries", "event_types", "event_questions", "recurring_availability_windows", "availability_date_overrides", "availability_date_override_windows", "operator_creation_receipts", "operator_creation_tombstones"]) state[table] = (await env.DB.prepare(`SELECT * FROM ${table}`).all()).results;
+      for (const table of ["host_profiles", "profile_focus_areas", "social_proof_entries", "event_types", "event_questions", "recurring_availability_windows", "availability_date_overrides", "availability_date_override_windows", "availability_schedules", "event_schedule_bindings", "booking_limit_policies", "operator_creation_receipts", "operator_creation_tombstones"]) state[table] = (await env.DB.prepare(`SELECT * FROM ${table}`).all()).results;
       return Response.json(state);
     }
     return url.pathname.startsWith("/__fixtures/") ? handleFixtures(request, env, servicesFor) : production.fetch(request, env, context);

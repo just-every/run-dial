@@ -32,6 +32,8 @@ export async function duplicateEvent(binding: D1Database, id: string): Promise<s
       ?, ? FROM event_types WHERE id = ? AND updated_at = ? RETURNING id
   `).bind(duplicateId, slug, title, timestamp, timestamp, id, source.updated_at)];
   const guard = "AND EXISTS (SELECT 1 FROM event_types WHERE id = ?)";
+  statements.push(binding.prepare(`INSERT INTO event_schedule_bindings (event_type_id,schedule_id,created_at,updated_at) SELECT ?,schedule_id,?,? FROM event_schedule_bindings WHERE event_type_id=? ${guard}`).bind(duplicateId, timestamp, timestamp, id, duplicateId));
+  statements.push(binding.prepare(`INSERT INTO booking_limit_policies (scope,limits_json,created_at,updated_at) SELECT ?,limits_json,?,? FROM booking_limit_policies WHERE scope=? ${guard}`).bind(duplicateId, timestamp, timestamp, id, duplicateId));
   // Parent overrides must precede their remapped windows within the same transaction.
   for (const child of children.results.filter(child => child.kind !== "window")) {
     const rowId = child.kind === "override" ? overrideIds.get(child.id)! : createId();

@@ -1,4 +1,5 @@
 import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
+import { validateAvailabilityConfig, validateAvailabilityReferences } from './availability-config.mjs';
 import { redirectConfigIssue, redirectUrlIssue } from '../../src/core/features/event-types/redirect-policy.mjs';
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
@@ -56,6 +57,7 @@ export function validateRows(archive, model) {
         }
       }
       if (table.name === 'event_questions' && ![0, 1].includes(row.private)) throw new Error('archive-invalid-question-privacy');
+      validateAvailabilityConfig(table.name, row);
       if (table.name === 'bookings') {
         const attribution = JSON.parse(row.attribution_json);
         if (!attribution || typeof attribution !== 'object' || Array.isArray(attribution) || Object.entries(attribution).some(([key, value]) => !['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'source'].includes(key) || typeof value !== 'string' || value.length > 500)) throw new Error('archive-invalid-booking-attribution');
@@ -72,6 +74,7 @@ export function validateRows(archive, model) {
   try {
     for (const statement of restoreStatements(archive.tables, triggers)) model.db.prepare(statement.sql).run(...statement.params);
     validateCustomFields(model.db);
+    validateAvailabilityReferences(model.db);
     if (model.db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('archive-invalid-references');
     for (const { name, rows } of archive.tables) {
       // Node 22's SQLite text getter truncates embedded NUL. SQLite JSON

@@ -42,6 +42,8 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
   if (selection.kind !== "valid") return await recoverOperatorBooking(dependencies, input) ?? selection;
   const invitee = validateInvitee(selection.event, { name: input.name, email: input.email, answers: input.answers });
   if (!invitee) return await recoverOperatorBooking(dependencies, input) ?? { kind: "invalid_answers" };
+  const limits = await dependencies.repository.limitExclusions(selection.event.id, selection.profile.timezone, selection.slot.startAt, selection.slot.endAt, invitee.email);
+  if (limits.length) return await recoverOperatorBooking(dependencies, input) ?? { kind: "slot_invalid", exclusions: limits };
   if (await dependencies.repository.isBlocked(invitee.email)) return await recoverOperatorBooking(dependencies, input) ?? { kind: "blocked" };
   const bookingId = createId();
   const occurrenceId = createId();

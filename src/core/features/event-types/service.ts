@@ -81,6 +81,10 @@ export class EventTypesService {
     return this.repository.replaceRecurringAvailability(id, windows);
   }
 
+  effectiveDateOverrides(id: string, firstDate: string, days: number) {
+    return this.repository.effectiveDateOverrides(id, firstDate, days);
+  }
+
   disableEventType(id: string) {
     return this.repository.setStatus(id, "disabled");
   }

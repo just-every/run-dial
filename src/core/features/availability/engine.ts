@@ -3,6 +3,7 @@ import { datePlus, hostDateAt, offsetMinutesAt, zonedOffsetLabel, zonedParts } f
 import { horizonAllows } from "../../shared/booking-horizon";
 import { windowsForDate } from "./windows";
 import { fitsWindow, windowSpans } from "./window-spans";
+import type { BookingLimitExclusion } from "./booking-limits";
 export { rankSlots, buildRecommendationContext } from "./recommendations";
 
 export type AvailabilityWindow = { weekday: number; startMinute: number; endMinute: number };
@@ -39,10 +40,12 @@ export type SlotExclusion =
   | "buffer"
   | "host_day_limit"
   | "dial_booking"
-  | "calendar_busy";
+  | "calendar_busy"
+  | BookingLimitExclusion;
 export type SlotEvaluation = { valid: boolean; exclusions: SlotExclusion[] };
 
 export type SlotEngineInput = {
+  additionalExclusions?: (startAt: string, endAt: string) => BookingLimitExclusion[];
   hostTimeZone: string;
   recurringWindows: AvailabilityWindow[];
   overrides: DateOverride[];
@@ -102,6 +105,7 @@ function evaluateCandidate(
   durationFits: boolean, startAligned: boolean,
 ): SlotEvaluation {
   const exclusions: SlotExclusion[] = [];
+  exclusions.push(...input.additionalExclusions?.(start.toISOString(), end.toISOString()) ?? []);
   if (!window || !durationFits) exclusions.push(input.overrides.some((override) => override.hostDate === hostDate) ? "date_override" : "schedule");
   if (window && !startAligned) exclusions.push("start_increment");
 

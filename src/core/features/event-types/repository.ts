@@ -1,6 +1,8 @@
 import { duplicateEvent } from "./duplicate";
+import { eventScheduleBindings } from "../../platform/db/availability-schema";
+import { NamedSchedules } from "../availability";
 import { hydrateEventTypes, readEventType } from "./hydration/repository";
-import { afterPersistedTimestampSql, nextEventTimestampSql } from "./revision";
+import { afterPersistedTimestampSql, nextEventTimestampSql } from "../../shared/event-revision";
 import { replaceDateOverride, deleteDateOverride } from "./override-writes";
 import { readDateOverrides } from "./date-overrides/repository";
 import type { ProfileRecord } from "../host-profile";
@@ -126,6 +128,10 @@ export class EventTypesRepository {
     return readDateOverrides(this.db, eventTypeId);
   }
 
+  async effectiveDateOverrides(eventTypeId: string, firstDate: string, days: number) {
+    return new NamedSchedules(this.binding).applyClosures(eventTypeId, await this.listDateAvailabilityOverrides(eventTypeId), firstDate, days);
+  }
+
   async replaceDateAvailabilityOverride(eventTypeId: string, input: DateAvailabilityOverrideInput): Promise<DateAvailabilityOverrideRecord> {
     await replaceDateOverride(this.binding, eventTypeId, input);
     const [result] = await readDateOverrides(this.db, eventTypeId, input.hostDate);
@@ -163,8 +169,10 @@ export class EventTypesRepository {
     const existing = await this.get(id);
     if (!existing) return undefined;
     const timestamp = nowIso();
+    const keepsHours = JSON.stringify(existing.availability) === JSON.stringify([...input.availability].sort((a, b) => a.weekday - b.weekday || a.startMinute - b.startMinute));
     await this.db.batch([
       this.db.update(eventTypes).set({ ...eventColumns(input), updatedAt: nextEventTimestamp(timestamp) }).where(eq(eventTypes.id, id)),
+      ...(keepsHours ? [] : [this.db.delete(eventScheduleBindings).where(eq(eventScheduleBindings.eventTypeId, id))]),
       this.db.delete(eventQuestions).where(eq(eventQuestions.eventTypeId, id)),
       this.db.delete(recurringAvailabilityWindows).where(eq(recurringAvailabilityWindows.eventTypeId, id)),
       ...childWrites(this.db, id, input, timestamp),

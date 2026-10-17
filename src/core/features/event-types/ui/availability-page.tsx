@@ -8,6 +8,8 @@ import type { AvailabilityWindowInput, EventTypeRecord } from "../repository";
 import { useHydrated } from "../../../app/use-hydrated";
 import { timeInput, timeMinutes } from "./window-time";
 import { DateOverrideEditor } from "./date-override-editor";
+import { ScheduleControls } from "./schedule-controls";
+import { BookingLimitFields } from "./booking-limit-fields";
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -76,7 +78,7 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
         })}</fieldset>
       </Card>
       <p className="text-sm text-muted">An end time of 00:00 means midnight after this host date.</p>
-    </form><DateOverrideEditor eventId={eventId} timezone={timezone ?? undefined} /></div>
+    </form><ScheduleControls eventId={eventId} windows={eventType.availability} onApplied={setEventType} onCopyWindows={update} /><DateOverrideEditor eventId={eventId} timezone={timezone ?? undefined} /><BookingLimitFields eventId={eventId} /></div>
   );
 }
 

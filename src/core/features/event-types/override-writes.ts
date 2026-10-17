@@ -1,6 +1,6 @@
 import { createId, nowIso } from "../../shared/ids";
 import type { DateAvailabilityOverrideInput } from "./repository";
-import { nextEventTimestampSql } from "./revision";
+import { nextEventTimestampSql } from "../../shared/event-revision";
 
 /** Override changes invalidate evaluations of the parent configuration in the same transaction. */
 export async function replaceDateOverride(binding: D1Database, eventTypeId: string, input: DateAvailabilityOverrideInput) {

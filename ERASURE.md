@@ -20,6 +20,8 @@ EVENT-005 deliberately supersedes BASE-DATA-003's event-type cascade: deleting o
 
 ## Paths and census
 
+Availability controls added in migration 0055 retain `availability_schedules`, `event_schedule_bindings` and `booking_limit_policies` as shared host configuration (H), exported (E). They contain no invitee identity or booking answers; invitee erasure leaves them intact. Their persisted JSON is validated on archive restore.
+
 B = booking graph; Q = request graph; P = final email remainders; O = operator identity graph; I = maintained import-kit erasure with `withdraw-all-job-artifacts`; T = maintained portability transfer invalidation; H = retained shared host/configuration; A = anonymous receipt/audit; F = intentional opaque anti-replay fence. E = exported; X = excluded; N = destination-installed/platform internal. A personal classification includes pseudonymous links, capabilities and provider identifiers. Host data is personal to the host, not automatically owned by every invitee or operator sharing it.
 
 Every table is listed below. Native B/Q/O children are explicitly discovered and deleted with portability statements; retained facts, temporary copies and external stores are detailed after the table.

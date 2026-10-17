@@ -1,9 +1,11 @@
-import { nextEventTimestampSql } from "./revision";
+import { nextEventTimestampSql } from "../../shared/event-revision";
 import { createId, nowIso } from "../../shared/ids";
 import type { AvailabilityWindowInput } from "./repository";
+import { NamedSchedules } from "../availability";
 
 /** Replace only recurring windows, atomically, without stale event/question input. */
 export async function replaceRecurringWindows(binding: D1Database, eventTypeId: string, windows: AvailabilityWindowInput[]) {
+  if (await new NamedSchedules(binding).replaceWindows(eventTypeId, windows)) return true;
   const timestamp = nowIso();
   const results = await binding.batch([
     binding.prepare(`UPDATE event_types SET updated_at = ${nextEventTimestampSql} WHERE id = ? RETURNING id`).bind(timestamp, eventTypeId),

@@ -1,4 +1,5 @@
 import { evidencePath as outputPath } from "./evidence-path.mjs";
+import { verifyAvailabilityControls } from "./availability-controls-journey.mjs";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
@@ -177,6 +178,7 @@ try {
   const final = await snapshot(); assert.equal(final.bookings.filter((row) => row.invitee_email === confirmation.email).length, 1);
   assert.equal(final.fixture_events.length, 0); assert.equal(final.fixture_mail.length, 0);
   mark("public confirmation refusals remain neutral without private rules/details and preserve the nonce for one successful exact retry after busy time clears");
+  await verifyAvailabilityControls(fixture.eventId);
   proofs.push({ rulesVerified: allRules, canonicalOperatorCreateAndReplay: true, currentClaimIdentityHidden: true, concurrentClaimsCommitted: 1, providerSendEffects: 0, publicRetryBookings: 1 });
   await writeFile(evidencePath, JSON.stringify({ status: "verified", verifiedAt: new Date().toISOString(), origin, providers: "task-owned synthetic calendar and mail", checks, proofs, limits: ["Native Hono/Start/D1/DO only; operator UI rendering and browser behavior remain unverified under the launch hold.", "Product-write assertions cover configuration, booking/request records, capabilities, history, delivery commands/attempts, erasure audit and retry receipts. Fresh provider reads may update derived busy cache and connection health; admission state and fixture read activity are outside those assertions.", "Synthetic external event metadata is injected only through the task-owned calendar adapter. No real calendar/mail provider or credentials are used. Future notification commands remain queued; none were sent by this fixture."] }, null, 2) + "\n");
 } catch (error) {

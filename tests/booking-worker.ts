@@ -63,7 +63,7 @@ export default {
       const result = await repository.reschedule({
         booking, nonceId, nonceHash, payloadHash: "reschedule-payload",
         selection: { startAt: "2030-06-03T12:00:00.000Z", endAt: "2030-06-03T12:30:00.000Z", inviteeTimezone: "UTC" },
-        hostDate: "2030-06-03", occupiedStartAt: "2030-06-03T12:00:00.000Z", occupiedEndAt: "2030-06-03T12:30:00.000Z", now,
+        hostDate: "2030-06-03", hostTimezone: "UTC", occupiedStartAt: "2030-06-03T12:00:00.000Z", occupiedEndAt: "2030-06-03T12:30:00.000Z", now,
         calendarPayload: { eventTitle: "D1 claim", startAt: "2030-06-03T12:00:00.000Z", endAt: "2030-06-03T12:30:00.000Z", hostTimezone: "UTC", invitee: { email: booking.inviteeEmail }, location: booking.locationValue, locationType: booking.locationType }, emails: [],
       });
       return Response.json({ result, booking: await repository.getById(bookingId) });

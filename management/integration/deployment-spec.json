@@ -342,6 +342,12 @@
       "name": "0054_booking_link_context.sql",
       "sha256": "ca04428200cb27c519c7fce715c4c061e5d72cc852202e33dc437f279f2047be",
       "sql": "ALTER TABLE event_types ADD COLUMN post_booking_redirect_json TEXT DEFAULT NULL\n  CHECK (post_booking_redirect_json IS NULL OR (json_valid(post_booking_redirect_json) AND json_type(post_booking_redirect_json) = 'object'));\nALTER TABLE event_questions ADD COLUMN private INTEGER NOT NULL DEFAULT 0 CHECK (private IN (0, 1));\nALTER TABLE bookings ADD COLUMN attribution_json TEXT NOT NULL DEFAULT '{}'\n  CHECK (json_valid(attribution_json) AND json_type(attribution_json) = 'object');\nALTER TABLE bookings ADD COLUMN post_booking_redirect_url TEXT DEFAULT NULL;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0055_availability_controls.sql",
+      "sha256": "461eb284bd3d80bd7a5fd4b0d90bd00d4bac41b8c09d610dc9a5e1f461a06f0f",
+      "sql": "CREATE TABLE availability_schedules (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL,\n  windows_json TEXT NOT NULL CHECK (json_valid(windows_json)),\n  block_us_holidays INTEGER NOT NULL DEFAULT 0 CHECK (block_us_holidays IN (0,1)),\n  reopened_holidays_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(reopened_holidays_json)),\n  time_off_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(time_off_json)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE event_schedule_bindings (\n  event_type_id TEXT PRIMARY KEY REFERENCES event_types(id) ON DELETE CASCADE,\n  schedule_id TEXT NOT NULL REFERENCES availability_schedules(id),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE INDEX event_schedule_bindings_schedule ON event_schedule_bindings(schedule_id);\nCREATE TABLE booking_limit_policies (\n  scope TEXT PRIMARY KEY,\n  limits_json TEXT NOT NULL CHECK (json_valid(limits_json)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE INDEX booking_occurrences_limits_start ON booking_occurrences(start_at) WHERE is_current=1;\nCREATE INDEX bookings_limits_invitee ON bookings(lower(trim(invitee_email)),state);\nCREATE TRIGGER event_booking_limits_delete AFTER DELETE ON event_types BEGIN\n  DELETE FROM booking_limit_policies WHERE scope=OLD.id;\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

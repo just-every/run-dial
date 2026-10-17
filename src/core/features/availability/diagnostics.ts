@@ -11,7 +11,7 @@ export function diagnoseAvailability(input: SlotEngineInput, startAt: string, no
   return { startAt: start.toISOString(), endAt: end.toISOString(), hostDate, hostTimezone: input.hostTimeZone, ...evaluation };
 }
 
-const labels: Record<SlotExclusion, string> = {
+const labels: Partial<Record<SlotExclusion, string>> = {
   schedule: "outside the event’s scheduled windows",
   date_override: "excluded by this date’s availability override",
   start_increment: "not aligned to the event’s start increment",
@@ -23,5 +23,5 @@ const labels: Record<SlotExclusion, string> = {
   calendar_busy: "overlaps conflict-calendar busy time",
 };
 export function unavailableTimeMessage(exclusions: SlotExclusion[]) {
-  return `That time is unavailable: ${exclusions.map((rule) => labels[rule]).join("; ")}.`;
+  return `That time is unavailable: ${exclusions.map((rule) => labels[rule] ?? (rule === "invitee_gap" ? "the minimum gap for this invitee is not met" : `the ${rule.replaceAll("_", " ")} limit would be exceeded`)).join("; ")}.`;
 }
