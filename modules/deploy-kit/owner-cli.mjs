@@ -17,7 +17,7 @@ import { refuseLocalModels } from './local-only.mjs';
 import { publicOrigin } from './public-origin.mjs';
 
 export const cronNotice = 'This Worker has a Cron Trigger. Cloudflare may take up to about two hours to start its first scheduled run on some accounts.';
-const usage = 'usage: owner-cli.mjs deploy|health|remove|inspect|record-owner|signin --declaration <file> --environment <name> [--product <dir>] [--state <file>] [--outcome claimed|kept] | secret ... --set NAME|--unset NAME';
+const usage = 'usage: owner-cli.mjs deploy|health|remove|inspect|record-owner|signin --declaration <file> --environment <name> [--product <dir>] [--state <file>] [--outcome claimed|kept] | secret ... --set NAME [--set NAME]|--unset NAME [--unset NAME]';
 
 /** The owner's committed source and existing local build. Run the seed's build first. */
 async function ownerArtifact(root, product) {
@@ -30,7 +30,7 @@ async function ownerArtifact(root, product) {
 /** Inputs: CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN, plus the secrets the declaration names on first deploy. */
 export async function main(argv = process.argv.slice(2), env = process.env, {fetch = globalThis.fetch, cwd = process.cwd(), healthOptions, propagation, settle, localOnlyKeys = [], notice = line => console.error(line), onCreated} = {}) {
   let parsed;
-  try { parsed = parseArgs({args:argv,allowPositionals:true,strict:true,options:{declaration:{type:'string'},environment:{type:'string'},product:{type:'string',default:''},state:{type:'string'},set:{type:'string'},unset:{type:'string'},outcome:{type:'string'}}}); }
+  try { parsed = parseArgs({args:argv,allowPositionals:true,strict:true,options:{declaration:{type:'string'},environment:{type:'string'},product:{type:'string',default:''},state:{type:'string'},set:{type:'string',multiple:true},unset:{type:'string',multiple:true},outcome:{type:'string'}}}); }
   catch { throw new Error('usage'); }
   const {positionals:[command,...rest],values} = parsed;
   if (!['deploy','health','secret','remove','inspect','record-owner','signin'].includes(command) || rest.length || !values.declaration || !values.environment) throw new Error('usage');
@@ -66,10 +66,12 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
   const statePath = values.state ? resolve(root,values.state) : join(root,'.rer','deploy',`${target.environment}.json`);
   if (command === 'remove') return {ok:true,...await ownerRemove({api,target,statePath}).catch(error => { throw api.annotateFailure(error,'remove'); })};
   if (command === 'secret') {
-    const binding = values.set ?? values.unset, item = (Array.isArray(declaration.secrets) ? declaration.secrets : []).find(entry => entry?.binding === binding);
-    if (!item) { const error = new Error('undeclared-secret'); error.resource = `secret:${binding}`; throw error; }
-    const value = values.set === undefined ? undefined : env[item.environment];
-    return {ok:true,...await ownerSecret({api,target,statePath,binding,value,fetch,healthOptions}).catch(error => { throw api.annotateFailure(error,'secrets'); })};
+    // Every named secret is changed in one Worker version, or none is.
+    const named = [...new Set(values.set ?? values.unset)], declared = Array.isArray(declaration.secrets) ? declaration.secrets : [];
+    const undeclared = named.filter(binding => !declared.some(entry => entry?.binding === binding));
+    if (undeclared.length) { const error = new Error('undeclared-secret'); error.resource = undeclared.map(binding => `secret:${binding}`).join(', '); throw error; }
+    const changes = named.map(binding => ({binding, value:values.set === undefined ? undefined : env[declared.find(entry => entry?.binding === binding).environment]}));
+    return {ok:true,...await ownerSecret({api,target,statePath,changes,fetch,healthOptions}).catch(error => { throw api.annotateFailure(error,'secrets'); })};
   }
   // A secret rer retired (the spent setup token) is no longer part of the plan.
   const state = await settleOwnerState({api,target,statePath});
@@ -114,6 +116,7 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
     api.annotateFailure(error,error.message.startsWith('missing-secret-') ? 'secrets' : undefined);
     throw error;
   });
+  for (const {binding,retried = []} of receipt.migrations) for (const name of retried) notice(`Migrations: retried ${name}: the earlier attempt was rolled back (D1 ${plan.d1.find(item => item.binding === binding).name}).`);
   // Optional secrets the Worker does not hold: never supplied, or removed with --unset.
   const optionalUnset = declaredSecrets.filter(item => item?.optional && (unsetSecrets.includes(item.binding) || retiredSecrets.includes(item.binding))).map(item => item.binding);
   const result = {ok:true,changed:receipt.changed,worker:target.worker,origin:receipt.origin,versionId:receipt.provider.versionId,created,sentSecrets,...(optionalUnset.length ? {optionalUnset} : {}),retiredSecrets,...(state.ownerClaim ? {ownerClaim:state.ownerClaim} : {}),state:statePath};

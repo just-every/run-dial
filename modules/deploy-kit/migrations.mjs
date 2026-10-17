@@ -53,9 +53,10 @@ export async function query(api, id, sql) {
   assert(Array.isArray(rows) && rows.length > 0 && rows.every(x => x.success === true && Array.isArray(x.results)), 'd1-query-failed');
   return rows;
 }
-export async function migrate(api, id, migrations, { apply = true, upgrade = apply } = {}) {
+/** `locked`: the caller holds the install's deploy lock (owner.mjs withStateLock). */
+export async function migrate(api, id, migrations, { apply = true, upgrade = apply, locked = false } = {}) {
   validateMigrations(migrations);
-  const { applied, transition, exists, claimed } = await readLedger(api, id, migrations, query);
+  const { applied, transition, exists, claimed, claimedFrom } = await readLedger(api, id, migrations, query, { rewritten:locked });
   const pending = migrations.slice(applied.length);
   assert(apply || pending.length === 0,'pending-migrations');
   if (transition && upgrade) {
@@ -73,12 +74,17 @@ export async function migrate(api, id, migrations, { apply = true, upgrade = app
     // A second terminator after trailing comments creates an empty D1 statement.
     // Keep the newline even when terminated: a final line comment must end.
     const separator = last?.kind === 'symbol' && last.value === ';' ? '' : '; ';
-    await api.importSql(id,`${migration.sql}\n${separator}UPDATE ${ledger} SET state='applied' WHERE name=${literal(migration.name)} AND sha256=${literal(migration.sha256)};`)
+    // A claim on bytes a reviewed rewrite replaced moves to these bytes only when this
+    // import commits; an earlier attempt that commits first leaves it applied on those.
+    const done = claimedFrom && index === 0
+      ? `UPDATE ${ledger} SET sha256=${literal(migration.sha256)}, state='applied' WHERE name=${literal(migration.name)} AND sha256=${literal(claimedFrom)} AND state='applying'`
+      : `UPDATE ${ledger} SET state='applied' WHERE name=${literal(migration.name)} AND sha256=${literal(migration.sha256)}`;
+    await api.importSql(id,`${migration.sql}\n${separator}${done};`)
       .catch(error => { error.migration ??= migration.name; throw error; });
   }
   if (pending.length) {
     const final = (await query(api,id,`SELECT name, sha256, state FROM ${ledger} ORDER BY id`))[0].results;
     assert(final.length === migrations.length && final.every((x,i) => x.state === 'applied' && recorded(x, migrations[i])), 'migration-readback-mismatch');
   }
-  return { applied:pending.map(x => x.name), history:migrations.map(({name,sha256}) => ({name,sha256})) };
+  return { applied:pending.map(x => x.name), retried:claimed ? [pending[0].name] : [], history:migrations.map(({name,sha256}) => ({name,sha256})) };
 }

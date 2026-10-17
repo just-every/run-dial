@@ -40,6 +40,14 @@ export function migrationFailure(error, again = 'rer deploy') {
       ? `Some of its changes are present (${present.join(', ')}). Undo them so the database is as it was before ${name}, then run ${again} again: rer checks again and runs it.`
       : `It creates no table, index, view, trigger or column, so rer cannot check whether it applied. If none of its changes are present, delete its claim with ${run('DELETE FROM d1_migrations')}, then run ${again} again.`} If it did apply in full, record that instead with ${run("UPDATE d1_migrations SET state='applied'")}.`;
   }
+  const unconfirmed = error?.unconfirmedClaim;
+  if (typeof unconfirmed?.name === 'string' && /^[a-f0-9]{64}$/.test(unconfirmed.sha256 ?? '')) {
+    const name = safe(unconfirmed.name).replaceAll(' ','?');
+    const run = `npx wrangler d1 execute ${database ?? '<database>'} --remote --command "DELETE FROM d1_migrations WHERE name='${name}' AND sha256='${unconfirmed.sha256}' AND state='applying'"`;
+    return `Migration ${name} in ${database ? `D1 ${database}` : 'its D1 database'} was started on bytes this build does not have (SHA-256 ${unconfirmed.sha256.slice(0,12)}) and never confirmed. ${unconfirmed.rewritten
+      ? `A reviewed rewrite in migrations/rewrites.json replaces those bytes; rer deploy retries it under its deploy lock, and this run does not hold one.`
+      : `No reviewed rewrite in migrations/rewrites.json replaces those bytes, so rer will not run it again.`} D1 imports a migration and its completion marker as one atomic file, so a claim still applying after that attempt ended means none of it applied. Deleting the claim is safe once that attempt has ended (it failed, or its run was stopped) and no other deploy of this environment is running: ${run}, then run ${again} again. While a deploy may still be running, leave it.`;
+  }
   if (typeof error?.migration === 'string') return `Migration ${safe(error.migration)} did not apply; the next ${again} runs it again once rer proves none of it applied.`;
   return undefined;
 }

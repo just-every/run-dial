@@ -12,6 +12,7 @@ import { validateMigrations } from './migrations.mjs';
 import { deploy } from './deploy.mjs';
 import { verifyHealth } from './health.mjs';
 import { validSecretNames, secretNames, pendingSecretNames } from './owner-secret-names.mjs';
+import { copyMessage, undeployedCopy } from './owner-secret-copy.mjs';
 import { publicOrigin } from './public-origin.mjs';
 
 /* Owner-account mode: the owner's own Cloudflare account, token and account id.
@@ -175,10 +176,14 @@ export async function readOwnerState(path, target) {
     && KINDS.every(kind => state.owned[kind] && typeof state.owned[kind] === 'object' && Object.values(state.owned[kind]).every(entry => ['pending','created'].includes(entry?.status))), 'invalid-owner-state');
   assert(state.pendingUpload === undefined || typeof state.pendingUpload?.fingerprint === 'string', 'invalid-owner-state');
   // Declared secrets rer removed on purpose (the spent setup token): later plans omit them.
-  assert(state.pendingSecret === undefined || identifier(state.pendingSecret?.binding) && typeof state.pendingSecret?.present === 'boolean'
-    && (state.pendingSecret.versionId === undefined || uuid(state.pendingSecret.versionId))
-    && (state.pendingSecret.repeatVersionId === undefined || uuid(state.pendingSecret.repeatVersionId))
-    && (state.pendingSecret.names === undefined || validSecretNames(state.pendingSecret.names) && !state.pendingSecret.names.includes(state.pendingSecret.binding)), 'invalid-owner-state');
+  // A change recorded by an older rer names one `binding`.
+  if (typeof state.pendingSecret?.binding === 'string' && state.pendingSecret.bindings === undefined) { const {binding, ...rest} = state.pendingSecret; state.pendingSecret = {...rest, bindings:[binding]}; }
+  const pending = state.pendingSecret;
+  assert(pending === undefined || Array.isArray(pending?.bindings) && pending.bindings.length > 0 && validSecretNames(pending.bindings) && typeof pending.present === 'boolean'
+    && (pending.versionId === undefined || uuid(pending.versionId))
+    && (pending.repeatVersionId === undefined || uuid(pending.repeatVersionId))
+    && (pending.copy === undefined || /^[0-9a-f]{32}$/.test(pending.copy))
+    && (pending.names === undefined || validSecretNames(pending.names) && !pending.names.some(name => pending.bindings.includes(name))), 'invalid-owner-state');
   assert(state.ownerClaim === undefined || ['claimed','kept'].includes(state.ownerClaim?.outcome), 'invalid-owner-state');
   assert(state.retiredSecrets === undefined || Array.isArray(state.retiredSecrets) && state.retiredSecrets.every(identifier), 'invalid-owner-state');
   assert(state.accountId === target.accountId && state.project === target.project && state.environment === target.environment && state.worker === target.worker, 'owner-state-target-mismatch');
@@ -242,11 +247,11 @@ async function uploadFingerprint(body) {
   return fingerprint;
 }
 /** Record a secret change's outcome on the receipt: the Worker version it made, and whether
- * the secret is now retired (a removed declared secret stays out of later plans). */
-export function recordSecretChange(state, current, {binding, present}) {
+ * its secrets are now retired (a removed declared secret stays out of later plans). */
+export function recordSecretChange(state, current, {bindings, present}) {
   state.receipt.provider = {versionId:current.versionId, deploymentId:current.deploymentId, etag:current.etag};
   const retired = new Set(state.retiredSecrets ?? []);
-  if (present) retired.delete(binding); else retired.add(binding);
+  for (const binding of bindings) if (present) retired.delete(binding); else retired.add(binding);
   if (retired.size) state.retiredSecrets = [...retired].sort(); else delete state.retiredSecrets;
   delete state.pendingSecret;
 }
@@ -255,16 +260,19 @@ export function recordSecretChange(state, current, {binding, present}) {
  * exactly one version after the recorded starting version and it is the live one, still running the receipt's
  * exact script and build fingerprint, with the other secret names unchanged: adopt its version. A confirming PUT also records its
  * own starting version before it writes; its immediate successor can be recovered by the
- * same checks. Anything later is left to the identity check, which refuses it. */
-export async function settlePendingSecret(api, worker, state, {preflight = false, observe, confirm} = {}) {
+ * same checks. A several-secret copy must also carry its marker; one uploaded but never deployed
+ * is deployed by `deployCopy` when given. Anything later is left to the identity check, which refuses it. */
+export async function settlePendingSecret(api, worker, state, {preflight = false, observe, confirm, deployCopy} = {}) {
   if (!state.pendingSecret || !state.receipt) return false;
   const live = await activeWorker(api, worker);
   if (sameDeployment(live, state.receipt.provider)) {
     // Both deployment and newest version must corroborate an unapplied write.
     // A stale deployment alone must not erase an accepted but unsettled intent.
     const versions = (await api.request(`/workers/scripts/${worker}/versions`))?.items;
-    const unchanged = Array.isArray(versions) && versions.every(item => uuid(item?.id))
-      && new Set(versions.map(item => item.id)).size === versions.length && versions[0]?.id === live.versionId;
+    const listed = Array.isArray(versions) && versions.every(item => uuid(item?.id)) && new Set(versions.map(item => item.id)).size === versions.length;
+    const unchanged = listed && versions[0]?.id === live.versionId;
+    const copy = listed && !unchanged && deployCopy ? await undeployedCopy(api, worker, state, versions) : null;
+    if (copy) { await deployCopy(copy); return settlePendingSecret(api, worker, state, {preflight, observe, confirm}); }
     observe?.(unchanged ? live : null);
     if (!preflight || !unchanged) return false;
     delete state.pendingSecret;
@@ -283,11 +291,12 @@ export async function settlePendingSecret(api, worker, state, {preflight = false
   // Its starting version is saved before that PUT, so interruption can recover
   // either the original immediate successor or the second write's successor.
   if (ids[0] !== live.versionId || !(repeatVersionId ? repeated || preflight && immediate && live.versionId === repeatVersionId : immediate)) return false;
+  if (state.pendingSecret.copy && live.version?.annotations?.['workers/message'] !== copyMessage(state.pendingSecret.copy)) return false;
   const rows = await api.request(`/workers/scripts/${worker}/secrets`);
-  const names = secretNames(rows);
-  if (!names || names.includes(state.pendingSecret.binding) !== state.pendingSecret.present) return false;
+  const names = secretNames(rows), {bindings, present} = state.pendingSecret;
+  if (!names || bindings.some(binding => names.includes(binding) !== present)) return false;
   const priorNames = await pendingSecretNames(api, worker, state);
-  const otherNames = names.filter(name => name !== state.pendingSecret.binding);
+  const otherNames = names.filter(name => !bindings.includes(name));
   if (!priorNames || priorNames.length !== otherNames.length || !priorNames.every(name => otherNames.includes(name))) return false;
   if (confirm && !repeatVersionId) { await confirm(live); return false; }
   recordSecretChange(state, live, state.pendingSecret);
@@ -406,7 +415,8 @@ async function deployLocked({api, target, plan, artifact, statePath, env, fetch,
     return result;
   }};
   const receipt = await deploy({api:observed, plan, artifact, artifactSha256:hash(artifact), previousReceipt:state.receipt ?? undefined,
-    createResources:false, uploadWithoutReceipt:true, env, fetch, healthOptions, readiness, declaredSecrets,
+    // Migrations run inside this run's state lock: no other deploy of this install is running.
+    createResources:false, uploadWithoutReceipt:true, locked:true, env, fetch, healthOptions, readiness, declaredSecrets,
     onReceipt: async candidate => { if (candidate.changed || !state.receipt) { state.receipt = candidate; delete state.pendingUpload; delete state.pendingSecret; await save(); } },
     // Keep each first-health attempt beside the identity it belongs to.
     onHealth: async candidate => { if (candidate.changed) { state.receipt = candidate; await save(); } }});

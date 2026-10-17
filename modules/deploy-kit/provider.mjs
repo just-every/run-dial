@@ -9,7 +9,7 @@ import { providerResponse, transportOutput, transportReason } from './provider-t
 // A gateway/server error can arrive after a write. An explicit API refusal cannot.
 export const definiteProviderRefusal = error => error.status === 200 || error.status >= 400 && error.status < 500;
 
-async function boundedText(response, limit = 4 * 1024 * 1024, onReadError) {
+async function boundedBytes(response, limit, onReadError) {
   assert(response.body, 'empty-response');
   const reader = response.body.getReader(); const chunks = []; let length = 0;
   try { while (true) {
@@ -20,8 +20,9 @@ async function boundedText(response, limit = 4 * 1024 * 1024, onReadError) {
     length += value.length; assert(length <= limit, 'response-too-large'); chunks.push(value);
   } }
   finally { await reader.cancel().catch(() => {}); }
-  return Buffer.concat(chunks).toString('utf8');
+  return Buffer.concat(chunks);
 }
+const boundedText = async (response, limit = 4 * 1024 * 1024, onReadError) => (await boundedBytes(response, limit, onReadError)).toString('utf8');
 export async function boundedJSON(response, limit) {
   try { return JSON.parse(await boundedText(response,limit)); } catch (error) { if (error instanceof SyntaxError) throw new Error('malformed-response'); throw error; }
 }
@@ -117,6 +118,22 @@ export function cloudflare({ accountId, token, fetch: request = globalThis.fetch
     const shape = (!options.method || options.method === 'GET') && providerListShape(path);
     return shape ? collect(path,{...shape,zone:options.zone,signal:options.signal}) : (await envelope(path,options)).result;
   }
+  /** A Worker version's own modules, as Cloudflare keeps them: multipart parts and the entry module's name. */
+  async function workerContent(worker, versionId) {
+    assert(/^[a-z0-9-]{1,63}$/.test(worker) && /^[0-9a-f-]{36}$/.test(versionId), 'invalid-provider-path');
+    assert(++requests <= maxRequests, 'provider-request-budget');
+    const operation = 'GET /workers/scripts/[worker]/content/v2';
+    const {response,output} = await providerResponse({method:'GET',timeoutMs,reserveRetry:() => requests < maxRequests && (++requests, true),
+      send:signal => request(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${worker}/content/v2?version=${versionId}`, {method:'GET',redirect:'error',signal,headers:{Authorization:`Bearer ${token}`}}),
+      consume:response => response.body ? boundedBytes(response, 64 * 1024 * 1024) : Buffer.alloc(0),
+      failure:(cause,attempts) => Object.assign(new Error('provider-transport-failed'), {providerTransport:{operation,endpoint:`https://api.cloudflare.com/client/v4/accounts/[REDACTED]/workers/scripts/${worker}/content/v2`,attempts,status:null,reason:transportReason(cause)}})});
+    if (!response.ok) throw Object.assign(new Error(`provider-http-${response.status}`), {status:response.status,providerCall:{operation,reason:`provider-http-${response.status}`}});
+    const type = response.headers.get('content-type') ?? '', entry = response.headers.get('cf-entrypoint');
+    assert(type.startsWith('multipart/form-data') && typeof entry === 'string' && entry, 'invalid-worker-content');
+    const parts = await new Response(output, {headers:{'content-type':type}}).formData();
+    assert(parts.has(entry), 'invalid-worker-content');
+    return {parts, entry};
+  }
   async function upload(url, bytes, etag) {
     const destination = importUploadURL(url);
     assert(++requests <= maxRequests, 'provider-request-budget');
@@ -130,6 +147,6 @@ export function cloudflare({ accountId, token, fetch: request = globalThis.fetch
     assert(response.status === 200, 'd1-import-upload-failed');
     assert(response.headers.get('etag')?.replace(/^"|"$/g, '') === etag, 'd1-import-upload-etag-mismatch');
   }
-  return { accountId, envelope, list, importSql(id, sql) { return importD1({envelope,upload,redact:text => redactValues(text,[accountId,token])}, id, sql); }, request:requestResult,
+  return { accountId, envelope, list, importSql(id, sql) { return importD1({envelope,upload,redact:text => redactValues(text,[accountId,token])}, id, sql); }, request:requestResult, workerContent,
     zoneRequest(path, options = {}) { return requestResult(path, { ...options, zone: true }); } };
 }

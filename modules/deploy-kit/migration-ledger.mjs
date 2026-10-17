@@ -44,10 +44,26 @@ export const recorded = (row, migration) => row.name === migration?.name && (row
 const validPrefix = (rows, migrations) => rows.every((row, index) => recorded(row, migrations[index]) && row.state === 'applied');
 const same = (a, b) => a.length === b.length && a.every((row, index) => row.name === b[index].name && row.sha256 === b[index].sha256 && row.state === b[index].state);
 
-export async function readLedger(api, id, migrations, query) {
+/** History this build does not match. When it ends in an unconfirmed claim after a
+ * valid prefix, the error names that claim (`unconfirmedClaim`) so the refusal can
+ * give the exact command that clears it; `rewritten` says a reviewed rewrite
+ * replaced the claimed bytes and only a deploy holding the install's lock retries it. */
+function unmatched(rows, migrations) {
+  const error = new Error('changed-or-uncertain-migration-history'), last = rows.at(-1);
+  if (last?.state === 'applying' && /^[a-f0-9]{64}$/.test(last.sha256 ?? '') && validPrefix(rows.slice(0, -1), migrations)) {
+    const next = migrations[rows.length - 1];
+    error.unconfirmedClaim = { name:last.name, sha256:last.sha256, rewritten:last.name === next?.name && (next.rewrites ?? []).some(rewrite => rewrite.from === last.sha256) };
+  }
+  return error;
+}
+
+/** `rewritten`: the caller holds the install's deploy lock (owner.mjs withStateLock),
+ * so no other deploy of it is running; a claim on bytes a reviewed rewrite replaced
+ * is then this build's to retry. */
+export async function readLedger(api, id, migrations, query, { rewritten = false } = {}) {
   const read = async sql => (await query(api, id, sql))[0].results;
   const tables = (await read(`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('${legacy}','${ledger}')`)).map(row => row.name);
-  let old = [], applied = [], transition = '', claimed = false;
+  let old = [], applied = [], transition = '', claimed = false, claimedFrom;
   if (tables.includes(legacy)) {
     const columns = await read(`SELECT name FROM pragma_table_info('${legacy}')`);
     assert(columns.length === 3 && columns.every(row => ['name','sha256','state'].includes(row.name)), 'invalid-migration-ledger');
@@ -59,11 +75,15 @@ export async function readLedger(api, id, migrations, query) {
     assert(['id','name','applied_at'].every(name => columns.includes(name)), 'invalid-migration-ledger');
     if (columns.includes('sha256') && columns.includes('state')) {
       applied = await read(`SELECT name, sha256, state FROM ${ledger} ORDER BY id`);
-      // The last row may claim this build's next migration, exact bytes, whose import
-      // did not complete; migrate re-runs it only on proof (migration-retry.mjs).
-      const last = applied.at(-1);
-      if (!tables.includes(legacy) && last?.state === 'applying' && last.name === migrations[applied.length - 1]?.name && last.sha256 === migrations[applied.length - 1].sha256) claimed = Boolean(applied.pop());
-      assert(validPrefix(applied, migrations), 'changed-or-uncertain-migration-history');
+      // The last row may claim this build's next migration whose import did not
+      // complete: its exact bytes, or (`rewritten`) bytes a reviewed rewrite replaced.
+      // migrate re-runs it only on proof (migration-retry.mjs).
+      const last = applied.at(-1), next = migrations[applied.length - 1];
+      if (!tables.includes(legacy) && last?.state === 'applying' && last.name === next?.name) {
+        if (last.sha256 === next.sha256) claimed = Boolean(applied.pop());
+        else if (rewritten && (next.rewrites ?? []).some(rewrite => rewrite.from === last.sha256)) { claimedFrom = last.sha256; claimed = Boolean(applied.pop()); }
+      }
+      if (!validPrefix(applied, migrations)) throw unmatched(applied, migrations);
       if (tables.includes(legacy)) assert(same(applied, old), 'changed-or-uncertain-migration-history');
     } else {
       assert(!columns.includes('sha256') && !columns.includes('state'), 'invalid-migration-ledger');
@@ -82,7 +102,7 @@ export async function readLedger(api, id, migrations, query) {
     applied = old;
   }
   if (tables.includes(legacy)) transition += `DROP TABLE ${legacy};`;
-  return { applied, transition, claimed, exists:tables.includes(ledger) || tables.includes(legacy) };
+  return { applied, transition, claimed, claimedFrom, exists:tables.includes(ledger) || tables.includes(legacy) };
 }
 function insert(row) {
   return `INSERT INTO ${ledger}(name,sha256,state) VALUES (${literal(row.name)},${literal(row.sha256)},'applied');\n`;

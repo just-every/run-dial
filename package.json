@@ -55,7 +55,7 @@
     "@cloudflare/workers-types": "5.20260908.1",
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.64.1",
-    "@runeditrun/rer": "0.2.44",
+    "@runeditrun/rer": "0.2.48",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "22.19.17",
     "@types/react": "^19.2.18",
