@@ -27,5 +27,5 @@ export async function pendingSecretNames(api, worker, {pendingSecret, receipt}) 
   if (anchor?.id !== pendingSecret.versionId || anchor?.resources?.script?.etag !== receipt.provider.etag
     || !Array.isArray(bindings) || !bindings.every(row => row && typeof row === 'object' && !Array.isArray(row) && historicalBindingTypes.has(row.type))
     || !validSecretNames(bindings.map(row => row.name)) || deployedFingerprint({bindings}) !== receipt.fingerprint) return null;
-  return bindings.filter(row => row.type === 'secret_text' && row.name !== pendingSecret.binding).map(row => row.name);
+  return bindings.filter(row => row.type === 'secret_text' && !pendingSecret.bindings.includes(row.name)).map(row => row.name);
 }

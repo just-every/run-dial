@@ -15,8 +15,10 @@ import { verifyHealth } from './health.mjs';
  * mode creates owned resources itself first, then passes false. `uploadWithoutReceipt`
  * re-uploads an identical build when no receipt survived, instead of refusing the no-op.
  * `declaredSecrets` (default `plan.secrets`) are the secrets the fingerprint names: owner mode
- * passes the declaration's, so retiring the spent setup token leaves the build unchanged. */
-export async function deploy({api,plan,artifact,artifactSha256,previousReceipt,repeatOnly=false,createResources=!previousReceipt,uploadWithoutReceipt=false,onReceipt,onHealth,readiness={},env={},fetch=globalThis.fetch,healthOptions={},declaredSecrets=plan.secrets}) {
+ * passes the declaration's, so retiring the spent setup token leaves the build unchanged.
+ * `locked`: the caller holds the install's deploy lock (owner mode), so migrate may retry a
+ * claim on bytes a reviewed rewrite replaced. */
+export async function deploy({api,plan,artifact,artifactSha256,previousReceipt,repeatOnly=false,createResources=!previousReceipt,uploadWithoutReceipt=false,onReceipt,onHealth,readiness={},env={},fetch=globalThis.fetch,healthOptions={},declaredSecrets=plan.secrets,locked=false}) {
   validatePlan(plan); validateArtifact(artifact);
   await verifyServiceGrants(api, plan);
   for (const item of plan.d1) validateMigrations(item.migrations);
@@ -43,7 +45,7 @@ export async function deploy({api,plan,artifact,artifactSha256,previousReceipt,r
   }
   const migrations = [];
   // A migration failure names its database, so the owner knows which one to inspect.
-  for (const item of plan.d1) migrations.push({binding:item.binding,...await migrate(api,resources.d1.find(x => x.binding === item.binding).id,item.migrations,{apply:!unchanged,upgrade:true}).catch(error => { error.resource ??= `d1:${item.name}`; throw error; })});
+  for (const item of plan.d1) migrations.push({binding:item.binding,...await migrate(api,resources.d1.find(x => x.binding === item.binding).id,item.migrations,{apply:!unchanged,upgrade:true,locked}).catch(error => { error.resource ??= `d1:${item.name}`; throw error; })});
   const window = readiness.window ?? readinessWindow({...(healthOptions.now ? {clock:healthOptions.now} : {}), ...(healthOptions.sleep ? {sleep:healthOptions.sleep} : {}), ...readiness});
   let upload;
   if (!unchanged) { window.start(); upload = await uploadWorker(api,{plan,artifact,bindings,secrets,migration,fingerprint}); }
