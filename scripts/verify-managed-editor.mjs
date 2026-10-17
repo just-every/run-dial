@@ -27,7 +27,7 @@ try {
     const response = await app.call('/auth/confirm', { token }); assert.equal(response.status, 303);
     return sessionCookie(response);
   };
-  browser = await chromium.launch({ headless: true, args: ['--disable-gpu'] });
+  browser = await chromium.launch({ headless: true, args: ['--disable-gpu', '--use-mock-keychain', '--password-store=basic'] });
   const results = [];
   for (const width of [1440, 390]) {
     if (results.length) cookie = await freshCookie();

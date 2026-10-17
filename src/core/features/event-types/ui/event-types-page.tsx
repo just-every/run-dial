@@ -1,3 +1,4 @@
+import { OfferedTimesPanel } from "../../booking-links/client";
 import { offeredLocations } from "../locations";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { BookingLinksPanel } from "../../booking-links/client";
@@ -33,7 +34,7 @@ export function EventTypesPage({ workspace = "/app" }: { workspace?: "/app" | "/
       {setup.error ? <p role="alert" className="rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{setup.error}</p> : null}
       {error ? <p role="alert" className="rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{error}</p> : null}
       {eventTypes === undefined ? <p role="status" className="text-sm text-muted">Loading event types…</p> : eventTypes.length === 0 ? <EmptyState title="No event types yet" description="Create your first event type to begin configuring availability and public booking." action={<Link to={`${workspace}/event-types/new`} className={buttonClassName()}>New event type</Link>} /> : <div className="grid gap-4">{eventTypes.map((eventType) => <EventTypeRow workspace={workspace} link={setup.state?.links.find((link) => link.eventTypeId === eventType.id)} eventType={eventType} key={eventType.id} />)}</div>}
-      {workspace === "/app" && eventTypes ? <BookingLinksPanel events={eventTypes} /> : null}
+      {workspace === "/app" && eventTypes ? <><OfferedTimesPanel events={eventTypes} /><BookingLinksPanel events={eventTypes} /></> : null}
     </div>
   );
 }

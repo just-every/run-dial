@@ -58,7 +58,7 @@ await externalConflict(booking);
 // Deliberately remove published hours; the operator must explicitly authorize the override.
 const configuration = await data(`/api/app/event-types/${fixture.eventId}`, undefined, 200, true);
 await data(`/api/app/event-types/${fixture.eventId}`, { ...configuration, availability: [{ weekday: 0, startMinute: 540, endMinute: 570 }] }, 200, true, "PATCH");
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 let page;
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1024 }, timezoneId: "Australia/Brisbane" });

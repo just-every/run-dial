@@ -1,3 +1,4 @@
+import { offeredTimesJourney } from "./offered-times-journey.mjs";
 import { rescheduleRequestJourney } from "./reschedule-request-journey.mjs";
 import { locationJourney } from "./location-journey.mjs";
 import { bookingLinksJourney } from "./booking-links-journey.mjs";
@@ -18,7 +19,7 @@ let cookie;
 const checks = [];
 async function call(path, body, expected = 200, method = body === undefined ? "GET" : "POST") {
   const response = await fetch(origin + path, { method, headers: { origin, "content-type": "application/json", ...(cookie ? { cookie } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: "manual" });
-  assert.equal(response.status, expected, `${method} ${path}: ${await response.clone().text()}`);
+  assert.ok((Array.isArray(expected) ? expected : [expected]).includes(response.status), `${method} ${path}: ${await response.clone().text()}`);
   return response;
 }
 const data = async (...args) => (await call(...args)).json();
@@ -224,6 +225,7 @@ await correspondenceJourney({ data, call, state, deliver, future, checks });
 await locationJourney({ data, call, state, deliver, future, checks });
 await rescheduleRequestJourney({ data, call, state, deliver, future, checks });
 await bookingLinksJourney({ data, call, state, deliver, future, checks });
+await offeredTimesJourney({data,call,future,checks});
 await data("/wire/ambiguous", {});
 await book(12); await deliver(); snap = await state();
 assert.ok(snap.base_mail_dispatch.some(row => row.state === "uncertain"));

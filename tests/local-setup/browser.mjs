@@ -6,7 +6,7 @@ import { evidencePath } from "../../scripts/evidence-path.mjs";
 
 /** Real local owner flow, after setup or restore, through the printed one-click link. */
 export async function browserJourney(origin, { email, width, openUrl, onSignedIn, completed = false }) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   try {
     const context = await browser.newContext({ viewport: { width, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] });
     const page = await context.newPage();

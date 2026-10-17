@@ -36,7 +36,7 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
    // Local sign-in completes without mail, including before hydration.
    server = await start(directory, 'dev', values.APP_URL, []);
    await runRer(directory, ['reset', '--yes'], { expected: 4 });
-   browser = await chromium.launch({ headless: true });
+   browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width, height: 900 } });
    await openGateFromLink(context, server.openUrl);
    const page = await context.newPage();
@@ -47,7 +47,7 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
     savedProfile = await completeFirstRun(page, values.APP_URL, onPhase);
 
    } });
-   await runRer(directory, ['dev', '--stop']); await server.owned.stop(); server = undefined;
+   await server.owned.stop(); server = undefined;
    await runRer(directory, ['export', '--output', 'exports/first.rer']);
    await runRer(directory, ['import', '--input', 'exports/first.rer', '--yes'], { expected: 4 });
    await legacyResetRefusal(directory);
@@ -72,7 +72,7 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
     await page.goto(values.APP_URL + '/app/settings');
     assert.equal((await page.request.get(values.APP_URL + '/api/app/profile')).status(), 200);
    } });
-   await runRer(directory, ['dev', '--stop']); await server.owned.stop(); server = undefined;
+   await server.owned.stop(); server = undefined;
    await runRer(directory, ['reset', '--yes']);
    await runRer(directory, args, { timeout: 300_000 });
    server = await start(directory, 'dev', values.APP_URL);
@@ -82,7 +82,7 @@ contract('OPER-001', 'README public CLI preserves its owner at 1440/390, signs i
     assert.equal((await (await page.request.get(values.APP_URL + '/api/app/host-setup')).json()).completedAt, null);
     await page.goto(values.APP_URL + '/app/settings'); await page.waitForURL(values.APP_URL + '/setup');
    } });
-   await runRer(directory, ['dev', '--stop']); await server.owned.stop(); server = undefined;
+   await server.owned.stop(); server = undefined;
   } finally { await browser?.close(); await server?.owned.stop(); await removeCopy(directory); }
  }
 });
@@ -101,7 +101,7 @@ contract('DATA-001', 'native hosted export imports through the ordinary CLI into
   } });
   // Complete the source browser checks before a separate session exports and
   // stops it. Restoration must never depend on the source coming back online.
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   const context = await browser.newContext();
   try {
    await openGateFromLink(context, server.openUrl);
@@ -112,7 +112,6 @@ contract('DATA-001', 'native hosted export imports through the ordinary CLI into
     assert.equal((await page.request.get(values.APP_URL + '/api/app/session')).status(), 200);
    } catch { throw Error('Hosted export owner sign-in failed; private diagnostics omitted.'); }
    await hostedExportJourney(page, { openUrl: server.openUrl, ownerGrant: email => ownerGrant(directory, email), hostedMigrations, origin: values.APP_URL, privateBytes, values, records, checkpointState: (id, operation) => checkpointState(directory, id, operation), stopSource: async () => {
-    await runRer(directory, ['dev', '--stop']);
     await server.owned.stop(); server = undefined;
    } });
   } catch (error) { throw safeBrowserFailure('signed-in callback', 1440, error); }

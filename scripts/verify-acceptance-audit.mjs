@@ -19,7 +19,7 @@ import { evidencePath } from "./evidence-path.mjs";
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752";
 const scans = [], errors = [], checks = [];
 const environment = `Local workerd on ${hostname()}, headless Chromium and maintained test-only calendar/mail adapters. These results establish neither production capacity nor complete WCAG 2.2 AA conformance. No manual screen-reader testing. Manifest statuses remain unchanged.`;
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 let owner;
 try {
   for (const width of [1440, 390, 320]) {

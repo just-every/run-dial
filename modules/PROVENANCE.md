@@ -86,3 +86,5 @@ Dial's AuthStore reads an unpinned session and its current operator authority
 in one SELECT. Pinned provider sessions retain a second fresh authority read
 with the captured provider fence. This request-latency adaptation remains outside
 the byte-exact Base copy claims and does not change the upstream revision.
+
+The 18 October 2026 LINK-002 round pins the published CLI package to rer 0.2.50 and reruns its frozen install. Recorded vendored Base copies retain their existing source revisions and bytes; the CLI package pin is separate from those copy claims.

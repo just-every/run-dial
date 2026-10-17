@@ -4,7 +4,7 @@ import { chromium } from "@playwright/test";
 /** `rer dev` opens signed in: following its RER_OPEN link lands the owner on /setup with a real session, no mail and no password. */
 export async function devIdentityJourney(server, origin, { width, email, onSignedIn }) {
   assert.equal(server.signedInAs, email, "rer dev names the identity it opens");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   try {
     const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 } });
     const page = await context.newPage();

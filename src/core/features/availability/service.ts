@@ -42,7 +42,7 @@ export class AvailabilityService {
     const selectedDuration = resolveEventDuration(event, durationMinutes);
     if (selectedDuration === undefined) return { kind: "invalid_duration" };
     const today = hostDateAt(now, profile.timezone);
-    const firstDate = week ?? event.bookingLink?.dates?.map(date=>date.hostDate).sort().find(date=>date>=today) ?? today;
+    const firstDate = week ?? event.bookingLink?.offeredStarts?.map(start=>hostDateForInstant(start,profile.timezone)).sort().find(date=>date>=today) ?? event.bookingLink?.dates?.map(date=>date.hostDate).sort().find(date=>date>=today) ?? today;
     return this.listEventWeek({ ...event, durationMinutes: selectedDuration }, profile.timezone, firstDate, inviteeTimeZone, now);
   }
 
@@ -139,7 +139,7 @@ export class AvailabilityService {
     const loaded = await this.loadInput(event, hostTimeZone, firstDate, days, now, freshness, operatorOverride, excludedBookingId);
     if (!loaded) return { state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] };
     const { input, range } = loaded;
-    const slots = listAvailableSlots(input);
+    const slots = listAvailableSlots(input).filter(slot=>!event.bookingLink?.offeredStarts || event.bookingLink.offeredStarts.includes(slot.startAt));
     const rankedSlots = slots.length && operatorOverride.includeRecommendations !== false
       ? rankSlots(slots, buildRecommendationContext(input, range, inviteeTimeZone), slots.length) : [];
     return { state: "available", calendarRequired: loaded.calendarRequired, week: firstDate, slots, recommendations: rankedSlots.slice(0, 5), rankedSlots };

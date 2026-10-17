@@ -23,7 +23,7 @@ export async function loadAvailabilityInput(
   const busyEnd = new Date(rangeEnd.getTime() + event.afterBufferMinutes * 60_000).toISOString();
   const [busy, internalClaims, overrides, limitExclusions] = await Promise.all([
     dependencies.calendar.readBusy({ startAt: busyStart, endAt: busyEnd, freshness }),
-    dependencies.repository.listInternalClaims(busyStart, busyEnd, excludedBookingId, event.hostDayBookingLimit === null ? [] : Array.from({ length: days }, (_, day) => datePlus(firstDate, day))),
+    dependencies.repository.listInternalClaims(busyStart, busyEnd, excludedBookingId, event.hostDayBookingLimit === null ? [] : Array.from({ length: days }, (_, day) => datePlus(firstDate, day)), event.bookingLink?.id),
     event.bookingLink?.dates ? Promise.resolve(event.bookingLink.dates.map(date => ({ hostDate: date.hostDate, mode: "open" as const, windows: date.windows }))) : dependencies.eventTypes.effectiveDateOverrides(event.id, firstDate, days),
     dependencies.repository.limitsForRange(event.id, hostTimeZone, firstDate, days, excludedBookingId),
   ]);

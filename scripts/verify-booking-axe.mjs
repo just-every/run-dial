@@ -12,7 +12,7 @@ import { operatorJourney } from "../tests/booking-axe/operator.mjs";
 import { publicSiteAudits, publicSiteJourney } from "../tests/booking-axe/public-site.mjs";
 import { evidencePath } from "./evidence-path.mjs";
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752";
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 const scans = [], errors = [], keyboardChecks = [];
 let storageState;
 try {

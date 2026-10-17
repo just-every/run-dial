@@ -1,3 +1,4 @@
+import type { OfferedSlot } from "./holds";
 import { createOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import { nowIso } from "../../shared/ids";
 import type { EventTypesService } from "../event-types";
@@ -8,9 +9,9 @@ import { BookingLinksRepository } from "./repository";
 export class BookingLinksService {
   constructor(private readonly repository: BookingLinksRepository, private readonly events: EventTypesService, private readonly secret: string) {}
   async list() {
-    return (await this.repository.list()).map(record => ({ id: record.id, eventTypeId: record.eventTypeId, kind: record.kind, expiresAt: record.expiresAt, createdAt: record.createdAt, state: state(record) }));
+    return (await this.repository.list()).map(record => ({ id: record.id, eventTypeId: record.eventTypeId, kind: record.kind, offeredStarts: record.offeredSlotsJson ? (JSON.parse(record.offeredSlotsJson) as OfferedSlot[]).map(slot=>slot.startAt) : undefined, holdUntil: record.holdUntil, expiresAt: record.expiresAt, createdAt: record.createdAt, state: state(record) }));
   }
-  async create(input: BookingLinkInput) {
+  async create(input: BookingLinkInput, slots?: OfferedSlot[]) {
     input = {...input,expiresAt:new Date(input.expiresAt).toISOString()};
     if (input.expiresAt <= nowIso()) return { kind: "invalid_expiry" as const };
     const event = await this.events.getEventType(input.eventTypeId);
@@ -20,7 +21,8 @@ export class BookingLinksService {
     const missing = readiness.missing.filter(reason=>reason!=="open_availability" || !input.overrides?.dates.some(date=>date.windows.length));
     if (missing.length) return {kind:"not_ready" as const,missing};
     const token = createOpaqueToken();
-    const id = await this.repository.create(input, await hashToken(token, this.secret));
+    const id = await this.repository.create(input, await hashToken(token, this.secret), slots);
+    if (!id) return {kind:"slot_taken" as const};
     return { kind: "created" as const, id, token, slug: event.slug };
   }
   revoke(id: string) { return this.repository.revoke(id); }
@@ -29,7 +31,7 @@ export class BookingLinksService {
     const link=await this.repository.byBooking(bookingId);
     if (!link) return undefined;
     const base=await this.events.getEventType(link.eventTypeId);
-    return base ? this.effectiveEvent(base,link) : undefined;
+    return base ? this.effectiveEvent(base,{...link,offeredSlotsJson:null}) : undefined;
   }
   async resolve(slug: string, token?: string): Promise<{ kind: "active" | "used" | "expired"; event: LinkEvent } | undefined> {
     if (!token) {
@@ -46,8 +48,8 @@ export class BookingLinksService {
   }
   private effectiveEvent(base:LinkEvent,link:BookingLinkRecord):LinkEvent {
     const overrides = link.overridesJson ? oneOffOverridesSchema.parse(JSON.parse(link.overridesJson)) : undefined;
-    const event: LinkEvent = { ...applyOverrides(base,overrides), status: "published", requestOnly: false, alternativeRequestsEnabled: false,
-      bookingLink: { id: link.id,kind:link.kind, expiresAt: link.expiresAt, dates: overrides?.dates },
+    const event: LinkEvent = { ...applyOverrides(base,overrides), ...(link.offeredSlotsJson ? {durationOptionsMinutes:[base.durationMinutes]} : {}), status: "published", requestOnly: false, alternativeRequestsEnabled: false,
+      bookingLink: { id: link.id,kind:link.kind, offeredStarts: link.offeredSlotsJson ? (JSON.parse(link.offeredSlotsJson) as OfferedSlot[]).map(slot=>slot.startAt) : undefined, expiresAt: link.expiresAt, dates: overrides?.dates },
     };
     return event;
   }

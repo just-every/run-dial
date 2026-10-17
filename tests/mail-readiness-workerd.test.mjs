@@ -39,7 +39,7 @@ test("NOTIFY-006 native Workers fetch checks authenticated domains and refuses r
     const ready = await worker.dispatchFetch("https://readiness.test/");
     assert.equal(ready.status, 200);
     assert.ok(Number.isFinite(Date.parse((await ready.json()).checkedAt)));
-    assert.deepEqual(calls, [senderUrl, domainUrl].map(expectedCall));
+    assert.deepEqual(calls.toSorted((a,b)=>a.url.localeCompare(b.url)), [senderUrl, domainUrl].map(expectedCall).toSorted((a,b)=>a.url.localeCompare(b.url)));
 
     for (redirectAt of [senderUrl, domainUrl]) {
       for (redirectStatus of [301, 302, 303, 307, 308]) {
@@ -47,7 +47,7 @@ test("NOTIFY-006 native Workers fetch checks authenticated domains and refuses r
         const refused = await worker.dispatchFetch("https://readiness.test/");
         assert.equal(refused.status, 503);
         assert.deepEqual(await refused.json(), { code: "provider_unavailable", retryable: false });
-        assert.deepEqual(calls, [senderUrl, domainUrl].map(expectedCall), "only the concurrent initial reads receive credentials; no redirect destination, retry or mail send does");
+        assert.deepEqual(calls.toSorted((a,b)=>a.url.localeCompare(b.url)), [senderUrl, domainUrl].map(expectedCall).toSorted((a,b)=>a.url.localeCompare(b.url)), "only the concurrent initial reads receive credentials; no redirect destination, retry or mail send does");
       }
     }
     // A remembered identity selects a live read, never a cached health result.
@@ -56,7 +56,7 @@ test("NOTIFY-006 native Workers fetch checks authenticated domains and refuses r
     redirectAt = undefined;
     calls.length = 0;
     assert.equal((await worker.dispatchFetch("https://readiness.test/")).status, 200);
-    assert.deepEqual(calls, [senderUrl, domainUrl].map(expectedCall));
+    assert.deepEqual(calls.toSorted((a,b)=>a.url.localeCompare(b.url)), [senderUrl, domainUrl].map(expectedCall).toSorted((a,b)=>a.url.localeCompare(b.url)));
     calls.length = 0;
     assert.equal((await worker.dispatchFetch("https://readiness.test/")).status, 200);
     assert.deepEqual(calls, [expectedCall(exactDomainUrl)]);

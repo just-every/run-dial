@@ -12,7 +12,7 @@ let browser;
 try {
   await startRuntime({ after: (fn) => cleanup.push(fn) });
   await fetch(origin + "/__test/setup", { method: "POST" });
-  browser = await chromium.launch({ channel: "chrome", headless: true });
+  browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   for (const width of [1440, 390]) {
     const context = await browser.newContext({ viewport: { width, height: 900 } });
     const page = await context.newPage(); const errors = [];

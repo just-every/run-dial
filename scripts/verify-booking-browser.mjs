@@ -6,7 +6,7 @@ import { chromium } from "@playwright/test";
 import { openGate } from "../tests/dev-key.mjs";
 
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15702";
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 const errors = [];
 const inviteeName = `Browser invitee ${Date.now()}`;
 try {
