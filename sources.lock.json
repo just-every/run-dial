@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "parent": null,
   "edition": "just-every/dial",
-  "manifest": "b753041d196e63330129d1f3428ef80ded76c8294e5ea2bc8e9d9cc78f00e10f",
+  "manifest": "e32fbdd6e6c8160bd09b761673f645974ca17a82f10b3a47a7766ac45d881edf",
   "toolchain": {
     "id": "runeditrun/edition-authoring",
     "version": "1.1.0",
@@ -48,7 +48,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/operator-auth",
           "paths": [
             "README.md",
@@ -141,9 +141,9 @@
         }
       },
       "baseline": {
-        "key": "fa462883c66450882b094bc7aea226075c42fdb06a1620460cb655cd93f3cff4",
+        "key": "9358640f18fe38901a5078cf5dd493a15873dd0a5fbe7e3c8e029193bc64bd91",
         "digest": "9dc3047aad64a967f85651ff0b34b944a6954e696d291598dce432f9b38ad42e",
-        "sha256": "3ad93d6a32333902cc6484df01b6af47af191df20d88f747826673269af63786"
+        "sha256": "175cdb4f9efd590e5af258dbf24e54e1a98d3c7a5f6d5f3c0289d8311d3d7634"
       }
     },
     {
@@ -155,7 +155,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/mail",
           "paths": [
             ".gitignore",
@@ -227,9 +227,9 @@
         }
       },
       "baseline": {
-        "key": "ce7d6c57156ac69e2bc16a7001cd362986d54351466b3b34532d5de0e4e14d5a",
+        "key": "f51b49e17c7c202acd74913661cbe5bba9ef3b6851be789228d509c8b08e5d80",
         "digest": "cbaaafa1f4b1e20ed09ef47fe9ecee9d17143258424c1b016e6c2092daa66be6",
-        "sha256": "5b35b9715818671939875fdc01a76ce7913abd6f8bbc670474ed828d28304080"
+        "sha256": "c92e13087a4aa463357219620c9ec98d6941fc44c798c946f601adea0d66622f"
       }
     },
     {
@@ -241,7 +241,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/deploy-kit",
           "paths": [
             "README.md",
@@ -295,9 +295,9 @@
         }
       },
       "baseline": {
-        "key": "948a134e00557fee4098523df37e7d111686ea46d769615fa84a056649dbe580",
-        "digest": "f2f183ebf165ff073ae8957838e501415653a7e6031e894e0a11ecc846c4d1bd",
-        "sha256": "a33f5ae22e92853444f5af719d3119931134001463f3822f967986ee43d11724"
+        "key": "d93fac9f5ec66a1efa56a5cdfdcf6867dfaa8fead40e4439dbe3625037134857",
+        "digest": "3ca3cd18427abb3dd5b4db4f753e76bb76f905a64e7f448e391129b3e00e9236",
+        "sha256": "dae24095ba9501d6aac605ff9966a09ae6ccb474b324721a7673e7d33f5cde32"
       }
     },
     {
@@ -309,7 +309,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "edition-authoring",
           "paths": [
             "README.md",
@@ -326,9 +326,9 @@
         }
       },
       "baseline": {
-        "key": "8cc47a91ff008a12c5e3d13aaab4a09f35b9c01bee25df7914d19eac92918234",
+        "key": "c7152d56f846f07ae31282033afb05eb313d1f3e3ca89bad7898c651481f6a91",
         "digest": "b690545d715f3e1fd63439d82cfd2d8cd2a189479a6e03746c7b3bf156713a63",
-        "sha256": "9fbc1559a5b318e3a83579bf05db377807d6b03c49ce3706d1345231b74eb8d5"
+        "sha256": "081edc50cbb0817f0d8cad98457041380a93d513f4bcea27ffc8e43da9baa207"
       }
     },
     {
@@ -340,7 +340,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "default-seed/src/core/platform/auth",
           "paths": [
             "local.server.d.mts",
@@ -351,9 +351,9 @@
         }
       },
       "baseline": {
-        "key": "c025c9cc0a709c26b180987088883e148de1f4bae4f432cada15d1ed31b97a4b",
+        "key": "90254af09ef1293a6c80d69164e65178000bc779e57340a1e9b372cbcc04f245",
         "digest": "6ec7be4a0a660111f1042190efba2d2808be19a4906a461e3c17ba0f446e0068",
-        "sha256": "454eabbd993cef32f430422fbadcf9c51ccfb044b44869f24a12cb9a24889120"
+        "sha256": "ec2c447626f9ea945f27af1578e95e2e79e9fc546d8951eea6d33a55aa47aa52"
       }
     },
     {
@@ -365,7 +365,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "operations",
           "paths": [
             "operations.mjs",
@@ -374,9 +374,9 @@
         }
       },
       "baseline": {
-        "key": "69cee667ceb9c90bebe16d3a84b9a14a97719e3bfd328e590ebeb4aa92d547f1",
+        "key": "84d108269e1dd6f1f84b111cdfbe6ceee80af331aacfebad0f998bd9d644451c",
         "digest": "ef2bd682d4468266e3a72b5a54e9a5e662158a9a1244897aca6c1b1814555f15",
-        "sha256": "d0d4efe59fa55f5d0d97b72a2d91c36725074deeae95075f767ca2884212f958"
+        "sha256": "a35676f7cb022d1007f000a2d2b3ed78f77aa5d51eef174bac43ad3d2c821cf0"
       }
     },
     {
@@ -388,7 +388,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "paths": [
             "modules/editor/src/config.ts",
             "modules/editor/src/index.ts",
@@ -413,9 +413,9 @@
         ]
       },
       "baseline": {
-        "key": "70e43440be1abc3925bc3252cc7ac2178831338ad5322b071800c751cb9c03ae",
+        "key": "2796c306a67ba276204303ed8588dcde8fcba0ceb7ef0de625f6f5200343f377",
         "digest": "76b88277ccc6f43b094c9f92d866016253d9acd49b615cf5f182e12fa46d196c",
-        "sha256": "8747c1cbc0d4c2283a03397c795fbca7cb98001a0f7e8095874f95cbe0320dfd"
+        "sha256": "a63c526e5099cf275ee7fd0c596ae7c0aa3e0e7c3152ae00255194a37254c805"
       }
     },
     {
@@ -427,7 +427,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "paths": [
             "modules/owner-claim/README.md",
             "modules/owner-claim/idp.mjs",
@@ -449,9 +449,9 @@
         ]
       },
       "baseline": {
-        "key": "30312b61cc5a3013ded7d9b2e7a481c440bf0a98daadf1c7a77413936479002a",
+        "key": "155670d6ff82fcbbeaddcf9522990e0bb2ed708ea02c606c791a3c270246f98e",
         "digest": "89fdd8e64fbc1fc669572727df4e59c9f6502b9169f843659f456241eac394f8",
-        "sha256": "d6bbff6b23417192ba2e9a9869192ebaa6d50265eeef9c4557d21b3dae4c3d05"
+        "sha256": "f94156f92fafc560c82d158a01d875d211f8cee0036da6ca856d3a938fce5c95"
       }
     },
     {
@@ -484,7 +484,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "paths": [
             "modules/delivery-producer/artifact.mjs",
             "modules/delivery-producer/bindings.mjs",
@@ -602,9 +602,9 @@
         ]
       },
       "baseline": {
-        "key": "a2d78e63ddab77cda9b86fe31836495787d4a5eb807ab6c0da864042badf041d",
+        "key": "f96c3cd9ed818542a5fa1efc4d3952ce7cd65cbd5322fe05eb2187e1c57d9793",
         "digest": "aaf0273ef8e4393ca78519337d317a2e710b0aa05b29cad3a9113c644915b086",
-        "sha256": "62d2e9d0422b2f24a6fc7e9fe1d40d87e9e2cc20d1a023e1134fe8859b91f06c"
+        "sha256": "5301b23f967e444108a08afcab25c865111f185a7499df5447ab5f8711f22bf8"
       }
     },
     {
@@ -616,7 +616,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/import-kit",
           "paths": [
             "CONTRACT.md",
@@ -804,9 +804,9 @@
         }
       },
       "baseline": {
-        "key": "651e6593b36d6992603816751f73196885954b38df1939ec080f5365d7c9f239",
+        "key": "40983b7a6cdebeebff1ecd3fb5aea82b210af5ae03cc85630524af7d8ce83088",
         "digest": "995db87cc7a73852c842aa992f0a177c059f8db5a6f3c312917f3ff2f5ec1b9b",
-        "sha256": "3098dc20f75a863c864c21d23132aab376af68410a333f919fe75c7b42a7ccfe"
+        "sha256": "dc29c2fba64164290a360c3240b536a8f5b80b73d905ef14150da0c03db1cbb7"
       }
     }
   ],
@@ -888,7 +888,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "db31d2081cd72ec82ebbe69c33c778a93d53593b042e12a0e431abd9b86e1820",
+      "sha256": "f87e42227a1bbc78b252d572da6b6542edcbe198bc2980e324876b2bee0d5654",
       "executable": false
     },
     "BASELINE.md": {
@@ -896,7 +896,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "16cd0f50623648c27c4e53df42d2812a5302ca3b8f006f5162b3a52d546c4660",
+      "sha256": "8952302169ca57ffa6df495274d431a54d58bb5856578530c5cc42976ecdd18f",
       "executable": false
     },
     "CLAUDE.md": {
@@ -968,7 +968,7 @@
       "executable": false
     },
     "edition.json": {
-      "sha256": "b753041d196e63330129d1f3428ef80ded76c8294e5ea2bc8e9d9cc78f00e10f",
+      "sha256": "e32fbdd6e6c8160bd09b761673f645974ca17a82f10b3a47a7766ac45d881edf",
       "executable": false
     },
     "ERASURE.md": {
@@ -1444,11 +1444,11 @@
       "executable": false
     },
     "modules/deploy-kit/site-readback.mjs": {
-      "sha256": "d7538b5e4531a3c1e899dd0802614a25ff714a108fe542f3293bec798f38b33b",
+      "sha256": "bd9bb14c186c70505e86a9e57014e33e17dd1092db05f629b9f190c03d9352c2",
       "executable": false
     },
     "modules/deploy-kit/site.mjs": {
-      "sha256": "696f3a33aab3576f6de5ecbdf4e422ca02dff2e6c4f08101f16605148beee09c",
+      "sha256": "be50648104dabadf1906b0d2b751e5b859ecd10c6804d1534f4d45329dd6444a",
       "executable": false
     },
     "modules/deploy-kit/sql-safety.mjs": {
@@ -2940,11 +2940,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "b1a33b250ee8a84dcd837e2ef42bb5aba476d6bd4f7b7e77f00b0b6ff8f57054",
+      "sha256": "e61e64dcf0730470daf314c52c4219d0854c09468a56845c9ea8bd9160297120",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "5a8e48eb2874c71acd0cb4b880db068743800858534ad48db03b1f6180c45b2e",
+      "sha256": "ffd9c76a4b708c071d073dc0ee2ec97704b41448f5ab10ab1353dce16947ffe2",
       "executable": false
     },
     "public/brand/band.svg": {
@@ -5260,7 +5260,7 @@
       "executable": false
     },
     "src/core/platform/public-admission.ts": {
-      "sha256": "549f093d0f87791483a4616eb949cfa56eb6c386ec198ff20654d54ccb59e028",
+      "sha256": "aea1ade5434922431e5ca408675cc853ac22696087a104a9ba21a630272c954d",
       "executable": false
     },
     "src/core/platform/theme-files.ts": {

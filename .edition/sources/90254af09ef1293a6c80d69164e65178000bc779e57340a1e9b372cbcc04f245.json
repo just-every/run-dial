@@ -1,8 +1,8 @@
 {
-  "key": "c025c9cc0a709c26b180987088883e148de1f4bae4f432cada15d1ed31b97a4b",
+  "key": "90254af09ef1293a6c80d69164e65178000bc779e57340a1e9b372cbcc04f245",
   "origin": {
     "repository": "git@github.com:runeditrun/base.git",
-    "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+    "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
     "path": "default-seed/src/core/platform/auth",
     "paths": [
       "local.server.d.mts",

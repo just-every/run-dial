@@ -1,8 +1,8 @@
 {
-  "key": "651e6593b36d6992603816751f73196885954b38df1939ec080f5365d7c9f239",
+  "key": "40983b7a6cdebeebff1ecd3fb5aea82b210af5ae03cc85630524af7d8ce83088",
   "origin": {
     "repository": "https://github.com/runeditrun/base.git",
-    "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+    "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
     "path": "modules/import-kit",
     "paths": [
       "CONTRACT.md",

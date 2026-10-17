@@ -56,6 +56,29 @@ export async function waitForSiteUpload({ api, worker, versionId, fingerprint, p
   throw timeout();
 }
 
+/** A new zone's Custom Domain list lags the attach. Poll it inside the deploy's
+ * readiness window until every hostname is listed on the kit's Worker. A hostname
+ * on another Worker is refused at once; one still unlisted at the deadline fails
+ * naming it. */
+export async function waitForSiteDomains({ api, zoneId, worker, hostnames, window }) {
+  const bounded = readinessAPI(api, window, 'domain-readback-mismatch');
+  const mismatch = hostname => Object.assign(new Error('domain-readback-mismatch'), { resource: `domain:${hostname}` });
+  let delay = 2000, missing = hostnames[0];
+  while (window.remaining() > 0) {
+    let domains;
+    try { domains = await bounded.request(`/workers/domains?zone_id=${zoneId}`); }
+    catch (error) { if (window.remaining() <= 0 || error.name === 'TimeoutError') throw mismatch(missing); throw error; }
+    assert(Array.isArray(domains), 'invalid-domain-list');
+    const foreign = hostnames.find(hostname => domains.some(row => row?.hostname === hostname && row.service !== worker));
+    if (foreign) throw mismatch(foreign);
+    missing = hostnames.find(hostname => !domains.some(row => row?.hostname === hostname));
+    if (!missing) return domains;
+    await window.sleep(Math.min(delay, window.remaining()));
+    delay = Math.min(delay * 2, 10000);
+  }
+  throw mismatch(missing);
+}
+
 /** Only provider UUIDs and kit fingerprints are safe to include in CLI output. */
 export function siteReadbackSummary(error) {
   if (error.message !== 'site-upload-timeout') return '';

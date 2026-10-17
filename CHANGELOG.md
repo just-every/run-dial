@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Refresh every recorded Base copy to rer-v0.2.40 together (rer 0.2.40 pin kept). The hosted demo moves from a container to rer's native Worker Loader host: each visitor gets their own isolate with the database, booking coordinator, files and queue in their own storage. `run-demo.yml` is Base's template, recorded as a Base copy. In demo mode, public admission accepts the demo host's own requests (its seed `/health` call), which carry no client address.
+- Refresh every recorded Base copy to rer-v0.2.41 together and pin rer 0.2.41. The hosted demo moves from a container to rer's native Worker Loader host: each visitor gets their own isolate with the database, booking coordinator, files and queue in their own storage. `run-demo.yml` is Base's template, recorded as a Base copy. Rer 0.2.41's native host sends `cf-connecting-ip` on the seed `/health` call, so the demo has no admission special case.
 - Pin rer 0.2.25 and declare the browser sign-in route and email-hint support in the generated deployment spec, so RER opens the claimed owner’s sign-in page with their email filled in.
 - Managed booking confirmations use their existing private calendar download link instead of an unsupported attachment. Both guest and host confirmations can be accepted by the relay; acceptance does not assert inbox delivery. Direct SendGrid and Resend confirmations retain the attachment.
 

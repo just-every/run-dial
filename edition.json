@@ -47,7 +47,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/operator-auth",
           "paths": [
             "README.md",
@@ -150,7 +150,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/mail",
           "paths": [
             ".gitignore",
@@ -232,7 +232,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/deploy-kit",
           "paths": [
             "README.md",
@@ -296,7 +296,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "edition-authoring",
           "paths": [
             "README.md",
@@ -323,7 +323,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "default-seed/src/core/platform/auth",
           "paths": [
             "local.server.d.mts",
@@ -344,7 +344,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "operations",
           "paths": [
             "operations.mjs",
@@ -363,7 +363,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "paths": [
             "modules/editor/src/config.ts",
             "modules/editor/src/index.ts",
@@ -398,7 +398,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "paths": [
             "modules/owner-claim/README.md",
             "modules/owner-claim/idp.mjs",
@@ -451,7 +451,7 @@
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "paths": [
             "modules/delivery-producer/artifact.mjs",
             "modules/delivery-producer/bindings.mjs",
@@ -579,7 +579,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+          "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
           "path": "modules/import-kit",
           "paths": [
             "CONTRACT.md",

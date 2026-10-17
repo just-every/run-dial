@@ -1,8 +1,8 @@
 {
-  "key": "69cee667ceb9c90bebe16d3a84b9a14a97719e3bfd328e590ebeb4aa92d547f1",
+  "key": "84d108269e1dd6f1f84b111cdfbe6ceee80af331aacfebad0f998bd9d644451c",
   "origin": {
     "repository": "git@github.com:runeditrun/base.git",
-    "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+    "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
     "path": "operations",
     "paths": [
       "operations.mjs",

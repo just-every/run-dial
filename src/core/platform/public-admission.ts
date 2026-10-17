@@ -66,8 +66,6 @@ function clientIdentity(request: Request, runtime: RuntimeEnvironment) {
     }
     throw new PublicAdmissionError("client_identity_unavailable");
   }
-  // A hosted demo's own requests (its seed's /health) come from the visitor's host, not the edge.
-  if (runtime.RER_DEMO === "1") return "demo-host";
   const url = new URL(runtime.APP_URL);
   if (runtime.ENVIRONMENT === "development" && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) && new URL(request.url).host === url.host) return "loopback";
   throw new PublicAdmissionError("client_identity_unavailable");

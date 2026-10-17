@@ -5,7 +5,7 @@ import { ownerWorkerName } from './owner.mjs';
 import { uploadAssets, workerOrigin } from './worker.mjs';
 import { readinessWindow, readinessAPI } from './readiness-window.mjs';
 import { uploadVersionId } from './uploaded-worker.mjs';
-import { ownedSiteVersion, waitForSiteUpload } from './site-readback.mjs';
+import { ownedSiteVersion, waitForSiteDomains, waitForSiteUpload } from './site-readback.mjs';
 export { servedVersion, siteReadbackSummary } from './site-readback.mjs';
 
 /* A seed's run site (run-<seed>.com): the folder `rer build --site` writes,
@@ -113,8 +113,7 @@ export async function siteDeploy({ api, plan, files, receiptPath, readiness = {}
   }
   // Readback: the kit's Worker live and both domains on it.
   await readback();
-  const domains = await api.request(`/workers/domains?zone_id=${zone.id}`);
-  for (const hostname of plan.hostnames) assert(domains.some(row => row.hostname === hostname && row.service === plan.worker), 'domain-readback-mismatch');
+  await waitForSiteDomains({ api, zoneId: zone.id, worker: plan.worker, hostnames: plan.hostnames, window });
   const receipt = { worker: plan.worker, domain: plan.domain, zoneId: zone.id, fingerprint, files: files.length, hostnames: plan.hostnames, redirect: plan.redirects[0] };
   await writeReceipt(receiptPath, receipt);
   return { origin: `https://${plan.domain}`, receipt };

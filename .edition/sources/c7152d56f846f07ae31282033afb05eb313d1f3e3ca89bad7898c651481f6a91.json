@@ -1,8 +1,8 @@
 {
-  "key": "8cc47a91ff008a12c5e3d13aaab4a09f35b9c01bee25df7914d19eac92918234",
+  "key": "c7152d56f846f07ae31282033afb05eb313d1f3e3ca89bad7898c651481f6a91",
   "origin": {
     "repository": "git@github.com:runeditrun/base.git",
-    "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+    "revision": "5f6fcabafcedc62346bd110b461b8d933fd33630",
     "path": "edition-authoring",
     "paths": [
       "README.md",
