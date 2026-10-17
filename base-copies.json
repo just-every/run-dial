@@ -2005,6 +2005,39 @@
       }
     },
     {
+      "path": "src/base/contract-filter.ts",
+      "originPath": "foundation/runtime/contract-filter.ts",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+      "files": {
+        "src/base/contract-filter.ts": "eec5be7da15653b69dd343fb3cf9f7a2e695eb215c5ee118f3508090e9c29232"
+      },
+      "modes": {
+        "src/base/contract-filter.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/contract-page.ts",
+      "originPath": "foundation/runtime/contract-page.ts",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+      "files": {
+        "src/base/contract-page.ts": "8fff886df5869401818c0a3422a9a9cb73f3f1c4cb100d46f2a315176102b64f"
+      },
+      "modes": {
+        "src/base/contract-page.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/contract-style.ts",
+      "originPath": "foundation/runtime/contract-style.ts",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+      "files": {
+        "src/base/contract-style.ts": "41afdf1cb60983b340283b13e414102387eb2a4af022d730220050a4384d0753"
+      },
+      "modes": {
+        "src/base/contract-style.ts": "100644"
+      }
+    },
+    {
       "path": "src/base/deployment-health.ts",
       "originPath": "foundation/runtime/deployment-health.ts",
       "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
@@ -2062,9 +2095,9 @@
     {
       "path": "src/base/hydration/README.md",
       "originPath": "foundation/runtime/hydration/README.md",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
       "files": {
-        "src/base/hydration/README.md": "4b72e893c9437a1ddc516759c1bae121db8290a01addf02fc9edb04f8add6ba8"
+        "src/base/hydration/README.md": "a25e8a1a787e141590c9b46efb313b8ba6d9b135fad880d3aacfd5289c205244"
       },
       "modes": {
         "src/base/hydration/README.md": "100644"
@@ -2106,9 +2139,9 @@
     {
       "path": "src/base/rejected-response.ts",
       "originPath": "foundation/runtime/rejected-response.ts",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
       "files": {
-        "src/base/rejected-response.ts": "5fe6ea3ac3d113f727431d898b56d4194fad39832c01d0e3cc5cd6d75eafe671"
+        "src/base/rejected-response.ts": "4aa9861a20497b9dde6f95951dcbecf60cee69e8dad1923c1110ef35abc10686"
       },
       "modes": {
         "src/base/rejected-response.ts": "100644"
@@ -2117,20 +2150,42 @@
     {
       "path": "src/base/run-site.ts",
       "originPath": "foundation/runtime/run-site.ts",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
       "files": {
-        "src/base/run-site.ts": "a9bf7a49e00918a694b8dc33f45584531cb6d99f76ac181a34d8ea1aed154241"
+        "src/base/run-site.ts": "608a6b61630ee1cddfa4bd797f2b6c1880ab699b89c82e37bba18f4690b5ca01"
       },
       "modes": {
         "src/base/run-site.ts": "100644"
       }
     },
     {
+      "path": "src/base/seed-contract.d.mts",
+      "originPath": "foundation/runtime/seed-contract.d.mts",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+      "files": {
+        "src/base/seed-contract.d.mts": "2add6b0252ab6cb78051c7c5c2754daaebada6d7bea411df85eb8b0cb8a0ce09"
+      },
+      "modes": {
+        "src/base/seed-contract.d.mts": "100644"
+      }
+    },
+    {
+      "path": "src/base/seed-contract.mjs",
+      "originPath": "foundation/runtime/seed-contract.mjs",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+      "files": {
+        "src/base/seed-contract.mjs": "fe40fa189caf33b7531b6d02e31616275f324d5727b9b0db7ddf35998712dd7c"
+      },
+      "modes": {
+        "src/base/seed-contract.mjs": "100644"
+      }
+    },
+    {
       "path": "src/base/setup-state.ts",
       "originPath": "foundation/runtime/setup-state.ts",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
       "files": {
-        "src/base/setup-state.ts": "41d478a3d4d9280b8af8b0e47f51fc4ec45413b5fe141b3aba724b75f7ae0983"
+        "src/base/setup-state.ts": "e4be71efeeec308d7a1ace213a2d58001cfdab2488140aac807bc71d70e47403"
       },
       "modes": {
         "src/base/setup-state.ts": "100644"
@@ -2139,9 +2194,9 @@
     {
       "path": "src/base/setup.ts",
       "originPath": "foundation/runtime/setup.ts",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
       "files": {
-        "src/base/setup.ts": "fe4d6792bdc370fe20a223a9add9c680c789ae80eedb46afc6deb90c86568a5b"
+        "src/base/setup.ts": "5599d7b1953d093e33c2d3cb8914b2b761547310d2ef0c40699573b439a33516"
       },
       "modes": {
         "src/base/setup.ts": "100644"
@@ -2161,9 +2216,9 @@
     {
       "path": "src/base/theme-frame.ts",
       "originPath": "foundation/runtime/theme-frame.ts",
-      "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
       "files": {
-        "src/base/theme-frame.ts": "3de5d84ebabbe4d6f80396903248ebebcd860c4b4a927d7cbbdd452f05ee4495"
+        "src/base/theme-frame.ts": "adb66c1805f7683aa090e85e5881a8137342941e59e973ee264843bd57f7ba62"
       },
       "modes": {
         "src/base/theme-frame.ts": "100644"

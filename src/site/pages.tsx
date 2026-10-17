@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { contractPageHtml } from "../base/contract-page";
 import { runPageHtml, siteNotFoundHtml, type SiteBuild, type SiteContext } from "../base/run-site";
 import { siteIdentity } from "./identity";
 import { run } from "./run";
@@ -12,7 +13,7 @@ import "../core/app/styles.css";
 import "../core/features/public-booking/ui/public-booking.css";
 import "../core/features/public-booking/ui/public-forms.css";
 
-export async function sitePages({ styles }: SiteContext): Promise<SiteBuild> {
+export async function sitePages({ styles, contract }: SiteContext): Promise<SiteBuild> {
   if (problem) throw new Error(problem);
   const document = (title: string, description: string, body: ReactElement) => "<!doctype html>" + renderToStaticMarkup(
     <html lang="en"><head><meta charSet="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,7 +27,8 @@ export async function sitePages({ styles }: SiteContext): Promise<SiteBuild> {
   }));
   return { pages: [
     { path: "/", html: document("Dial · Pick a time. That’s it.", "100% free, open source alternative to Calendly, Acuity Scheduling and SavvyCal. Dial is an open-source booking page. It checks your live calendar, speaks every timezone and never asks invitees to sign up.", <Landing variant="site" />) },
-    { path: "/run", html: runPageHtml(siteIdentity, run) }, ...docs,
-    { path: "/404", html: siteNotFoundHtml(siteIdentity, run) },
+    { path: "/run", html: runPageHtml(siteIdentity, run, contract) },
+    ...(contract ? [{ path: "/contract", html: contractPageHtml(siteIdentity, run, contract) }] : []), ...docs,
+    { path: "/404", html: siteNotFoundHtml(siteIdentity, run, contract) },
   ], assets: ["rer-theme.css", "rer-mark.svg", "fonts", "brand"] };
 }
