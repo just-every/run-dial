@@ -1,3 +1,4 @@
+import { publicLocations, type PublicLocationOption } from "./locations";
 import type { EventQuestionInput, EventTypeRecord } from "./repository";
 
 export type PublicEventQuestion = Required<Pick<EventQuestionInput, "key">> & Omit<EventQuestionInput, "key" | "private">;
@@ -5,7 +6,7 @@ export type PublicEventQuestion = Required<Pick<EventQuestionInput, "key">> & Om
 export type PublicEventTypeRecord = Pick<
   EventTypeRecord,
   "bookingPolicy" | "requestOnly" | "slug" | "title" | "description" | "bookingHorizonDays" | "bookingHorizonMode" | "bookingStartDate" | "bookingEndDate" | "durationMinutes" | "durationOptionsMinutes" | "color" | "locationLabel" | "alternativeRequestsEnabled"
-> & { questions: PublicEventQuestion[] };
+> & { locations?: PublicLocationOption[]; questions: PublicEventQuestion[] };
 
 /** Deliberately project only values an invitee may receive before a booking exists. */
 export function toPublicEventType(eventType: EventTypeRecord): PublicEventTypeRecord {
@@ -22,7 +23,8 @@ export function toPublicEventType(eventType: EventTypeRecord): PublicEventTypeRe
     durationMinutes: eventType.durationMinutes,
     durationOptionsMinutes: eventType.durationOptionsMinutes,
     color: eventType.color,
-    locationLabel: eventType.locationLabel,
+    locationLabel: publicLocations(eventType).map(location => location.label).join(" or "),
+    locations: publicLocations(eventType),
     alternativeRequestsEnabled: eventType.alternativeRequestsEnabled,
     questions: eventType.questions.map((question) => {
       if (!question.key) throw new Error("Persisted event question is missing its public key");

@@ -1,4 +1,5 @@
 import { useDocumentData } from "../../../app/document-data";
+import { useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useHydrated } from "../../../app/use-hydrated";
 import { api, errorMessage, publicApi } from "../../../api/client";
@@ -16,7 +17,11 @@ export function PublicEventPage(props: { handle: string; slug: string; embedded?
   return <PublicEventContent key={`${props.handle}/${props.slug}`} {...props} />;
 }
 function PublicEventContent({ handle, slug, embedded = false }: { handle: string; slug: string; embedded?: boolean }) {
-  const initial = seedEvent(useDocumentData<unknown>(), handle, slug);
+  const documentData = useDocumentData<unknown>();
+  const initial = seedEvent(documentData, handle, slug);
+  const search = useRouterState({select: state => state.location.searchStr});
+  const link = new URLSearchParams(search).get("link") ?? undefined;
+  const [used,setUsed] = useState(Boolean(documentData && typeof documentData === "object" && "linkState" in documentData && documentData.linkState === "used"));
   const hydrated = useHydrated(), epoch = useRef(0);
   const [data, setData] = useState<PublicEventPayload | undefined>(initial);
   const [missing, setMissing] = useState(false);
@@ -24,18 +29,22 @@ function PublicEventContent({ handle, slug, embedded = false }: { handle: string
   const load = useCallback(async () => {
     const current = ++epoch.current; setError("");
     try {
-      const response = await publicApi.api.public.events[":handle"][":slug"].$get({ param: { handle, slug } });
+      const response = await publicApi.api.public.events[":handle"][":slug"].$get({ param: { handle, slug }, query:{link} });
       if (current !== epoch.current) return;
-      if (response.status === 404) { setMissing(true); return; }
+      if (response.status === 404 || response.status === 410) { setMissing(true); return; }
       if (!response.ok) { const message = await errorMessage(response); if (current === epoch.current) setError(message); return; }
-      const received = seedEvent(await response.json(), handle, slug);
+      const payload = await response.json();
+      if ("linkState" in payload && payload.linkState === "used") { setUsed(true); setData(undefined); return; }
+      setUsed(false);
+      const received = seedEvent(payload, handle, slug);
       if (current !== epoch.current) return;
       if (!received) { setError("This session could not be loaded. Please retry."); return; }
       setData(received); setMissing(false);
     } catch { if (current === epoch.current) setError("This session could not be loaded. Please retry."); }
-  }, [handle, slug]);
+  }, [handle, slug, link]);
   useEffect(() => { void load(); return () => { epoch.current += 1; }; }, [load]);
   if (missing) return <PublicRecoveryPage />;
+  if (used) return <PublicTheme><PublicHeader embedded={embedded} /><main className="pb-recovery"><section><p className="pb-eyebrow">Booking link used</p><h1>This link has already been used.</h1><p>Contact the host if you need another meeting.</p></section></main></PublicTheme>;
   if (!data) return <PublicTheme><PublicHeader embedded={embedded} /><main className="pb-loading">{error ? <><p role="alert">{error}</p><button type="button" className="pb-secondary-button" disabled={!hydrated} onClick={() => void load()}>Reload session</button></> : "Loading this session…"}</main></PublicTheme>;
   return <PublicEventEntry data={data} embedded={embedded} />;
 }

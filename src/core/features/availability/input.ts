@@ -1,4 +1,5 @@
-import type { EventTypeRecord, EventTypesService } from "../event-types";
+import type { EventTypesService } from "../event-types";
+import type { LinkEvent } from "../booking-links";
 import type { AvailabilityRepository } from "./repository";
 import type { CalendarBusyReader } from "./service";
 import type { SlotEngineInput } from "./engine";
@@ -10,7 +11,7 @@ export type OperatorAvailabilityOptions = { overrideNoticeAndHorizon: boolean; o
 /** One authoritative, bounded read context for offers, selection and private diagnostics. */
 export async function loadAvailabilityInput(
   dependencies: { repository: AvailabilityRepository; calendar: CalendarBusyReader; eventTypes: EventTypesService },
-  event: EventTypeRecord, hostTimeZone: string, firstDate: string, days: number,
+  event: LinkEvent, hostTimeZone: string, firstDate: string, days: number,
   now: Date, freshness: "cached" | "fresh", operatorOverride: OperatorAvailabilityOptions,
   excludedBookingId?: string,
 ) {
@@ -23,7 +24,7 @@ export async function loadAvailabilityInput(
   const [busy, internalClaims, overrides, limitExclusions] = await Promise.all([
     dependencies.calendar.readBusy({ startAt: busyStart, endAt: busyEnd, freshness }),
     dependencies.repository.listInternalClaims(busyStart, busyEnd, excludedBookingId, event.hostDayBookingLimit === null ? [] : Array.from({ length: days }, (_, day) => datePlus(firstDate, day))),
-    dependencies.eventTypes.effectiveDateOverrides(event.id, firstDate, days),
+    event.bookingLink?.dates ? Promise.resolve(event.bookingLink.dates.map(date => ({ hostDate: date.hostDate, mode: "open" as const, windows: date.windows }))) : dependencies.eventTypes.effectiveDateOverrides(event.id, firstDate, days),
     dependencies.repository.limitsForRange(event.id, hostTimeZone, firstDate, days, excludedBookingId),
   ]);
   if (busy.kind !== "ok" || !overrides || (event.locationType === "google_meet" && busy.calendarRequired === false)) return undefined;

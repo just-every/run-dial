@@ -10,6 +10,7 @@ function isProfile(value: unknown): value is PublicProfile {
 }
 function isEvent(value: unknown): value is PublicEvent {
   return record(value) && strings(value, ["slug", "title", "description", "color", "locationLabel"])
+    && (value.locations === undefined || (Array.isArray(value.locations) && value.locations.every(location => record(location) && strings(location, ["id", "label"]) && (location.input === undefined || ["phone", "place"].includes(String(location.input))) && (location.prompt === undefined || typeof location.prompt === "string"))))
     && typeof value.bookingHorizonDays === "number" && Number.isInteger(value.bookingHorizonDays) && value.bookingHorizonDays > 0
     && typeof value.durationMinutes === "number" && Number.isFinite(value.durationMinutes)
     && (value.requestOnly === undefined || typeof value.requestOnly === "boolean")
@@ -25,6 +26,7 @@ function profile(value: PublicProfile): PublicProfile {
 }
 function event(value: PublicEvent): PublicEvent {
   return { bookingPolicy: value.bookingPolicy, requestOnly: value.requestOnly, slug: value.slug, title: value.title, description: value.description, bookingHorizonDays: value.bookingHorizonDays, bookingHorizonMode: value.bookingHorizonMode, bookingStartDate: value.bookingStartDate, bookingEndDate: value.bookingEndDate, durationMinutes: value.durationMinutes, durationOptionsMinutes: value.durationOptionsMinutes, color: value.color,
+    locations: value.locations?.map(({ id, label, input, prompt }) => ({ id, label, input, prompt })),
     locationLabel: value.locationLabel, alternativeRequestsEnabled: value.alternativeRequestsEnabled,
     questions: value.questions.map(({ key, kind, label, required, options }) => ({ key, kind, label, required, options: options.map(({ value, label }) => ({ value, label })) })) };
 }

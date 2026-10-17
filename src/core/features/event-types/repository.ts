@@ -23,7 +23,8 @@ import type { PostBookingRedirect } from "./redirect-policy.mjs";
 export type { PostBookingRedirect } from "./redirect-policy.mjs";
 
 export type EventStatus = "draft" | "published" | "disabled";
-export type EventLocationType = "google_meet" | "fixed_link" | "phone" | "in_person";
+import { offeredLocations, type EventLocationOption, type EventLocationType } from "./locations";
+export type { EventLocationType } from "./locations";
 export type EventQuestionKind = "text" | "textarea" | "phone" | "dropdown" | "single_choice" | "multiple_choice" | "checkbox";
 export type EventQuestionOptionInput = { value: string; label: string };
 export type EventQuestionInput = {
@@ -54,6 +55,7 @@ export type EventTypeInput = {
   durationMinutes: number;
   durationOptionsMinutes?: number[];
   color: string;
+  locations?: EventLocationOption[];
   locationType: EventLocationType;
   locationLabel: string;
   locationValue: string;
@@ -271,9 +273,10 @@ function eventColumns(input: EventTypeInput) {
     durationMinutes: input.durationMinutes,
     durationOptionsJson: JSON.stringify(input.durationOptionsMinutes ?? [input.durationMinutes]),
     color: input.color,
-    locationType: input.locationType,
-    locationLabel: input.locationLabel,
-    locationValue: input.locationValue,
+    locationsJson: input.locations ? JSON.stringify(input.locations) : null,
+    locationType: offeredLocations(input)[0].type,
+    locationLabel: offeredLocations(input)[0].label,
+    locationValue: offeredLocations(input)[0].value,
     listed: input.listed,
     alternativeRequestsEnabled: input.alternativeRequestsEnabled,
     slotIncrementMinutes: input.slotIncrementMinutes,

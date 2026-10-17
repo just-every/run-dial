@@ -6,6 +6,7 @@ export function googleEventPayload(event: ManagedCalendarEvent, conferenceExists
   return {
     ...(includeIcalUid ? { iCalUID: event.icalUid } : {}),
     summary: event.title,
+    transparency: event.transparency ?? "opaque",
     description: event.description,
     location: event.location,
     start: { dateTime: event.startAt, timeZone: event.timeZone },

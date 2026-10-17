@@ -237,8 +237,8 @@ migration ledger.
 
 The archive excludes credentials and live authority: OAuth tokens, sessions,
 sign-in and invitation links, setup/webhook secrets, booking and request
-capabilities, the development mail outbox, callback authority, and ephemeral
-admission state. Pending or historical provider commands cannot replay after
+capabilities, development sign-in authority, callback authority, and ephemeral
+admission state. Restored reschedule requests retain their choices and history with `archive_historical=1`; they do not grant policy bypasses, send reminders or expire bookings. A host may send a fresh request after restoring. Pending or historical provider commands cannot replay after
 restore. The source SESSION_SECRET remains private; the archive contains only
 a non-secret continuity digest needed to protect retry and erasure guards.
 

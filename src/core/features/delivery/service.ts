@@ -147,7 +147,11 @@ export class ProviderDeliveryService {
     if (record.kind === "calendar_upsert") {
       if (await this.repository.calendarCommandState(record) !== "current") return undefined;
       if (record.bookingId) payload = { ...payload, lockedTimezone: await this.repository.calendarPresentationZone(record.bookingId) };
-      const event = templatedCalendar(calendarEventFrom(payload, record), record.bookingId && record.occurrenceId ? await this.repository.correspondence(record.bookingId, record.occurrenceId) : undefined);
+      let event: import("../../platform/calendar/types").ManagedCalendarEvent = templatedCalendar(calendarEventFrom(payload, record), record.bookingId && record.occurrenceId ? await this.repository.correspondence(record.bookingId, record.occurrenceId) : undefined);
+      if (record.bookingId) {
+        const released = await this.repository.releasedRescheduleRequest(record.bookingId);
+        if (released) event = {...event,title:`Reschedule requested: ${event.title}`,transparency:"transparent"};
+      }
       const result = await this.calendar.upsertManagedEvent(event);
       const delivered = await this.repository.markCalendarDelivered(record, result);
       if (delivered.meetingFailed) throw new ProviderFailure("meeting_creation_failed", false);
@@ -167,6 +171,7 @@ export class ProviderDeliveryService {
       if (!reminder) throw new ProviderFailure("invalid_delivery_payload", false);
       payload = { ...payload, ...reminder };
     }
+    if (typeof payload.rescheduleRequestId === "string" && !await this.repository.activeRescheduleRequest(payload.rescheduleRequestId,now.toISOString())) throw new ProviderFailure("superseded_occurrence",false);
     if (record.kind === "mail_send" && !await this.repository.currentBookingMail(record, payload.bookingState === "cancelled", payload.messageKind === "host_contact")) throw new ProviderFailure("superseded_occurrence", false);
     const providerKey = string(payload.providerIdempotencyKey) ?? record.idempotencyKey;
     // Freeze the exact provider bytes before the effect. An ambiguous explicit
@@ -196,7 +201,7 @@ export class ProviderDeliveryService {
     }
     if (!frozen && payload.recipientRole === "invitee" && record.bookingId && record.occurrenceId) {
       const kind = record.kind === "reminder" ? "reminder" : payload.messageKind;
-      if (kind === "confirmation" || kind === "reschedule" || kind === "cancellation" || kind === "reminder") {
+      if (kind === "confirmation" || kind === "reschedule" || kind === "cancellation" || kind === "reminder" || kind === "rescheduleRequest" || kind === "rescheduleRequestReminder") {
         const data = await this.repository.correspondence(record.bookingId, record.occurrenceId);
         if (data) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now));
       }

@@ -71,6 +71,11 @@ export class BookingCoordinator extends DurableObject<AppBindings> {
         if (parsed.data.bookingId) await services.erasure.reconcileCalendarFact(parsed.data.bookingId, parsed.data.kind, parsed.data.updatedAt ?? parsed.data.providerEventId);
         return new Response(null, { status: 204 });
       }
+      if (path === "/__reschedule-request" && request.method === "POST") {
+        const body=z.object({bookingId:z.string().length(26)}).parse(await request.json());
+        await this.coordinatedServices(this.env).bookings.processRescheduleRequest(body.bookingId);
+        return new Response(null,{status:204});
+      }
       if (path === "/__calendar-probe" && request.method === "POST") {
         const parsed = deletionProbeSchema.safeParse(await request.json());
         if (!parsed.success) return new Response("Invalid deletion probe", { status: 400 });

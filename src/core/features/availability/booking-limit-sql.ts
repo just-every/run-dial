@@ -21,7 +21,7 @@ totals AS MATERIALIZED (
        ), 0))
      FROM booking_occurrences occurrence
      JOIN bookings booking ON booking.id = occurrence.booking_id
-     WHERE occurrence.is_current = 1
+     WHERE occurrence.is_current = 1 AND occurrence.blocks_time = 1
        AND booking.state IN ('confirmed', 'rescheduled')
        AND occurrence.start_at >= periods.start_at
        AND occurrence.start_at < periods.end_at
@@ -54,7 +54,7 @@ WHERE invitee_gap.minutes > 0
     JOIN booking_occurrences occurrence ON occurrence.booking_id = booking.id
     WHERE lower(trim(booking.invitee_email)) = json_extract(candidate.data, '$.inviteeEmail')
       AND booking.state IN ('confirmed', 'rescheduled')
-      AND occurrence.is_current = 1
+      AND occurrence.is_current = 1 AND occurrence.blocks_time = 1
       AND booking.id IS NOT json_extract(candidate.data, '$.excludedBookingId')
       AND unixepoch(occurrence.start_at, 'subsec') * 1000
           < json_extract(candidate.data, '$.endMs') + invitee_gap.minutes * 60000

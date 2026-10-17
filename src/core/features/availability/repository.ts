@@ -19,7 +19,7 @@ export class AvailabilityRepository {
                 occurrence.start_at AS bookingStartAt, occurrence.end_at AS bookingEndAt
          FROM booking_occurrences occurrence
          JOIN bookings booking ON booking.id = occurrence.booking_id
-         WHERE occurrence.is_current = 1
+         WHERE occurrence.is_current = 1 AND occurrence.blocks_time = 1
            AND booking.state IN ('confirmed', 'rescheduled')
            AND ((occurrence.occupied_start_at < ?
            AND occurrence.occupied_end_at > ?)${dateClause})

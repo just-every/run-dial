@@ -6,9 +6,10 @@ import { conjunction } from './native-predicates';
 import { assertCustodyColumns, includeCustodyTable } from './custody-tables';
 const groups:Record<string,Record<string,string>>={
  profile:{host_profiles:'id',profile_focus_areas:'profile_id',social_proof_entries:'profile_id'},
- event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id',event_schedule_bindings:'event_type_id',booking_limit_policies:'scope',event_booking_policies:'event_type_id',event_correspondence:'event_type_id'},
- booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id',booking_presentation:'booking_id',booking_correspondence:'booking_id'},
+ event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id',event_schedule_bindings:'event_type_id',booking_limit_policies:'scope',event_booking_policies:'event_type_id',event_correspondence:'event_type_id',booking_links:'event_type_id',booking_link_tokens:'link_id IN (SELECT id FROM booking_links WHERE event_type_id'},
+ booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id',booking_presentation:'booking_id',booking_correspondence:'booking_id',booking_reschedule_requests:'booking_id',booking_request_history:'booking_id',booking_links:'consumed_booking_id',booking_link_tokens:'link_id IN (SELECT id FROM booking_links WHERE consumed_booking_id'},
 };
+const parentTables:Record<string,{table:string;foreign:string}>={availability_date_override_windows:{table:'availability_date_overrides',foreign:'override_id'},booking_link_tokens:{table:'booking_links',foreign:'link_id'}};
 function scope(kind:string,table:string){const key=groups[kind]?.[table];if(!key)throw new Error('Unsupported import native table.');return key.includes(' IN ')?`${key}=?)`:`${key}=?`;}
 // Search columns are a deterministic projection, not source-owned content.
 // Keep old applied snapshots and undo guards comparable after the additive upgrade.
@@ -38,6 +39,11 @@ function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
   for(const [table,columns]of Object.entries(defaults))if(candidate[table]?.every(row=>Object.entries(columns).every(([key,value])=>row[key]===value))){historical[table]=candidate[table].map(row=>{const source={...row};for(const key of Object.keys(columns))delete source[key];return source;});changed=true;}
   if(changed)eventVersions.push(historical);
  }
+ // 0058 and 0060 add physical defaults to SELECT *; omit each only when
+ // unchanged, and only accept the complete retained source hash below.
+ for(const [table,column,defaultValue] of [['event_types','locations_json',null],['booking_occurrences','blocks_time',1]] as const){
+  for(const candidate of [...eventVersions])if(candidate[table]?.length&&candidate[table].every(row=>row[column]===defaultValue))eventVersions.push({...candidate,[table]:candidate[table].map(row=>{const source={...row};delete source[column];return source;})});
+ }
  for(const candidate of eventVersions){
   const historical=candidate.bookings?.some(row=>row.calendar_required===1)
    ? {...candidate,bookings:candidate.bookings.map(row=>{const source={...row};if(source.calendar_required===1)delete source.calendar_required;return source;})}:null;
@@ -64,6 +70,11 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
   if(!columns.includes('booking_horizon_mode'))predicates.push("actual.booking_horizon_mode IS 'calendar_days'");
   for(const key of ['booking_start_date','booking_end_date'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
   if(!columns.includes('post_booking_redirect_json'))predicates.push('actual.post_booking_redirect_json IS NULL');
+  if(!columns.includes('locations_json'))predicates.push('actual.locations_json IS NULL');
+ }
+ if(table==='booking_occurrences'){
+  const index=columns.indexOf('blocks_time');if(index!==-1)predicates.splice(index,1);
+  predicates.push("actual.blocks_time IS CASE WHEN json_type(wanted.value,'$.blocks_time') IS NULL THEN 1 ELSE json_extract(wanted.value,'$.blocks_time') END");
  }
  if(table==='event_questions'&&!columns.includes('private'))predicates.push('actual.private IS 0');
  if(table==='host_profiles')for(const key of ['avatar_key','avatar_content_type'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
@@ -96,7 +107,7 @@ export const importTargets:D1TargetAdapter={
   if(row.targetKind==='booking'){
    const booking=value(row).tables.bookings[0],occurrence=value(row).tables.booking_occurrences[0];
    // Fail the complete atomic kit batch if another native confirmation won after preview.
-   statements.unshift({sql:`INSERT INTO move_in_guard(ok) SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM booking_occurrences o JOIN bookings b ON b.id=o.booking_id WHERE o.is_current=1 AND b.state IN ('confirmed','rescheduled') AND o.occupied_start_at<? AND o.occupied_end_at>?) AND EXISTS(SELECT 1 FROM event_types WHERE id=?) THEN 1 ELSE 0 END`,params:[occurrence.occupied_end_at,occurrence.occupied_start_at,booking.event_type_id]});
+   statements.unshift({sql:`INSERT INTO move_in_guard(ok) SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM booking_occurrences o JOIN bookings b ON b.id=o.booking_id WHERE o.is_current=1 AND o.blocks_time=1 AND b.state IN ('confirmed','rescheduled') AND o.occupied_start_at<? AND o.occupied_end_at>?) AND EXISTS(SELECT 1 FROM event_types WHERE id=?) THEN 1 ELSE 0 END`,params:[occurrence.occupied_end_at,occurrence.occupied_start_at,booking.event_type_id]});
    statements.push({sql:'DELETE FROM move_in_guard'});
   }
   statements.push({sql:'INSERT INTO move_in_targets(kind,id,revision) VALUES(?,?,?)',params:[row.targetKind,row.targetId,row.revision]});return statements;
@@ -106,10 +117,10 @@ export const importTargets:D1TargetAdapter={
   const markers=(await db.prepare(`${markersSql} ORDER BY m.kind,m.id`).bind(destination).all<Marker>()).results;
   const sets=new Map<string,Row[]>();
   for(const [kind,tables]of Object.entries(groups))for(const [table,key]of Object.entries(tables)){
-   const where=key.includes(' IN ')?`override_id IN(SELECT id FROM availability_date_overrides WHERE event_type_id IN(SELECT id FROM move_in_targets WHERE kind='event'))`:`${key} IN(SELECT id FROM move_in_targets WHERE kind='${kind}')`;
+   const where=key.includes(' IN ')?`${key} IN(SELECT id FROM move_in_targets WHERE kind='${kind}'))`:`${key} IN(SELECT id FROM move_in_targets WHERE kind='${kind}')`;
    sets.set(`${kind}:${table}`,sourceRows(table,(await db.prepare(`SELECT * FROM ${table} WHERE ${where} ORDER BY rowid`).all<Row>()).results));
   }
-  return markers.map(marker=>{const tables:NativeValue['tables']={};for(const [table,key]of Object.entries(groups[marker.kind])){const rows=(sets.get(`${marker.kind}:${table}`)??[]).filter(row=>key.includes(' IN ')?(sets.get(`${marker.kind}:availability_date_overrides`)??[]).some(o=>o.id===row.override_id&&o.event_type_id===marker.id):row[key]===marker.id);if(includeCustodyTable(table,rows))tables[table]=rows;}return {destination,targetKind:marker.kind,targetId:marker.id,revision:marker.revision,value:snapshot(tables,marker.valueHash)};});
+  return markers.map(marker=>{const tables:NativeValue['tables']={};for(const [table,key]of Object.entries(groups[marker.kind])){const rows=(sets.get(`${marker.kind}:${table}`)??[]).filter(row=>parentTables[table]?(sets.get(`${marker.kind}:${parentTables[table].table}`)??[]).some(parent=>parent.id===row[parentTables[table].foreign]&&parent[groups[marker.kind][parentTables[table].table]]===marker.id):row[key]===marker.id);if(includeCustodyTable(table,rows))tables[table]=rows;}return {destination,targetKind:marker.kind,targetId:marker.id,revision:marker.revision,value:snapshot(tables,marker.valueHash)};});
  },
  matchesCount(count){return {sql:'(SELECT count(*) FROM move_in_targets)=?',params:[count]};},
  // A native value is {tables}: a selector outside `tables` (an invitee inside a

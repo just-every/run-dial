@@ -1,3 +1,5 @@
+import { OperatorLocation } from "./operator-location";
+import { offeredLocations } from "../../event-types/client";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { stableJson } from "../../../shared/stable-json";
@@ -30,6 +32,8 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
   const [choice, setChoice] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [locationId, setLocationId] = useState("");
+  const [locationInput, setLocationInput] = useState("");
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [overrideNoticeAndHorizon, setOverrideNoticeAndHorizon] = useState(false);
   const [notice, setNotice] = useState("");
@@ -56,6 +60,8 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
     })();
   }, [requestId]);
   const event = events?.find((entry) => entry.id === eventTypeId);
+  const options = event ? offeredLocations(event) : [];
+  const selectedLocation = locationId || (options.length === 1 ? options[0].id : "");
   const candidates = useMemo(() => resolveOperatorTime(startLocal, timezone), [startLocal, timezone]);
   const selected = candidates.length === 1 ? candidates[0]?.instant : candidates.find((entry) => entry.instant === choice)?.instant;
   const zones = useMemo(() => [...new Set([timezone, inviteeTimezone, ...(hostTimezone ? [hostTimezone] : []), "UTC", ...Intl.supportedValuesOf("timeZone")])], [timezone, inviteeTimezone, hostTimezone]);
@@ -65,7 +71,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
     if (!ready || !selected || saving) return;
     setSaving(true); setNotice("");
     try {
-      const payload = { ...(requestId ? { requestId } : {}), eventTypeId, durationMinutes, startAt: selected, inviteeTimezone, name, email, answers, overrideNoticeAndHorizon };
+      const payload = { ...(requestId ? { requestId } : {}), eventTypeId, locationId: selectedLocation, ...(locationInput ? { locationInput } : {}), durationMinutes, startAt: selected, inviteeTimezone, name, email, answers, overrideNoticeAndHorizon };
       const fingerprint = stableJson({ ...payload, name: payload.name.trim(), email: payload.email.trim().toLowerCase() });
       if (creationAttempt.current?.fingerprint !== fingerprint) creationAttempt.current = { key: crypto.randomUUID(), fingerprint };
       const response = await api.api.app.bookings.$post({ json: { ...payload, idempotencyKey: creationAttempt.current.key } });
@@ -85,7 +91,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
     <Card className="max-w-3xl p-5 sm:p-6"><form onSubmit={(formEvent) => void create(formEvent)}>
       <fieldset disabled={!hydrated || !ready || saving} className="border-0 p-0">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-[650] text-ink">Event type<Select value={eventTypeId} onChange={(entry) => { setNotice(""); setEventTypeId(entry.target.value); setDurationMinutes(undefined); setAnswers({}); }} disabled={Boolean(request)}>{events?.map((entry) => <option key={entry.id} value={entry.id}>{entry.title} · {entry.durationMinutes} min</option>)}</Select></label>
+          <label className="grid gap-2 text-sm font-[650] text-ink">Event type<Select value={eventTypeId} onChange={(entry) => { setNotice(""); setEventTypeId(entry.target.value); setDurationMinutes(undefined); setLocationId(""); setLocationInput(""); setAnswers({}); }} disabled={Boolean(request)}>{events?.map((entry) => <option key={entry.id} value={entry.id}>{entry.title} · {entry.durationMinutes} min</option>)}</Select></label>
           <label className="grid gap-2 text-sm font-[650] text-ink">Duration<Select value={durationMinutes ?? event?.durationMinutes ?? ""} onChange={entry => setDurationMinutes(Number(entry.target.value))}>{(event?.durationOptionsMinutes ?? (event ? [event.durationMinutes] : [])).map(value => <option key={value} value={value}>{value} minutes</option>)}</Select></label><label className="grid gap-2 text-sm font-[650] text-ink">Editing time zone<Select aria-label="Editing time zone" value={timezone} onChange={(entry) => { setNotice(""); if (selected) setStartLocal(localInput(selected, entry.target.value)); setTimezone(entry.target.value); setChoice(""); }}>{zones.map((zone) => <option key={zone}>{zone}</option>)}</Select></label>
           <label className="grid gap-2 text-sm font-[650] text-ink">Start time<Input type="datetime-local" step={60} value={startLocal} onChange={(entry) => { setNotice(""); setStartLocal(entry.target.value); setChoice(""); }} required /></label>
           <label className="grid gap-2 text-sm font-[650] text-ink">Invitee time zone<Select aria-label="Invitee time zone" value={inviteeTimezone} onChange={(entry) => { setNotice(""); setInviteeTimezone(entry.target.value); }}>{zones.map((zone) => <option key={zone}>{zone}</option>)}</Select></label>
@@ -96,6 +102,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
           {selected && hostTimezone ? <div className="grid gap-1.5 text-sm text-ink sm:col-span-2"><p><strong className="font-[650]">Host start: </strong>{startTime(selected, hostTimezone)}</p><p><strong className="font-[650]">Invitee start: </strong>{startTime(selected, inviteeTimezone)}</p></div> : null}
           <label className="grid gap-2 text-sm font-[650] text-ink">Invitee name<Input value={name} onChange={(entry) => { setNotice(""); setName(entry.target.value); }} required maxLength={160} /></label>
           <label className="grid gap-2 text-sm font-[650] text-ink">Invitee email<Input type="email" value={email} onChange={(entry) => { setNotice(""); setEmail(entry.target.value); }} required maxLength={320} /></label>
+          <OperatorLocation locations={options} id={selectedLocation} value={locationInput} onChoose={value => { setLocationId(value); setLocationInput(""); }} onInput={setLocationInput} />
           {event?.questions.map((question) => { const key = question.key; return key ? <OperatorQuestion key={key} question={question} value={answers[key] ?? ""} onChange={(value) => { setNotice(""); setAnswers((current) => ({ ...current, [key]: value })); }} /> : null; })}
         </div>
         <label className="mt-6 flex items-start gap-3 rounded-[14px] border border-gold-line bg-gold-wash p-3 text-sm leading-5 text-ink"><input className="mt-0.5 h-[18px] w-[18px] shrink-0" type="checkbox" checked={overrideNoticeAndHorizon} onChange={(entry) => { setNotice(""); setOverrideNoticeAndHorizon(entry.target.checked); }} />Override the event’s minimum-notice and rolling-range rules. Calendar conflicts are still always checked.</label>

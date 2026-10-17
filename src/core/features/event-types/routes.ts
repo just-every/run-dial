@@ -1,5 +1,7 @@
+import { locationTypes, locationIssue, offeredLocations, type EventLocationOption } from "./locations";
 import { postBookingRedirectSchema, validateEventRedirect } from "./redirect-validation";
 import { Hono } from "hono";
+import { toPublicEventType } from "./public";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
 import { apiError } from "../../shared/http";
@@ -44,7 +46,8 @@ const eventTypeInputSchema = z
     durationMinutes: z.number().int().min(5).max(480),
     durationOptionsMinutes: z.array(z.number().int().min(5).max(480)).min(1).max(4).optional(),
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-    locationType: z.enum(["google_meet", "fixed_link", "phone", "in_person"]),
+    locationType: z.enum(locationTypes),
+    locations: z.array(z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/), type: z.enum(locationTypes), label: z.string().trim().min(1).max(180), value: z.string().max(1000), prompt: z.string().trim().max(500).optional() })).min(1).max(8).optional(),
     locationLabel: z.string().min(1).max(180),
     locationValue: z.string().max(1000),
     listed: z.boolean(),
@@ -70,13 +73,15 @@ const eventTypeInputSchema = z
 const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
 const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions) }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
 
-function requirePrivateLocation(input: { durationMinutes: number; durationOptionsMinutes?: number[]; locationType: string; locationValue: string; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {
+function requirePrivateLocation(input: { durationMinutes: number; durationOptionsMinutes?: number[]; locationType: typeof locationTypes[number]; locationLabel: string; locationValue: string; locations?: EventLocationOption[]; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {
   if (input.durationOptionsMinutes && (new Set(input.durationOptionsMinutes).size !== input.durationOptionsMinutes.length || !input.durationOptionsMinutes.includes(input.durationMinutes))) context.addIssue({ code: "custom", path: ["durationOptionsMinutes"], message: "Choose distinct durations and include the default duration." });
   if (input.bookingHorizonMode === "fixed_range") {
     if (!input.bookingStartDate) context.addIssue({ code: "custom", path: ["bookingStartDate"], message: "Choose the first bookable date." });
     if (!input.bookingEndDate || (input.bookingStartDate && input.bookingEndDate < input.bookingStartDate)) context.addIssue({ code: "custom", path: ["bookingEndDate"], message: "Choose an end date on or after the first date." });
   }
-  if (input.locationType !== "google_meet" && input.locationValue.trim().length === 0) context.addIssue({ code: "custom", path: ["locationValue"], message: "This location needs its private value." });
+  const options = offeredLocations(input);
+  if (new Set(options.map(location => location.id)).size !== options.length) context.addIssue({ code: "custom", path: ["locations"], message: "Location keys must be unique." });
+  options.forEach((location, index) => { const message = locationIssue(location); if (message) context.addIssue({ code: "custom", path: input.locations ? ["locations", index] : ["locationValue"], message }); });
 }
 
 const idSchema = z.object({ id: z.string().min(26).max(26) });
@@ -95,11 +100,14 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       if (result.kind === "published") return context.json(result.eventType);
       return apiError(context, result.kind === "event_not_found" ? 404 : 409, result.kind, "Open requests requires a saved host profile, a draft or disabled event with alternative requests enabled, and a verified mail sender.", result.kind === "not_ready" ? result.readiness.missing : ["event_not_found"]);
     })
-    .get("/api/public/events/:handle/:slug", validate("param", publicEventSchema), async (context) => {
+    .get("/api/public/events/:handle/:slug", validate("param", publicEventSchema), validate("query",z.object({link:z.string().max(200).optional()}).optional()), async (context) => {
       const { handle, slug } = context.req.valid("param");
       const profile = await context.get("services").hostProfile.getPublicProfile(handle);
       if (!profile) return apiError(context, 404, "profile_not_found", "The requested public profile does not exist.");
-      const eventType = await context.get("services").eventTypes.getPublicEvent(slug);
+      const offer = await context.get("services").bookingLinks.resolve(slug,context.req.valid("query")?.link);
+      if (offer?.kind === "used") return context.json({linkState:"used" as const});
+      if (offer?.kind === "expired") return apiError(context,offer.event.bookingLink?.kind === "one_off" ? 404 : 410,"link_expired","This booking link has expired.");
+      const eventType = offer ? toPublicEventType(offer.event) : undefined;
       return eventType ? context.json({ profile: toPublicProfile(profile), eventType }) : apiError(context, 404, "event_not_available", "This event type is not publicly available.");
     })
     .get("/api/app/event-types", async (context) => context.json(await context.get("services").eventTypes.listEventTypes()))

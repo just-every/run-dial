@@ -15,3 +15,6 @@ export type {
 export type { PublicEventQuestion, PublicEventTypeRecord } from "./public";
 
 export { EventBookingPolicyRepository, inviteeChangePolicyPredicate } from "./booking-policy-repository";
+
+export { offeredLocations, resolveBookingLocation } from "./locations";
+export type { EventLocationOption, PublicLocationOption } from "./locations";

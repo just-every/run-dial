@@ -33,7 +33,7 @@ export async function bookingLimitsForRange(
   const selection = `SELECT booking.event_type_id AS eventId, occurrence.start_at AS startAt,
       occurrence.end_at AS endAt FROM booking_occurrences occurrence
     JOIN bookings booking ON booking.id = occurrence.booking_id
-    WHERE occurrence.is_current = 1 AND booking.state IN ('confirmed', 'rescheduled')
+    WHERE occurrence.is_current = 1 AND occurrence.blocks_time = 1 AND booking.state IN ('confirmed', 'rescheduled')
       AND booking.id IS NOT ?`;
   const [counts, sameInvitee] = await Promise.all([
     hasCaps ? binding.prepare(`${selection} AND occurrence.start_at >= ? AND occurrence.start_at < ?`)

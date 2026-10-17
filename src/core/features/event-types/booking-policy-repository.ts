@@ -65,7 +65,7 @@ export function inviteeChangePolicyPredicate(input: {
   const cutoffColumn = rescheduling ? "reschedule_cutoff_minutes" : "cancellation_cutoff_minutes";
   const cutoff = rescheduling ? inherited.rescheduleCutoffMinutes : inherited.cancellationCutoffMinutes;
   return {
-    sql: `EXISTS (SELECT 1 FROM bookings policy_booking
+    sql: `(EXISTS(SELECT 1 FROM booking_reschedule_requests request WHERE request.booking_id=? AND request.state='open' AND request.archive_historical=0 AND request.expires_at>?) OR EXISTS (SELECT 1 FROM bookings policy_booking
       JOIN booking_occurrences policy_occurrence ON policy_occurrence.id = policy_booking.current_occurrence_id
         AND policy_occurrence.booking_id = policy_booking.id AND policy_occurrence.is_current = 1
       LEFT JOIN event_booking_policies policy ON policy.event_type_id = policy_booking.event_type_id
@@ -74,7 +74,7 @@ export function inviteeChangePolicyPredicate(input: {
         ${rescheduling ? `AND (policy.reschedule_cap IS NULL OR (
           SELECT count(*) FROM booking_history policy_history WHERE policy_history.booking_id = policy_booking.id
             AND policy_history.actor_type = 'invitee' AND policy_history.action = 'rescheduled'
-        ) < policy.reschedule_cap)` : ""})`,
-    params: [input.bookingId, input.now, cutoff],
+        ) < policy.reschedule_cap)` : ""}))`,
+    params: [input.bookingId, input.now, input.bookingId, input.now, cutoff],
   };
 }

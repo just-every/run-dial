@@ -1,3 +1,4 @@
+import { resolveBookingLocation } from "../event-types";
 import { hasSupportedInstantPrecision } from "../../shared/instants";
 import type { AvailabilityService, SlotExclusion } from "../availability";
 import { hostDateForInstant } from "../availability";
@@ -40,7 +41,9 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
   const creationIdentity = await operatorCreationIdentity(input, dependencies.runtime.SESSION_SECRET);
   const selection = await dependencies.availability.verifyOperatorSelection(input.eventTypeId, input.startAt, { overrideNoticeAndHorizon: input.overrideNoticeAndHorizon }, new Date(), undefined, input.durationMinutes);
   if (selection.kind !== "valid") return await recoverOperatorBooking(dependencies, input) ?? selection;
-  const invitee = validateInvitee(selection.event, { name: input.name, email: input.email, answers: input.answers });
+  const event = resolveBookingLocation(selection.event, input);
+  if (!event) return { kind: "invalid_answers" };
+  const invitee = validateInvitee(event, { name: input.name, email: input.email, answers: input.answers });
   if (!invitee) return await recoverOperatorBooking(dependencies, input) ?? { kind: "invalid_answers" };
   const limits = await dependencies.repository.limitExclusions(selection.event.id, selection.profile.timezone, selection.slot.startAt, selection.slot.endAt, invitee.email);
   if (limits.length) return await recoverOperatorBooking(dependencies, input) ?? { kind: "slot_invalid", exclusions: limits };
@@ -59,7 +62,7 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
     hostName: selection.profile.name,
     manageTokenHash: await hashToken(manageToken, dependencies.runtime.SESSION_SECRET),
     manageTokenExpiresAt: new Date(Date.parse(selection.slot.startAt) + manageTokenLifetimeMs).toISOString(),
-    event: selection.event,
+    event,
     invitee,
     selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone },
     hostTimezone: selection.profile.timezone,
@@ -67,8 +70,8 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
     occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
     occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
     now,
-    calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, lockedTimezone: selection.event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
-    emails: await dependencies.confirmationEmails({ profile: selection.profile, event: selection.event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired }),
+    calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, lockedTimezone: selection.event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
+    emails: await dependencies.confirmationEmails({ profile: selection.profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired }),
   }, input.operatorId);
   if (claim !== "claimed") return await recoverOperatorBooking(dependencies, input) ?? { kind: claim };
   const booking = await dependencies.repository.getById(bookingId);

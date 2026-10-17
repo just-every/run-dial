@@ -24,6 +24,7 @@ import { shiftHostDate, dateInZone, dayLabel, type PickerSlot as Slot, type Pick
 export function ChooseTime({ data, embedded = false, preview = false }: { data: PublicEventPayload; embedded?: boolean; preview?: boolean }) {
   const reads = useRef(new RequestOrder()), selectionReads = useRef(new RequestOrder()), selectingNow = useRef(false);
   const search = useRouterState({ select: (state) => state.location.searchStr });
+  const link = new URLSearchParams(search).get("link") ?? undefined;
   const [availability, setAvailability] = useState<Availability>();
   const [checking, setChecking] = useState(false);
   const [notice, setNotice] = useState("");
@@ -63,7 +64,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     if (preview) return;
     const currentRead = reads.current.begin();
     setNotice(""); setChecking(true);
-    const query = { durationMinutes: String(durationMinutes), ...(nextWeek ? { week: nextWeek } : {}), ...(!lockedTimezone && inviteeTimezone ? { inviteeTimezone } : {}) };
+    const query = { link, durationMinutes: String(durationMinutes), ...(nextWeek ? { week: nextWeek } : {}), ...(!lockedTimezone && inviteeTimezone ? { inviteeTimezone } : {}) };
     try {
       const response = await publicApi.api.public.book[":handle"][":slug"].availability.$get({ param: { handle: data.profile.handle, slug: data.eventType.slug }, query });
       if (response.ok) { const received = await response.json() as Availability; if (currentRead()) setAvailability(received); return; }
@@ -71,7 +72,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     } catch { if (currentRead()) { setAvailability(undefined); setNotice("Availability could not be checked. Please retry."); } }
     finally { if (currentRead()) setChecking(false); }
 
-  }, [data.eventType.slug, data.profile.handle, inviteeTimezone, preview, week, durationMinutes, lockedTimezone]);
+  }, [data.eventType.slug, data.profile.handle, inviteeTimezone, preview, week, durationMinutes, lockedTimezone, link]);
   useEffect(() => { const order = reads.current; void refreshAvailability(); return () => { order.invalidate(); }; }, [refreshAvailability]);
 
   useEffect(() => { const order = selectionReads.current; return () => { order.invalidate(); }; }, [data.profile.handle, data.eventType.slug, displayTimezone, durationMinutes]);
@@ -84,7 +85,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
     selectingNow.current = true;
     setSelecting(slot.startAt); setNotice("");
     try {
-      const response = await publicApi.api.public.book[":handle"][":slug"].selection.$post({ param: { handle: data.profile.handle, slug: data.eventType.slug }, json: { startAt: slot.startAt, inviteeTimezone: selectionTimezone, durationMinutes } });
+      const response = await publicApi.api.public.book[":handle"][":slug"].selection.$post({ param: { handle: data.profile.handle, slug: data.eventType.slug }, json: { link, startAt: slot.startAt, inviteeTimezone: selectionTimezone, durationMinutes } });
       if (!currentSelection()) return;
       if (!response.ok) {
         if (response.status === 409) { await refreshAvailability(); if (currentSelection()) setNotice("That time is no longer available. Choose from the current times."); return; }

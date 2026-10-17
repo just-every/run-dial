@@ -75,3 +75,8 @@ export async function forwardBookingRequest(env: AppBindings, bookingId: string,
   }
   return response;
 }
+
+export async function processDueRescheduleRequests(env: AppBindings) {
+  const requests = await new BookingsRepository(env.DB).requests.due(new Date().toISOString());
+  for (const request of requests) await forwardBookingRequest(env,request.bookingId,new Request("http://coordinator.internal/__reschedule-request",{method:"POST",body:JSON.stringify(request)}));
+}

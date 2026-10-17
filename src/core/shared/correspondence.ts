@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const correspondenceVariables = ["invitee full name", "invitee first name", "host name", "event name", "date and time", "duration", "location", "manage link", "message"] as const;
-export const correspondenceTemplateKeys = ["calendarTitle", "calendarDescription", "confirmationSubject", "confirmationBody", "rescheduleSubject", "rescheduleBody", "cancellationSubject", "cancellationBody", "reminderSubject", "reminderBody"] as const;
+export const correspondenceTemplateKeys = ["calendarTitle", "calendarDescription", "confirmationSubject", "confirmationBody", "rescheduleSubject", "rescheduleBody", "cancellationSubject", "cancellationBody", "reminderSubject", "reminderBody", "rescheduleRequestSubject", "rescheduleRequestBody", "rescheduleRequestReminderSubject", "rescheduleRequestReminderBody"] as const;
 export type CorrespondenceVariable = typeof correspondenceVariables[number];
 export type CorrespondenceTemplateKey = typeof correspondenceTemplateKeys[number];
 export type CorrespondenceQuestion = { key: string; label: string; private?: boolean };
@@ -60,6 +60,10 @@ export function defaultCorrespondenceTemplates(questions: readonly Correspondenc
     cancellationBody: `Your booking has been cancelled.\n\n${body}\n\n{message}`,
     reminderSubject: "Reminder: {event name}",
     reminderBody: body,
+    rescheduleRequestSubject: "Please choose a new time: {event name}",
+    rescheduleRequestBody: "{host name} asks you to choose a new time.\n\n{message}\n\n{body}".replace("{body}", body),
+    rescheduleRequestReminderSubject: "Reminder to choose a new time: {event name}",
+    rescheduleRequestReminderBody: "Please choose a new time for {event name}.\n\n{message}\n\n{body}".replace("{body}", body),
   };
 }
 
@@ -99,7 +103,7 @@ export function renderCorrespondenceTemplate(template: string, values: Correspon
   return rendered;
 }
 
-export function renderMailCorrespondence(config: CorrespondenceConfig, kind: "confirmation" | "reschedule" | "cancellation" | "reminder", values: CorrespondenceValues, options: { questions?: readonly CorrespondenceQuestion[] } = {}) {
+export function renderMailCorrespondence(config: CorrespondenceConfig, kind: "confirmation" | "reschedule" | "cancellation" | "reminder" | "rescheduleRequest" | "rescheduleRequestReminder", values: CorrespondenceValues, options: { questions?: readonly CorrespondenceQuestion[] } = {}) {
   const questions = options.questions ?? [];
   const parsed = z.object({ templates: correspondenceConfigSchema().shape.templates }).strict().parse(config);
   const templates = editableCorrespondenceTemplates(parsed, questions);

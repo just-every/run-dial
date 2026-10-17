@@ -1,6 +1,8 @@
+import type { BookingLinksService } from "../booking-links";
+import type { LinkEvent } from "../booking-links";
 import { resolveEventDuration } from "../../shared/event-duration";
 import { hasSupportedInstantPrecision } from "../../shared/instants";
-import type { EventTypeRecord, EventTypesService } from "../event-types";
+import type { EventTypesService } from "../event-types";
 import type { HostProfileService } from "../host-profile";
 import { hostDateAt } from "./timezone";
 import { loadAvailabilityInput, type OperatorAvailabilityOptions } from "./input";
@@ -27,26 +29,40 @@ export class AvailabilityService {
     private readonly profiles: HostProfileService,
     private readonly eventTypes: EventTypesService,
     private readonly calendar: CalendarBusyReader,
+    private readonly links?: BookingLinksService,
   ) {}
 
-  async listPublicWeek(handle: string, slug: string, week: string | undefined, inviteeTimeZone?: string, now = new Date(), durationMinutes?: number): Promise<AvailabilityResult | { kind: "invalid_duration" } | undefined> {
+  async listPublicWeek(handle: string, slug: string, week: string | undefined, inviteeTimeZone?: string, now = new Date(), durationMinutes?: number, link?: string): Promise<AvailabilityResult | { kind: "invalid_duration" | "link_used" | "link_expired" } | undefined> {
     const [profile, event] = await Promise.all([
       this.profiles.getPublicProfile(handle),
-      this.eventTypes.resolvePublishedEventForPublicRequest(slug),
+      this.resolvePublicEvent(slug, link),
     ]);
     if (!profile || !event) return undefined;
+    if ("kind" in event) return event;
     const selectedDuration = resolveEventDuration(event, durationMinutes);
     if (selectedDuration === undefined) return { kind: "invalid_duration" };
-    const firstDate = week ?? hostDateAt(now, profile.timezone);
+    const today = hostDateAt(now, profile.timezone);
+    const firstDate = week ?? event.bookingLink?.dates?.map(date=>date.hostDate).sort().find(date=>date>=today) ?? today;
     return this.listEventWeek({ ...event, durationMinutes: selectedDuration }, profile.timezone, firstDate, inviteeTimeZone, now);
   }
 
-  async verifyPublicSelection(handle: string, slug: string, startAt: string, now = new Date(), excludedBookingId?: string, durationMinutes?: number, retainedDurationMinutes?: number) {
+  async verifyPublicSelection(handle: string, slug: string, startAt: string, now = new Date(), excludedBookingId?: string, durationMinutes?: number, retainedDurationMinutes?: number, link?: string) {
     const [profile, event] = await Promise.all([
       this.profiles.getPublicProfile(handle),
-      this.eventTypes.resolvePublishedEventForPublicRequest(slug),
+      this.resolvePublicEvent(slug, link),
     ]);
     if (!profile || !event) return { kind: "not_found" as const };
+    if ("kind" in event) return { kind: "not_found" as const };
+    return this.verifyResolvedPublicSelection(profile, event, startAt, now, excludedBookingId, durationMinutes, retainedDurationMinutes);
+  }
+
+  private async resolvePublicEvent(slug: string, token?: string): Promise<LinkEvent | { kind: "link_used" | "link_expired" } | undefined> {
+    if (!this.links) return token ? undefined : this.eventTypes.resolvePublishedEventForPublicRequest(slug);
+    const result = await this.links.resolve(slug, token);
+    return !result || result.kind === "expired" && result.event.bookingLink?.kind === "one_off" ? undefined : result.kind === "active" ? result.event : { kind: result.kind === "used" ? "link_used" : "link_expired" };
+  }
+
+  async verifyResolvedPublicSelection(profile: NonNullable<Awaited<ReturnType<HostProfileService["getPublicProfile"]>>>, event: LinkEvent, startAt: string, now = new Date(), excludedBookingId?: string, durationMinutes?: number, retainedDurationMinutes?: number) {
     const selectedDuration = resolveEventDuration(event, durationMinutes ?? retainedDurationMinutes, retainedDurationMinutes);
     if (selectedDuration === undefined) return { kind: "invalid_duration" as const };
     const effectiveEvent = { ...event, durationMinutes: selectedDuration };
@@ -59,11 +75,20 @@ export class AvailabilityService {
 
   /** The booking service resolves both IDs from a validated manage capability. */
   async listRescheduleWeek(eventTypeId: string, excludedBookingId: string, week?: string, inviteeTimeZone?: string, now = new Date(), durationMinutes?: number, retainedDurationMinutes?: number): Promise<AvailabilityResult | { kind: "invalid_duration" } | undefined> {
-    const [profile, event] = await Promise.all([this.profiles.getProfile(), this.eventTypes.getEventType(eventTypeId)]);
+    const [profile, event] = await Promise.all([this.profiles.getProfile(), this.resolveManagedEvent(eventTypeId,excludedBookingId)]);
     if (!profile || !event || event.status !== "published") return undefined;
     const selectedDuration = resolveEventDuration(event, durationMinutes ?? retainedDurationMinutes, retainedDurationMinutes);
     if (selectedDuration === undefined) return { kind: "invalid_duration" };
     return this.listEventWeek({ ...event, durationMinutes: selectedDuration }, profile.timezone, week ?? hostDateAt(now, profile.timezone), inviteeTimeZone, now, "cached", excludedBookingId);
+  }
+
+  private async resolveManagedEvent(eventTypeId:string,bookingId:string) {
+    return await this.links?.resolveForBooking(bookingId) ?? this.eventTypes.getEventType(eventTypeId);
+  }
+  async verifyManagedSelection(eventTypeId:string,bookingId:string,startAt:string,now = new Date(),durationMinutes?:number,retainedDurationMinutes?:number) {
+    const [profile,event]=await Promise.all([this.profiles.getProfile(),this.resolveManagedEvent(eventTypeId,bookingId)]);
+    if (!profile || !event || event.status!=="published") return {kind:"not_found" as const};
+    return this.verifyResolvedPublicSelection(profile,event,startAt,now,bookingId,durationMinutes,retainedDurationMinutes);
   }
 
   /**
@@ -101,7 +126,7 @@ export class AvailabilityService {
   }
 
   private async listEventWeek(
-    event: EventTypeRecord,
+    event: LinkEvent,
     hostTimeZone: string,
     firstDate: string,
     inviteeTimeZone: string | undefined,
@@ -119,7 +144,7 @@ export class AvailabilityService {
       ? rankSlots(slots, buildRecommendationContext(input, range, inviteeTimeZone), slots.length) : [];
     return { state: "available", calendarRequired: loaded.calendarRequired, week: firstDate, slots, recommendations: rankedSlots.slice(0, 5), rankedSlots };
   }
-  private loadInput(event: EventTypeRecord, zone: string, date: string, days: number, now: Date, freshness: "cached" | "fresh", options: OperatorAvailabilityOptions, excludedBookingId?: string) {
+  private loadInput(event: LinkEvent, zone: string, date: string, days: number, now: Date, freshness: "cached" | "fresh", options: OperatorAvailabilityOptions, excludedBookingId?: string) {
     return loadAvailabilityInput({ repository: this.repository, calendar: this.calendar, eventTypes: this.eventTypes }, event, zone, date, days, now, freshness, options, excludedBookingId);
   }
 }

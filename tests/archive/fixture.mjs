@@ -23,6 +23,9 @@ const correspondence = JSON.stringify({ templates: {
   reminderBody: null,
 } });
 const overrides = {
+  booking_links: { kind:'single_use',overrides_json:null,expires_at:end,consumed_at:instant,consumed_booking_id:'bookings-1',revoked_at:null },
+  booking_reschedule_requests: { state:'open',message:'Please choose a new time.',release_time:1,actor_id:'owner',expires_at:end,reminder_at:null,reminded_at:null },
+  booking_request_history: {action:'reschedule_requested',actor_type:'operator',actor_id:'owner',reason:'Please choose a new time.'},
   availability_schedules: { name: 'Working hours', windows_json: '[{"weekday":1,"startMinute":540,"endMinute":600}]', block_us_holidays: 1, reopened_holidays_json: '["2026-11-11"]', time_off_json: '[{"startDate":"2026-12-23","endDate":"2026-12-27"}]' },
   booking_limit_policies: { scope: 'host', limits_json: '{"dayCount":null,"weekCount":null,"monthCount":10,"dayMinutes":null,"weekMinutes":240,"monthMinutes":null,"inviteeGapMinutes":120}' },
   event_booking_policies: { locked_timezone: 'Australia/Brisbane', reschedule_cutoff_minutes: 120, cancellation_cutoff_minutes: 60, reschedule_cap: 3 },

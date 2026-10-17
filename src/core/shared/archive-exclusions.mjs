@@ -60,6 +60,7 @@ export const excluded = {
   magic_link_tokens: 'Retired authentication capabilities', operator_sessions: 'Retired session capabilities',
   rer_mail_development_outbox: 'Captured mail contains raw sign-in and invitation capabilities', calendar_push_channels: 'Live callback authority; recreate on reconnect',
   calendar_oauth_states: 'Session-bound OAuth capabilities', booking_nonces: 'Single-use booking capabilities',
+  booking_link_tokens: 'Private booking link authority; restored definitions require a new link',
   booking_manage_tokens: 'Private manage capabilities; old links must cease to work',
   availability_request_review_nonces: 'Single-use request capabilities', public_rate_events: 'Ephemeral admission identities',
   oa_tokens: 'Native sign-in and invitation capabilities', oa_sessions: 'Native session capabilities',

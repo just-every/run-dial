@@ -10,7 +10,7 @@ export function templatedCalendar<T extends { title: string; description: string
   return { ...event, ...renderCalendarCorrespondence(data.config, values, data.questions) };
 }
 
-export function templatedMail(payload: Record<string, unknown>, kind: "confirmation" | "reschedule" | "cancellation" | "reminder", data: BookingCorrespondence, manageUrl: string) {
+export function templatedMail(payload: Record<string, unknown>, kind: "confirmation" | "reschedule" | "cancellation" | "reminder" | "rescheduleRequest" | "rescheduleRequestReminder", data: BookingCorrespondence, manageUrl: string) {
   const template = payload.mailTemplate as { reason?: unknown } | undefined;
   const values = { ...data.values, "manage link": manageUrl, message: typeof template?.reason === "string" ? template.reason : typeof payload.changeReason === "string" ? payload.changeReason : "" };
   const message = renderMailCorrespondence(data.config, kind, values, { questions: data.questions });

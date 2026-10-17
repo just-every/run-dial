@@ -43,7 +43,7 @@ export function wireTransport(db: D1Database): typeof fetch {
     const events = (await db.prepare("SELECT payload FROM wire_events").all<{ payload: string }>()).results.map(row => JSON.parse(row.payload));
     // A conflict calendar free/busy cannot read (unshared or deleted): Google answers 200 with the calendar's errors.
     if (url.pathname.endsWith("/freeBusy") && await control(db, "google-busy-error")) return Response.json({ calendars: { "synthetic-calendar": { errors: [{ domain: "global", reason: "notFound" }], busy: [] } } });
-    if (url.pathname.endsWith("/freeBusy")) return Response.json({ calendars: { "synthetic-calendar": { busy: events.filter(event => event.status !== "cancelled").map(event => ({ start: event.start.dateTime, end: event.end.dateTime })) } } });
+    if (url.pathname.endsWith("/freeBusy")) return Response.json({ calendars: { "synthetic-calendar": { busy: events.filter(event => event.status !== "cancelled" && event.transparency !== "transparent").map(event => ({ start: event.start.dateTime, end: event.end.dateTime })) } } });
     const match = /\/events(?:\/([^/]+))?$/.exec(url.pathname);
     if (!match) throw new Error("Unexpected Google request");
     const id = match[1];

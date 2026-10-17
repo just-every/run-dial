@@ -62,6 +62,7 @@ export const eventTypes = sqliteTable("event_types", {
   locationType: text("location_type").notNull(),
   locationLabel: text("location_label").notNull(),
   locationValue: text("location_value").notNull(),
+  locationsJson: text("locations_json"),
   listed: integer("listed", { mode: "boolean" }).notNull(),
   requestOnly: integer("request_only", { mode: "boolean" }).notNull().default(false),
   alternativeRequestsEnabled: integer("alternative_requests_enabled", { mode: "boolean" }).notNull(),

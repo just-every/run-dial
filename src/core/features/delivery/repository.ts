@@ -39,6 +39,8 @@ export class DeliveryRepository {
   }
   correspondence(bookingId: string, occurrenceId: string) { return new BookingCorrespondenceRepository(this.binding).read(bookingId, occurrenceId); }
 
+  async releasedRescheduleRequest(bookingId:string) { return Boolean(await this.binding.prepare("SELECT 1 FROM booking_reschedule_requests WHERE booking_id=? AND state='open' AND archive_historical=0 AND release_time=1").bind(bookingId).first()); }
+  async activeRescheduleRequest(id:string,now:string) { return Boolean(await this.binding.prepare("SELECT 1 FROM booking_reschedule_requests WHERE id=? AND state='open' AND archive_historical=0 AND expires_at>?").bind(id,now).first()); }
   async reminderBooking(record: DeliveryOutboxRecord, now: string) {
     return this.binding.prepare("SELECT b.event_title AS title, p.name AS hostName, (unixepoch(o.end_at) - unixepoch(o.start_at)) / 60 AS durationMinutes, o.start_at AS startAt, o.end_at AS endAt, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, presentation.locked_timezone AS lockedTimezone, presentation.browser_timezone AS browserTimezone, b.location_type AS locationType, b.location_value AS locationValue, b.location_label AS locationLabel, b.meeting_url AS meetingUrl, b.meeting_state AS meetingState, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE b.calendar_state END AS calendarState FROM bookings b JOIN booking_occurrences o ON o.id = b.current_occurrence_id LEFT JOIN booking_presentation presentation ON presentation.booking_id = b.id JOIN host_profiles p ON 1 = 1 WHERE b.id = ? AND o.id = ? AND o.is_current = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.start_at > ?").bind(record.bookingId, record.occurrenceId, now).first<import("./reminders").ReminderBooking>();
   }

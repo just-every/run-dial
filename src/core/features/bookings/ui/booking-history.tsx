@@ -6,6 +6,8 @@ import { startTime } from "./operator-time";
 const actions: Record<BookingHistoryEntry["action"], string> = {
   created: "Created", cancelled: "Cancelled", rescheduled: "Rescheduled",
   attendance_marked: "Attendance recorded", calendar_cancelled: "Cancelled by calendar provider",
+  reschedule_requested: "Invitee asked to pick a new time", reschedule_request_reminded: "Reschedule request reminder sent",
+  reschedule_request_picked: "New time picked", reschedule_request_expired: "Reschedule request expired",
 };
 
 export function BookingHistory({ booking }: { booking: BookingRecord }) {

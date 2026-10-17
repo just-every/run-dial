@@ -5,6 +5,8 @@ export function bookingPath(handle: string, slug: string, suffix: "" | "/details
   const search = new URLSearchParams(params);
   const current = new URLSearchParams(currentSearch);
   if (suffix !== "/confirmed") {
+    const link = current.get("link");
+    if (link) search.set("link",link);
     appendLinkContext(search, currentSearch);
     for (const key of ["week", "day", "timezone"]) {
       const value = current.get(key);

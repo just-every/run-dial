@@ -3,7 +3,7 @@ import type { AppServices } from "./services";
 import { parseRuntimeEnvironment } from "../shared/runtime-env";
 import { isPlatformHealthJob } from "../platform/health";
 import { PublicAdmissionGate } from "../platform/public-admission";
-import { processCoordinatedDelivery, processDueCalendarDeletionProbes } from "./booking-coordination";
+import { processCoordinatedDelivery, processDueCalendarDeletionProbes, processDueRescheduleRequests } from "./booking-coordination";
 
 /** The Worker's Queue handler: every delivery job runs under its booking's coordinator. */
 export async function consumeJobs(batch: MessageBatch<unknown>, env: AppBindings, services: AppServices) {
@@ -19,6 +19,7 @@ export async function consumeJobs(batch: MessageBatch<unknown>, env: AppBindings
 
 /** The Worker's Cron handler: connection health and alerts (its healthy check also times the next connection probe), calendar sync and channel renewal, due deliveries. */
 export async function runScheduledWork(env: AppBindings, services: AppServices) {
+  await processDueRescheduleRequests(env);
   await services.delivery.reconcileConnections();
   await services.calendar.syncManagedEvents();
   await processDueCalendarDeletionProbes(env);

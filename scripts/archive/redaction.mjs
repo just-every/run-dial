@@ -9,6 +9,7 @@ const credentialColumns = {
   availability_request_review_nonces: ['nonce_hash'], availability_requests: ['nonce_hash'],
   oa_tokens: ['token_hash'], oa_sessions: ['token_hash'], oa_step_up_challenges: ['token_hash'],
   oa_owner_signins: ['token_hash'],
+  booking_link_tokens: ['token_hash'],
 };
 // Exact field names in structured user data still identify embedded credentials.
 // Normalize naming conventions only; secretary/tokenizer/cookieRecipe are data.

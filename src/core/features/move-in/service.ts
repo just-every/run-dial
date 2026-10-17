@@ -26,7 +26,7 @@ export class MoveInService{
  async snapshot():Promise<Snapshot>{
   const profile=await this.db.prepare("SELECT * FROM host_profiles WHERE singleton_key='default'").first<Row>();
   const slugs=(await this.db.prepare('SELECT slug FROM event_types').all<{slug:string}>()).results.map(r=>r.slug);
-  const busy=(await this.db.prepare("SELECT b.id,o.occupied_start_at AS start,o.occupied_end_at AS end FROM bookings b JOIN booking_occurrences o ON o.id=b.current_occurrence_id WHERE b.state IN ('confirmed','rescheduled') AND o.is_current=1").all<{id:string;start:string;end:string}>()).results;
+  const busy=(await this.db.prepare("SELECT b.id,o.occupied_start_at AS start,o.occupied_end_at AS end FROM bookings b JOIN booking_occurrences o ON o.id=b.current_occurrence_id WHERE b.state IN ('confirmed','rescheduled') AND o.is_current=1 AND o.blocks_time=1").all<{id:string;start:string;end:string}>()).results;
   const existing=new Set((await this.db.prepare('SELECT id FROM move_in_targets').all<{id:string}>()).results.map(r=>r.id));
   const events=new Map((await this.db.prepare('SELECT * FROM event_types').all<Row>()).results.map(row=>[String(row.id),row]));return {profile,slugs,busy,existing,events};
  }

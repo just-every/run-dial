@@ -1,12 +1,12 @@
 import type { Answers } from "./answer-retention";
 
-type Draft = { handle: string; slug: string; expiresAt: number; name: string; email: string; answers: Answers };
+type Draft = { handle: string; slug: string; expiresAt: number; name: string; email: string; answers: Answers; locationId?: string; locationInput?: string };
 const key = "dial:booking-recovery";
 const lifetime = 30 * 60 * 1000;
 let expiryTimer: number | undefined;
 
 /** One event's refused details, private to this tab. Never supplies booking authority. */
-export function rememberRecoveryDraft(handle: string, slug: string, details: Pick<Draft, "name" | "email" | "answers">) {
+export function rememberRecoveryDraft(handle: string, slug: string, details: Pick<Draft, "name" | "email" | "answers" | "locationId" | "locationInput">) {
   try {
     const draft = { handle, slug, expiresAt: Date.now() + lifetime, ...details };
     window.sessionStorage.setItem(key, JSON.stringify(draft));
@@ -41,6 +41,8 @@ function validDraft(value: unknown): value is Draft {
   return typeof draft.handle === "string" && typeof draft.slug === "string"
     && typeof draft.expiresAt === "number" && draft.expiresAt > Date.now() && draft.expiresAt <= Date.now() + lifetime
     && typeof draft.name === "string" && draft.name.length <= 160 && typeof draft.email === "string" && draft.email.length <= 320
+    && (draft.locationId === undefined || typeof draft.locationId === "string" && draft.locationId.length <= 80)
+    && (draft.locationInput === undefined || typeof draft.locationInput === "string" && draft.locationInput.length <= 1000)
     && Boolean(draft.answers) && typeof draft.answers === "object" && !Array.isArray(draft.answers)
     && Object.values(draft.answers!).every(answer => typeof answer === "string" || Array.isArray(answer) && answer.every(item => typeof item === "string"));
 }

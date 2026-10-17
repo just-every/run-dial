@@ -7,10 +7,11 @@ export type BookingFilters = {
   from?: string;
   to?: string;
   deliveryFailed?: "true" | "false";
+  rescheduleRequest?: "open" | "picked" | "expired" | "cancelled";
   query?: string;
 };
 
-const filterKeys = ["state", "time", "eventTypeId", "from", "to", "deliveryFailed", "query"] as const;
+const filterKeys = ["state", "time", "eventTypeId", "from", "to", "deliveryFailed", "rescheduleRequest", "query"] as const;
 const bookingStates = ["confirmed", "rescheduled", "cancelled"] as const;
 export const bookingPageSize = 100;
 
@@ -38,6 +39,7 @@ export function readBookingFilters(search: string): BookingFilters {
   const from = dateValue(params.get("from"));
   const to = dateValue(params.get("to"));
   const deliveryFailed = params.get("deliveryFailed");
+  const rescheduleRequest = params.get("rescheduleRequest");
   const query = params.get("query")?.slice(0, 160) || undefined;
 
   return {
@@ -47,6 +49,7 @@ export function readBookingFilters(search: string): BookingFilters {
     ...(from ? { from } : {}),
     ...(to ? { to } : {}),
     ...(deliveryFailed === "true" || deliveryFailed === "false" ? { deliveryFailed } : {}),
+    ...(rescheduleRequest === "open" || rescheduleRequest === "picked" || rescheduleRequest === "expired" || rescheduleRequest === "cancelled" ? { rescheduleRequest } : {}),
     ...(query ? { query } : {}),
   };
 }
@@ -59,6 +62,7 @@ export function bookingListQuery(filters: BookingFilters, page = 1) {
     ...(filters.from ? { fromDate: filters.from } : {}),
     ...(filters.to ? { throughDate: filters.to } : {}),
     ...(filters.deliveryFailed ? { deliveryFailed: filters.deliveryFailed } : {}),
+    ...(filters.rescheduleRequest ? { rescheduleRequest: filters.rescheduleRequest } : {}),
     ...(filters.query?.trim() ? { query: filters.query.trim().slice(0, 160) } : {}),
     limit: String(bookingPageSize),
     offset: String((Math.max(1, page) - 1) * bookingPageSize),

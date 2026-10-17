@@ -1,3 +1,4 @@
+import { bookingLinkRoutes } from "../features/booking-links/routes";
 import { correspondenceRoutes } from "../features/event-types/correspondence-routes";
 import { bookingPolicyRoutes } from "../features/event-types/booking-policy-routes";
 import { personErasureRoutes } from "../features/erasure/person-routes";
@@ -79,6 +80,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", hostProfileRoutes)
     .route("/", avatarRoutes)
     .route("/", eventTypeRoutes)
+    .route("/", bookingLinkRoutes)
     .route("/", bookingPolicyRoutes)
     .route("/", correspondenceRoutes)
     .route("/", hostSetupRoutes)

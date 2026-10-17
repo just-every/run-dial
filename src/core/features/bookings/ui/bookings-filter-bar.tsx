@@ -54,6 +54,16 @@ export function BookingsFilterBar({
         </Select>
       </label>
       <label className={fieldLabel}>
+        Reschedule request
+        <Select value={filters.rescheduleRequest ?? "all"} onChange={event => onChange({ rescheduleRequest: event.currentTarget.value === "all" ? undefined : event.currentTarget.value as BookingFilters["rescheduleRequest"] })}>
+          <option value="all">Any request state</option>
+          <option value="open">Open</option>
+          <option value="picked">New time picked</option>
+          <option value="expired">Expired</option>
+          <option value="cancelled">Cancelled</option>
+        </Select>
+      </label>
+      <label className={fieldLabel}>
         From date ({hostTimezone ?? "host time zone"})
         <Input type="date" value={filters.from ?? ""} max={filters.to} onChange={(event) => onChange({ from: event.currentTarget.value || undefined })} />
       </label>

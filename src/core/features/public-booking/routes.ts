@@ -9,18 +9,19 @@ import { hostDateSchema, ianaTimeZoneSchema } from "../../shared/scheduling";
 const handleSchema = z.object({ handle: z.string().regex(/^[a-z0-9-]+$/).max(80) });
 const eventSchema = handleSchema.extend({ slug: z.string().regex(/^[a-z0-9-]+$/).max(80) });
 const recoverySchema = z.object({ token: z.string().min(1).max(512) });
-const availabilityQuerySchema = z.object({ week: hostDateSchema.optional(), inviteeTimezone: ianaTimeZoneSchema.optional(), durationMinutes: z.coerce.number().int().min(5).max(480).optional() });
-const selectionSchema = z.object({ startAt: z.string().datetime({ offset: true }), inviteeTimezone: ianaTimeZoneSchema, durationMinutes: z.number().int().min(5).max(480).optional() });
+const availabilityQuerySchema = z.object({ link:z.string().max(200).optional(), week: hostDateSchema.optional(), inviteeTimezone: ianaTimeZoneSchema.optional(), durationMinutes: z.coerce.number().int().min(5).max(480).optional() });
+const selectionSchema = z.object({ link:z.string().max(200).optional(), startAt: z.string().datetime({ offset: true }), inviteeTimezone: ianaTimeZoneSchema, durationMinutes: z.number().int().min(5).max(480).optional() });
 // Capability recovery must answer 404 for an absent or incomplete query, before
 // parsing selection values that an unauthorised caller is not entitled to validate.
 const selectionLookupSchema = z.object({
+  link:z.string().max(200).optional(),
   nonce: z.string().min(1).max(200).optional(),
   startAt: z.string().optional(),
   inviteeTimezone: z.string().optional(),
 });
 const confirmedLookupSchema = z.object({ token: z.string().min(1).max(512).optional() });
 const answerValueSchema = z.union([z.string().max(4_000), z.array(z.string().max(500)).max(50)]);
-const confirmationSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema), attribution: attributionSchema.optional() });
+const confirmationSchema = selectionSchema.extend({ locationId:z.string().max(80).optional(),locationInput:z.string().max(1000).optional(), nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema), attribution: attributionSchema.optional() });
 const manageRescheduleSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), reason: z.string().trim().max(500).optional() });
 const cancelSchema = z.object({ reason: z.string().trim().max(500).optional() });
 
@@ -34,18 +35,18 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
   .get("/api/public/book/:handle/:slug/availability", validate("param", eventSchema), validate("query", availabilityQuerySchema.optional()), async (context) => {
     const { handle, slug } = context.req.valid("param");
     const query = context.req.valid("query") ?? {};
-    const result = await context.get("services").availability.listPublicWeek(handle, slug, query.week, query.inviteeTimezone, new Date(), query.durationMinutes);
+    const result = await context.get("services").availability.listPublicWeek(handle, slug, query.week, query.inviteeTimezone, new Date(), query.durationMinutes, query.link);
     if (!result) return apiError(context, 404, "event_not_available", "This event type is not publicly available.");
-    if ("kind" in result) return invalidDuration(context);
+    if ("kind" in result) return result.kind === "invalid_duration" ? invalidDuration(context) : apiError(context,410,result.kind,result.kind === "link_used" ? "This link has already been used." : "This booking link has expired.");
     return context.json(result);
   })
   .post("/api/public/book/:handle/:slug/selection", validate("param", eventSchema), validate("json", selectionSchema), async (context) => {
-    const result = await context.get("services").bookings.issuePublicSelection(context.req.valid("param").handle, context.req.valid("param").slug, context.req.valid("json").startAt, context.req.valid("json").inviteeTimezone, context.req.valid("json").durationMinutes);
+    const result = await context.get("services").bookings.issuePublicSelection(context.req.valid("param").handle, context.req.valid("param").slug, context.req.valid("json").startAt, context.req.valid("json").inviteeTimezone, context.req.valid("json").durationMinutes, context.req.valid("json").link);
     return selectionResult(context, result);
   })
   .get("/api/public/book/:handle/:slug/selection", validate("param", eventSchema), validate("query", selectionLookupSchema), async (context) => {
     const query = context.req.valid("query");
-    const result = await context.get("services").bookings.getPublicSelection({ ...context.req.valid("param"), nonce: query.nonce ?? "", startAt: query.startAt ?? "", inviteeTimezone: query.inviteeTimezone ?? "" });
+    const result = await context.get("services").bookings.getPublicSelection({ ...context.req.valid("param"), link:query.link, nonce: query.nonce ?? "", startAt: query.startAt ?? "", inviteeTimezone: query.inviteeTimezone ?? "" });
     if (result.kind === "found") return context.json(result.selection);
     return result.kind === "expired"
       ? apiError(context, 410, "booking_nonce_expired", "This booking selection has expired. Choose a new time.")
@@ -108,7 +109,7 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
   })
   .get("/book/:handle/:slug/details", validate("param", eventSchema), validate("query", selectionLookupSchema), async (context) => {
     const query = context.req.valid("query");
-    const result = await context.get("services").bookings.getPublicSelection({ ...context.req.valid("param"), nonce: query.nonce ?? "", startAt: query.startAt ?? "", inviteeTimezone: query.inviteeTimezone ?? "" });
+    const result = await context.get("services").bookings.getPublicSelection({ ...context.req.valid("param"), link:query.link, nonce: query.nonce ?? "", startAt: query.startAt ?? "", inviteeTimezone: query.inviteeTimezone ?? "" });
     return result.kind === "found" ? publicSurface(context) : recoverySurface(context, undefined, result.kind === "expired" ? 410 : 404);
   })
   .get("/book/:handle/:slug/confirmed", validate("param", eventSchema), validate("query", confirmedLookupSchema), async (context) => {
@@ -121,7 +122,9 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
   })
   .get("/book/:handle/:slug", validate("param", eventSchema), async (context) => {
     const { handle, slug } = context.req.valid("param");
-    return (await knownPublicEvent(context, handle, slug)) ? publicSurface(context) : recoverySurface(context);
+    const offer = await context.get("services").bookingLinks.resolve(slug,context.req.query("link"));
+    const profile = await context.get("services").hostProfile.getPublicProfile(handle);
+    return profile && offer ? offer.kind === "expired" ? recoverySurface(context,undefined,offer.event.bookingLink?.kind === "one_off" ? 404 : 410) : publicSurface(context) : recoverySurface(context);
   })
   .get("/book/:handle", validate("param", handleSchema), async (context) => {
     return (await context.get("services").hostProfile.getPublicProfile(context.req.valid("param").handle))
@@ -136,11 +139,6 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
   .get("/manage/*", (context) => recoverySurface(context))
   .get("/embed/*", (context) => recoverySurface(context, { blockFraming: true }))
   .get("/privacy", (context) => publicSurface(context));
-
-async function knownPublicEvent(context: Context<AppEnvironment>, handle: string, slug: string) {
-  const profile = await context.get("services").hostProfile.getPublicProfile(handle);
-  return Boolean(profile && (await context.get("services").eventTypes.getPublicEvent(slug)));
-}
 
 async function knownAlternativeRequestEvent(context: Context<AppEnvironment>, handle: string, slug: string) {
   const profile = await context.get("services").hostProfile.getPublicProfile(handle);

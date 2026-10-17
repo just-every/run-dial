@@ -69,7 +69,11 @@ export async function bookingPolicyJourney({ data, call, state, deliver, checks 
     [`${nearManage}/cancel`, {}, 'cancellation_cutoff'],
   ]) assert.equal((await data(path, body, 409)).error.code, reason);
   const afterDenied = await state();
-  for (const table of ['bookings', 'booking_occurrences', 'booking_history', 'delivery_outbox', 'wire_calls']) assert.deepEqual(afterDenied[table], beforeDenied[table], `cut-off refusal preserves ${table}`);
+  for (const table of ['bookings', 'booking_occurrences', 'booking_history', 'delivery_outbox']) assert.deepEqual(afterDenied[table], beforeDenied[table], `cut-off refusal preserves ${table}`);
+  // Connection health and watch renewal run independently of booking commands.
+  // Keep every booking-event and mail call in this comparison, including reads.
+  const bookingCalls = snapshot => snapshot.wire_calls.filter(row => !/^https:\/\/www\.googleapis\.com\/calendar\/v3\/(?:users\/me\/calendarList(?:\/|\?|$)|freeBusy$|calendars\/[^/]+\/events\/watch$|channels\/stop$)/.test(row.url));
+  assert.deepEqual(bookingCalls(afterDenied), bookingCalls(beforeDenied), 'cut-off refusal preserves booking calendar and mail calls');
   assert.equal((await data(nearManage)).changePolicy.cancellationAllowed, false);
   const key = randomUUID();
   await data(`${nearManage}/contact-host`, { idempotencyKey: key, message: 'My flight changed; can we move this visit?' });

@@ -56,6 +56,7 @@ export type BusyRead = {
 };
 
 export type ManagedCalendarEvent = {
+  transparency?: "opaque" | "transparent";
   idempotencyKey: string;
   bookingId: string;
   occurrenceId: string;

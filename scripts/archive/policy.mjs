@@ -15,9 +15,9 @@ export const exported = [
   'availability_date_override_windows', 'calendar_connections', 'calendar_connection_calendars',
   'provider_connection_health', 'calendar_busy_intervals', 'calendar_busy_read_windows',
   'delivery_outbox', 'delivery_attempts', 'provider_webhook_events', 'operator_delivery_preferences',
-  'bookings', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_attendance', 'booking_presentation', 'booking_correspondence',
+  'bookings', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_request_history', 'booking_reschedule_requests', 'booking_attendance', 'booking_presentation', 'booking_correspondence',
   'blocked_address_rules', 'availability_requests', 'availability_request_windows', 'embed_allowed_origins',
-  'booking_calendar_conflicts', 'anonymized_audit', 'erased_calendar_targets', 'calendar_deletion_probes',
+  'booking_calendar_conflicts', 'booking_links', 'anonymized_audit', 'erased_calendar_targets', 'calendar_deletion_probes',
   'oc_owner_claims', 'operator_setup_identity', 'operator_mail_invocations', 'oa_operators', 'oa_bootstrap', 'base_mail_dispatch',
   'operator_creation_receipts', 'operator_creation_tombstones', 'oa_invitation_cancellations', 'oa_domain_rules',
 ].sort();
@@ -57,6 +57,6 @@ export function canonicalRow(name, source, secrets = []) {
     row.payload_json = JSON.stringify({ ...payload, archiveHistorical: true });
     if (['pending', 'processing'].includes(row.state)) { row.state = 'failed'; row.last_error_code = 'restored_historical_command'; }
   }
-  if (name === 'calendar_deletion_probes' || name === 'erased_calendar_targets') row.archive_historical = 1;
+  if (name === 'calendar_deletion_probes' || name === 'erased_calendar_targets' || name === 'booking_reschedule_requests') row.archive_historical = 1;
   return row;
 }

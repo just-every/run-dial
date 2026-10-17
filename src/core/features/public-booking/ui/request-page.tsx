@@ -27,7 +27,7 @@ export function AlternativeRequestPage({ handle, slug, embedded = false }: { han
   useEffect(() => {
     setMissing(false);
     void publicApi.api.public.events[":handle"][":slug"].$get({ param: { handle, slug } }).then(async (response) => {
-      if (response.ok) setData(await response.json()); else setMissing(true);
+      if (response.ok) { const received = await response.json(); if ("eventType" in received) setData(received); else setMissing(true); } else setMissing(true);
     });
   }, [handle, slug]);
   if (missing || (data && !data.eventType.alternativeRequestsEnabled)) return <PublicRecoveryPage />;

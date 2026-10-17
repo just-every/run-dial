@@ -22,7 +22,7 @@ export type BookingOccurrence = {
 export type BookingHistoryEntry = {
   id: string;
   occurrenceId: string | null;
-  action: "created" | "rescheduled" | "cancelled" | "attendance_marked" | "calendar_cancelled";
+  action: "created" | "rescheduled" | "cancelled" | "attendance_marked" | "calendar_cancelled" | "reschedule_requested" | "reschedule_request_reminded" | "reschedule_request_picked" | "reschedule_request_expired";
   actorType: "invitee" | "operator" | "calendar_provider" | "system";
   actorId: string | null;
   previousStartAt: string | null;
@@ -57,6 +57,7 @@ export type BookingCalendarConflict = {
   createdAt: string;
 };
 export type BookingRecord = {
+  rescheduleRequest?: import("./reschedule-requests").RescheduleRequest;
   changePolicy?: import("../../shared/change-policy").ChangePolicyDecision;
   lockedTimezone?: string;
   browserTimezone?: string | null;
@@ -98,6 +99,7 @@ export type BookingSelection = { startAt: string; endAt: string; inviteeTimezone
 export type BookingNonce = { nonce: string; expiresAt: string; selection: BookingSelection };
 export type BookingActor = { type: "invitee" } | { type: "operator"; operatorId: string } | { type: "calendar_provider" };
 export type BookingConfirmation = {
+  rescheduleRequest?: import("./reschedule-requests").RescheduleRequest;
   lockedTimezone?: string;
   browserTimezone?: string | null;
   changePolicy?: import("../../shared/change-policy").ChangePolicyDecision;

@@ -6,13 +6,14 @@ export type OperatorCreationIdentity = { keyHash: string; payloadHash: string };
 export type OperatorCreationPayload = {
   requestId?: string; operatorId: string; idempotencyKey?: string; eventTypeId: string;
   startAt: string; inviteeTimezone: string; name: string; email: string; durationMinutes?: number;
+  locationId?: string; locationInput?: string;
   answers: unknown; overrideNoticeAndHorizon: boolean;
 };
 export type OperatorCreationReceipt = { bookingId: string; operatorId: string; payloadHash: string };
 
 export async function operatorCreationIdentity(input: OperatorCreationPayload, secret: string): Promise<OperatorCreationIdentity | undefined> {
   if (!input.idempotencyKey || !hasSupportedInstantPrecision(input.startAt) || !Number.isFinite(Date.parse(input.startAt))) return undefined;
-  const payload = { ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.requestId ? { requestId: input.requestId } : {}), eventTypeId: input.eventTypeId, startAt: new Date(input.startAt).toISOString(), inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, overrideNoticeAndHorizon: input.overrideNoticeAndHorizon };
+  const payload = { ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.requestId ? { requestId: input.requestId } : {}), eventTypeId: input.eventTypeId, startAt: new Date(input.startAt).toISOString(), inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, overrideNoticeAndHorizon: input.overrideNoticeAndHorizon };
   const [keyHash, payloadHash] = await Promise.all([
     hashToken(`operator-create.v1:${input.operatorId}:${input.idempotencyKey}`, secret),
     hashToken(`operator-create-payload.v1:${stableJson(payload)}`, secret),

@@ -10,6 +10,8 @@ const kinds = [
   { name: "Calendar invitation", keys: ["calendarTitle", "calendarDescription"] },
   { name: "Confirmation email", keys: ["confirmationSubject", "confirmationBody"] },
   { name: "Reschedule email", keys: ["rescheduleSubject", "rescheduleBody"] },
+  { name: "Reschedule request email", keys: ["rescheduleRequestSubject", "rescheduleRequestBody"] },
+  { name: "Reschedule request reminder email", keys: ["rescheduleRequestReminderSubject", "rescheduleRequestReminderBody"] },
   { name: "Cancellation email", keys: ["cancellationSubject", "cancellationBody"] },
   { name: "Reminder email", keys: ["reminderSubject", "reminderBody"] },
 ] as const;
@@ -87,7 +89,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
           const label = calendar ? index === 0 ? "Title" : "Description" : index === 0 ? "Subject" : "Body";
           const control = { id: `${id}-${key}`, value: templates[key], disabled, required: true, "aria-invalid": loaded && issues[key].length > 0, "aria-describedby": issues[key].length ? `${id}-${key}-errors` : undefined, onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => update(key, event.target.value) };
           return <div key={key} className="grid min-w-0 gap-2">
-            <div className="flex flex-wrap items-center justify-between gap-2"><label htmlFor={control.id} className="text-sm font-semibold">{label} <span className="font-normal text-muted">· {value.templates[key] === null ? "Default" : "Custom"}</span></label><Button type="button" variant="quiet" disabled={disabled || value.templates[key] === null} onClick={() => update(key, null)}>Restore default</Button></div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><label htmlFor={control.id} className="text-sm font-semibold">{label} <span className="font-normal text-muted">· {value.templates[key] == null ? "Default" : "Custom"}</span></label><Button type="button" variant="quiet" disabled={disabled || value.templates[key] == null} onClick={() => update(key, null)}>Restore default</Button></div>
             {index === 0 ? <Input {...control} maxLength={500} /> : <Textarea {...control} maxLength={10_000} rows={9} />}
             {loaded && issues[key].length ? <p id={`${id}-${key}-errors`} className="text-sm leading-6 text-danger">{issues[key].join(" ")}</p> : null}
           </div>;

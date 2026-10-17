@@ -1,3 +1,4 @@
+import { requestColumns, normalizeRequest, type RescheduleRequest } from "./reschedule-requests";
 import { evaluateChangePolicy, defaultInheritedChangePolicyWindows } from "../../shared/change-policy";
 import type { EventBookingPolicy } from "../../shared/booking-policy";
 import type { BookingCalendarConflict, BookingDelivery, BookingHistoryEntry, BookingOccurrence, BookingRecord } from "./types";
@@ -69,13 +70,15 @@ export async function hydrateOperatorBookings(binding: D1Database, rows: Operato
   const idSet = "IN (SELECT value FROM json_each(?))";
   const [answers, history, deliveries, attendance, calendarConflicts, presentations, policies] = await Promise.all([
     binding.prepare(`SELECT booking_id AS bookingId, question_key AS key, question_label AS label, question_kind AS kind, value_json AS valueJson FROM booking_answers WHERE booking_id ${idSet} ORDER BY created_at`).bind(bookingIdsJson).all<BookingAnswerRow>(),
-    binding.prepare(`SELECT booking_id AS bookingId, id, occurrence_id AS occurrenceId, action, actor_type AS actorType, actor_id AS actorId, previous_start_at AS previousStartAt, new_start_at AS newStartAt, reason, created_at AS createdAt FROM booking_history WHERE booking_id ${idSet} ORDER BY created_at`).bind(bookingIdsJson).all<BookingHistoryRow>(),
+    binding.prepare(`SELECT booking_id AS bookingId, id, occurrence_id AS occurrenceId, action, actor_type AS actorType, actor_id AS actorId, previous_start_at AS previousStartAt, new_start_at AS newStartAt, reason, created_at AS createdAt FROM booking_history WHERE booking_id ${idSet} UNION ALL SELECT booking_id AS bookingId,id,occurrence_id AS occurrenceId,action,actor_type AS actorType,actor_id AS actorId,NULL AS previousStartAt,NULL AS newStartAt,reason,created_at AS createdAt FROM booking_request_history WHERE booking_id ${idSet} ORDER BY createdAt`).bind(bookingIdsJson,bookingIdsJson).all<BookingHistoryRow>(),
     binding.prepare(`SELECT booking_id AS bookingId, id, kind, occurrence_id AS occurrenceId, payload_json AS payloadJson, state, attempts, last_error_code AS lastErrorCode, created_at AS createdAt, succeeded_at AS succeededAt FROM delivery_outbox WHERE booking_id ${idSet} ORDER BY created_at`).bind(bookingIdsJson).all<BookingDeliveryRow>(),
     binding.prepare(`SELECT booking_id AS bookingId, status, note, marked_by_operator_id AS operatorId, marked_at AS markedAt FROM booking_attendance WHERE booking_id ${idSet}`).bind(bookingIdsJson).all<BookingAttendanceRow>(),
     binding.prepare(`SELECT booking_id AS bookingId, id, occurrence_id AS occurrenceId, provider_event_id AS providerEventId, provider_updated_at AS providerUpdatedAt, canonical_start_at AS canonicalStartAt, canonical_end_at AS canonicalEndAt, canonical_location AS canonicalLocation, external_start_at AS externalStartAt, external_end_at AS externalEndAt, external_location AS externalLocation, state, created_at AS createdAt FROM booking_calendar_conflicts WHERE booking_id ${idSet} ORDER BY created_at DESC`).bind(bookingIdsJson).all<BookingCalendarConflictRow>(),
     binding.prepare(`SELECT booking_id AS bookingId, locked_timezone AS lockedTimezone, browser_timezone AS browserTimezone FROM booking_presentation WHERE booking_id ${idSet}`).bind(bookingIdsJson).all<{ bookingId: string; lockedTimezone: string; browserTimezone: string | null }>(),
     binding.prepare(`SELECT b.id AS bookingId, p.locked_timezone AS lockedTimezone, p.reschedule_cutoff_minutes AS rescheduleCutoffMinutes, p.cancellation_cutoff_minutes AS cancellationCutoffMinutes, p.reschedule_cap AS maxInviteeReschedules FROM bookings b JOIN event_booking_policies p ON p.event_type_id=b.event_type_id WHERE b.id ${idSet}`).bind(bookingIdsJson).all<EventBookingPolicy & { bookingId: string }>(),
   ]);
+  const requests = await binding.prepare(`SELECT booking_id AS bookingId,${requestColumns} FROM booking_reschedule_requests WHERE booking_id ${idSet} ORDER BY created_at`).bind(bookingIdsJson).all<RescheduleRequest & {bookingId:string}>();
+  const requestById = new Map(requests.results.map(row=>[row.bookingId,normalizeRequest(row)]));
   const policyById = new Map(policies.results.map(({ bookingId, ...policy }) => [bookingId, policy]));
   const presentationById = new Map(presentations.results.map(row => [row.bookingId, row]));
   const answersByBooking = groupByBookingId(answers.results, (row) => ({ key: row.key, label: row.label, kind: row.kind, valueJson: row.valueJson }));
@@ -83,13 +86,19 @@ export async function hydrateOperatorBookings(binding: D1Database, rows: Operato
   const deliveriesByBooking = groupByBookingId(deliveries.results, (row) => ({ id: row.id, kind: row.kind, occurrenceId: row.occurrenceId, payloadJson: row.payloadJson, state: row.state, attempts: row.attempts, lastErrorCode: row.lastErrorCode, createdAt: row.createdAt, succeededAt: row.succeededAt }));
   const attendanceByBooking = groupByBookingId(attendance.results, (row) => ({ status: row.status, note: row.note, operatorId: row.operatorId, markedAt: row.markedAt }));
   const conflictsByBooking = groupByBookingId(calendarConflicts.results, (row) => ({ id: row.id, occurrenceId: row.occurrenceId, providerEventId: row.providerEventId, providerUpdatedAt: row.providerUpdatedAt, canonicalStartAt: row.canonicalStartAt, canonicalEndAt: row.canonicalEndAt, canonicalLocation: row.canonicalLocation, externalStartAt: row.externalStartAt, externalEndAt: row.externalEndAt, externalLocation: row.externalLocation, state: row.state, createdAt: row.createdAt }));
-  return rows.map((row) => ({ ...toBookingRecord(row, {
+  const hydrated = rows.map((row) => ({ ...toBookingRecord(row, {
     answers: answersByBooking.get(row.id) ?? [],
     history: historyByBooking.get(row.id) ?? [],
     deliveries: deliveriesByBooking.get(row.id) ?? [],
     attendance: attendanceByBooking.get(row.id)?.[0],
     calendarConflicts: conflictsByBooking.get(row.id) ?? [],
   }), ...(policyById.has(row.id) ? { changePolicy: evaluateChangePolicy({ policy: policyById.get(row.id), startAt: row.occurrenceStartAt, now: new Date(), successfulInviteeReschedules: (historyByBooking.get(row.id) ?? []).filter(entry => entry.action === "rescheduled" && entry.actorType === "invitee").length, inherited: defaultInheritedChangePolicyWindows }) } : {}), ...(presentationById.has(row.id) ? { lockedTimezone: presentationById.get(row.id)!.lockedTimezone, browserTimezone: presentationById.get(row.id)!.browserTimezone } : {}) }));
+  return hydrated.map(booking => {
+    const request=requestById.get(booking.id);
+    if (!request) return booking;
+    const open=!request.archiveHistorical && request.state==='open' && request.expiresAt>new Date().toISOString();
+    return {...booking,rescheduleRequest:request,...(open && booking.changePolicy ? {changePolicy:{...booking.changePolicy,rescheduleAllowed:true,cancellationAllowed:true,rescheduleReason:null,cancellationReason:null}}:{})};
+  });
 }
 
 function toBookingRecord(row: OperatorBookingRow, data: BookingHydrationData): BookingRecord {

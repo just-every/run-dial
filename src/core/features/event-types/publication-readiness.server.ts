@@ -1,3 +1,4 @@
+import { offeredLocations, locationIssue } from "./locations";
 import { validHostProfile } from "../host-setup";
 import type { ProfileRecord } from "../host-profile";
 import type { EventTypeRecord } from "./repository";
@@ -7,13 +8,13 @@ export function publicationRequirements(eventType: EventTypeRecord, profile: Pro
   const missing = [
     ...(!validHostProfile(profile) ? ["host_profile"] : []),
     ...(eventType.availability.length === 0 ? ["open_availability"] : []),
-    ...(eventType.locationType !== "google_meet" && !eventType.locationValue.trim() ? ["private_location"] : []),
+    ...(offeredLocations(eventType).some(location => locationIssue(location)) ? ["private_location"] : []),
   ];
-  if (!providers) return { ready: false, missing: [...missing, "transactional_mail", "destination_calendar", ...(eventType.locationType === "google_meet" ? ["google_meet_capability"] : [])] };
+  if (!providers) return { ready: false, missing: [...missing, "transactional_mail", "destination_calendar", ...(offeredLocations(eventType).some(location => location.type === "google_meet") ? ["google_meet_capability"] : [])] };
   const { calendar, mail } = providers;
   if (calendar.kind !== "healthy" && calendar.code !== "not_connected") missing.push("destination_calendar");
   if (mail.kind !== "healthy") missing.push("transactional_mail");
-  if (eventType.locationType === "google_meet" && (calendar.kind !== "healthy" || !calendar.conferenceCapable)) missing.push("google_meet_capability");
+  if (offeredLocations(eventType).some(location => location.type === "google_meet") && (calendar.kind !== "healthy" || !calendar.conferenceCapable)) missing.push("google_meet_capability");
   return { ready: missing.length === 0, missing };
 }
 

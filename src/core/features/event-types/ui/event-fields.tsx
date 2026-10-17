@@ -1,18 +1,18 @@
+import { LocationFields } from "./location-fields";
 import { DurationFields } from "./duration-fields";
 import { useState, type ReactNode } from "react";
-import { Card, IconTile, Input, Select, Textarea, noticeClassName } from "../../../app/ui/primitives";
+import { Card, IconTile, Input, Select, Textarea } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
 import type { IconName } from "../../../shared/drawing/icons";
 import type { EventTypeInput } from "../repository";
 
-const locationLabels = { google_meet: "Google Meet", fixed_link: "Fixed link", phone: "Host phone number", in_person: "In-person address" } as const;
 type Props = { event: EventTypeInput; update<K extends keyof EventTypeInput>(key: K, value: EventTypeInput[K]): void };
 
 export function EventFields({ event, update }: Props) {
   const [more, setMore] = useState(false);
   return <>
     <Card className="p-5 sm:p-6"><SectionHeading icon="file" title="Details" description="Start with the offer your guests will book." /><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="Event name"><Input value={event.title} onChange={(entry) => update("title", entry.target.value)} required /></Field></div><DurationFields event={event} update={update} /></Card>
-    <Card className="p-5 sm:p-6"><SectionHeading icon="pin" title="Location and delivery" description="Guests see the label before confirmation; the private value is released only on a confirmed booking." /><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="Location kind"><Select value={event.locationType} onChange={(entry) => { const kind = entry.target.value as EventTypeInput["locationType"]; update("locationType", kind); update("locationLabel", locationLabels[kind]); if (kind === "google_meet") update("locationValue", ""); }}>{Object.entries(locationLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</Select></Field><Field label="Public label"><Input value={event.locationLabel} onChange={(entry) => update("locationLabel", entry.target.value)} required /></Field>{event.locationType !== "google_meet" ? <Field label="Private link, number, or address" className="sm:col-span-2"><Input value={event.locationValue} onChange={(entry) => update("locationValue", entry.target.value)} required /></Field> : <p className={noticeClassName("warning", "sm:col-span-2")}>Google Meet is provisioned after confirmation. Publication checks conferencing capability.</p>}</div></Card>
+    <LocationFields event={event} update={update} />
     <Card className="p-5 sm:p-6"><Field label="Description" icon="file"><Textarea value={event.description} onChange={(entry) => update("description", entry.target.value)} required /></Field></Card>
     <Card className="p-5 sm:p-6"><details open={more} onToggle={(entry) => setMore(entry.currentTarget.open)} className="group"><summary className="flex cursor-pointer list-none items-center gap-3 text-[19px] font-[750] tracking-[-.01em] [&::-webkit-details-marker]:hidden"><span aria-hidden="true" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-row"><span className="ml-0.5 h-0 w-0 border-y-[5px] border-l-[8px] border-y-transparent border-l-ink transition-transform group-open:rotate-90" /></span>More options</summary><div onInvalidCapture={() => setMore(true)} className="mt-5 grid gap-4 sm:grid-cols-2">
       <Field label="Slug"><Input value={event.slug} onChange={(entry) => update("slug", entry.target.value.toLowerCase())} required pattern={"[a-z0-9\\-]+"} maxLength={80} /></Field>

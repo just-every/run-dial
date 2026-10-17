@@ -1,3 +1,5 @@
+import { BookingLinksRepository } from "../features/booking-links/repository";
+import { BookingLinksService } from "../features/booking-links/service";
 import { EventCorrespondenceRepository } from "../features/event-types/correspondence-repository";
 import { EventBookingPolicyRepository } from "../features/event-types/booking-policy-repository";
 import { PersonErasure } from "../features/erasure/person";
@@ -43,10 +45,11 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     : new ResendMailSender(mailConfig.apiKey && mailConfig.from && (runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET) ? { apiKey: mailConfig.apiKey, fromEmail: mailConfig.from } : undefined));
   const deliveryRepository = new DeliveryRepository(binding, mailConfig.provider, Boolean(runtime.MAIL_PROVIDER ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET));
   const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile, { calendar, mail, recorded: { calendar: () => calendar.connectionHealth(), mail: () => deliveryRepository.mailHealth() } });
-  const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar);
+  const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
+  const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
   const bookings = new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
-  });
+  }, bookingLinks);
   calendar.setExternalChangeHandler(adapters.calendarChanges ?? bookings);
   if (adapters.connectionWatch) calendar.setWatchObservers(adapters.connectionWatch);
   const authMail = adapters.authMail ?? (adapters.mail ? { async send(message: import("../../../modules/operator-auth/index.mjs").MailMessage) {
@@ -74,6 +77,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     hostProfile,
     hostSetup: new HostSetupService(new HostSetupRepository(binding), hostProfile, eventTypes, installPublicOrigin(runtime.APP_URL)),
     eventTypes,
+    bookingLinks,
     calendar,
     mail,
     sendgridWebhook: new SendGridWebhookReceiver(binding, runtime.MAIL_WEBHOOK_KEY),

@@ -15,6 +15,7 @@ const instantSchema = z.string().datetime({ offset: true })
   .refine((value) => Number.isFinite(Date.parse(value)), "Use a valid instant.")
   .transform((value) => new Date(value).toISOString());
 const operatorListSchema = z.object({
+  rescheduleRequest: z.enum(["open", "picked", "expired", "cancelled"]).optional(),
   state: z.enum(["confirmed", "cancelled", "rescheduled"]).optional(),
   time: z.enum(["future", "past"]).optional(),
   eventTypeId: z.string().length(26).optional(),
@@ -36,6 +37,8 @@ const operatorCreateSchema = z.object({
   idempotencyKey: z.string().uuid().optional(),
   requestId: z.string().length(26).optional(),
   eventTypeId: z.string().length(26),
+  locationId: z.string().max(80).optional(),
+  locationInput: z.string().max(1000).optional(),
   durationMinutes: z.number().int().min(5).max(480).optional(),
   startAt: instantSchema,
   inviteeTimezone: ianaTimeZoneSchema,
@@ -51,6 +54,11 @@ const attendanceSchema = z.object({ status: z.enum(["attended", "no_show"]), not
 
 /** Session-gated lifecycle endpoints. Booking IDs and delivery detail never cross this boundary. */
 export const bookingOperatorRoutes = new Hono<AppEnvironment>()
+  .post("/api/app/bookings/:id/reschedule-request", validate("param", bookingIdSchema), validate("json", z.object({ message:z.string().trim().max(1000).default(""),releaseTime:z.boolean(),expiresInDays:z.number().int().min(1).max(30).default(14),reminderHours:z.number().int().min(1).max(168).nullable().default(null) }).strict()), async context=> {
+    const result=await context.get("services").bookings.requestReschedule(context.req.valid("param").id,context.get("session").id,context.req.valid("json"));
+    if(result.kind==="created") return context.json(result.booking);
+    return apiError(context,result.kind==="not_found"?404:409,result.kind,result.kind==="invalid_reminder"?"The reminder must be before expiry and, for a held time, before the original start.":"This booking cannot receive a new reschedule request. Check its state and existing request.");
+  })
   .get("/api/app/bookings", validate("query", operatorListSchema), async (context) => {
     const services = context.get("services");
     const { fromDate, throughDate, ...filters } = context.req.valid("query");

@@ -1,0 +1,67 @@
+import assert from "node:assert/strict";
+
+export async function bookingLinksJourney({data,call,state,deliver,future,checks}) {
+  const event=await data("/api/app/event-types",{slug:"private-links",title:"Private consultation",description:"Meet by private link.",durationMinutes:30,color:"#176b5a",locationType:"fixed_link",locationLabel:"Video",locationValue:"https://meet.example.test/base-private",listed:false,alternativeRequestsEnabled:false,slotIncrementMinutes:30,minimumNoticeMinutes:0,bookingHorizonDays:90,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,questions:[],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:60,endMinute:300}))},201);
+  const oneOffDate=new Date(Date.parse(future+"T00:00:00.000Z")+2*86400000).toISOString().slice(0,10);
+  const create = (kind="single_use",overrides) => data("/api/app/booking-links",{eventTypeId:event.id,kind,expiresAt:new Date(Date.now()+86400000).toISOString(),...(overrides?{overrides}:{})},201);
+  const link=await create(), token=new URL(link.url).searchParams.get("link"), origin=new URL(link.url).origin;
+  for (const method of ["GET","POST"]) {
+    const anonymous=await fetch(origin+"/api/app/booking-links",{method,headers:{origin,"content-type":"application/json"},...(method==="POST"?{body:JSON.stringify({eventTypeId:event.id,kind:"single_use",expiresAt:new Date(Date.now()+86400000).toISOString()})}:{})});
+    assert.equal(anonymous.status,401);await anonymous.arrayBuffer();
+  }
+  assert.equal((await data("/api/app/booking-links")).filter(row=>row.eventTypeId===event.id).length,1);
+  const base=`/api/public/book/dial-host/${event.slug}`, query=`link=${encodeURIComponent(token)}`;
+  await call(`/api/public/events/dial-host/${event.slug}`,undefined,404);
+  const publicOffer=await data(`/api/public/events/dial-host/${event.slug}?${query}`);
+  assert.ok(!JSON.stringify(publicOffer).includes(event.locationValue));
+  await call(`/api/public/events/foreign-host/${event.slug}?${query}`,undefined,404);
+  await call(`/api/public/events/dial-host/intro?${query}`,undefined,404);
+  await call(`${base}/availability?link=forged&week=${future}`,undefined,404);
+  const slots=(await data(`${base}/availability?${query}&week=${future}`)).slots;
+  assert.ok(slots.length>1);
+  const selections=await Promise.all(slots.slice(0,2).map(slot=>data(`${base}/selection`,{link:token,startAt:slot.startAt,inviteeTimezone:"UTC"},201)));
+  const payloads=selections.map((selection,index)=>({link:token,nonce:selection.nonce,startAt:selection.selection.startAt,inviteeTimezone:"UTC",name:"Private guest",email:`single-link-${index}@dial.test`,answers:{}}));
+  await call(`${base}/confirm`,{...payloads[0],link:undefined},404);
+  const responses=await Promise.all(payloads.map(payload=>fetch(origin+`${base}/confirm`,{method:"POST",headers:{"content-type":"application/json",origin},body:JSON.stringify(payload)})));
+  assert.equal(responses.filter(response=>response.status===201).length,1,"two different nonce/slot claims consume one private link once");
+  const winner=responses.findIndex(response=>response.status===201), loser=1-winner;
+  assert.ok([409,410].includes(responses[loser].status),await responses[loser].text());
+  const receipt=await responses[winner].json();
+  assert.deepEqual(await data(`${base}/confirm`,payloads[winner]),receipt,"same confirmation still replays its own committed result");
+  assert.deepEqual(await data(`/api/public/events/dial-host/${event.slug}?${query}`),{linkState:"used"});
+  await call(`${base}/availability?${query}&week=${future}`,undefined,410);
+  await call(`${base}/selection`,{link:token,startAt:slots[1].startAt,inviteeTimezone:"UTC"},404);
+  assert.equal((await state()).bookings.filter(row=>row.event_type_id===event.id).length,1);
+  const expired=await create("one_off",{durationMinutes:45,locationType:"in_person",locationLabel:"Studio",locationValue:"Private studio address",dates:[{hostDate:oneOffDate,windows:[{startMinute:360,endMinute:540}]}]});
+  await call("/__fixtures/expire-link",{id:expired.id},204);
+  await call(`/api/public/events/dial-host/${event.slug}?${new URL(expired.url).searchParams}`,undefined,404);
+  const oneOff=await create("one_off",{durationMinutes:45,locationType:"in_person",locationLabel:"Studio",locationValue:"Private studio address",dates:[{hostDate:oneOffDate,windows:[{startMinute:360,endMinute:540}]}]});
+  const oneToken=new URL(oneOff.url).searchParams.get("link"),oneQuery=new URL(oneOff.url).searchParams;
+  const offer=await data(`/api/public/events/dial-host/${event.slug}?${oneQuery}`);
+  assert.equal(offer.eventType.durationMinutes,45);assert.equal(offer.eventType.locationLabel,"Studio");assert.ok(!JSON.stringify(offer).includes("Private studio address"));
+  const oneSlot=(await data(`${base}/availability?${oneQuery}&week=${future}`)).slots[0];assert.ok(oneSlot);assert.equal(new Intl.DateTimeFormat("en-GB",{timeZone:offer.profile.timezone,hour:"2-digit",hourCycle:"h23"}).format(new Date(oneSlot.startAt)),"06");
+  const oneSelection=await data(`${base}/selection`,{link:oneToken,startAt:oneSlot.startAt,inviteeTimezone:"UTC"},201);
+  const selectedQuery=new URLSearchParams({link:oneToken,nonce:oneSelection.nonce,startAt:oneSlot.startAt,inviteeTimezone:"UTC"});
+  assert.equal((await data(`${base}/selection?${selectedQuery}`)).event.durationMinutes,45);
+  const oneReceipt=await data(`${base}/confirm`,{link:oneToken,nonce:oneSelection.nonce,startAt:oneSlot.startAt,inviteeTimezone:"UTC",name:"One-off guest",email:"one-off@dial.test",answers:{}},201);
+  await deliver();
+  const booking=(await state()).bookings.find(row=>row.invitee_email==="one-off@dial.test");
+  assert.equal(booking.duration_minutes,45);assert.equal(booking.location_value,"Private studio address");
+  const manageToken=new URL(oneReceipt.manageUrl).pathname.split("/").at(-1),manage=`/api/public/manage/${manageToken}`;
+  await call("/__fixtures/expire-link",{id:oneOff.id},204);
+  const manageAvailability=await data(`${manage}/reschedule/availability?week=${future}`);
+  const move=manageAvailability.slots.find(slot=>slot.startAt!==oneSlot.startAt);assert.ok(move,"a consumed/expired one-off offer retains its own manage schedule");
+  const moveSelection=await data(`${manage}/reschedule/selection`,{startAt:move.startAt,inviteeTimezone:"UTC"},201);
+  const moved=await data(`${manage}/reschedule`,{nonce:moveSelection.nonce,startAt:move.startAt,inviteeTimezone:"UTC"});
+  assert.equal(moved.event.durationMinutes,45);await deliver();
+  const movedBooking=(await state()).bookings.find(row=>row.id===booking.id);
+  assert.equal(movedBooking.location_value,"Private studio address");assert.equal(movedBooking.ical_uid,booking.ical_uid);
+  await data(`${manage}/cancel`,{});await deliver();assert.equal((await state()).bookings.find(row=>row.id===booking.id).state,"cancelled");
+  const list=await data("/api/app/booking-links");assert.equal(list.find(row=>row.id===oneOff.id).state,"used");assert.equal(list.find(row=>row.id===expired.id).state,"expired");
+  const revoked=await create();await data(`/api/app/booking-links/${revoked.id}/revoke`,{});
+  await call(`/api/public/events/dial-host/${event.slug}?${new URL(revoked.url).searchParams}`,undefined,404);
+  await call(`/api/app/bookings/${booking.id}`,undefined,202,"DELETE");
+  assert.equal((await state()).booking_links.find(row=>row.id===oneOff.id).consumed_booking_id,null);
+  assert.deepEqual(await data(`/api/public/events/dial-host/${event.slug}?${oneQuery}`),{linkState:"used"},"erasure removes the booking association without reopening the spent link");
+  checks.push("LINK-001/AUTH-007: private native link creation/list/revocation, foreign and missing capabilities refused, competing distinct nonce claims book once, used state has no booking data, expired one-off 404, duration/location/hours overrides persist without publishing an event type");
+}

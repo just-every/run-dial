@@ -1,3 +1,4 @@
+import { validateLocations } from "./locations.mjs";
 import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
 import { validateAvailabilityConfig, validateAvailabilityReferences } from './availability-config.mjs';
 import { validateBookingPolicy } from './booking-policy.mjs';
@@ -59,6 +60,7 @@ export function validateRows(archive, model) {
         }
       }
       if (table.name === 'event_questions' && ![0, 1].includes(row.private)) throw new Error('archive-invalid-question-privacy');
+      validateLocations(table.name, row);
       validateAvailabilityConfig(table.name, row);
       validateBookingPolicy(table.name, row);
       validateCorrespondence(table.name, row);

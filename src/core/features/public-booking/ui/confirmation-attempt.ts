@@ -1,6 +1,6 @@
 import type { Answers } from "./answer-retention";
 import type { Attribution } from "./link-context";
-export type ConfirmationInput = { nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: Answers; attribution?: Attribution };
+export type ConfirmationInput = { nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: Answers; attribution?: Attribution; locationId?: string; locationInput?: string; link?: string };
 /** Keep an uncertain confirmation byte-equivalent even if current questions change. */
 export class ConfirmationAttempt {
   private input?: ConfirmationInput;

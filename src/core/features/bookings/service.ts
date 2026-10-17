@@ -1,4 +1,8 @@
+import type { BookingLinksService } from "../booking-links";
+import { resolveBookingLocation } from "../event-types";
 import { suppressesMail } from "../../platform/mail/development";
+import type { RescheduleRequestInput } from "./reschedule-requests";
+import { requestEmail } from "./reschedule-request-mail";
 import { bookingRedirect, cleanAttribution, type BookingAttribution } from "./link-context";
 import { resolveEventDuration } from "../../shared/event-duration";
 import { intervalDuration } from "./duration";
@@ -54,11 +58,12 @@ export class BookingsService {
     private readonly eventTypes: EventTypesService,
     private readonly runtime: RuntimeEnvironment,
     private readonly deletions: Pick<DeletionReconciliationDependencies, "inspect" | "probes">,
+    private readonly bookingLinks?: BookingLinksService,
   ) {}
 
-  async issuePublicSelection(handle: string, slug: string, startAt: string, inviteeTimezone: string, durationMinutes?: number): Promise<BookingSelectionResult> {
+  async issuePublicSelection(handle: string, slug: string, startAt: string, inviteeTimezone: string, durationMinutes?: number, link?: string): Promise<BookingSelectionResult> {
     if (!isCanonicalIanaTimeZone(inviteeTimezone) || !isIsoInstant(startAt)) return { kind: "invalid_timezone" };
-    const verified = await this.availability.verifyPublicSelection(handle, slug, startAt, new Date(), undefined, durationMinutes);
+    const verified = await this.availability.verifyPublicSelection(handle, slug, startAt, new Date(), undefined, durationMinutes, undefined, link);
     if (verified.kind !== "valid") return verified;
     const rawNonce = createOpaqueToken();
     const now = nowIso();
@@ -66,6 +71,7 @@ export class BookingsService {
     await this.repository.createNonce({
       nonceHash: await hashToken(rawNonce, this.runtime.SESSION_SECRET),
       purpose: "confirm",
+      linkId: verified.event.bookingLink?.id,
       eventTypeId: verified.event.id,
       selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone },
       expiresAt,
@@ -74,7 +80,7 @@ export class BookingsService {
     return { kind: "issued", nonce: { nonce: rawNonce, expiresAt, selection: { startAt: verified.slot.startAt, endAt: verified.slot.endAt, inviteeTimezone } } };
   }
 
-  async getPublicSelection(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string }): Promise<PublicSelectionLookupResult> {
+  async getPublicSelection(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; link?: string }): Promise<PublicSelectionLookupResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "not_found" };
     const nonce = await this.repository.getNonce(await hashToken(input.nonce, this.runtime.SESSION_SECRET));
     if (!nonce || nonce.purpose !== "confirm") return { kind: "not_found" };
@@ -82,9 +88,10 @@ export class BookingsService {
     if (nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "not_found" };
     const [profile, event] = await Promise.all([
       this.profiles.getPublicProfile(input.handle),
-      this.eventTypes.getEventType(nonce.eventTypeId),
+      this.bookingLinks ? this.bookingLinks.resolve(input.slug, input.link) : this.eventTypes.getEventType(nonce.eventTypeId).then(event => event ? {kind:"active" as const,event} : undefined),
     ]);
-    if (!profile || !event || event.status !== "published" || event.slug !== input.slug) return { kind: "not_found" };
+    if (profile && event?.kind === "expired" && "bookingLink" in event.event && event.event.bookingLink?.kind === "single_use" && event.event.id === nonce.eventTypeId && event.event.bookingLink.id === nonce.linkId) return {kind:"expired"};
+    if (!profile || !event || event.kind !== "active" || event.event.status !== "published" || event.event.slug !== input.slug || event.event.id !== nonce.eventTypeId || ("bookingLink" in event.event ? event.event.bookingLink?.id ?? null : null) !== nonce.linkId) return { kind: "not_found" };
     const selectedDuration = intervalDuration(nonce.selectionStartAt, nonce.selectionEndAt);
     if (selectedDuration === undefined) return { kind: "not_found" };
     return {
@@ -93,13 +100,13 @@ export class BookingsService {
         nonce: input.nonce,
         expiresAt: nonce.expiresAt,
         selection: { startAt: nonce.selectionStartAt, endAt: nonce.selectionEndAt, hostTimezone: profile.timezone, inviteeTimezone: nonce.inviteeTimezone },
-        event: toPublicEventType({ ...event, durationMinutes: selectedDuration }),
+        event: toPublicEventType({ ...event.event, durationMinutes: selectedDuration }),
         host: toPublicProfile(profile),
       },
     };
   }
 
-  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; durationMinutes?: number; attribution?: BookingAttribution }): Promise<BookingConfirmationResult> {
+  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string }): Promise<BookingConfirmationResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
@@ -107,11 +114,12 @@ export class BookingsService {
     if (!nonce) return { kind: "invalid_nonce" };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
     const attribution = cleanAttribution(input.attribution);
-    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }) });
+    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }) });
     const profile = await this.profiles.getPublicProfile(input.handle);
     if (!profile) return { kind: "invalid_nonce" };
-    const event = await this.eventTypes.getEventType(nonce.eventTypeId);
-    if (!event || event.slug !== input.slug) return { kind: "invalid_nonce" };
+    const offer = this.bookingLinks ? await this.bookingLinks.resolve(input.slug, input.link) : undefined;
+    const originalEvent = offer?.event ?? (!input.link ? await this.eventTypes.getEventType(nonce.eventTypeId) : undefined);
+    if (!originalEvent || originalEvent.id !== nonce.eventTypeId || originalEvent.slug !== input.slug || (offer?.event.bookingLink?.id ?? null) !== nonce.linkId) return { kind: "invalid_nonce" };
     if (nonce.consumedAt) {
       if (nonce.payloadHash !== payloadHash) return { kind: "payload_mismatch" };
       const booking = await this.repository.getByConsumedNonce(nonce);
@@ -119,6 +127,9 @@ export class BookingsService {
       return { kind: "replayed", booking: this.toInitialConfirmation(booking, profile, await this.managedTokenFromNonce(input.nonce)) };
     }
     if (nonce.purpose !== "confirm" || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" };
+    if (offer && offer.kind !== "active") return {kind:"expired_nonce"};
+    const event = resolveBookingLocation(originalEvent, input);
+    if (!event) return {kind:"invalid_answers"};
     if (event.status !== "published") return { kind: "slot_invalid" };
     const selectedDuration = intervalDuration(nonce.selectionStartAt, nonce.selectionEndAt);
     if (selectedDuration === undefined) return { kind: "invalid_nonce" };
@@ -128,7 +139,7 @@ export class BookingsService {
     const invitee = validateInvitee(event, { name: input.name, email: input.email, answers: input.answers });
     if (!invitee) return { kind: "invalid_answers" };
     if (await this.repository.isBlocked(invitee.email)) return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: "blocked" };
-    const selection = await this.availability.verifyPublicSelection(profile.handle, event.slug, input.startAt, new Date(), undefined, selectedDuration);
+    const selection = await this.availability.verifyResolvedPublicSelection(profile, { ...event, ...(offer?.event.bookingLink ? {bookingLink:offer.event.bookingLink} : {}) }, input.startAt, new Date(), undefined, selectedDuration);
     if (selection.kind !== "valid") {
       if (selection.kind === "invalid_duration") return selection;
       if (selection.kind === "calendar_unavailable") return { kind: "calendar_unavailable" };
@@ -190,11 +201,11 @@ export class BookingsService {
     if (!access) return { kind: "not_found" as const };
     if (access.status !== "active") return { kind: "expired" as const };
     if (access.booking.changePolicy?.rescheduleReason) return { kind: "policy_blocked" as const, reason: access.booking.changePolicy.rescheduleReason };
-    if (access.booking.state === "cancelled" || Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
+    if (access.booking.state === "cancelled" || (Date.parse(access.booking.occurrence.startAt) <= Date.now() && !openRequest(access.booking))) return { kind: "policy_blocked" as const };
     if (!access.booking.eventTypeId) return { kind: "not_found" as const };
     const availability = await this.availability.listRescheduleWeek(access.booking.eventTypeId, access.booking.id, week, inviteeTimezone, new Date(), durationMinutes, access.booking.durationMinutes);
     if (availability && "kind" in availability) return availability;
-    const event = await this.eventTypes.getEventType(access.booking.eventTypeId);
+    const event = await this.bookingLinks?.resolveForBooking(access.booking.id) ?? await this.eventTypes.getEventType(access.booking.eventTypeId);
     return availability && event ? { kind: "found" as const, availability: { ...availability, durationOptionsMinutes: event.durationOptionsMinutes } } : { kind: "not_found" as const };
   }
 
@@ -231,6 +242,32 @@ export class BookingsService {
 
   getForOperator(id: string) {
     return this.repository.getById(id);
+  }
+
+  async requestReschedule(id: string, operatorId: string, input: RescheduleRequestInput) {
+    const booking = await this.repository.getById(id), profile = await this.profiles.getProfile();
+    if (!booking || !profile) return { kind: "not_found" as const };
+    if (!booking.eventTypeId || booking.state === "cancelled" || booking.occurrence.startAt <= nowIso()) return { kind: "not_available" as const };
+    const storedManageUrl = await this.repository.storedManageUrl(id);
+    const token = storedManageUrl ? undefined : createOpaqueToken();
+    const manageUrl = storedManageUrl ?? new URL(`/manage/${token}`,this.runtime.APP_URL).toString();
+    const capability = token ? {id:createId(),hash:await hashToken(token,this.runtime.SESSION_SECRET),expiresAt:new Date(Date.parse(booking.occurrence.startAt)+manageTokenLifetimeMs).toISOString()} : undefined;
+    const result = await this.repository.requests.begin(booking,operatorId,input,requestEmail(booking,profile.name,manageUrl,input.message),nowIso(),capability);
+    return result === "created" ? { kind: "created" as const, booking: await this.repository.getById(id) } : { kind: result };
+  }
+
+  async processRescheduleRequest(id: string, now = new Date()) {
+    const booking = await this.repository.getById(id), profile = await this.profiles.getProfile();
+    const request = booking?.rescheduleRequest, stamp = now.toISOString();
+    if (!booking || !profile || !request || request.archiveHistorical || !["open","expired"].includes(request.state)) return;
+    if (request.expiresAt <= stamp) {
+      await this.repository.requests.expire(booking,stamp);
+      if (request.releaseTime) await this.repository.cancel(booking,{type:"system"},"no new time picked",stamp,
+        await this.changeEmails(profile,booking,"booking_cancelled","no new time picked",{actor:"the request expiry"}));
+    } else {
+      const manageUrl = await this.repository.storedManageUrl(id);
+      if (manageUrl) await this.repository.requests.remind(booking,requestEmail(booking,profile.name,manageUrl,request.message,true),stamp);
+    }
   }
 
   async cancelForOperator(id: string, operatorId: string, reason?: string) {
@@ -274,7 +311,7 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - selection.event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
       now: nowIso(),
-      calendarPayload: selection.calendarRequired !== false ? { bookingId: booking.id, icalUid: booking.icalUid, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, lockedTimezone: booking.lockedTimezone, invitee: { name: booking.inviteeName, email: booking.inviteeEmail }, location: selection.event.locationValue, locationType: selection.event.locationType } : undefined,
+      calendarPayload: selection.calendarRequired !== false ? { bookingId: booking.id, icalUid: booking.icalUid, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, lockedTimezone: booking.lockedTimezone, invitee: { name: booking.inviteeName, email: booking.inviteeEmail }, location: booking.locationValue, locationType: booking.locationType } : undefined,
       emails: await this.changeEmails(selection.profile, booking, "booking_changed", input.reason, { actor: "an operator", newStartAt: selection.slot.startAt, newEndAt: selection.slot.endAt, newInviteeTimezone: input.inviteeTimezone, manageUrl, calendarRequired: selection.calendarRequired }),
     });
     if (outcome === "slot_taken") return { kind: "slot_taken" as const };
@@ -368,7 +405,7 @@ export class BookingsService {
     if (!result) return { kind: "not_found" as const };
     if (result.status !== "active") return { kind: "expired" as const };
     if (result.booking.state !== "cancelled" && result.booking.changePolicy?.cancellationReason) return { kind: "policy_blocked" as const, reason: result.booking.changePolicy.cancellationReason };
-    if (result.booking.state !== "cancelled" && Date.parse(result.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
+    if (result.booking.state !== "cancelled" && (Date.parse(result.booking.occurrence.startAt) <= Date.now() && !openRequest(result.booking))) return { kind: "policy_blocked" as const };
     const profile = await this.profiles.getProfile();
     if (!profile) return { kind: "not_found" as const };
     const emails = await this.changeEmails(profile, result.booking, "booking_cancelled", reason, { actor: "the invitee" });
@@ -383,10 +420,11 @@ export class BookingsService {
     if (!access) return { kind: "not_found" };
     if (access.status !== "active") return { kind: "expired" };
     if (access.booking.changePolicy?.rescheduleReason) return { kind: "policy_blocked", reason: access.booking.changePolicy.rescheduleReason };
-    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" };
-    const [profile, event] = await Promise.all([this.profiles.getProfile(), access.booking.eventTypeId ? this.eventTypes.getEventType(access.booking.eventTypeId) : undefined]);
+    if ((Date.parse(access.booking.occurrence.startAt) <= Date.now() && !openRequest(access.booking))) return { kind: "policy_blocked" };
+    const [profile, event] = await Promise.all([this.profiles.getProfile(), access.booking.eventTypeId ? this.bookingLinks?.resolveForBooking(access.booking.id).then(event=>event ?? this.eventTypes.getEventType(access.booking.eventTypeId!)) ?? this.eventTypes.getEventType(access.booking.eventTypeId) : undefined]);
     if (!profile || !event || event.status !== "published") return { kind: "slot_invalid" };
-    const verified = await this.availability.verifyPublicSelection(profile.handle, event.slug, startAt, new Date(), access.booking.id, durationMinutes, access.booking.durationMinutes);
+    if (openRequest(access.booking) && durationMinutes !== undefined && durationMinutes !== access.booking.durationMinutes) return {kind:"invalid_duration"};
+    const verified = await this.availability.verifyManagedSelection(event.id, access.booking.id, startAt, new Date(), durationMinutes, access.booking.durationMinutes);
     if (verified.kind !== "valid") return verified;
     const rawNonce = createOpaqueToken();
     const now = nowIso();
@@ -405,7 +443,7 @@ export class BookingsService {
     const now = nowIso();
     if (!nonce?.consumedAt) {
     if (access.booking.changePolicy?.rescheduleReason) return { kind: "policy_blocked" as const, reason: access.booking.changePolicy.rescheduleReason };
-    if (Date.parse(access.booking.occurrence.startAt) <= Date.now()) return { kind: "policy_blocked" as const };
+    if ((Date.parse(access.booking.occurrence.startAt) <= Date.now() && !openRequest(access.booking))) return { kind: "policy_blocked" as const };
     }
     if (!nonce) return { kind: "invalid_nonce" as const };
     if (nonce.purpose !== "reschedule" || nonce.bookingId !== access.booking.id || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" as const };
@@ -418,14 +456,14 @@ export class BookingsService {
       const booking = await this.repository.getByConsumedNonce(nonce);
       return booking ? { kind: "replayed" as const, booking: this.toConfirmation(booking, profile, input.token) } : { kind: "invalid_nonce" as const };
     }
-    const event = access.booking.eventTypeId ? await this.eventTypes.getEventType(access.booking.eventTypeId) : undefined;
+    const event = access.booking.eventTypeId ? await this.bookingLinks?.resolveForBooking(access.booking.id) ?? await this.eventTypes.getEventType(access.booking.eventTypeId) : undefined;
     if (!event || event.status !== "published") return { kind: "slot_invalid" as const };
     const selectedDuration = intervalDuration(nonce.selectionStartAt, nonce.selectionEndAt);
-    if (selectedDuration === undefined) return { kind: "invalid_nonce" as const };
+    if (selectedDuration === undefined || (openRequest(access.booking) && selectedDuration !== access.booking.durationMinutes)) return { kind: "invalid_nonce" as const };
     const requestedDuration = input.durationMinutes ?? selectedDuration;
     if (resolveEventDuration(event, requestedDuration, access.booking.durationMinutes) === undefined) return { kind: "invalid_duration" as const };
     if (requestedDuration !== selectedDuration) return { kind: "invalid_nonce" as const };
-    const verified = await this.availability.verifyPublicSelection(profile.handle, event.slug, input.startAt, new Date(), access.booking.id, selectedDuration, access.booking.durationMinutes);
+    const verified = await this.availability.verifyManagedSelection(event.id, access.booking.id, input.startAt, new Date(), selectedDuration, access.booking.durationMinutes);
     if (verified.kind === "invalid_duration") return verified;
     if (verified.kind !== "valid" || verified.slot.endAt !== nonce.selectionEndAt) return verified.kind === "calendar_unavailable" ? { kind: "calendar_unavailable" as const } : { kind: "slot_invalid" as const };
     if (access.booking.calendarState !== "not_required" && verified.calendarRequired === false) return { kind: "calendar_unavailable" as const };
@@ -438,7 +476,7 @@ export class BookingsService {
       occupiedStartAt: new Date(Date.parse(verified.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
       occupiedEndAt: new Date(Date.parse(verified.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
       now,
-      calendarPayload: verified.calendarRequired !== false ? { bookingId: access.booking.id, icalUid: access.booking.icalUid, eventTitle: event.title, startAt: verified.slot.startAt, endAt: verified.slot.endAt, hostTimezone: profile.timezone, lockedTimezone: access.booking.lockedTimezone, invitee: { name: access.booking.inviteeName, email: access.booking.inviteeEmail }, location: event.locationValue, locationType: event.locationType } : undefined,
+      calendarPayload: verified.calendarRequired !== false ? { bookingId: access.booking.id, icalUid: access.booking.icalUid, eventTitle: event.title, startAt: verified.slot.startAt, endAt: verified.slot.endAt, hostTimezone: profile.timezone, lockedTimezone: access.booking.lockedTimezone, invitee: { name: access.booking.inviteeName, email: access.booking.inviteeEmail }, location: access.booking.locationValue, locationType: access.booking.locationType } : undefined,
       emails,
     });
     if (outcome === "slot_taken") {
@@ -467,6 +505,7 @@ export class BookingsService {
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     return {
       bookingReference: booking.id,
+      ...(booking.rescheduleRequest ? { rescheduleRequest: booking.rescheduleRequest } : {}),
       ...(booking.lockedTimezone ? { lockedTimezone: booking.lockedTimezone, browserTimezone: booking.browserTimezone ?? null } : {}),
       ...(booking.changePolicy ? { changePolicy: booking.changePolicy } : {}),
       event: { eventTitle: booking.eventTitle, durationMinutes: booking.durationMinutes },
@@ -586,3 +625,5 @@ function base64(value: string) {
 function renderTimeRange(startAt: string, endAt: string, timeZone: string) {
   return formatTimeRange(startAt, endAt, timeZone);
 }
+
+function openRequest(booking: BookingRecord) { return !booking.rescheduleRequest?.archiveHistorical && booking.rescheduleRequest?.state === "open" && booking.rescheduleRequest.expiresAt > nowIso(); }
