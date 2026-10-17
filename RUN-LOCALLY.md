@@ -1,8 +1,12 @@
 # Run it locally
 
-Use Node 22.20.0 and pnpm 10.12.4 for maintained first-party checkouts. From a
-runnable edition's root, install locked dependencies, prepare its local owner,
-then start development:
+Start Dial from nothing with `npx -y @runeditrun/rer dev just-every/run-dial` (set up
+only: `npx -y @runeditrun/rer setup just-every/run-dial`; without Node:
+`curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-dial`).
+
+Use Node 22.20.0 and pnpm 10.12.4 for maintained first-party checkouts. To choose
+the owner, from a runnable edition's root install locked dependencies, prepare its
+local owner, then start development:
 
 ```sh
 rer install

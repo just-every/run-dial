@@ -17,7 +17,7 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
 
 ## Run it on your computer
 
-1. Use Node 22 or later and Git. One line installs the latest `rer`, clones the source and starts Dial. In a Dial checkout, `rer` runs the exact version Dial pins in `package.json`:
+1. Use Node 22 or later and Git (without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-dial` brings its own). One line installs the latest `rer`, clones the source and starts Dial. In a Dial checkout, `rer` runs the exact version Dial pins in `package.json`:
 
    ```bash
    npx -y @runeditrun/rer dev just-every/run-dial
@@ -50,8 +50,9 @@ computer to start signed in at the local `/setup` workspace. The generated owner
 is local to this checkout. The URL's fragment carries its local development key;
 treat it as a credential and do not share it.
 
-If a local workflow needs a chosen owner address, run explicit setup on a fresh
-checkout before its first `rer dev` launch:
+If a local workflow needs a chosen owner address, fetch a fresh checkout without
+starting it (`npx -y @runeditrun/rer install just-every/run-dial`) and run explicit
+setup in `run-dial` before its first `rer dev` launch:
 
 ```bash
 rer setup --owner-email you@example.com

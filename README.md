@@ -46,7 +46,7 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-With Node 22 or later and Git, one line installs the latest `rer`, clones Dial and starts it. Dial pins **rer 0.2.22**:
+With Node 22 or later and Git, one line installs the latest `rer`, clones Dial and starts it (without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-dial` brings its own). Dial pins **rer 0.2.22**:
 
 ```sh
 npx -y @runeditrun/rer dev just-every/run-dial
@@ -75,8 +75,9 @@ automatically created owner is local to this checkout. `RER_OPEN` carries this
 checkout's local dev key in its fragment, which the page trades for a cookie:
 treat the line as a credential and do not share it.
 
-If your local workflow needs a chosen owner address, run explicit setup on the
-fresh checkout before its first dev launch, then start dev:
+If your local workflow needs a chosen owner address, fetch the checkout without
+starting it (`npx -y @runeditrun/rer install just-every/run-dial`), run explicit
+setup in `run-dial` before its first dev launch, then start dev:
 
 ```sh
 rer setup --owner-email you@example.com
