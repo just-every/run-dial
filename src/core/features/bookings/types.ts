@@ -1,6 +1,7 @@
 import type { EventQuestionInput, EventTypeRecord } from "../event-types";
 import type { MailAttachment } from "../../platform/mail";
 import type { BookingCancellationTemplate } from "../delivery";
+import { normalizePhoneNumber } from "../../shared/phone";
 
 export type InviteeAnswers = Record<string, string | string[]>;
 export type ValidatedInvitee = { name: string; email: string; answers: InviteeAnswers };
@@ -161,13 +162,17 @@ export function validateInvitee(event: EventTypeRecord, candidate: { name: strin
 }
 
 function validateAnswer(question: EventQuestionInput, value: unknown): string | string[] | undefined {
+  if (question.kind === "phone") {
+    if (typeof value !== "string") return undefined;
+    return value.trim() === "" ? "" : normalizePhoneNumber(value);
+  }
   if (question.kind === "text" || question.kind === "textarea") {
     if (typeof value !== "string") return undefined;
     const max = question.kind === "text" ? 500 : 4_000;
     return value.trim().length <= max ? value.trim() : undefined;
   }
   const choices = new Set(question.options.map((option) => option.value));
-  if (question.kind === "single_choice") return typeof value === "string" && choices.has(value) ? value : undefined;
+  if (question.kind === "single_choice" || question.kind === "dropdown") return typeof value === "string" && (choices.has(value) || (!question.required && value === "")) ? value : undefined;
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string") || new Set(value).size !== value.length || value.some((item) => !choices.has(item))) return undefined;
   return value as string[];
 }

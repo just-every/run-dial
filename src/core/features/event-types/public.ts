@@ -4,7 +4,7 @@ export type PublicEventQuestion = Required<Pick<EventQuestionInput, "key">> & Om
 
 export type PublicEventTypeRecord = Pick<
   EventTypeRecord,
-  "requestOnly" | "slug" | "title" | "description" | "bookingHorizonDays" | "durationMinutes" | "color" | "locationLabel" | "alternativeRequestsEnabled"
+  "requestOnly" | "slug" | "title" | "description" | "bookingHorizonDays" | "bookingHorizonMode" | "bookingStartDate" | "bookingEndDate" | "durationMinutes" | "color" | "locationLabel" | "alternativeRequestsEnabled"
 > & { questions: PublicEventQuestion[] };
 
 /** Deliberately project only values an invitee may receive before a booking exists. */
@@ -15,6 +15,9 @@ export function toPublicEventType(eventType: EventTypeRecord): PublicEventTypeRe
     title: eventType.title,
     description: eventType.description,
     bookingHorizonDays: eventType.bookingHorizonDays,
+    bookingHorizonMode: eventType.bookingHorizonMode,
+    bookingStartDate: eventType.bookingStartDate,
+    bookingEndDate: eventType.bookingEndDate,
     durationMinutes: eventType.durationMinutes,
     color: eventType.color,
     locationLabel: eventType.locationLabel,

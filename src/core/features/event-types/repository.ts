@@ -17,7 +17,7 @@ import { toPublicEventType, type PublicEventTypeRecord } from "./public";
 
 export type EventStatus = "draft" | "published" | "disabled";
 export type EventLocationType = "google_meet" | "fixed_link" | "phone" | "in_person";
-export type EventQuestionKind = "text" | "textarea" | "single_choice" | "multiple_choice" | "checkbox";
+export type EventQuestionKind = "text" | "textarea" | "phone" | "dropdown" | "single_choice" | "multiple_choice" | "checkbox";
 export type EventQuestionOptionInput = { value: string; label: string };
 export type EventQuestionInput = {
   /** A persisted, public-safe question key. Omit only when creating a new question. */
@@ -50,9 +50,13 @@ export type EventTypeInput = {
   locationValue: string;
   listed: boolean;
   alternativeRequestsEnabled: boolean;
-  slotIncrementMinutes: 5 | 10 | 15 | 30 | 60;
+  slotIncrementMinutes: 5 | 10 | 15 | 30 | 45 | 60;
   minimumNoticeMinutes: number;
   bookingHorizonDays: number;
+  bookingHorizonMode?: "calendar_days" | "weekdays" | "fixed_range" | "indefinite";
+  bookingStartDate?: string | null;
+  bookingEndDate?: string | null;
+
   beforeBufferMinutes: number;
   afterBufferMinutes: number;
   hostDayBookingLimit: number | null;
@@ -255,6 +259,9 @@ function eventColumns(input: EventTypeInput) {
     slotIncrementMinutes: input.slotIncrementMinutes,
     minimumNoticeMinutes: input.minimumNoticeMinutes,
     bookingHorizonDays: input.bookingHorizonDays,
+    bookingHorizonMode: input.bookingHorizonMode ?? "calendar_days",
+    bookingStartDate: input.bookingStartDate ?? null,
+    bookingEndDate: input.bookingEndDate ?? null,
     beforeBufferMinutes: input.beforeBufferMinutes,
     afterBufferMinutes: input.afterBufferMinutes,
     hostDayBookingLimit: input.hostDayBookingLimit,

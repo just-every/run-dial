@@ -11,13 +11,13 @@ const optionSchema = z.object({ value: z.string().min(1).max(120), label: z.stri
 const questionSchema = z
   .object({
     key: z.string().regex(/^q_[A-Za-z0-9_-]{10,80}$/).optional(),
-    kind: z.enum(["text", "textarea", "single_choice", "multiple_choice", "checkbox"]),
+    kind: z.enum(["text", "textarea", "phone", "dropdown", "single_choice", "multiple_choice", "checkbox"]),
     label: z.string().min(1).max(500),
     required: z.boolean(),
     options: z.array(optionSchema).max(50),
   })
   .superRefine((question, context) => {
-    const choice = ["single_choice", "multiple_choice", "checkbox"].includes(question.kind);
+    const choice = ["single_choice", "dropdown", "multiple_choice", "checkbox"].includes(question.kind);
     if (choice && question.options.length === 0) context.addIssue({ code: "custom", path: ["options"], message: "Choice questions need at least one option." });
     if (!choice && question.options.length > 0) context.addIssue({ code: "custom", path: ["options"], message: "Text questions cannot have options." });
     if (new Set(question.options.map((option) => option.value)).size !== question.options.length) {
@@ -46,9 +46,12 @@ const eventTypeInputSchema = z
     locationValue: z.string().max(1000),
     listed: z.boolean(),
     alternativeRequestsEnabled: z.boolean(),
-    slotIncrementMinutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(30), z.literal(60)]),
+    slotIncrementMinutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(30), z.literal(45), z.literal(60)]),
     minimumNoticeMinutes: z.number().int().min(0).max(7 * 24 * 60),
     bookingHorizonDays: z.number().int().min(1).max(365),
+    bookingHorizonMode: z.enum(["calendar_days", "weekdays", "fixed_range", "indefinite"]).default("calendar_days"),
+    bookingStartDate: hostDateSchema.nullable().default(null),
+    bookingEndDate: hostDateSchema.nullable().default(null),
     beforeBufferMinutes: z.number().int().min(0).max(120),
     afterBufferMinutes: z.number().int().min(0).max(120),
     hostDayBookingLimit: z.number().int().positive().nullable(),
@@ -63,7 +66,11 @@ const eventTypeInputSchema = z
 const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation);
 const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions) }).superRefine(requirePrivateLocation);
 
-function requirePrivateLocation(input: { locationType: string; locationValue: string }, context: z.RefinementCtx) {
+function requirePrivateLocation(input: { locationType: string; locationValue: string; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {
+  if (input.bookingHorizonMode === "fixed_range") {
+    if (!input.bookingStartDate) context.addIssue({ code: "custom", path: ["bookingStartDate"], message: "Choose the first bookable date." });
+    if (!input.bookingEndDate || (input.bookingStartDate && input.bookingEndDate < input.bookingStartDate)) context.addIssue({ code: "custom", path: ["bookingEndDate"], message: "Choose an end date on or after the first date." });
+  }
   if (input.locationType !== "google_meet" && input.locationValue.trim().length === 0) context.addIssue({ code: "custom", path: ["locationValue"], message: "This location needs its private value." });
 }
 

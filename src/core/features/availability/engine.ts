@@ -1,5 +1,6 @@
 import { datePlus, hostDateAt, offsetMinutesAt, zonedOffsetLabel, zonedParts } from "./timezone";
 
+import { horizonAllows } from "../../shared/booking-horizon";
 import { windowsForDate } from "./windows";
 import { fitsWindow, windowSpans } from "./window-spans";
 export { rankSlots, buildRecommendationContext } from "./recommendations";
@@ -13,6 +14,10 @@ export type AvailabilityConstraints = {
   slotIncrementMinutes: number;
   minimumNoticeMinutes: number;
   bookingHorizonDays: number;
+  bookingHorizonMode?: "calendar_days" | "weekdays" | "fixed_range" | "indefinite";
+  bookingStartDate?: string | null;
+  bookingEndDate?: string | null;
+
   beforeBufferMinutes: number;
   afterBufferMinutes: number;
   hostDayBookingLimit: number | null;
@@ -105,8 +110,7 @@ function evaluateCandidate(
     if (start.getTime() < minimumStart) exclusions.push("minimum_notice");
   }
   if (input.constraints.enforceHorizon !== false) {
-    const horizonEnd = now.getTime() + input.constraints.bookingHorizonDays * 24 * 60 * 60 * 1000;
-    if (start.getTime() > horizonEnd) exclusions.push("horizon");
+    if (!horizonAllows(input.constraints, hostDate, hostDateAt(now, input.hostTimeZone))) exclusions.push("horizon");
   }
 
   const occupiedStart = start.getTime() - input.constraints.beforeBufferMinutes * 60_000;

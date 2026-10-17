@@ -10,6 +10,7 @@ import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mj
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    source.db.exec("UPDATE event_types SET booking_horizon_mode='fixed_range', booking_start_date='2026-10-07', booking_end_date='2026-10-31', slot_increment_minutes=45");
     const names = source.db.prepare(tableQuery).all().map(row => row.name);
     assertCoverage(names);
     assert.ok(exported.includes('oa_invitation_cancellations'));

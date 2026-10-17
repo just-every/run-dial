@@ -10,7 +10,7 @@ export function defaultEventTypeInput(): EventTypeInput {
     slug: "", title: "", description: "", durationMinutes: 30, color: "#dcab3c",
     locationType: "fixed_link", locationLabel: "Fixed link", locationValue: "",
     listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 15,
-    minimumNoticeMinutes: 240, bookingHorizonDays: 60, beforeBufferMinutes: 0,
+    minimumNoticeMinutes: 240, bookingHorizonDays: 60, bookingHorizonMode: "calendar_days", bookingStartDate: null, bookingEndDate: null, beforeBufferMinutes: 0,
     afterBufferMinutes: 0, hostDayBookingLimit: null,
     questions: defaultEventQuestions(), availability: [],
   };

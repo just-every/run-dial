@@ -15,7 +15,7 @@ function isEvent(value: unknown): value is PublicEvent {
     && (value.requestOnly === undefined || typeof value.requestOnly === "boolean")
     && typeof value.alternativeRequestsEnabled === "boolean" && Array.isArray(value.questions)
     && value.questions.every((question) => record(question) && strings(question, ["key", "label", "kind"])
-      && ["text", "textarea", "single_choice", "multiple_choice", "checkbox"].includes(String(question.kind))
+      && ["text", "textarea", "phone", "dropdown", "single_choice", "multiple_choice", "checkbox"].includes(String(question.kind))
       && typeof question.required === "boolean" && Array.isArray(question.options)
       && question.options.every((option) => record(option) && strings(option, ["value", "label"])));
 }
@@ -24,7 +24,7 @@ function profile(value: PublicProfile): PublicProfile {
     focusAreas: value.focusAreas.map(({ label }) => ({ label })), socialProof: value.socialProof.map(({ quote, attribution }) => ({ quote, attribution })) };
 }
 function event(value: PublicEvent): PublicEvent {
-  return { requestOnly: value.requestOnly, slug: value.slug, title: value.title, description: value.description, bookingHorizonDays: value.bookingHorizonDays, durationMinutes: value.durationMinutes, color: value.color,
+  return { requestOnly: value.requestOnly, slug: value.slug, title: value.title, description: value.description, bookingHorizonDays: value.bookingHorizonDays, bookingHorizonMode: value.bookingHorizonMode, bookingStartDate: value.bookingStartDate, bookingEndDate: value.bookingEndDate, durationMinutes: value.durationMinutes, color: value.color,
     locationLabel: value.locationLabel, alternativeRequestsEnabled: value.alternativeRequestsEnabled,
     questions: value.questions.map(({ key, kind, label, required, options }) => ({ key, kind, label, required, options: options.map(({ value, label }) => ({ value, label })) })) };
 }

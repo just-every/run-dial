@@ -271,9 +271,9 @@ Done means implemented with a test exercising the clause through its public or o
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 55 | 21 | 0 | 76 |
+| Published | 56 | 20 | 0 | 76 |
 | Target and push further | 1 | 17 | 76 | 94 |
-| All | 56 | 38 | 76 | 170 |
+| All | 57 | 37 | 76 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -301,8 +301,8 @@ Done means implemented with a test exercising the clause through its public or o
 | `PROFILE-002` | Public profile | published | done | `tests/booking-http.test.mjs`, `src/core/features/host-profile/public.ts` |  |
 | `PROFILE-003` | Avatar asset | published | done | `tests/avatar-upload.test.mjs`, `tests/avatar.test.mjs` |  |
 | `EVENT-001` | Event type lifecycle | published | partial | `tests/availability-diagnostics.test.mjs`, `tests/event-status-trigger.test.mjs` | Single duration; options are `EVENT-011`. |
-| `EVENT-002` | Scheduling constraints | published | partial | `tests/availability-diagnostics.test.mjs`, `src/core/features/availability/engine.ts` | Rolling calendar-day horizon only. |
-| `EVENT-003` | Invitee questions | published | partial | `tests/availability-diagnostics.test.mjs` | Phone and dropdown types missing. |
+| `EVENT-002` | Scheduling constraints | published | done | `scripts/verify-availability-diagnostics.mjs`, `tests/availability-diagnostics.test.mjs`, `migrations/core/0052_booking_horizons.sql`; browser: `work/sd-cp-dial/shots/EVENT-002/` |  |
+| `EVENT-003` | Invitee questions | published | partial | `scripts/verify-question-defaults.mjs`, `tests/availability-diagnostics.test.mjs`, `migrations/core/0051_phone_dropdown_questions.sql`; browser: `work/sd-cp-dial/shots/EVENT-003/` | All question kinds, stable dropdown options and E.164 phone normalization implemented; mapping to CRM phone fields awaits INTEG-002 to INTEG-004 and INTEG-008. |
 | `EVENT-004` | Locations | published | partial | `src/core/platform/calendar/google-managed-events.ts`, `tests/providers-d1.test.mjs`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `EVENT-005` | Removing an event type | published | done | `tests/event-status-trigger.test.mjs` |  |
 | `EVENT-006` | Publication readiness | published | done | `tests/availability-diagnostics.test.mjs`, `tests/host-setup-journey.test.mjs`, `tests/booking-axe/request-only.mjs` |  |

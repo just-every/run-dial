@@ -94,7 +94,40 @@ try {
   assert.deepEqual((await data(`/api/app/bookings/${customBooking.id}`, undefined, 200, true)).answers, [{ key: choice.key, label: choice.label, kind: choice.kind, value: "first" }]);
   assert.equal(afterEdit.bookings.length, 4); assert.equal(afterEdit.fixture_mail.length, 0); assert.equal(afterEdit.fixture_events.length, 0);
   mark("required custom choice rejects unknown/missing values before claim and reuses the nonce for its configured value; later question/option label edits preserve stable keys and immutable committed answer snapshots with provider sends queued");
-  await writeFile(evidencePath, JSON.stringify({ status: "verified", verifiedAt: new Date().toISOString(), origin, checks, proofs: { defaultQuestionKey: agenda.key, defaultQuestionOptional: true, textBoundary: { refused: 501, accepted: 500 }, bookings: 4, providerSendEffects: 0 }, limits: ["Actual native Hono/Start/D1/DO with fresh task-owned state and synthetic providers only.", "Public and operator input maxLength, editor default presentation and client interaction remain source-reviewed only under the browser launch hold.", "Question defaults apply to omitted create input only; explicit configuration and persisted older events were tested without migration or backfill."] }, null, 2) + "\n");
+
+  const phone = { key: "q_native_phone_number", kind: "phone", label: "Your phone number", required: true, options: [] };
+  const dropdown = { ...choice, key: "q_native_dropdown_choice", kind: "dropdown", label: "Meeting topic" };
+  await unchanged(async () => {
+    await call("/api/app/event-types", full(template, { slug: "invalid-phone", questions: [{ ...phone, options: choice.options }] }), 400, true);
+    await call("/api/app/event-types", full(template, { slug: "invalid-dropdown", questions: [{ ...dropdown, options: [] }] }), 400, true);
+  });
+  let typedEvent = await data("/api/app/event-types", full(template, { slug: "phone-dropdown", questions: [phone, dropdown] }), 201, true);
+  await data(`/api/app/event-types/${typedEvent.id}/publish`, {}, 200, true);
+  assert.deepEqual((await data(`/api/public/events/dial-host/${typedEvent.slug}`)).eventType.questions, [phone, dropdown]);
+  const typedBody = await select(typedEvent, 13, "phone-question@dial.test", { [phone.key]: "555-12", [dropdown.key]: "first" });
+  await invalid(typedEvent, typedBody);
+  await invalid(typedEvent, { ...typedBody, answers: { [phone.key]: "", [dropdown.key]: "first" } });
+  await invalid(typedEvent, { ...typedBody, answers: { [phone.key]: "(415) 555-0100", [dropdown.key]: "unconfigured" } });
+  await invalid(typedEvent, { ...typedBody, answers: { [phone.key]: "(415) 555-0100", [dropdown.key]: ["first"] } });
+  const typedValid = { ...typedBody, answers: { [phone.key]: "(415) 555-0100", [dropdown.key]: "first" } };
+  await confirm(typedEvent, typedValid, 201);
+  await unchanged(() => confirm(typedEvent, typedValid, 200));
+  const typedBooking = await bookingFor(typedValid.email);
+  assert.deepEqual(typedBooking.answers, [{ key: dropdown.key, label: dropdown.label, kind: dropdown.kind, value: "first" }, { key: phone.key, label: phone.label, kind: phone.kind, value: "+14155550100" }]);
+  const operatorTyped = { ...operatorBody, idempotencyKey: randomUUID(), eventTypeId: typedEvent.id, startAt: at(14), email: "operator-phone@dial.test", answers: { [phone.key]: "555-12", [dropdown.key]: "second" } };
+  const invalidOperatorTyped = await unchanged(() => data("/api/app/bookings", operatorTyped, 400, true));
+  assert.equal(invalidOperatorTyped.error.code, "invalid_booking");
+  await data("/api/app/bookings", { ...operatorTyped, answers: { [phone.key]: "+44 20 7946 0018", [dropdown.key]: "second" } }, 201, true);
+  assert.deepEqual((await bookingFor(operatorTyped.email)).answers, [{ key: dropdown.key, label: dropdown.label, kind: dropdown.kind, value: "second" }, { key: phone.key, label: phone.label, kind: phone.kind, value: "+442079460018" }]);
+  typedEvent = await data(`/api/app/event-types/${typedEvent.id}/details`, details(typedEvent, { questions: [{ ...phone, required: false }, { ...dropdown, required: false }] }), 200, true, "PATCH");
+  const optionalTyped = await select(typedEvent, 15, "optional-phone@dial.test", { [phone.key]: "", [dropdown.key]: "" });
+  await confirm(typedEvent, optionalTyped, 201);
+  assert.ok((await bookingFor(optionalTyped.email)).answers.every(answer => answer.value === ""));
+  assert.deepEqual((await bookingFor(typedValid.email)).answers, typedBooking.answers);
+  mark("phone/dropdown questions round-trip through native event and public doors; malformed or missing required phones and foreign/array dropdown values leave the nonce untouched; US and international phones persist as E.164 through public/operator booking; optional blanks and exact replay work without changing older answer snapshots");
+  const final = await snapshot();
+  assert.equal(final.bookings.length, 7); assert.equal(final.fixture_mail.length, 0); assert.equal(final.fixture_events.length, 0);
+  await writeFile(evidencePath, JSON.stringify({ status: "verified", verifiedAt: new Date().toISOString(), origin, checks, proofs: { defaultQuestionKey: agenda.key, defaultQuestionOptional: true, textBoundary: { refused: 501, accepted: 500 }, phoneNormalization: { us: "+14155550100", international: "+442079460018" }, bookings: final.bookings.length, providerSendEffects: 0 }, limits: ["Actual native Hono/Start/D1/DO with fresh task-owned state and synthetic providers only.", "This native test covers HTTP behaviour; rendering is exercised separately through rer dev at desktop and mobile widths.", "Question defaults apply to omitted create input only; existing event and answer identities are preserved."] }, null, 2) + "\n");
 } catch (error) {
   await writeFile(evidencePath, JSON.stringify({ status: "failed", observedAt: new Date().toISOString(), origin, checks, failure: error.message, stack: error.stack }, null, 2) + "\n"); throw error;
 }

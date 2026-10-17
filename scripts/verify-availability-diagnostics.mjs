@@ -43,7 +43,7 @@ async function createDenied(startAt, exclusions, override = false) {
   return noProductWrites(async () => denial(await call("/api/app/bookings", body(startAt, { overrideNoticeAndHorizon: override }), 409, true), exclusions));
 }
 async function configure(changes) {
-  const fields = ["slug", "title", "description", "durationMinutes", "color", "locationType", "locationLabel", "locationValue", "listed", "alternativeRequestsEnabled", "slotIncrementMinutes", "minimumNoticeMinutes", "bookingHorizonDays", "beforeBufferMinutes", "afterBufferMinutes", "hostDayBookingLimit", "questions", "availability"];
+  const fields = ["slug", "title", "description", "durationMinutes", "color", "locationType", "locationLabel", "locationValue", "listed", "alternativeRequestsEnabled", "slotIncrementMinutes", "minimumNoticeMinutes", "bookingHorizonDays", "bookingHorizonMode", "bookingStartDate", "bookingEndDate", "beforeBufferMinutes", "afterBufferMinutes", "hostDayBookingLimit", "questions", "availability"];
   event = await data(`/api/app/event-types/${fixture.eventId}`, { ...Object.fromEntries(fields.map((field) => [field, event[field]])), ...changes }, 200, true, "PATCH");
 }
 
@@ -51,6 +51,26 @@ try {
   fixture = await data("/__fixtures/setup", {}); await authenticate(fixture.operatorEmail);
   event = await data(`/api/app/event-types/${fixture.eventId}`, undefined, 200, true); questionKey = event.questions[0].key;
   await configure({ availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 540, endMinute: 720 })) });
+  await configure({ slotIncrementMinutes: 45, minimumNoticeMinutes: 0 });
+  const offers = await data(`/api/public/book/dial-host/${event.slug}/availability?week=${futureDate}`);
+  assert.deepEqual(offers.slots.filter(slot => slot.hostDate === futureDate).map(slot => slot.startAt), [540, 585, 630, 675].map(minute => at(futureDate, minute)));
+  await configure({ bookingHorizonMode: "fixed_range", bookingStartDate: dayPlus(futureDate, 1), bookingEndDate: dayPlus(futureDate, 2) });
+  await diagnose(at(futureDate, 540), ["horizon"]);
+  await diagnose(at(dayPlus(futureDate, 1), 540), []);
+  await diagnose(at(dayPlus(futureDate, 3), 540), ["horizon"]);
+  await noProductWrites(() => data(`/api/app/event-types/${fixture.eventId}/details`, { ...event, bookingStartDate: dayPlus(futureDate, 3), bookingEndDate: futureDate, availability: undefined, alternativeRequestsEnabled: undefined }, 400, true, "PATCH"));
+  const today = new Date().toISOString().slice(0, 10);
+  let tenthWeekday = today, weekdays = 0;
+  while (weekdays < 10) { tenthWeekday = dayPlus(tenthWeekday, 1); if (![0,6].includes(new Date(tenthWeekday + "T12:00:00Z").getUTCDay())) weekdays++; }
+  await configure({ bookingHorizonMode: "weekdays", bookingHorizonDays: 10 });
+  await diagnose(at(tenthWeekday, 540), []);
+  await diagnose(at(dayPlus(tenthWeekday, 1), 540), ["horizon"]);
+  await configure({ bookingHorizonMode: "indefinite" });
+  const manifest = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../seed.json", import.meta.url), "utf8"));
+  await diagnose(at(dayPlus(today, manifest.limits.availabilityLookaheadDays), 540), []);
+  await diagnose(at(dayPlus(today, manifest.limits.availabilityLookaheadDays + 1), 540), ["horizon"]);
+  await configure({ slotIncrementMinutes: 15, minimumNoticeMinutes: 240, bookingHorizonMode: "calendar_days", bookingHorizonDays: 60, bookingStartDate: null, bookingEndDate: null });
+  mark("45-minute offers, inclusive fixed dates, ten-weekday counting and bounded indefinite horizons use the same authoritative diagnostics and public offers");
   const selected = at(futureDate, 540);
   await noProductWrites(async () => {
     await call(path(selected), undefined, 401);
