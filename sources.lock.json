@@ -6586,7 +6586,7 @@
       "executable": false
     },
     "tests/operations-summary.test.mjs": {
-      "sha256": "5f722e04c4a9d421a8cd209a076085be6f2caa2bb912d6ae33e3f84bbad492ce",
+      "sha256": "e9ca180e21fedf2b00fe48eadf28c796228b218b607abf3a9da9beaa92783413",
       "executable": false
     },
     "tests/operator-access-migration.test.mjs": {

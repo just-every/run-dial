@@ -19,7 +19,10 @@ contract('OPER-001', 'fresh operations check and describe use the maintained RER
   const description = operationsCommand({}, 'describe', { entry: 'scripts/operations.mjs' });
   const nativeDescription = operationsCommand({}, 'describe');
   assert.equal(description.status, 0);
-  assert.deepEqual(description.output, nativeDescription.output);
+  // `rer describe` adds the repository commands (global/cli/describe.mjs); the project entry describes the project alone.
+  const { repositoryCommands, ...nativeProject } = nativeDescription.output;
+  assert.ok(repositoryCommands.dev);
+  assert.deepEqual(description.output, nativeProject);
   assert.ok(description.output.verbs.setup);
   assert.ok(description.output.verbs.doctor);
 });
