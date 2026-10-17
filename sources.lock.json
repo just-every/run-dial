@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "parent": null,
   "edition": "just-every/dial",
-  "manifest": "da3ecf7e904c0ac410d12b351e0b75b1cdc3872cb0489c38aab42b0ac03ed62a",
+  "manifest": "b753041d196e63330129d1f3428ef80ded76c8294e5ea2bc8e9d9cc78f00e10f",
   "toolchain": {
     "id": "runeditrun/edition-authoring",
     "version": "1.1.0",
@@ -62,6 +62,7 @@
             "accounts/native.d.mts",
             "accounts/native.mjs",
             "accounts/oa.mjs",
+            "accounts/one-click.mjs",
             "accounts/owner-signin.mjs",
             "accounts/provider-control.mjs",
             "accounts/provider-pin.mjs",
@@ -128,6 +129,7 @@
             "loopback.mjs",
             "owner-signin-grant.mjs",
             "page.mjs",
+            "policy.d.mts",
             "policy.mjs",
             "rejected-response.mjs",
             "routes.mjs",
@@ -139,9 +141,9 @@
         }
       },
       "baseline": {
-        "key": "318e20191a09eaabb6acbae1348c104d0d553e5b8ef296614b219f9dd91c5703",
-        "digest": "cdc459e44ae66cbdb6c72089fb1a5420a73230e5023eb1646ed8884cf1f0e4e5",
-        "sha256": "662ac17de90253a422a11c62dd3f18b5835b4536f1a99e1e14008e5b615825dc"
+        "key": "fa462883c66450882b094bc7aea226075c42fdb06a1620460cb655cd93f3cff4",
+        "digest": "9dc3047aad64a967f85651ff0b34b944a6954e696d291598dce432f9b38ad42e",
+        "sha256": "3ad93d6a32333902cc6484df01b6af47af191df20d88f747826673269af63786"
       }
     },
     {
@@ -886,7 +888,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "21d9a36bf25f7fc2fbc59f5da094e489a423c1a9773d516c611d17b631800544",
+      "sha256": "db31d2081cd72ec82ebbe69c33c778a93d53593b042e12a0e431abd9b86e1820",
       "executable": false
     },
     "BASELINE.md": {
@@ -966,7 +968,7 @@
       "executable": false
     },
     "edition.json": {
-      "sha256": "da3ecf7e904c0ac410d12b351e0b75b1cdc3872cb0489c38aab42b0ac03ed62a",
+      "sha256": "b753041d196e63330129d1f3428ef80ded76c8294e5ea2bc8e9d9cc78f00e10f",
       "executable": false
     },
     "ERASURE.md": {
@@ -2569,6 +2571,10 @@
       "sha256": "84508f8c507d12d3df4cd0d683baa8bbd5a3b60522bd08d31cf49ebb92a72aa1",
       "executable": false
     },
+    "modules/operator-auth/accounts/one-click.mjs": {
+      "sha256": "54569eaa85085d6adc6877b832c9a651b003ecfa2f68949569e0e4fc21833416",
+      "executable": false
+    },
     "modules/operator-auth/accounts/owner-signin.mjs": {
       "sha256": "20a538bf6b343edc3209718174f63f7b2015d98f64c19fe5b5f878e02e83b3a0",
       "executable": false
@@ -2622,7 +2628,7 @@
       "executable": false
     },
     "modules/operator-auth/accounts/store.mjs": {
-      "sha256": "ba95aab40c6b2bf83c88abdef516ed294faa9ba5bb500fd92656aac6c78f396e",
+      "sha256": "415862418f177fb02182d2afcb7950202f4b10775f357f9be825dd6d508d07af",
       "executable": false
     },
     "modules/operator-auth/branding.mjs": {
@@ -2738,7 +2744,7 @@
       "executable": false
     },
     "modules/operator-auth/identity/email-link/index.mjs": {
-      "sha256": "8075bcde1f82adcbe9bea7f9d1c9d185ecd22c3f2314143bbfb30c9b6ad66881",
+      "sha256": "21a6cb51788760b860122719f73bffbd1d3105bec7b40cd4f387d0507d11cc58",
       "executable": false
     },
     "modules/operator-auth/identity/email-link/message.mjs": {
@@ -2806,7 +2812,7 @@
       "executable": false
     },
     "modules/operator-auth/index.d.mts": {
-      "sha256": "da80479bf1812c905c20f1515d623c862b4c3cb9ceffaf1804b5517100e37f4e",
+      "sha256": "8f2b260638a0a294f092497592752d7f45c56a6577aaf13ec67cd0b8344eb96d",
       "executable": false
     },
     "modules/operator-auth/index.mjs": {
@@ -2833,6 +2839,10 @@
       "sha256": "5a6e74e3e1861dbe6906ab2e0219b498f1943c11e9c88a779819563ec32e7322",
       "executable": false
     },
+    "modules/operator-auth/policy.d.mts": {
+      "sha256": "c0e46fcab9ce8626b8da53f88561eb00a1e83e9460fd91407a32a2daf605c4cf",
+      "executable": false
+    },
     "modules/operator-auth/policy.mjs": {
       "sha256": "d535aba35621d333cd6faae49fc3c6cb72e1d5718741f02d363cbe3e8eaf153c",
       "executable": false
@@ -2850,7 +2860,7 @@
       "executable": false
     },
     "modules/operator-auth/service.mjs": {
-      "sha256": "7a4b61af08cfb80ec8f562776d7185080d2b04de9ff20636416804634ea224dd",
+      "sha256": "a09897951d4dad25b767eed4004d53be4ff9da242649bb916b8b04fde035fdf7",
       "executable": false
     },
     "modules/operator-auth/signin/index.d.mts": {

@@ -1035,6 +1035,17 @@
       }
     },
     {
+      "path": "modules/operator-auth/accounts/one-click.mjs",
+      "originPath": "modules/operator-auth/accounts/one-click.mjs",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+      "files": {
+        "modules/operator-auth/accounts/one-click.mjs": "54569eaa85085d6adc6877b832c9a651b003ecfa2f68949569e0e4fc21833416"
+      },
+      "modes": {
+        "modules/operator-auth/accounts/one-click.mjs": "100644"
+      }
+    },
+    {
       "path": "modules/operator-auth/accounts/owner-signin.mjs",
       "originPath": "modules/operator-auth/accounts/owner-signin.mjs",
       "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
@@ -1725,6 +1736,17 @@
       },
       "modes": {
         "modules/operator-auth/page.mjs": "100644"
+      }
+    },
+    {
+      "path": "modules/operator-auth/policy.d.mts",
+      "originPath": "modules/operator-auth/policy.d.mts",
+      "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
+      "files": {
+        "modules/operator-auth/policy.d.mts": "c0e46fcab9ce8626b8da53f88561eb00a1e83e9460fd91407a32a2daf605c4cf"
+      },
+      "modes": {
+        "modules/operator-auth/policy.d.mts": "100644"
       }
     },
     {
