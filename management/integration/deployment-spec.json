@@ -318,6 +318,18 @@
       "name": "0050_managed_mail_health.sql",
       "sha256": "cc683f44e27421639f5f91639b8e1744dc8d878a0675de7339f5a734464ab130",
       "sql": "-- Add the Managed relay identity without changing any existing provider health.\nALTER TABLE provider_connection_health RENAME TO provider_connection_health_before_managed_mail;\nCREATE TABLE provider_connection_health (\n  provider TEXT PRIMARY KEY NOT NULL CHECK (provider IN ('google_calendar', 'resend', 'sendgrid', 'rer', 'development')),\n  status TEXT NOT NULL CHECK (status IN ('healthy', 'unhealthy')),\n  last_checked_at TEXT,\n  unhealthy_code TEXT,\n  alert_state TEXT NOT NULL CHECK (alert_state IN ('healthy_announced', 'unhealthy_announced', 'unannounced')),\n  alert_cycle INTEGER NOT NULL DEFAULT 0 CHECK (alert_cycle >= 0),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nINSERT INTO provider_connection_health SELECT * FROM provider_connection_health_before_managed_mail;\nDROP TABLE provider_connection_health_before_managed_mail;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0051_phone_dropdown_questions.sql",
+      "sha256": "06537d56e7ebc075a87560376122be24d1283120278546791a79e24b649bace0",
+      "sql": "-- Expand question kinds while preserving existing public identities and ordering.\n-- No triggers or foreign keys reference event_questions in the preceding schema.\nCREATE TABLE event_questions_v3 (\n  id TEXT PRIMARY KEY NOT NULL,\n  event_type_id TEXT NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,\n  position INTEGER NOT NULL,\n  kind TEXT NOT NULL CHECK (kind IN ('text', 'textarea', 'phone', 'single_choice', 'dropdown', 'multiple_choice', 'checkbox')),\n  label TEXT NOT NULL,\n  required INTEGER NOT NULL DEFAULT 0 CHECK (required IN (0, 1)),\n  options_json TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  public_key TEXT\n);\n\nINSERT INTO event_questions_v3 (id, event_type_id, position, kind, label, required, options_json, created_at, updated_at, public_key)\nSELECT id, event_type_id, position, kind, label, required, options_json, created_at, updated_at, public_key\nFROM event_questions;\n\nDROP TABLE event_questions;\nALTER TABLE event_questions_v3 RENAME TO event_questions;\nCREATE UNIQUE INDEX event_questions_position_idx ON event_questions(event_type_id, position);\nCREATE UNIQUE INDEX event_questions_public_key_idx ON event_questions(event_type_id, public_key);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0052_booking_horizons.sql",
+      "sha256": "bfd44e7ac84da583877ecdc78b4ea07bae73222ff8a4decf682c133b51949d1a",
+      "sql": "-- Preserve every event and its configured increment while widening the constraint.\nALTER TABLE event_types ADD COLUMN scheduling_increment INTEGER NOT NULL DEFAULT 15\n  CHECK (scheduling_increment IN (5, 10, 15, 30, 45, 60));\nUPDATE event_types SET scheduling_increment = slot_increment_minutes;\nALTER TABLE event_types DROP COLUMN slot_increment_minutes;\nALTER TABLE event_types RENAME COLUMN scheduling_increment TO slot_increment_minutes;\nALTER TABLE event_types ADD COLUMN booking_horizon_mode TEXT NOT NULL DEFAULT 'calendar_days'\n  CHECK (booking_horizon_mode IN ('calendar_days', 'weekdays', 'fixed_range', 'indefinite'));\nALTER TABLE event_types ADD COLUMN booking_start_date TEXT;\nALTER TABLE event_types ADD COLUMN booking_end_date TEXT;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
