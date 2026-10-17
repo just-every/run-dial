@@ -40,11 +40,11 @@ try {
   });
   let defaultEvent = await data("/api/app/event-types", omittedInput, 201, true);
   assert.equal(defaultEvent.questions.length, 1);
-  const agenda = defaultEvent.questions[0]; assert.deepEqual(agenda, { key: "q_default_agenda", kind: "text", label: "Agenda", required: false, options: [] });
+  const agenda = defaultEvent.questions[0]; assert.deepEqual(agenda, { key: "q_default_agenda", kind: "text", label: "Agenda", required: false, private: false, options: [] });
   assert.deepEqual((await data(`/api/app/event-types/${defaultEvent.id}`, undefined, 200, true)).questions, [agenda]);
   const emptyEvent = await data("/api/app/event-types", full(template, { slug: "explicit-empty", questions: [] }), 201, true);
   const customEvent = await data("/api/app/event-types", full(template, { slug: "custom-choice", questions: [choice] }), 201, true);
-  assert.deepEqual(emptyEvent.questions, []); assert.deepEqual(customEvent.questions, [choice]);
+  assert.deepEqual(emptyEvent.questions, []); assert.deepEqual(customEvent.questions, [{ ...choice, private: false }]);
   assert.deepEqual((await data(`/api/app/event-types/${template.id}`, undefined, 200, true)).questions, template.questions);
   await unchanged(async () => {
     await call(`/api/app/event-types/${defaultEvent.id}`, omitted(full(defaultEvent), "questions"), 400, true, "PATCH");
@@ -54,7 +54,7 @@ try {
   assert.equal(defaultEvent.questions[0].key, agenda.key);
   for (const event of [defaultEvent, emptyEvent, customEvent]) await data(`/api/app/event-types/${event.id}/publish`, {}, 200, true);
   const publicDefault = (await data("/api/public/events/dial-host/default-agenda")).eventType;
-  assert.deepEqual(publicDefault.questions, defaultEvent.questions);
+  assert.deepEqual(publicDefault.questions, [{ key: agenda.key, kind: "text", label: "Original booked agenda", required: false, options: [] }]);
   assert.deepEqual((await data("/api/public/events/dial-host/explicit-empty")).eventType.questions, []);
   assert.deepEqual((await data("/api/public/events/dial-host/custom-choice")).eventType.questions, [choice]);
   mark("native creation defaults omitted questions to one stable optional Agenda only; explicit empty/custom lists and existing events remain unchanged, edits require questions, and auth/origin/configuration refusals store nothing");
@@ -85,7 +85,7 @@ try {
   const customBooking = await bookingFor(customValid.email), beforeEdit = await snapshot();
   const editedChoice = { ...choice, label: "Edited future choice", options: [{ value: "first", label: "Updated first label" }, choice.options[1]] };
   const updatedCustom = await data(`/api/app/event-types/${customEvent.id}/details`, details(customEvent, { questions: [editedChoice] }), 200, true, "PATCH");
-  assert.deepEqual(updatedCustom.questions, [editedChoice]);
+  assert.deepEqual(updatedCustom.questions, [{ ...editedChoice, private: false }]);
   defaultEvent = await data(`/api/app/event-types/${defaultEvent.id}`, full(defaultEvent, { questions: [{ ...agenda, label: "Edited future agenda" }] }), 200, true, "PATCH");
   assert.equal(defaultEvent.questions[0].key, agenda.key);
   const afterEdit = await snapshot();
