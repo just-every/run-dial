@@ -23,9 +23,14 @@ function value(row:TargetRow){return row.value as unknown as NativeValue;}
 // the old representation only when its COMPLETE value matches retained custody;
 // explicitly authored 0/1 and every later native edit keep their actual values.
 function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
- if(tables.bookings?.some(row=>row.calendar_required===1)){
-  const legacy={tables:{...tables,bookings:tables.bookings.map(row=>{const source={...row};if(source.calendar_required===1)delete source.calendar_required;return source;})}};
-  if(sha256(canonicalJson(json(legacy)))===appliedHash)return json(legacy);
+ // Additive defaults belong to the historical representation only when the
+ // complete retained snapshot proves that representation. Authored edits stay visible.
+ const eventTables=tables.event_types?.every(row=>row.booking_horizon_mode==='calendar_days'&&row.booking_start_date===null&&row.booking_end_date===null)
+  ? {...tables,event_types:tables.event_types.map(row=>{const source={...row};delete source.booking_horizon_mode;delete source.booking_start_date;delete source.booking_end_date;return source;})}:null;
+ for(const candidate of [tables,...(eventTables?[eventTables]:[])]){
+  const historical=candidate.bookings?.some(row=>row.calendar_required===1)
+   ? {...candidate,bookings:candidate.bookings.map(row=>{const source={...row};if(source.calendar_required===1)delete source.calendar_required;return source;})}:null;
+  for(const version of [candidate,...(historical?[historical]:[])]){const value=json({tables:version});if(sha256(canonicalJson(value))===appliedHash)return value;}
  }
  return json({tables});
 }
@@ -39,6 +44,10 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
  if(table==='bookings'){
   const index=columns.indexOf('calendar_required');if(index!==-1)predicates.splice(index,1);
   predicates.push(`actual.calendar_required IS CASE WHEN json_type(wanted.value,'$.calendar_required') IS NULL THEN 1 ELSE json_extract(wanted.value,'$.calendar_required') END`);
+ }
+ if(table==='event_types'){
+  if(!columns.includes('booking_horizon_mode'))predicates.push("actual.booking_horizon_mode IS 'calendar_days'");
+  for(const key of ['booking_start_date','booking_end_date'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
  }
  if(table==='host_profiles')for(const key of ['avatar_key','avatar_content_type'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
  return {sql:`(SELECT count(*) FROM ${table} WHERE ${where})=? AND NOT EXISTS(SELECT 1 FROM json_each(?) wanted WHERE NOT EXISTS(SELECT 1 FROM ${table} actual WHERE ${conjunction(predicates)}))`,params:[id,rows.length,JSON.stringify(rows)]};
