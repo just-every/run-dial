@@ -267,9 +267,14 @@ interrupted, leave the destination unpublished, preserve the archive, and
 recover there only after inspection or use another clean destination.
 Hosted export uses the same schema proof, exhaustive exclusions, canonicalization,
 asset scans and salt continuity through the published Base authenticated HTTP
-handler/client. From a stopped local checkout of the exact deployed revision:
+handler/client. Local installs use package-mode `rer export` / `rer import`;
+`rer export` is local-only and refuses a hosted origin, per
+[Base’s hosted-data rule](https://github.com/runeditrun/base/blob/main/export/RUN-LOCALLY.md#if-hosted-deployment-stops).
+From a stopped local checkout of the exact deployed revision with dependencies
+installed, call Dial’s existing helper to download authoritative D1 records and
+actual R2 file bytes, using absolute session and output paths:
 
-    rer export --target remote --origin https://dial.example --session-file .rer/local/hosted-owner.cookie --output exports/hosted.rer
+    node scripts/local/remote-export.mjs https://dial.example "$PWD/.rer/local/hosted-owner.cookie" "$PWD/exports/hosted.rer"
 
 The mode-0600 session file holds one native owner cookie, never a URL or provider
 credential. The runtime exposes `/api/portability/exports` and the read-only
