@@ -3500,7 +3500,7 @@
       "executable": false
     },
     "OPERATIONS.md": {
-      "sha256": "ed9583d93ca09cdaa1d0486936948bd2a4b8685bbdff4f7ac6ed669efb3f8553",
+      "sha256": "15d89d1dfc75cdf10535d15d618212d27172fe9cdfa95665f56a15f0197a7f1a",
       "executable": false
     },
     "operations/operations.mjs": {
@@ -4591,8 +4591,12 @@
       "sha256": "ca044d9354d02be37b7c559fac68069f619b56f80d152b34bcc429d65753c5fc",
       "executable": false
     },
+    "src/core/features/booking-links/offered-time-choices.tsx": {
+      "sha256": "730096c39d34efea0b0edbdf897aff0d5f28d14ceeccebb6e0ff05cce4a284ae",
+      "executable": false
+    },
     "src/core/features/booking-links/offered-times-ui.tsx": {
-      "sha256": "33be68ad0a5ccbd68b505e69c0f1589df5706ae8e6634fd02d19b0bb4dcafbfb",
+      "sha256": "3c700484520d6c3cb6ecb7f83bb16cc9e31a6a6cbcb2a5541505720965367734",
       "executable": false
     },
     "src/core/features/booking-links/repository.ts": {
