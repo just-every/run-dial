@@ -4,7 +4,8 @@ import { Button, Card, Input, Select, Textarea } from "../../app/ui/primitives";
 import { useHydrated } from "../../app/use-hydrated";
 import type { EventTypeRecord } from "../event-types";
 import type { ProfileRecord } from "../host-profile";
-import { dateInZone, dayLabel, groupSlotsByDay, shiftHostDate, slotTimeLabel, type PickerAvailability, type PickerSlot } from "../public-booking";
+import { dateInZone, shiftHostDate, type PickerAvailability, type PickerSlot } from "../public-booking";
+import { OfferedTimeChoices } from "./offered-time-choices";
 
 type Host = Pick<ProfileRecord, "handle" | "timezone">;
 type CreatedOffer = { url: string; email: string };
@@ -139,12 +140,7 @@ function OfferForm({ event, host, onCreated }: { event: EventTypeRecord; host: H
         <label className={fieldLabel}>Week starting<Input type="date" min={today} value={week} required onChange={entry => { if (entry.target.value) setWeek(entry.target.value); }} /></label>
         <div className="flex flex-wrap gap-3"><Button type="button" variant="secondary" disabled={loading || week <= today} onClick={() => setWeek(shiftHostDate(week, -7) < today ? today : shiftHostDate(week, -7))}>Previous</Button><Button type="button" variant="secondary" disabled={loading} onClick={() => setWeek(shiftHostDate(week, 7))}>Next</Button><Button type="button" variant="quiet" disabled={loading} onClick={() => setRefresh(value => value + 1)}>Refresh times</Button></div>
       </div>
-      {loading ? <p role="status" className="text-sm text-soft">Checking live availability…</p> : availabilityError ? <p role="alert" className="text-sm text-danger">{availabilityError}</p> : availability?.state === "available" ? <div className="grid max-h-80 gap-4 overflow-y-auto rounded-xl border border-line p-3">
-        {!availability.slots.length ? <p className="text-sm text-soft">No available times this week. Choose another week.</p> : groupSlotsByDay(availability.slots, host.timezone).map(day => <fieldset key={day.date} className="min-w-0"><legend className="mb-2 text-sm font-semibold">{dayLabel(day.date)}</legend><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{day.slots.map(slot => {
-          const checked = selected.some(item => item.startAt === slot.startAt);
-          return <label key={slot.startAt} className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm ${checked ? "border-ink bg-gold-wash" : "border-line"}`}><input type="checkbox" checked={checked} disabled={!checked && selected.length >= 12} onChange={() => toggle(slot)} /><span>{slotTimeLabel(slot.startAt, host.timezone)}</span></label>;
-        })}</div></fieldset>)}
-      </div> : null}
+      {loading ? <p role="status" className="text-sm text-soft">Checking live availability…</p> : availabilityError ? <p role="alert" className="text-sm text-danger">{availabilityError}</p> : availability?.state === "available" ? <OfferedTimeChoices slots={availability.slots} timezone={host.timezone} selected={selected} onToggle={toggle} /> : null}
       <div><p role="status" className="text-sm font-semibold">{selected.length} of 12 times selected</p>{selected.length ? <ul className="mt-2 grid gap-1">{selected.map(slot => <li key={slot.startAt} className="flex flex-wrap items-center justify-between gap-x-3 text-sm"><span>{offeredLabel(slot, host.timezone)}</span><Button type="button" variant="quiet" aria-label={`Remove ${offeredLabel(slot, host.timezone)}`} onClick={() => toggle(slot)}>Remove</Button></li>)}</ul> : null}</div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={fieldLabel}>Hold selected times<Select value={hold} onChange={entry => setHold(entry.target.value)}><option value="held">Hold for recipient</option><option value="none">No hold</option></Select></label>
