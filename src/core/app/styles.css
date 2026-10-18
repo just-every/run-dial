@@ -81,3 +81,23 @@
     outline-offset: 3px;
   }
 }
+
+/* Every single-choice select draws its chevron 14 px in from the right border with room under it for the text. Two gradient
+   strokes read --rer-select-ink, so the chevron follows the token and paints under the pages' CSP (no data: image). Unlayered,
+   so it wins over the utility padding of the Select primitive and the booking forms' own field rule. Multiple and size>1 lists
+   keep their native look. */
+select:not([multiple], [size]:not([size="1"])) {
+  --rer-select-ink: var(--muted);
+  -webkit-appearance: none;
+  appearance: none;
+  padding-inline-end: 40px;
+  text-overflow: ellipsis;
+  background-image:
+    linear-gradient(to top right, transparent calc(50% - 1.1px), var(--rer-select-ink) calc(50% - .55px), var(--rer-select-ink) calc(50% + .55px), transparent calc(50% + 1.1px)),
+    linear-gradient(to top left, transparent calc(50% - 1.1px), var(--rer-select-ink) calc(50% - .55px), var(--rer-select-ink) calc(50% + .55px), transparent calc(50% + 1.1px));
+  background-repeat: no-repeat;
+  background-position: right 20px center, right 14px center;
+  background-size: 6px 6px;
+}
+select:not([multiple], [size]:not([size="1"])):focus-visible { --rer-select-ink: var(--ink); }
+select:not([multiple], [size]:not([size="1"])):disabled { --rer-select-ink: color-mix(in srgb, var(--muted) 55%, transparent); }

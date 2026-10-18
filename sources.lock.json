@@ -4424,7 +4424,7 @@
       "executable": false
     },
     "src/core/app/styles.css": {
-      "sha256": "74679d39e55b117c8284be3bce3978a950360a86cfcaa030b288db9a620d443e",
+      "sha256": "67bf67f24ca208d0e199f06aed8fdaedff54d1ccb31241ffc52d225c60349bc0",
       "executable": false
     },
     "src/core/app/ui/app-shell.tsx": {
