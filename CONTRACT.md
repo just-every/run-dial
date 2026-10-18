@@ -323,7 +323,7 @@ What Dial does not do, and how a buyer gets it:
 
 ## Status
 
-Judged from the code and tests at commit `b084d6e4705b228308fb9453e002b361a7e1f754` (18 October 2026).
+Judged from the code and tests at commit `e07c9659c03a45d796b5ab5d67faa07fd1a99ded` (18 October 2026).
 
 The rows below record each clause's bounded implementation and remaining work at the cited in-repository paths. The original assessment was made on 16 October 2026; subsequent catch-up rows include the later implementation and supersede that assessment for their clauses.
 
@@ -331,13 +331,13 @@ Done means implemented with a test exercising the clause through its public or o
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 56 | 20 | 0 | 76 |
-| Target and push further | 3 | 24 | 67 | 94 |
-| All | 59 | 44 | 67 | 170 |
+| Published | 49 | 27 | 0 | 76 |
+| Target and push further | 2 | 21 | 71 | 94 |
+| All | 51 | 48 | 71 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
-| `AUTH-001` | Public authority | published | done | `tests/operator-auth-boundary.test.mjs`, `tests/booking-http.test.mjs` |  |
+| `AUTH-001` | Public authority | published | partial | `tests/operator-auth-boundary.test.mjs`, `tests/booking-http.test.mjs` | Native sessions and public capabilities are enforced; host/team ownership and role checks under OPER-001 and scoped API credentials under AUTH-008 remain absent. |
 | `AUTH-002` | Booking nonce | published | done | `tests/booking-http.test.mjs` |  |
 | `AUTH-003` | Booking access | published | done | `tests/embed-document-authorization.test.mjs` |  |
 | `AUTH-004` | Calendar authorisation callback | published | done | `tests/providers-runtime.test.mjs` |  |
@@ -348,7 +348,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `OPER-001` | Roles and permissions | published | partial | `tests/operator-management.test.mjs`, `tests/local-setup-journey.test.mjs`, `src/core/features/operators/service.ts` | The cited paths cover part of the clause; the rest is still to build. |
 | `OPER-002` | Operator management | published | partial | `tests/operator-management.test.mjs`, `tests/operator-removal-mail.test.mjs`, `tests/operator-access-migration.test.mjs` | Equal-owner case; role scope missing. |
 | `OPER-003` | Booking workspace | published | partial | `tests/bookings-filters.test.mjs`, `tests/bookings-search-upgrade.test.mjs` | Single-host 100,000-booking fixture; capacity fixture missing. |
-| `OPER-004` | Booking record | published | done | `tests/booking-axe/acceptance-records.mjs`, `tests/booking-axe.test.mjs` |  |
+| `OPER-004` | Booking record | published | partial | `tests/booking-axe/acceptance-records.mjs`, `tests/booking-axe.test.mjs` | Booking details show answers, zones, history and calendar/meeting states, but DeliveryActions lists only failed deliveries without a retry; queued and succeeded email states are not shown. |
 | `EDITOR-001` | Owner editor | published | partial | `scripts/verify-managed-editor.mjs` | Owner case; non-owner refusal missing. |
 | `OPER-005` | Durable first run | published | done | `tests/first-run.test.mjs`, `tests/host-setup-journey.test.mjs` |  |
 | `OPER-006` | Editing a member's availability and event types | target | missing |  | No implementing code yet. |
@@ -399,7 +399,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `EMBED-002` | Browser extension | target | missing |  | No implementing code yet. |
 | `EMBED-003` | Outlook add-in | target | missing |  | No implementing code yet. |
 | `EMBED-004` | Gmail add-on | target | missing |  | No implementing code yet. |
-| `MOBILE-001` | Mobile web booking and operation | target | done | `tests/booking-axe.test.mjs`, `src/core/features/public-booking/ui/event-page.tsx` |  |
+| `MOBILE-001` | Mobile web booking and operation | target | partial | `tests/booking-axe.test.mjs`, `src/core/features/public-booking/ui/event-page.tsx` | Booking, request and operator interfaces ship with responsive 390-pixel journeys; routing and poll pages and their mobile paths remain absent, and the complete 320-to-430-pixel and touch-target guarantee is not established. |
 | `MOBILE-002` | Native iOS and Android apps | target | missing |  | No implementing code yet. |
 | `AVAIL-001` | Schedule and overrides | published | done | `tests/availability-diagnostics.test.mjs`, `src/core/features/event-types/recurring-writes.ts`, `src/core/features/event-types/override-writes.ts` |  |
 | `AVAIL-002` | Valid slots | published | done | `tests/dst-native.test.mjs`, `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs` |  |
@@ -417,7 +417,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `BOOK-002` | Atomic claim | published | done | `tests/booking-lifecycle.test.mjs` |  |
 | `BOOK-003` | Idempotent confirmation | published | done | `tests/lifecycle-journey.test.mjs` |  |
 | `BOOK-004` | States and occurrences | published | done | `tests/occurrence-mail-duration.test.mjs`, `tests/booking-wire.test.mjs` |  |
-| `BOOK-005` | Confirmation receipt | published | done | `tests/booking-wire.test.mjs`, `tests/booking-axe/booking.mjs` |  |
+| `BOOK-005` | Confirmation receipt | published | partial | `tests/booking-wire.test.mjs`, `tests/booking-axe/booking.mjs` | Receipt contents and pending joining-link notice ship; the pending join control is omitted instead of shown disabled and labelled pending. |
 | `BOOK-006` | Manage link | published | done | `tests/embed-document-authorization.test.mjs`, `src/core/features/bookings/manage-capability.ts` |  |
 | `BOOK-007` | Invitee rescheduling | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |  |
 | `BOOK-008` | Invitee cancellation | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |  |
@@ -433,7 +433,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `CAL-003` | Managed event | published | partial | `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs`, `tests/lifecycle-journey.test.mjs`, `evidence/contract/2026-10-17/CAL-003/` | Native Google managed events render saved title/description templates and update them on reschedule without private answers or raw manage tokens. Unconfigured offers retain pre-template wording; invitation links and wider provider/template scope remain under NOTIFY-009, CAL-010 and CAL-011. |
 | `CAL-004` | Idempotent side effects | published | done | `tests/booking-wire.test.mjs` |  |
 | `CAL-005` | Provider failure | published | done | `tests/booking-wire.test.mjs` |  |
-| `CAL-006` | Connection health | published | done | `tests/lifecycle-journey.test.mjs`, `tests/export-restored-behavior.test.mjs` |  |
+| `CAL-006` | Connection health | published | partial | `tests/lifecycle-journey.test.mjs`, `tests/export-restored-behavior.test.mjs` | Named unhealthy states and fail-closed recovery ship; the declared calendar.connection-health-changed.v1 event is not emitted, and replacing a lapsed push channel retains the sync cursor instead of forcing a full resync. |
 | `CAL-007` | Provider callbacks | published | done | `tests/deletion-ordering.test.mjs`, `tests/coordination.test.mjs` |  |
 | `CAL-008` | External deletion and edits | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-wire.test.mjs` |  |
 | `CAL-009` | Calendar file | published | done | `tests/calendar-file.test.mjs`, `src/core/features/bookings/calendar-file.ts` |  |
@@ -453,14 +453,14 @@ Done means implemented with a test exercising the clause through its public or o
 | `REQUEST-001` | Compose | published | done | `tests/requests.test.mjs`, `src/core/features/availability-requests/service.ts` |  |
 | `REQUEST-002` | Submit | published | done | `tests/requests.test.mjs` |  |
 | `REQUEST-003` | Operator workflow | published | partial | `tests/requests.test.mjs`, `tests/requests/runtime.mjs` | Single-host case; host scope missing. |
-| `REQUEST-004` | Routing | published | done | `tests/requests.test.mjs` | Single-host recipients; two-host scoping is `NOTIFY-008`. |
+| `REQUEST-004` | Routing | published | partial | `tests/requests.test.mjs` | Default single-host notifications reach all operators; routing-policy subset selection and email suppression are not implemented, and host/team recipient scoping remains absent. |
 | `REQUEST-005` | Invitee updates | published | done | `tests/requests.test.mjs` |  |
 | `NOTIFY-001` | Booking confirmation | published | partial | `tests/booking-wire.test.mjs`, `tests/mail-preferences.test.mjs`, `tests/lifecycle-journey.test.mjs` | Template and invitee-confirmation switch missing. |
 | `NOTIFY-002` | Link completion | published | done | `tests/booking-wire.test.mjs`, `tests/providers-d1.test.mjs` |  |
 | `NOTIFY-003` | Reminders | published | done | `tests/lifecycle-journey.test.mjs`, `tests/coordination.test.mjs`, `src/core/features/bookings/reminder-commands.ts` | Single-host recipients; two-host scoping is `NOTIFY-008`. |
 | `NOTIFY-004` | Changes | published | done | `tests/lifecycle-journey.test.mjs`, `tests/move-in-catch-up.test.mjs` | Single-host recipients; two-host scoping is `NOTIFY-008`. |
-| `NOTIFY-005` | Delivery failure | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-wire.test.mjs` |  |
-| `NOTIFY-006` | No mail loops | published | done | `tests/deploy-adoption.test.mjs`, `tests/mail-readiness-workerd.test.mjs` |  |
+| `NOTIFY-005` | Delivery failure | published | partial | `tests/lifecycle-journey.test.mjs`, `tests/booking-wire.test.mjs` | Typed failures, bounded attempt counts and safe resend ship; provider Retry-After can extend retries beyond the required one-hour window. |
+| `NOTIFY-006` | No mail loops | published | partial | `tests/deploy-adoption.test.mjs`, `tests/mail-readiness-workerd.test.mjs` | Verified sending and ignored inbound mail ship; ordinary invitee mail lacks the assigned-host Reply-To, per-event No-reply choice and required replies-not-received notice. |
 | `NOTIFY-007` | Connection alerts | published | done | `tests/lifecycle-journey.test.mjs`, `scripts/lifecycle/connection-alert-timing.mjs` | Single-host: every operator is an owner. |
 | `NOTIFY-008` | Notification recipients | target | partial | `src/core/features/delivery/booking-mails.ts`, `tests/mail-preferences.test.mjs`, `tests/booking-wire.test.mjs`, `tests/requests.test.mjs` | Single-host case. |
 | `NOTIFY-009` | Invitation and message templates | target | partial | `tests/booking-wire/correspondence-journey.mjs`, `tests/booking-wire/reschedule-request-journey.mjs`, `src/core/features/event-types/ui/correspondence-editor.tsx` | Native per-event calendar and invitee confirmation/change/cancellation/reminder/request/request-reminder templates, escaped previews, named unknown/private-variable refusal, duplication and deleted-offer retention. Managed team/locale templates, invitation capabilities/direct links, workflow confirmation suppression and From/Reply-To preview await their foundations. |
@@ -474,8 +474,8 @@ Done means implemented with a test exercising the clause through its public or o
 | `CLIENT-001` | Client records | target | missing |  | No implementing code yet. |
 | `REPORT-001` | Scheduling analytics | target | missing |  | No implementing code yet. |
 | `REPORT-002` | Host calendar view and booking workspace | target | partial | `src/core/features/bookings/ui/bookings-page.tsx`, `tests/bookings-filters.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
-| `REPORT-003` | Exports and scheduled reports | target | partial | `src/core/features/portability/routes.ts`, `tests/export-base-adoption.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
-| `API-001` | Public REST API | target | partial | `src/core/features/bookings/routes.ts`, `src/core/features/public-booking/routes.ts` | The cited paths cover part of the clause; the rest is still to build. |
+| `REPORT-003` | Exports and scheduled reports | target | missing |  | Filtered reporting CSVs and scheduled member reports are absent; the owner archive is DATA-001, not this reporting flow. |
+| `API-001` | Public REST API | target | missing |  | No versioned credential-authorized public API, cursor pagination, per-credential limits or OpenAPI document ships; existing page-internal and invitee-capability JSON routes are not this API. |
 | `API-002` | Webhooks | target | missing |  | No implementing code yet. |
 | `INTEG-001` | Zapier, Make and Crank | target | missing |  | No implementing code yet. |
 | `INTEG-002` | HubSpot | target | missing |  | No implementing code yet. |
@@ -497,10 +497,10 @@ Done means implemented with a test exercising the clause through its public or o
 | `CUSTOM-001` | Operator annotations | published | partial | `tests/custom-fields.test.mjs` | Owner case; role scope missing. |
 | `CUSTOM-002` | Annotation privacy and portability | published | done | `tests/custom-fields.test.mjs` |  |
 | `AGENT-001` | Agent authority, limits and audit | push-further | missing |  | No implementing code yet. |
-| `AGENT-002` | Exception negotiator | push-further | partial | `src/core/features/availability-requests/service.ts`, `tests/requests.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `AGENT-002` | Exception negotiator | push-further | missing |  | No agent constraint solver, exception proposals or approval-to-offered-times flow ships; alternative requests are handled manually. |
 | `AGENT-003` | Unanswered-thread follow-up | push-further | missing |  | No implementing code yet. |
 | `AGENT-004` | Calendar drift reconciler | push-further | partial | `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
-| `AGENT-005` | Meeting happened check | push-further | partial | `src/core/features/bookings/service.ts`, `tests/booking-axe/keyboard-bookings.mjs` | The cited paths cover part of the clause; the rest is still to build. |
+| `AGENT-005` | Meeting happened check | push-further | missing |  | No agent evidence assembly, attendance proposals or host-confirmation flow ships; BOOK-011 supports manual attendance marks only. |
 | `AGENT-006` | No-show recovery | push-further | missing |  | No implementing code yet. |
 | `AGENT-007` | Meeting follow-through | push-further | missing |  | No implementing code yet. |
 | `AGENT-008` | Pre-meeting brief | push-further | missing |  | No implementing code yet. |
