@@ -378,6 +378,12 @@
       "name": "0061_booking_links.sql",
       "sha256": "0c562d202c048e9dc6a4c436e8f48c172649324a8f9fabc1554c82f28348995a",
       "sql": "-- Private offer definitions survive restore; their live capabilities do not.\n-- Erasure journals and clears consumed_booking_id before deleting its booking.\nCREATE TABLE booking_links (\n  id TEXT PRIMARY KEY NOT NULL,\n  event_type_id TEXT NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,\n  kind TEXT NOT NULL CHECK(kind IN ('single_use','one_off')),\n  overrides_json TEXT,\n  expires_at TEXT NOT NULL,\n  consumed_at TEXT,\n  consumed_booking_id TEXT REFERENCES bookings(id),\n  revoked_at TEXT,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE booking_link_tokens (\n  id TEXT PRIMARY KEY NOT NULL,\n  link_id TEXT NOT NULL UNIQUE REFERENCES booking_links(id) ON DELETE CASCADE,\n  token_hash TEXT NOT NULL UNIQUE,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nALTER TABLE booking_nonces ADD COLUMN link_id TEXT REFERENCES booking_links(id) ON DELETE CASCADE;\nCREATE INDEX booking_links_event_idx ON booking_links(event_type_id,created_at);\nCREATE UNIQUE INDEX booking_links_booking_idx ON booking_links(consumed_booking_id) WHERE consumed_booking_id IS NOT NULL;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0062_offered_times.sql",
+      "sha256": "53395825224778c14ddbc4757a246c90d0f232070042bbe9d0eed25d8aea4104",
+      "sql": "-- Offered times retain their definition; only a live private token activates a hold.\nALTER TABLE booking_links ADD COLUMN offered_slots_json TEXT;\nALTER TABLE booking_links ADD COLUMN hold_until TEXT;\nCREATE INDEX booking_links_active_holds_idx ON booking_links(hold_until) WHERE consumed_at IS NULL AND revoked_at IS NULL;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
