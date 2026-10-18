@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 — 2026-10-18
+
+Description only; no product change. The catalogue description is now "Let clients book appointments around your availability without the scheduling back and forth.", the same sentence as main. The application, contract, migrations and configuration are identical to 0.3.0, so upgrading from 0.3.0 needs no migration, configuration or data step.
+
 ## 0.3.0 — 2026-10-16
 
 - A Managed mail message the relay transport cannot carry fails at once as a permanent delivery failure, instead of an unknown outcome. The workspace checks database, storage and queue health once per signed-in session and keeps the result while you move between pages.

@@ -1,7 +1,7 @@
 {
   "id": "dial",
   "name": "Dial",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "maturity": "runtime-spine-public-port",
   "category": "scheduling",
   "spine": {
@@ -9,7 +9,7 @@
     "record": "booking against an availability rule"
   },
   "replaces": ["Calendly", "Acuity Scheduling", "SavvyCal"],
-  "description": "An invitee-first, self-hosted scheduler for one business or independent host.",
+  "description": "Let clients book appointments around your availability without the scheduling back and forth.",
   "capabilities": [
     {
       "id": "public-home",

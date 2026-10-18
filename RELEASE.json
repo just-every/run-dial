@@ -1,8 +1,8 @@
 {
-  "version": "0.3.0",
-  "previousVersion": "0.2.0",
-  "date": "2026-10-16",
-  "publicReleaseNotes": "Dial 0.3.0 adds RER Managed mail, one-time owner sign-in links from rer signin, and sign-in email prefill from login_hint. Local development no longer captures mail. Additive migrations 0047-0050.",
+  "version": "0.3.1",
+  "previousVersion": "0.3.0",
+  "date": "2026-10-18",
+  "publicReleaseNotes": "Dial 0.3.1 changes only the catalogue description, which is now: Let clients book appointments around your availability without the scheduling back and forth. Description only; no product change. The application, contract, migrations and configuration are identical to 0.3.0.",
   "screenshots": [
     {
       "path": ".github/assets/screenshots/bookings-1440.png",
@@ -196,5 +196,5 @@
     }
   ],
   "breaking": false,
-  "agentUpdateInstructions": "Read this release record\u2019s contractChanges and migrations before updating from 0.2.0. Preserve authored data, existing local or deployed state, native operator and setup identities, durable setup-completion markers, and every already-applied migration byte. Back up first: stop dev or preview with rer dev --stop or rer preview --stop and export to a new path with rer export --output exports/NAME.rer, keeping the archive and the original private settings, including SESSION_SECRET, outside local state. Then apply only the new migrations 0047 to 0050 in filename order through the owner-authorized deployment procedure in OPERATIONS.md. Do not reset or replace state to upgrade. All four are additive; 0050 copies provider health rows unchanged.\n\nMail: an install keeping SendGrid or Resend needs no change, and its sender may now be any verified address on its domain. A Managed install selects MAIL_PROVIDER=rer; Managed hosting supplies MAIL_RELAY_URL, MAIL_FROM and the credential. Local development no longer captures mail: rer dev opens signed in as the owner through its printed RER_OPEN link, and no sign-in link or outbox is printed or served. Owners of a hosted install can get a one-time sign-in link with rer signin. Restore only into an empty destination with the original settings, then rer import --input exports/NAME.rer --yes. No live provider, deployment or release acceptance is claimed."
+  "agentUpdateInstructions": "From 0.3.0: description only; no product change. Update the checkout to v0.3.1; no migration, configuration, data or redeploy step is needed. From an earlier version, first follow the upgrade to 0.3.0 (RELEASE.json at tag v0.3.0)."
 }
