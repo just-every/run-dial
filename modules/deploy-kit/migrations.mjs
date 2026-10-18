@@ -56,8 +56,7 @@ export async function query(api, id, sql) {
 /** `locked`: the caller holds the install's deploy lock (owner.mjs withStateLock). */
 export async function migrate(api, id, migrations, { apply = true, upgrade = apply, locked = false } = {}) {
   validateMigrations(migrations);
-  const { applied, transition, exists, claimed, claimedFrom } = await readLedger(api, id, migrations, query, { rewritten:locked });
-  const pending = migrations.slice(applied.length);
+  const { applied, pending, transition, exists, claimed, claimedFrom } = await readLedger(api, id, migrations, query, { rewritten:locked });
   assert(apply || pending.length === 0,'pending-migrations');
   if (transition && upgrade) {
     await api.importSql(id, transition);
@@ -83,8 +82,9 @@ export async function migrate(api, id, migrations, { apply = true, upgrade = app
       .catch(error => { error.migration ??= migration.name; throw error; });
   }
   if (pending.length) {
-    const final = (await query(api,id,`SELECT name, sha256, state FROM ${ledger} ORDER BY id`))[0].results;
-    assert(final.length === migrations.length && final.every((x,i) => x.state === 'applied' && recorded(x, migrations[i])), 'migration-readback-mismatch');
+    // By name and bytes: rows applied after ones that sort above them keep their ids.
+    const rows = (await query(api,id,`SELECT name, sha256, state FROM ${ledger}`))[0].results, final = new Map(rows.map(x => [x.name, x]));
+    assert(rows.length === migrations.length && final.size === rows.length && migrations.every(x => final.get(x.name)?.state === 'applied' && recorded(final.get(x.name), x)), 'migration-readback-mismatch');
   }
   return { applied:pending.map(x => x.name), retried:claimed ? [pending[0].name] : [], history:migrations.map(({name,sha256}) => ({name,sha256})) };
 }

@@ -41,17 +41,29 @@ export function migrationLedgerShape(rows) {
 /** An applied row records this migration: its current bytes, or bytes a seed's
  * reviewed rewrite record says this migration replaced. */
 export const recorded = (row, migration) => row.name === migration?.name && (row.sha256 === migration.sha256 || (migration.rewrites ?? []).some(rewrite => rewrite.from === row.sha256));
-const validPrefix = (rows, migrations) => rows.every((row, index) => recorded(row, migrations[index]) && row.state === 'applied');
+/** Applied history this build records, by name: every row is applied, names a
+ * build migration once, and holds that migration's recorded bytes. Rows may skip
+ * build migrations: a seed release can add migrations that sort below ones an
+ * install already applied, and Wrangler applies those by name set too. */
+const validHistory = (rows, migrations) => {
+  const byName = new Map(migrations.map(migration => [migration.name, migration])), seen = new Set();
+  return rows.every(row => row.state === 'applied' && !seen.has(row.name) && seen.add(row.name) && recorded(row, byName.get(row.name)));
+};
+/** The build migrations these rows do not apply, in name order. */
+export const unapplied = (rows, migrations) => {
+  const names = new Set(rows.map(row => row.name));
+  return migrations.filter(migration => !names.has(migration.name));
+};
 const same = (a, b) => a.length === b.length && a.every((row, index) => row.name === b[index].name && row.sha256 === b[index].sha256 && row.state === b[index].state);
 
-/** History this build does not match. When it ends in an unconfirmed claim after a
- * valid prefix, the error names that claim (`unconfirmedClaim`) so the refusal can
+/** History this build does not match. When it ends in an unconfirmed claim after
+ * valid history, the error names that claim (`unconfirmedClaim`) so the refusal can
  * give the exact command that clears it; `rewritten` says a reviewed rewrite
  * replaced the claimed bytes and only a deploy holding the install's lock retries it. */
 function unmatched(rows, migrations) {
   const error = new Error('changed-or-uncertain-migration-history'), last = rows.at(-1);
-  if (last?.state === 'applying' && /^[a-f0-9]{64}$/.test(last.sha256 ?? '') && validPrefix(rows.slice(0, -1), migrations)) {
-    const next = migrations[rows.length - 1];
+  if (last?.state === 'applying' && /^[a-f0-9]{64}$/.test(last.sha256 ?? '') && validHistory(rows.slice(0, -1), migrations)) {
+    const next = unapplied(rows.slice(0, -1), migrations)[0];
     error.unconfirmedClaim = { name:last.name, sha256:last.sha256, rewritten:last.name === next?.name && (next.rewrites ?? []).some(rewrite => rewrite.from === last.sha256) };
   }
   return error;
@@ -68,22 +80,23 @@ export async function readLedger(api, id, migrations, query, { rewritten = false
     const columns = await read(`SELECT name FROM pragma_table_info('${legacy}')`);
     assert(columns.length === 3 && columns.every(row => ['name','sha256','state'].includes(row.name)), 'invalid-migration-ledger');
     old = await read(`SELECT name, sha256, state FROM ${legacy} ORDER BY name`);
-    assert(validPrefix(old, migrations), 'changed-or-uncertain-migration-history');
+    assert(validHistory(old, migrations), 'changed-or-uncertain-migration-history');
   }
   if (tables.includes(ledger)) {
     const columns = (await read(`SELECT name FROM pragma_table_info('${ledger}')`)).map(row => row.name);
     assert(['id','name','applied_at'].every(name => columns.includes(name)), 'invalid-migration-ledger');
     if (columns.includes('sha256') && columns.includes('state')) {
       applied = await read(`SELECT name, sha256, state FROM ${ledger} ORDER BY id`);
-      // The last row may claim this build's next migration whose import did not
-      // complete: its exact bytes, or (`rewritten`) bytes a reviewed rewrite replaced.
-      // migrate re-runs it only on proof (migration-retry.mjs).
-      const last = applied.at(-1), next = migrations[applied.length - 1];
+      // The last row may claim this build's next migration (its first unapplied one,
+      // as migrate claims them) whose import did not complete: its exact bytes, or
+      // (`rewritten`) bytes a reviewed rewrite replaced. migrate re-runs it only on
+      // proof (migration-retry.mjs).
+      const last = applied.at(-1), next = unapplied(applied.slice(0, -1), migrations)[0];
       if (!tables.includes(legacy) && last?.state === 'applying' && last.name === next?.name) {
         if (last.sha256 === next.sha256) claimed = Boolean(applied.pop());
         else if (rewritten && (next.rewrites ?? []).some(rewrite => rewrite.from === last.sha256)) { claimedFrom = last.sha256; claimed = Boolean(applied.pop()); }
       }
-      if (!validPrefix(applied, migrations)) throw unmatched(applied, migrations);
+      if (!validHistory(applied, migrations)) throw unmatched(applied, migrations);
       if (tables.includes(legacy)) assert(same(applied, old), 'changed-or-uncertain-migration-history');
     } else {
       assert(!columns.includes('sha256') && !columns.includes('state'), 'invalid-migration-ledger');
@@ -102,7 +115,7 @@ export async function readLedger(api, id, migrations, query, { rewritten = false
     applied = old;
   }
   if (tables.includes(legacy)) transition += `DROP TABLE ${legacy};`;
-  return { applied, transition, claimed, claimedFrom, exists:tables.includes(ledger) || tables.includes(legacy) };
+  return { applied, pending:unapplied(applied, migrations), transition, claimed, claimedFrom, exists:tables.includes(ledger) || tables.includes(legacy) };
 }
 function insert(row) {
   return `INSERT INTO ${ledger}(name,sha256,state) VALUES (${literal(row.name)},${literal(row.sha256)},'applied');\n`;

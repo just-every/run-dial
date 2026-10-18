@@ -8,8 +8,8 @@ import { assert, hexId } from './validation.mjs';
 import { regularBytes } from './artifact.mjs';
 import { packageBuild } from './prepare.mjs';
 import { cloudflare } from './provider.mjs';
-import { ownerTarget, ownerWorkerName, ownerPlan, ownerDeploy, ownerHealth, settleOwnerState, sameDeployment, localOnlyBinding, withStateLock, readOwnerState, writeOwnerState } from './owner.mjs';
-import { activeWorker } from './worker.mjs';
+import { ownerTarget, ownerWorkerName, ownerPlan, ownerDeploy, ownerHealth, settleOwnerState, sameDeployment, localOnlyBinding, withStateLock, readOwnerState, writeOwnerState, workerSettings, withScopeHints } from './owner.mjs';
+import { activeWorker, secretBindings } from './worker.mjs';
 import { ownerSecret } from './owner-secret.mjs';
 import { ownerRemove } from './owner-remove.mjs';
 import { ownerSignin } from './owner-signin.mjs';
@@ -17,7 +17,7 @@ import { refuseLocalModels } from './local-only.mjs';
 import { publicOrigin } from './public-origin.mjs';
 
 export const cronNotice = 'This Worker has a Cron Trigger. Cloudflare may take up to about two hours to start its first scheduled run on some accounts.';
-const usage = 'usage: owner-cli.mjs deploy|health|remove|inspect|record-owner|signin --declaration <file> --environment <name> [--product <dir>] [--state <file>] [--outcome claimed|kept] | secret ... --set NAME [--set NAME]|--unset NAME [--unset NAME]';
+const usage = 'usage: owner-cli.mjs deploy|dry-run|health|remove|inspect|record-owner|signin --declaration <file> --environment <name> [--product <dir>] [--state <file>] [--outcome claimed|kept] | secret ... --set NAME [--set NAME]|--unset NAME [--unset NAME]';
 
 /** The owner's committed source and existing local build. Run the seed's build first. */
 async function ownerArtifact(root, product) {
@@ -33,7 +33,7 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
   try { parsed = parseArgs({args:argv,allowPositionals:true,strict:true,options:{declaration:{type:'string'},environment:{type:'string'},product:{type:'string',default:''},state:{type:'string'},set:{type:'string',multiple:true},unset:{type:'string',multiple:true},outcome:{type:'string'}}}); }
   catch { throw new Error('usage'); }
   const {positionals:[command,...rest],values} = parsed;
-  if (!['deploy','health','secret','remove','inspect','record-owner','signin'].includes(command) || rest.length || !values.declaration || !values.environment) throw new Error('usage');
+  if (!['deploy','dry-run','health','secret','remove','inspect','record-owner','signin'].includes(command) || rest.length || !values.declaration || !values.environment) throw new Error('usage');
   if ((command === 'secret') !== (values.set !== undefined || values.unset !== undefined) || values.set !== undefined && values.unset !== undefined) throw new Error('usage');
   if (values.outcome !== undefined && command !== 'record-owner' || command === 'record-owner' && !['claimed','kept'].includes(values.outcome)) throw new Error('usage');
   await refuseLocalModels(resolve(cwd));
@@ -47,6 +47,12 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
   assert(typeof declaration?.project === 'string','missing-owner-project');
   // Validate even direct kit invocations before any provider request or write.
   publicOrigin(declaration, env);
+  let artifact;
+  if (command === 'dry-run') {
+    artifact = await packageBuild({root,source:{sha:'0'.repeat(40),tree:'0'.repeat(40)},runIdentity:{id:'0',attempt:'1'},productDirectory:values.product});
+    const worker = ownerWorkerName(declaration.project,values.environment);
+    ownerPlan({project:declaration.project,environment:values.environment,worker,origin:`https://${worker}.example.invalid`},declaration,artifact,{localOnlyKeys,env});
+  }
   // Removal reads identity before each object DELETE and may span many pages.
   // Bound each response, not the owner's bucket size; failures retain ownership.
   let requestWindow = propagation?.uploaded ? propagation.window : undefined;
@@ -74,7 +80,9 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
     return {ok:true,...await ownerSecret({api,target,statePath,changes,fetch,healthOptions}).catch(error => { throw api.annotateFailure(error,'secrets'); })};
   }
   // A secret rer retired (the spent setup token) is no longer part of the plan.
-  const state = await settleOwnerState({api,target,statePath});
+  // A dry run only reads state: settling an interrupted change may write it.
+  const state = command === 'dry-run' ? await readOwnerState(statePath,target) : await settleOwnerState({api,target,statePath});
+  if (command === 'dry-run') assert(!state.pendingSecret, 'secret-change-unsettled');
   const {retiredSecrets = []} = state;
   if (command === 'record-owner') return withStateLock(statePath, async () => {
     const current = await readOwnerState(statePath, target);
@@ -97,8 +105,14 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
     return {ok:true, origin:target.origin, versionId:live.versionId, retiredSecrets, ownerClaim:state.ownerClaim, liveSecrets:rows.map(row => row.name)};
   }
   const current = retiredSecrets.length && Array.isArray(declaration.secrets) ? {...declaration,secrets:declaration.secrets.filter(item => !retiredSecrets.includes(item?.binding))} : declaration;
-  const artifact = await ownerArtifact(root,values.product);
+  artifact ??= await ownerArtifact(root,values.product);
   const plan = ownerPlan(target,current,artifact,{localOnlyKeys,env});
+  if (command === 'dry-run') {
+    const checked = withScopeHints(api);
+    const exists = await workerSettings(checked,target.worker) !== null;
+    const {unset} = await secretBindings(checked,target.worker,plan,env,exists);
+    return {ok:true,dryRun:true,deployed:false,optionalUnset:unset};
+  }
   if (command === 'health') {
     const readiness = {...(healthOptions?.now ? {clock:healthOptions.now} : {}), ...(healthOptions?.sleep ? {sleep:healthOptions.sleep} : {}),
       ...healthOptions?.readiness,single:true,totalMs:30000,
@@ -130,10 +144,10 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
 /** Prints refusal codes and resource names only; never inputs, tokens or provider bodies. */
 export function report(error) {
   const diagnostic = deployDiagnostic(error);
-  if (diagnostic) return {ok:false,...diagnostic};
+  if (diagnostic) return {ok:false,...diagnostic,...(error.missingSecrets ? {missingSecrets:error.missingSecrets} : {})};
   if (error.message === 'missing-input') return {ok:false,code:'missing-input',inputs:error.inputs};
   if (error.message === 'usage') return {ok:false,code:'usage',usage};
-  return {ok:false,code:/^[a-zA-Z0-9_-]{1,120}$/.test(error.message) ? error.message : 'owner-deploy-failed',...(error.resource ? {resource:error.resource} : {})};
+  return {ok:false,code:/^[a-zA-Z0-9_-]{1,120}$/.test(error.message) ? error.message : 'owner-deploy-failed',...(error.resource ? {resource:error.resource} : {}),...(error.missingSecrets ? {missingSecrets:error.missingSecrets} : {})};
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   try { console.log(JSON.stringify(await main())); }

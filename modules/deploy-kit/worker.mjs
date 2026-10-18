@@ -49,10 +49,16 @@ export async function secretBindings(api, worker, plan, env, exists) {
   const supplied = item => typeof env[item.environment] === 'string' && env[item.environment].trim();
   // An optional secret neither held nor supplied stays unbound; the app treats it as not connected.
   const unset = plan.secrets.filter(item => item.optional && !names.includes(item.binding) && !supplied(item)).map(item => item.binding);
+  const missingSecrets = plan.secrets.filter(item => !item.optional && !names.includes(item.binding) && !supplied(item))
+    .map(({binding,environment}) => ({binding,environment}));
+  if (missingSecrets.length) {
+    const error = new Error(`missing-secret-${missingSecrets[0].environment}`);
+    error.missingSecrets = missingSecrets;
+    throw error;
+  }
   for (const item of plan.secrets) {
     if (names.includes(item.binding)) bindings.push({type:'inherit',name:item.binding});
     else if (!unset.includes(item.binding)) {
-      assert(supplied(item), `missing-secret-${item.environment}`);
       bindings.push({type:'secret_text',name:item.binding,text:env[item.environment]});
     }
   }
