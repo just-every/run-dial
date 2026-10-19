@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { invitationSettings, invitationBrowserJourney } from './invitation-manage.mjs';
 import { expect } from '@playwright/test';
 import { auditor, trackPage } from './audit.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
@@ -14,6 +15,7 @@ export async function confirmationSettingsJourney(browser, owner, origin, eventI
       const form = page.getByRole('form', { name: 'Invitation and email templates', exact: true });
       const checkbox = form.getByRole('checkbox', { name: /^Send Dial confirmation to invitees/ });
       await expect(checkbox).toBeEnabled();
+      await invitationSettings(page, form, width);
       await checkbox.uncheck();
       await form.getByRole('button', { name: 'Save templates', exact: true }).click();
       await expect(form.getByRole('status')).toContainText('saved');
@@ -49,6 +51,12 @@ export async function confirmationSettingsJourney(browser, owner, origin, eventI
       await expect(row.getByRole('button', { name: 'Retry delivery', exact: true })).toHaveCount(0);
       await auditor(page, width, scans)('NOTIFY-001-suppressed');
       await page.getByRole('region', { name: 'Deliveries', exact: true }).screenshot({ caret: 'initial', path: evidencePath(`NOTIFY-001-deliveries-${width}.png`) });
+
+      await invitationBrowserJourney(browser, owner, origin, booking, width, scans, errors);
+      await page.reload();
+      const history = page.getByRole('region', { name: 'Booking history', exact: true });
+      await expect(history.getByText('Manage link replaced · System', { exact: true })).toBeVisible();
+      await history.screenshot({ caret: "initial", path: evidencePath(`NOTIFY-009-audit-${width}.png`) });
 
       await page.goto(origin + `/app/event-types/${eventId}`);
       await expect(checkbox).toBeEnabled(); await checkbox.check();

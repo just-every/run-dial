@@ -18,6 +18,8 @@ export async function manageRotationJourney({ data, call, state, book, future, c
   const calendar = findOutbox(snapshot, booking.id, row => row.kind === "calendar_upsert");
   await data("/__fixtures/deliver", { id: calendar.id });
   snapshot = await state();
+  const defaultInvitation = snapshot.wire_calls.find(row => row.method === "POST" && new URL(row.url).pathname.includes("/events") && JSON.parse(row.body).extendedProperties?.private?.["dial-booking-id"] === booking.id);
+  assert.ok(JSON.parse(defaultInvitation.body).description.includes("/manage/invite/"), "NOTIFY-009: unconfigured offers include invitation access by default");
   const linkReady = findOutbox(snapshot, booking.id, row => row.kind === "mail_send" && parsePayload(row).subject === "Your meeting link is ready");
 
   const revokedInitial = first.receipt.manageUrl;

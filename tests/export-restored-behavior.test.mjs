@@ -50,6 +50,7 @@ contract('BASE-OPS-003', 'NOTIFY-001 confirmation choice survives restore; resto
     for (const table of ['event_correspondence', 'booking_correspondence']) {
       const row = target.db.prepare(`SELECT templates_json FROM ${table}`).get();
       assert.equal(JSON.parse(row.templates_json).inviteeConfirmationEnabled, false, 'NOTIFY-001: archive restores the saved confirmation choice');
+      assert.equal(JSON.parse(row.templates_json).invitationManageLinkEnabled, false, 'NOTIFY-009: archive restores the saved invitation manage-link choice');
     }
     const { DeliveryRepository } = await load('../src/core/features/delivery/repository.ts');
     const { DeliveryRecovery } = await load('../src/core/features/delivery/recovery.ts');

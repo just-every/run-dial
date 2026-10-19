@@ -4,14 +4,17 @@ import { evidencePath } from "../../scripts/evidence-path.mjs";
 
 function publicErrorMessage(value) {
   return value.replace(/https?:\/\/[^\s"'<>]+/g, text => {
-    try { const url = new URL(text); return url.origin + url.pathname.replace(/(\/manage\/)[^/]+/g, "$1[capability]"); }
+    try { const url = new URL(text); return url.origin + url.pathname.replace(/(\/manage\/)(?:invite\/)?[^/]+/g, "$1[capability]"); }
     catch { return "[URL]"; }
   });
 }
-export function trackPage(page, errors) {
+export function trackPage(page, errors, expectedResponses = new Map()) {
   page.setDefaultTimeout(30000);
-  page.on("console", message => { if (message.type() === "error" || /hydration|did not match/i.test(message.text())) errors.push({ message: publicErrorMessage(message.text()), location: publicErrorMessage(message.location().url) }); });
-  page.on("response", response => { if (response.status() === 404) errors.push({ message: "HTTP 404", location: publicErrorMessage(response.url()) }); });
+  page.on("console", message => {
+    const expected = expectedResponses.get(message.location().url);
+    if (expected && message.text() === `Failed to load resource: the server responded with a status of ${expected} (${expected === 410 ? "Gone" : "Not Found"})`) return;
+    if (message.type() === "error" || /hydration|did not match/i.test(message.text())) errors.push({ message: publicErrorMessage(message.text()), location: publicErrorMessage(message.location().url) }); });
+  page.on("response", response => { if (response.status() === 404 && expectedResponses.get(response.url()) !== 404) errors.push({ message: "HTTP 404", location: publicErrorMessage(response.url()) }); });
   page.on("pageerror", error => errors.push({ message: publicErrorMessage(error.message) }));
 }
 export function auditor(page, width, scans) {

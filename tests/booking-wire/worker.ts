@@ -30,6 +30,11 @@ export default {
       const tables = ["wire_calls", "wire_events", "booking_reschedule_requests", "booking_request_history", "booking_links", "event_booking_policies", "booking_presentation", "event_correspondence", "booking_correspondence", "base_mail_dispatch", "calendar_connections", "bookings", "booking_occurrences", "booking_nonces", "booking_history", "booking_calendar_conflicts", "delivery_outbox", "delivery_attempts", "availability_requests", "availability_request_windows", "calendar_deletion_probes"];
       return Response.json(Object.fromEntries(await Promise.all(tables.map(async table => [table, (await (table.startsWith("wire_") ? providerDb(env) : env.DB).prepare(`SELECT * FROM ${table}`).all()).results]))));
     }
+    if (url.pathname === "/__fixtures/invitation-start") {
+      const { id, startAt } = await request.json<{ id: string; startAt: string }>();
+      await env.DB.prepare("UPDATE booking_occurrences SET start_at=? WHERE id=(SELECT current_occurrence_id FROM bookings WHERE id=?)").bind(startAt,id).run();
+      return new Response(null,{status:204});
+    }
     if (url.pathname === "/__fixtures/expire-link") {
       const {id}=await request.json<{id:string}>();
       await env.DB.prepare("UPDATE booking_links SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(id).run();

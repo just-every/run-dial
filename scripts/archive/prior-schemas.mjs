@@ -9,7 +9,11 @@ import { migrationFiles } from './schema.mjs';
 // A later migration without an entry ends acceptance: older backups refuse.
 const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
+const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  'core/0065_invitation_rotation_audit.sql': (_table, row) => row,
+  'core/0064_invitation_manage_link.sql': (table, row) => ['event_correspondence', 'booking_correspondence'].includes(table)
+    ? { ...row, templates_json: invitation.get(row.templates_json).templates_json } : row,
   // ALTER TABLE ADD COLUMN without a default: existing links hold NULL.
   'core/0062_offered_times.sql': (table, row) => table === 'booking_links' ? { ...row, offered_slots_json: null, hold_until: null } : row,
   // The same json_set the migration runs on correspondence saved before the switch.

@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
+import { invitationManageJourney } from './invitation-manage-journey.mjs';
 import { bookingMail, textBody, recipient } from './mail-contracts.mjs';
 
 export async function correspondenceJourney({ data, call, state, deliver, future, checks }) {
   const event = await data('/api/app/event-types', { slug: 'commission-planning', title: 'Commission planning', description: 'Plan a piece for your space.', durationMinutes: 30, color: '#176b5a', locationType: 'fixed_link', locationLabel: 'Video call', locationValue: 'https://meet.example.test/commission', listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [{ kind: 'text', label: 'Project goals', required: true, private: false, options: [] }, { kind: 'text', label: 'Private budget', required: false, private: true, options: [] }], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 780, endMinute: 1020 })) }, 201);
   const [goal, budget] = event.questions;
-  const config = { inviteeConfirmationEnabled: true, templates: { rescheduleRequestSubject: null, rescheduleRequestBody: null, rescheduleRequestReminderSubject: null, rescheduleRequestReminderBody: null, calendarTitle: '{invitee full name} & {host name}', calendarDescription: `Project: {event name}\nWhen: {date and time}\nJoin: {location}\nGoals: {answer.${goal.key}}`, confirmationSubject: 'Your studio session, {invitee first name}', confirmationBody: `Hello {invitee first name},\nWe are looking forward to {event name}.\n{date and time}\n{location}\nBudget: {answer.${budget.key}}\n{manage link}`, rescheduleSubject: 'Updated studio time for {invitee first name}', rescheduleBody: 'The new studio time is {date and time}.\n{message}\n{manage link}', cancellationSubject: 'Studio session cancelled for {invitee first name}', cancellationBody: 'Your studio session is cancelled.\n{message}\n{manage link}', reminderSubject: 'See you soon, {invitee first name}', reminderBody: 'Your studio session starts at {date and time}.\n{location}\n{manage link}' } };
+  const config = { invitationManageLinkEnabled: true, inviteeConfirmationEnabled: true, templates: { rescheduleRequestSubject: null, rescheduleRequestBody: null, rescheduleRequestReminderSubject: null, rescheduleRequestReminderBody: null, calendarTitle: '{invitee full name} & {host name}', calendarDescription: `Project: {event name}\nWhen: {date and time}\nJoin: {location}\nGoals: {answer.${goal.key}}`, confirmationSubject: 'Your studio session, {invitee first name}', confirmationBody: `Hello {invitee first name},\nWe are looking forward to {event name}.\n{date and time}\n{location}\nBudget: {answer.${budget.key}}\n{manage link}`, rescheduleSubject: 'Updated studio time for {invitee first name}', rescheduleBody: 'The new studio time is {date and time}.\n{message}\n{manage link}', cancellationSubject: 'Studio session cancelled for {invitee first name}', cancellationBody: 'Your studio session is cancelled.\n{message}\n{manage link}', reminderSubject: 'See you soon, {invitee first name}', reminderBody: 'Your studio session starts at {date and time}.\n{location}\n{manage link}' } };
   const saved = await data(`/api/app/event-types/${event.id}/correspondence`, config, 200, 'PUT');
   assert.deepEqual(saved, config);
   const beforeInvalid = (await state()).event_correspondence;
@@ -33,7 +34,9 @@ export async function correspondenceJourney({ data, call, state, deliver, future
   assert.ok(textBody(confirmations[0]).startsWith('Hello Taylor,')); assert.ok(textBody(confirmations[0]).includes('America/New_York')); assert.match(textBody(confirmations[0]), /UTC-04:00/); assert.ok(textBody(confirmations[0]).includes('Private budget 4200')); assert.ok(!textBody(confirmations[0]).includes('Invitee time:'));
   const calendarWrite = snap.wire_calls.find(row => row.method === 'POST' && new URL(row.url).pathname.includes('/events') && JSON.parse(row.body).extendedProperties?.private?.['dial-booking-id'] === booking.id);
   assert.ok(calendarWrite); const calendar = JSON.parse(calendarWrite.body);
-  assert.equal(calendar.summary, `Taylor Morgan & ${receipt.host.name}`); assert.equal(calendar.start.timeZone, 'America/New_York'); assert.ok(calendar.description.includes('A sculpture for our library')); assert.ok(calendar.description.includes('https://meet.example.test/commission')); assert.ok(!calendar.description.includes('Private budget 4200')); assert.ok(!calendar.description.includes('/manage/'));
+  assert.equal(calendar.summary, `Taylor Morgan & ${receipt.host.name}`); assert.equal(calendar.start.timeZone, 'America/New_York'); assert.ok(calendar.description.includes('A sculpture for our library')); assert.ok(calendar.description.includes('https://meet.example.test/commission')); assert.ok(!calendar.description.includes('Private budget 4200')); assert.ok(calendar.description.includes('/manage/invite/'));
+  const invitation = await invitationManageJourney({ data, call, state, deliver, calendar, receipt, booking, checks });
+  receipt.manageUrl = invitation.replacementUrl;
   const reminder = snap.delivery_outbox.find(row => row.booking_id === booking.id && row.kind === 'reminder' && JSON.parse(row.payload_json).recipientRole === 'invitee');
   await call('/__fixtures/due', { id: reminder.id }, 204); await deliver(); snap = await state();
   const reminderSend = snap.wire_calls.filter(row => new URL(row.url).pathname === '/v3/mail/send').map(row => JSON.parse(row.body)).find(mail => mail.subject === 'See you soon, Taylor');
@@ -45,12 +48,22 @@ export async function correspondenceJourney({ data, call, state, deliver, future
   const changed = bookingMail(snap, booking.id).filter(mail => mail.subject === 'Updated studio time for Taylor'); assert.equal(changed.length, 1); assert.ok(textBody(changed[0]).includes('A new delivery date'));
   const patches = snap.wire_calls.filter(row => row.method === 'PATCH' && new URL(row.url).pathname.includes('/events') && JSON.parse(row.body).extendedProperties?.private?.['dial-booking-id'] === booking.id);
   assert.equal(patches.length, 1); const patch = JSON.parse(patches[0].body); assert.equal(patch.summary, calendar.summary); assert.notEqual(patch.description, calendar.description);
+  assert.ok(patch.description.includes(invitation.invitationUrl), "invitation link is stable across reschedules");
+  config.invitationManageLinkEnabled = false;
+  await data(`/api/app/event-types/${event.id}/correspondence`, config, 200, "PUT");
+  const next = (await data(`${manage}/reschedule/availability?week=${future}`)).slots.find(candidate => candidate.startAt !== newSlot.startAt); assert.ok(next);
+  const nextSelection = await data(`${manage}/reschedule/selection`, { startAt: next.startAt, inviteeTimezone: "America/Los_Angeles" }, 201);
+  await data(`${manage}/reschedule`, { nonce: nextSelection.nonce, startAt: next.startAt, inviteeTimezone: "America/Los_Angeles" }); await deliver();
+  const disabledPatch = (await state()).wire_calls.filter(row => row.method === "PATCH" && new URL(row.url).pathname.includes("/events") && JSON.parse(row.body).extendedProperties?.private?.["dial-booking-id"] === booking.id).at(-1);
+  assert.ok(!JSON.parse(disabledPatch.body).description.includes("/manage/"), "per-event toggle removes invitation capability on calendar update");
   // The last saved templates survive offer deletion for the booking's later cancellation.
   await call(`/api/app/event-types/${event.id}`, undefined, 204, 'DELETE');
   assert.deepEqual(JSON.parse((await state()).booking_correspondence.find(row => row.booking_id === booking.id).templates_json), config);
   await data(`${manage}/cancel`, { reason: 'Travel plans changed' }); await deliver(); snap = await state();
   const cancelled = bookingMail(snap, booking.id).filter(mail => mail.subject === 'Studio session cancelled for Taylor'); assert.equal(cancelled.length, 1); assert.ok(textBody(cancelled[0]).includes('Travel plans changed'));
-  checks.push('NOTIFY-009/CAL-003 configured calendar title/description and invitee confirmation/reminder/change/cancel replace built-ins; private calendar answers and shared manage capabilities refuse; unknown variables and question removal refuse without mutation; duplicate and deleted-offer retention persist');
+  await call(invitation.base, undefined, 410);
+  await call(`${invitation.base}/email`, {}, 410);
+  checks.push('NOTIFY-009/CAL-003 configured calendar title/description and invitee confirmation/reminder/change/cancel replace built-ins; private calendar answers and raw shared manage capabilities refuse; default-on invitation link, stable reschedule URL, per-event off and cancelled refusal; unknown variables and question removal refuse without mutation; duplicate and deleted-offer retention persist');
 }
 
 /** NOTIFY-001: use the public booking door, including mail-first queue order. */
@@ -65,6 +78,7 @@ export async function confirmationChoiceJourney({ data, call, state, deliver, fu
   }, 201);
   const path = `/api/app/event-types/${event.id}/correspondence`;
   const config = await data(path);
+  assert.equal(config.invitationManageLinkEnabled, true, 'NOTIFY-009: new offers include invitation access by default');
   assert.equal(config.inviteeConfirmationEnabled, true, 'NOTIFY-001: existing and new offers send Dial confirmation by default');
   config.inviteeConfirmationEnabled = false;
   await data(path, config, 200, 'PUT');
@@ -97,6 +111,7 @@ export async function confirmationChoiceJourney({ data, call, state, deliver, fu
       const write = snap.wire_calls.find(row => row.method === 'POST' && new URL(row.url).pathname.includes('/events') && JSON.parse(row.body).extendedProperties?.private?.['dial-booking-id'] === booking.id); assert.ok(write);
       assert.equal(new URL(write.url).searchParams.get('sendUpdates'), 'all');
       assert.ok(JSON.parse(write.body).attendees.some(attendee => attendee.email === email));
+      assert.ok(JSON.parse(write.body).description.includes('/manage/invite/'), 'NOTIFY-001: provider invitation carries the default invitation manage capability');
       assert.ok(!snap.base_mail_dispatch.some(row => row.delivery_id === mail.idempotency_key), 'suppression never invokes mail transport');
     } else {
       assert.ok(textBody(invitee[0]).includes('/manage/'));

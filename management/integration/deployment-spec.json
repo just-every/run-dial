@@ -390,6 +390,18 @@
       "name": "0063_invitee_confirmation.sql",
       "sha256": "6334b322c9f63f5f2aa82ca7b06319aae4b5ec37b4dce907aa41b86de77df60e",
       "sql": "-- Existing event and retained booking correspondence continues to send confirmations.\nUPDATE event_correspondence SET templates_json = json_set(templates_json, '$.inviteeConfirmationEnabled', json('true'))\nWHERE json_type(templates_json, '$.inviteeConfirmationEnabled') IS NULL;\nUPDATE booking_correspondence SET templates_json = json_set(templates_json, '$.inviteeConfirmationEnabled', json('true'))\nWHERE json_type(templates_json, '$.inviteeConfirmationEnabled') IS NULL;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0064_invitation_manage_link.sql",
+      "sha256": "c14625cd11c15239f2687dbfc9bcb4e83dcef237d927903768e85de5c94dacfc",
+      "sql": "-- Shared invitations email booking access to the invitee by default. Retained\n-- correspondence carries the choice after an event type is deleted.\nUPDATE event_correspondence SET templates_json = json_set(templates_json, '$.invitationManageLinkEnabled', json('true'))\nWHERE json_type(templates_json, '$.invitationManageLinkEnabled') IS NULL;\nUPDATE booking_correspondence SET templates_json = json_set(templates_json, '$.invitationManageLinkEnabled', json('true'))\nWHERE json_type(templates_json, '$.invitationManageLinkEnabled') IS NULL;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0065_invitation_rotation_audit.sql",
+      "sha256": "6fff279c55b07f05513059ef0abc02a28e18b3bc6a21ca509270f4370a425a7a",
+      "sql": "-- Expand the existing history's action constraint. Preserve every historical\n-- row, column, primary key and foreign key; no token material enters the audit.\nCREATE TABLE booking_request_history_expanded (\n id TEXT PRIMARY KEY NOT NULL,\n booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n occurrence_id TEXT REFERENCES booking_occurrences(id) ON DELETE SET NULL,\n action TEXT NOT NULL CHECK(action IN ('reschedule_requested','reschedule_request_reminded','reschedule_request_picked','reschedule_request_expired','manage_link_rotated')),\n actor_type TEXT NOT NULL CHECK(actor_type IN ('operator','system','invitee')),\n actor_id TEXT,\n reason TEXT,\n created_at TEXT NOT NULL\n);\nINSERT INTO booking_request_history_expanded SELECT * FROM booking_request_history;\nDROP TRIGGER close_reschedule_request_on_pick;\nDROP TABLE booking_request_history;\nALTER TABLE booking_request_history_expanded RENAME TO booking_request_history;\nCREATE TRIGGER close_reschedule_request_on_pick AFTER UPDATE OF current_occurrence_id ON bookings\nWHEN NEW.current_occurrence_id<>OLD.current_occurrence_id BEGIN\n INSERT INTO booking_request_history(id,booking_id,occurrence_id,action,actor_type,created_at)\n SELECT NEW.current_occurrence_id,NEW.id,NEW.current_occurrence_id,'reschedule_request_picked','system',NEW.updated_at\n FROM booking_reschedule_requests WHERE booking_id=NEW.id AND state='open' AND archive_historical=0;\n UPDATE booking_reschedule_requests SET state='picked',updated_at=NEW.updated_at WHERE booking_id=NEW.id AND state='open' AND archive_historical=0;\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

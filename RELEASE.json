@@ -11,7 +11,9 @@
     }
   ],
   "contractChanges": {
-    "DATA-001": "rer import restores a native archive made before migrations 0062 and 0063 (the previously listed release) into the current schema. Rows get those migrations' declared effects (0062 columns NULL, 0063 inviteeConfirmationEnabled true), and the archive's schema proof must match that earlier migration set exactly. Any other schema still refuses. No migration."
+    "DATA-001": "rer import restores a native archive made before migrations 0062 and 0063 (the previously listed release) into the current schema. Rows get those migrations' declared effects (0062 columns NULL, 0063 inviteeConfirmationEnabled true), and the archive's schema proof must match that earlier migration set exactly. Any other schema still refuses. No migration.",
+    "NOTIFY-009": "Default-on, per-event invitation manage links are shared mail-only capabilities. Explicit requests rotate and audit a replacement BOOK-006 capability, email only the stored invitee, and state in the page and email that earlier manage links no longer work. Team/locale templates, direct links, workflow suppression and From/Reply-To previews remain partial.",
+    "NOTIFY-001": "DONE: provider invitations now include NOTIFY-009 invitation manage access. Confirmation defaults on; a successful provider invitation replaces Dial confirmation when switched off. Absent/failed calendar writes still send Dial confirmation."
   },
   "extensionPointChanges": [],
   "migrations": [
@@ -238,8 +240,16 @@
     {
       "id": "0063_invitee_confirmation.sql",
       "buyerSteps": "Back up and apply after 0062. Sets the new invitee-confirmation choice to on for every existing event and booking, so they keep sending confirmations."
+    },
+    {
+      "id": "0064_invitation_manage_link.sql",
+      "buyerSteps": "Back up and apply after 0063. Enables invitation manage access in existing event and retained booking correspondence. Per-event settings can turn it off."
+    },
+    {
+      "id": "0065_invitation_rotation_audit.sql",
+      "buyerSteps": "Apply after 0064. Expands the existing request-history action constraint to record token-free replacement-link audits. Every existing history row is preserved."
     }
   ],
   "breaking": false,
-  "agentUpdateInstructions": "Read this release record's contractChanges before updating from 0.4.1. There are no new migrations: back up first (rer export --output exports/NAME.rer locally, keeping .dev.vars with it; hosted: Settings, Export status, Download backup, and keep .rer/deploy/<environment>.secrets.env), then pull and run rer install, then rer setup locally or rer deploy from the same deploying checkout. Do not reset or replace state to upgrade. A backup made by the previously listed release (before 0062) can now be restored into an empty destination with its original SESSION_SECRET: rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
+  "agentUpdateInstructions": "Read this release record's contractChanges before updating from 0.4.1. The next update adds 0064\u20130065: back up first (rer export --output exports/NAME.rer locally, keeping .dev.vars with it; hosted: Settings, Export status, Download backup, and keep .rer/deploy/<environment>.secrets.env), then pull and run rer install, then rer setup locally or rer deploy from the same deploying checkout. Do not reset or replace state to upgrade. A backup made by the previously listed release (before 0062) can now be restored into an empty destination with its original SESSION_SECRET: rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
 }

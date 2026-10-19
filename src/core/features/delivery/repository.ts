@@ -41,7 +41,7 @@ export class DeliveryRepository {
   async calendarPresentationZone(bookingId: string) {
     return (await this.binding.prepare("SELECT locked_timezone AS zone FROM booking_presentation WHERE booking_id=?").bind(bookingId).first<{ zone: string }>())?.zone;
   }
-  correspondence(bookingId: string, occurrenceId: string) { return new BookingCorrespondenceRepository(this.binding).read(bookingId, occurrenceId); }
+  correspondence(bookingId: string, occurrenceId: string, runtime?: import("../../shared/runtime-env").RuntimeEnvironment) { return new BookingCorrespondenceRepository(this.binding).read(bookingId, occurrenceId, runtime); }
 
   async releasedRescheduleRequest(bookingId:string) { return Boolean(await this.binding.prepare("SELECT 1 FROM booking_reschedule_requests WHERE booking_id=? AND state='open' AND archive_historical=0 AND release_time=1").bind(bookingId).first()); }
   async activeRescheduleRequest(id:string,now:string) { return Boolean(await this.binding.prepare("SELECT 1 FROM booking_reschedule_requests WHERE id=? AND state='open' AND archive_historical=0 AND expires_at>?").bind(id,now).first()); }

@@ -57,3 +57,7 @@
 @media (max-width: 640px) { .pb-timezone-bar { flex-wrap: wrap; } .pb-zone-control { flex: 1 1 200px; } .pb-zone-control input { width: 100%; } }
 .pb-manage .pb-zone-control label { margin-top: 0; }
 .pb-manage .pb-timezone-bar { width: 100%; }
+
+.pb-invitation > section { display: grid; gap: 18px; }
+.pb-invitation h1 { margin: 0; }
+.pb-invitation .pb-primary-button { justify-self: center; }

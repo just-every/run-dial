@@ -4,6 +4,7 @@ import type { BookingHistoryEntry, BookingRecord } from "../types";
 import { startTime } from "./operator-time";
 
 const actions: Record<BookingHistoryEntry["action"], string> = {
+  manage_link_rotated: "Manage link replaced",
   created: "Created", cancelled: "Cancelled", rescheduled: "Rescheduled",
   attendance_marked: "Attendance recorded", calendar_cancelled: "Cancelled by calendar provider",
   reschedule_requested: "Invitee asked to pick a new time", reschedule_request_reminded: "Reschedule request reminder sent",
