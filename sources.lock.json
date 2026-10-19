@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "491a8d2c0e3a4857ef8dace078c4ca7c3aca6793b3f8030934fb12b9a85a92b0",
+      "sha256": "677ddb9c102856949ba8d8bdc4b3a795ee7f8c1d056e224d7e05b32ea5910232",
       "executable": false
     },
     "DEMO.md": {
@@ -3576,11 +3576,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "83557b8be5c557e30efee1e7470f0618e7de0c028d23725521da4129c68c261f",
+      "sha256": "fa841af2f7a38d09b0d0e7471716c279f8319d1ff9ce6434d3c6b8a5e859cfc9",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "2c52508b7aeeb21f493bcd85c48603336e2787b4dfd86b764fcecb21af696ac7",
+      "sha256": "37aecd13fdb80217a787bc5fce6b0cdee3558a2912443dd73d9906a7c54a3540",
       "executable": false
     },
     "public/brand/band.svg": {
@@ -3608,7 +3608,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "06e8c00c6ac7ec6de2e439b8d29a7bf5ee2cabcc52130ee9dea2eee01f0d455b",
+      "sha256": "2c8cf4cf0fbb7bba37769bcf8a9e8e6e7a93598f57617a3f061f8a02570f0e10",
       "executable": false
     },
     "RELEASE.md": {
@@ -4223,6 +4223,10 @@
       "sha256": "c31c80b486737d9f5ac884596432fcb1b0ec0d6efb44db60557a4a3ad429d310",
       "executable": false
     },
+    "scripts/verify-booking-record.mjs": {
+      "sha256": "c8dd62dad275f728215786b9ed4d74038389c820efd64d3c4aad5f94318398d0",
+      "executable": false
+    },
     "scripts/verify-deletion-ordering.mjs": {
       "sha256": "e20fbcaffd3bf365945ccccc9bbf2e9997b85347469fa18eb038b843eea4c8db",
       "executable": false
@@ -4824,7 +4828,11 @@
       "executable": false
     },
     "src/core/features/bookings/ui/delivery-actions.tsx": {
-      "sha256": "14bcd8152af40e54cb11ace93776a2e78b7d444a737163be9c153bb446be2901",
+      "sha256": "1ab318a0289b902368cb23cbc29a06fc687e3dbc8c19778c9ae87e0b6c5ba6be",
+      "executable": false
+    },
+    "src/core/features/bookings/ui/delivery-list.tsx": {
+      "sha256": "eb669cf300a4750bb8b3a5fefdd8dfb2e21d2e0b2dc688df3a1b9a395f1df9e6",
       "executable": false
     },
     "src/core/features/bookings/ui/operator-location.tsx": {
@@ -4948,7 +4956,7 @@
       "executable": false
     },
     "src/core/features/delivery/recovery.ts": {
-      "sha256": "bb8ffe98d761812cbac569d5751a08b0f9d58d91f405cd9e15d565386a1fb157",
+      "sha256": "3c62fa5969a7ad9e90b464cc7527271694663e60e341f2a93dfa04d61f16b7f6",
       "executable": false
     },
     "src/core/features/delivery/reminders.ts": {
@@ -5656,7 +5664,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/confirmation-page.tsx": {
-      "sha256": "e6e82682653ace73270f390733fc7a66c3ed528daee7925637d807cd6a7a5833",
+      "sha256": "3af5c46318647f3330e3ccab3ff21ff23d2bfb8637fdd4719a82eae89011191d",
       "executable": false
     },
     "src/core/features/public-booking/ui/contact-host.tsx": {
@@ -5736,7 +5744,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/public-booking.css": {
-      "sha256": "b549d0a14b8dddc47aef02f4ddb2bc5e65ee0cc1d14f0a708c7579740a25bf34",
+      "sha256": "30465b9b6ebb0a85fe781540fe31a1136187d3d4629f7026e046c048401e2c7b",
       "executable": false
     },
     "src/core/features/public-booking/ui/public-forms.css": {
@@ -6752,7 +6760,7 @@
       "executable": false
     },
     "tests/booking-axe.test.mjs": {
-      "sha256": "d567bcf7be692c579b09263e5d69fc4c606c6d43312616484b6c9e324d733736",
+      "sha256": "686040a89608687751f2a924b6ab6478c9a8b59a4559d724d456b916203b3971",
       "executable": false
     },
     "tests/booking-axe/acceptance-avatar-boundary.mjs": {
@@ -6772,7 +6780,7 @@
       "executable": false
     },
     "tests/booking-axe/acceptance-records.mjs": {
-      "sha256": "936ac1f7008580d029f7c2a0847748bfc27b5088d01b1dc48f8e2219ea2bdfd0",
+      "sha256": "55b4e094b77429ac4275ebbe5cfb5e018218c99f65fac0906d878b6f40a2feab",
       "executable": false
     },
     "tests/booking-axe/audit.mjs": {
@@ -6780,7 +6788,7 @@
       "executable": false
     },
     "tests/booking-axe/booking.mjs": {
-      "sha256": "3e72786c572f7aa36a2eff8a228714d7ba7f01df86816af8790884850b7cc4f9",
+      "sha256": "38ad0b8b23b143f3770282d50811bb34428801132bf9c3f80f90e2fd66b4207f",
       "executable": false
     },
     "tests/booking-axe/day-picker.mjs": {
