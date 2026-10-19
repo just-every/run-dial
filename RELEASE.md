@@ -1,6 +1,6 @@
 # Releasing Dial
 
-The public source repository is `just-every/run-dial` (`https://github.com/just-every/run-dial`). The current version is 0.4.0, declared consistently by package, seed and release metadata. Releases are annotated tags `vVERSION` created by `rer release --tag` from a green main commit, which also writes the producer bundle; the first release was `v0.1.0`. Live Google Calendar and Meet acceptance on a real account is not yet proven; see HANDOVER.md and ACCEPTANCE.md.
+The public source repository is `just-every/run-dial` (`https://github.com/just-every/run-dial`). The current version is 0.4.1, declared consistently by package, seed and release metadata. Releases are annotated tags `vVERSION` created by `rer release --tag` from a green main commit, which also writes the producer bundle; the first release was `v0.1.0`. Live Google Calendar and Meet acceptance on a real account is not yet proven; see HANDOVER.md and ACCEPTANCE.md.
 
 Before a release, freeze and independently verify the candidate, refresh and check its complete source lock, review migration/update instructions, and run Base's publication checks against the exact intended public tree. Keep private authoring history and historical evidence private. The actual parentless export must have a complete history scan with zero findings, source bytes and modes that match exactly, and an exact clean-clone verify receipt. A no-tag dry-run must record DRY_RUN, no created/pushed tag and publicExport null. No preparation claim substitutes for these receipts.
 

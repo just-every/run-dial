@@ -1,5 +1,9 @@
 # Dial handover
 
+## Release 0.4.1 (19 Oct 2026)
+
+- 0.4.1 fixes native export, hosted Download backup, restore and erasure on databases installed by RER Managed, whose `rer_migrations` ledger 0.4.0 did not classify (`scripts/archive/policy.mjs`, `scripts/archive/migration-ledger.mjs`, `src/core/features/erasure/portability.ts`). `tests/export-deploy-ledger.test.mjs` round-trips a Platform-installed database built with Platform's exact ledger DDL. It also carries the per-event invitee-confirmation switch (migration 0063) and the one-hour NOTIFY-005 retry bound.
+
 ## Release 0.4.0 (19 Oct 2026)
 
 - 0.4.0 is cut from main `7191fe8` plus the rer 0.2.65 pin. Its gate (CHANGELOG.md) ran the homepage jobs locally at 1440 and 390 px and on a disposable hosted deployment with SendGrid and real inboxes, upgraded a populated 0.3.0 install in place, and restored a hosted backup into an empty local install with the same content hash. Hosted restore is not exposed, and live Google Calendar and Meet were not exercised (CHANGELOG.md known issues).

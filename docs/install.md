@@ -24,10 +24,10 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
    ```
 
    To start it again later, run `cd run-dial && rer dev`. The default clone follows
-   `main`. For the tagged **v0.4.0** release instead, clone it yourself:
+   `main`. For the tagged **v0.4.1** release instead, clone it yourself:
 
    ```bash
-   git clone --branch v0.4.0 https://github.com/just-every/run-dial.git dial
+   git clone --branch v0.4.1 https://github.com/just-every/run-dial.git dial
    cd dial
    ```
 

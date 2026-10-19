@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.1 — 2026-10-19
+
+Dial 0.4.1 fixes backups on RER Managed. It is cut from main and pins rer 0.2.65.
+
+- **Backups work on an install that RER Managed set up.** On 0.4.0, Download backup (Settings → Export status), `rer export` and restore stopped with `archive-unclassified-schema`, so you could not back up or move your Dial. RER Managed keeps a record of the migrations it applied in a table called `rer_migrations`, and Dial did not recognise it. Dial now recognises that record, checks that it lists exactly this release's migrations with their hashes, never puts it in the archive and leaves the destination's own record untouched when it restores. Any other unknown table still stops a backup, as before.
+- **Erasing a person works on RER Managed.** Erasing a person or an operator on a Managed install stopped with `unclassified_table:rer_migrations` for the same reason; it now goes ahead.
+- **Invitee confirmations can be switched off per event.** When the calendar invitation already reaches the invitee, an event type can turn off Dial's own confirmation email. It is on for every existing event. Only a calendar invitation that was actually sent replaces it, and a confirmation that was not sent is labelled Not sent in the booking record.
+- **Failed emails are retried within an hour.** A provider's request to wait longer no longer pushes retries past one hour after the first attempt.
+
+Migration `0063_invitee_confirmation.sql` is additive: it turns the new invitee-confirmation choice on for existing events and bookings, so they keep sending confirmations.
+
+Back up first (on a Managed install where 0.4.0 refused the backup, update first and then download it). Locally: stop dev, run `rer export --output exports/before-0.4.1.rer` and keep `.dev.vars` with it, then pull and run `rer install`, `rer setup` and `rer dev`. Hosted: download a backup at Settings → Export status → Download backup, copy `.rer/deploy/<environment>.secrets.env` from the deploying checkout, then pull and `rer deploy` the same environment from that checkout. RER Managed applies the migration itself.
+
+The known issues listed for 0.4.0 still apply.
+
 ## 0.4.0 — 2026-10-19
 
 Dial 0.4.0 is the next regular release after 0.3.0. It is cut from main and pins rer 0.2.65.
