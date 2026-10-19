@@ -80,6 +80,10 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
     <Card className="min-w-0 p-5 sm:p-6">
       <h2 className="text-lg font-semibold text-ink">Invitation and email templates</h2>
       <p className="mt-2 text-sm leading-6 text-soft">Edit the calendar invitation and booking emails for this event type. Saving applies these templates to future messages. Restore a default to use the wording shown below.</p>
+      <label className="mt-5 flex items-start gap-3 text-sm font-semibold">
+        <input type="checkbox" className="mt-0.5 h-6 w-6 shrink-0 accent-ink" checked={value.inviteeConfirmationEnabled} disabled={disabled} onChange={event => { setValue(current => ({ ...current, inviteeConfirmationEnabled: event.target.checked })); setStatus(""); setError(""); }} />
+        <span>Send Dial confirmation to invitees<span className="mt-1 block font-normal leading-6 text-soft">When off, a successful calendar invitation replaces this email. Dial still sends its confirmation when no calendar is connected or a calendar write fails. This applies to confirmations that have not yet been sent.</span></span>
+      </label>
       {!loaded ? <p role="status" className="mt-4 text-sm text-soft">{error ? "Templates are unavailable." : "Loading templates…"}</p> : null}
       <div className="mt-5 grid min-w-0 gap-5">
         <label className="grid gap-2 text-sm font-semibold">Template

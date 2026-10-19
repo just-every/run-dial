@@ -384,6 +384,12 @@
       "name": "0062_offered_times.sql",
       "sha256": "53395825224778c14ddbc4757a246c90d0f232070042bbe9d0eed25d8aea4104",
       "sql": "-- Offered times retain their definition; only a live private token activates a hold.\nALTER TABLE booking_links ADD COLUMN offered_slots_json TEXT;\nALTER TABLE booking_links ADD COLUMN hold_until TEXT;\nCREATE INDEX booking_links_active_holds_idx ON booking_links(hold_until) WHERE consumed_at IS NULL AND revoked_at IS NULL;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0063_invitee_confirmation.sql",
+      "sha256": "6334b322c9f63f5f2aa82ca7b06319aae4b5ec37b4dce907aa41b86de77df60e",
+      "sql": "-- Existing event and retained booking correspondence continues to send confirmations.\nUPDATE event_correspondence SET templates_json = json_set(templates_json, '$.inviteeConfirmationEnabled', json('true'))\nWHERE json_type(templates_json, '$.inviteeConfirmationEnabled') IS NULL;\nUPDATE booking_correspondence SET templates_json = json_set(templates_json, '$.inviteeConfirmationEnabled', json('true'))\nWHERE json_type(templates_json, '$.inviteeConfirmationEnabled') IS NULL;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

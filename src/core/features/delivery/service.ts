@@ -206,6 +206,16 @@ export class ProviderDeliveryService {
       const kind = record.kind === "reminder" ? "reminder" : payload.messageKind;
       if (kind === "confirmation" || kind === "reschedule" || kind === "cancellation" || kind === "reminder" || kind === "rescheduleRequest" || kind === "rescheduleRequestReminder") {
         const data = await this.repository.correspondence(record.bookingId, record.occurrenceId);
+        if (kind === "confirmation" && data?.config.inviteeConfirmationEnabled === false) {
+          // Queue order is not authority. Under the booking coordinator, attempt
+          // the pending calendar write first; any failure still sends Dial mail.
+          const calendar = await this.repository.confirmations.calendar(record);
+          if (calendar?.state === "pending" && calendar.outboxId) await this.process({ outboxId: calendar.outboxId }, now);
+          if ((await this.repository.confirmations.calendar(record))?.state === "succeeded") {
+            await this.repository.confirmations.suppress(record);
+            return undefined;
+          }
+        }
         if (data) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now));
       }
     }

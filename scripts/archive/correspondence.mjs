@@ -8,7 +8,7 @@ export function validateCorrespondence(name, row) {
   if (!['event_correspondence', 'booking_correspondence'].includes(name)) return;
   let config;
   try { config = JSON.parse(row.templates_json); } catch { throw new Error('archive-invalid-correspondence'); }
-  if (!object(config) || Object.keys(config).length !== 1 || !Object.hasOwn(config, 'templates') || !object(config.templates)
+  if (!object(config) || Object.keys(config).some(key => !['templates', 'inviteeConfirmationEnabled'].includes(key)) || Object.hasOwn(config, 'inviteeConfirmationEnabled') && typeof config.inviteeConfirmationEnabled !== 'boolean' || !Object.hasOwn(config, 'templates') || !object(config.templates)
     || Object.keys(config.templates).some(key => !keys.includes(key)) || keys.slice(0, 10).some(key => !Object.hasOwn(config.templates, key))) throw new Error('archive-invalid-correspondence');
   for (const key of keys) {
     const template = config.templates[key];

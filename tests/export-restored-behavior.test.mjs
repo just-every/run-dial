@@ -43,10 +43,14 @@ contract('CAL-006', 'restored Calendar requires reauthorization for a connected 
     } finally { disconnected.db.close(); }
   } finally { source.db.close(); target.db.close(); }
 });
-contract('BASE-OPS-003', 'restored outbox, retries, deletion probes and erasure reconciliation cannot recreate historical provider effects', async () => {
+contract('BASE-OPS-003', 'NOTIFY-001 confirmation choice survives restore; restored outbox, retries, deletion probes and erasure reconciliation cannot recreate historical provider effects', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
     const destination = testPlatform(target.db); await restoreArchive(destination, await createArchive(testPlatform(source.db)));
+    for (const table of ['event_correspondence', 'booking_correspondence']) {
+      const row = target.db.prepare(`SELECT templates_json FROM ${table}`).get();
+      assert.equal(JSON.parse(row.templates_json).inviteeConfirmationEnabled, false, 'NOTIFY-001: archive restores the saved confirmation choice');
+    }
     const { DeliveryRepository } = await load('../src/core/features/delivery/repository.ts');
     const { DeliveryRecovery } = await load('../src/core/features/delivery/recovery.ts');
     const { CalendarDeletionProbesRepository } = await load('../src/core/features/bookings/deletion-probes.ts');

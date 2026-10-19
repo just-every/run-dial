@@ -5,7 +5,7 @@ export const correspondenceTemplateKeys = ["calendarTitle", "calendarDescription
 export type CorrespondenceVariable = typeof correspondenceVariables[number];
 export type CorrespondenceTemplateKey = typeof correspondenceTemplateKeys[number];
 export type CorrespondenceQuestion = { key: string; label: string; private?: boolean };
-export type CorrespondenceConfig = { templates: Record<CorrespondenceTemplateKey, string | null> };
+export type CorrespondenceConfig = { inviteeConfirmationEnabled: boolean; templates: Record<CorrespondenceTemplateKey, string | null> };
 /** Values are already formatted for the recipient, including the named timezone. */
 export type CorrespondenceValues = Record<CorrespondenceVariable, string> & { answers: Readonly<Record<string, string>> };
 const questionKeyPattern = /^q_[A-Za-z0-9_-]{10,80}$/u;
@@ -15,7 +15,7 @@ const singleLineKey = (key: CorrespondenceTemplateKey) => key === "calendarTitle
 export function correspondenceConfigSchema(questions: readonly CorrespondenceQuestion[] = []) {
   const questionKeys = questions.map(({ key }) => key);
   const shape = Object.fromEntries(correspondenceTemplateKeys.map((key) => [key, z.string().min(1).max(singleLineKey(key) ? 500 : 10_000).nullable().default(null)])) as Record<CorrespondenceTemplateKey, z.ZodDefault<z.ZodNullable<z.ZodString>>>;
-  return z.object({ templates: z.object(shape).strict().default(emptyTemplates()) }).strict().superRefine((config, context) => {
+  return z.object({ inviteeConfirmationEnabled: z.boolean().default(true), templates: z.object(shape).strict().default(emptyTemplates()) }).strict().superRefine((config, context) => {
     for (const key of correspondenceTemplateKeys) {
       const template = config.templates[key];
       if (template === null) continue;
@@ -31,7 +31,7 @@ export function correspondenceConfigSchema(questions: readonly CorrespondenceQue
 }
 
 export function defaultCorrespondenceConfig(): CorrespondenceConfig {
-  return { templates: emptyTemplates() };
+  return { inviteeConfirmationEnabled: true, templates: emptyTemplates() };
 }
 
 function emptyTemplates(): CorrespondenceConfig["templates"] {
@@ -105,7 +105,7 @@ export function renderCorrespondenceTemplate(template: string, values: Correspon
 
 export function renderMailCorrespondence(config: CorrespondenceConfig, kind: "confirmation" | "reschedule" | "cancellation" | "reminder" | "rescheduleRequest" | "rescheduleRequestReminder", values: CorrespondenceValues, options: { questions?: readonly CorrespondenceQuestion[] } = {}) {
   const questions = options.questions ?? [];
-  const parsed = z.object({ templates: correspondenceConfigSchema().shape.templates }).strict().parse(config);
+  const parsed = z.object({ inviteeConfirmationEnabled: z.boolean().default(true), templates: correspondenceConfigSchema().shape.templates }).strict().parse(config);
   const templates = editableCorrespondenceTemplates(parsed, questions);
   const keys = questions.map(({ key }) => key);
   const subject = renderCorrespondenceTemplate(templates[`${kind}Subject`], values, keys, true);
