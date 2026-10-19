@@ -21,7 +21,7 @@ bytes and a manifest of hashes, sizes and capture times. Existing folders are re
 Manual capture uses `/users/me`, `/event_types?user=...`,
 `/user_availability_schedules?user=...`,
 `/event_type_availability_schedules?event_type=...`,
-`/scheduled_events?user=...&min_start_time=...` (active and cancelled, so a later
+`/scheduled_events?user=...&min_start_time=...` (active and canceled, so a later
 catch-up can see cancellations and reschedules), and each event's `/invitees`,
 following every `pagination.next_page` including empty pages. Create
 manifest version 1 with capturedAt and files with name, resource, page, size,
@@ -38,7 +38,7 @@ or skipped item. Download its JSON report, validated against
 | Source | Dial |
 | --- | --- |
 | User name, zone, slug | Creates host only if none exists; saved profile stays |
-| Solo standard event | Draft title, plain description, default duration, colour and visibility |
+| Solo standard event | Draft title, plain description, default duration, color and visibility |
 | Several duration options | Default retained; alternatives reported as dropped |
 | Group, pooled, collective, ad hoc, poll | Skipped with reason |
 | Text, multiline, single/multiple choice questions | Required/order retained; phone and disabled questions skipped; free other choice dropped |
@@ -48,20 +48,20 @@ or skipped item. Download its JSON report, validated against
 | Schedule zone differs | Adopt source zone for new host or skip availability; change an existing host's zone in Profile first |
 | Undocumented schedule settings | Dial defaults: 15-minute increment, 240-minute notice, 60-day horizon, zero buffers, unlimited daily limit; all reported |
 | Active future event, one active invitee | Confirmed Imported booking; actual occupied times, answers and source location |
-| Past, cancelled, multiple invitees, skipped event | Skipped and counted |
+| Past, canceled, multiple invitees, skipped event | Skipped and counted |
 | Overlapping confirmed booking | Rejected, named and timed in host zone |
 
 Choose a location, zone or skipped event, then preview again. The first preview upload
 captures its as-of instant; selecting files alone does not capture it. Repeated
 previews and choice changes use that same upload time. Selecting the files again
-starts a fresh upload review and requires a fresh acknowledgement. Applying and
+starts a fresh upload review and requires a fresh acknowledgment. Applying and
 resuming preserve the exact reviewed instant, including its past-booking
 classification. An unapplied upload review expires after 30 minutes, or when
 you undo an import or sign in with a new session (including after archive
 restore); select the files again to start a new review. A runtime restart with
 the same signed-in session preserves the pending review. Applied jobs
 resume from their saved plan without the upload or that time limit. Applying requires
-acknowledgement of losses, overlaps and changes and the same reviewed fingerprint.
+acknowledgment of losses, overlaps and changes and the same reviewed fingerprint.
 Continue import commits bounded batches and shows progress. Reloading lists saved
 jobs; resume needs only the stored job and current operator session. Revocation
 stops every mutation.
@@ -77,7 +77,7 @@ and whole-install archives. A later operator cancellation sends one ordinary
 cancellation email to the invitee and leaves the source calendar entry alone.
 
 Undo removes unchanged imported records and retains edited, published,
-rescheduled, cancelled, attended or noted records with reasons. Events with new
+rescheduled, canceled, attended or noted records with reasons. Events with new
 native bookings and required parents stay. With the prior import still present,
 identical saved data reports “already here” and creates no duplicates. After a
 full undo, the same source can be previewed and applied again as a new idempotent
@@ -87,14 +87,14 @@ the retained conflicts.
 
 ## Catch up from a newer capture
 
-Keep Calendly live while Dial runs beside it: invitees keep booking, cancelling
+Keep Calendly live while Dial runs beside it: invitees keep booking, canceling
 and rescheduling there. After an import is applied, capture again with the same
 command into a new folder and select those files in **Settings → Move in**. A
 capture of the same Calendly account previews as a **catch-up**:
 
 - Records already saved by an applied import are matched by their source identity
   and left exactly as Dial holds them, including anything you edited, published,
-  rescheduled or cancelled in Dial. They are never imported twice or overwritten,
+  rescheduled or canceled in Dial. They are never imported twice or overwritten,
   and the catch-up does not save another copy of them.
 - New event types and new future single-invitee bookings get the same losses,
   overlap rejections and choices as a first import, stay drafts or arrive
@@ -115,8 +115,8 @@ future with the new capture and lists one difference for each:
 | Difference | What Dial does |
 | --- | --- |
 | Unchanged | Nothing |
-| Moved at source | Shows both times in your zone. Calendly reschedules by cancelling the old event and booking a new one; that new event is listed here, not imported as a second booking. Keep the Dial time, or reschedule in Bookings (the ordinary reschedule emails the invitee). |
-| Cancelled at source | **Release this time** cancels the Dial booking, frees its time and buffers and records you and the reason in history without emailing the invitee, because Calendly already told them. Or cancel in Bookings, which sends one ordinary cancellation email, or keep it. |
+| Moved at source | Shows both times in your zone. Calendly reschedules by canceling the old event and booking a new one; that new event is listed here, not imported as a second booking. Keep the Dial time, or reschedule in Bookings (the ordinary reschedule emails the invitee). |
+| Canceled at source | **Release this time** cancels the Dial booking, frees its time and buffers and records you and the reason in history without emailing the invitee, because Calendly already told them. Or cancel in Bookings, which sends one ordinary cancellation email, or keep it. |
 | Invitee changed | Keep the Dial booking, or change it in Bookings |
 | No longer in the capture | Keep it, or cancel it in Bookings |
 
