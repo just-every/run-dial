@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readArchive } from '@runeditrun/rer/modules/portability';
@@ -26,7 +26,8 @@ contract('DATA-001', 'a backup made by the listed release restores through rer i
     await checkout(root);
     const settings = await readFile(join(root, '.dev.vars'), 'utf8');
     await writeFile(join(root, '.dev.vars'), settings.replace(/^SESSION_SECRET=.*$/m, `SESSION_SECRET=${salt}`), { mode: 0o600 });
-    await copyFile(fixture, join(root, 'exports/prior.rer'));
+    // rer import reads only an owner-private input, whatever mode the checkout gave the fixture.
+    await copyFile(fixture, join(root, 'exports/prior.rer')); await chmod(join(root, 'exports/prior.rer'), 0o600);
     await run(root, ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes']);
 
     const records = []; for await (const record of readArchive(new Blob([await readFile(fixture)]).stream())) records.push(record);
