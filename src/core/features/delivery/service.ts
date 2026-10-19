@@ -58,14 +58,17 @@ export class ProviderDeliveryService {
     } catch (error) {
       const failure = asProviderFailure(error);
       const backoff = retryDelaysMs[record.attempts - 1];
-      const delay = backoff === undefined ? undefined : Math.max(backoff, (failure.retryAfterSeconds ?? 0) * 1000);
-      const retryable = failure.retryable && delay !== undefined;
+      const remainingMs = Date.parse(record.firstAttemptAt) + 60 * 60_000 - now.getTime();
+      // Provider throttling cannot extend NOTIFY-005's retry window. At the
+      // deadline, remaining retries are due immediately; late work is final.
+      const delay = backoff === undefined ? undefined : Math.min(Math.max(backoff, (failure.retryAfterSeconds ?? 0) * 1000), remainingMs);
+      const retryable = failure.retryable && delay !== undefined && remainingMs >= 0;
       if (failure.code === "unauthorized" && ["mail_send", "reminder"].includes(record.kind)) await this.repository.setMailHealth("unhealthy", failure.code);
       await this.repository.failed(record, {
         retryable,
         errorCode: failure.code,
         nextAttemptAt: retryable ? new Date(now.getTime() + delay).toISOString() : undefined,
-      });
+      }, now.toISOString());
       return retryable ? "retrying" : "failed";
     }
   }

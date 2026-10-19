@@ -20,6 +20,7 @@ export type DeliveryOutboxRecord = {
   requestId: string | null;
   payloadJson: string;
   attempts: number;
+  firstAttemptAt: string;
 };
 
 export class DeliveryRepository {
@@ -73,6 +74,7 @@ export class DeliveryRepository {
         requestId: deliveryOutbox.requestId,
         payloadJson: deliveryOutbox.payloadJson,
         attempts: deliveryOutbox.attempts,
+        firstAttemptAt: sql<string>`COALESCE((SELECT MIN(attempted_at) FROM delivery_attempts WHERE outbox_id = ${id}), ${now})`,
       })
       .from(deliveryOutbox)
       .where(and(eq(deliveryOutbox.id, id), eq(deliveryOutbox.state, "processing")));
@@ -88,8 +90,7 @@ export class DeliveryRepository {
     ]);
   }
 
-  async failed(record: DeliveryOutboxRecord, input: { retryable: boolean; errorCode: string; nextAttemptAt?: string }) {
-    const timestamp = nowIso();
+  async failed(record: DeliveryOutboxRecord, input: { retryable: boolean; errorCode: string; nextAttemptAt?: string }, timestamp = nowIso()) {
     const retry = input.retryable && record.attempts < 6 && input.nextAttemptAt;
     await this.binding.batch([
       // A rejected or lost response cannot prove that an in-flight upsert had no

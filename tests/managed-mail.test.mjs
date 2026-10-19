@@ -9,7 +9,7 @@ import { senderHealthJourney } from './mail-connection/health-journey.mjs';
 import { bookingRelayJourney, bookingStatusScreens } from './mail-connection/booking-journey.mjs';
 import { editorReadinessJourney } from './mail-connection/editor-readiness-journey.mjs';
 
-test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner', async t => {
+test('NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner', async t => {
   let browser, context;
   // After hooks run in registration order. Drain browser requests while their
   // Worker is still alive, then close the browser before the fixture disposes it.
@@ -18,8 +18,9 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
     finally { await browser?.close(); }
   });
   const calls = [], relay = 'https://platform.example.test/api/managed-mail/send';
-  let status = 202;
-  const f = await emittedFixture(t, { MAIL_PROVIDER: 'rer', MAIL_API_KEY: 'synthetic-managed-credential', MAIL_RELAY_URL: relay }, async request => {
+  let status = 202, retryAfter = '180';
+  const managedConfig = { MAIL_PROVIDER: 'rer', MAIL_API_KEY: 'synthetic-managed-credential', MAIL_RELAY_URL: relay };
+  const outbound = async request => {
     assert.equal(request.url, relay);
     assert.equal(request.method, 'POST');
     // A network receiver cannot see fetch options. Native acceptance plus the
@@ -32,8 +33,9 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
     if (!Object.keys(body).length) return Response.json({ error: 'Invalid message' }, { status: status === 401 ? 401 : 400 });
     assert.deepEqual(Object.keys(body).sort(), ['html', 'subject', 'text', 'to']);
     assert.ok(['invitee@example.test', 'owner@example.test'].includes(body.to));
-    return Response.json(status === 202 ? { accepted: true } : { error: 'sensitive provider body must not reach Dial' }, { status, headers: status === 429 ? { 'Retry-After': '180' } : {} });
-  });
+    return Response.json(status === 202 ? { accepted: true } : { error: 'sensitive provider body must not reach Dial' }, { status, headers: status === 429 ? { 'Retry-After': retryAfter } : {} });
+  };
+  const f = await emittedFixture(t, managedConfig, outbound);
   assert.equal((await f.request('/api/app/mail/check', {})).status, 200);
   assert.equal((await f.fetch('/api/app/profile', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Robin Miller', handle: 'robin', title: 'Independent consultant', biography: 'Practical conversations about your next project.', timezone: 'Australia/Brisbane', focusAreas: [], socialProof: [] }) })).status, 200);
   const created = await f.request('/api/app/event-types', { title: 'Project conversation', slug: 'project-conversation', description: 'Talk through your next project with Robin.', durationMinutes: 30, color: '#f08c52', locationType: 'phone', locationLabel: 'Phone call', locationValue: '+61755550123', listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 15, minimumNoticeMinutes: 240, bookingHorizonDays: 60, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, availability: [{ weekday: 1, startMinute: 540, endMinute: 1020 }] });
@@ -72,6 +74,35 @@ test('the emitted Worker sends Managed sign-in mail, refuses redirects, queues t
   const operatorAt = Date.now();
   assert.equal(await processDelivery('managed-operator-throttled'), 'pending');
   assert.ok(Date.parse((await row('managed-operator-throttled')).next_attempt_at) >= operatorAt + 180_000, 'Retry-After survives the native notification coordinator');
+  retryAfter = '86400';
+  const bounded = await fixture(t, managedConfig, outbound);
+  await bounded.db.prepare("INSERT INTO delivery_outbox(id,kind,idempotency_key,payload_json,state,attempts,next_attempt_at,created_at,updated_at) VALUES('bounded','mail_send','bounded',?,'pending',0,?,?,?)")
+    .bind(JSON.stringify({ to: 'invitee@example.test', subject: 'Retry window', text: 'Your conversation is confirmed.', html: '<p>Your conversation is confirmed.</p>' }), at, at, at).run();
+  let retryAt = at;
+  const deadline = Date.parse(at) + 60 * 60_000;
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    const result = await (await bounded.request('/__fixture/process', { outboxId: 'bounded', now: retryAt })).json();
+    const record = await bounded.db.prepare("SELECT state,attempts,last_error_code,next_attempt_at FROM delivery_outbox WHERE id='bounded'").first();
+    assert.equal(record.attempts, attempt);
+    assert.equal(record.last_error_code, 'quota_exhausted');
+    assert.equal(result.result, attempt < 6 ? 'retrying' : 'failed');
+    assert.equal(record.state, attempt < 6 ? 'pending' : 'failed');
+    if (attempt < 6) {
+      assert.ok(Date.parse(record.next_attempt_at) <= deadline, `NOTIFY-005: attempt ${attempt} due ${record.next_attempt_at}, first ${at}, current ${retryAt}`);
+      assert.ok(Date.parse(record.next_attempt_at) >= Date.parse(retryAt));
+      if (attempt === 1) {
+        const sent = calls.length;
+        assert.equal((await (await bounded.request('/__fixture/process', { outboxId: 'bounded', now: at })).json()).result, 'not_due');
+        assert.equal(calls.length, sent);
+      }
+      retryAt = record.next_attempt_at;
+    }
+  }
+  const sent = calls.length;
+  assert.equal((await (await bounded.request('/__fixture/process', { outboxId: 'bounded', now: retryAt })).json()).result, 'not_due');
+  assert.equal(calls.length, sent, 'a final failed command is not sent again');
+  await bounded.close();
+  retryAfter = '180';
   status = 401;
   await enqueue('managed-retired');
   assert.equal(await processDelivery('managed-retired'), 'failed');
