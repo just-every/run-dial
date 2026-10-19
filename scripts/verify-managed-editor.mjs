@@ -15,7 +15,7 @@ let app, browser;
 try {
   app = await admissionRuntime({ managementOrigin: edge.origin });
   edge.state.allowed = app.origin;
-  assert.equal((await app.call('/api/editor/config')).status, 403);
+  assert.equal((await app.call('/api/editor/config')).status, 403, 'EDITOR-001: a sessionless caller receives no editor grant');
   const admitted = await app.call('/auth/owner-claim', { token: app.token(), returnTo: '/app' });
   assert.equal(admitted.status, 303);
   let cookie = sessionCookie(admitted);
@@ -44,7 +44,7 @@ try {
       page.on('console', message => { if (message.type() === 'error' && /frame-ancestors|framing/i.test(message.text())) framingRefusals.push(true); });
       await page.goto(app.origin + '/app');
       await page.waitForURL('**/signin?**');
-      assert.equal(await page.locator('[data-rer-editor]').count(), 0);
+      assert.equal(await page.locator('[data-rer-editor]').count(), 0, 'EDITOR-001: a sessionless document carries no editor configuration');
       const [name, value] = cookie.split('='); await context.addCookies([{ name, value, url: app.origin, httpOnly: true, sameSite: 'Lax' }]);
       const document = await page.goto(app.origin + '/app');
       assert.equal(document.status(), 200);
@@ -99,8 +99,8 @@ try {
       results.push({ width, nativeOwner: true, anonymousGate: true, compiledSourceEdits: true, routeRemounts: true, focusDraftContinuity: true, concurrentFocus: true, exactCsp: true, browserCspRefusal: true, leaseExpiry: true, sessionRevocation: true, logout: true });
     } finally { await context.close(); }
   }
-  await writeFile(evidencePath('managed-editor-results.json'), JSON.stringify({ results, externalNetwork: false, scope: 'Local native Worker and exact Base editor with local management edge; hosted acceptance remains separate.' }, null, 2));
-  console.log('Managed editor browser journey passed at 1440 and 390.');
+  await writeFile(evidencePath('managed-editor-results.json'), JSON.stringify({ clause: 'EDITOR-001', results, externalNetwork: false, scope: 'Local native Worker and exact Base editor with local management edge; hosted acceptance remains separate.' }, null, 2));
+  console.log('[EDITOR-001] Managed editor browser journey passed at 1440 and 390: grant lifetime, revocation, framing origins and sessionless refusal.');
 } finally {
   try { await browser?.close(); await app?.close(); }
   finally { await Promise.all([writeFile(snapshotFile, originalSnapshot), edge.close()]); }
