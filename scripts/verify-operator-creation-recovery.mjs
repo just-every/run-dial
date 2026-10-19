@@ -92,7 +92,7 @@ try {
     const linkedReceipts = await Promise.all(linkedResponses.map((response) => response.json())), winner = linkedReceipts[0];
     assert.equal(new Set(linkedReceipts.map((receipt) => receipt.id)).size, 1);
     state = await snapshot(); proveOne(state, linked, winner.id);
-    const handled = state.availability_requests.find((row) => row.id === request.id); assert.equal(handled.state, "handled"); assert.equal(handled.booking_id, winner.id);
+    const handled = state.availability_requests.find((row) => row.id === request.id); assert.equal(handled.state, "handled", "REQUEST-003: a booking created from a request marks it handled"); assert.equal(handled.booking_id, winner.id, "REQUEST-003: the request links the booking made from it");
     assert.equal(state.delivery_outbox.filter((row) => row.request_id === request.id && row.idempotency_key === `request:${request.id}:invitee:handled`).length, 1);
     before = effects(state); assert.equal((await create(linked, 200, fixture.operatorEmail)).id, winner.id); assert.deepEqual(effects(await snapshot()), before);
     mark("four parallel linked attempts use the real serialized Durable Object and recover one booking; handling and acknowledgement commit once, and later replay bypasses resolved eligibility");

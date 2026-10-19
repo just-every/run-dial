@@ -48,11 +48,19 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   await keys.activate(opener, "Reopen native DOM dialog");
   await keys.activate(button(dialog, "Close"), "Close native DOM dialog"); await dialog.waitFor({ state: "hidden" });
   await keys.restored(opener, "Native DOM dialog Close");
+  const effects = async () => { const native = await get(page, origin, "/__fixtures/status"); return { commands: native.delivery_outbox.filter(row => row.booking_id === booking.id).map(row => row.id), event: native.fixture_events.find(row => row.booking_id === booking.id) }; };
+  const effectsBefore = await effects(), markedFrom = Date.now();
   await mutation(page, `/api/app/bookings/${booking.id}/attendance`, () => keys.native(button(page, "Mark attended"), "Confirm attendance", "prompt", true, "Keyboard attendance note"));
   await page.getByText("Attendance: attended", { exact: true }).waitFor();
   checks.push({ width, check: "Attendance confirmation leaves logical focus on its result", passed: await page.getByRole("status", { name: "Booking update" }).evaluate(el => el === globalThis.document.activeElement) });
   const attended = await get(page, origin, `/api/app/bookings/${booking.id}`);
   assert.equal(attended.attendance.status, "attended"); assert.equal(attended.attendance.note, "Keyboard attendance note");
+  // BOOK-011: the mark records its operator and time, keeps the lifecycle state, and queues no mail or calendar command.
+  assert.equal(attended.attendance.operatorId, (await get(page, origin, "/api/app/operators")).currentOperatorId, "BOOK-011: the mark records the signed-in operator");
+  assert.ok(Date.parse(attended.attendance.markedAt) >= markedFrom - 1000 && Date.parse(attended.attendance.markedAt) <= Date.now() + 1000, "BOOK-011: the mark records its time");
+  assert.ok(attended.history.some(entry => entry.action === "attendance_marked" && entry.actorType === "operator" && entry.actorId === attended.attendance.operatorId), "BOOK-011: the booking record shows the mark");
+  assert.equal(attended.state, before.state, "BOOK-011: attendance changes no lifecycle state");
+  assert.deepEqual(await effects(), effectsBefore, "BOOK-011: attendance sends nothing and changes no calendar event");
   const cancel = button(page, "Cancel booking");
   await keys.native(cancel, "Dismiss booking cancellation prompt", "prompt", false);
   await page.waitForLoadState("networkidle");

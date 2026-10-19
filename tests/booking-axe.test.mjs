@@ -49,6 +49,7 @@ contract("PUBLIC-001", "BOOK-005 pending-to-ready receipt and headless axe cover
 contract("AVAIL-005", "native browser timezone search, privacy, invalid input and day/zone history persist", gate);
 contract("BOOK-007", "native Brisbane reschedule picker, one confirm and held old slot work from a New York browser", gate);
 contract("BOOK-008", "cancellation asks confirmation and cancelled bookings expose no change controls", gate);
+contract("BOOK-011", "an ended booking marked attended with a note records its operator and time in the booking record, keeps its state and sends nothing", gate);
 contract("HOME-001", "the installed Lobby passes axe at desktop and mobile and leaves browser storage empty after reload", gate);
 contract("DOCS-001", "every published docs page passes axe at desktop and mobile, and docs navigation leaves browser storage empty", gate);
 
