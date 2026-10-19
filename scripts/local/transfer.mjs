@@ -7,6 +7,7 @@ import { absent, privateFile, promote } from '@runeditrun/rer/modules/portabilit
 import { readSettings } from '@runeditrun/rer/adapter-settings';
 import { snapshotInput } from './archive-input.mjs';
 import { dialPolicy, guardedBucket } from './archive-policy.mjs';
+import { restoreMigrations } from './migration-replay.mjs';
 async function* records(path) {
  const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
  try { yield* readArchive(Readable.toWeb(file.createReadStream({ autoClose: false }))); }
@@ -22,7 +23,7 @@ async function moveArchive(direction, path, journal) {
  const temporary = path + '.partial';
  try {
   const { policy, knownSecrets } = await dialPolicy(proxy.env.DB, vars);
-  service = await createPortability({ db: proxy.env.DB, buckets: { FILES: guardedBucket(proxy.env.FILES, knownSecrets) }, policy });
+  service = await createPortability({ db: proxy.env.DB, buckets: { FILES: guardedBucket(proxy.env.FILES, knownSecrets) }, policy, migrations: () => restoreMigrations(proxy.env.DB, policy) });
   if (direction === 'export') {
    const file = await privateFile(temporary); temporaryOwned = true;
    try {

@@ -1,0 +1,44 @@
+import { DatabaseSync } from 'node:sqlite';
+import { migrationReplay } from '@runeditrun/rer/modules/portability/migration-history';
+import { applicationCatalog, catalogQuery } from './catalog.mjs';
+import { migrationFiles } from './schema.mjs';
+
+// A backup made before Dial's latest migrations restores through Base's
+// acceptedSchemas. Each later migration states here exactly what it does to a
+// row that already existed, so a restored row ends as that migration leaves it.
+// A later migration without an entry ends acceptance: older backups refuse.
+const json = new DatabaseSync(':memory:');
+const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
+export const rowUpgrades = {
+  // ALTER TABLE ADD COLUMN without a default: existing links hold NULL.
+  'core/0062_offered_times.sql': (table, row) => table === 'booking_links' ? { ...row, offered_slots_json: null, hold_until: null } : row,
+  // The same json_set the migration runs on correspondence saved before the switch.
+  'core/0063_invitee_confirmation.sql': (table, row) => ['event_correspondence', 'booking_correspondence'].includes(table)
+    ? { ...row, templates_json: confirmation.get(row.templates_json).templates_json } : row,
+};
+
+/** Each earlier migration set whose later migrations all declare their row upgrade:
+ * its Base schema identity under `policy`, the schema proof that Dial's export of
+ * that set carries (the same files and hashes, and the catalog they create), and
+ * the composed row upgrade. A set whose schema matches the current one (later
+ * migrations changed only data) is left to Base's own migration placement. */
+export async function priorSchemas(policy) {
+  const files = await migrationFiles(), result = [];
+  const identity = names => migrationReplay(files.map(m => ({ name: m.file, statements: [m.sql], sha256: m.sha256 })), policy).schemaAfter(names);
+  const current = await identity(files.map(m => m.file));
+  for (let k = files.length - 1; k > 0 && Object.hasOwn(rowUpgrades, files[k].file); k--) {
+    const earlier = files.slice(0, k), later = files.slice(k).map(m => rowUpgrades[m.file]);
+    const db = new DatabaseSync(':memory:');
+    let catalog;
+    try { for (const { sql } of earlier) db.exec(sql); catalog = applicationCatalog(db.prepare(catalogQuery).all()); }
+    finally { db.close(); }
+    const schema = await identity(earlier.map(m => m.file));
+    if (schema === current) continue;
+    result.push({
+      identity: schema,
+      proof: JSON.stringify({ migrations: earlier.map(({ file, sha256 }) => ({ file, sha256 })), catalog }),
+      upgradeRow: (table, row) => later.reduce((value, upgrade) => upgrade(table, value), row),
+    });
+  }
+  return result;
+}

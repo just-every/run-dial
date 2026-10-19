@@ -13,18 +13,24 @@ import { validSqlValue } from './json-values.mjs';
 import { quote, tableQuery, catalogQuery, applicationCatalog } from './catalog.mjs';
 export { quote, tableQuery, catalogQuery, applicationCatalog } from './catalog.mjs';
 export const hash = value => createHash('sha256').update(value).digest('hex');
+// Dial's migration files in application order, with their exact bytes.
+export async function migrationFiles() {
+  const result = [];
+  for (const directory of ['core', 'ext']) {
+    const path = new URL(`../../migrations/${directory}/`, import.meta.url);
+    const files = await readdir(path).catch(error => { if (directory === 'ext' && error.code === 'ENOENT') return []; throw error; });
+    for (const file of files.filter(name => name.endsWith('.sql')).sort()) {
+      const sql = await readFile(new URL(file, path), 'utf8');
+      result.push({ file: `${directory}/${file}`, sql, sha256: hash(sql) });
+    }
+  }
+  return result;
+}
 export async function schemaModel() {
   const db = new DatabaseSync(':memory:');
   const migrations = [];
   try {
-    for (const directory of ['core', 'ext']) {
-      const path = new URL(`../../migrations/${directory}/`, import.meta.url);
-      const files = await readdir(path).catch(error => { if (directory === 'ext' && error.code === 'ENOENT') return []; throw error; });
-      for (const file of files.filter(name => name.endsWith('.sql')).sort()) {
-        const sql = await readFile(new URL(file, path), 'utf8');
-        db.exec(sql); migrations.push({ file: `${directory}/${file}`, sha256: hash(sql) });
-      }
-    }
+    for (const { file, sql, sha256 } of await migrationFiles()) { db.exec(sql); migrations.push({ file, sha256 }); }
     assertCoverage(db.prepare(tableQuery).all().map(row => row.name));
     return { db, migrations, catalog: applicationCatalog(db.prepare(catalogQuery).all()), columns: Object.fromEntries(exported.map(name => [name, db.prepare(`PRAGMA table_info(${quote(name)})`).all().map(column => column.name)])) };
   } catch (error) { db.close(); throw error; }

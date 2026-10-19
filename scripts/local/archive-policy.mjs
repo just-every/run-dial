@@ -2,6 +2,7 @@ import { canonicalRow, collectSecrets, excluded } from '../archive/policy.mjs';
 import { environmentSecrets } from '../archive/secrets.mjs';
 import { exportPolicy } from '../archive/export-policy.mjs';
 import { schemaModel, validateRows, assertSchema } from '../archive/schema.mjs';
+import { priorSchemas } from '../archive/prior-schemas.mjs';
 
 const quote = name => '"' + name.replaceAll('"', '""') + '"';
 export async function dialPolicy(db, vars) {
@@ -13,7 +14,18 @@ export async function dialPolicy(db, vars) {
   schemaProof = JSON.stringify({ migrations: model.migrations, catalog: model.catalog });
  } finally { model.db.close(); }
  const result = await exportPolicy(db, vars, schemaProof);
+ // A backup from an earlier migration set restores through its declared row
+ // upgrades, and must carry exactly that set's schema proof.
+ const priors = await priorSchemas(result.policy), current = result.policy.extraPayloads['schema-proof'];
+ let prior;
+ result.policy.acceptedSchemas = Object.fromEntries(priors.map(({ identity, upgradeRow }) => [identity, { upgradeRow }]));
+ result.policy.extraPayloads['schema-proof'] = { produce: current.produce, async consume(stream) {
+  if (!prior) return current.consume(stream);
+  if (await new Response(stream).text() !== prior.proof) throw Error('archive-schema-mismatch');
+ } };
  result.policy.validateStaged = async function({ db, read, manifest }) {
+    // Base consumes payloads after staged validation; bind the proof to this archive's schema.
+    prior = priors.find(entry => entry.identity === manifest.schema);
     // Preserve Dial's exact authority graph and historical command guarantees.
     const tables = await Promise.all(manifest.tables.map(async table => ({ name: table.name, rows: await read(table.name) })));
     const model = await schemaModel();
