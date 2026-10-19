@@ -7,7 +7,12 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { contract } from "./contract.mjs";
 
-contract("NOTIFY-001", "native per-operator mail preferences apply at delivery time and persist through restart", async (context) => {
+let journey;
+const gate = (context) => journey ??= preferencesJourney(context);
+contract("NOTIFY-001", "native per-operator mail preferences apply at delivery time and persist through restart", gate);
+contract("NOTIFY-008", "single-host recipients: the invitee and every operator as host get each booking mail, a muted operator's booking mail is suppressed at send time without touching the invitee or the other operator, and request notices reach every operator", gate);
+
+async function preferencesJourney(context) {
   const persist = await mkdtemp(resolve(tmpdir(), "dial-mail-preferences-"));
   const cwd = new URL("../", import.meta.url), config = "tests/mail-preferences/worker.wrangler.toml", origin = "http://127.0.0.1:15706";
   let server, output = "";
@@ -40,4 +45,4 @@ contract("NOTIFY-001", "native per-operator mail preferences apply at delivery t
     await stop(); await start(); console.log((await run("node", ["scripts/verify-mail-preferences.mjs", "--after-restart"])).trim());
     assert.doesNotMatch(output, /Can.t read from request stream|Error inside ProxyWorker|Uncaught TypeError/);
   } catch (error) { throw new Error(`${error.message}\nRuntime output:\n${output.slice(-14000)}`); }
-});
+}
