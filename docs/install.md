@@ -24,15 +24,15 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
    ```
 
    To start it again later, run `cd run-dial && rer dev`. The default clone follows
-   `main`. For the tagged **v0.2.0** release instead, clone it yourself:
+   `main`. For the tagged **v0.4.0** release instead, clone it yourself:
 
    ```bash
-   git clone --branch v0.2.0 https://github.com/just-every/run-dial.git dial
+   git clone --branch v0.4.0 https://github.com/just-every/run-dial.git dial
    cd dial
    ```
 
    A tag retains its own dependency pins. This guide describes current `main`,
-   which pins **rer 0.2.22**.
+   which pins **rer 0.2.65**.
 
 2. From a checkout you cloned yourself, start Dial:
 
@@ -66,17 +66,9 @@ normal fresh-checkout `rer dev` already does this preparation with its local
 development owner. Once the default owner has been created, keep using it on
 later runs; choose a custom owner before the first launch.
 
-To exercise Dial's email-link sign-in instead of the automatic development
-identity, start it with `--login`:
-
-```bash
-rer dev --login
-```
-
-Open the `RER_SIGN_IN` outbox, choose the newest message, then choose **Open this
-link** and **Confirm**. No email is sent. Each sign-in link works once. While
-Dial is running, `rer outbox --owner-email EMAIL` requests a fresh link for that
-owner and prints the outbox address again.
+Local Dial sends no email and keeps no outbox: outgoing messages are checked
+and then suppressed. The older `rer dev --login` flag is still accepted and uses
+the same automatic sign-in. Email-link sign-in is for a deployed install.
 
 `rer dev` reloads the app as you edit the source. Stop it with Ctrl-C or with
 the command below:
@@ -108,7 +100,7 @@ settings and setup's own records. It keeps the source, the dependencies, your
 archives in `exports/` and your deploy records in `.rer/deploy`. The next
 `rer dev` prepares a fresh, empty Dial whose owner starts setup again.
 
-Local setup does not connect Google Calendar. Choosing **Publish event type** turns on automatic bookings for fixed-link, phone and in-person event types using saved weekly availability, existing Dial bookings and the local outbox. Without a connected calendar, external calendar conflicts are not checked. Google Meet requires a healthy connected Google Calendar that supports Meet. To explore calendar integration, run the review demo, which uses a synthetic calendar and mail at `http://127.0.0.1:15702`. Sign in as `operator@dial.test` through its local outbox. Never use it for real bookings.
+Local setup does not connect Google Calendar. Choosing **Publish event type** turns on automatic bookings for fixed-link, phone and in-person event types using saved weekly availability, existing Dial bookings; locally, booking mail is checked and suppressed, never delivered. Without a connected calendar, external calendar conflicts are not checked. Google Meet requires a healthy connected Google Calendar that supports Meet. To explore calendar integration, run the review demo, which uses a synthetic calendar and mail at `http://127.0.0.1:15702`. Sign in as `operator@dial.test` through its local outbox. Never use it for real bookings.
 
 ```bash
 pnpm run review
@@ -118,7 +110,7 @@ The review demo is an optional package script that needs pnpm 10.12.4 on your
 `PATH`; it is not part of the normal `rer dev` path.
 
 > [!WARNING]
-> Local mode is for one person on one machine. The local outbox shows sign-in links in plain view, so any process or user on your computer that can reach it can sign in as the owner. Keep `.dev.vars`, `.wrangler`, `.seed` and `exports/` private, and out of git.
+> Local mode is for one person on one machine. The `RER_OPEN` link and the dev-key cookie it leaves sign in as the owner, so any process or user on your computer that can read them can sign in as the owner. Keep `.dev.vars`, `.wrangler`, `.seed` and `exports/` private, and out of git.
 
 ## Deploy to Cloudflare
 
@@ -183,7 +175,7 @@ After a healthy deploy, `rer` claims the hosted owner and removes the one-time s
 
 If the email does not arrive, check the owner address, SendGrid credentials, verified sender and mailbox delivery. A successful deploy or health check does not prove email delivery. A setup token cannot sign you in after the owner has been claimed.
 
-Dial pins **rer 0.2.22**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
+Dial pins **rer 0.2.65**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
 
 ```bash
 rer signin
@@ -260,4 +252,4 @@ For an installation deployed under another environment, name that same environme
 rer deploy --remove --yes --environment staging
 ```
 
-Removal permanently deletes the Worker and the D1, R2, KV and queue resources that this environment's deploy record proves rer created, then reads back that each is gone. For Dial this includes the hosted database and stored files. It touches no resources outside that record. Do not delete the receipt before removal. `rer reset --yes` only clears local state and does not remove a hosted installation.
+Removal permanently deletes the Worker and the D1, R2, KV and queue resources that this environment's deploy record proves rer created, then reads back that each is gone. For Dial this includes the hosted database and stored files. It touches no resources outside that record. Do not delete the receipt before removal. Removal also deletes `.rer/deploy/<environment>.secrets.env`, which holds the installation's `SESSION_SECRET`; a hosted backup cannot be restored without it, so copy that file somewhere private first (see [Backups and export](backups.md#keep-your-session-secret)). `rer reset --yes` only clears local state and does not remove a hosted installation.

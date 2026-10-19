@@ -53,7 +53,6 @@ The archive never holds a secret or a live key.
 
 - No Google access or refresh credentials, no sessions, no sign-in or invitation links, no setup or webhook secrets.
 - No private manage links for bookings, and no saved email bodies that contain them.
-- Nothing from the local development outbox.
 - Not your private settings in `.dev.vars`, including your session secret.
 
 Your Cloudflare token, SendGrid key and Google client secrets are not in the archive either. Keep them wherever you already keep them.
@@ -61,6 +60,8 @@ Your Cloudflare token, SendGrid key and Google client secrets are not in the arc
 ## Keep your session secret
 
 Dial uses the `SESSION_SECRET` in `.dev.vars` to match retry and erasure records for bookings, and a restore refuses settings whose secret does not match the archive. Keep a private copy of `.dev.vars` with your archives, never inside the archive itself and never in git. Reset removes `.dev.vars`, so copy it first.
+
+A hosted install keeps its `SESSION_SECRET` in `.rer/deploy/<environment>.secrets.env` in the checkout that deployed it. `rer deploy --remove` deletes that file, so copy it somewhere private before you remove an installation. To restore a hosted archive, put that `SESSION_SECRET` line in the empty destination's `.dev.vars`.
 
 ## Restore into an empty install
 
@@ -81,7 +82,7 @@ Restore only works into an install that has no data at all: no owner, no rows an
 
 3. Put your original `.dev.vars` back in the checkout root, readable only by you.
 4. Put the archive in `exports/`, readable only by you, and run the import command above. Import applies the migrations itself, checks the whole archive, then restores it.
-5. Run setup with the original owner's email, start Dial, and sign in through the local outbox:
+5. Run setup with the original owner's email and start Dial; `rer dev` prints the `RER_OPEN` link that signs you in as that owner:
 
    ```bash
    pnpm run setup -- \

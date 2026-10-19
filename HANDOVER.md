@@ -1,5 +1,9 @@
 # Dial handover
 
+## Release 0.4.0 (19 Oct 2026)
+
+- 0.4.0 is cut from main `7191fe8` plus the rer 0.2.65 pin. Its gate (CHANGELOG.md) ran the homepage jobs locally at 1440 and 390 px and on a disposable hosted deployment with SendGrid and real inboxes, upgraded a populated 0.3.0 install in place, and restored a hosted backup into an empty local install with the same content hash. Hosted restore is not exposed, and live Google Calendar and Meet were not exercised (CHANGELOG.md known issues).
+
 ## Latest changes (15 Oct 2026)
 
 - Public `main` was `9b37c951b52065de5f46f3d3f7e1aa2c7c5b7127` before this round. [Verify 38653389135](https://github.com/just-every/run-dial/actions/runs/38653389135) succeeded on that exact SHA. [Run site 38653389156](https://github.com/just-every/run-dial/actions/runs/38653389156) succeeded on the same SHA; its deploy job ran `rer deploy --site`, then read back `/run` as HTTP 200 and `www` root as HTTP 301 to the canonical domain. That baseline certifies only that SHA; each later head is certified by its own exact-SHA Verify run.

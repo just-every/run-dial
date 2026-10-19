@@ -1,8 +1,8 @@
 {
-  "version": "0.3.0",
-  "previousVersion": "0.2.0",
-  "date": "2026-10-16",
-  "publicReleaseNotes": "Dial 0.3.0 adds RER Managed mail, one-time owner sign-in links from rer signin, and sign-in email prefill from login_hint. Local development no longer captures mail. Additive migrations 0047-0050.",
+  "version": "0.4.0",
+  "previousVersion": "0.3.0",
+  "date": "2026-10-19",
+  "publicReleaseNotes": "Dial 0.4.0 lets a host offer one to four meeting lengths, several locations including Ask invitee, phone and dropdown questions, scheduling horizons, booking-frequency limits, shared schedules with US holidays and time off, a locked meeting timezone, per-event change cut-offs, a thank-you-page redirect, correspondence templates, asking an invitee to pick a new time, single-use links and host-offered specific times. Booking records show each email's delivery state. Additive migrations 0051-0062. Product screenshot: .github/assets/screenshots/bookings-1440.png",
   "screenshots": [
     {
       "path": ".github/assets/screenshots/bookings-1440.png",
@@ -11,12 +11,48 @@
     }
   ],
   "contractChanges": {
-    "NOTIFY-006": "Product mail is sent from the configured verified sender, any address on a verified domain (for example hello@ or bookings@), not only a no-reply address. Dial never reads mail delivered to that address, so a reply still never creates a booking, request or notification. The sender check, publication readiness and every send use the same rule. No migration is required.",
-    "HOME-001": "The installed Lobby and /setup/state both use completed onboarding: owner admission alone keeps Finish setup, completion switches it to Sign in. The setup-token hint appears only for editions that declare manual token claims; Dial's CLI claims its owner automatically, so Dial no longer shows it. Anonymous requests pass host and public rate checks before archive admission. No migration is required.",
-    "AUTH-006": "Adds deployment owner sign-in links minted by rer signin with the deployment's own Cloudflare credentials (migration 0049). Only the SHA-256 of each link token is stored; a link survives link scanners, admits once and refuses stale authority. Grants and authentication audit remain installation-local, are excluded from archives and are covered by operator erasure. Provider controls and dependency setup (migrations 0047 and 0048) are additive and default to off.",
-    "BASE-OPS-001": "Mail can use RER Managed mail (MAIL_PROVIDER=rer): Managed hosting supplies MAIL_RELAY_URL, the sender and the installation credential. Relay sends use Base's adapter with durable once-only admission, Retry-After-aware queue backoff and a visible owner notice when the credential is refused; the readiness probe sends no mail. Direct SendGrid and Resend installs keep their provider setup. Local development and demo mode now suppress mail entirely: the captured outbox and its sign-in links are retired, and rer dev opens signed in as the owner. Migration 0050 adds the rer provider to connection health without changing existing rows.",
-    "BOOK-005": "Confirmation receipts show a disabled, explicitly pending join control while provisioning is pending and replace it with the stored joining URL when ready. Existing native browser journeys exercise both states at 1440 and 390. No migration or authority change.",
-    "OPER-004": "Booking records list each delivery separately, identify emails by recipient and subject, and show queued, processing, sent, retrying and failed states with recorded reasons. Original failures remain visible after a separate retry succeeds. Sent means provider acceptance. Native operator browser proof covers records and recovery at 1440 and 390; no migration or authority change."
+    "EVENT-001": "An event type offers one to four durations with a default, and Duplicate makes an independent draft copy with every location, question, schedule binding and correspondence template. Workspace capacity, team templates and workflows remain open (partial). Migrations 0053 and 0060.",
+    "EVENT-002": "Adds the 45-minute start increment and a booking horizon that is rolling (calendar days or weekdays), a fixed date range or indefinite up to the lookahead limit. Existing event types keep their behaviour. Migration 0052.",
+    "EVENT-003": "Adds phone-number questions (validated and stored as E.164; US numbers accepted in national format) and dropdown questions with stable options. CRM field mapping awaits the integrations (partial). Migration 0051 rebuilds event_questions with the same rows.",
+    "EVENT-004": "An event type can offer several locations, and the invitee chooses one before confirming; Ask invitee and the invitee's own phone number are new kinds. Invitees see only public labels before booking; the chosen private value goes to the receipt, mail, calendar and operator record. Zoom, Teams, Webex and GoTo remain open (partial). Migration 0060.",
+    "EVENT-011": "New: invitees choose among the offered lengths, and availability, booking, rescheduling, calendar, .ics, notices and reminders use the chosen length (partial: pricing, teams, webhooks and reports remain open). Migration 0053.",
+    "LINK-001": "New: single-use and one-off private booking links with 256-bit hashed capabilities, expiry, revocation and a used state (done). Migration 0061.",
+    "LINK-002": "New: a host offers specific live times by link or email, with configurable or no holds that release atomically on booking, expiry or revocation (done). Migration 0062.",
+    "LINK-003": "New: booking links and embeds can prefill name, email and answers, and bounded UTM and source values are saved on the booking and shown in its record, export and erasure (partial). Migration 0054.",
+    "AUTH-007": "New: private booking-link capabilities (see LINK-001 and LINK-002) are bound to their event or record, single-use where declared, and not restored as live authority from an archive (partial). Migration 0061.",
+    "AVAIL-010": "New: per-day, per-week and per-month count and minute caps, per event or across events, enforced atomically at booking and reschedule (partial: host and role scope wait for teams). Migration 0055.",
+    "AVAIL-011": "New: shared named schedules, copying hours between events, US federal holidays with per-date reopening, and multi-day time off (partial). Migration 0055.",
+    "AVAIL-012": "New: an event type can lock its displayed timezone; the picker, details, receipt, manage page, booking mail, reminders and .ics carry the locked zone (partial). Migration 0056.",
+    "BOOK-005": "The receipt shows a disabled, explicitly pending join control while a meeting link is being provisioned and replaces it with the stored link when ready; an event with a redirect sends the invitee to the host's page instead (BOOK-013). No migration.",
+    "BOOK-009": "An operator can ask the invitee to pick a new time instead of choosing it (BOOK-014). Role and delegation scope remain open (partial). Migration 0058.",
+    "BOOK-013": "New: an event type can send invitees to the host's own HTTPS thank-you page after booking, passing only the selected committed fields; the confirmation email still carries the manage link (partial). Migration 0054.",
+    "BOOK-014": "New: the host asks the invitee to pick a new time, with a message, an optional reminder and an expiry, holding or releasing the original time; the booking, manage link and calendar event stay the same (partial). Migration 0058.",
+    "BOOK-015": "New: separate per-event rescheduling and cancellation cut-offs and a maximum number of invitee reschedules, refused atomically with a typed reason (partial). Migration 0056.",
+    "NOTIFY-009": "New: per-event templates for the calendar invitation and the invitee's confirmation, change, cancellation, reminder and request mail, with escaped previews and refusal of unknown or private variables (partial). Migration 0057.",
+    "CAL-003": "The managed Google event's title and description follow the event type's invitation template and update on reschedule, without private answers or manage tokens (partial). Migration 0057.",
+    "OPER-004": "Booking records list each delivery separately, identify emails by recipient and subject, and show queued, processing, sent, retrying and failed states with recorded reasons; an original failure stays visible after a retry succeeds. Sent means provider acceptance. No migration.",
+    "OPER-005": "Local development signs the owner in through rer's printed RER_OPEN link (Base development sign-in); a fresh owner opens /setup and a completed owner /app, with no sign-in mail or captured-mail inbox. No migration.",
+    "NOTIFY-006": "Adds the Reply-To rule of NOTIFY-010 to the sender clause; the assigned-host Reply-To, the per-event No-reply choice and its notice are not in this release (partial). No migration.",
+    "AUTH-001": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "OPER-001": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "OPER-002": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "OPER-003": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "EDITOR-001": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "PROFILE-001": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "PUBLIC-006": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "AVAIL-008": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "BOOK-011": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "BOOK-012": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "CAL-001": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "REQUEST-003": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "REQUEST-004": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "DATA-002": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "DATA-003": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "CUSTOM-001": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "NOTIFY-001": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "NOTIFY-003": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "NOTIFY-004": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration.",
+    "NOTIFY-007": "This clause now states the multi-host target: people, roles and scope under OPER-001. Dial 0.4.0 implements the single-host case, where every operator is an owner; the role rules are not in this release (Status: partial). No migration."
   },
   "extensionPointChanges": [],
   "migrations": [
@@ -195,8 +231,52 @@
     {
       "id": "0050_managed_mail_health.sql",
       "buyerSteps": "Back up and apply after 0049. Rebuilds provider_connection_health with the same columns and rows, adding the rer provider to its allowed values. Existing provider health is copied unchanged."
+    },
+    {
+      "id": "0051_phone_dropdown_questions.sql",
+      "buyerSteps": "Back up and apply after 0050. Rebuilds event_questions with the same rows to allow phone-number and dropdown questions; existing questions are copied unchanged."
+    },
+    {
+      "id": "0052_booking_horizons.sql",
+      "buyerSteps": "Back up and apply after 0051. Replaces event_types.slot_increment_minutes with a copy that also allows 45 (values copied unchanged) and adds booking horizon columns; existing event types keep their rolling calendar-day horizon."
+    },
+    {
+      "id": "0053_event_duration_options.sql",
+      "buyerSteps": "Back up and apply after 0052. Adds duration options to event_types, filled from each event's existing duration."
+    },
+    {
+      "id": "0054_booking_link_context.sql",
+      "buyerSteps": "Back up and apply after 0053. Adds nullable redirect and link-attribution columns to event types, questions and bookings; existing rows are unchanged."
+    },
+    {
+      "id": "0055_availability_controls.sql",
+      "buyerSteps": "Back up and apply after 0054. Adds named schedules, schedule bindings and booking-limit tables and their indexes; existing events keep their own hours."
+    },
+    {
+      "id": "0056_booking_policy.sql",
+      "buyerSteps": "Back up and apply after 0055. Adds per-event booking-policy and locked-timezone presentation tables; absent rows keep the deployment's policy."
+    },
+    {
+      "id": "0057_correspondence.sql",
+      "buyerSteps": "Back up and apply after 0056. Adds per-event correspondence templates and their per-booking snapshots; events without a template keep the built-in wording."
+    },
+    {
+      "id": "0058_reschedule_requests.sql",
+      "buyerSteps": "Back up and apply after 0057. Adds reschedule-request tables and an occurrence column that marks held time; existing occurrences keep blocking their time."
+    },
+    {
+      "id": "0060_event_location_options.sql",
+      "buyerSteps": "Back up and apply after 0058 (there is no 0059). Adds a nullable locations column to event_types; existing events keep their single location."
+    },
+    {
+      "id": "0061_booking_links.sql",
+      "buyerSteps": "Back up and apply after 0060. Adds private booking-link tables (token hashes only) and a nullable link column on booking nonces."
+    },
+    {
+      "id": "0062_offered_times.sql",
+      "buyerSteps": "Back up and apply after 0061. Adds offered-time and hold columns to booking links and an index for active holds."
     }
   ],
   "breaking": false,
-  "agentUpdateInstructions": "Read this release record\u2019s contractChanges and migrations before updating from 0.2.0. Preserve authored data, existing local or deployed state, native operator and setup identities, durable setup-completion markers, and every already-applied migration byte. Back up first: stop dev or preview with rer dev --stop or rer preview --stop and export to a new path with rer export --output exports/NAME.rer, keeping the archive and the original private settings, including SESSION_SECRET, outside local state. Then apply only the new migrations 0047 to 0050 in filename order through the owner-authorized deployment procedure in OPERATIONS.md. Do not reset or replace state to upgrade. All four are additive; 0050 copies provider health rows unchanged.\n\nMail: an install keeping SendGrid or Resend needs no change, and its sender may now be any verified address on its domain. A Managed install selects MAIL_PROVIDER=rer; Managed hosting supplies MAIL_RELAY_URL, MAIL_FROM and the credential. Local development no longer captures mail: rer dev opens signed in as the owner through its printed RER_OPEN link, and no sign-in link or outbox is printed or served. Owners of a hosted install can get a one-time sign-in link with rer signin. Restore only into an empty destination with the original settings, then rer import --input exports/NAME.rer --yes. No live provider, deployment or release acceptance is claimed."
+  "agentUpdateInstructions": "Read this release record's contractChanges and migrations before updating from 0.3.0. Preserve authored data, existing local or deployed state, native operator and setup identities, durable setup-completion markers, and every already-applied migration byte. Back up first. Locally: stop dev or preview and export to a new path with rer export --output exports/NAME.rer, keeping the archive and the original .dev.vars (including SESSION_SECRET) outside local state. Hosted: sign in as the owner, open Settings, Export status, Download backup, keep the .rer file private, and copy .rer/deploy/<environment>.secrets.env from the deploying checkout; rer deploy --remove deletes that file and a hosted archive cannot be restored without its SESSION_SECRET. Then pull, run rer install, and apply only the new migrations 0051 to 0058 and 0060 to 0062 (there is no 0059) in filename order: rer setup locally, or rer deploy from the same deploying checkout for a hosted install. Do not reset or replace state to upgrade. All are additive; 0051 rebuilds event_questions with the same rows. Existing event types keep their duration, single location, hours, horizon and wording until the owner changes them. Restore only into an empty destination with the original SESSION_SECRET, then rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
 }

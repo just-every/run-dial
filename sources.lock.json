@@ -896,7 +896,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "8952302169ca57ffa6df495274d431a54d58bb5856578530c5cc42976ecdd18f",
+      "sha256": "13346775cc32f146f3efac73e146639bf773d407f4af739c45b6951a5b01da09",
       "executable": false
     },
     "CLAUDE.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "677ddb9c102856949ba8d8bdc4b3a795ee7f8c1d056e224d7e05b32ea5910232",
+      "sha256": "41752ffc03aec2a42105fd0b7aa12eb2261fe0db16e4eddfcdacdbfb0627d31a",
       "executable": false
     },
     "DEMO.md": {
@@ -936,7 +936,7 @@
       "executable": false
     },
     "docs/backups.md": {
-      "sha256": "428a721f4ec4dab0b9814b012d45949602ff4611ab5fa1c889fc68bdbb252062",
+      "sha256": "28f21e86a430da7542d54e007673bd0b2a478d95dc25ded82c5e65b213888836",
       "executable": false
     },
     "docs/booking-page.md": {
@@ -944,7 +944,7 @@
       "executable": false
     },
     "docs/calendar-and-email.md": {
-      "sha256": "239fb7cd1792d09b60ee365194583c7b1721dc4ae3fe55dc46dba03ffcc5a525",
+      "sha256": "98427629712eab031d6572df281d5940e3a74abbb2c3e0c83759b8c9c5155953",
       "executable": false
     },
     "docs/importing.md": {
@@ -952,7 +952,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "7dc3729801af6d39f55a16939832e58b7f693475ea1c78c24a7e65585fda1bae",
+      "sha256": "5425a7199751e1fa89511e7ccd6b7462b113596eab3ee79530d8ccb4a6f64442",
       "executable": false
     },
     "docs/overview.md": {
@@ -1508,7 +1508,7 @@
       "executable": false
     },
     "HANDOVER.md": {
-      "sha256": "74807fa5706252fa3e2c1a7b5fa9d2d992d1aca9bdcf171a17bf66ea1b8f2d0b",
+      "sha256": "2cf548b89a11984926dceda2db3d77d5ffe471f68bca8bc426fdf51c077b7e53",
       "executable": false
     },
     "LICENSE": {
@@ -3576,7 +3576,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "fa841af2f7a38d09b0d0e7471716c279f8319d1ff9ce6434d3c6b8a5e859cfc9",
+      "sha256": "d6341487a6adcc37bae621b5783a6276d4bdc2c1535a581300ab28cc5cfca9bb",
       "executable": false
     },
     "pnpm-lock.yaml": {
@@ -3604,15 +3604,15 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "292af977c3ebe033056a3e6d44b7baa659e540724c170127d17d97be5e6d4d76",
+      "sha256": "64ef6d82611ed472d76c31ce442ea7cebbaf21af903fa9209d20bbfa38a05f88",
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "2c8cf4cf0fbb7bba37769bcf8a9e8e6e7a93598f57617a3f061f8a02570f0e10",
+      "sha256": "18f28f5dd9e1188057f6c4f82eff0157c51344d5812dcb6819c5b32efa6343d7",
       "executable": false
     },
     "RELEASE.md": {
-      "sha256": "099a061e901cfbf68b4d31b4e2a16e5a5c44cab54a595c484d5731e1a23eb278",
+      "sha256": "e82e30d970dfc23caff7cc1e73069d7212f9323d4ef65543450c1a70c2f3ac9f",
       "executable": false
     },
     "RENDERING.md": {
@@ -4312,7 +4312,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "8f9b9be83090f40270d42aba2c0e8678d28504962453c568716043822d2a03f3",
+      "sha256": "4feaa3767c1c13d3e7208fcdc8137012c6e0e2e8d5d8844f3ee082ab67967f44",
       "executable": false
     },
     "src/base/contract-filter.ts": {

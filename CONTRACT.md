@@ -323,7 +323,7 @@ What Dial does not do, and how a buyer gets it:
 
 ## Status
 
-Judged from the code and tests at commit `e07c9659c03a45d796b5ab5d67faa07fd1a99ded` (18 October 2026).
+Judged from the code and tests at commit `7191fe8` (19 October 2026). Release 0.4.0 is cut from this code: its gate ran the homepage jobs locally and on a disposable hosted deployment with real mail, an in-place upgrade from 0.3.0, and a hosted backup restored into an empty install (CHANGELOG.md). Each done row's evidence is the cited tests, which `rer verify` runs; live Google Calendar and Meet were not part of the gate.
 
 The rows below record each clause's bounded implementation and remaining work at the cited in-repository paths. The original assessment was made on 16 October 2026; subsequent catch-up rows include the later implementation and supersede that assessment for their clauses.
 

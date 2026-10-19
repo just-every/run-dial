@@ -1,10 +1,39 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-10-19
+
+Dial 0.4.0 is the next regular release after 0.3.0. It is cut from main and pins rer 0.2.65.
+
+What an owner gets:
+
+- **Meeting lengths and locations.** An event type offers one to four lengths and the invitee picks one before choosing a time; availability, the calendar event, the .ics file, emails and reminders use the chosen length. An event can offer several locations, including Ask invitee and the invitee's own phone number. Invitees see only the public label until they book. Duplicate makes an independent draft copy of an event.
+- **Scheduling rules.** Phone-number questions (stored in E.164) and dropdown questions; a 45-minute start increment; booking horizons counted in calendar days or weekdays, a fixed date range or indefinite; per-day, week and month caps on bookings or minutes, per event or across events; shared named schedules with US federal holidays (each date can be reopened) and time off; a locked meeting timezone for in-person events; separate rescheduling and cancellation cut-offs and a reschedule limit per event.
+- **Links.** Single-use and one-off private booking links; host-offered specific times, sent as a link or an email, with an optional hold that is released when the invitee books or the offer expires; links and embeds that prefill name, email and answers and record UTM and source values on the booking.
+- **After booking.** An event can send invitees to your own HTTPS thank-you page; their email still has the manage link. Per-event templates for the calendar invitation and the invitee's confirmation, change, cancellation, reminder and request emails. You can ask an invitee to pick a new time instead of choosing it for them; the booking, manage link and calendar event stay the same.
+- **Booking records.** Each email is listed with its recipient, subject and state (queued, processing, sent, retrying or failed, with the reason). A failure stays visible after a retry succeeds. Sent means the mail provider accepted it. A confirmation whose meeting link is still being created shows a disabled, pending join button until the link is ready.
+- The time picker can be used efficiently from the keyboard, and signed-in pages load their data with the document.
+
+Release gate (19 October 2026, rer 0.2.65): on a fresh clone, the homepage jobs ran locally at 1440 and 390 px. The host saved a profile and timezone, created an event with a private in-person address, set weekly hours, published it, copied its link and finished setup. Invitees in London and Tokyo booked in their own zones from up to five suggested times, each with its reason; each got the private address, a working .ics file and a manage link, and no cookie was set. One rescheduled and one cancelled through the manage link, and Bookings showed both in the host's zone with their history. An invitee in Berlin requested another time; the host read the windows in both zones and created the agreed booking. Booking IDs and invitee emails opened nothing without the manage token. On a disposable Cloudflare deployment with SendGrid, deploy claimed the owner, who signed in from a real emailed link; the same jobs ran there, and the confirmation, reschedule, cancellation and request emails reached real inboxes, with SPF, DKIM and DMARC passing. The owner downloaded a backup from Settings, holding the hosted-only bookings and request. Removal read back nothing left. After a redeploy, email sign-in worked, and a backup from that deployment restored into an empty local install with the same content hash. A 0.3.0 install with bookings, a cancellation and a request upgraded in place: migrations 0051 to 0062 applied, every 0.3.0 row was unchanged and the upgraded app showed the old records and took a new booking.
+
+Not in this release: the target contract's partial and missing clauses. Among them are team scheduling (round-robin, collective and group events), roles and delegation, routing forms, payments and deposits, SMS and workflows, Microsoft 365, iCloud, Zoom, Teams, Webex and GoTo, CRM and Slack integrations, meeting polls, approvals, recurring bookings, invitee languages, native apps and add-ins. Dial replaces Calendly, Acuity Scheduling and SavvyCal for the jobs on its homepage, not yet for every feature those products sell. The homepage's Google Calendar and Meet features are in the code and covered by tests against a simulated Google, but this release was not checked against a real Google account.
+
+Known issues:
+
+- Hosted restore is not exposed. A hosted backup restores into an empty local install.
+- `rer deploy --remove` deletes `.rer/deploy/<environment>.secrets.env`, which holds the deployment's `SESSION_SECRET`. A hosted backup cannot be restored without it: import stops with "Private settings are required". Copy that file somewhere private before you remove a deployment.
+- When an invitee cancels within seconds of booking, before the confirmation email has left the queue, Dial drops the queued confirmation and sends only the cancellation.
+- A new Worker's Cron schedule can take up to about two hours to start on some Cloudflare accounts, which delays reminders until then.
+- RER Managed mail cannot set a Reply-To, so replies to Managed booking emails do not reach the host.
+- Capacity limits are design targets, not measured hosted capacity.
+
+Back up first. Locally: stop dev, run `rer export --output exports/before-0.4.0.rer` and keep `.dev.vars` with it, then pull and run `rer install`, `rer setup` and `rer dev`. Hosted: download a backup at Settings → Export status → Download backup, copy `.rer/deploy/<environment>.secrets.env` from the deploying checkout, then pull and `rer deploy` the same environment from that checkout. Migrations `0051_phone_dropdown_questions.sql`, `0052_booking_horizons.sql`, `0053_event_duration_options.sql`, `0054_booking_link_context.sql`, `0055_availability_controls.sql`, `0056_booking_policy.sql`, `0057_correspondence.sql`, `0058_reschedule_requests.sql`, `0060_event_location_options.sql`, `0061_booking_links.sql` and `0062_offered_times.sql` apply in order and keep existing data (there is no 0059). Existing event types keep their length, location, hours, horizon and wording until you change them.
+
+Also in this release:
 
 - Refresh every recorded Base copy to rer-v0.2.41 together and pin rer 0.2.41. The hosted demo moves from a container to rer's native Worker Loader host: each visitor gets their own isolate with the database, booking coordinator, files and queue in their own storage. `run-demo.yml` is Base's template, recorded as a Base copy. Rer 0.2.41's native host sends `cf-connecting-ip` on the seed `/health` call, so the demo has no admission special case.
 - Pin rer 0.2.25 and declare the browser sign-in route and email-hint support in the generated deployment spec, so RER opens the claimed owner’s sign-in page with their email filled in.
 - Managed booking confirmations use their existing private calendar download link instead of an unsupported attachment. Both guest and host confirmations can be accepted by the relay; acceptance does not assert inbox delivery. Direct SendGrid and Resend confirmations retain the attachment.
+- Docs describe rer 0.2.65's automatic local sign-in instead of the retired local outbox, name the v0.4.0 tag, and say to keep the deployment's secrets file before removal.
 
 ## 0.3.0 — 2026-10-16
 

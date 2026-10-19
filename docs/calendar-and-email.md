@@ -87,6 +87,6 @@ This opt-in declaration is needed because the current `rer` deployment tool only
 
 Use `rer` for the secret change: it records the Worker's new version in the deployment receipt. Editing the secret directly in the provider dashboard would leave that receipt stale and can block later deployments. To turn tracking off, keep the declaration and run `pnpm exec rer deploy --environment production --unset-secret MAIL_WEBHOOK_KEY`; rer records the removal so later deploys do not require the retired secret. Set it again with the command above to resume tracking.
 
-## The local outbox
+## Local mail
 
-On your own computer Dial sends no email. Messages go to a local outbox at `/__dev/outbox`, which keeps up to 100 messages from the last seven days. It never runs on a deployed install.
+On your own computer Dial sends no email: outgoing messages are checked and then suppressed, and nothing keeps them. A deployed install sends through its configured provider.
