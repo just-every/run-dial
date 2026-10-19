@@ -25,10 +25,16 @@ export async function bookingJourney(browser, origin, scans, errors, widths = [1
       assert.ok(await page.getByText("Fields marked * are required.", { exact: true }).isVisible()); await audit("details-invalid");
       await page.getByLabel("Name", { exact: true }).fill(`Axe ${width}`); await page.getByLabel("Email", { exact: true }).fill(`axe${width}@dial.test`); await page.getByLabel("What would you like to discuss?", { exact: true }).fill("Accessibility journey"); await audit("details");
       await page.getByRole("button", { name: "Confirm booking", exact: true }).click(); await page.getByRole("heading", { name: "Booking confirmed.", exact: true }).waitFor();
-      await page.getByText(/Your joining link will arrive by email/).waitFor(); await audit("receipt");
+      await page.getByText(/Your joining link will arrive by email/).waitFor();
+      const pendingJoin = page.getByRole("button", { name: "Join session (pending)", exact: true });
+      assert.ok(await pendingJoin.isVisible(), "BOOK-005 shows the pending joining control on the confirmed receipt");
+      assert.ok(await pendingJoin.isDisabled(), "BOOK-005 cannot join before a provisioned URL is stored");
+      assert.equal(await pendingJoin.getAttribute("aria-disabled"), "true");
+      assert.equal(await page.getByRole("link", { name: "Join session", exact: true }).count(), 0);
+      await audit("receipt");
       await linkContrast(page.getByRole("link", { name: "Add to calendar", exact: true })); await linkContrast(page.getByRole("link", { name: "Manage booking", exact: true }));
       for (let i = 0; i < 2; i++) assert.equal((await page.request.post(origin + "/__fixtures/deliver", { data: {} })).status(), 200);
-      await page.reload(); await page.getByRole("link", { name: "Join session", exact: true }).waitFor(); await linkContrast(page.getByRole("link", { name: "Join session", exact: true })); await audit("receipt-ready");
+      await page.reload(); await page.getByRole("link", { name: "Join session", exact: true }).waitFor(); assert.equal(await pendingJoin.count(), 0, "BOOK-005 ready link replaces the disabled pending control"); await linkContrast(page.getByRole("link", { name: "Join session", exact: true })); await audit("receipt-ready");
       await page.getByRole("link", { name: "Manage booking", exact: true }).click(); await page.locator("main[aria-busy=false]").waitFor(); await audit("manage");
       const token = new URL(page.url()).pathname.split("/").at(-1);
       const old = await (await page.request.get(`${origin}/api/public/manage/${token}`)).json(); assert.equal(old.inviteeTimezone, "Australia/Brisbane");

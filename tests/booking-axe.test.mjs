@@ -45,7 +45,7 @@ async function runAxe(t) {
 
 let result;
 const gate = t => result ??= runAxe(t);
-contract("PUBLIC-001", "headless axe covers all seven public pages, original operator/request journeys and new validation states at desktop and mobile", gate);
+contract("PUBLIC-001", "BOOK-005 pending-to-ready receipt and headless axe cover all seven public pages, original operator/request journeys and new validation states at desktop and mobile", gate);
 contract("AVAIL-005", "native browser timezone search, privacy, invalid input and day/zone history persist", gate);
 contract("BOOK-007", "native Brisbane reschedule picker, one confirm and held old slot work from a New York browser", gate);
 contract("BOOK-008", "cancellation asks confirmation and cancelled bookings expose no change controls", gate);

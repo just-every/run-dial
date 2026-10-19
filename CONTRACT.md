@@ -331,9 +331,9 @@ Done means implemented with a test exercising the clause through its public or o
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 49 | 27 | 0 | 76 |
+| Published | 50 | 26 | 0 | 76 |
 | Target and push further | 2 | 21 | 71 | 94 |
-| All | 51 | 48 | 71 | 170 |
+| All | 52 | 47 | 71 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -417,7 +417,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `BOOK-002` | Atomic claim | published | done | `tests/booking-lifecycle.test.mjs` |  |
 | `BOOK-003` | Idempotent confirmation | published | done | `tests/lifecycle-journey.test.mjs` |  |
 | `BOOK-004` | States and occurrences | published | done | `tests/occurrence-mail-duration.test.mjs`, `tests/booking-wire.test.mjs` |  |
-| `BOOK-005` | Confirmation receipt | published | partial | `tests/booking-wire.test.mjs`, `tests/booking-axe/booking.mjs` | Receipt contents and pending joining-link notice ship; the pending join control is omitted instead of shown disabled and labelled pending. |
+| `BOOK-005` | Confirmation receipt | published | done | `tests/booking-wire.test.mjs`, `tests/booking-axe/booking.mjs`, `tests/booking-axe.test.mjs` | Receipt contents, disabled pending join control and replacement by the stored provisioned joining link are exercised at 1440 and 390. |
 | `BOOK-006` | Manage link | published | done | `tests/embed-document-authorization.test.mjs`, `src/core/features/bookings/manage-capability.ts` |  |
 | `BOOK-007` | Invitee rescheduling | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |  |
 | `BOOK-008` | Invitee cancellation | published | done | `tests/lifecycle-journey.test.mjs`, `tests/booking-axe.test.mjs` |  |

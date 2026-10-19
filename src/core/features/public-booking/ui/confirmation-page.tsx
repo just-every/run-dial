@@ -49,6 +49,7 @@ export function BookingConfirmationPage({ token, embedded = false }: { token: st
     <BookingChangeTerms policy={booking.changePolicy?.effectivePolicy} />
     {!cancelled && booking.location.state === "ready" ? <p>{booking.location.label}{booking.location.value && !joinUrl ? <>: {booking.location.value}</> : null}</p> : null}
     {!cancelled && booking.location.state === "ready" && joinUrl ? <a className="pb-primary-link" href={joinUrl}>Join session</a> : null}
+    {!cancelled && isPending(booking) && !(booking.location.state === "ready" && joinUrl) ? <button className="pb-primary-link" disabled aria-disabled="true">Join session (pending)</button> : null}
     {(!cancelled && setupNotice) || refreshError ? <p className="pb-request-notice" role="status">{!cancelled ? setupNotice : null}{refreshError ? <> These are your last verified details. <button className="pb-quiet-button" onClick={() => void refreshReceipt()}>Reload receipt</button></> : null}</p> : null}
     <p className="pb-receipt-actions"><a className="pb-receipt-link" href={booking.icsUrl}>{cancelled ? "Download cancellation" : "Add to calendar"}</a> · <a className="pb-receipt-link" href={manage}>Manage booking</a></p>
   </section></main><PublicFooter embedded={embedded} /></PublicTheme>;
