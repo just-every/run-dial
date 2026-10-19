@@ -1,7 +1,7 @@
 import { defaultCorrespondenceConfig, type CorrespondenceConfig, type CorrespondenceQuestion, type CorrespondenceValues } from "../../shared/correspondence";
 import { formatTimeRange } from "./booking-mail-times";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
-import { invitationManageUrl } from "../bookings/invitation-capability";
+import { invitationManageUrl } from "../bookings";
 
 type BookingTemplateRow = {
   config: string | null; eventTypeId: string | null; eventTitle: string; inviteeName: string; hostName: string;
