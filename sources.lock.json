@@ -2699,6 +2699,10 @@
       "sha256": "1cc6c400007eb6a08a9698a22d4b6cfd41ace42b04eb59927bd34c776bbe444c",
       "executable": false
     },
+    "modules/import-kit/src/door/refusals.ts": {
+      "sha256": "1c03c2366bac97733ba30ad9e0f69311191735dcddced839a5e804dc2e4f6d6e",
+      "executable": false
+    },
     "modules/import-kit/src/door/schema.ts": {
       "sha256": "f5814a590ec4329e2ae77bdb98af6d1d3726a53b4d5939c7513d49c348593c0d",
       "executable": false
@@ -2765,6 +2769,10 @@
     },
     "modules/import-kit/src/provenance/canonical-stream.ts": {
       "sha256": "94b9bef088d1d907edd4de44b74132ba257fa488a1ca447ad2cceb0f1d049890",
+      "executable": false
+    },
+    "modules/import-kit/src/provenance/credential-names.ts": {
+      "sha256": "51c836f11d6c8a938c724a9ceb07746dfbbdd8f1474627ece80fbd917634f01f",
       "executable": false
     },
     "modules/import-kit/src/provenance/credentials.ts": {

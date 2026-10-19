@@ -2,8 +2,8 @@ import { providerPages, providerListShape } from './pagination.mjs';
 import { deleteR2Object } from './r2-object-transport.mjs';
 import { isR2ObjectDelete } from './r2-objects.mjs';
 import { recordDeployFailure } from './diagnostics.mjs';
-import { importD1, importUploadURL } from './d1-import.mjs';
-import { assert, hexId } from './validation.mjs';
+import { D1_IMPORT_POLL_LIMIT, importD1, importUploadURL } from './d1-import.mjs';
+import { assert, hexId, uuid } from './validation.mjs';
 import { providerResponse, transportOutput, transportReason } from './provider-transport.mjs';
 
 // A gateway/server error can arrive after a write. An explicit API refusal cannot.
@@ -28,10 +28,22 @@ export async function boundedJSON(response, limit) {
 }
 const redactValues = (text, values) => values.filter(Boolean).flatMap(value=>[value,encodeURIComponent(value),JSON.stringify(value).slice(1,-1)]).sort((a,b)=>b.length-a.length).reduce((value,secret)=>value.split(secret).join('[REDACTED]'),text);
 /** Only this fixed origin and the explicitly selected account ever receive the token. */
-export function cloudflare({ accountId, token, fetch: request = globalThis.fetch, objectDelete = deleteR2Object, timeoutMs = 30000, maxRequests = 500, removal = false }) {
+export function cloudflare({ accountId, token, fetch: request = globalThis.fetch, objectDelete = deleteR2Object, timeoutMs = 30000, maxRequests = 500, removal = false, budgetMigrations = false }) {
   assert(hexId(accountId), 'invalid-cloudflare-account-id');
   assert(typeof token === 'string' && token.trim() && !/[\r\n]/.test(token), 'invalid-cloudflare-api-token');
   let requests = 0;
+  const migrationBudgets = new Set();
+  function reserveMigrationRequests(id, pending) {
+    if (!budgetMigrations || migrationBudgets.has(id)) return;
+    assert(uuid(id) && Number.isSafeInteger(pending) && pending >= 0, 'invalid-provider-request-budget');
+    // Each pending migration can claim, initialize, upload and ingest, then use
+    // the bounded import poll protocol. Metadata and transport retries share the
+    // original allowance. Reserve validated work only once per database/run.
+    const limit = maxRequests + pending * (4 + D1_IMPORT_POLL_LIMIT);
+    assert(Number.isSafeInteger(limit), 'invalid-provider-request-budget');
+    migrationBudgets.add(id);
+    maxRequests = limit;
+  }
   // `zone` scope: the zone-level API (/zones/...), for a run site's zone lookup and redirect rule.
   async function rawEnvelope(path, { method = 'GET', body, assetToken, zone = false, signal: callerSignal } = {}) {
     assert(typeof path === 'string' && (isR2ObjectDelete(path, method) || /^\/[a-z0-9/_?=&.,%-]+$/i.test(path) && !path.includes('..') && !path.split('?')[0].includes('%')), 'invalid-provider-path');
@@ -147,6 +159,6 @@ export function cloudflare({ accountId, token, fetch: request = globalThis.fetch
     assert(response.status === 200, 'd1-import-upload-failed');
     assert(response.headers.get('etag')?.replace(/^"|"$/g, '') === etag, 'd1-import-upload-etag-mismatch');
   }
-  return { accountId, envelope, list, importSql(id, sql) { return importD1({envelope,upload,redact:text => redactValues(text,[accountId,token])}, id, sql); }, request:requestResult, workerContent,
+  return { accountId, envelope, list, reserveMigrationRequests, importSql(id, sql) { return importD1({envelope,upload,redact:text => redactValues(text,[accountId,token])}, id, sql); }, request:requestResult, workerContent,
     zoneRequest(path, options = {}) { return requestResult(path, { ...options, zone: true }); } };
 }

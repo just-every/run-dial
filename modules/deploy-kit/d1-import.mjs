@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import { assert, uuid } from './validation.mjs';
 import { recordDeployFailure } from './diagnostics.mjs';
 
+export const D1_IMPORT_POLL_LIMIT = 100;
+
 // Wrangler's remote --file protocol. D1 imports execute the whole file atomically,
 // including trigger bodies; the query endpoint's semicolon splitting cannot.
 // Cloudflare's own reason for an import that failed or did not finish, kept on the
@@ -31,7 +33,7 @@ export async function importD1({ envelope, upload, redact = String }, id, sql) {
     await upload(response.upload_url, bytes, etag);
     response = await post({ action:'ingest', filename:response.filename, etag });
   }
-  for (let polls = 0; polls < 100; polls++) {
+  for (let polls = 0; polls < D1_IMPORT_POLL_LIMIT; polls++) {
     // REST places errors on the envelope; validate nested errors when supplied.
     if (!(response?.success === true && response.type === 'import' && response.status !== 'error' && (!Object.hasOwn(response, 'errors') || Array.isArray(response.errors) && !response.errors.length))) throw importFailure('d1-import-failed', id, response, redact);
     if (response.status === 'complete') {

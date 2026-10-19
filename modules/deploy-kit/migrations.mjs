@@ -58,6 +58,7 @@ export async function migrate(api, id, migrations, { apply = true, upgrade = app
   validateMigrations(migrations);
   const { applied, pending, transition, exists, claimed, claimedFrom } = await readLedger(api, id, migrations, query, { rewritten:locked });
   assert(apply || pending.length === 0,'pending-migrations');
+  if (apply && pending.length) api.reserveMigrationRequests?.(id, pending.length);
   if (transition && upgrade) {
     await api.importSql(id, transition);
     const verified = await readLedger(api, id, migrations, query);

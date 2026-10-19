@@ -1,5 +1,18 @@
 # Subject erasure
 
+To bring existing data into a seed, sign in as the owner and use its import
+screen. First step: open this path on the destination app:
+
+```text
+/app/import
+```
+
+Upload a supported source export, review the plan and its differences, then
+approve that exact plan to apply it. Reconcile the result against native data;
+use Undo from the same history when needed. Base's reference accepts people JSON
+here, not installation `.rer` archives. Editions adopt this same door
+with their own supported readers and native adapters.
+
 This dependency-free source module erases one subject (a person, contact,
 requester, booking and so on) and everything a seed declares as depending on
 it, for BASE-DATA-003. Audit records survive with an anonymised reference
@@ -163,7 +176,8 @@ the seed retires them in its own migration.
   only the subject), so an older archive that contains any of those rows is
   refused on restore. The fence's own limit stays: an old archive offered to a
   brand-new store that has no journal cannot be recognised. Supply the owner's
-  later journal there (`rer import --journal LATER_ARCHIVE`).
+  later journal there (restore this installation with
+  `rer import --journal LATER_ARCHIVE`, separate from the reviewed import door).
 - **import-kit.** `nativeStatements(entity, subject)` returns the whole D1 phase
   as `{sql, params}` statements for `eraseD1ImportTarget(kind, id,
   nativeStatements, context)`. Kit custody, the product cascade and the fence

@@ -64,7 +64,7 @@ export async function main(argv = process.argv.slice(2), env = process.env, {fet
     const deadline = AbortSignal.timeout(Math.max(1, Math.ceil(remaining)));
     return request(input, {...init,signal:init.signal ? AbortSignal.any([init.signal,deadline]) : deadline});
   };
-  const api = deploymentDiagnostics(cloudflare({accountId:env.CLOUDFLARE_ACCOUNT_ID,token:env.CLOUDFLARE_API_TOKEN,fetch,...(command === 'remove' ? {maxRequests:Infinity,removal:true} : {})}),{onCreated});
+  const api = deploymentDiagnostics(cloudflare({accountId:env.CLOUDFLARE_ACCOUNT_ID,token:env.CLOUDFLARE_API_TOKEN,fetch,budgetMigrations:command === 'deploy',...(command === 'remove' ? {maxRequests:Infinity,removal:true} : {})}),{onCreated});
   // Removal needs the recorded account/name identity, not a workers.dev route.
   const target = command === 'remove'
     ? {accountId:api.accountId,project:declaration.project,environment:values.environment,worker:ownerWorkerName(declaration.project,values.environment)}
