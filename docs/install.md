@@ -24,15 +24,15 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
    ```
 
    To start it again later, run `cd run-dial && rer dev`. The default clone follows
-   `main`. For the tagged **v0.4.1** release instead, clone it yourself:
+   `main`. For the tagged **v0.4.2** release instead, clone it yourself:
 
    ```bash
-   git clone --branch v0.4.1 https://github.com/just-every/run-dial.git dial
+   git clone --branch v0.4.2 https://github.com/just-every/run-dial.git dial
    cd dial
    ```
 
    A tag retains its own dependency pins. This guide describes current `main`,
-   which pins **rer 0.2.65**.
+   which pins **rer 0.2.68**.
 
 2. From a checkout you cloned yourself, start Dial:
 
@@ -175,7 +175,7 @@ After a healthy deploy, `rer` claims the hosted owner and removes the one-time s
 
 If the email does not arrive, check the owner address, SendGrid credentials, verified sender and mailbox delivery. A successful deploy or health check does not prove email delivery. A setup token cannot sign you in after the owner has been claimed.
 
-Dial pins **rer 0.2.65**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
+Dial pins **rer 0.2.68**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
 
 ```bash
 rer signin

@@ -896,7 +896,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "923ae577495ce6c30bc2887ccd2315e9f7705c9f5819de68abfa40b278b32880",
+      "sha256": "9087deb4ff583b06410dd55de85caf83a5005ec273c7086cc4015bd97122724e",
       "executable": false
     },
     "CLAUDE.md": {
@@ -952,7 +952,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "208c5b5cce8ff3608c4ed701e8e59b6ce0621ec60eddd98d8a77fc5190afee10",
+      "sha256": "501b85d1e84d167cad7a5dc8560c70e4b1ff06a7803e95a6213b7cbc61ef1667",
       "executable": false
     },
     "docs/overview.md": {
@@ -1508,7 +1508,7 @@
       "executable": false
     },
     "HANDOVER.md": {
-      "sha256": "7715dc7bf5867e728c54ecfdcfb2455bafe8c63f19c9767049974bfdf3013c36",
+      "sha256": "8fffad4cf3f5edb9eb6daab776d54d304a5a0f9202d0cc6df8ce7cf4a622803a",
       "executable": false
     },
     "LICENSE": {
@@ -3580,7 +3580,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "5c209c34a8555ca3fb03df02b5b0808abcde609801011bc58ead814228c9cda5",
+      "sha256": "63660801cf20734b695919ba557cf4a2802e03f62e2ec38866323fd1cbeefb63",
       "executable": false
     },
     "pnpm-lock.yaml": {
@@ -3608,15 +3608,15 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "3bafe5badeae540ae174caca426138de0efb0cf8a0774508be022853334b7faf",
+      "sha256": "058ad4698fbd5d460aa09ae6b36c293a68b2e0f1ef0b7eaf2112299549bcef15",
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "eb881b2808e40015d9ba05cc4568ba7500eb72dc9ea794494feccac2943477e0",
+      "sha256": "084cbc671a7fc28eb36fbdd40510de9ad3f8801c7c0e56f7bc48cd8c80fc04e3",
       "executable": false
     },
     "RELEASE.md": {
-      "sha256": "2dee0281c58d28f708144a7e017eb8a7ff8f7ac349f68334954fe9064a2acec2",
+      "sha256": "6c09e1ac6e4446cbf3f8b0148771d90df57ae23130ada5daaabb2ec119a6f550",
       "executable": false
     },
     "RENDERING.md": {
@@ -4324,7 +4324,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "2fb0013cd66669a03fee751c2c3068411d4c7a42deabc95d049a8bd7bb0fa210",
+      "sha256": "6f8034843da42535790f649ba99d4cc2143334f2236a3a751e15a9134f500685",
       "executable": false
     },
     "src/base/contract-filter.ts": {

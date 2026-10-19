@@ -1,5 +1,9 @@
 # Dial handover
 
+## Release 0.4.2 (19 Oct 2026)
+
+- 0.4.2 restores a native backup made by the previously listed release (bb5d650f, migrations up to 0061) into the current schema. `scripts/archive/prior-schemas.mjs` declares Base `acceptedSchemas` for every earlier migration set whose later migrations each state their row upgrade (0062: booking_links offered_slots_json/hold_until NULL; 0063: the migration's own json_set of inviteeConfirmationEnabled). The archive's schema-proof payload must equal that set's proof byte for byte. A later migration without an entry ends acceptance. `scripts/local/transfer.mjs` also passes Base's replay of the destination's applied migrations (`scripts/local/migration-replay.mjs`). `tests/archive-prior-release.test.mjs` imports the retained backup (`tests/fixtures/archive/listed-bb5d650f.rer`) through `rer import`. Pins rer 0.2.68.
+
 ## Release 0.4.1 (19 Oct 2026)
 
 - 0.4.1 fixes native export, hosted Download backup, restore and erasure on databases installed by RER Managed, whose `rer_migrations` ledger 0.4.0 did not classify (`scripts/archive/policy.mjs`, `scripts/archive/migration-ledger.mjs`, `src/core/features/erasure/portability.ts`). `tests/export-deploy-ledger.test.mjs` round-trips a Platform-installed database built with Platform's exact ledger DDL. It also carries the per-event invitee-confirmation switch (migration 0063) and the one-hour NOTIFY-005 retry bound.

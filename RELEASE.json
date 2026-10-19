@@ -1,8 +1,8 @@
 {
-  "version": "0.4.1",
-  "previousVersion": "0.4.0",
+  "version": "0.4.2",
+  "previousVersion": "0.4.1",
   "date": "2026-10-19",
-  "publicReleaseNotes": "Dial 0.4.1 makes backups work on installs that RER Managed set up: Download backup, rer export and restore no longer stop with archive-unclassified-schema, and erasing a person no longer stops with unclassified_table:rer_migrations. Dial now recognises RER Managed's migration record (rer_migrations), checks that it lists exactly this release's migrations with their hashes, and leaves the destination's record untouched on restore. Also: an event can turn off Dial's own invitee confirmation when the calendar invitation is sent, and failed emails are retried within one hour. Additive migration 0063. Product screenshot: .github/assets/screenshots/bookings-1440.png",
+  "publicReleaseNotes": "Dial 0.4.2: a backup made by the previous version now restores. A backup from the Dial version listed before 0.4.1 stopped with schema_mismatch when restored into 0.4.1; it now restores with every archived record and file. Booking links get the two new offered-time fields empty, as migration 0062 leaves them, and saved confirmation wording gets the invitee confirmation switched on, as 0063 does. The backup is still checked against that earlier version's exact migrations and schema. Pins rer 0.2.68. No new migrations. Product screenshot: .github/assets/screenshots/bookings-1440.png",
   "screenshots": [
     {
       "path": ".github/assets/screenshots/bookings-1440.png",
@@ -11,10 +11,7 @@
     }
   ],
   "contractChanges": {
-    "DATA-001": "Native export, hosted Download backup and restore accept a database installed by RER Managed: its migration ledger rer_migrations is classified as installer bookkeeping, must list exactly this revision's migration names and file hashes (a changed hash, unknown or missing file, or interrupted-release progress row refuses with archive-migration-history-mismatch), is never archived and is never written by restore. Every other unknown table still refuses. No migration.",
-    "DATA-002": "Person and operator erasure on a database installed by RER Managed no longer stops with unclassified_table:rer_migrations; the census classifies only that exact ledger name. No migration.",
-    "NOTIFY-005": "A provider Retry-After is clamped to one hour from the first attempt: up to five retries fall due within that hour, and later work is final (done). No migration.",
-    "NOTIFY-001": "An event type can switch off Dial's own invitee confirmation (default on); only a successfully sent calendar invitation suppresses it, and suppressed mail is labelled Not sent (partial). Migration 0063."
+    "DATA-001": "rer import restores a native archive made before migrations 0062 and 0063 (the previously listed release) into the current schema. Rows get those migrations' declared effects (0062 columns NULL, 0063 inviteeConfirmationEnabled true), and the archive's schema proof must match that earlier migration set exactly. Any other schema still refuses. No migration."
   },
   "extensionPointChanges": [],
   "migrations": [
@@ -244,5 +241,5 @@
     }
   ],
   "breaking": false,
-  "agentUpdateInstructions": "Read this release record's contractChanges and migrations before updating from 0.4.0. Preserve authored data, existing local or deployed state, native operator and setup identities, durable setup-completion markers, and every already-applied migration byte, including RER Managed's rer_migrations rows. Back up first. Locally: stop dev or preview and export to a new path with rer export --output exports/NAME.rer, keeping the archive and the original .dev.vars (including SESSION_SECRET) outside local state. Hosted: sign in as the owner, open Settings, Export status, Download backup, keep the .rer file private, and copy .rer/deploy/<environment>.secrets.env from the deploying checkout; rer deploy --remove deletes that file and a hosted archive cannot be restored without its SESSION_SECRET. On an RER Managed install where 0.4.0 refused the backup, update first and then download the backup. Then pull, run rer install, and apply only the new migration 0063 in filename order: rer setup locally, or rer deploy from the same deploying checkout for a hosted install; RER Managed applies it itself. Do not reset or replace state to upgrade. 0063 is additive. Restore only into an empty destination with the original SESSION_SECRET, then rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
+  "agentUpdateInstructions": "Read this release record's contractChanges before updating from 0.4.1. There are no new migrations: back up first (rer export --output exports/NAME.rer locally, keeping .dev.vars with it; hosted: Settings, Export status, Download backup, and keep .rer/deploy/<environment>.secrets.env), then pull and run rer install, then rer setup locally or rer deploy from the same deploying checkout. Do not reset or replace state to upgrade. A backup made by the previously listed release (before 0062) can now be restored into an empty destination with its original SESSION_SECRET: rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
 }

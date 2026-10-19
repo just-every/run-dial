@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2 — 2026-10-19
+
+Dial 0.4.2 fixes restoring older backups. It is cut from main and pins rer 0.2.68.
+
+- **A backup made by the previous version now restores.** A backup made by the Dial version listed in the catalogue before 0.4.1 (before migrations 0062 and 0063) stopped with `schema_mismatch` when you restored it into 0.4.1, so the newer Dial could not take in your existing data. It now restores with every archived record and file. Booking links get the two new offered-time fields empty, as 0062 leaves them. Saved confirmation wording gets the invitee confirmation switched on, as 0063 does. Dial still checks the backup against that earlier version's exact migrations and schema, and a backup that matches neither refuses as before.
+- **Pins rer 0.2.68**, which reads RER Managed's migration record when it places an older backup.
+
+No new migrations. The update steps and known issues listed for 0.4.1 still apply.
+
 ## 0.4.1 — 2026-10-19
 
 Dial 0.4.1 fixes backups on RER Managed. It is cut from main and pins rer 0.2.65.
