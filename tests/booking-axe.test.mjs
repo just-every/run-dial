@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { evidencePath } from "../scripts/evidence-path.mjs";
 
-async function runAxe(t) {
+async function runAxe(t, journey) {
   const state = await mkdtemp(resolve(tmpdir(), "dial-booking-axe-"));
   const origin = "http://127.0.0.1:15752";
   const config = resolve("tests/booking-axe/worker.wrangler.toml");
@@ -40,7 +40,7 @@ async function runAxe(t) {
     try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ }
     await new Promise(done => setTimeout(done, 125));
   }
-  console.log((await run(["node", process.env.DIAL_ACCEPTANCE_CAPACITY ? "scripts/verify-acceptance-capacity.mjs" : process.env.DIAL_ACCEPTANCE_AUDIT ? "scripts/verify-acceptance-audit.mjs" : "scripts/verify-booking-axe.mjs"])).trim());
+  console.log((await run(["node", journey ?? (process.env.DIAL_ACCEPTANCE_CAPACITY ? "scripts/verify-acceptance-capacity.mjs" : process.env.DIAL_ACCEPTANCE_AUDIT ? "scripts/verify-acceptance-audit.mjs" : "scripts/verify-booking-axe.mjs")])).trim());
 }
 
 let result;
@@ -53,3 +53,5 @@ contract("HOME-001", "the installed Lobby passes axe at desktop and mobile and l
 contract("DOCS-001", "every published docs page passes axe at desktop and mobile, and docs navigation leaves browser storage empty", gate);
 
 contract("AUTH-001", "both unclaimed setup widths precede the native claim; fresh sessionless reloads hide setup and refuse replay", gate);
+
+contract("OPER-004", "booking records show each email state and retained failure, with recovery at desktop and mobile", t => runAxe(t, "scripts/verify-booking-record.mjs"));

@@ -331,9 +331,9 @@ Done means implemented with a test exercising the clause through its public or o
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 50 | 26 | 0 | 76 |
+| Published | 51 | 25 | 0 | 76 |
 | Target and push further | 2 | 21 | 71 | 94 |
-| All | 52 | 47 | 71 | 170 |
+| All | 53 | 46 | 71 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -348,7 +348,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `OPER-001` | Roles and permissions | published | partial | `tests/operator-management.test.mjs`, `tests/local-setup-journey.test.mjs`, `src/core/features/operators/service.ts` | The cited paths cover part of the clause; the rest is still to build. |
 | `OPER-002` | Operator management | published | partial | `tests/operator-management.test.mjs`, `tests/operator-removal-mail.test.mjs`, `tests/operator-access-migration.test.mjs` | Equal-owner case; role scope missing. |
 | `OPER-003` | Booking workspace | published | partial | `tests/bookings-filters.test.mjs`, `tests/bookings-search-upgrade.test.mjs` | Single-host 100,000-booking fixture; capacity fixture missing. |
-| `OPER-004` | Booking record | published | partial | `tests/booking-axe/acceptance-records.mjs`, `tests/booking-axe.test.mjs` | Booking details show answers, zones, history and calendar/meeting states, but DeliveryActions lists only failed deliveries without a retry; queued and succeeded email states are not shown. |
+| `OPER-004` | Booking record | published | done | `tests/booking-axe/acceptance-records.mjs`, `tests/booking-axe.test.mjs`, `scripts/verify-booking-record.mjs` | Native records show answers, annotations, both zones, history, calendar/meeting states and each email's recipient, subject, queue/send/failure state and recorded reason. At 1440 and 390 the UI retries a failed email, shows its separate sent retry and retains the original failure; Sent means provider acceptance. |
 | `EDITOR-001` | Owner editor | published | partial | `scripts/verify-managed-editor.mjs` | Owner case; non-owner refusal missing. |
 | `OPER-005` | Durable first run | published | done | `tests/first-run.test.mjs`, `tests/host-setup-journey.test.mjs` |  |
 | `OPER-006` | Editing a member's availability and event types | target | missing |  | No implementing code yet. |

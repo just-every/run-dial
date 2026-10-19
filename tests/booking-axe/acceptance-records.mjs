@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { auditor, trackPage } from "./audit.mjs";
+import { evidencePath } from "../../scripts/evidence-path.mjs";
 import { keyboardControls } from "./acceptance-keyboard.mjs";
 
 export async function seedAcceptanceRecords(owner, origin, fixture) {
@@ -31,6 +32,72 @@ export async function seedAcceptanceRecords(owner, origin, fixture) {
     assert.ok(!body.includes("DISCOVERY-42") && !body.includes("A private note for follow-up."), `custom annotation absent from public projection ${path}`);
   }
   return { booking, requestId };
+}
+
+export async function bookingRecordDeliveryJourney(browser, owner, origin, booking, scans, errors) {
+  const storageState = await owner.storageState();
+  const deliveries = async () => {
+    const response = await owner.request.get(`${origin}/api/app/bookings/${booking.id}/deliveries`);
+    assert.equal(response.status(), 200); return response.json();
+  };
+  const mails = (await deliveries()).filter(delivery => delivery.kind === "mail_send");
+  assert.ok(mails.length >= 2, "OPER-004 has separate invitee and host confirmation emails");
+  for (const [index, width] of [1440, 390].entries()) {
+    const context = await browser.newContext({ storageState, viewport: { width, height: width === 1440 ? 1024 : 844 } });
+    try {
+      const page = await context.newPage(); trackPage(page, errors);
+      await page.goto(origin + "/app/bookings?query=Acceptance%20record");
+      await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).waitFor();
+      await page.getByText("Saved value: DISCOVERY-42", { exact: true }).waitFor();
+      for (const value of ["Saved value: High", "Saved value: Yes", "Saved value: A private note for follow-up.\nReview the proposed scope before our next conversation."]) assert.ok(await page.getByText(value, { exact: true }).isVisible(), "OPER-004 shows every stored custom-field value");
+      assert.ok(await page.getByRole("heading", { name: booking.inviteeName, exact: true }).locator("..").getByText(booking.eventTitle, { exact: true }).isVisible());
+      assert.ok(await page.locator("dl > div").filter({ has: page.getByText("Location", { exact: true }) }).locator("dd").getByText(booking.locationLabel, { exact: true }).isVisible());
+      const audit = async state => {
+        await auditor(page, width, scans)(`OPER-004-${state}`);
+        await page.getByRole("region", { name: "Deliveries", exact: true }).screenshot({ path: evidencePath(`OPER-004-${width}-${state}-deliveries.png`), caret: "initial" });
+      };
+      assert.ok(await page.getByText("A detailed discussion of a useful next step.", { exact: false }).first().isVisible());
+      for (const [label, zone] of [["Host time", booking.hostTimezone], ["Invitee time", booking.inviteeTimezone]]) {
+        const value = page.locator("dl > div").filter({ has: page.getByText(label, { exact: true }) }).locator("dd");
+        const formatter = new Intl.DateTimeFormat("en-US", { timeZone: zone, dateStyle: "medium", timeStyle: "short" });
+        const text = await value.innerText();
+        assert.ok(text.includes(formatter.format(new Date(booking.occurrence.startAt))) && text.includes(formatter.format(new Date(booking.occurrence.endAt))) && text.includes(zone), `OPER-004 ${label} shows both endpoints and the IANA zone`);
+      }
+      assert.ok(await page.getByRole("region", { name: "Booking history" }).getByText(/Created/).isVisible());
+      const target = mails[index];
+      const row = id => page.locator(`[data-delivery-id="${id}"]`);
+      await row(target.id).getByText("Queued", { exact: true }).waitFor();
+      assert.ok(await row(target.id).getByText(`To: ${target.recipient}`, { exact: true }).isVisible());
+      assert.ok(await row(target.id).getByText(target.subject, { exact: true }).isVisible());
+      await page.getByText("Update pending", { exact: true }).waitFor();
+      await page.getByText("Meeting link pending", { exact: true }).waitFor();
+      await audit("queued");
+      assert.equal((await owner.request.post(origin + "/__fixtures/control", { data: { kind: "mail", failure: true } })).status(), 204);
+      try { assert.equal((await owner.request.post(origin + "/__fixtures/deliver", { data: { id: target.id } })).status(), 200); }
+      finally { await owner.request.post(origin + "/__fixtures/control", { data: { kind: "mail", failure: false } }); }
+      await page.getByRole("button", { name: "Refresh deliveries", exact: true }).click();
+      await row(target.id).getByText("Failed", { exact: true }).waitFor();
+      assert.ok(await row(target.id).getByText("Last failure: provider unavailable", { exact: true }).isVisible(), "OPER-004 names the recorded failure");
+      assert.ok(await row(target.id).getByText("Attempts: 1", { exact: true }).isVisible());
+      await audit("failed");
+      const retried = page.waitForResponse(response => response.url().endsWith(`/deliveries/${target.id}/retry`) && response.request().method() === "POST");
+      await row(target.id).getByRole("button", { name: "Retry delivery", exact: true }).click();
+      const retryResponse = await retried; assert.equal(retryResponse.status(), 202);
+      const retry = await retryResponse.json();
+      await row(retry.id).getByText("Queued", { exact: true }).waitFor();
+      await row(target.id).getByText("Retry: queued", { exact: true }).waitFor();
+      assert.equal(await row(target.id).getByRole("button", { name: "Retry delivery", exact: true }).count(), 0);
+      assert.equal((await owner.request.post(origin + "/__fixtures/deliver", { data: { id: retry.id } })).status(), 200);
+      await page.getByRole("button", { name: "Refresh deliveries", exact: true }).click();
+      await row(retry.id).getByText("Sent", { exact: true }).waitFor();
+      await row(target.id).getByText("Retry: sent", { exact: true }).waitFor();
+      assert.ok(await row(target.id).getByText("Last failure: provider unavailable", { exact: true }).isVisible(), "OPER-004 retains the original failure after recovery");
+      const reminder = (await deliveries()).find(delivery => delivery.kind === "reminder");
+      assert.ok(await row(reminder.id).getByText("Queued", { exact: true }).isVisible(), "OPER-004 keeps the state of each email separate");
+      await audit("sent");
+      await page.reload(); await row(retry.id).getByText("Sent", { exact: true }).waitFor();
+    } finally { await context.close(); }
+  }
 }
 
 export async function avatarEvidence(browser, origin, storageState, scans, errors, checks) {
