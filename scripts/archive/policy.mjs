@@ -27,6 +27,7 @@ export const internal = {
   booking_search_casefold: 'Normative Unicode folding data installed by the destination migration; contains no owner data',
   _rer_deploy_migrations: 'Installer-only migration claims and hashes; retain destination history instead of archiving it',
   d1_migrations: 'Installer migration ledger', sqlite_sequence: 'SQLite sequence bookkeeping',
+  rer_migrations: 'Run Edit Run Platform migration ledger (names and file hashes); validated against the schema proof and kept on the destination instead of archiving it',
   sqlite_stat1: 'SQLite query planner statistics', sqlite_stat4: 'SQLite query planner samples',
 };
 export function isInternalTable(name) {

@@ -45,7 +45,7 @@ Everything durable:
 - Alternative requests, delivery attempts, settings and the audit trail.
 - Calendar connection details and sync state, without the credentials.
 
-Each part of the archive is checked before restore. Use the exact source revision that made the archive: unknown tables or indexes, changed migration hashes, missing entries in the migration ledger, and unfinished hosted migration claims are refused. Local Wrangler history and hosted installer history have different bookkeeping columns; those differences do not change your application schema. Restore keeps the destination’s migration ledger.
+Each part of the archive is checked before restore. Use the exact source revision that made the archive: unknown tables or indexes, changed migration hashes, missing entries in the migration ledger, and unfinished hosted migration claims are refused. Local Wrangler history, hosted installer history and the RER Managed migration ledger (`rer_migrations`) have different bookkeeping columns; those differences do not change your application schema, and each one must list exactly the migrations of that revision with their hashes. Restore keeps the destination’s migration ledger.
 
 ## What it leaves out
 

@@ -79,3 +79,46 @@ contract('BASE-DATA-001', 'installed migration bookkeeping never exempts unknown
   assert.deepEqual(source.ledger(), sourceLedger);
   assert.deepEqual(target.ledger(), targetLedger);
 });
+
+contract('DATA-001', 'Platform-installed schema round trips the native archive while each installation keeps its own validated Platform migration ledger', async t => {
+  const source = await deployedFixture(t, { populated: true, install: 'source', platform: true });
+  const target = await deployedFixture(t, { platform: true });
+  const fresh = await deployedFixture(t, { platform: true });
+  const sourceLedger = source.ledger(); const targetLedger = target.ledger(); const freshLedger = fresh.ledger();
+  assert.notDeepEqual(sourceLedger, targetLedger, 'independent installations have distinct Platform timestamps');
+  assert.deepEqual(sourceLedger.map(({ name, sha256 }) => ({ name, sha256 })), source.migrations.map(({ file, sha256 }) => ({ name: file.split('/').at(-1), sha256 })));
+  assert.ok(!source.db.prepare(tableQuery).all().some(row => row.name === 'd1_migrations'), 'Platform installs carry only its own ledger');
+  const platform = testPlatform(source.db); const destination = testPlatform(target.db); const empty = testPlatform(fresh.db);
+  platform.objects.set('avatar/original.bin', { bytes: Buffer.from([0, 255, 19, 128]), contentType: 'image/png' });
+
+  // v0.4.0 refused this exact database at export admission with archive-unclassified-schema.
+  const archive = await createArchive(platform);
+  assert.deepEqual(archive.tables.map(table => table.name), exported);
+  assert.ok(!archive.tables.some(table => table.name === 'rer_migrations'));
+  assert.deepEqual(archive.migrations, source.migrations, 'archive retains exact product migration hashes');
+  await restoreArchive(destination, archive);
+  assert.deepEqual(await createArchive(destination), archive);
+  assert.deepEqual(destination.objects, platform.objects, 'original R2 bytes and content types round trip');
+  assert.deepEqual(source.ledger(), sourceLedger);
+  assert.deepEqual(target.ledger(), targetLedger, 'restore neither rewrites nor drops the destination Platform history');
+
+  // Platform history is checked on both doors, not merely skipped.
+  const [first] = sourceLedger, last = sourceLedger.at(-1);
+  for (const change of [`UPDATE rer_migrations SET sha256='changed-sql-bytes' WHERE name='${first.name}'`, `UPDATE rer_migrations SET name='9999_unrecognized.sql' WHERE name='${first.name}'`,
+    `UPDATE rer_migrations SET name='${last.name}#0-1' WHERE name='${last.name}'`, `DELETE FROM rer_migrations WHERE name='${last.name}'`]) {
+    for (const [installation, binding, operation] of [[source, platform, () => createArchive(platform)], [fresh, empty, () => restoreArchive(empty, archive)]]) {
+      const original = installation.ledger(), before = { ...binding.writes };
+      installation.db.exec(`SAVEPOINT tamper; ${change}`);
+      await assert.rejects(operation(), /archive-migration-history-mismatch/, change);
+      installation.db.exec('ROLLBACK TO tamper; RELEASE tamper');
+      assert.deepEqual(installation.ledger(), original);
+      assert.deepEqual(binding.writes, before);
+    }
+  }
+  // The ledger is classified by its exact name; other rer_ tables stay unknown.
+  for (const installation of [source, fresh]) installation.db.exec('CREATE TABLE rer_migrations_future(id TEXT)');
+  await assert.rejects(createArchive(platform), /archive-unclassified-schema/);
+  await assert.rejects(restoreArchive(empty, archive), /archive-unclassified-schema/);
+  assert.deepEqual(empty.writes, { database: 0, objects: 0 });
+  assert.deepEqual(fresh.ledger(), freshLedger);
+});
