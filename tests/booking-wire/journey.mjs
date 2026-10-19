@@ -19,7 +19,7 @@ let cookie;
 const checks = [];
 async function call(path, body, expected = 200, method = body === undefined ? "GET" : "POST") {
   const response = await fetch(origin + path, { method, headers: { origin, "content-type": "application/json", ...(cookie ? { cookie } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: "manual" });
-  assert.ok((Array.isArray(expected) ? expected : [expected]).includes(response.status), `${method} ${path}: ${await response.clone().text()}`);
+  assert.ok((Array.isArray(expected) ? expected : [expected]).includes(response.status), `${method} ${path.replace(/\/manage\/(?:invite\/)?[^/?]+/gu, "/manage/[redacted]")}: ${(await response.clone().text()).replace(/\/manage\/(?:invite\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]")}`);
   return response;
 }
 const data = async (...args) => (await call(...args)).json();

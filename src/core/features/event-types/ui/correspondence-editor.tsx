@@ -84,6 +84,10 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
         <input type="checkbox" className="mt-0.5 h-6 w-6 shrink-0 accent-ink" checked={value.inviteeConfirmationEnabled} disabled={disabled} onChange={event => { setValue(current => ({ ...current, inviteeConfirmationEnabled: event.target.checked })); setStatus(""); setError(""); }} />
         <span>Send Dial confirmation to invitees<span className="mt-1 block font-normal leading-6 text-soft">When off, a successful calendar invitation replaces this email. Dial still sends its confirmation when no calendar is connected or a calendar write fails. This applies to confirmations that have not yet been sent.</span></span>
       </label>
+      <label className="mt-5 flex items-start gap-3 text-sm font-semibold">
+        <input type="checkbox" className="mt-0.5 h-6 w-6 shrink-0 accent-ink" checked={value.invitationManageLinkEnabled} disabled={disabled} onChange={event => { setValue(current => ({ ...current, invitationManageLinkEnabled: event.target.checked })); setStatus(""); setError(""); }} />
+        <span>Include invitation manage link<span className="mt-1 block font-normal leading-6 text-soft">Add a link to the calendar description that emails a booking management link only to the invitee. Guests and shared-calendar viewers cannot use it to see or change the booking.</span></span>
+      </label>
       {!loaded ? <p role="status" className="mt-4 text-sm text-soft">{error ? "Templates are unavailable." : "Loading templates…"}</p> : null}
       <div className="mt-5 grid min-w-0 gap-5">
         <label className="grid gap-2 text-sm font-semibold">Template
@@ -104,7 +108,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
           {availableQuestions.length ? <ul className="mt-3 grid gap-1">{availableQuestions.map(question => <li key={question.key} className="break-words [overflow-wrap:anywhere]">{question.label}: <code>{`{answer.${question.key}}`}</code>{question.private ? " (private answer; email only)" : ""}</li>)}</ul> : null}
           {calendar ? <p className="mt-3">Calendar invitations are shared with guests and delegates. Use private answers and manage booking links in emails.</p> : <p className="mt-3">The message variable contains the sender’s message when one is available.</p>}
         </details>
-        {loaded ? <CorrespondencePreview templates={templates} keys={selected.keys} questionKeys={questionKeys} hostName={hostName} eventTitle={eventTitle} questions={availableQuestions} calendar={calendar} invalid={selected.keys.some(key => issues[key].length > 0)} /> : null}
+        {loaded ? <CorrespondencePreview templates={templates} keys={selected.keys} questionKeys={questionKeys} hostName={hostName} eventTitle={eventTitle} questions={availableQuestions} calendar={calendar} invitationManageLinkEnabled={value.invitationManageLinkEnabled} invalid={selected.keys.some(key => issues[key].length > 0)} /> : null}
       </div>
     </Card>
     {error ? <p role="alert" className={`${noticeClassName("error")} break-words [overflow-wrap:anywhere]`}>{error}</p> : null}

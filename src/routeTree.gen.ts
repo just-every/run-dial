@@ -35,6 +35,7 @@ import { Route as AppEventTypesNewRouteImport } from './routes/app.event-types_.
 import { Route as BookHandleSlugRouteImport } from './routes/book.$handle_.$slug'
 import { Route as EmbedHandleSlugRouteImport } from './routes/embed.$handle.$slug'
 import { Route as EmbedManageTokenRouteImport } from './routes/embed.manage.$token'
+import { Route as ManageInviteTokenRouteImport } from './routes/manage.invite.$token'
 import { Route as SetupEventTypesIdRouteImport } from './routes/setup.event-types_.$id'
 import { Route as SetupEventTypesNewRouteImport } from './routes/setup.event-types_.new'
 import { Route as AppEventTypesIdAvailabilityRouteImport } from './routes/app.event-types_.$id_.availability'
@@ -177,6 +178,11 @@ const EmbedManageTokenRoute = EmbedManageTokenRouteImport.update({
   path: '/embed/manage/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManageInviteTokenRoute = ManageInviteTokenRouteImport.update({
+  id: '/manage/invite/$token',
+  path: '/manage/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupEventTypesIdRoute = SetupEventTypesIdRouteImport.update({
   id: '/event-types_/$id',
   path: '/event-types/$id',
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
+  '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByTo {
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
+  '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/book/$handle_/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
+  '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types_/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types_/new': typeof SetupEventTypesNewRoute
   '/app/event-types_/$id_/availability': typeof AppEventTypesIdAvailabilityRoute
@@ -381,6 +390,7 @@ export interface FileRouteTypes {
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
+    | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
     | '/app/event-types/$id/availability'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
+    | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
     | '/app/event-types/$id/availability'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/book/$handle_/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
+    | '/manage/invite/$token'
     | '/setup/event-types_/$id'
     | '/setup/event-types_/new'
     | '/app/event-types_/$id_/availability'
@@ -483,6 +495,7 @@ export interface RootRouteChildren {
   BookHandleSlugRoute: typeof BookHandleSlugRoute
   EmbedHandleSlugRoute: typeof EmbedHandleSlugRoute
   EmbedManageTokenRoute: typeof EmbedManageTokenRoute
+  ManageInviteTokenRoute: typeof ManageInviteTokenRoute
   BookHandleSlugConfirmedRoute: typeof BookHandleSlugConfirmedRoute
   BookHandleSlugDetailsRoute: typeof BookHandleSlugDetailsRoute
   BookHandleSlugRequestRoute: typeof BookHandleSlugRequestRoute
@@ -675,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedManageTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/manage/invite/$token': {
+      id: '/manage/invite/$token'
+      path: '/manage/invite/$token'
+      fullPath: '/manage/invite/$token'
+      preLoaderRoute: typeof ManageInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setup/event-types_/$id': {
       id: '/setup/event-types_/$id'
       path: '/event-types/$id'
@@ -822,6 +842,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookHandleSlugRoute: BookHandleSlugRoute,
   EmbedHandleSlugRoute: EmbedHandleSlugRoute,
   EmbedManageTokenRoute: EmbedManageTokenRoute,
+  ManageInviteTokenRoute: ManageInviteTokenRoute,
   BookHandleSlugConfirmedRoute: BookHandleSlugConfirmedRoute,
   BookHandleSlugDetailsRoute: BookHandleSlugDetailsRoute,
   BookHandleSlugRequestRoute: BookHandleSlugRequestRoute,
