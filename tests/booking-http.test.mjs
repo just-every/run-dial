@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { contract } from "./contract.mjs";
 
@@ -68,6 +69,40 @@ contract("AUTH-002", "the public Hono flow binds a nonce to its selected event a
   assert.ok(inviteeMail, "the transactional invitee command is present");
   assert.equal(inviteeMail.payload.attachments[0].filename, "booking.ics", "the invitee confirmation atomically includes the current calendar file");
   assert.match(Buffer.from(inviteeMail.payload.attachments[0].contentBase64, "base64").toString("utf8"), /UID:dial-/);
+});
+
+contract("AUTH-001", "the invitation manage capability and the booking manage capability each open only their own declared public surface; anonymous, forged and crossed tokens change nothing", async (context) => {
+  const { deploy } = JSON.parse(await readFile(new URL("../seed.json", import.meta.url), "utf8"));
+  const declared = path => deploy.publicPaths.some(entry => entry.endsWith("/") && entry !== "/" ? path.startsWith(entry) : path === entry);
+  for (const path of ["/manage/invite/token", "/api/public/manage/invite/token", "/api/public/manage/invite/token/email"]) assert.ok(declared(path), `${path} is a declared public path`);
+  const server = await startWorker(context);
+  await fetch(`${server.origin}/fixture`);
+  const event = await readJson(await fetch(`${server.origin}/api/public/events/dial-host/intro`), "public event");
+  const [slot] = (await readJson(await fetch(`${server.origin}/api/public/book/dial-host/intro/availability`), "availability")).slots;
+  const selection = await readJson(await fetch(`${server.origin}/api/public/book/dial-host/intro/selection`, json({ startAt: slot.startAt, inviteeTimezone: "UTC" })), "selection");
+  const created = await fetch(`${server.origin}/api/public/book/dial-host/intro/confirm`, json({ nonce: selection.nonce, startAt: slot.startAt, inviteeTimezone: "UTC", name: "Invitee", email: "invitee@example.test", answers: { [event.eventType.questions[0].key]: "review" } }));
+  assert.equal(created.status, 201, await created.clone().text());
+  const receipt = await readJson(created, "confirmation");
+  const manageToken = new URL(receipt.manageUrl).pathname.split("/").at(-1);
+  const invitationToken = new URL((await readJson(await fetch(`${server.origin}/invitation-link`), "invitation link")).url).pathname.split("/").at(-1);
+  const flipped = `${invitationToken.slice(0, -1)}${invitationToken.endsWith("A") ? "B" : "A"}`;
+  const before = await readJson(await fetch(`${server.origin}/status`), "status before");
+  const refused = [
+    ["GET", `/manage/invite/${flipped}`, 404], ["GET", `/api/public/manage/invite/${flipped}`, 404], ["POST", `/api/public/manage/invite/${flipped}/email`, 404],
+    ["GET", "/manage/invite/unknown", 404], ["POST", "/api/public/manage/invite/unknown/email", 404],
+    ["GET", `/manage/invite/${manageToken}`, 404], ["GET", `/api/public/manage/invite/${manageToken}`, 404], ["POST", `/api/public/manage/invite/${manageToken}/email`, 404],
+    ["GET", `/manage/${invitationToken}`, 404], ["GET", `/api/public/manage/${invitationToken}`, 404],
+    ["POST", `/api/public/manage/${invitationToken}/cancel`, 404, { reason: "crossed capability" }],
+  ];
+  for (const [method, path, status, body = {}] of refused) {
+    const response = await fetch(`${server.origin}${path}`, method === "GET" ? {} : json(body));
+    assert.equal(response.status, status, `${method} ${path}`);
+    assert.doesNotMatch(await response.text(), /invitee@example\.test|Invitee|Introductory call/, `${method} ${path} discloses no booking`);
+  }
+  assert.deepEqual(await readJson(await fetch(`${server.origin}/status`), "status after"), before, "refused requests create, queue and rotate nothing");
+  assert.deepEqual(await readJson(await fetch(`${server.origin}/api/public/manage/invite/${invitationToken}`), "invitation projection"), { available: true }, "the invitation capability opens only its field-free projection");
+  assert.equal((await fetch(`${server.origin}/manage/invite/${invitationToken}`)).status, 200);
+  assert.deepEqual(await readJson(await fetch(`${server.origin}/api/public/manage/${manageToken}`), "receipt"), receipt, "the booking capability still reads its own booking unchanged");
 });
 
 async function startWorker(context) {

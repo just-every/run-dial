@@ -4,6 +4,8 @@ import { AvailabilityRepository, AvailabilityService, type CalendarBusyReader } 
 import { BookingLinksRepository } from "../src/core/features/booking-links/repository";
 import { BookingLinksService } from "../src/core/features/booking-links/service";
 import { BookingsRepository, BookingsService, CalendarDeletionProbesRepository } from "../src/core/features/bookings";
+import { invitationManageUrl } from "../src/core/features/bookings/invitation-capability";
+import { InvitationManageService } from "../src/core/features/bookings/invitation-manage";
 import type { AppEnvironment } from "../src/core/app/context";
 import type { AppServices } from "../src/core/app/services";
 import { EventTypesRepository, EventTypesService } from "../src/core/features/event-types";
@@ -11,6 +13,7 @@ import { eventTypeRoutes } from "../src/core/features/event-types/routes";
 import { HostProfileRepository } from "../src/core/features/host-profile/repository";
 import { HostProfileService } from "../src/core/features/host-profile/service";
 import { OperatorsService } from "../src/core/features/operators";
+import { invitationManageRoutes } from "../src/core/features/public-booking/invitation-routes";
 import { publicBookingRoutes } from "../src/core/features/public-booking/routes";
 import { hashToken } from "../src/core/platform/auth/tokens";
 import type { RuntimeEnvironment } from "../src/core/shared/runtime-env";
@@ -35,12 +38,16 @@ export default {
       await env.DB.prepare("UPDATE booking_nonces SET expires_at = ? WHERE nonce_hash = ?").bind("2000-01-01T00:00:00.000Z", await hashToken(nonce, runtime.SESSION_SECRET)).run();
       return Response.json({ ok: true });
     }
+    if (new URL(request.url).pathname === "/invitation-link") {
+      const booking = await env.DB.prepare("SELECT id FROM bookings ORDER BY created_at DESC LIMIT 1").first<{ id: string }>();
+      return Response.json({ url: booking ? await invitationManageUrl(booking.id, runtime) : null });
+    }
     const services = servicesFor(env.DB);
     const app = new Hono<AppEnvironment>().use("*", async (context, next) => {
       context.set("runtime", runtime);
       context.set("services", services as AppServices);
       await next();
-    }).route("/", eventTypeRoutes).route("/", publicBookingRoutes);
+    }).route("/", eventTypeRoutes).route("/", invitationManageRoutes).route("/", publicBookingRoutes);
     return app.fetch(request, env as never);
   },
 };
@@ -56,6 +63,7 @@ function servicesFor(binding: D1Database) {
     eventTypes,
     bookingLinks,
     availability,
+    invitationManage: new InvitationManageService(binding, runtime),
     bookings: new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime, {
       probes: new CalendarDeletionProbesRepository(binding), inspect: async () => { throw new Error("The booking HTTP Worker has no calendar provider."); },
     }, bookingLinks),
