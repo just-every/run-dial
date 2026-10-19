@@ -1,3 +1,4 @@
+import { invitationManageRoutes } from "../features/public-booking/invitation-routes";
 import { bookingLinkRoutes } from "../features/booking-links/routes";
 import { correspondenceRoutes } from "../features/event-types/correspondence-routes";
 import { bookingPolicyRoutes } from "../features/event-types/booking-policy-routes";
@@ -93,6 +94,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", personErasureRoutes)
     .route("/", moveInRoutes)
     .route("/", embedRoutes)
+    .route("/", invitationManageRoutes)
     .route("/", publicBookingRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
     .get("/app", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))

@@ -61,7 +61,8 @@ export async function readPublicDocument(path: string): Promise<{ status: number
       const result = await publicServices().bookings.getPublicConfirmation({ handle, slug, token: url.searchParams.get("token") ?? "" });
       return result.kind === "found" ? { status: 200, payloadJson: JSON.stringify(result.booking) } : { status: result.kind === "expired" ? 410 : 404, payloadJson: null };
     } else if (!step || step === "request") endpoint = `/api/public/events/${encodeURIComponent(handle)}/${encodeURIComponent(slug)}${url.searchParams.has("link") ? `?link=${encodeURIComponent(url.searchParams.get("link")!)}` : ""}`;
-  } else if (pieces[0] === "manage" && pieces.length === 2) endpoint = `/api/public/manage/${encodeURIComponent(pieces[1])}`;
+  } else if (pieces[0] === "manage" && pieces[1] === "invite" && pieces.length === 3) endpoint = `/api/public/manage/invite/${encodeURIComponent(pieces[2])}`;
+  else if (pieces[0] === "manage" && pieces.length === 2) endpoint = `/api/public/manage/${encodeURIComponent(pieces[1])}`;
   if (!endpoint) return { status: 200, payloadJson: null };
   const bound = bindings();
   const origin = parseRuntimeEnvironment(bound).APP_URL;

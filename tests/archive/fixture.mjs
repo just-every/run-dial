@@ -10,7 +10,7 @@ export const copyReport = {
   accepted_at: '2026-10-07T00:01:02.003Z', created_at: '2026-10-06T23:58:59.001Z', updated_at: '2026-10-07T00:01:02.003Z',
 };
 const end = '2026-10-07T01:00:00.000Z';
-const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, templates: {
+const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invitationManageLinkEnabled: false, templates: {
   calendarTitle: '{event name} with {invitee full name}',
   calendarDescription: '{date and time}\n{duration}\n{location}',
   confirmationSubject: 'Confirmed: {event name}',

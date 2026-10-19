@@ -1,4 +1,4 @@
-import { renderCalendarCorrespondence, renderMailCorrespondence } from "../../shared/correspondence";
+import { appendInvitationManageLink, renderCalendarCorrespondence, renderMailCorrespondence } from "../../shared/correspondence";
 import { formatTimeRange } from "./booking-mail-times";
 import { inviteeCalendarUrl, renderBrandedMail } from "./branded-layout";
 import type { BookingCorrespondence } from "./correspondence-repository";
@@ -7,7 +7,10 @@ export function templatedCalendar<T extends { title: string; description: string
   if (!data) return event;
   const publicKeys = new Set(data.questions.filter(question => !question.private).map(question => question.key));
   const values = { ...data.values, "date and time": formatTimeRange(event.startAt, event.endAt, event.timeZone, true), answers: Object.fromEntries(Object.entries(data.values.answers).filter(([key]) => publicKeys.has(key))) };
-  return { ...event, ...renderCalendarCorrespondence(data.config, values, data.questions) };
+  const rendered = data.configured ? renderCalendarCorrespondence(data.config, values, data.questions) : event;
+  if (!data.config.invitationManageLinkEnabled) return { ...event, ...rendered };
+  if (!data.invitationManageUrl) throw new TypeError("Calendar correspondence requires an invitation manage URL.");
+  return { ...event, ...rendered, description: appendInvitationManageLink(rendered.description, data.invitationManageUrl) };
 }
 
 export function templatedMail(payload: Record<string, unknown>, kind: "confirmation" | "reschedule" | "cancellation" | "reminder" | "rescheduleRequest" | "rescheduleRequestReminder", data: BookingCorrespondence, manageUrl: string) {

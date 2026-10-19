@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { renderCorrespondenceTemplate } from "../../../shared/correspondence";
+import { appendInvitationManageLink, renderCorrespondenceTemplate } from "../../../shared/correspondence";
 
 type PreviewValues = Parameters<typeof renderCorrespondenceTemplate>[1];
 
-export function CorrespondencePreview({ templates, keys, questionKeys, hostName, eventTitle, questions, calendar, invalid }: {
+export function CorrespondencePreview({ templates, keys, questionKeys, hostName, eventTitle, questions, calendar, invitationManageLinkEnabled, invalid }: {
   templates: Record<string, string>;
   keys: readonly [string, string];
   questionKeys: string[];
@@ -11,6 +11,7 @@ export function CorrespondencePreview({ templates, keys, questionKeys, hostName,
   eventTitle: string;
   questions: { key: string; label: string }[];
   calendar: boolean;
+  invitationManageLinkEnabled: boolean;
   invalid: boolean;
 }) {
   const [date] = useState(() => {
@@ -37,6 +38,7 @@ export function CorrespondencePreview({ templates, keys, questionKeys, hostName,
   if (!invalid) {
     try {
       preview = [renderCorrespondenceTemplate(templates[keys[0]], values, questionKeys, true), renderCorrespondenceTemplate(templates[keys[1]], values, questionKeys, false)];
+      if (calendar && invitationManageLinkEnabled) preview[1] = appendInvitationManageLink(preview[1], "[Invitation manage link]");
     } catch (cause) {
       error = cause instanceof Error ? cause.message : "This template could not be previewed.";
     }

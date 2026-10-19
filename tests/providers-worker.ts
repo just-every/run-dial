@@ -124,7 +124,7 @@ function servicesFor(binding: D1Database) {
   return {
     calendarRepository,
     calendar,
-    delivery: new ProviderDeliveryService(new DeliveryRepository(binding), calendar, mail, runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET),
+    delivery: new ProviderDeliveryService(new DeliveryRepository(binding), calendar, mail, runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime),
   };
 }
 
@@ -232,7 +232,7 @@ async function staleCalendarFinishCycle(calendar: CalendarConnectionService, cal
       binding.prepare("UPDATE bookings SET state = 'rescheduled', current_occurrence_id = 'race-current-occurrence', calendar_state = 'pending', updated_at = ? WHERE id = 'race-booking'").bind(timestamp),
     ]);
   });
-  const delivery = new ProviderDeliveryService(new DeliveryRepository(interleaving.binding), calendar, mail, runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET);
+  const delivery = new ProviderDeliveryService(new DeliveryRepository(interleaving.binding), calendar, mail, runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime);
   const callsBefore = calendarAdapter.managedEvents.length;
   const first = await delivery.process({ outboxId: "race-calendar-command" }, new Date(timestamp));
   const second = await delivery.process({ outboxId: "race-calendar-command" }, new Date(timestamp));
@@ -256,7 +256,7 @@ async function rotatedCapabilityFinishCycle(calendar: CalendarConnectionService,
     if (result.kind !== "rotated") throw new Error("Capability-rotation fixture did not rotate its active manage token");
     rotatedManageUrl = result.manageUrl;
   });
-  const delivery = new ProviderDeliveryService(new DeliveryRepository(interleaving.binding), calendar, mail, runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET);
+  const delivery = new ProviderDeliveryService(new DeliveryRepository(interleaving.binding), calendar, mail, runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime);
   const callsBefore = calendarAdapter.managedEvents.length;
   const first = await delivery.process({ outboxId: "rotate-race-calendar-command" }, new Date(timestamp));
   const second = await delivery.process({ outboxId: "rotate-race-calendar-command" }, new Date(timestamp));

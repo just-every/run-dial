@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { evidencePath } from "../scripts/evidence-path.mjs";
 
-test("NOTIFY-001: production Google lifecycle and Base SendGrid outbox run on native D1; request-only needs no Google connection", async t => {
+test("NOTIFY-001/NOTIFY-009/AUTH-007: production Google lifecycle and Base SendGrid outbox run on native D1; request-only needs no Google connection", async t => {
   const state = await mkdtemp(resolve(tmpdir(), "dial-booking-wire-"));
   const origin = "http://127.0.0.1:15754", config = "tests/booking-wire/worker.wrangler.toml";
   const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin };
@@ -14,7 +14,7 @@ test("NOTIFY-001: production Google lifecycle and Base SendGrid outbox run on na
   t.after(async () => {
     if (server?.exitCode === null) { const stopped = new Promise(done => server.once("exit", done)); try { process.kill(-server.pid, "SIGTERM"); } catch { server.kill("SIGTERM"); } await stopped; }
     // C.1 keeps captured Worker evidence free of generated manage capability URLs.
-    await writeFile(evidencePath("booking-wire-worker.log"), output.replace(/\/manage\/[^/?\s"'<>]+/gu, "/manage/[redacted]")); await rm(state, { recursive: true, force: true });
+    await writeFile(evidencePath("booking-wire-worker.log"), output.replace(/\/manage\/(?:invite\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]")); await rm(state, { recursive: true, force: true });
   });
   const run = args => new Promise((done, reject) => {
     const child = spawn(args[0], args.slice(1), { env, stdio: "pipe" }); let log = "";

@@ -30,7 +30,7 @@ async function runAxe(t, journey) {
   const run = args => new Promise((done, reject) => {
     const child = spawn(args[0], args.slice(1), { env, stdio: "pipe" }); let log = "";
     child.stdout.on("data", chunk => { log += chunk; }); child.stderr.on("data", chunk => { log += chunk; });
-    child.on("error", reject); child.on("exit", code => code === 0 ? done(log) : reject(new Error(log)));
+    child.on("error", reject); child.on("exit", code => code === 0 ? done(log) : reject(new Error(log.replace(/\/manage\/(?:invite\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]"))));
   });
   await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-axe-test", "--local", "--persist-to", state, "--config", config]);
   server = spawn("pnpm", [...fixtureVite, "--host", "127.0.0.1", "--port", "15752", "--strictPort"], { env, stdio: "pipe", detached: true });
@@ -54,4 +54,4 @@ contract("DOCS-001", "every published docs page passes axe at desktop and mobile
 
 contract("AUTH-001", "both unclaimed setup widths precede the native claim; fresh sessionless reloads hide setup and refuse replay", gate);
 
-contract("OPER-004", "NOTIFY-001 saved confirmation switch and honest suppression; booking records show each email state and retained failure, with recovery at desktop and mobile", t => runAxe(t, "scripts/verify-booking-record.mjs"));
+contract("OPER-004", "NOTIFY-009 invitation replacement and NOTIFY-001 saved confirmation switch and honest suppression; booking records show each email state and retained failure, with recovery at desktop and mobile", t => runAxe(t, "scripts/verify-booking-record.mjs"));

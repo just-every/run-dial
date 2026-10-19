@@ -12,11 +12,11 @@ import { quote } from '../scripts/archive/schema.mjs';
 const fixture = new URL('./fixtures/archive/listed-bb5d650f.rer', import.meta.url);
 const salt = 'synthetic-qualification-owner-salt';
 const sorted = row => JSON.stringify(Object.fromEntries(Object.entries(row).sort(([a], [b]) => a < b ? -1 : 1)));
-// 0063 turns invitee confirmations on for correspondence saved before the switch existed.
+// 0063 and 0064 turn confirmation and invitation access on for older correspondence.
 function confirmed(table, row) {
   if (!['event_correspondence', 'booking_correspondence'].includes(table)) return row;
   const templates = JSON.parse(row.templates_json);
-  return { ...row, templates_json: JSON.stringify({ ...templates, inviteeConfirmationEnabled: templates.inviteeConfirmationEnabled ?? true }) };
+  return { ...row, templates_json: JSON.stringify({ ...templates, inviteeConfirmationEnabled: templates.inviteeConfirmationEnabled ?? true, invitationManageLinkEnabled: templates.invitationManageLinkEnabled ?? true }) };
 }
 
 contract('DATA-001', 'a backup made by the listed release restores through rer import with every archived value and file', async () => {

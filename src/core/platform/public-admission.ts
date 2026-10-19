@@ -29,10 +29,11 @@ export class PublicAdmissionGate {
     const clientKey = await hashToken(`public-client:${client}`, this.runtime.SESSION_SECRET);
     const path = new URL(request.url).pathname;
     const mutation = request.method === "POST" && (/^\/api\/public\/book\/[^/]+\/[^/]+\/confirm$/.test(path) || /^\/api\/public\/manage\/[^/]+\/(cancel|reschedule)$/.test(path));
+    const invitation = request.method === "POST" && /^\/api\/public\/manage\/invite\/[^/]+\/email$/.test(path);
     const alternative = request.method === "POST" && /^\/api\/public\/events\/[^/]+\/[^/]+\/request$/.test(path);
     const minute = 60_000;
     const rules: Rule[] = [{ predicate: "client_key = ?", args: [clientKey], windowMs: minute, limit: manifest.limits.publicRequestsPerIpPerMinute }];
-    if (mutation) rules.push({ predicate: "client_key = ? AND booking_mutation = 1", args: [clientKey], windowMs: minute, limit: manifest.limits.bookingMutationsPerIpPerMinute });
+    if (mutation || invitation) rules.push({ predicate: "client_key = ? AND booking_mutation = 1", args: [clientKey], windowMs: minute, limit: manifest.limits.bookingMutationsPerIpPerMinute });
     if (alternative) rules.push({ predicate: "client_key = ? AND alternative_submission = 1", args: [clientKey], windowMs: 60 * minute, limit: manifest.limits.alternativeRequestsPerIpPerHour });
     if (provider) rules.push({ predicate: "provider = ?", args: [provider], windowMs: minute, limit: manifest.limits.webhookRequestsPerProviderPerMinute });
     const timestamp = new Date(now).toISOString();
@@ -43,7 +44,7 @@ export class PublicAdmissionGate {
         this.binding.prepare("DELETE FROM public_rate_events WHERE id IN (SELECT id FROM public_rate_events WHERE expires_at <= ? ORDER BY expires_at LIMIT 1000)").bind(now),
         this.binding.prepare(`INSERT INTO public_rate_events (id, client_key, booking_mutation, alternative_submission, provider, admitted_at, expires_at, created_at, updated_at)
           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE ${predicates.join(" AND ")}`)
-          .bind(createId(), clientKey, mutation ? 1 : 0, alternative ? 1 : 0, provider ?? null, now, now + Math.max(...rules.map((rule) => rule.windowMs)), timestamp, timestamp, ...argumentsForRules),
+          .bind(createId(), clientKey, mutation || invitation ? 1 : 0, alternative ? 1 : 0, provider ?? null, now, now + Math.max(...rules.map((rule) => rule.windowMs)), timestamp, timestamp, ...argumentsForRules),
       ]);
       if (result[1].meta.changes === 1) return { kind: "admitted" };
       const counts = await Promise.all(rules.map((rule) => this.binding.prepare(`SELECT count(*) AS count, min(admitted_at) AS oldest FROM public_rate_events WHERE ${rule.predicate} AND admitted_at > ?`).bind(...rule.args, now - rule.windowMs).first<{ count: number; oldest: number | null }>()));

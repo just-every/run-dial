@@ -28,6 +28,7 @@ export class ProviderDeliveryService {
     private readonly mail: MailSender,
     private readonly resendWebhookSecret: string | undefined,
     private readonly sessionSecret: string,
+    private readonly runtime: import("../../shared/runtime-env").RuntimeEnvironment,
   ) {}
 
   async processDue(limit = 25, now = new Date()) {
@@ -150,7 +151,7 @@ export class ProviderDeliveryService {
     if (record.kind === "calendar_upsert") {
       if (await this.repository.calendarCommandState(record) !== "current") return undefined;
       if (record.bookingId) payload = { ...payload, lockedTimezone: await this.repository.calendarPresentationZone(record.bookingId) };
-      let event: import("../../platform/calendar/types").ManagedCalendarEvent = templatedCalendar(calendarEventFrom(payload, record), record.bookingId && record.occurrenceId ? await this.repository.correspondence(record.bookingId, record.occurrenceId) : undefined);
+      let event: import("../../platform/calendar/types").ManagedCalendarEvent = templatedCalendar(calendarEventFrom(payload, record), record.bookingId && record.occurrenceId ? await this.repository.correspondence(record.bookingId, record.occurrenceId, this.runtime) : undefined);
       if (record.bookingId) {
         const released = await this.repository.releasedRescheduleRequest(record.bookingId);
         if (released) event = {...event,title:`Reschedule requested: ${event.title}`,transparency:"transparent"};

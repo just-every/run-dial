@@ -1,3 +1,4 @@
+import { InvitationManageService } from "../features/bookings/invitation-manage";
 import { BookingLinksRepository } from "../features/booking-links/repository";
 import { BookingLinksService } from "../features/booking-links/service";
 import { EventCorrespondenceRepository } from "../features/event-types/correspondence-repository";
@@ -58,6 +59,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    invitationManage: new InvitationManageService(binding, runtime),
     correspondence: new EventCorrespondenceRepository(binding),
     bookingPolicies: new EventBookingPolicyRepository(binding),
     namedSchedules: new NamedSchedules(binding),
@@ -81,7 +83,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     calendar,
     mail,
     sendgridWebhook: new SendGridWebhookReceiver(binding, runtime.MAIL_WEBHOOK_KEY),
-    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET),
+    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime),
     availability,
     bookings,
     availabilityRequests: new AvailabilityRequestsService(new AvailabilityRequestsRepository(binding), eventTypes, hostProfile, runtime),

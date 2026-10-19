@@ -1,16 +1,18 @@
-import type { CorrespondenceConfig, CorrespondenceQuestion, CorrespondenceValues } from "../../shared/correspondence";
+import { defaultCorrespondenceConfig, type CorrespondenceConfig, type CorrespondenceQuestion, type CorrespondenceValues } from "../../shared/correspondence";
 import { formatTimeRange } from "./booking-mail-times";
+import type { RuntimeEnvironment } from "../../shared/runtime-env";
+import { invitationManageUrl } from "../bookings/invitation-capability";
 
 type BookingTemplateRow = {
-  config: string; eventTypeId: string | null; eventTitle: string; inviteeName: string; hostName: string;
+  config: string | null; eventTypeId: string | null; eventTitle: string; inviteeName: string; hostName: string;
   inviteeTimezone: string; hostTimezone: string; lockedTimezone: string | null;
   startAt: string; endAt: string; locationType: string; locationLabel: string; locationValue: string; meetingUrl: string | null;
 };
-export type BookingCorrespondence = { config: CorrespondenceConfig; values: CorrespondenceValues; questions: CorrespondenceQuestion[] };
+export type BookingCorrespondence = { config: CorrespondenceConfig; configured: boolean; invitationManageUrl?: string; values: CorrespondenceValues; questions: CorrespondenceQuestion[] };
 
 export class BookingCorrespondenceRepository {
   constructor(private readonly binding: D1Database) {}
-  async read(bookingId: string, occurrenceId: string): Promise<BookingCorrespondence | undefined> {
+  async read(bookingId: string, occurrenceId: string, runtime?: RuntimeEnvironment): Promise<BookingCorrespondence | undefined> {
     const row = await this.binding.prepare(`SELECT COALESCE(current.templates_json,retained.templates_json) AS config,
       b.event_type_id AS eventTypeId,b.event_title AS eventTitle,b.invitee_name AS inviteeName,
       p.name AS hostName,b.invitee_timezone AS inviteeTimezone,b.host_timezone AS hostTimezone,
@@ -21,9 +23,9 @@ export class BookingCorrespondenceRepository {
       LEFT JOIN event_correspondence current ON current.event_type_id=b.event_type_id
       LEFT JOIN booking_correspondence retained ON retained.booking_id=b.id
       LEFT JOIN booking_presentation presentation ON presentation.booking_id=b.id
-      WHERE b.id=? AND o.id=? AND (current.templates_json IS NOT NULL OR retained.templates_json IS NOT NULL)`)
+      WHERE b.id=? AND o.id=?`)
       .bind(bookingId, occurrenceId).first<BookingTemplateRow>();
-    if (!row) return undefined;
+    if (!row || row.config === null && !runtime) return undefined;
     const [answers, questions] = await Promise.all([
       this.binding.prepare(`SELECT question_key AS key,question_label AS label,value_json AS value FROM booking_answers WHERE booking_id=? ORDER BY created_at`).bind(bookingId).all<{ key: string; label: string; value: string }>(),
       this.binding.prepare(`SELECT COALESCE(public_key,'q_'||id) AS key,label,private FROM event_questions WHERE event_type_id=? ORDER BY position`).bind(row.eventTypeId).all<{ key: string; label: string; private: number }>(),
@@ -39,7 +41,10 @@ export class BookingCorrespondenceRepository {
     // Newly added questions have no answer on an older booking; absence is explicit.
     for (const question of metadata) if (!Object.hasOwn(answerValues, question.key)) answerValues[question.key] = "Not answered";
     const zone = row.lockedTimezone ?? row.inviteeTimezone;
-    return { config: JSON.parse(row.config) as CorrespondenceConfig, questions: metadata, values: {
+    const config = row.config === null ? defaultCorrespondenceConfig() : JSON.parse(row.config) as CorrespondenceConfig;
+    return { config, configured: row.config !== null,
+      invitationManageUrl: runtime && config.invitationManageLinkEnabled ? await invitationManageUrl(bookingId, runtime) : undefined,
+      questions: metadata, values: {
       "invitee full name": row.inviteeName, "invitee first name": row.inviteeName.trim().split(/\s+/u)[0],
       "host name": row.hostName, "event name": row.eventTitle,
       "date and time": formatTimeRange(row.startAt, row.endAt, zone, Boolean(row.lockedTimezone)),

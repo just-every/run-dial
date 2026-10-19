@@ -1,3 +1,4 @@
+import { invitationBookingId } from "../features/bookings/invitation-capability";
 import type { AppBindings } from "./bindings";
 import { BookingsRepository, CalendarDeletionProbesRepository } from "../features/bookings";
 import { hashToken } from "../platform/auth/tokens";
@@ -22,6 +23,8 @@ export async function bookingMutationTarget(request: Request, env: AppBindings) 
   if (requestTarget) return `request:${requestTarget[1]}`;
   const operator = /^\/api\/app\/(?:bookings|erasures)\/([^/]+)(?:\/|$)/.exec(path);
   if (operator) return operator[1];
+  const invitation = /^\/api\/public\/manage\/invite\/([^/]+)\/email$/.exec(path);
+  if (invitation) return invitationBookingId(invitation[1], parseRuntimeEnvironment(env));
   const capability = /^\/api\/public\/manage\/([^/]+)(?:\/|$)/.exec(path);
   if (!capability) return undefined;
   const hash = await hashToken(capability[1], parseRuntimeEnvironment(env).SESSION_SECRET);
