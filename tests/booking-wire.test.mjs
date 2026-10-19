@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { evidencePath } from "../scripts/evidence-path.mjs";
 
-test("production Google lifecycle and Base SendGrid outbox run on native D1; request-only needs no Google connection", async t => {
+test("NOTIFY-001: production Google lifecycle and Base SendGrid outbox run on native D1; request-only needs no Google connection", async t => {
   const state = await mkdtemp(resolve(tmpdir(), "dial-booking-wire-"));
   const origin = "http://127.0.0.1:15754", config = "tests/booking-wire/worker.wrangler.toml";
   const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin };

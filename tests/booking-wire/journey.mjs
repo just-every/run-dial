@@ -2,7 +2,7 @@ import { offeredTimesJourney } from "./offered-times-journey.mjs";
 import { rescheduleRequestJourney } from "./reschedule-request-journey.mjs";
 import { locationJourney } from "./location-journey.mjs";
 import { bookingLinksJourney } from "./booking-links-journey.mjs";
-import { correspondenceJourney } from "./correspondence-journey.mjs";
+import { correspondenceJourney, confirmationChoiceJourney } from "./correspondence-journey.mjs";
 import { bookingPolicyJourney } from "./booking-policy-journey.mjs";
 import { linkContextJourney } from "./link-context-journey.mjs";
 import { durationJourney } from "./duration-journey.mjs";
@@ -235,5 +235,6 @@ for (const mail of snap.delivery_outbox.filter(row => row.last_error_code === "m
 const ambiguousSends = snap.wire_calls.filter(row => new URL(row.url).pathname === "/v3/mail/send").length;
 await deliver();
 assert.equal((await state()).wire_calls.filter(row => new URL(row.url).pathname === "/v3/mail/send").length, ambiguousSends, "ambiguous SendGrid outcome never automatically repeats");
+await confirmationChoiceJourney({ data, call, state, deliver, future, checks });
 await writeFile(evidencePath("booking-wire.json"), JSON.stringify({ checks: [...checks, "never-connected request-only admission without booking/calendar side effects", "normal publish gate preserved", "Google Meet conferenceDataVersion=1", "reschedule same event", "cancel event", "fresh authoritative GET/list after external deletion", "Base SendGrid confirmation/reschedule/cancel with nullable receipt", "exact replay, interrupted accepted delivery recovery and ambiguous mail no-repeat"], scope: "Native local D1 and production services/adapters with contract-shaped provider wire fixtures" }, null, 2));
 console.log("Production Google + Base SendGrid lifecycle and native request-only journey passed.");

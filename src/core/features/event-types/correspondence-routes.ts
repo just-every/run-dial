@@ -6,7 +6,7 @@ import { nowIso } from "../../shared/ids";
 import { validate } from "../../shared/validation";
 import { correspondenceConfigSchema } from "../../shared/correspondence";
 const id = z.object({ id: z.string().length(26) });
-const body = z.object({ templates: correspondenceConfigSchema().shape.templates }).strict();
+const body = z.object({ inviteeConfirmationEnabled: z.boolean().default(true), templates: correspondenceConfigSchema().shape.templates }).strict();
 export const correspondenceRoutes = new Hono<AppEnvironment>()
   .get("/api/app/event-types/:id/correspondence", validate("param", id), async context => {
     const config = await context.get("services").correspondence.read(context.req.valid("param").id);

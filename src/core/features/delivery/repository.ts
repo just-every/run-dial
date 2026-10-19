@@ -1,3 +1,4 @@
+import { ConfirmationDeliveryRepository } from "./confirmation-repository";
 import { BookingCorrespondenceRepository } from "./correspondence-repository";
 import { and, asc, eq, isNull, lte, sql } from "drizzle-orm";
 import { createDatabase } from "../../platform/db/client";
@@ -25,9 +26,11 @@ export type DeliveryOutboxRecord = {
 
 export class DeliveryRepository {
   private readonly db;
+  readonly confirmations: ConfirmationDeliveryRepository;
 
   constructor(private readonly binding: D1Database, readonly mailProvider: "resend" | "sendgrid" | "rer" | "development" = "resend", private readonly webhookConfigured = false) {
     this.db = createDatabase(binding);
+    this.confirmations = new ConfirmationDeliveryRepository(binding);
   }
 
   async recoverProcessing(now: string) {

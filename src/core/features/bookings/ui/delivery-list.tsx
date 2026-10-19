@@ -22,6 +22,7 @@ function deliveryStatus(delivery: Delivery, state = delivery.state) {
     case "processing": return "Processing";
     case "succeeded": return ["mail_send", "reminder"].includes(delivery.kind) ? "Sent" : "Completed";
     case "failed": return "Failed";
+    case "suppressed": return "Not sent · calendar invitation";
     default: throw new Error("Unknown delivery state");
   }
 }

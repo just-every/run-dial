@@ -54,4 +54,4 @@ contract("DOCS-001", "every published docs page passes axe at desktop and mobile
 
 contract("AUTH-001", "both unclaimed setup widths precede the native claim; fresh sessionless reloads hide setup and refuse replay", gate);
 
-contract("OPER-004", "booking records show each email state and retained failure, with recovery at desktop and mobile", t => runAxe(t, "scripts/verify-booking-record.mjs"));
+contract("OPER-004", "NOTIFY-001 saved confirmation switch and honest suppression; booking records show each email state and retained failure, with recovery at desktop and mobile", t => runAxe(t, "scripts/verify-booking-record.mjs"));
