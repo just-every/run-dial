@@ -81,4 +81,4 @@ These figures are the author's estimates, not measured or load-tested. For one h
 4. [Backups and export](backups.md) saves a private copy of local or hosted data and restores it into an empty local install.
 5. [Updating](updating.md) shows how to take a new version safely.
 
-The [changelog](../CHANGELOG.md) lists what is in each version. Dial is MIT licensed; the licence is in [LICENSE](../LICENSE).
+The [changelog](../CHANGELOG.md) lists what is in each version. Dial is MIT licensed; the license is in [LICENSE](../LICENSE).

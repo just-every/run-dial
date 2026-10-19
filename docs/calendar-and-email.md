@@ -41,12 +41,12 @@ If creating the event fails after someone has booked, the booking stays confirme
 
 ## Emails Dial sends
 
-Mail goes out from your verified sender address; Dial never reads replies sent to it. Confirmation pages and client emails offer **Add to calendar**, an `.ics` file. A reschedule updates the same calendar entry, and a cancellation marks it cancelled.
+Mail goes out from your verified sender address; Dial never reads replies sent to it. Confirmation pages and client emails offer **Add to calendar**, an `.ics` file. A reschedule updates the same calendar entry, and a cancellation marks it canceled.
 
 - **Confirmation.** The client and every operator get the time, answers and calendar status. The client's copy has their manage link. When a connected calendar receives the booking, Google separately sends the client its own invitation. If the meeting link is not ready, the email says so, and the client gets one more when it is.
 - **Changes.** A reschedule or cancellation emails the client and every operator once.
-- **Reminders.** The client and every operator get one 24 hours and one 1 hour before the start. A reminder whose time has already passed is never scheduled. Rescheduling replaces them and cancelling removes them. These offsets are fixed for now.
-- **Requests.** Clients get an acknowledgement, then one more email when you handle or close it. Operators are told of each new request.
+- **Reminders.** The client and every operator get one 24 hours and one 1 hour before the start. A reminder whose time has already passed is never scheduled. Rescheduling replaces them and canceling removes them. These offsets are fixed for now.
+- **Requests.** Clients get an acknowledgment, then one more email when you handle or close it. Operators are told of each new request.
 
 To stop booking mail for yourself, tick **Mute booking mail for me** under **Your booking mail** in **Settings**. Client emails are never muted, and sign-in links, requests and connection alerts still reach you. A failed send is retried up to five times over an hour, then marked failed, and you can send it again without a duplicate.
 

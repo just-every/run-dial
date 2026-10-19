@@ -62,7 +62,7 @@ Dial rechecks your saved schedule and existing Dial bookings at confirmation, pl
 
 ## Alternative requests
 
-Switch alternative requests on with **Enable alternative requests** on the event type's page; the same button turns them off. With them on, clients see **None of these work?** under the times. They pick up to ten future dates and twenty time windows, add their details and an optional note, review, and send. A request never holds a time or makes a booking, and the client gets an acknowledgement email.
+Switch alternative requests on with **Enable alternative requests** on the event type's page; the same button turns them off. With them on, clients see **None of these work?** under the times. They pick up to ten future dates and twenty time windows, add their details and an optional note, review, and send. A request never holds a time or makes a booking, and the client gets an acknowledgment email.
 
 Open **Requests** to see them as Submitted, Handled or Closed. **Create agreed booking** turns one into a booking, and **Mark handled** or **Close request** emails the client once.
 

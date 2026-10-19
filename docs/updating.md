@@ -7,7 +7,7 @@ Dial is source code that you own. A new version arrives as new commits in the up
 Each version of Dial ships three things you read before you change anything:
 
 - **[CHANGELOG.md](../CHANGELOG.md)** says what changed in plain language, including anything that breaks.
-- **[RELEASE.json](../RELEASE.json)** is the exact record for your agent: which behaviours changed, whether the update breaks anything, each database migration with its steps, and written instructions for the agent that applies the update.
+- **[RELEASE.json](../RELEASE.json)** is the exact record for your agent: which behaviors changed, whether the update breaks anything, each database migration with its steps, and written instructions for the agent that applies the update.
 - **[HANDOVER.md](../HANDOVER.md)** says what has and has not been proven, so you know the limits of that version.
 
 Dial does not check for updates or phone home. Nothing changes on your install until you apply it.
@@ -16,7 +16,7 @@ Dial does not check for updates or phone home. Nothing changes on your install u
 
 You and your coding agent may change any part of Dial: the screens, the rules, the database, the infrastructure. Dial does not lock down a core and an extension area. When an update touches code you have changed, merging, reapplying your changes or rewriting is work for your agent, and it chooses the method. What matters is the result, which is that the updated Dial still does what you asked for.
 
-Whichever way you take an update, keep your own changes and every authored record. Check the result against the behaviour you want before you deploy it. Do not regenerate the code over your work.
+Whichever way you take an update, keep your own changes and every authored record. Check the result against the behavior you want before you deploy it. Do not regenerate the code over your work.
 
 ## Update safely
 
