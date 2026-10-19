@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { Button, Card, Input, Select } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
+import { useWorkspaceRead } from "../../../app/workspace-reads";
+import { operatorTimestamp } from "../../../shared/operator-format";
 import type { BlockedAddressRule } from "../index";
 
 export function BlockedAddressesCard() {
@@ -12,6 +14,7 @@ export function BlockedAddressesCard() {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const timezone = useWorkspaceRead<{ timezone: string }>("/api/app/profile")?.timezone;
 
   async function load() {
     const response = await api.api.app["blocked-addresses"].$get();
@@ -67,7 +70,7 @@ export function BlockedAddressesCard() {
       </fieldset>
     </form>
     <div className="mt-5 grid gap-2">
-      {rules.map((rule) => <div key={rule.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-row px-4 py-3"><div className="min-w-0 flex-1"><p className="break-all text-sm font-semibold">{rule.value}</p><p className="text-[13px] text-muted">{rule.kind === "email" ? "Email address" : "Exact domain"}</p></div><Button type="button" variant="secondary" disabled={working} aria-label={`Remove blocking rule for ${rule.value}`} onClick={() => void remove(rule.id)}>Remove</Button></div>)}
+      {rules.map((rule) => <div key={rule.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-row px-4 py-3"><div className="min-w-0 flex-1"><p className="break-all text-sm font-semibold">{rule.value}</p><p className="text-[13px] text-muted">{rule.kind === "email" ? "Email address" : "Exact domain"}</p><p className="break-words text-[13px] text-muted">Added by {rule.createdBy.email ?? "a removed operator"} · <time dateTime={rule.createdAt}>{operatorTimestamp(rule.createdAt, timezone)}</time></p></div><Button type="button" variant="secondary" disabled={working} aria-label={`Remove blocking rule for ${rule.value}`} onClick={() => void remove(rule.id)}>Remove</Button></div>)}
       {ready && rules.length === 0 ? <p className="text-sm text-muted">No addresses or domains are blocked.</p> : null}
       {!ready && !error ? <p role="status" className="text-sm text-muted">Loading blocking rules…</p> : null}
     </div>

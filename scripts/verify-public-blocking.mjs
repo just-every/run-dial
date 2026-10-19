@@ -15,8 +15,13 @@ try {
   assert.deepEqual(await rules(), []);
   mark("native list/create/delete require sessions and forged write origins cannot add rules");
 
+  const addedFrom = Date.now();
   const exact = await add("email", "  EXACT@DIAL.TEST  ");
   assert.equal(exact.value, "exact@dial.test"); assert.equal(exact.kind, "email"); assert.equal(exact.id.length, 26);
+  assert.equal(exact.createdBy.email?.toLowerCase(), fixture.operatorEmail.toLowerCase(), "PUBLIC-006: the entry records the operator who added it");
+  assert.ok(exact.createdBy.operatorId);
+  assert.ok(Date.parse(exact.createdAt) >= addedFrom - 1000 && Date.parse(exact.createdAt) <= Date.now() + 1000, "PUBLIC-006: the entry records when it was added");
+  assert.deepEqual((await rules()).find((rule) => rule.id === exact.id), exact, "PUBLIC-006: the list shows each entry's author and time");
   const duplicate = await add("email", "Exact@Dial.Test"); assert.deepEqual(duplicate, exact);
   const domain = await add("domain", "  Quota.Example.Test  "); assert.equal(domain.value, "quota.example.test");
   const duplicates = await Promise.all(Array.from({ length: 8 }, () => add("domain", "QUOTA.EXAMPLE.TEST")));
@@ -24,7 +29,7 @@ try {
   for (const value of ["@example.test", "https://example.test", "*.example.test", "example.test/path", "name space.test"]) await call("/api/app/blocked-addresses", { kind: "domain", value }, 400, true);
   await call(`/api/app/blocked-addresses/${exact.id}`, undefined, 403, true, "DELETE", { Origin: "https://forged.example.test" });
   assert.equal((await rules()).length, 2);
-  mark("email/domain values trim and lowercase; duplicate/concurrent upserts retain one rule identity; malformed hostnames and forged deletion are refused");
+  mark("email/domain values trim and lowercase; duplicate/concurrent upserts retain one rule identity and its first author and time; the list shows who added each entry and when; malformed hostnames and forged deletion are refused");
 
   const event = await data("/api/public/events/dial-host/intro");
   const answerKey = event.eventType.questions[0].key;
