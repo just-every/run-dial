@@ -5,7 +5,16 @@ export const correspondenceTemplateKeys = ["calendarTitle", "calendarDescription
 export type CorrespondenceVariable = typeof correspondenceVariables[number];
 export type CorrespondenceTemplateKey = typeof correspondenceTemplateKeys[number];
 export type CorrespondenceQuestion = { key: string; label: string; private?: boolean };
-export type CorrespondenceConfig = { inviteeConfirmationEnabled: boolean; invitationManageLinkEnabled: boolean; templates: Record<CorrespondenceTemplateKey, string | null> };
+/** Policy `availability-request.routing.v1`: who among the host recipients is emailed about a new alternative request. */
+export const requestRoutingModes = ["host_recipients", "selected", "suppressed"] as const;
+export type RequestRouting = { mode: typeof requestRoutingModes[number]; operatorIds: string[] };
+export const defaultRequestRouting: RequestRouting = { mode: "host_recipients", operatorIds: [] };
+export const requestRoutingSchema = z.object({ mode: z.enum(requestRoutingModes), operatorIds: z.array(z.string().min(1).max(64)).max(500).default([]) }).strict().superRefine((routing, context) => {
+  if (routing.mode === "selected" && routing.operatorIds.length === 0) context.addIssue({ code: "custom", path: ["operatorIds"], message: "Choose at least one person to email about requests, or turn request email off." });
+  if (routing.mode !== "selected" && routing.operatorIds.length) context.addIssue({ code: "custom", path: ["operatorIds"], message: "People are chosen only when request email goes to selected people." });
+  if (new Set(routing.operatorIds).size !== routing.operatorIds.length) context.addIssue({ code: "custom", path: ["operatorIds"], message: "Each person can be chosen once." });
+});
+export type CorrespondenceConfig = { inviteeConfirmationEnabled: boolean; invitationManageLinkEnabled: boolean; requestRouting?: RequestRouting; templates: Record<CorrespondenceTemplateKey, string | null> };
 /** Values are already formatted for the recipient, including the named timezone. */
 export type CorrespondenceValues = Record<CorrespondenceVariable, string> & { answers: Readonly<Record<string, string>> };
 const questionKeyPattern = /^q_[A-Za-z0-9_-]{10,80}$/u;
@@ -15,7 +24,7 @@ const singleLineKey = (key: CorrespondenceTemplateKey) => key === "calendarTitle
 export function correspondenceConfigSchema(questions: readonly CorrespondenceQuestion[] = []) {
   const questionKeys = questions.map(({ key }) => key);
   const shape = Object.fromEntries(correspondenceTemplateKeys.map((key) => [key, z.string().min(1).max(singleLineKey(key) ? 500 : 10_000).nullable().default(null)])) as Record<CorrespondenceTemplateKey, z.ZodDefault<z.ZodNullable<z.ZodString>>>;
-  return z.object({ inviteeConfirmationEnabled: z.boolean().default(true), invitationManageLinkEnabled: z.boolean().default(true), templates: z.object(shape).strict().default(emptyTemplates()) }).strict().superRefine((config, context) => {
+  return z.object({ inviteeConfirmationEnabled: z.boolean().default(true), invitationManageLinkEnabled: z.boolean().default(true), requestRouting: requestRoutingSchema.optional(), templates: z.object(shape).strict().default(emptyTemplates()) }).strict().superRefine((config, context) => {
     for (const key of correspondenceTemplateKeys) {
       const template = config.templates[key];
       if (template === null) continue;
@@ -105,7 +114,7 @@ export function renderCorrespondenceTemplate(template: string, values: Correspon
 
 export function renderMailCorrespondence(config: CorrespondenceConfig, kind: "confirmation" | "reschedule" | "cancellation" | "reminder" | "rescheduleRequest" | "rescheduleRequestReminder", values: CorrespondenceValues, options: { questions?: readonly CorrespondenceQuestion[] } = {}) {
   const questions = options.questions ?? [];
-  const parsed = z.object({ inviteeConfirmationEnabled: z.boolean().default(true), invitationManageLinkEnabled: z.boolean().default(true), templates: correspondenceConfigSchema().shape.templates }).strict().parse(config);
+  const parsed = z.object({ inviteeConfirmationEnabled: z.boolean().default(true), invitationManageLinkEnabled: z.boolean().default(true), requestRouting: requestRoutingSchema.optional(), templates: correspondenceConfigSchema().shape.templates }).strict().parse(config);
   const templates = editableCorrespondenceTemplates(parsed, questions);
   const keys = questions.map(({ key }) => key);
   const subject = renderCorrespondenceTemplate(templates[`${kind}Subject`], values, keys, true);

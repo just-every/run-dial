@@ -1,4 +1,5 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { DatabaseSync } from "node:sqlite";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -80,3 +81,13 @@ export async function startWorker(context) {
 }
 
 export async function executeD1(server, command) { await server.update(command); }
+
+/** Read-only view of the runtime's local D1 file; queue consumers are off, so queued mail stays in the outbox. */
+export async function queuedMail(server, requestId) {
+  const directory = resolve(server.persist, "v3/d1/miniflare-D1DatabaseObject");
+  const [file] = (await readdir(directory)).filter((name) => name.endsWith(".sqlite") && name !== "metadata.sqlite");
+  const db = new DatabaseSync(resolve(directory, file), { readOnly: true });
+  try {
+    return db.prepare("SELECT json_extract(payload_json, '$.recipientRole') AS role, json_extract(payload_json, '$.to') AS recipient FROM delivery_outbox WHERE request_id = ? AND kind = 'mail_send' ORDER BY role, recipient").all(requestId).map((row) => ({ ...row }));
+  } finally { db.close(); }
+}

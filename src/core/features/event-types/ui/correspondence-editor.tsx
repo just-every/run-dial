@@ -4,6 +4,7 @@ import { Button, Card, Input, Select, Textarea, noticeClassName } from "../../..
 import { useHydrated } from "../../../app/use-hydrated";
 import { correspondenceTemplateKeys, defaultCorrespondenceConfig, editableCorrespondenceTemplates, invalidTemplateVariables, type CorrespondenceConfig, type CorrespondenceTemplateKey } from "../../../shared/correspondence";
 import { CorrespondencePreview } from "./correspondence-preview";
+import { RequestRoutingFields } from "./request-routing-fields";
 
 type Props = { eventId: string; hostName: string; eventTitle: string; questions: { key?: string; label: string; private?: boolean }[] };
 const kinds = [
@@ -68,6 +69,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
     event.preventDefault();
     if (disabled || busy.current) return;
     if (invalid.length) { setError(invalid.map(key => `${key}: ${issues[key].join(" ")}`).join(" ")); return; }
+    if (value.requestRouting?.mode === "selected" && !value.requestRouting.operatorIds.length) { setError("Choose at least one person to email about requests, or choose No email."); return; }
     busy.current = true; setSaving(true); setError(""); setStatus("");
     try {
       const response = await api.api.app["event-types"][":id"].correspondence.$put({ param: { id: eventId }, json: value });
@@ -88,6 +90,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
         <input type="checkbox" className="mt-0.5 h-6 w-6 shrink-0 accent-ink" checked={value.invitationManageLinkEnabled} disabled={disabled} onChange={event => { setValue(current => ({ ...current, invitationManageLinkEnabled: event.target.checked })); setStatus(""); setError(""); }} />
         <span>Include invitation manage link<span className="mt-1 block font-normal leading-6 text-soft">Add a link to the calendar description that emails a booking management link only to the invitee. Guests and shared-calendar viewers cannot use it to see or change the booking.</span></span>
       </label>
+      {loaded ? <RequestRoutingFields value={value.requestRouting} disabled={disabled} onChange={requestRouting => { setValue(current => ({ ...current, requestRouting })); setStatus(""); setError(""); }} /> : null}
       {!loaded ? <p role="status" className="mt-4 text-sm text-soft">{error ? "Templates are unavailable." : "Loading templates…"}</p> : null}
       <div className="mt-5 grid min-w-0 gap-5">
         <label className="grid gap-2 text-sm font-semibold">Template

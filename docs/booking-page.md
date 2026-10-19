@@ -66,6 +66,8 @@ Switch alternative requests on with **Enable alternative requests** on the event
 
 Open **Requests** to see them as Submitted, Handled or Closed. **Create agreed booking** turns one into a booking, and **Mark handled** or **Close request** emails the client once.
 
+Under **Alternative request email** in the event type's email settings, choose who is emailed about each new request: **Every host** (everyone with access, the default), **Selected people**, or **No email**. Every request still appears in **Requests**, and the client still gets an acknowledgment. The choice applies to requests made after you save it.
+
 **Open requests** lets you start before your calendar is ready. On an unpublished event type it shows only the request form, with no times. It needs a saved profile, alternative requests turned on and a passing mail check.
 
 ## Embed it on your site

@@ -86,7 +86,7 @@ export class AvailabilityRequestsService {
       eventTitle: resolved.event.title,
       hostName: resolved.profile.name,
       composition: canonical,
-      operatorRecipients: await this.repository.listOperators(),
+      operatorRecipients: await this.repository.requestRecipients(resolved.event.id),
     });
     if (request === "blocked") return { kind: "blocked" };
     return { kind: "created", request: toPublicRequest(request, resolved.profile.name) };

@@ -9,6 +9,7 @@ import {
 import { operators } from "../../platform/db/schema";
 import { createId, nowIso } from "../../shared/ids";
 import { operatorRecipientAdmission, requestSubmissionMail, requestUpdateMail } from "../delivery/mail";
+import { defaultRequestRouting, requestRoutingSchema } from "../../shared/correspondence";
 
 export type RequestState = "submitted" | "handled" | "closed";
 export type RequestAcknowledgementState = "queued" | "sent" | "failed";
@@ -190,8 +191,13 @@ export class AvailabilityRequestsRepository {
     return updated;
   }
 
-  async listOperators() {
-    return this.db.select({ id: operators.id, email: operators.email, generation: operators.accessGeneration }).from(operators).where(isNull(operators.removedAt)).orderBy(asc(operators.email));
+  /** `availability-request.routing.v1`: every host recipient (each current operator of a single-host install) unless the event's policy selects some of them or suppresses email. */
+  async requestRecipients(eventTypeId: string) {
+    const row = await this.binding.prepare("SELECT json_extract(templates_json, '$.requestRouting') AS routing FROM event_correspondence WHERE event_type_id = ?").bind(eventTypeId).first<{ routing: string | null }>();
+    const routing = row?.routing ? requestRoutingSchema.parse(JSON.parse(row.routing)) : defaultRequestRouting;
+    if (routing.mode === "suppressed") return [];
+    const current = await this.db.select({ id: operators.id, email: operators.email, generation: operators.accessGeneration }).from(operators).where(isNull(operators.removedAt)).orderBy(asc(operators.email));
+    return routing.mode === "selected" ? current.filter(operator => routing.operatorIds.includes(operator.id)) : current;
   }
 
   private lifecycleDeliveryCommand(record: RequestRecord, state: Exclude<RequestState, "submitted">, hostName: string, timestamp: string, reason: "state" | "booking", correlation: string) {

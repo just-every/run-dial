@@ -3,12 +3,16 @@
 const keys = ['calendarTitle', 'calendarDescription', 'confirmationSubject', 'confirmationBody', 'rescheduleSubject', 'rescheduleBody', 'cancellationSubject', 'cancellationBody', 'reminderSubject', 'reminderBody', 'rescheduleRequestSubject', 'rescheduleRequestBody', 'rescheduleRequestReminderSubject', 'rescheduleRequestReminderBody'];
 const variables = new Set(['invitee full name', 'invitee first name', 'host name', 'event name', 'date and time', 'duration', 'location', 'manage link', 'message']);
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const routingModes = ['host_recipients', 'selected', 'suppressed'];
+const validRouting = routing => object(routing) && Object.keys(routing).every(key => ['mode', 'operatorIds'].includes(key)) && routingModes.includes(routing.mode)
+  && Array.isArray(routing.operatorIds) && routing.operatorIds.length <= 500 && routing.operatorIds.every(id => typeof id === 'string' && id.length >= 1 && id.length <= 64)
+  && new Set(routing.operatorIds).size === routing.operatorIds.length && (routing.mode === 'selected') === (routing.operatorIds.length > 0);
 
 export function validateCorrespondence(name, row) {
   if (!['event_correspondence', 'booking_correspondence'].includes(name)) return;
   let config;
   try { config = JSON.parse(row.templates_json); } catch { throw new Error('archive-invalid-correspondence'); }
-  if (!object(config) || Object.keys(config).some(key => !['templates', 'inviteeConfirmationEnabled', 'invitationManageLinkEnabled'].includes(key)) || Object.hasOwn(config, 'inviteeConfirmationEnabled') && typeof config.inviteeConfirmationEnabled !== 'boolean' || Object.hasOwn(config, 'invitationManageLinkEnabled') && typeof config.invitationManageLinkEnabled !== 'boolean' || !Object.hasOwn(config, 'templates') || !object(config.templates)
+  if (!object(config) || Object.keys(config).some(key => !['templates', 'inviteeConfirmationEnabled', 'invitationManageLinkEnabled', 'requestRouting'].includes(key)) || Object.hasOwn(config, 'requestRouting') && !validRouting(config.requestRouting) || Object.hasOwn(config, 'inviteeConfirmationEnabled') && typeof config.inviteeConfirmationEnabled !== 'boolean' || Object.hasOwn(config, 'invitationManageLinkEnabled') && typeof config.invitationManageLinkEnabled !== 'boolean' || !Object.hasOwn(config, 'templates') || !object(config.templates)
     || Object.keys(config.templates).some(key => !keys.includes(key)) || keys.slice(0, 10).some(key => !Object.hasOwn(config.templates, key))) throw new Error('archive-invalid-correspondence');
   for (const key of keys) {
     const template = config.templates[key];

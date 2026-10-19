@@ -17,6 +17,12 @@ export class EventCorrespondenceRepository {
     ]);
     return results[0].meta.changes > 0;
   }
+  async unknownOperators(ids: readonly string[]) {
+    if (!ids.length) return [];
+    const rows = await this.binding.prepare(`SELECT id FROM operators WHERE removed_at IS NULL AND id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all<{ id: string }>();
+    const current = new Set(rows.results.map(row => row.id));
+    return ids.filter(id => !current.has(id));
+  }
   validateQuestions(candidate: unknown, questions: { key?: string; label: string; private?: boolean }[]) {
     return correspondenceConfigSchema(questions.flatMap(question => question.key ? [{ ...question, key: question.key }] : [])).safeParse(candidate);
   }

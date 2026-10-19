@@ -1,12 +1,13 @@
-import { seedDemoWorkspace, localMagicLink, confirmAuthLink, bootstrapTestOwner } from "./auth-client.mjs";
+import { seedDemoWorkspace, localMagicLink, confirmAuthLink, bootstrapTestOwner, readTestMail } from "./auth-client.mjs";
 import assert from "node:assert/strict";
-import { startWorker, executeD1 } from "./requests/runtime.mjs";
+import { startWorker, executeD1, queuedMail } from "./requests/runtime.mjs";
 import { contract } from "./contract.mjs";
 
 let journey;
 const gate = (context) => journey ??= requestJourney(context);
 contract("REQUEST-002", "reviewed alternative requests replay exactly after nonce expiry and retain no public internal identifiers", gate);
 contract("REQUEST-003", "operators list requests by state, read each window in the invitee's and the host's zone, and mark a request handled or closed once", gate);
+contract("REQUEST-004", "a request mails every host by default; a subset mails only the chosen operators; suppressed email keeps the in-app record and mails nobody", gate);
 
 async function requestJourney(context) {
   const server = await startWorker(context);
@@ -61,6 +62,62 @@ async function requestJourney(context) {
   assert.equal(missing.status, 404);
   const erasedReplay = await fetch(`${server.origin}/api/public/events/maya-chen/${event.slug}/request?nonce=${encodeURIComponent(review.nonce)}`, post(body));
   assert.equal(erasedReplay.status, 404, "erasure invalidates the stored request capability without disclosing the erased request");
+  await routingJourney(server, cookie, event, body);
+}
+
+/** REQUEST-004: policy `availability-request.routing.v1` per event type, applied when the request is created. */
+async function routingJourney(server, cookie, event, body) {
+  const { origin } = server, headers = { cookie, origin, "content-type": "application/json" };
+  const firstEmail = "operator@dial.test", secondEmail = "second-host@dial.test";
+  const invited = await fetch(`${origin}/api/app/operators`, { method: "POST", headers, body: JSON.stringify({ email: secondEmail }) });
+  assert.equal(invited.status, 201, await invited.clone().text());
+  const secondId = (await invited.json()).operator.id;
+  const invitation = (await readTestMail(origin)).find((message) => [message.to].flat().includes(secondEmail))?.text?.match(/https?:\/\/[^\s<>]+\/auth\/confirm\?token=[^\s<>]+/)?.[0];
+  assert.ok(invitation, "the second operator's invitation reached the test mail adapter");
+  assert.equal((await confirmAuthLink(invitation)).status, 303, "the second operator accepts and becomes active");
+  const path = `${origin}/api/app/event-types/${event.id}/correspondence`;
+  const config = await json(await fetch(path, { headers: { cookie } }));
+  assert.equal(config.requestRouting, undefined, "an event never routed uses the default policy");
+  const route = (requestRouting) => fetch(path, { method: "PUT", headers, body: JSON.stringify({ ...config, requestRouting }) });
+  let client = 0;
+  const submit = async (inviteeEmail) => {
+    // Each invitee arrives from its own address, so the hourly per-address request limit is not what is under test.
+    const composition = { ...body, inviteeName: "Routing Invitee", inviteeEmail }, from = (request) => ({ ...request, headers: { ...request.headers, "CF-Connecting-IP": `198.18.4.${++client}` } });
+    const review = await json(await fetch(`${origin}/api/public/events/maya-chen/${event.slug}/request/review`, from(post(composition))));
+    const created = await fetch(`${origin}/api/public/events/maya-chen/${event.slug}/request?nonce=${encodeURIComponent(review.nonce)}`, from(post(composition)));
+    assert.equal(created.status, 201, await created.clone().text());
+    const listed = await json(await fetch(`${origin}/api/app/availability-requests?state=submitted`, { headers: { cookie } }));
+    const request = listed.find((candidate) => candidate.inviteeEmail === inviteeEmail);
+    assert.ok(request, "the request is in the operator inbox");
+    return queuedMail(server, request.id);
+  };
+  const operatorsMailed = (mail) => mail.filter((row) => row.role === "operator").map((row) => row.recipient).sort();
+  const inviteeMailed = (mail) => mail.filter((row) => row.role === "invitee").map((row) => row.recipient);
+
+  const byDefault = await submit("routing-default@example.test");
+  assert.deepEqual(operatorsMailed(byDefault), [firstEmail, secondEmail].sort(), "default routing mails every host recipient: each operator of a single-host install");
+  assert.deepEqual(inviteeMailed(byDefault), ["routing-default@example.test"]);
+
+  for (const invalid of [{ mode: "selected", operatorIds: [] }, { mode: "selected", operatorIds: ["01UNKNOWNOPERATOR000000000"] }, { mode: "suppressed", operatorIds: [secondId] }, { mode: "everyone" }]) {
+    assert.equal((await route(invalid)).status, 400, `refused policy ${JSON.stringify(invalid)}`);
+  }
+  assert.equal((await json(await fetch(path, { headers: { cookie } }))).requestRouting, undefined, "refused policies change nothing");
+
+  const subset = await route({ mode: "selected", operatorIds: [secondId] });
+  assert.equal(subset.status, 200, await subset.clone().text());
+  assert.deepEqual((await json(subset)).requestRouting, { mode: "selected", operatorIds: [secondId] });
+  const selected = await submit("routing-subset@example.test");
+  assert.deepEqual(operatorsMailed(selected), [secondEmail], "a subset mails only the chosen operators");
+  assert.deepEqual(inviteeMailed(selected), ["routing-subset@example.test"], "routing never touches the invitee acknowledgement");
+
+  assert.equal((await route({ mode: "suppressed", operatorIds: [] })).status, 200);
+  assert.deepEqual((await json(await fetch(path, { headers: { cookie } }))).requestRouting, { mode: "suppressed", operatorIds: [] }, "the policy is stored per event type");
+  const suppressed = await submit("routing-suppressed@example.test");
+  assert.deepEqual(operatorsMailed(suppressed), [], "suppressed email mails no operator");
+  assert.deepEqual(inviteeMailed(suppressed), ["routing-suppressed@example.test"], "suppression keeps the in-app record (found above) and the invitee acknowledgement");
+
+  assert.equal((await route({ mode: "host_recipients", operatorIds: [] })).status, 200);
+  assert.deepEqual(operatorsMailed(await submit("routing-restored@example.test")), [firstEmail, secondEmail].sort(), "returning to the default mails every host recipient again");
 }
 
 async function operatorCookie(origin) {
