@@ -331,9 +331,9 @@ Done means implemented with a test exercising the clause through its public or o
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 60 | 16 | 0 | 76 |
+| Published | 61 | 15 | 0 | 76 |
 | Target and push further | 2 | 21 | 71 | 94 |
-| All | 62 | 37 | 71 | 170 |
+| All | 63 | 36 | 71 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |

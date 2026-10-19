@@ -258,7 +258,7 @@ Every clause in [CONTRACT.md](CONTRACT.md) with the acceptance evidence that pro
 | AGENT-010 — Flexible holds and availability tuning | Native test: a priority booking moves one flexible block within its range and re-places it, a non-flexible event is never moved, and a monthly proposal changes nothing until accepted. | — | Missing |
 | AGENT-011 — Voice booking through a contracted provider | Integration test with the voice provider's webhooks synthetic: a call transcript requesting Tuesday at 3 p.m. books a valid slot once, an unavailable time is answered with alternatives, and an outbound reminder call is not placed without recorded consent. | — | Missing |
 
-Counts: 170 clauses — 67 done, 36 partial, 67 missing.
+Counts: 170 clauses — 68 done, 35 partial, 67 missing.
 
 ## Parts 1–4: bounded local acceptance
 

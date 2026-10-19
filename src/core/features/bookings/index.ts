@@ -9,3 +9,5 @@ export type { BookingAttendance, BookingCalendarConflict, BookingConfirmation, B
 export { foldBookingSearch } from "./search/case-fold.mjs";
 
 export { attributionSchema } from "./link-context";
+
+export { invitationManageUrl } from "./invitation-capability";
