@@ -61,3 +61,9 @@
 .pb-invitation > section { display: grid; gap: 18px; }
 .pb-invitation h1 { margin: 0; }
 .pb-invitation .pb-primary-button { justify-self: center; }
+.pb-pay-step { margin: 16px 0; padding: 14px 16px; border-radius: 12px; background: var(--gold-wash); color: var(--soft); line-height: 1.5; }
+.pb-pay-step .pb-pay-amount { margin: 0 0 4px; color: var(--ink); font-size: 22px; font-weight: 800; }
+.pb-payment-summary { margin: 14px 0; padding: 12px 14px; border-radius: 10px; background: var(--gold-wash); color: var(--soft); line-height: 1.5; overflow-wrap: anywhere; }
+.pb-payment-summary p { margin: 0; }
+.pb-payment-summary p + p { margin-top: 6px; }
+.pb-payment-summary code, .pb-recovery code { overflow-wrap: anywhere; word-break: break-all; }

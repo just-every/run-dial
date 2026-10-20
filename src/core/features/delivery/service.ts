@@ -11,6 +11,7 @@ import type { AdmitCallback } from "../../platform/public-admission";
 import { operatorNotificationCommand } from "../../platform/operator-notification-boundary";
 import { isOperatorNotification } from "./operator-mail";
 import { bookingCancellationMail, type BookingCancellationTemplate } from "./booking-mails";
+import { formatUsd } from "../../shared/event-price";
 import { escapeHtml, inviteeCalendarUrl, validateMailUrl } from "./branded-layout";
 import { hashToken } from "../../platform/auth/tokens";
 
@@ -190,6 +191,7 @@ export class ProviderDeliveryService {
         ...payload,
         ...bookingCancellationMail({
           ...snapshot,
+          payment: snapshot.paymentAmountCents && snapshot.paymentReference ? { amount: formatUsd(snapshot.paymentAmountCents), reference: snapshot.paymentReference } : undefined,
           hostName: template.hostName,
           calendarState: snapshot.calendarState,
           actor: template.actor,

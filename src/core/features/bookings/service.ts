@@ -25,6 +25,8 @@ import { validateInvitee } from "./types";
 import { bookingIcs, initialBookingIcs } from "./calendar-file";
 import { reconcileDeletionProbe, type DeletionReconciliationDependencies } from "./deletion-reconciliation";
 import { bookingCancellationMail, bookingChangeHtml, bookingConfirmationMail, formatTimeRange } from "../delivery/mail";
+import { formatUsd, priceForDuration, type PaymentsService } from "../payments";
+import { beginPaidConfirmation, paidReplay, type PaymentStep } from "./paid-confirmation";
 
 const nonceLifetimeMs = 30 * 60 * 1000;
 const manageTokenLifetimeMs = 90 * 24 * 60 * 60 * 1000;
@@ -32,11 +34,14 @@ const manageTokenLifetimeMs = 90 * 24 * 60 * 60 * 1000;
 export type BookingSelectionResult =
   | { kind: "issued"; nonce: BookingNonce }
   | { kind: "not_found" | "slot_invalid" | "calendar_unavailable" | "invalid_timezone" | "invalid_duration" }
-  | { kind: "policy_blocked"; reason?: string };
+  | { kind: "policy_blocked"; reason?: string }
+  | { kind: "payments_unavailable"; reason: string };
 export type BookingConfirmationResult =
   | { kind: "created"; booking: BookingConfirmation }
   | { kind: "replayed"; booking: BookingConfirmation }
-  | { kind: "invalid_nonce" | "expired_nonce" | "slot_invalid" | "calendar_unavailable" | "invalid_answers" | "payload_mismatch" | "slot_taken" | "blocked" | "invalid_duration" };
+  | { kind: "invalid_nonce" | "expired_nonce" | "slot_invalid" | "calendar_unavailable" | "invalid_answers" | "payload_mismatch" | "slot_taken" | "blocked" | "invalid_duration" }
+  | { kind: "payment_required"; payment: PaymentStep }
+  | { kind: "payments_unavailable"; reason: string };
 export type PublicSelectionLookupResult =
   | {
     kind: "found";
@@ -46,6 +51,7 @@ export type PublicSelectionLookupResult =
       selection: { startAt: string; endAt: string; hostTimezone: string; inviteeTimezone: string };
       event: ReturnType<typeof toPublicEventType>;
       host: ReturnType<typeof toPublicProfile>;
+      payment?: { amountCents: number; currency: "usd" };
     };
   }
   | { kind: "not_found" | "expired" };
@@ -59,12 +65,15 @@ export class BookingsService {
     private readonly runtime: RuntimeEnvironment,
     private readonly deletions: Pick<DeletionReconciliationDependencies, "inspect" | "probes">,
     private readonly bookingLinks?: BookingLinksService,
+    private readonly payments?: PaymentsService,
   ) {}
 
   async issuePublicSelection(handle: string, slug: string, startAt: string, inviteeTimezone: string, durationMinutes?: number, link?: string): Promise<BookingSelectionResult> {
     if (!isCanonicalIanaTimeZone(inviteeTimezone) || !isIsoInstant(startAt)) return { kind: "invalid_timezone" };
     const verified = await this.availability.verifyPublicSelection(handle, slug, startAt, new Date(), undefined, durationMinutes, undefined, link);
     if (verified.kind !== "valid") return verified;
+    const quote = await this.payments?.quote(verified.event.id, intervalDuration(verified.slot.startAt, verified.slot.endAt) ?? 0);
+    if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
     const rawNonce = createOpaqueToken();
     const now = nowIso();
     const expiresAt = new Date(Date.now() + nonceLifetimeMs).toISOString();
@@ -94,6 +103,7 @@ export class BookingsService {
     if (!profile || !event || event.kind !== "active" || event.event.status !== "published" || event.event.slug !== input.slug || event.event.id !== nonce.eventTypeId || ("bookingLink" in event.event ? event.event.bookingLink?.id ?? null : null) !== nonce.linkId) return { kind: "not_found" };
     const selectedDuration = intervalDuration(nonce.selectionStartAt, nonce.selectionEndAt);
     if (selectedDuration === undefined) return { kind: "not_found" };
+    const amountCents = this.payments ? priceForDuration(await this.payments.eventPrice(event.event.id), selectedDuration) : undefined;
     return {
       kind: "found",
       selection: {
@@ -102,6 +112,7 @@ export class BookingsService {
         selection: { startAt: nonce.selectionStartAt, endAt: nonce.selectionEndAt, hostTimezone: profile.timezone, inviteeTimezone: nonce.inviteeTimezone },
         event: toPublicEventType({ ...event.event, durationMinutes: selectedDuration }),
         host: toPublicProfile(profile),
+        ...(amountCents === undefined ? {} : { payment: { amountCents, currency: "usd" as const } }),
       },
     };
   }
@@ -123,8 +134,8 @@ export class BookingsService {
     if (nonce.consumedAt) {
       if (nonce.payloadHash !== payloadHash) return { kind: "payload_mismatch" };
       const booking = await this.repository.getByConsumedNonce(nonce);
-      if (!booking) return { kind: "invalid_nonce" };
-      return { kind: "replayed", booking: this.toInitialConfirmation(booking, profile, await this.managedTokenFromNonce(input.nonce)) };
+      if (!booking) return (this.payments ? await paidReplay(this.payments, this.runtime, nonce.id, input.nonce, input.handle, input.slug) : undefined) ?? { kind: "invalid_nonce" };
+      return { kind: "replayed", booking: this.toInitialConfirmation(booking, profile, await this.replayManageToken(booking, input.nonce)) };
     }
     if (nonce.purpose !== "confirm" || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" };
     if (offer && offer.kind !== "active") return {kind:"expired_nonce"};
@@ -153,10 +164,28 @@ export class BookingsService {
     const bookingId = createId();
     const occurrenceId = createId();
     const manageTokenId = createId();
-    const manageToken = await this.managedTokenFromNonce(input.nonce);
     const hostDate = hostDateForInstant(selection.slot.startAt, profile.timezone);
-    const manageTokenHash = await hashToken(manageToken, this.runtime.SESSION_SECRET);
     const expiresAt = new Date(Date.parse(selection.slot.startAt) + manageTokenLifetimeMs).toISOString();
+    const claimBase = {
+      attribution,
+      postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution }),
+      bookingId, occurrenceId, nonceId: nonce.id, nonceHash, payloadHash, manageTokenId, manageTokenExpiresAt: expiresAt, event, invitee,
+      selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone },
+      hostTimezone: profile.timezone, hostDate,
+      occupiedStartAt: new Date(Date.parse(selection.slot.startAt) - event.beforeBufferMinutes * 60_000).toISOString(),
+      occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + event.afterBufferMinutes * 60_000).toISOString(),
+      now,
+      calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, lockedTimezone: event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
+    };
+    const quote = await this.payments?.quote(event.id, selectedDuration);
+    if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
+    if (quote && this.payments) {
+      const paid = await beginPaidConfirmation({ repository: this.repository, payments: this.payments, runtime: this.runtime, confirmationEmails: (manageToken, payment) => this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired, payment }) },
+        { claim: claimBase, nonce: input.nonce, handle: input.handle, slug: input.slug, quote, durationMinutes: selectedDuration });
+      return paid.kind === "slot_taken" || paid.kind === "blocked" ? await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? paid : paid;
+    }
+    const manageToken = await this.managedTokenFromNonce(input.nonce);
+    const manageTokenHash = await hashToken(manageToken, this.runtime.SESSION_SECRET);
     const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired });
     const claim = await this.repository.claim({
       attribution,
@@ -384,6 +413,11 @@ export class BookingsService {
     return deriveOpaqueToken(nonce, this.runtime.SESSION_SECRET, "booking-manage.v1");
   }
 
+  /** A paid booking's manage token derives from its payment-return capability (PAY-001). */
+  private async replayManageToken(booking: BookingRecord, nonce: string) {
+    return booking.payment && this.payments ? this.payments.manageToken(await this.payments.returnToken(nonce)) : this.managedTokenFromNonce(nonce);
+  }
+
   async getCalendarFile(token: string) {
     const result = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
     if (!result) return { kind: "not_found" as const };
@@ -492,7 +526,7 @@ export class BookingsService {
     const consumed = await this.repository.getNonce(nonceHash);
     if (!consumed?.consumedAt || consumed.payloadHash !== payloadHash) return undefined;
     const stored = await this.repository.getByConsumedNonce(consumed);
-    return stored ? { kind: "replayed" as const, booking: this.toInitialConfirmation(stored, profile, await this.managedTokenFromNonce(nonce)) } : undefined;
+    return stored ? { kind: "replayed" as const, booking: this.toInitialConfirmation(stored, profile, await this.replayManageToken(stored, nonce)) } : undefined;
   }
 
   private toInitialConfirmation(booking: BookingRecord, profile: ProfileRecord, token: string): BookingConfirmation {
@@ -518,10 +552,11 @@ export class BookingsService {
       manageUrl,
       icsUrl: new URL(`/api/public/manage/${manageToken}/calendar.ics`, this.runtime.APP_URL).toString(),
       state: booking.state,
+      ...(booking.payment ? { payment: { amountCents: booking.payment.amountCents, currency: booking.payment.currency, reference: booking.payment.checkoutSessionId, refundIssuedByDial: false } } : {}),
     };
   }
 
-  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean }): Promise<BookingEmail[]> {
+  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean; payment?: { amountCents: number; reference: string } }): Promise<BookingEmail[]> {
     const { profile, event, invitee, startAt, endAt, inviteeTimezone, manageToken, bookingId } = input;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     const location = event.locationType === "google_meet" ? "Google Meet link pending" : event.locationValue;
@@ -539,6 +574,7 @@ export class BookingsService {
       inviteeTimezone, hostTimezone: profile.timezone, locationType: event.locationType, locationLabel: event.locationLabel,
       locationValue: event.locationValue, calendarState: input.calendarRequired === false ? "not_required" : "pending",
       inviteeName: invitee.name, inviteeEmail: invitee.email, answers: answerDetails,
+      ...(input.payment ? { payment: { amount: formatUsd(input.payment.amountCents), reference: input.payment.reference } } : {}),
     };
     return [
       { to: invitee.email, recipientRole: "invitee", messageKind: "confirmation", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), ...calendarFile },
@@ -574,6 +610,7 @@ export class BookingsService {
       reason: normalizedReason,
       inviteeName: booking.inviteeName,
       inviteeEmail: booking.inviteeEmail,
+      ...(booking.payment ? { payment: { amount: formatUsd(booking.payment.amountCents), reference: booking.payment.checkoutSessionId } } : {}),
     };
     if (changed) {
       const template = { kind: "booking-cancellation" as const, hostName: profile.name, actor: change.actor, ...(normalizedReason ? { reason: normalizedReason } : {}) };

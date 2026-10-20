@@ -10,6 +10,11 @@
       "id": "mail",
       "label": "Sign-in email",
       "help": "Managed hosting supplies mail automatically. Other hosted installs need a verified sender and provider credentials."
+    },
+    {
+      "id": "payments",
+      "label": "Stripe payments (optional)",
+      "help": "Only for paid event types (PAY-001). Use your own Stripe platform account; leave these blank to keep every event type free."
     }
   ],
   "fields": [
@@ -102,6 +107,36 @@
           "required": true
         }
       ]
+    },
+    {
+      "name": "STRIPE_SECRET_KEY",
+      "label": "Stripe secret key",
+      "help": "Your Stripe platform secret key (sk_…). Dial uses it for Connect, Checkout and webhook-confirmed bookings.",
+      "kind": "secret",
+      "input": "entered",
+      "required": false,
+      "ownerVisible": true,
+      "group": "payments"
+    },
+    {
+      "name": "STRIPE_CONNECT_CLIENT_ID",
+      "label": "Stripe Connect client ID",
+      "help": "From Stripe Dashboard → Connect → Settings (ca_…). Register the redirect URI shown in Dial Settings.",
+      "kind": "secret",
+      "input": "entered",
+      "required": false,
+      "ownerVisible": true,
+      "group": "payments"
+    },
+    {
+      "name": "STRIPE_WEBHOOK_SECRET",
+      "label": "Stripe webhook signing secret",
+      "help": "The signing secret (whsec_…) of a Connect webhook endpoint for your Dial address followed by /api/webhooks/stripe.",
+      "kind": "secret",
+      "input": "entered",
+      "required": false,
+      "ownerVisible": true,
+      "group": "payments"
     },
     {
       "name": "SESSION_SECRET",

@@ -28,6 +28,9 @@ export type AppBindings = {
   GOOGLE_OAUTH_CLIENT_ID?: string;
   GOOGLE_OAUTH_CLIENT_SECRET?: string;
   CALENDAR_WEBHOOK_SECRET?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_CONNECT_CLIENT_ID?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
   RESEND_WEBHOOK_SECRET?: string;

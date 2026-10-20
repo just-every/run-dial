@@ -1,5 +1,6 @@
 import type { BusyInterval, InternalClaim } from "./engine";
 import { BookingLimits } from "./booking-limits";
+import { activeHoldIntervals } from "../payments";
 
 /** Database reads required by availability; calendar reads stay in the adapter. */
 export class AvailabilityRepository {
@@ -31,7 +32,8 @@ export class AvailabilityRepository {
       FROM booking_links l JOIN booking_link_tokens t ON t.link_id=l.id,json_each(l.offered_slots_json) s
       WHERE l.consumed_at IS NULL AND l.revoked_at IS NULL AND l.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now') AND l.hold_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')
         AND json_extract(s.value,'$.occupiedStartAt')<? AND json_extract(s.value,'$.occupiedEndAt')>? AND (? IS NULL OR l.id<>?)`).bind(endAt,startAt,excludedLinkId ?? null,excludedLinkId ?? null).all<InternalClaim>();
-    return [...result.results,...holds.results];
+    // An active payment hold (PAY-001) occupies its slot until Dial releases it.
+    return [...result.results,...holds.results,...await activeHoldIntervals(this.binding,startAt,endAt)];
   }
 
   /** Where Dial's own managed events sat when a busy read was observed: each booking's last confirmed placement (an

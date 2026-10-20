@@ -93,6 +93,8 @@ export type BookingRecord = {
   deliveries: BookingDelivery[];
   attendance: BookingAttendance | null;
   calendarConflicts: BookingCalendarConflict[];
+  /** PAY-001: present when the booking was paid through Stripe; cancel and reschedule keep it. */
+  payment?: import("../payments").BookingPayment;
 };
 
 export type BookingSelection = { startAt: string; endAt: string; inviteeTimezone: string };
@@ -115,6 +117,7 @@ export type BookingConfirmation = {
   manageUrl: string;
   icsUrl: string;
   state: BookingState;
+  payment?: { amountCents: number; currency: "usd"; reference: string; refundIssuedByDial: false };
 };
 
 export type BookingEmail = {

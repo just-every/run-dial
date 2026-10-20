@@ -49,6 +49,8 @@ export async function addressRemainders(db: D1Database, fence: PortabilityFence,
   statements.push(...await deleteRows(db, fence, "blocked_address_rules", `kind='email' AND ${emailFoldSql("value")}=?`, [foldEmail(email)]));
   const captures=(await db.prepare("SELECT rowid AS row_number,message FROM rer_mail_development_outbox").all<{row_number:number;message:string}>()).results.filter(row=>mailRecipientMatches(row.message,email)).map(row=>row.row_number);
   statements.push(...await deleteRows(db, fence, "rer_mail_development_outbox", "rowid IN (SELECT value FROM json_each(?))", [JSON.stringify(captures)]));
+  // PAY-001: a pending payment hold carries the payer's folded address and pending booking.
+  statements.push(...await deleteRows(db, fence, "payment_holds", "invitee_email_folded=?", [foldEmail(email)]));
   statements.push(...await deleteRows(db, fence, "availability_request_review_nonces", `${emailFoldSql("invitee_email")}=? OR (invitee_email IS NULL AND request_id IS NULL)`, [foldEmail(email)]));
   // Old receipts have no delivery correlation. Keeping a payload hash would retain
   // an unverifiable identity fingerprint; these mail-only facts carry no calendar authority.

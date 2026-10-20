@@ -20,7 +20,16 @@ export type BookingMailDetails = {
   meetingUrl?: string | null;
   calendarState: string;
   meetingState?: string;
+  /** PAY-001: the amount paid through Stripe and its reference. */
+  payment?: { amount: string; reference: string };
 };
+
+/** Until PAY-003 ships, Dial issues no refund for a cancelled or moved paid booking. */
+export const paidChangeRefundNote = "No refund is issued by Dial. The host refunds payments in Stripe.";
+const paymentFacts = (input: BookingMailDetails): BrandedMailFact[] => input.payment ? [{ label: "Payment", value: `${input.payment.amount} paid · Stripe reference ${input.payment.reference}` }] : [];
+const paymentText = (input: BookingMailDetails) => input.payment ? `\nPayment: ${input.payment.amount} paid · Stripe reference ${input.payment.reference}` : "";
+const refundFacts = (input: BookingMailDetails): BrandedMailFact[] => input.payment ? [...paymentFacts(input), { label: "Refunds", value: paidChangeRefundNote }] : [];
+const refundLines = (input: BookingMailDetails) => input.payment ? [`Payment: ${input.payment.amount} paid · Stripe reference ${input.payment.reference}`, paidChangeRefundNote] : [];
 
 export type BookingCancellationTemplate = {
   kind: "booking-cancellation";
@@ -43,6 +52,7 @@ export function bookingConfirmationMail(input: BookingMailDetails & {
     { label: "Event", value: input.eventTitle },
     ...timeFacts,
     { label: "Duration", value: `${input.durationMinutes} minutes` },
+    ...paymentFacts(input),
     { label: "Location", value: `${bookingLocationLabel(input)}: ${location}` },
     ...(input.recipientRole === "operator" ? [{ label: "Calendar setup", value: calendarStatus(input.calendarState) }] : []),
     ...input.answers.map(({ label, value }) => ({ label, value })),
@@ -55,7 +65,7 @@ export function bookingConfirmationMail(input: BookingMailDetails & {
   }
   const answerText = input.answers.length ? `\n\nAnswers:\n${input.answers.map(({ label, value }) => `${label}: ${value}`).join("\n")}` : "";
   const joinText = bookingJoinUrl(input) ? `\n\nJoin session: ${bookingJoinUrl(input)}` : "";
-  const summary = `${input.eventTitle} with ${input.hostName}\n${timeFactsText(timeFacts)}\nDuration: ${input.durationMinutes} minutes\nLocation: ${bookingLocationLabel(input)}: ${location}${input.recipientRole === "operator" ? `\nCalendar setup: ${calendarStatus(input.calendarState)}.` : ""}`;
+  const summary = `${input.eventTitle} with ${input.hostName}\n${timeFactsText(timeFacts)}\nDuration: ${input.durationMinutes} minutes${paymentText(input)}\nLocation: ${bookingLocationLabel(input)}: ${location}${input.recipientRole === "operator" ? `\nCalendar setup: ${calendarStatus(input.calendarState)}.` : ""}`;
   const text = input.recipientRole === "invitee"
     ? `${summary}${answerText}${joinText}\n\nManage this booking: ${input.manageUrl}\nAdd to calendar: ${input.manageUrl ? inviteeCalendarUrl(input.manageUrl) : ""}`
     : `${summary}${answerText}\n\nInvitee: ${input.inviteeName} <${input.inviteeEmail}>${joinText}`;
@@ -145,6 +155,7 @@ export function bookingChangeHtml(input: BookingMailDetails & {
     ...timeFacts,
     { label: "Duration", value: `${input.durationMinutes} minutes` },
     { label: bookingLocationLabel(input), value: locationText(input) },
+    ...refundFacts(input),
   ];
   if (input.reason) facts.push({ label: "Reason", value: input.reason });
   if (input.recipientRole === "operator") facts.push({ label: "Calendar state", value: calendarStatus(input.calendarState) });
@@ -161,6 +172,7 @@ export function bookingChangeHtml(input: BookingMailDetails & {
     ...(input.recipientRole === "operator" ? [`Calendar state: ${calendarStatus(input.calendarState)}.`] : []),
     `Duration: ${input.durationMinutes} minutes`,
     `${bookingLocationLabel(input)}: ${locationText(input)}`,
+    ...refundLines(input),
     ...(bookingJoinUrl(input) ? [`Join session: ${bookingJoinUrl(input)}`] : []),
     ...(input.recipientRole === "operator" ? [`Invitee: ${input.inviteeName} <${input.inviteeEmail}>`] : []),
     ...(input.recipientRole === "invitee" && input.manageUrl ? [`Manage this booking: ${input.manageUrl}`, `Add to calendar: ${inviteeCalendarUrl(input.manageUrl)}`] : []),
@@ -190,6 +202,7 @@ export function bookingCancellationMail(input: BookingMailDetails & {
     ...timeFacts,
     { label: "Duration", value: `${input.durationMinutes} minutes` },
     { label: "Location", value: `${bookingLocationLabel(input)}: ${location}` },
+    ...refundFacts(input),
     ...(input.recipientRole === "operator" ? [{ label: "Calendar state", value: calendarStatus(input.calendarState) }] : []),
   ];
   if (input.recipientRole === "operator") facts.push({ label: "Invitee", value: `${input.inviteeName} <${input.inviteeEmail}>` });
@@ -200,6 +213,7 @@ export function bookingCancellationMail(input: BookingMailDetails & {
     timeFactsText(timeFacts),
     `Duration: ${input.durationMinutes} minutes`,
     `Location: ${bookingLocationLabel(input)}: ${location}`,
+    ...refundLines(input),
     reasonLine,
     ...(input.recipientRole === "operator" ? [`Calendar state: ${calendarStatus(input.calendarState)}.`] : []),
     ...(input.recipientRole === "operator" ? [`Invitee: ${input.inviteeName} <${input.inviteeEmail}>`] : []),

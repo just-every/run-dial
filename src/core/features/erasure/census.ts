@@ -25,6 +25,8 @@ export const applicationTables = [
   "booking_link_tokens",
   "booking_occurrences",
   "booking_presentation",
+  // PAY-001: amount, currency and Stripe references only; erased with its booking.
+  "booking_payments",
   "booking_search_casefold",
   "bookings",
   "calendar_busy_intervals",
@@ -45,6 +47,7 @@ export const applicationTables = [
   "event_questions",
   "event_schedule_bindings",
   "event_types",
+  "event_type_prices",
   "ext_custom_field_definitions",
   "ext_custom_field_values",
   "host_link_copy_reports",
@@ -116,6 +119,11 @@ export const applicationTables = [
   "oa_sessions",
   "oa_tokens",
   "oc_owner_claims",
+  // PAY-001: the connected account ID and status; no personal data.
+  "payment_connections",
+  // PAY-001: a pending hold carries the payer's folded email and pending booking until it ends; erased by email and with its booking.
+  "payment_holds",
+  "payment_oauth_states",
   "operator_erasure_subjects",
   "operator_creation_receipts",
   "operator_creation_tombstones",

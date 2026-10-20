@@ -20,6 +20,8 @@ export async function consumeJobs(batch: MessageBatch<unknown>, env: AppBindings
 /** The Worker's Cron handler: connection health and alerts (its healthy check also times the next connection probe), calendar sync and channel renewal, due deliveries. */
 export async function runScheduledWork(env: AppBindings, services: AppServices) {
   await processDueRescheduleRequests(env);
+  // PAY-001: end payment windows by expiring their Checkout Sessions, then free the slots.
+  await services.payments.sweepExpiredHolds();
   await services.delivery.reconcileConnections();
   await services.calendar.syncManagedEvents();
   await processDueCalendarDeletionProbes(env);

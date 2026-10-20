@@ -30,6 +30,7 @@ import { HostProfileRepository } from "../features/host-profile/repository";
 import { HostProfileService } from "../features/host-profile/service";
 import { AvatarStorage } from "../features/host-profile/avatar-storage";
 import { OperatorsService } from "../features/operators";
+import { PaymentsRepository, PaymentsService } from "../features/payments";
 import { PublicAbuseRepository } from "../features/public-abuse";
 import { createSpaSurface } from "../platform/assets/spa-surface";
 import { SendGridWebhookReceiver } from "../features/delivery/sendgrid-webhook";
@@ -38,7 +39,7 @@ import { suppressesMail } from "../platform/mail/development";
 import { BaseMailSender, mailConfiguration } from "../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 
-export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers } = {}) {
+export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsTransport?: typeof fetch } = {}) {
   const hostProfile = new HostProfileService(new HostProfileRepository(binding));
   const calendar = new CalendarConnectionService(new CalendarConnectionRepository(binding), runtime, adapters.calendar);
   const mailConfig = mailConfiguration(runtime);
@@ -48,9 +49,12 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile, { calendar, mail, recorded: { calendar: () => calendar.connectionHealth(), mail: () => deliveryRepository.mailHealth() } });
   const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
-  const bookings = new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime, {
+  const bookingsRepository = new BookingsRepository(binding);
+  const payments = new PaymentsService(new PaymentsRepository(binding), runtime, adapters.paymentsTransport);
+  payments.setConversion((claim, payment) => bookingsRepository.claim(claim, payment));
+  const bookings = new BookingsService(bookingsRepository, availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
-  }, bookingLinks);
+  }, bookingLinks, payments);
   calendar.setExternalChangeHandler(adapters.calendarChanges ?? bookings);
   if (adapters.connectionWatch) calendar.setWatchObservers(adapters.connectionWatch);
   const authMail = adapters.authMail ?? (adapters.mail ? { async send(message: import("../../../modules/operator-auth/index.mjs").MailMessage) {
@@ -86,6 +90,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime),
     availability,
     bookings,
+    payments,
     availabilityRequests: new AvailabilityRequestsService(new AvailabilityRequestsRepository(binding), eventTypes, hostProfile, runtime),
     embeds: new EmbedsService(new EmbedsRepository(binding), eventTypes, hostProfile),
     spaSurface: createSpaSurface(assets),
