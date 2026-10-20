@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e0147ee0d77a3651cba5ac40ab79b5eebf6b90503566cae9597d51dbcd3d626c",
+      "sha256": "e44bf253d927572f69d358d38a196692bab4ab52fad0b6528eb62f6ccf3a8dfa",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e4c17e314b52b8d315ff59f25fafed3d0701c180b918ee5fc907e3253969f59e",
+      "sha256": "d76e573b004c16240492d4c3c7a66aae63d8f0b43d4293f78e48b1c63b56851c",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "8fa84450bd0cb233decb53d757898e3e04ed0825bb64af45057a9316a9c6708b",
+      "sha256": "2236724ea69d87bf277ce4a9b934b048f02e1cc3c12fc9f6efa771325f4f87e3",
       "executable": false
     },
     "docs/importing.md": {
@@ -1512,27 +1512,27 @@
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-details-1440.png": {
-      "sha256": "ae14869bc6cc004740f494dad4722fe347fbf3a439675c3d464f3a3bf46de4a2",
+      "sha256": "d0896f588d1d8b1ea2366b7a41749917617410dc65b185fc794e4b6faa4c350c",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-details-390.png": {
-      "sha256": "a851adeae717e65d82d5492626f2ab8a43647f71aef15844315f0e117f0083ce",
+      "sha256": "12dbbfb8c914b4c8e25c46c536e45f4a0d4efd297563e11f6c385c52edf3d956",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-manage-1440.png": {
-      "sha256": "e419ca863a8510919896577858617a0c638f2166ba62fc59d903e225ab82729d",
+      "sha256": "95cfdad96f79f6151f8c38d20aa44a2137eedcae2ef4a53712edb4eefb81da3a",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-manage-390.png": {
-      "sha256": "fd3ae6e4c91e2baccf9029db236cee347fd6d35495166c933ce4bb40b1e2c9db",
+      "sha256": "a81cef102f398f31fb467497e14586d34bb1a50b4ad706372c2060324a1fd6b9",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-receipt-1440.png": {
-      "sha256": "a169c3915ac4e704af0bdb23195a2b404385cb8e7f329053553f251920c8913c",
+      "sha256": "329ca98debb2ee124f53af699906ce72b2be5850b8487fefde47d6cf895169af",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-receipt-390.png": {
-      "sha256": "2bab7fa2e45e8415fc34e5bfbcc1a2da1154f5322ff6a6f7e69e955e3a12a66b",
+      "sha256": "a4fde421f0ecb215001d2ef4e7e658690a4d46bc9d18a33d087dd9d8bcaf36c5",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-request-1440.png": {
@@ -1540,7 +1540,7 @@
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-request-390.png": {
-      "sha256": "5bb89fb00947158f178e898d7bfbadbd67db9b08ec9064f690a689032966d3d5",
+      "sha256": "9bdc16970eb6d12b0bef096b941bd896750057b06f6516896b1d1064df7e2451",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/invitee-request-review-1440.png": {
@@ -1560,19 +1560,19 @@
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/operator-booking-1440.png": {
-      "sha256": "43018950aa12a3bf19027b6ee11bfd380d799db0e9c855a6504de6d828e95b5c",
+      "sha256": "15c05f9308c5b91aeff43293578c9548d53cfb4abc5bf6196bd0a4d901429c85",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/operator-booking-390.png": {
-      "sha256": "7eeccc97d398c76187adae29037b642da2a783025a4d6f4c32397f3d92e97fe9",
+      "sha256": "1107b1dc5e27c7a9b4de87f7ade2e087757b81f9551317dce94cb40f0d13ccc1",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/request-booking-1440.png": {
-      "sha256": "948f75b6df10076cbda2bb5215d1a5b294c8dfddd73c7ef4af7cc7c95d1ace56",
+      "sha256": "84a98993507599bafa23ba29682af1f75b3688e31a7e65bbae4a6e2595e2681f",
       "executable": false
     },
     "evidence/contract/2026-10-21/AVAIL-012/request-booking-390.png": {
-      "sha256": "7164ed5de16d25bcd4b23e371414b5a5659547f4387dc731475292000cf8e9c6",
+      "sha256": "b2f14b41fb9fc7db7d30f1e5930b9ec056c3bc69cb1709f869554dc77f14f7de",
       "executable": false
     },
     "HANDOVER.md": {
@@ -3804,7 +3804,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "7217087ccabf76a8596f2a46a183da2804b95128952bc2f43017b56380cbf8d3",
+      "sha256": "6314c8cae9d65539e00f3af5b57ffa6cedd430fd66b465c695982904495dd5ff",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
