@@ -12,6 +12,8 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Historical requests have no invitee browser observation; do not infer one.
+  'core/0067_request_browser_timezone.sql': (table, row) => table === 'availability_requests' ? { ...row, browser_timezone: null } : row,
   // Additive history starts empty; an older backup cannot supply past transitions.
   'core/0066_calendar_connection_health_changes.sql': (_table, row) => row,
   'core/0065_invitation_rotation_audit.sql': (_table, row) => row,
