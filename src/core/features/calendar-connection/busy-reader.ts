@@ -26,7 +26,7 @@ export class CalendarBusyReader implements CalendarAvailabilityReader {
     // always continues through the provider checks below and fails closed.
     if (!connection || connection.status === "disconnected") return { kind: "ok" as const, calendarRequired: false, observedAt: new Date().toISOString(), intervals: [] };
     let requiresFreshRead = input.freshness === "fresh";
-    if (connection.status !== "healthy") {
+    if (connection.status !== "healthy" || !connection.syncCursor) {
       const recovered = await this.recoverConnection();
       if (recovered.kind === "unavailable") return recovered;
       connection = await this.repository.get();

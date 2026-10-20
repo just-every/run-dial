@@ -30,6 +30,8 @@ export const applicationTables = [
   "calendar_busy_intervals",
   "calendar_busy_read_windows",
   "calendar_connection_calendars",
+  // No personal data: anonymous state transitions, sanitized reasons and timestamps.
+  "calendar_connection_health_changes",
   "calendar_connections",
   "calendar_deletion_probes",
   "calendar_oauth_states",

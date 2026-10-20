@@ -9,6 +9,7 @@ import {
   calendarPushChannels,
   providerWebhookEvents,
 } from "../../platform/db/provider-schema";
+import { healthChangeStatement, recentHealthChanges } from "./health-history";
 import { createId, nowIso } from "../../shared/ids";
 
 export type CalendarConnectionStatus = "disconnected" | "healthy" | "unhealthy";
@@ -83,7 +84,7 @@ export class CalendarConnectionRepository {
     accessTokenExpiresAt: string;
   }) {
     const timestamp = nowIso();
-    await this.db
+    const write = this.db
       .insert(calendarConnections)
       .values({
         singletonKey: "default",
@@ -122,8 +123,14 @@ export class CalendarConnectionRepository {
           unhealthyCode: "selection_required",
           updatedAt: timestamp,
         },
-      });
+      }).toSQL();
+    await this.binding.batch([
+      healthChangeStatement(this.binding, "unhealthy", "selection_required", timestamp),
+      this.binding.prepare(write.sql).bind(...write.params),
+    ]);
   }
+
+  recentHealthChanges() { return recentHealthChanges(this.binding); }
 
   async replaceSelection(destinationCalendarId: string, conflictCalendarIds: string[], descriptors: Map<string, { conferenceCapable: boolean }>) {
     const timestamp = nowIso();
@@ -132,6 +139,7 @@ export class CalendarConnectionRepository {
       ...conflictCalendarIds.map((calendarId) => ({ calendarId, purpose: "conflict" as const, conferenceCapable: descriptors.get(calendarId)?.conferenceCapable ?? false })),
     ];
     await this.binding.batch([
+      healthChangeStatement(this.binding, "unhealthy", "selection_changed", timestamp),
       this.binding.prepare("DELETE FROM calendar_connection_calendars"),
       ...rows.map((row) => this.binding
         .prepare("INSERT INTO calendar_connection_calendars (id, calendar_id, purpose, conference_capable, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)")
@@ -154,10 +162,14 @@ export class CalendarConnectionRepository {
   }
 
   async markHealthy(checkAt: string, successfulRead = false) {
-    await this.db
-      .update(calendarConnections)
-      .set({ status: "healthy", lastCheckedAt: checkAt, ...(successfulRead ? { lastSuccessfulReadAt: checkAt } : {}), unhealthyCode: null, updatedAt: nowIso() })
-      .where(eq(calendarConnections.singletonKey, "default"));
+    const timestamp = nowIso();
+    await this.binding.batch([
+      healthChangeStatement(this.binding, "healthy", "connection_restored", timestamp),
+      this.binding.prepare(`UPDATE calendar_connections SET status='healthy', last_checked_at=?,
+        last_successful_read_at=CASE WHEN ? THEN ? ELSE last_successful_read_at END,
+        unhealthy_code=NULL, updated_at=? WHERE singleton_key='default'`)
+        .bind(checkAt, successfulRead ? 1 : 0, checkAt, timestamp),
+    ]);
   }
 
   /** Each healthy check records the destination's current conferencing capability for readiness. */
@@ -167,10 +179,12 @@ export class CalendarConnectionRepository {
   }
 
   async markUnhealthy(code: string) {
-    await this.db
-      .update(calendarConnections)
-      .set({ status: "unhealthy", unhealthyCode: code, updatedAt: nowIso() })
-      .where(eq(calendarConnections.singletonKey, "default"));
+    const timestamp = nowIso();
+    await this.binding.batch([
+      healthChangeStatement(this.binding, "unhealthy", code, timestamp),
+      this.binding.prepare("UPDATE calendar_connections SET status='unhealthy', unhealthy_code=?, updated_at=? WHERE singleton_key='default'")
+        .bind(code, timestamp),
+    ]);
   }
 
   async replaceBusyIntervals(input: {
@@ -277,6 +291,7 @@ export class CalendarConnectionRepository {
   async disconnect() {
     const timestamp = nowIso();
     await this.binding.batch([
+      healthChangeStatement(this.binding, "disconnected", "disconnected", timestamp),
       this.binding.prepare("DELETE FROM calendar_connection_calendars"),
       this.binding.prepare("DELETE FROM calendar_busy_intervals"),
       this.binding.prepare("DELETE FROM calendar_busy_read_windows"),

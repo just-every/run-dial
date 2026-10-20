@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { migrationReplay } from '@runeditrun/rer/modules/portability/migration-history';
 import { applicationCatalog, catalogQuery } from './catalog.mjs';
 import { migrationFiles } from './schema.mjs';
+import { exported } from './policy.mjs';
 
 // A backup made before Dial's latest migrations restores through Base's
 // acceptedSchemas. Each later migration states here exactly what it does to a
@@ -11,6 +12,8 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Additive history starts empty; an older backup cannot supply past transitions.
+  'core/0066_calendar_connection_health_changes.sql': (_table, row) => row,
   'core/0065_invitation_rotation_audit.sql': (_table, row) => row,
   'core/0064_invitation_manage_link.sql': (table, row) => ['event_correspondence', 'booking_correspondence'].includes(table)
     ? { ...row, templates_json: invitation.get(row.templates_json).templates_json } : row,
@@ -43,10 +46,11 @@ export async function priorSchemas(policy) {
     const schema = await identity(earlier.map(m => m.file));
     if (schema === current) continue;
     const proof = JSON.stringify({ migrations: earlier.map(({ file, sha256 }) => ({ file, sha256 })), catalog });
+    const emptyTables = exported.filter(name => !catalog.some(entry => entry.type === 'table' && entry.name === name));
     const upgradeRow = (table, row) => later.reduce((value, upgrade) => upgrade(table, value), row);
     const group = result.get(schema);
     if (group) Object.assign(group, { proofs: [...group.proofs, proof], upgradeRow });
-    else result.set(schema, { identity: schema, proofs: [proof], upgradeRow });
+    else result.set(schema, { identity: schema, proofs: [proof], upgradeRow, emptyTables });
   }
   return [...result.values()];
 }

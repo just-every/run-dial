@@ -14,7 +14,7 @@ const callbackSchema = z.object({ state: z.string().min(1).max(4_096).optional()
 
 export const calendarConnectionRoutes = new Hono<AppEnvironment>()
   .get("/api/app/calendar/setup", (context) => context.json(context.get("services").calendar.setupGuide()))
-  .get("/api/app/calendar/connection", async (context) => context.json(await context.get("services").calendar.connectionHealth()))
+  .get("/api/app/calendar/connection", async (context) => context.json({ ...await context.get("services").calendar.connectionHealth(), recentChanges: await context.get("services").calendar.recentHealthChanges() }))
   .get("/api/app/calendar/oauth/start", async (context) => {
     const redirect = await context.get("services").calendar.beginAuthorization(context.get("session"));
     return redirect ? context.redirect(redirect, 302) : apiError(context, 503, "calendar_not_configured", "Google Calendar is not configured for this deployment.");

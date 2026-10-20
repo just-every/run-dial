@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { evidencePath, externalEvidencePath } from "./evidence-path.mjs";
 import { origin, startLifecycleRuntime } from "./lifecycle/runtime.mjs";
+import { verifyConnectionResync } from "./lifecycle/connection-health.mjs";
 import { lifecycleDoors } from "./lifecycle/doors.mjs";
 
 // One booking lifecycle, in order, through Dial's public and operator doors. Each step checks what the invitee sees,
@@ -170,7 +171,7 @@ try {
   assert.equal(await recoveredCount(), 1);
   pass("a persistent calendar read failure alerts once within 60 s of the failing request, not at the pass in between; a second failure sends nothing more; one recovery", { alertLatencyMs: alertLatency });
 
-  // 6c. A new incident that no request sees, starting just after a scheduled pass: the worst phase, with the next probe
+  // 6b continued. A new incident that no request sees, starting just after a scheduled pass: the worst phase, with the next probe
   // 30 s away and the next pass a minute. Only free/busy over the conflict calendar fails (unshared or deleted), so only a
   // probe that reads what the health check reads sees it; the confirmation alerts once, within 60 s of the onset.
   await nextPass(); await d.atSecond(2);
@@ -188,8 +189,9 @@ try {
   assert.equal(await recoveredCount(), 2);
   pass("a new incident that no request sees, only free/busy over the conflict calendar failing, starting just after a scheduled pass, alerts once within 60 s of its onset", { failedAt: new Date(unseenAt).toISOString(), firstSeenAfterMs: Date.parse(firstSeen.at) - unseenAt, onsetLatencyMs: onsetLatency });
 
-  // 6d. Google refuses the token refresh, as after the owner revokes access: only a new consent can restore the connection.
+  // 6c. CAL-006: Google refuses the token refresh, as after the owner revokes access: only a new consent can restore the connection.
   const tokenCalls = snap => snap.wire_calls.filter(row => new URL(row.url).hostname === "oauth2.googleapis.com").length;
+  const healthBeforeRevocation = new Set((await state()).calendar_connection_health_changes.map(row => row.id));
   await d.wire("google-refresh-refused", 1);
   const revoked = await until("reauthorization required", async () => { const connection = await op("/api/app/calendar/connection"); return connection.state === "unhealthy" && connection.reason === "reauthorization_required" ? connection : undefined; }, 180_000);
   assert.equal((await pub(`/api/public/book/lifecycle-host/lifecycle/availability?week=${d.day(5)}&inviteeTimezone=UTC`)).state, "temporarily_unavailable");
@@ -207,6 +209,15 @@ try {
   await until("the third recovery announcement", async () => mailTo(await state(), "operator@dial.test", /^Calendar connection recovered$/).length === 3, 90_000);
   assert.equal(await week(), "available");
   pass("Google refuses the token refresh: Settings names reauthorization_required, one alert names it, booking fails closed and no refresh is retried; a new consent keeps the selection and announces recovery once", { reason: revoked.reason });
+  const transitions = (await state()).calendar_connection_health_changes.filter(row => !healthBeforeRevocation.has(row.id));
+  assert.deepEqual(transitions.map(row => [row.from_state, row.to_state, row.reason]), [
+    ["healthy", "unhealthy", "reauthorization_required"], ["unhealthy", "healthy", "connection_restored"],
+  ]);
+  assert.ok(transitions.every(row => row.event_type === "calendar.connection-health-changed.v1" && Number.isFinite(Date.parse(row.occurred_at))));
+  const recent = (await op("/api/app/calendar/connection")).recentChanges;
+  assert.ok(transitions.every(row => recent.some(change => change.id === row.id && change.reason === row.reason)));
+  await verifyConnectionResync(d, pass);
+
 
   // 7. Mail delivery is throttled once and retried on a scheduled pass, without a duplicate.
   await d.wire("mail-rate-limited:casey@dial.test", 1);

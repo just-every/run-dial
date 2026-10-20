@@ -2,17 +2,22 @@ import { createArchive } from './archive/artifact.mjs';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { contract } from './contract.mjs';
-import { fixture, testPlatform } from './archive/fixture.mjs';
+import { fixture, healthChanges, testPlatform } from './archive/fixture.mjs';
 import { schemaModel } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 async function load(path) {
   const result = await build({ entryPoints: [new URL(path, import.meta.url).pathname], bundle: true, write: false, platform: 'node', format: 'esm' });
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text + `\n//# sourceURL=dial-test-bundle:${path}\n`).toString('base64')}`);
 }
-contract('CAL-006', 'restored Calendar requires reauthorization for a connected source and preserves a disconnected source', async () => {
+contract('CAL-006', 'restored Calendar preserves health history, requires reauthorization for a connected source and preserves a disconnected source', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
-    const destination = testPlatform(target.db); await restoreArchive(destination, await createArchive(testPlatform(source.db)));
+    const destination = testPlatform(target.db);
+    const archive = await createArchive(testPlatform(source.db));
+    assert.deepEqual(archive.tables.find(table => table.name === 'calendar_connection_health_changes').rows.sort((a, b) => a.occurred_at.localeCompare(b.occurred_at)), healthChanges);
+    await restoreArchive(destination, archive);
+    const history = db => db.prepare('SELECT * FROM calendar_connection_health_changes ORDER BY occurred_at,id').all().map(row => ({ ...row }));
+    assert.deepEqual(history(target.db), healthChanges, 'restore preserves historical health facts without inventing a reauthorization transition');
     const { CalendarConnectionService } = await load('../src/core/features/calendar-connection/service.ts');
     const { CalendarConnectionRepository } = await load('../src/core/features/calendar-connection/repository.ts');
     let calls = 0;
@@ -27,6 +32,7 @@ contract('CAL-006', 'restored Calendar requires reauthorization for a connected 
     assert.deepEqual(await calendar.checkConnection(), { kind: 'unavailable', code: 'reauthorization_required' });
     assert.deepEqual(await calendar.readBusy({ startAt: '2026-10-07T00:00:00.000Z', endAt: '2026-10-07T01:00:00.000Z', freshness: 'cached' }), { kind: 'unavailable', code: 'reauthorization_required' });
     assert.equal(calls, 0);
+    assert.deepEqual(history(target.db), healthChanges, 'reading restored unavailable health preserves its history');
     const session = { id: 'owner', sessionId: 'new-session' };
     const authorization = await calendar.beginAuthorization(session); assert.ok(authorization);
     const state = new URL(authorization).searchParams.get('state');
@@ -40,6 +46,7 @@ contract('CAL-006', 'restored Calendar requires reauthorization for a connected 
       await restoreArchive(testPlatform(disconnected.db), await createArchive(testPlatform(source.db)));
       const row = disconnected.db.prepare('SELECT status,access_token_ciphertext,refresh_token_ciphertext,access_token_expires_at,channel_id,channel_resource_id,channel_expires_at FROM calendar_connections').get();
       assert.deepEqual(Object.values(row), ['disconnected', null, null, null, null, null, null]);
+      assert.deepEqual(history(disconnected.db), healthChanges, 'a disconnected source retains the same historical facts');
     } finally { disconnected.db.close(); }
   } finally { source.db.close(); target.db.close(); }
 });

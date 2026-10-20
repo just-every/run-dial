@@ -24,6 +24,16 @@ export const calendarConnections = sqliteTable("calendar_connections", {
   ...timestamps,
 });
 
+export const calendarConnectionHealthChanges = sqliteTable("calendar_connection_health_changes", {
+  id: text("id").primaryKey(),
+  eventType: text("event_type").notNull().default("calendar.connection-health-changed.v1"),
+  fromState: text("from_state", { enum: ["disconnected", "healthy", "unhealthy"] }).notNull(),
+  toState: text("to_state", { enum: ["disconnected", "healthy", "unhealthy"] }).notNull(),
+  reason: text("reason").notNull(),
+  occurredAt: text("occurred_at").notNull(),
+  ...timestamps,
+}, (table) => [index("calendar_connection_health_changes_recent_idx").on(table.occurredAt, table.id)]);
+
 export const calendarConnectionCalendars = sqliteTable(
   "calendar_connection_calendars",
   {

@@ -3,6 +3,10 @@ import { schemaModel, quote } from '../../scripts/archive/schema.mjs';
 import { chunks } from '../../scripts/archive/streams.mjs';
 import { exported } from '../../scripts/archive/policy.mjs';
 export const instant = '2026-10-07T00:00:00.000Z';
+export const healthChanges = [
+  { id: 'calendar-health-lost', event_type: 'calendar.connection-health-changed.v1', from_state: 'healthy', to_state: 'unhealthy', reason: 'reauthorization_required', occurred_at: '2026-10-06T23:00:00.000Z', created_at: '2026-10-06T23:00:00.000Z', updated_at: '2026-10-06T23:00:00.000Z' },
+  { id: 'calendar-health-restored', event_type: 'calendar.connection-health-changed.v1', from_state: 'unhealthy', to_state: 'healthy', reason: 'connection_restored', occurred_at: instant, created_at: instant, updated_at: instant },
+];
 export const secret = 'synthetic-PLANTED_PRIVATE_CREDENTIAL_0123456789';
 export const copyReport = {
   id: '01K6Z21FDK9C9E2RVFQDBCGD53', event_type_id: 'event_types-1',
@@ -58,6 +62,7 @@ const overrides = {
   availability_date_override_windows: { start_minute: 540, end_minute: 600 },
   calendar_connections: { singleton_key: 'default', provider: 'google', status: 'healthy', access_token_ciphertext: secret + '_ACCESS', refresh_token_ciphertext: secret + '_REFRESH', access_token_expires_at: end, authorised_by_operator_id: 'owner', sync_cursor: 'retained-sync-cursor', channel_id: secret + '_CHANNEL', account_email: 'calendar@example.test' },
   calendar_connection_calendars: { purpose: 'destination', calendar_id: 'calendar@example.test' },
+  calendar_connection_health_changes: healthChanges[0],
   provider_connection_health: { provider: 'google_calendar', status: 'healthy', alert_state: 'healthy_announced' },
   calendar_busy_intervals: { starts_at: instant, ends_at: end, transparency: 'opaque' },
   calendar_busy_read_windows: { starts_at: instant, ends_at: end },
@@ -100,6 +105,7 @@ export async function fixture() {
     if (name === 'bookings') { row.invitee_name_folded = foldBookingSearch(row.invitee_name); row.invitee_email_folded = foldBookingSearch(row.invitee_email); }
     db.prepare(`INSERT INTO ${quote(name)} (${Object.keys(row).map(quote)}) VALUES (${Object.keys(row).map(() => '?')})`).run(...Object.values(row));
   }
+  for (const row of healthChanges.slice(1)) db.prepare(`INSERT INTO calendar_connection_health_changes (${Object.keys(row).map(quote)}) VALUES (${Object.keys(row).map(() => '?')})`).run(...Object.values(row));
   for (const trigger of triggers) db.exec(trigger.sql);
   db.exec("INSERT INTO oa_operators VALUES ('zz-cancelled','cancelled@example.test','Cancelled invite','owner','inactive',2,1791331200000)");
   db.exec(`INSERT INTO booking_manage_tokens VALUES('manage','bookings-1','${secret}_MANAGE_HASH','2099',NULL,NULL,'${instant}','${instant}');

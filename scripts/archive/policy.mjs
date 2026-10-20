@@ -12,7 +12,7 @@ export const exported = [
   'avatar_object_deletions', 'operators', 'host_profiles', 'host_link_copy_reports', 'profile_focus_areas', 'social_proof_entries', 'event_types',
   'event_questions', 'recurring_availability_windows', 'availability_date_overrides',
   'availability_schedules', 'event_schedule_bindings', 'booking_limit_policies', 'event_booking_policies', 'event_correspondence',
-  'availability_date_override_windows', 'calendar_connections', 'calendar_connection_calendars',
+  'availability_date_override_windows', 'calendar_connections', 'calendar_connection_calendars', 'calendar_connection_health_changes',
   'provider_connection_health', 'calendar_busy_intervals', 'calendar_busy_read_windows',
   'delivery_outbox', 'delivery_attempts', 'provider_webhook_events', 'operator_delivery_preferences',
   'bookings', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_request_history', 'booking_reschedule_requests', 'booking_attendance', 'booking_presentation', 'booking_correspondence',

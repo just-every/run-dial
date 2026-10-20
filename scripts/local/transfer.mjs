@@ -14,15 +14,19 @@ async function* records(path) {
  finally { await file.close(); }
 }
 async function moveArchive(direction, path, journal) {
+ let incoming;
  if (direction === 'export') await absent(path);
- else for (const file of [path,journal].filter(Boolean)) for await (const record of records(file)) { if (!record.kind) throw Error('archive-invalid-record'); }
+ else for (const file of [path,journal].filter(Boolean)) for await (const record of records(file)) {
+  if (!record.kind) throw Error('archive-invalid-record');
+  if (file === path && record.kind === 'manifest') incoming = record;
+ }
  const { values: vars } = await readSettings(process.cwd(), { file: '.dev.vars' });
  const { getPlatformProxy } = await import('wrangler');
  const proxy = await getPlatformProxy({ configPath: resolve('wrangler.toml'), persist: { path: resolve('.wrangler/state/v3') }, remoteBindings: false });
  let service, id, complete = false, manifest, closing, temporaryOwned = false;
  const temporary = path + '.partial';
  try {
-  const { policy, knownSecrets } = await dialPolicy(proxy.env.DB, vars);
+  const { policy, knownSecrets } = await dialPolicy(proxy.env.DB, vars, incoming);
   service = await createPortability({ db: proxy.env.DB, buckets: { FILES: guardedBucket(proxy.env.FILES, knownSecrets) }, policy, migrations: () => restoreMigrations(proxy.env.DB, policy) });
   if (direction === 'export') {
    const file = await privateFile(temporary); temporaryOwned = true;

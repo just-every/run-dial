@@ -87,6 +87,8 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     return connectionHealth(await this.repository.get());
   }
 
+  recentHealthChanges() { return this.repository.recentHealthChanges(); }
+
   async listCalendars() {
     try {
       const credentials = await this.credentials();
@@ -131,7 +133,7 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
       const credentials = await this.credentials(connection);
       const descriptor = await this.readHealth(credentials.accessToken, destination.calendarId, conflicts.map((entry) => entry.calendarId));
       await this.ensurePushChannels(credentials, [destination.calendarId, ...conflicts.map((entry) => entry.calendarId)]);
-      if (!connection.syncCursor) {
+      if (!(await this.repository.get())?.syncCursor) {
         const sync = await this.syncManagedEvents();
         if (sync.kind === "unavailable") return sync;
       }
@@ -249,7 +251,10 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
       await this.repository.updateSyncCursor(synced.syncCursor);
       return { kind: "synced" as const, changed: synced.changes.length };
     } catch (error) {
-      if (failureCode(error) === "invalid_sync_cursor") await this.repository.clearSyncCursor();
+      if (failureCode(error) === "invalid_sync_cursor") {
+        await this.repository.clearSyncCursor();
+        await this.repository.invalidateBusyCache();
+      }
       await this.markFailure(error);
       return { kind: "unavailable" as const, code: failureCode(error) };
     }
@@ -309,11 +314,26 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     const current = existing.length === uniqueCalendarIds.length
       && uniqueCalendarIds.every((calendarId) => existing.some((channel) => channel.calendarId === calendarId && Date.parse(channel.expiresAt) > renewalDeadline));
     if (current) return false;
-    const channels = await this.calendar.watchCalendars(credentials.accessToken, {
+    const lapsed = existing.some(channel => Date.parse(channel.expiresAt) <= Date.now());
+    const unrenewable = (await this.repository.get())?.unhealthyCode === "push_channel_unrenewable";
+    // Invalidate before replacement, so a provider success followed by a failed local write cannot retain stale data.
+    if (lapsed || unrenewable) {
+      await this.repository.clearSyncCursor();
+      await this.repository.invalidateBusyCache();
+    }
+    let channels;
+    try { channels = await this.calendar.watchCalendars(credentials.accessToken, {
       calendarIds: uniqueCalendarIds,
       callbackUrl: new URL("/api/webhooks/google-calendar", this.runtime.APP_URL).toString(),
       channelToken: configuration.webhookSecret,
-    });
+    }); } catch (error) {
+      await this.repository.clearSyncCursor();
+      await this.repository.invalidateBusyCache();
+      // Preserve reauthorization and quota failures; other failed watch attempts name the channel failure.
+      const code = failureCode(error);
+      if (["unauthorized", "reauthorization_required", "quota_exhausted"].includes(code)) throw error;
+      throw new ProviderFailure("push_channel_unrenewable", true);
+    }
     await this.repository.replacePushChannels(channels);
     const stopped = await Promise.allSettled(existing.map((channel) =>
       this.calendar.stopWatch(credentials.accessToken, { providerChannelId: channel.providerChannelId, providerResourceId: channel.providerResourceId }),

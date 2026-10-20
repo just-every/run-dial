@@ -38,7 +38,11 @@ export function wireTransport(db: D1Database): typeof fetch {
     const readStatus = await control(db, "google-read-status");
     if (readStatus && (url.pathname.includes("/users/me/calendarList") || url.pathname.endsWith("/freeBusy"))) return Response.json({ error: { code: Number(readStatus), message: "Private provider diagnostic must not be persisted" } }, { status: Number(readStatus) });
     if (url.pathname.includes("/users/me/calendarList")) return Response.json(url.pathname.endsWith("calendarList") ? { items: [descriptor] } : descriptor);
-    if (url.pathname.endsWith("/events/watch")) return Response.json({ resourceId: "wire-resource", expiration: String(Date.now() + 86400000) });
+    if (url.pathname.endsWith("/events/watch")) {
+      const status = await control(db, "google-watch-status");
+      if (status) return Response.json({ error: { code: Number(status) } }, { status: Number(status) });
+      return Response.json({ resourceId: "wire-resource", expiration: String(Date.now() + 7 * 86400000) });
+    }
     if (url.pathname.endsWith("/channels/stop")) return new Response(null, { status: 204 });
     const events = (await db.prepare("SELECT payload FROM wire_events").all<{ payload: string }>()).results.map(row => JSON.parse(row.payload));
     // A conflict calendar free/busy cannot read (unshared or deleted): Google answers 200 with the calendar's errors.
@@ -54,6 +58,10 @@ export function wireTransport(db: D1Database): typeof fetch {
       return event ? Response.json(event) : Response.json({ error: { code: 404 } }, { status: 404 });
     }
     if (method === "GET") {
+      if (url.searchParams.has("syncToken") && await control(db, "google-invalid-cursor")) {
+        await db.prepare("DELETE FROM wire_controls WHERE name='google-invalid-cursor'").run();
+        return Response.json({ error: { code: 410 } }, { status: 410 });
+      }
       const booking = url.searchParams.get("privateExtendedProperty")?.split("=")[1];
       const mode = booking && await control(db, `google-list-mode:${booking}`);
       if (mode === "paginated") return Response.json({ kind: "calendar#events", items: [], nextPageToken: "unread-page" });

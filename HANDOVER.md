@@ -278,7 +278,7 @@ Every manifest extension ID is accounted for below. “No registry consumer” d
 | `availability-request.created.v1` | Declared; no registry consumer yet. Persisted product facts drive native delivery; no extension subscriber is registered. |
 | `availability-request.handled.v1` | Declared; no registry consumer yet. Persisted product facts drive native delivery; no extension subscriber is registered. |
 | `availability-request.closed.v1` | Declared; no registry consumer yet. Persisted product facts drive native delivery; no extension subscriber is registered. |
-| `calendar.connection-health-changed.v1` | Declared; no registry consumer yet. Persisted product facts drive native delivery; no extension subscriber is registered. |
+| `calendar.connection-health-changed.v1` | Recorded natively and atomically with each calendar connection state transition, including OAuth connect/disconnect: from/to, named reason and time in `calendar_connection_health_changes`. Recent facts appear in Settings and owner archive export/restore preserves them. Subscriber and webhook dispatch belong to `API-002`; no extension subscriber is registered. |
 | `delivery.failed.v1` | Declared; no registry consumer yet. Persisted product facts drive native delivery; no extension subscriber is registered. |
 | `operator.navigation.after.v1` | Declared; no registry consumer yet. No authored extension contributes to this surface; public slots intentionally receive no annotation values. |
 | `operator.dashboard.after.v1` | Declared; no registry consumer yet. No authored extension contributes to this surface; public slots intentionally receive no annotation values. |

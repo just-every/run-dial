@@ -18,8 +18,8 @@ function bucket(platform) {
   async delete(key) { platform.objects.delete(key); },
  };
 }
-async function service(platform, transformRow) {
- const { policy, knownSecrets } = await dialPolicy(platform.binding, { ...vars, ...(platform.knownSecrets?.() ?? []).reduce((result, value, index) => ({ ...result, [`TEST_${index}_SECRET`]: value }), {}) });
+async function service(platform, transformRow, incoming) {
+ const { policy, knownSecrets } = await dialPolicy(platform.binding, { ...vars, ...(platform.knownSecrets?.() ?? []).reduce((result, value, index) => ({ ...result, [`TEST_${index}_SECRET`]: value }), {}) }, incoming);
  if (transformRow) { const original=policy.exportRow; policy.exportRow=(name,row)=>transformRow(name,original(name,row)); }
  return createPortability({ db: platform.binding, buckets: { FILES: guardedBucket(bucket(platform), knownSecrets) }, policy });
 }
@@ -38,7 +38,7 @@ export async function createArchive(platform, path, { transformRow } = {}) {
 }
 export async function restoreArchive(platform, archive) {
  const records = archives.get(archive); if (!records) throw Error('archive-invalid-format');
- const api = await service(platform); const id = await api.imports.create(records[0]); let complete = false;
+ const api = await service(platform, undefined, records[0]); const id = await api.imports.create(records[0]); let complete = false;
  try {
   for (const record of records) if (record.kind === 'part') await api.imports.uploadPart(id, record.index, record);
   await api.imports.finalize(id, { contentHash: records.at(-1).contentHash, archiveHash: records.at(-1).archiveHash }); complete = true;

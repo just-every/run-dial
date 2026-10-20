@@ -57,6 +57,7 @@ contract('DATA-001', 'a backup made by the listed release restores through rer i
       assert.equal(stored.httpMetadata.contentType, object.httpMetadata.contentType, object.key);
     }
     assert.deepEqual((await DB.prepare('PRAGMA foreign_key_check').all()).results, []);
+    assert.deepEqual((await DB.prepare('SELECT * FROM calendar_connection_health_changes').all()).results, [], 'an older backup cannot invent past connection-health facts');
   } finally {
     await proxy?.dispose();
     await rm(directory, { recursive: true, force: true });

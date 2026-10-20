@@ -1,4 +1,5 @@
 export type ProviderFailureCode =
+  | "push_channel_unrenewable"
   | "meeting_creation_failed"
   | "superseded_occurrence"
   | "operator_removed"

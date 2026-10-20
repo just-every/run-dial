@@ -5,7 +5,7 @@ import { schemaModel, validateRows, assertSchema } from '../archive/schema.mjs';
 import { priorSchemas } from '../archive/prior-schemas.mjs';
 
 const quote = name => '"' + name.replaceAll('"', '""') + '"';
-export async function dialPolicy(db, vars) {
+export async function dialPolicy(db, vars, incoming) {
  if (!vars.SESSION_SECRET) throw Error('archive-owner-salt-required');
  const model = await schemaModel();
  let schemaProof;
@@ -17,6 +17,15 @@ export async function dialPolicy(db, vars) {
  // A backup from an earlier migration set restores through its declared row
  // upgrades, and must carry exactly the schema proof of a set with its schema.
  const priors = await priorSchemas(result.policy), current = result.policy.extraPayloads['schema-proof'];
+ // Base's explicit row upgrades require the archived table inventory. Later
+ // additive tables stay empty, rather than acquiring invented historical rows.
+ const inherited = priors.find(entry => entry.identity === incoming?.schema);
+ const emptyTables = inherited?.emptyTables ?? [];
+ const assertEmptyHistory = async () => {
+  for (const name of emptyTables) if (await db.prepare(`SELECT 1 FROM ${quote(name)} LIMIT 1`).first()) throw Error('archive-destination-not-empty');
+ };
+ await assertEmptyHistory();
+ result.policy.excludeTables.push(...emptyTables);
  let prior;
  result.policy.acceptedSchemas = Object.fromEntries(priors.map(({ identity, upgradeRow }) => [identity, { upgradeRow }]));
  result.policy.extraPayloads['schema-proof'] = { produce: current.produce, async consume(stream) {
@@ -26,8 +35,9 @@ export async function dialPolicy(db, vars) {
  result.policy.validateStaged = async function({ db, read, manifest }) {
     // Base consumes payloads after staged validation; bind the proof to this archive's schema.
     prior = priors.find(entry => entry.identity === manifest.schema);
+    await assertEmptyHistory();
     // Preserve Dial's exact authority graph and historical command guarantees.
-    const tables = await Promise.all(manifest.tables.map(async table => ({ name: table.name, rows: await read(table.name) })));
+    const tables = [...await Promise.all(manifest.tables.map(async table => ({ name: table.name, rows: await read(table.name) }))), ...emptyTables.map(name => ({ name, rows: [] }))];
     const model = await schemaModel();
     try { validateRows({ migrations: model.migrations, tables: [...tables].sort((a, b) => a.name.localeCompare(b.name)) }, model); }
     finally { model.db.close(); }
