@@ -521,7 +521,7 @@ export class BookingsService {
     };
   }
 
-  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; manageToken: string; bookingId: string; calendarRequired?: boolean }): Promise<BookingEmail[]> {
+  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean }): Promise<BookingEmail[]> {
     const { profile, event, invitee, startAt, endAt, inviteeTimezone, manageToken, bookingId } = input;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     const location = event.locationType === "google_meet" ? "Google Meet link pending" : event.locationValue;
@@ -535,7 +535,7 @@ export class BookingsService {
     const operators = await this.repository.listOperatorRecipients();
     const details = {
       hostName: profile.name, eventTitle: event.title, startAt, endAt, durationMinutes: (Date.parse(endAt) - Date.parse(startAt)) / 60_000,
-      lockedTimezone: event.bookingPolicy?.lockedTimezone ?? undefined, browserTimezone: inviteeTimezone,
+      lockedTimezone: event.bookingPolicy?.lockedTimezone ?? undefined, browserTimezone: input.browserTimezone === undefined ? inviteeTimezone : input.browserTimezone,
       inviteeTimezone, hostTimezone: profile.timezone, locationType: event.locationType, locationLabel: event.locationLabel,
       locationValue: event.locationValue, calendarState: input.calendarRequired === false ? "not_required" : "pending",
       inviteeName: invitee.name, inviteeEmail: invitee.email, answers: answerDetails,

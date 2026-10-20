@@ -17,6 +17,7 @@ export const requestCompositionSchema = z
     inviteeName: z.string().trim().min(1).max(160),
     inviteeEmail: z.string().trim().email().max(320),
     inviteeTimezone: ianaTimeZoneSchema,
+    browserTimezone: ianaTimeZoneSchema.nullable().optional(),
     note: z.string().trim().max(500).nullable().optional(),
     windows: z.array(z.object({ date: hostDateSchema, ...timeWindowSchema.shape })).min(1).max(20),
   })

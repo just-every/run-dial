@@ -40,6 +40,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM oa_step_up_challenges').get().n, 0);
     assert.deepEqual(await createArchive(destination), archive);
+    assert.equal(target.db.prepare('SELECT browser_timezone FROM availability_requests').get().browser_timezone, 'America/Los_Angeles', 'AVAIL-012 request browser zone survives the public archive round trip');
+    assert.equal(target.db.prepare('SELECT browser_timezone FROM booking_presentation').get().browser_timezone, 'America/New_York', 'AVAIL-012 booking preserves its independent invitee observation');
     assert.throws(() => target.db.exec("UPDATE oa_operators SET status='active' WHERE id='zz-cancelled'"), /invitation_required/);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox').get().n, 0);
     // Future clipboard storage must be classified from its eventual migration,
@@ -126,5 +128,7 @@ contract('OPER-005', 'whole-install transfer preserves unfinished first-run stat
     await restoreArchive(destination, archive);
     assert.equal(target.db.prepare("SELECT onboarding_completed_at FROM operator_setup_identity").get().onboarding_completed_at, null);
     assert.deepEqual(await createArchive(destination), archive);
+    assert.equal(target.db.prepare('SELECT browser_timezone FROM availability_requests').get().browser_timezone, 'America/Los_Angeles', 'AVAIL-012 request browser zone survives the public archive round trip');
+    assert.equal(target.db.prepare('SELECT browser_timezone FROM booking_presentation').get().browser_timezone, 'America/New_York', 'AVAIL-012 booking preserves its independent invitee observation');
   } finally { source.db.close(); target.db.close(); }
 });

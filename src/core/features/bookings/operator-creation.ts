@@ -18,7 +18,7 @@ export type OperatorBookingCreateResult =
   | { kind: "slot_invalid"; exclusions: SlotExclusion[] };
 type CreationDependencies = {
   repository: BookingsRepository; availability: AvailabilityService; runtime: RuntimeEnvironment;
-  confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: ValidatedInvitee; startAt: string; endAt: string; inviteeTimezone: string; manageToken: string; bookingId: string; calendarRequired?: boolean }): Promise<BookingEmail[]>;
+  confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: ValidatedInvitee; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean }): Promise<BookingEmail[]>;
 };
 const manageTokenLifetimeMs = 90 * 24 * 60 * 60 * 1000;
 
@@ -48,6 +48,7 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
   const limits = await dependencies.repository.limitExclusions(selection.event.id, selection.profile.timezone, selection.slot.startAt, selection.slot.endAt, invitee.email);
   if (limits.length) return await recoverOperatorBooking(dependencies, input) ?? { kind: "slot_invalid", exclusions: limits };
   if (await dependencies.repository.isBlocked(invitee.email)) return await recoverOperatorBooking(dependencies, input) ?? { kind: "blocked" };
+  const browserTimezone = input.requestId ? await dependencies.repository.requestBrowserTimezone(input.requestId) : null;
   const bookingId = createId();
   const occurrenceId = createId();
   const manageTokenId = createId();
@@ -71,7 +72,7 @@ export async function createOperatorBooking(dependencies: CreationDependencies, 
     occupiedEndAt: new Date(Date.parse(selection.slot.endAt) + selection.event.afterBufferMinutes * 60_000).toISOString(),
     now,
     calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: selection.event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: selection.profile.timezone, lockedTimezone: selection.event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
-    emails: await dependencies.confirmationEmails({ profile: selection.profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired }),
+    emails: await dependencies.confirmationEmails({ profile: selection.profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, browserTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired }),
   }, input.operatorId);
   if (claim !== "claimed") return await recoverOperatorBooking(dependencies, input) ?? { kind: claim };
   const booking = await dependencies.repository.getById(bookingId);

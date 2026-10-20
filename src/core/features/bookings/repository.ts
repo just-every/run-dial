@@ -143,6 +143,11 @@ export class BookingsRepository {
     return results[0].meta.changes > 0 ? "claimed" : (results.at(-1)?.results[0] as { blocked: number }).blocked ? "blocked" : "slot_taken";
   }
 
+  async requestBrowserTimezone(requestId: string) {
+    const row = await this.binding.prepare("SELECT browser_timezone AS browserTimezone FROM availability_requests WHERE id=?").bind(requestId).first<{ browserTimezone: string | null }>();
+    return row?.browserTimezone ?? null;
+  }
+
   operatorCreationReceipt(keyHash: string) { return readOperatorCreation(this.binding, keyHash); }
   operatorCreationErased(keyHash: string, operatorId: string) { return isErasedOperatorCreation(this.binding, keyHash, operatorId); }
 
@@ -174,7 +179,7 @@ export class BookingsRepository {
       ).bind(input.occurrenceId, input.bookingId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.bookingId),
       this.binding.prepare("UPDATE bookings SET current_occurrence_id = ? WHERE id = ? AND current_occurrence_id IS NULL").bind(input.occurrenceId, input.bookingId),
       ...bookingCorrespondenceStatements(this.binding, input.bookingId, event.id, input.now),
-      ...bookingPresentationStatements(this.binding, input, false),
+      ...bookingPresentationStatements(this.binding, input, false, input.requestId),
       ...answerStatements(this.binding, input.bookingId, event.questions, input.invitee.answers, input.now),
       this.binding.prepare(
         "INSERT INTO booking_manage_tokens (id, booking_id, token_hash, expires_at, created_at, updated_at) SELECT ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)",

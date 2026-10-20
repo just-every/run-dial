@@ -34,6 +34,7 @@ export const availabilityRequests = sqliteTable(
     inviteeName: text("invitee_name").notNull(),
     inviteeEmail: text("invitee_email").notNull(),
     inviteeTimezone: text("invitee_timezone").notNull(),
+    browserTimezone: text("browser_timezone"),
     note: text("note"),
     state: text("state", { enum: ["submitted", "handled", "closed"] }).notNull(),
       nonceHash: text("nonce_hash").notNull(),

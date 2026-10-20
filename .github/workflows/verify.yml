@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - "cloud/**"
       - pr-dial-export-fix
       - "style/**"
 

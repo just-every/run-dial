@@ -18,6 +18,7 @@ export type RequestComposition = {
   inviteeName: string;
   inviteeEmail: string;
   inviteeTimezone: string;
+  browserTimezone?: string | null;
   note: string | null;
   windows: RequestedWindow[];
 };
@@ -136,8 +137,8 @@ export class AvailabilityRequestsRepository {
     ];
     try {
       const result = await this.binding.batch([
-        this.binding.prepare(`INSERT INTO availability_requests (id, event_type_id, event_title, invitee_name, invitee_email, invitee_timezone, note, state, nonce_hash, composition_hash, booking_id, submitted_at, handled_at, closed_at, state_changed_by_operator_id, created_at, updated_at) SELECT ?, ?, ?, ?, ?, ?, ?, 'submitted', ?, ?, NULL, ?, NULL, NULL, NULL, ?, ? WHERE NOT ${blockedAddressSql}`)
-          .bind(requestId, input.eventTypeId, input.eventTitle, input.composition.inviteeName, input.composition.inviteeEmail, input.composition.inviteeTimezone, input.composition.note, input.nonceHash, input.compositionHash, timestamp, timestamp, timestamp, ...blockedAddressValues(input.composition.inviteeEmail)),
+        this.binding.prepare(`INSERT INTO availability_requests (id, event_type_id, event_title, invitee_name, invitee_email, invitee_timezone, browser_timezone, note, state, nonce_hash, composition_hash, booking_id, submitted_at, handled_at, closed_at, state_changed_by_operator_id, created_at, updated_at) SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', ?, ?, NULL, ?, NULL, NULL, NULL, ?, ? WHERE NOT ${blockedAddressSql}`)
+          .bind(requestId, input.eventTypeId, input.eventTitle, input.composition.inviteeName, input.composition.inviteeEmail, input.composition.inviteeTimezone, input.composition.browserTimezone ?? null, input.composition.note, input.nonceHash, input.compositionHash, timestamp, timestamp, timestamp, ...blockedAddressValues(input.composition.inviteeEmail)),
         ...input.composition.windows.map((window, position) => this.binding.prepare("INSERT INTO availability_request_windows (id, request_id, requested_date, start_minute, end_minute, position, created_at, updated_at) SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM availability_requests WHERE id = ?)")
           .bind(createId(), requestId, window.date, window.startMinute, window.endMinute, position, timestamp, timestamp, requestId)),
         this.binding.prepare("UPDATE availability_request_review_nonces SET consumed_at = ?, request_id = ?, updated_at = ? WHERE nonce_hash = ? AND consumed_at IS NULL AND EXISTS (SELECT 1 FROM availability_requests WHERE id = ?)")
@@ -239,6 +240,7 @@ export class AvailabilityRequestsRepository {
       inviteeName: record.inviteeName,
       inviteeEmail: record.inviteeEmail,
       inviteeTimezone: record.inviteeTimezone,
+      browserTimezone: record.browserTimezone,
       note: record.note,
       windows,
       state: record.state as RequestState,

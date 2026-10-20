@@ -28,7 +28,7 @@ export function bookingTimeFacts(input: BookingMailTimes, prefix = ""): BrandedM
       { label: prefix ? `${prefix} time` : "Time", value: formatTimeRange(input.startAt, input.endAt, input.lockedTimezone, true) },
       ...(input.browserTimezone && input.browserTimezone !== input.lockedTimezone
         ? [{ label: prefix ? `${prefix} browser time` : "Browser time", value: formatTimeRange(input.startAt, input.endAt, input.browserTimezone, true) }]
-        : []),
+        : input.browserTimezone ? [] : [{ label: "Invitee browser zone", value: "Zone not provided by invitee" }]),
     ];
   }
   return [

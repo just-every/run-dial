@@ -170,6 +170,7 @@ export function canonicalComposition(input: RequestComposition): RequestComposit
     inviteeName: input.inviteeName.trim(),
     inviteeEmail: input.inviteeEmail.trim().toLowerCase(),
     inviteeTimezone: input.inviteeTimezone.trim(),
+    browserTimezone: input.browserTimezone?.trim() ?? null,
     note: input.note?.trim() || null,
     windows: [...input.windows]
       .map((window) => ({ ...window }))
@@ -188,6 +189,7 @@ function toPublicRequest(record: RequestRecord, hostName: string): PublicRequest
     inviteeName: record.inviteeName,
     inviteeEmail: record.inviteeEmail,
     inviteeTimezone: record.inviteeTimezone,
+    browserTimezone: record.browserTimezone ?? null,
     note: record.note,
     windows: record.windows,
     eventTitle: record.eventTitle,
@@ -203,6 +205,7 @@ function toOperatorRequest(record: RequestRecord, hostTimezone: string): Operato
     inviteeName: record.inviteeName,
     inviteeEmail: record.inviteeEmail,
     inviteeTimezone: record.inviteeTimezone,
+    browserTimezone: record.browserTimezone ?? null,
     note: record.note,
     state: record.state,
     bookingId: record.bookingId,

@@ -75,7 +75,7 @@ const overrides = {
   booking_history: { action: 'created', actor_type: 'operator', actor_id: 'owner' },
   booking_attendance: { status: 'attended' },
   blocked_address_rules: { kind: 'email', value: 'blocked@example.test' },
-  availability_requests: { state: 'submitted', nonce_hash: secret + '_NONCE', invitee_timezone: 'UTC' },
+  availability_requests: { state: 'submitted', nonce_hash: secret + '_NONCE', invitee_timezone: 'America/New_York', browser_timezone: 'America/Los_Angeles' },
   availability_request_windows: { requested_date: '2026-10-08', start_minute: 600, end_minute: 660 },
   embed_allowed_origins: { origin: 'https://example.test' },
   booking_calendar_conflicts: { state: 'open' },

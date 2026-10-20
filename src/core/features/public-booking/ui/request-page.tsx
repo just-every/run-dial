@@ -18,7 +18,7 @@ import type { PublicEventPayload } from "./types";
 
 type TimeRange = { start: string; end: string };
 type RequestWindow = { date: string; startMinute: number; endMinute: number };
-type RequestComposition = { inviteeName: string; inviteeEmail: string; inviteeTimezone: string; note: string | null; windows: RequestWindow[] };
+type RequestComposition = { inviteeName: string; inviteeEmail: string; inviteeTimezone: string; browserTimezone?: string | null; note: string | null; windows: RequestWindow[] };
 type Review = { nonce: string; expiresAt: string; request: RequestComposition & { eventTitle: string; hostName: string } };
 
 export function AlternativeRequestPage({ handle, slug, embedded = false }: { handle: string; slug: string; embedded?: boolean }) {
@@ -110,6 +110,7 @@ function RequestComposer({ data, embedded }: { data: PublicEventPayload; embedde
     inviteeName: name.trim(),
     inviteeEmail: email.trim(),
     inviteeTimezone: timezone.trim(),
+    browserTimezone,
     note: note.trim() || null,
     windows: selectedDates.flatMap((date) => ranges.map((range) => ({ date, startMinute: minutes(range.start), endMinute: minutes(range.end) }))),
   });

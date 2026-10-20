@@ -94,6 +94,25 @@ export async function bookingPolicyJourney({ data, call, state, deliver, checks 
   const foldIcs = await (await call(`/api/public/manage/${new URL(foldManage).pathname.split('/').at(-1)}/calendar.ics`)).text();
   assert.ok(foldIcs.includes('DTSTART:' + foldStart.slice(0,19).replaceAll('-','').replaceAll(':','') + 'Z'));
   assert.ok(foldIcs.includes('UTC-05:00'), 'later repeated wall-clock time preserves its UTC instant and explicit locked offset');
+  assert.equal(foldBooking.browserTimezone, null, 'operator entry never pretends its chosen zone came from the invitee');
+  assert.equal((await data(`/api/app/bookings/${foldBooking.id}`)).browserTimezone, null);
+  const requestBase = `/api/public/events/dial-host/${event.slug}/request`;
+  const request = { inviteeName: 'Casey Chen', inviteeEmail: 'request-zone@dial.test', inviteeTimezone: policy.lockedTimezone, browserTimezone: 'America/Los_Angeles', note: 'Visiting the New York studio', windows: [{ date: tomorrow, startMinute: 600, endMinute: 660 }] };
+  const review = await data(`${requestBase}/review`, request, 201);
+  await data(`${requestBase}?nonce=${review.nonce}`, request, 201);
+  const requested = (await data('/api/app/availability-requests')).find(row => row.inviteeEmail === request.inviteeEmail);
+  assert.equal(requested.browserTimezone, request.browserTimezone);
+  assert.equal(requested.inviteeTimezone, policy.lockedTimezone);
+  const freeSlot = (await data(`${base}/availability?week=${tomorrow}`)).slots.find(slot => Date.parse(slot.startAt) > Date.now() + 30 * 3600000);
+  const fromRequest = await data('/api/app/bookings', { idempotencyKey: randomUUID(), requestId: requested.id, eventTypeId: event.id, startAt: freeSlot.startAt, inviteeTimezone: requested.inviteeTimezone, name: requested.inviteeName, email: requested.inviteeEmail, answers: {} }, 201);
+  assert.equal(fromRequest.browserTimezone, 'America/Los_Angeles', 'AVAIL-012 operator carries the observation from the invitee request');
+  assert.equal(fromRequest.lockedTimezone, policy.lockedTimezone);
+  assert.equal((await data(`/api/app/bookings/${fromRequest.id}`)).browserTimezone, 'America/Los_Angeles');
+  await deliver();
+  const requestMail = bookingMail(await state(), fromRequest.id).find(mail => mail.subject.startsWith('Confirmed:'));
+  assert.ok(textBody(requestMail).includes('America/Los_Angeles'), 'request-derived confirmation carries the invitee observation');
+  const operatorMail = bookingMail(await state(), foldBooking.id).find(mail => mail.subject.startsWith('Confirmed:'));
+  assert.ok(textBody(operatorMail).includes('Zone not provided by invitee'), 'operator confirmation explicitly records the missing observation');
   // A newly edited lock never changes a previously booked location zone.
   await data(`/api/app/event-types/${event.id}/booking-policy`, { ...policy, lockedTimezone: 'Europe/London' }, 200, 'PUT');
   assert.equal((await data(manage)).lockedTimezone, 'America/New_York');
