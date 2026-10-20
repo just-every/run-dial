@@ -70,6 +70,14 @@ export async function locationJourney({ data, call, state, deliver, future, chec
     const ics = await (await call(new URL(receipt.icsUrl).pathname)).text();
     if (value) assert.ok(ics.replace(/\r?\n /g, "").replaceAll("\\,", ",").includes(value));
   }
+  // EVENT-004/DATA-002: the invitee phone given as a location is erased with the invitee's records.
+  const phoneEmail = "location-callback@dial.test", stored = snapshot => JSON.stringify(Object.entries(snapshot).filter(([table]) => !table.startsWith("wire_")));
+  assert.equal((await state()).bookings.find(row => row.invitee_email === phoneEmail).location_value, "+14155552672");
+  const preview = await data("/api/app/privacy/preview", { email: phoneEmail });
+  await data("/api/app/privacy/erase", { email: phoneEmail, confirmation: preview.confirmation, expiresAt: preview.expiresAt });
+  const erased = await state();
+  assert.ok(!erased.bookings.some(row => row.invitee_email === phoneEmail));
+  assert.ok(!stored(erased).includes("4155552672"), "the invitee phone location survives in no product table after erasure");
   const slot = (await data(`${base}/availability?week=${future}`)).slots[0];
   const operatorInput = { idempotencyKey: randomUUID(), eventTypeId: event.id, startAt: slot.startAt, inviteeTimezone: "UTC", name: "Agreed location guest", email: "location-agreed@dial.test", answers: {}, overrideNoticeAndHorizon: false };
   await call("/api/app/bookings", operatorInput, 400);
@@ -85,5 +93,5 @@ export async function locationJourney({ data, call, state, deliver, future, chec
   const moveSnapshot = await state();
   const moveWrites = moveSnapshot.wire_calls.filter(row => ["POST", "PATCH"].includes(row.method) && new URL(row.url).pathname.includes("/events")).map(row => JSON.parse(row.body)).filter(body => body.extendedProperties?.private?.["dial-booking-id"] === operatorBooking.id);
   assert.ok(moveWrites.length && moveWrites.every(body => body.location === "Agreed private location"));
-  checks.push("EVENT-004/EVENT-006: native multi-location editor/API and duplication, label-only public event/selection, required choice and invitee place/phone, E.164 storage, immutable replay and only chosen conference/calendar/mail/receipt disclosure");
+  checks.push("EVENT-004/EVENT-006: invitee phone location erased with the invitee (DATA-002); native multi-location editor/API and duplication, label-only public event/selection, required choice and invitee place/phone, E.164 storage, immutable replay and only chosen conference/calendar/mail/receipt disclosure");
 }

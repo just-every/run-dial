@@ -57,7 +57,30 @@ export async function durationJourney({ data, call, state, deliver, future, chec
   const selected = await data(`/api/public/manage/${token}/reschedule/selection`, { startAt: newSlot.startAt, inviteeTimezone: 'UTC' }, 201);
   const moved = await data(`/api/public/manage/${token}/reschedule`, { nonce: selected.nonce, startAt: newSlot.startAt, inviteeTimezone: 'UTC' });
   assert.equal(moved.event.durationMinutes, 60); assert.equal(moved.manageUrl, receipt.manageUrl);
+  // EVENT-011: a reschedule may change the length only to another offered option, revalidated as a new slot.
+  const manage = `/api/public/manage/${token}`, shortOffers = (await data(`${manage}/reschedule/availability?week=${future}&durationMinutes=30`)).slots;
+  assert.ok(shortOffers.length && shortOffers.every(row => Date.parse(row.endAt) - Date.parse(row.startAt) === 30 * 60000));
+  await call(`${manage}/reschedule/availability?week=${future}&durationMinutes=45`, undefined, 400);
+  const shortSlot = shortOffers[0], shortChange = { startAt: shortSlot.startAt, inviteeTimezone: 'UTC' };
+  await call(`${manage}/reschedule/selection`, { startAt: new Date(Date.parse(gap) + 30 * 60000).toISOString(), inviteeTimezone: 'UTC', durationMinutes: 30 }, 409);
+  const unchanged = snap => JSON.stringify([snap.bookings, snap.booking_occurrences, snap.delivery_outbox.length]), beforeCrafted = unchanged(await state());
+  await call(`${manage}/reschedule/selection`, { ...shortChange, durationMinutes: 45 }, 400);
+  const shortSelected = await data(`${manage}/reschedule/selection`, { ...shortChange, durationMinutes: 30 }, 201);
+  await call(`${manage}/reschedule`, { ...shortChange, nonce: shortSelected.nonce, durationMinutes: 45 }, 400);
+  assert.equal(unchanged(await state()), beforeCrafted);
+  const shortened = await data(`${manage}/reschedule`, { ...shortChange, nonce: shortSelected.nonce, durationMinutes: 30 });
+  assert.equal(shortened.event.durationMinutes, 30);
+  assert.equal(Date.parse(shortened.occurrence.endAt) - Date.parse(shortened.occurrence.startAt), 30 * 60000);
+  assert.equal((await state()).bookings.find(row => row.id === booking.id).duration_minutes, 30);
   await deliver();
+  // EVENT-001: an edited slug is not retained, the old one answers per PUBLIC-005, and existing manage links keep working.
+  const renamed = await data(`/api/app/event-types/${event.id}/details`, { ...event, availability: undefined, alternativeRequestsEnabled: undefined, slug: 'flexible-renamed' }, 200, 'PATCH');
+  assert.equal(renamed.slug, 'flexible-renamed');
+  await call(`/api/public/events/dial-host/${event.slug}`, undefined, 404);
+  await call(`${base}/availability?week=${future}`, undefined, 404);
+  assert.equal((await data('/api/public/events/dial-host/flexible-renamed')).eventType.slug, 'flexible-renamed');
+  assert.equal((await data(manage)).state, 'rescheduled');
+  assert.ok((await data(`${manage}/reschedule/availability?week=${future}`)).slots.length);
   const overrideDate = new Date(Date.parse(future + 'T12:00:00Z') + 2 * 86400000).toISOString().slice(0,10);
   await data(`/api/app/event-types/${event.id}/availability-overrides/${overrideDate}`, { mode: 'open', windows: [{ startMinute: 600, endMinute: 660 }] }, 200, 'PUT');
   const copy = await data(`/api/app/event-types/${event.id}/duplicate`, {}, 201);
@@ -69,5 +92,5 @@ export async function durationJourney({ data, call, state, deliver, future, chec
   snapshot = await state();
   assert.equal(snapshot.bookings.filter(row => row.event_type_id === copy.id).length, 0);
   assert.equal(snapshot.availability_requests.filter(row => row.event_type_id === copy.id).length, 0);
-  checks.push('EVENT-011: offered duration drives gaps, nonce binding, stored length, Google/Meet interval, mail, reminders and reschedule; EVENT-001: duplicate is a private draft with settings and remapped overrides but no history');
+  checks.push('EVENT-011: offered duration drives gaps, nonce binding, stored length, Google/Meet interval, mail, reminders, reschedule to the other offered length revalidated as a new slot and an unoffered 45 refused with no change; EVENT-001: an edited slug answers 404 under the old one while the existing manage link keeps working; EVENT-001: duplicate is a private draft with settings and remapped overrides but no history');
 }

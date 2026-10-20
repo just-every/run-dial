@@ -81,6 +81,23 @@ export async function verifyAvailabilityControls(eventId) {
   const gapDenied = await book(second, repeatDay, 12, ' Repeat-Client@dial.test ', 409);
   assert.ok(gapDenied.error.details.includes('invitee_gap'));
   await book(second, repeatDay, 12, 'different-client@dial.test');
+  // AVAIL-010: the gap needs the invitee's email, so it holds at public confirmation and in a manage reschedule offer.
+  const publicBase = `/api/public/book/dial-host/${first.slug}`, gapStart = at(repeatDay, 13), otherDay = plus(monday, 9);
+  const publicBook = async (date, hour, email) => {
+    const startAt = at(date, hour), selection = await data(`${publicBase}/selection`, { startAt, inviteeTimezone: 'UTC' }, 201);
+    return { startAt, selection, payload: { nonce: selection.nonce, startAt, inviteeTimezone: 'UTC', name: 'Repeat Client', email, answers: {} } };
+  };
+  const manageToken = async (date, hour, email) => new URL((await data(`${publicBase}/confirm`, (await publicBook(date, hour, email)).payload, 201)).manageUrl).pathname.split('/').at(-1);
+  const repeatToken = await manageToken(otherDay, 11, 'Repeat-Client@dial.test'), controlToken = await manageToken(otherDay, 12, 'gap-control@dial.test');
+  const manageOffers = async token => (await data(`/api/public/manage/${token}/reschedule/availability?week=${repeatDay}`)).slots.map(slot => slot.startAt);
+  assert.ok(!(await manageOffers(repeatToken)).includes(gapStart), 'the repeat invitee is not offered a time inside the gap');
+  assert.ok((await manageOffers(controlToken)).includes(gapStart), 'another invitee is offered the same time');
+  await call(`/api/public/manage/${repeatToken}/reschedule/selection`, { startAt: gapStart, inviteeTimezone: 'UTC' }, 409);
+  await data(`/api/public/manage/${controlToken}/reschedule/selection`, { startAt: gapStart, inviteeTimezone: 'UTC' }, 201);
+  const gapAttempt = await publicBook(repeatDay, 13, 'Repeat-Client@dial.test'), beforeGap = (await snapshot()).bookings.length;
+  await call(`${publicBase}/confirm`, gapAttempt.payload, 409);
+  assert.equal((await snapshot()).bookings.length, beforeGap, 'a refused public confirmation books nothing');
+  await data(`${publicBase}/confirm`, { ...gapAttempt.payload, email: 'gap-control-two@dial.test' }, 201);
   await data('/api/app/booking-limits/host', { ...empty, dayCount: 1 }, 200, true, 'PUT');
   const raceDay = plus(monday, 10);
   const racers = await Promise.all([11, 12].map(hour => call('/api/app/bookings', { idempotencyKey: randomUUID(), eventTypeId: second.id, startAt: at(raceDay, hour), inviteeTimezone: 'UTC', name: 'Casey Morgan', email: `race-${hour}@dial.test`, answers: {}, overrideNoticeAndHorizon: true }, [201, 409], true)));
@@ -97,7 +114,7 @@ export async function verifyAvailabilityControls(eventId) {
   await book(boundary, `${year}-12-01`, 5);
   const boundaryDenied = await book(boundary, `${year}-12-01`, 6, undefined, 409);
   assert.ok(boundaryDenied.error.details.includes('event_month_count'));
-  console.log('PASS AVAIL-011 shared hours, holidays, individual reopen, inclusive time off, duplicate binding and invalid-input nonmutation; AVAIL-010 cross-event weekly minutes/monthly counts, scoped caps, own-duration reschedule, normalized invitee gap and concurrent last-place admission');
+  console.log('PASS AVAIL-011 shared hours, holidays, individual reopen, inclusive time off, duplicate binding and invalid-input nonmutation; AVAIL-010 cross-event weekly minutes/monthly counts, scoped caps, own-duration reschedule, normalized invitee gap through the operator booking, public confirm and manage reschedule offer, and concurrent last-place admission');
 }
 
 function scheduleInput(schedule) { return Object.fromEntries(['name', 'windows', 'blockUsHolidays', 'reopenedHolidays', 'timeOff'].map(key => [key, schedule[key]])); }

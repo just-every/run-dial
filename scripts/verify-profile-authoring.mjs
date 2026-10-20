@@ -69,7 +69,15 @@ try {
   assert.match(html, /Biography &lt;img/); assert.match(html, /Quote &lt;script&gt;quoteProbe/);
   assert.ok(!html.includes("<script>profileProbe</script>")); assert.ok(!html.includes("<img src=x onerror=profileProbe()>"));
   assert.ok(!html.includes("<script>quoteProbe</script>"));
-  mark("repeated profile edits retain identity/createdAt, replace children without duplicates, rename public routes and render current safely escaped SSR data without private IDs or timestamps");
+  // PROFILE-001: the in-app preview renders the same content as the public page.
+  const escaped = (value) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#x27;");
+  const appHtml = await (await call("/app/profile", undefined, 200, true)).text(), preview = appHtml.slice(appHtml.indexOf("Public profile preview"));
+  assert.ok(preview.length > 0 && appHtml.includes("Public profile preview"), "the authenticated profile page renders the preview");
+  for (const text of [profile.name, profile.title, profile.biography, ...profile.focusAreas.map((area) => area.label), ...profile.socialProof.flatMap((entry) => [entry.quote, entry.attribution])]) {
+    assert.ok(preview.includes(escaped(text)), "the preview shows each saved field");
+    assert.ok(html.includes(escaped(text)), "the public page shows the same field");
+  }
+  mark("repeated profile edits retain identity/createdAt, replace children without duplicates, rename public routes and render current safely escaped SSR data without private IDs or timestamps; PROFILE-001 the in-app preview shows the same fields as the public page");
 
   const event = await data(`/api/app/event-types/${fixture.eventId}`, undefined, 200, true);
   const startAt = new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10) + "T10:00:00.000Z";

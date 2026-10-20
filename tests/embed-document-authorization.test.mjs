@@ -3,6 +3,7 @@ import { before, after } from "node:test";
 import { contract } from "./contract.mjs";
 import { stripComments } from "./html-text.mjs";
 import { call, data, origin, read, start, stop } from "./embed-document-authorization/runtime.mjs";
+import { parentFrame } from "./embed-document-authorization/parent-frame.mjs";
 
 const parent = "https://allowed.example.test";
 const eventPath = "/embed/dial-host/intro";
@@ -91,7 +92,17 @@ contract("PUBLIC-005", "unpublished and unknown event embeds return no receipt p
   for (const path of ["/embed/missing-host/intro", "/embed/dial-host/missing-event", confirmedPath().replace("/intro/", "/missing-event/")]) await blocked(withParent(path), "unknown event", true);
 });
 
-contract("PUBLIC-004", "allowed event, details, confirmation, manage and request-only SSR preserve standalone projections", async () => {
+contract("PUBLIC-004", "allowed event, details, confirmation, manage and request-only SSR preserve standalone projections; BOOK-013 the served bootstrap navigates the parent to an HTTPS redirect after dial:booked and ignores any other", async () => {
+  const bootstrap = await (await call("/embed/dial.js")).text(), mount = () => parentFrame(bootstrap, `${origin}/embed/dial.js`);
+  const redirect = "https://thanks.example.test/done?start_time=2030-01-01T10%3A00%3A00Z&utm_source=ads", booked = [["event", "dial:booked"]];
+  const navigated = mount(); navigated.booked("booking-1", redirect); navigated.booked("booking-1", redirect);
+  assert.deepEqual(navigated.order, [...booked, ["assign", redirect]], "the parent navigates once, after the booked event");
+  for (const unsafe of ["http://thanks.example.test/done", "javascript:alert(1)", "https://user:secret@thanks.example.test/done", "not a url", 7, undefined]) {
+    const ignored = mount(); ignored.booked("booking-2", unsafe);
+    assert.deepEqual(ignored.order, booked, "a non-HTTPS or malformed redirect never navigates the parent");
+  }
+  const forged = mount(); forged.booked("booking-3", redirect, forged.foreign()); forged.booked("booking-4", redirect, forged.stranger());
+  assert.deepEqual(forged.order, [], "messages from another origin or another window are ignored");
   for (const path of shapes()) {
     await allowed(path, "A focused introduction");
     const standalone = path.startsWith("/embed/manage/") ? path.replace("/embed/manage/", "/manage/") : path.replace("/embed/", "/book/");
