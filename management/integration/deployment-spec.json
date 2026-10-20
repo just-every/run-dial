@@ -402,6 +402,12 @@
       "name": "0065_invitation_rotation_audit.sql",
       "sha256": "6fff279c55b07f05513059ef0abc02a28e18b3bc6a21ca509270f4370a425a7a",
       "sql": "-- Expand the existing history's action constraint. Preserve every historical\n-- row, column, primary key and foreign key; no token material enters the audit.\nCREATE TABLE booking_request_history_expanded (\n id TEXT PRIMARY KEY NOT NULL,\n booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n occurrence_id TEXT REFERENCES booking_occurrences(id) ON DELETE SET NULL,\n action TEXT NOT NULL CHECK(action IN ('reschedule_requested','reschedule_request_reminded','reschedule_request_picked','reschedule_request_expired','manage_link_rotated')),\n actor_type TEXT NOT NULL CHECK(actor_type IN ('operator','system','invitee')),\n actor_id TEXT,\n reason TEXT,\n created_at TEXT NOT NULL\n);\nINSERT INTO booking_request_history_expanded SELECT * FROM booking_request_history;\nDROP TRIGGER close_reschedule_request_on_pick;\nDROP TABLE booking_request_history;\nALTER TABLE booking_request_history_expanded RENAME TO booking_request_history;\nCREATE TRIGGER close_reschedule_request_on_pick AFTER UPDATE OF current_occurrence_id ON bookings\nWHEN NEW.current_occurrence_id<>OLD.current_occurrence_id BEGIN\n INSERT INTO booking_request_history(id,booking_id,occurrence_id,action,actor_type,created_at)\n SELECT NEW.current_occurrence_id,NEW.id,NEW.current_occurrence_id,'reschedule_request_picked','system',NEW.updated_at\n FROM booking_reschedule_requests WHERE booking_id=NEW.id AND state='open' AND archive_historical=0;\n UPDATE booking_reschedule_requests SET state='picked',updated_at=NEW.updated_at WHERE booking_id=NEW.id AND state='open' AND archive_historical=0;\nEND;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0066_calendar_connection_health_changes.sql",
+      "sha256": "d70d77ba5fce41cedc2e7117fb707460581a55505dfdc9f637a3515690e0a57f",
+      "sql": "CREATE TABLE calendar_connection_health_changes (\n  id TEXT PRIMARY KEY NOT NULL,\n  event_type TEXT NOT NULL DEFAULT 'calendar.connection-health-changed.v1',\n  from_state TEXT NOT NULL,\n  to_state TEXT NOT NULL,\n  reason TEXT NOT NULL,\n  occurred_at TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE INDEX calendar_connection_health_changes_recent_idx ON calendar_connection_health_changes(occurred_at, id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
