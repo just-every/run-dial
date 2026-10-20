@@ -1,7 +1,7 @@
 {
   "id": "dial",
   "name": "Dial",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "maturity": "runtime-spine-public-port",
   "category": "scheduling",
   "spine": {

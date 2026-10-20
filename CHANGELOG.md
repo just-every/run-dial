@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.5.0 — 2026-10-20
+
+Dial 0.5.0 is the next regular release after 0.4.2. It is cut from main and pins rer 0.2.68.
+
+What an owner gets:
+
+- **Choose who hears about alternative requests.** Each event type's email settings have an **Alternative request email** choice: **Every host** (everyone with access, the default), **Selected people**, or **No email**. Every request still appears in Requests and the client still gets an acknowledgment. The choice applies to requests made after you save it, and a selection must name at least one person who currently has access.
+- **Manage links in calendar invitations.** When an event's calendar invitation replaces Dial's own confirmation, the invitation carries a private link. The invitee uses it to have a fresh manage link emailed to the address they booked with; the earlier manage link then stops working, and both the page and the email say so. The link is on for every event type, existing ones included, and can be turned off per event type.
+- **Who blocked an address.** Settings lists who added each blocked address or domain and when, in your zone.
+- **A backup made by 0.4.2 restores.** A backup made by 0.4.2 or 0.4.1 restores into 0.5.0 with every record and file, and gets the invitation-link setting turned on, as migration 0064 does. Older backups still restore as in 0.4.2.
+- The contract now records sign-in protection on every private page, Calendly move-in, booking-mail recipients, attendance marks, operator-created bookings, request handling, operator management, private fields and the owner editor as done for a single-owner workspace.
+
+Back up first. Locally: stop dev, run `rer export --output exports/before-0.5.0.rer` and keep `.dev.vars` with it, then pull and run `rer install`, `rer setup` and `rer dev`. Hosted: download a backup at Settings → Export status → Download backup, copy `.rer/deploy/<environment>.secrets.env` from the deploying checkout, then pull and `rer deploy` the same environment from that checkout. Migrations `0064_invitation_manage_link.sql` (turns the invitation manage link on for existing events and retained booking emails) and `0065_invitation_rotation_audit.sql` (lets booking history record a replacement link, keeping every existing history row) apply in order and keep existing data.
+
+Not in this release: roles. Every person with access acts as an owner until roles and delegation ship, so the "done" clauses above are done for a single-owner workspace. Also not in it: team scheduling (round-robin, collective and group events) and the two-host mail journeys that come with it, routing forms, payments, SMS and workflows, Microsoft 365, iCloud, Zoom, Teams, Webex and GoTo, CRM and Slack integrations, meeting polls, approvals, recurring bookings, invitee languages, native apps and add-ins. The Google Calendar and Meet features are covered by tests against a simulated Google; this release was not checked against a real Google account.
+
+Known issues:
+
+- Hosted restore is not exposed. A hosted backup restores into an empty local install.
+- `rer deploy --remove` deletes `.rer/deploy/<environment>.secrets.env`, which holds the deployment's `SESSION_SECRET`. Copy that file somewhere private before you remove a deployment; a hosted backup cannot be restored without it.
+- When an invitee cancels within seconds of booking, before the confirmation email has left the queue, Dial drops the queued confirmation and sends only the cancellation.
+- A new Worker's Cron schedule can take up to about two hours to start on some Cloudflare accounts, which delays reminders until then.
+- RER Managed mail cannot set a Reply-To, so replies to Managed booking emails do not reach the host.
+- Muting booking mail does not stop alternative-request notices; use the event type's Alternative request email choice for those.
+- Capacity limits are design targets, not measured hosted capacity.
+
 ## 0.4.2 — 2026-10-19
 
 Dial 0.4.2 fixes restoring older backups. It is cut from main and pins rer 0.2.68.

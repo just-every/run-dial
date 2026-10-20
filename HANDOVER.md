@@ -1,5 +1,10 @@
 # Dial handover
 
+## Release 0.5.0 (20 Oct 2026)
+
+- 0.5.0 carries AUTH-001, DATA-003, NOTIFY-008 and REQUEST-004 (per-event alternative-request routing) to done, with NOTIFY-001, NOTIFY-009's invitation manage link (migrations 0064 and 0065), PUBLIC-006, BOOK-009, BOOK-011, BOOK-012, REQUEST-003, OPER-002, CUSTOM-001 and EDITOR-001 landed since 0.4.2. Pins rer 0.2.68.
+- A native backup made by 0.4.2 was refused on main with `archive-schema-mismatch`: 0063 and 0064 change only data, so the migration sets ending at 0062, 0063 and 0064 share one Base schema identity, and the restore compared the archive's proof with the 0064 set's. `scripts/archive/prior-schemas.mjs` now returns one entry per identity carrying every set's proof, and the row upgrade composes from the group's earliest set. A data-only migration's `rowUpgrades` entry must therefore leave a row it already migrated unchanged, as 0063 and 0064's guarded json_set does.
+
 ## Release 0.4.2 (19 Oct 2026)
 
 - 0.4.2 restores a native backup made by the previously listed release (bb5d650f, migrations up to 0061) into the current schema. `scripts/archive/prior-schemas.mjs` declares Base `acceptedSchemas` for every earlier migration set whose later migrations each state their row upgrade (0062: booking_links offered_slots_json/hold_until NULL; 0063: the migration's own json_set of inviteeConfirmationEnabled). The archive's schema-proof payload must equal that set's proof byte for byte. A later migration without an entry ends acceptance. `scripts/local/transfer.mjs` also passes Base's replay of the destination's applied migrations (`scripts/local/migration-replay.mjs`). `tests/archive-prior-release.test.mjs` imports the retained backup (`tests/fixtures/archive/listed-bb5d650f.rer`) through `rer import`. Pins rer 0.2.68.

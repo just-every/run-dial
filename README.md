@@ -53,11 +53,11 @@ npx -y @runeditrun/rer dev just-every/run-dial
 ```
 
 To start it again later, run `cd run-dial && rer dev`. The default clone follows
-`main`. To start from the tagged **v0.4.2** release instead, clone it yourself and
+`main`. To start from the tagged **v0.5.0** release instead, clone it yourself and
 run `rer dev` in the checkout:
 
 ```sh
-git clone --branch v0.4.2 https://github.com/just-every/run-dial.git dial
+git clone --branch v0.5.0 https://github.com/just-every/run-dial.git dial
 cd dial && rer dev
 ```
 
