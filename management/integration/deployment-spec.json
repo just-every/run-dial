@@ -408,6 +408,12 @@
       "name": "0066_calendar_connection_health_changes.sql",
       "sha256": "d70d77ba5fce41cedc2e7117fb707460581a55505dfdc9f637a3515690e0a57f",
       "sql": "CREATE TABLE calendar_connection_health_changes (\n  id TEXT PRIMARY KEY NOT NULL,\n  event_type TEXT NOT NULL DEFAULT 'calendar.connection-health-changed.v1',\n  from_state TEXT NOT NULL,\n  to_state TEXT NOT NULL,\n  reason TEXT NOT NULL,\n  occurred_at TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE INDEX calendar_connection_health_changes_recent_idx ON calendar_connection_health_changes(occurred_at, id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0067_request_browser_timezone.sql",
+      "sha256": "3f02c7ac1df54e64306197ed1ad49adcdf52d48dbca86d78e58654e40bb84c6c",
+      "sql": "-- Keep the invitee observation separate from the zone used to compose windows.\n-- Historical requests have no observation; never infer one from their display zone.\nALTER TABLE availability_requests ADD COLUMN browser_timezone TEXT;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

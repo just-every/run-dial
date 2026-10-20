@@ -14,5 +14,5 @@ export function LockedTimezoneNotice({ timezone }: { timezone: string }) {
 
 export function LockedBookingTime({ startAt, endAt, timezone, browserTimezone }: { startAt: string; endAt?: string; timezone: string; browserTimezone?: string | null }) {
   const range = (zone: string) => <>{formatZonedTime(startAt, zone)}{endAt ? <> – {formatZonedTime(endAt, zone)}</> : null}</>;
-  return <><p>{range(timezone)}</p>{browserTimezone && browserTimezone !== timezone ? <p>Your browser time: {range(browserTimezone)}</p> : null}{!browserTimezone ? <p>Zone not provided by invitee.</p> : null}</>;
+  return <><p>{range(timezone)}</p>{browserTimezone && browserTimezone !== timezone ? <p>Your browser time: {range(browserTimezone)}</p> : null}</>;
 }
