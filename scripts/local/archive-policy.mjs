@@ -15,13 +15,13 @@ export async function dialPolicy(db, vars) {
  } finally { model.db.close(); }
  const result = await exportPolicy(db, vars, schemaProof);
  // A backup from an earlier migration set restores through its declared row
- // upgrades, and must carry exactly that set's schema proof.
+ // upgrades, and must carry exactly the schema proof of a set with its schema.
  const priors = await priorSchemas(result.policy), current = result.policy.extraPayloads['schema-proof'];
  let prior;
  result.policy.acceptedSchemas = Object.fromEntries(priors.map(({ identity, upgradeRow }) => [identity, { upgradeRow }]));
  result.policy.extraPayloads['schema-proof'] = { produce: current.produce, async consume(stream) {
   if (!prior) return current.consume(stream);
-  if (await new Response(stream).text() !== prior.proof) throw Error('archive-schema-mismatch');
+  if (!prior.proofs.includes(await new Response(stream).text())) throw Error('archive-schema-mismatch');
  } };
  result.policy.validateStaged = async function({ db, read, manifest }) {
     // Base consumes payloads after staged validation; bind the proof to this archive's schema.

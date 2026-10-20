@@ -21,13 +21,17 @@ export const rowUpgrades = {
     ? { ...row, templates_json: confirmation.get(row.templates_json).templates_json } : row,
 };
 
-/** Each earlier migration set whose later migrations all declare their row upgrade:
- * its Base schema identity under `policy`, the schema proof that Dial's export of
- * that set carries (the same files and hashes, and the catalog they create), and
- * the composed row upgrade. A set whose schema matches the current one (later
- * migrations changed only data) is left to Base's own migration placement. */
+/** Each earlier schema whose later migrations all declare their row upgrade: its
+ * Base schema identity under `policy`, the schema proofs that Dial's export of
+ * each migration set with that schema carries (the same files and hashes, and the
+ * catalog they create), and the composed row upgrade. Sets that differ only by
+ * data-only migrations share one identity, and Base picks the upgrade by identity
+ * before it reads the proof, so the group upgrades from its earliest set: a
+ * data-only migration's entry leaves a row it already migrated unchanged (as the
+ * guarded json_set of 0063 and 0064 does). A set whose schema matches the current
+ * one (later migrations changed only data) is left to Base's own migration placement. */
 export async function priorSchemas(policy) {
-  const files = await migrationFiles(), result = [];
+  const files = await migrationFiles(), result = new Map();
   const identity = names => migrationReplay(files.map(m => ({ name: m.file, statements: [m.sql], sha256: m.sha256 })), policy).schemaAfter(names);
   const current = await identity(files.map(m => m.file));
   for (let k = files.length - 1; k > 0 && Object.hasOwn(rowUpgrades, files[k].file); k--) {
@@ -38,11 +42,11 @@ export async function priorSchemas(policy) {
     finally { db.close(); }
     const schema = await identity(earlier.map(m => m.file));
     if (schema === current) continue;
-    result.push({
-      identity: schema,
-      proof: JSON.stringify({ migrations: earlier.map(({ file, sha256 }) => ({ file, sha256 })), catalog }),
-      upgradeRow: (table, row) => later.reduce((value, upgrade) => upgrade(table, value), row),
-    });
+    const proof = JSON.stringify({ migrations: earlier.map(({ file, sha256 }) => ({ file, sha256 })), catalog });
+    const upgradeRow = (table, row) => later.reduce((value, upgrade) => upgrade(table, value), row);
+    const group = result.get(schema);
+    if (group) Object.assign(group, { proofs: [...group.proofs, proof], upgradeRow });
+    else result.set(schema, { identity: schema, proofs: [proof], upgradeRow });
   }
-  return result;
+  return [...result.values()];
 }
