@@ -1,4 +1,4 @@
-import type { CalendarHealthChange } from "../../calendar-connection/health-history";
+import type { CalendarHealthChange } from "../../calendar-connection";
 import { operatorTimestamp } from "../../../shared/operator-format";
 
 export function CalendarHealthHistory({ changes, timezone }: { changes: CalendarHealthChange[]; timezone: string | null }) {
