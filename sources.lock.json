@@ -3784,7 +3784,7 @@
       "executable": false
     },
     "rer-project.json": {
-      "sha256": "ca41cf3404f2e37a31af6d6efbb7cf436fb4e208ba7ebf8a83ce8b3d6d4d1e76",
+      "sha256": "87020e93be101300b20a745fde1106afab643ed79c20e749c16b8fce83bda1f2",
       "executable": false
     },
     "rer-setup.json": {
@@ -7168,7 +7168,7 @@
       "executable": false
     },
     "tests/booking-http-worker.ts": {
-      "sha256": "8e871abf56a571d5eba74eac30670e6b451f869b44c40184b7aac822ee176770",
+      "sha256": "ede2f89f1a2172742cbf43fc03397ab539b606f0ebafef2eb914b2a8c9c16321",
       "executable": false
     },
     "tests/booking-http-worker.wrangler.toml": {
