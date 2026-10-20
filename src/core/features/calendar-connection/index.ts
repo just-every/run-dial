@@ -6,3 +6,4 @@ export type { ProviderHealth } from "./health";
 export type { CalendarExternalChange, CalendarExternalChangeHandler } from "./external-sync";
 
 export { calendarChangeSchema } from "./external-sync";
+export type { CalendarHealthChange } from "./health-history";

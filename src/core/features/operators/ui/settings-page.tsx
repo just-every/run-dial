@@ -4,7 +4,7 @@ import { mailConnectionMessage } from "../../../platform/mail/connection-message
 import { ExtensionContribution } from "../../../app/extensions";
 import { operatorTimestamp } from "../../../shared/operator-format";
 import { CalendarHealthHistory } from "./calendar-health-history";
-import type { CalendarHealthChange } from "../../calendar-connection/health-history";
+import type { CalendarHealthChange } from "../../calendar-connection";
 import { MailTracking } from "./mail-tracking";
 import { GoogleSetupGuide } from "./google-setup-guide";
 import { OperatorAccessCard } from "./operator-access";
