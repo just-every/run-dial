@@ -236,6 +236,16 @@ alias; setting `MAIL_API_KEY` alone does not supply that declaration's input.
 
 Later deploys retain stored Worker secrets by name. Changing an environment variable or env-file value does not replace an existing Worker secret. Use the explicit `rer deploy --set-secret NAME --env-file /absolute/private/dial-deploy.env` operation for an intentional secret change; it records the new Worker version. Changing `OWNER_EMAIL` is not an owner-transfer or recovery workflow.
 
+### Stripe payments (optional, PAY-001)
+
+Paid event types need three operator-held secrets from your own Stripe platform account. Free event types work without them.
+
+- `STRIPE_SECRET_KEY`: the platform secret key (`sk_…`). Dial uses it to exchange the Connect OAuth code, create and expire Checkout Sessions on the host's connected account, and revoke access on disconnect.
+- `STRIPE_CONNECT_CLIENT_ID`: the Connect client ID (`ca_…`) from Stripe Dashboard → Connect → Settings, with OAuth for Standard accounts turned on and the redirect URI that Dial's Settings shows (your Dial address followed by `/api/payments/stripe/oauth/callback`).
+- `STRIPE_WEBHOOK_SECRET`: the signing secret (`whsec_…`) of a webhook endpoint that listens to events on connected accounts at your Dial address followed by `/api/webhooks/stripe`, with the events Settings lists.
+
+Declare each in the `secrets` array of your `deploy.json` and set it with a separate `rer deploy --environment production --set-secret NAME --env-file /absolute/private/dial-deploy.env`. Never put them in source or in ordinary variables. Payment methods (cards, Apple Pay, Google Pay, Link) come from your Stripe Dashboard's payment method settings; ACH Direct Debit is offered only when the host turns it on in Dial's Settings. Archives do not carry these secrets; restore them with the other private settings.
+
 `MAIL_WEBHOOK_KEY` is optional. Without it, sending and sender verification work but delivery and bounce tracking is off. To enable tracking, opt in to its deploy declaration and set the signed Event Webhook public verification key through `rer deploy --set-secret MAIL_WEBHOOK_KEY`. See [Optional delivery and bounce tracking](calendar-and-email.md#optional-delivery-and-bounce-tracking). The guide includes the declaration and exact command needed by the current deploy tool; existing Worker secrets are retained on later deploys.
 
 ## Remove a hosted installation

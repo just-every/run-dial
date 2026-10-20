@@ -40,7 +40,7 @@ Dial stays small on purpose. It does not offer:
 - Group events, classes, waitlists or resource capacity.
 - Extra guests on a booking.
 - Bookings that wait for your approval before they are confirmed.
-- Payments, deposits, refunds or booking fees.
+- Deposits, refunds, cancellation or no-show fees, packages, coupons, sales tax, invoices and payment reconciliation. Paid bookings through your own Stripe account work today; Dial issues no refund, so refund in Stripe until deposits, refunds and fees arrive (PAY-003).
 - Recurring booking series or scheduling polls.
 - A marketplace, ratings or reviews from clients.
 - Text messages, WhatsApp, phone automation, a CRM or marketing campaigns.

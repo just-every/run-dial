@@ -67,9 +67,9 @@ export class PaymentsService {
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(input.amountCents),
       "line_items[0][price_data][product_data][name]": `${input.eventTitle} (${input.durationMinutes} minutes)`.slice(0, 250),
-      "payment_method_types[0]": "card",
-      "payment_method_types[1]": "link",
-      ...(input.achEnabled ? { "payment_method_types[2]": "us_bank_account" } : {}),
+      // Stripe manages Checkout's methods (cards, Apple Pay, Google Pay, Link) from the account's Dashboard and
+      // refuses payment_method_types; ACH Direct Debit is excluded unless the host enabled it in Dial.
+      ...(input.achEnabled ? {} : { "excluded_payment_method_types[0]": "us_bank_account" }),
       success_url: `${input.returnUrl}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${input.returnUrl}&canceled=1`,
       expires_at: String(Math.floor(Date.now() / 1000) + checkoutLifetimeSeconds),

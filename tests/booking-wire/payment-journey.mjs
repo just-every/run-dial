@@ -87,7 +87,7 @@ const create = snap.wire_calls.find(row => new URL(row.url).pathname === "/v1/ch
 const form = JSON.parse(create.body), sent = JSON.parse(create.headers);
 assert.equal(form["line_items[0][price_data][unit_amount]"], "9000", "the 60-minute option's own price is charged");
 assert.equal(form["line_items[0][price_data][currency]"], "usd");
-assert.deepEqual([form["payment_method_types[0]"], form["payment_method_types[1]"], form["payment_method_types[2]"]], ["card", "link", undefined]);
+assert.equal(form["excluded_payment_method_types[0]"], "us_bank_account", "ACH Direct Debit is offered only when the host enables it");
 assert.equal(sent.account, "acct_wirehost"); assert.ok(sent.idempotency.startsWith("dial-hold-"));
 assert.equal(payer.step.payment.checkoutUrl, session.url);
 assert.equal(snap.bookings.filter(row => row.event_slug === "paid-session").length, 0, "nothing confirms before Stripe's signed event");

@@ -13,11 +13,14 @@ import { initializeWire, wireTransport } from "./transport";
 import { connectionWatchObservers } from "../../src/core/app/connection-watch";
 import { captureAuthMail, captureMail, capturedMail } from "../mail-capture";
 import { paymentFixtures } from "./payment-fixtures";
-type WireBindings = AppBindings & { PROVIDER_DB?: D1Database };
+// STRIPE_EDGE=live is the local-only PAY-001 test-mode proof: Stripe calls go to api.stripe.com.
+type WireBindings = AppBindings & { PROVIDER_DB?: D1Database; STRIPE_EDGE?: "live"; STRIPE_EDGE_RELAY?: string };
+// A sandbox without direct egress relays the unchanged request bytes through a local forwarder to Stripe.
+const liveStripe = (relay?: string): typeof fetch => relay ? (input, init) => { const url = new URL(String(input)); return fetch(`${relay}/${url.hostname}${url.pathname}${url.search}`, init); } : fetch;
 const providerDb = (env: WireBindings) => env.PROVIDER_DB ?? env.DB;
 const servicesFor = (env: WireBindings) => {
   const runtime = parseRuntimeEnvironment(env), wire = wireTransport(providerDb(env));
-  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env), paymentsTransport: wire });
+  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env), paymentsTransport: env.STRIPE_EDGE === "live" ? liveStripe(env.STRIPE_EDGE_RELAY) : wire });
 };
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: WireBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);

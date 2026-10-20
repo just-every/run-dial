@@ -15,6 +15,13 @@ export async function paymentFixtures(url: URL, request: Request, db: D1Database
     await services.payments.sweepExpiredHolds();
     return new Response(null, { status: 204 });
   }
+  if (url.pathname === "/__fixtures/payments/connect") {
+    // The real-provider proof has no Connect client ID for a live OAuth grant; it records the test account directly.
+    const { accountId } = await request.json<{ accountId: string }>();
+    const now = new Date().toISOString();
+    await db.prepare("INSERT INTO payment_connections (singleton_key, provider, account_id, status, livemode, ach_enabled, connected_by_operator_id, connected_at, status_changed_at, created_at, updated_at) VALUES ('default','stripe',?,'connected',0,0,NULL,?,?,?,?) ON CONFLICT(singleton_key) DO UPDATE SET account_id=excluded.account_id, status='connected'").bind(accountId, now, now, now, now).run();
+    return new Response(null, { status: 204 });
+  }
   if (url.pathname === "/__fixtures/payments/oauth-expired") {
     await db.prepare("UPDATE payment_oauth_states SET expires_at='2000-01-01T00:00:00.000Z' WHERE consumed_at IS NULL").run();
     return new Response(null, { status: 204 });

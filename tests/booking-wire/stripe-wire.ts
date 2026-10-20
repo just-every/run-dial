@@ -22,12 +22,13 @@ export async function stripeWire(db: D1Database, url: URL, method: string, init:
     const key = headers.get("idempotency-key");
     const prior = key ? await db.prepare("SELECT payload FROM wire_stripe_sessions WHERE idempotency_key=?").bind(key).first<{ payload: string }>() : null;
     if (prior) return Response.json(JSON.parse(prior.payload));
-    if (form.get("mode") !== "payment" || form.get("line_items[0][price_data][currency]") !== "usd" || !form.get("success_url")?.includes("{CHECKOUT_SESSION_ID}")) return stripeError(400, "parameter_invalid");
+    // Stripe refuses payment_method_types on Checkout Sessions; methods come from the Dashboard.
+    if ([...form.keys()].some(name => name.startsWith("payment_method_types[")) || form.get("mode") !== "payment" || form.get("line_items[0][price_data][currency]") !== "usd" || !form.get("success_url")?.includes("{CHECKOUT_SESSION_ID}")) return stripeError(400, "parameter_invalid");
     const sessionId = `cs_test_wire${crypto.randomUUID().replaceAll("-", "")}`;
     const session = { id: sessionId, object: "checkout.session", url: `https://checkout.stripe.com/c/pay/${sessionId}`, status: "open", payment_status: "unpaid", mode: "payment",
       amount_total: Number(form.get("line_items[0][price_data][unit_amount]")), currency: "usd", payment_intent: null, expires_at: Number(form.get("expires_at")),
       client_reference_id: form.get("client_reference_id"), metadata: { dial_hold_id: form.get("metadata[dial_hold_id]") },
-      payment_method_types: [...form.entries()].filter(([name]) => name.startsWith("payment_method_types[")).map(([, value]) => value) };
+      excluded_payment_method_types: [...form.entries()].filter(([name]) => name.startsWith("excluded_payment_method_types[")).map(([, value]) => value) };
     await db.prepare("INSERT INTO wire_stripe_sessions(id,idempotency_key,payload) VALUES(?,?,?)").bind(sessionId, key, JSON.stringify(session)).run();
     return Response.json(session);
   }
@@ -56,7 +57,15 @@ export async function payStripeSession(db: D1Database, id: string, paymentStatus
 }
 
 export async function initializeStripeWire(db: D1Database) {
-  await db.prepare("CREATE TABLE IF NOT EXISTS wire_stripe_sessions(id TEXT PRIMARY KEY,idempotency_key TEXT,payload TEXT)").run();
+  await db.batch([
+    db.prepare("CREATE TABLE IF NOT EXISTS wire_calls(id INTEGER PRIMARY KEY,url TEXT,method TEXT,body TEXT,headers TEXT,at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))"),
+    db.prepare("CREATE TABLE IF NOT EXISTS wire_stripe_sessions(id TEXT PRIMARY KEY,idempotency_key TEXT,payload TEXT)"),
+  ]);
+}
+
+/** The same Stripe edge for the browser review rig. */
+export function stripeTransport(db: D1Database): typeof fetch {
+  return async (input, init = {}) => { await initializeStripeWire(db); return stripeWire(db, new URL(String(input)), init.method ?? "GET", init); };
 }
 
 function stripeError(status: number, code: string) { return Response.json({ error: { code, message: `Synthetic Stripe ${code}`, type: "invalid_request_error" } }, { status }); }

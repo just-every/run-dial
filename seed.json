@@ -348,7 +348,7 @@
     "Group events, classes, waitlists, or resource capacity",
     "Additional invitee guests on a booking",
     "Bookings that wait for host approval before they are confirmed",
-    "Payments, deposits, refunds, or booking fees",
+    "Deposits, refunds, cancellation or no-show fees, packages, coupons, sales tax, invoices and payment reconciliation (paid bookings through Stripe ship under PAY-001; deposits, refunds and fees stay out until PAY-003)",
     "Recurring booking series or scheduling polls",
     "Marketplace discovery, ratings, or invitee-submitted reviews",
     "SMS, WhatsApp, phone automation, CRM, campaigns, or marketing automation",

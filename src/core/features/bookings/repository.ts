@@ -309,7 +309,8 @@ export class BookingsRepository {
         o.id AS occurrenceId, o.sequence AS occurrenceSequence, o.start_at AS occurrenceStartAt, o.end_at AS occurrenceEndAt, o.occupied_start_at AS occupiedStartAt, o.occupied_end_at AS occupiedEndAt, o.host_date AS hostDate, o.state AS occurrenceState, o.is_current AS isCurrent
        FROM bookings b JOIN booking_occurrences o ON ${clause} ORDER BY ${order}, b.id LIMIT ? OFFSET ?`,
     ).bind(...values, filters.limit ?? 500, filters.offset ?? 0).all<OperatorBookingRow>();
-    return hydrateOperatorBookings(this.binding, results.results);
+    const [bookings, payments] = await Promise.all([hydrateOperatorBookings(this.binding, results.results), new PaymentsRepository(this.binding).bookingPayments(results.results.map(row => row.id))]);
+    return bookings.map(booking => payments.has(booking.id) ? { ...booking, payment: payments.get(booking.id) } : booking);
   }
 
   async countForOperator(filters: OperatorBookingFilters, now: string) {
