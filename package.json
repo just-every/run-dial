@@ -78,8 +78,8 @@
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.0",
-    "@tanstack/react-router": "^1.170.33",
-    "@tanstack/react-start": "1.168.50",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.7",
     "libphonenumber-js": "^1.13.15",
