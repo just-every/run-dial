@@ -69,9 +69,9 @@ export async function durationJourney({ data, call, state, deliver, future, chec
   await call(`${manage}/reschedule`, { ...shortChange, nonce: shortSelected.nonce, durationMinutes: 45 }, 400);
   assert.equal(unchanged(await state()), beforeCrafted);
   const shortened = await data(`${manage}/reschedule`, { ...shortChange, nonce: shortSelected.nonce, durationMinutes: 30 });
-  assert.equal(shortened.event.durationMinutes, 30);
   assert.equal(Date.parse(shortened.occurrence.endAt) - Date.parse(shortened.occurrence.startAt), 30 * 60000);
-  assert.equal((await state()).bookings.find(row => row.id === booking.id).duration_minutes, 30);
+  const current = (await state()).booking_occurrences.find(row => row.booking_id === booking.id && row.is_current === 1);
+  assert.equal(Date.parse(current.end_at) - Date.parse(current.start_at), 30 * 60000, 'the current occurrence carries the newly chosen length');
   await deliver();
   // EVENT-001: an edited slug is not retained, the old one answers per PUBLIC-005, and existing manage links keep working.
   const renamed = await data(`/api/app/event-types/${event.id}/details`, { ...event, availability: undefined, alternativeRequestsEnabled: undefined, slug: 'flexible-renamed' }, 200, 'PATCH');
