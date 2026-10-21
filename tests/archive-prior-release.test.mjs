@@ -104,19 +104,26 @@ for (const [shape, statements] of [
     'INSERT INTO rer_migrations(name,sha256) SELECT name,sha256 FROM prior_ledger',
     'DROP TABLE prior_ledger',
   ]],
+  ['applied in an impossible order (rowid reversed)', ['UPDATE rer_migrations SET rowid = -rowid']],
 ]) contract('DATA-001', `a Platform ledger ${shape} refuses export and import before any write, leaving storage unchanged`, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'dial-malformed-ledger-'));
   const { getPlatformProxy } = await import('wrangler');
   try {
     // Export is refused from a populated installation, import into an otherwise empty migrated one.
-    for (const [command, args, populate] of [['export', ['export', '--target', 'local', '--output', 'exports/probe.rer'], true], ['import', ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes'], false]]) {
+    // An import is tried with the prior-release backup and with a current archive this checkout exported before the ledger changed.
+    const current = join(directory, 'current.rer');
+    for (const [command, args, populate, input] of [['export', ['export', '--target', 'local', '--output', 'exports/probe.rer'], true], ['import', ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes'], false, fixture], ['import-current', ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes'], false, current]]) {
       const root = join(directory, command);
       await checkout(root);
       const settings = await readFile(join(root, '.dev.vars'), 'utf8');
       await writeFile(join(root, '.dev.vars'), settings.replace(/^SESSION_SECRET=.*$/m, `SESSION_SECRET=${salt}`), { mode: 0o600 });
       await platformMigrations(root, getPlatformProxy);
-      await copyFile(fixture, join(root, 'exports/prior.rer')); await chmod(join(root, 'exports/prior.rer'), 0o600);
-      if (populate) await run(root, ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes']);
+      await copyFile(input ?? fixture, join(root, 'exports/prior.rer')); await chmod(join(root, 'exports/prior.rer'), 0o600);
+      if (populate) {
+        await run(root, ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes']);
+        await run(root, ['export', '--target', 'local', '--output', 'exports/current.rer']);
+        await copyFile(join(root, 'exports/current.rer'), current);
+      }
       const proxy = await getPlatformProxy(local(root));
       try {
         // Portability's runtime lease table is created on first use, so none may already stand in for a write.

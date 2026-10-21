@@ -3,7 +3,10 @@
 // records names; hosted rer also records hashes and interrupted claims; Platform
 // records each completed file's name and hash in rer_migrations, and an
 // interrupted Platform release leaves '<file>#<start>-<end>' progress rows.
-const ledgers = { d1_migrations: 'id', _rer_deploy_migrations: 'name', rer_migrations: 'name' };
+// Each ledger is read in the order the pinned rer consumes it: Platform inserts a
+// file's row in the same request as its SQL, so rer replays rer_migrations by
+// rowid (modules/portability/ledgers.mjs) and that must be the spec's order.
+const ledgers = { d1_migrations: 'id', _rer_deploy_migrations: 'name', rer_migrations: 'rowid' };
 // Mirror @runeditrun/rer 0.2.77 modules/portability/ledgers.mjs's private
 // platformShape: exact inventory/order, declared type, nullability and primary key.
 const platformShape = [
@@ -41,7 +44,7 @@ export async function assertMigrationLedger(db, migrations) {
   const claims = name === '_rer_deploy_migrations' || name === 'd1_migrations' && (columns.includes('sha256') || columns.includes('state'));
   const fields = name === 'rer_migrations' ? platformColumns : claims ? ['name', 'sha256', 'state'] : ['name'];
   if (fields.some(field => !columns.includes(field))) throw Error('archive-migration-history-mismatch');
-  const want = ledgers[name] === 'id' ? expected : byName;
+  const want = ledgers[name] === 'name' ? byName : expected;
   const rows = (await db.prepare(`SELECT ${fields.join(',')} FROM ${name} ORDER BY ${ledgers[name]}`).all()).results;
   if (name === 'rer_migrations' && rows.some(row => row.applied_at === null)) throw Error('archive-migration-history-mismatch');
   if (rows.length !== want.length || rows.some((row, index) => row.name !== want[index].name || fields.includes('sha256') && row.sha256 !== want[index].sha256 || fields.includes('state') && row.state !== 'applied')) throw Error('archive-migration-history-mismatch');
