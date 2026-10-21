@@ -976,7 +976,7 @@
       "executable": false
     },
     "ERASURE.md": {
-      "sha256": "ef112fb33aaf605994cd12a1a9d8564d40dd487c4f625a9fc9e8913d7db9934d",
+      "sha256": "5bfb60c7cbcedcce9831b8a669348eb0280928fb1f3ec3c307f5c4c36c364174",
       "executable": false
     },
     "eslint.config.mjs": {
@@ -5296,7 +5296,7 @@
       "executable": false
     },
     "src/core/features/erasure/portability.ts": {
-      "sha256": "20b05354b8459df9047325891d491541c83bfce71aca094092adb9aa41b58007",
+      "sha256": "8e537eff942d0b353250125d98fb5d93f920e1f94daff74bb4160448305128b7",
       "executable": false
     },
     "src/core/features/erasure/repository.ts": {

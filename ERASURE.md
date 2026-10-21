@@ -168,6 +168,7 @@ Every table is listed below. Native B/Q/O children are explicitly discovered and
 | `rer_mail_development_outbox` | Yes: B/Q/P/O delete sent local mail, including raw capabilities and encoded calendar attachments. | X | `migrations/core/0020_base_development_outbox.sql` |
 | `rer_portability_epochs` | F: trusted opaque deletion journal/source epochs; retained across protected restore. | N | `migrations/core/0026_portability.sql` |
 | `rer_portability_guard` | No: transient publication guard. | N | `migrations/core/0026_portability.sql` |
+| `rer_portability_import_leases` | Transfer metadata: an import job's renewable lease (job, expiry, holder token), no personal values. T deletes it with its job (`ON DELETE CASCADE`) in the erasure commit. | N | Created at runtime by the pinned rer's portability service (rer 0.2.69 and later), not a migration |
 | `rer_portability_jobs` | Transfer metadata/copy custody: T invalidates jobs, parts, segments and ownership in the erasure commit. | N | `migrations/core/0026_portability.sql` |
 | `rer_portability_journal` | F: trusted opaque deletion journal/source epochs; retained across protected restore. | N | `migrations/core/0026_portability.sql` |
 | `rer_portability_owned` | Transfer metadata/copy custody: T invalidates jobs, parts, segments and ownership in the erasure commit. | N | `migrations/core/0026_portability.sql` |

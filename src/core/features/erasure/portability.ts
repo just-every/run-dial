@@ -3,7 +3,7 @@ import { applicationTables } from "./census";
 import { ErasureError, type PortabilityFence } from "../../../modules/erasure/index.mjs";
 import { createPortability } from "@runeditrun/rer/modules/portability";
 
-const internal = /^(sqlite_(sequence|stat1|stat4)|d1_migrations|rer_migrations|_rer_deploy_migrations|rer_portability_(state|jobs|parts|segments|journal|epochs|guard|owned|snap_[a-zA-Z0-9_]+|stage_[a-zA-Z0-9_]+))$/;
+const internal = /^(sqlite_(sequence|stat1|stat4)|d1_migrations|rer_migrations|_rer_deploy_migrations|rer_portability_(state|jobs|parts|segments|journal|epochs|guard|owned|import_leases|snap_[a-zA-Z0-9_]+|stage_[a-zA-Z0-9_]+))$/;
 export async function assertErasureCensus(db: D1Database) {
   const { results } = await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all<{ name: string }>();
   const expected = new Set<string>(applicationTables);
