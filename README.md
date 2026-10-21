@@ -46,7 +46,7 @@ Licensed under the [MIT License](LICENSE).
 
 ## Run it on your computer
 
-With Node 22 or later and Git, one line installs the latest `rer`, clones Dial and starts it (without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-dial` brings its own). Dial pins **rer 0.2.68**:
+With Node 22 or later and Git, one line installs the latest `rer`, clones Dial and starts it (without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-dial` brings its own). Dial pins **rer 0.2.77**:
 
 ```sh
 npx -y @runeditrun/rer dev just-every/run-dial
@@ -61,7 +61,7 @@ git clone --branch v0.5.0 https://github.com/just-every/run-dial.git dial
 cd dial && rer dev
 ```
 
-A tag retains its own dependency pins; the commands and **rer 0.2.68** pin here
+A tag retains its own dependency pins; the commands and **rer 0.2.77** pin here
 describe current `main`.
 
 On a fresh checkout, `rer dev` selects Dial's pinned Node **22.20.0** and pnpm

@@ -956,7 +956,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "349b9db412cdd6d4f91b25402a0206107e6bd7c5ad2af1ed4dbf84512f301de0",
+      "sha256": "fcefde1ec861f472bee6f82e8a88714c23f8efc0232ea00f2587649ec873839d",
       "executable": false
     },
     "docs/overview.md": {
@@ -3740,11 +3740,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "774bf2ed680bae91e3f64b04e0a284b58854c925d472d53baad8f58a80a390a4",
+      "sha256": "afc2d2ea5e36d4fa085c9bfcbf63c357d5f2bb4152b6c8e16839420ea241cf8a",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "15c3261f75278c720c8738be3951d08f7c40523fe129dde0f0868c8614fb8604",
+      "sha256": "b93adb6286e669b0b152337bfbd4ca8263813171dee705d39e65f2cf7a3cc7bb",
       "executable": false
     },
     "public/brand/band.svg": {
@@ -3768,7 +3768,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "011684636de516995a087907d0cbb4fe3efcc997b946a3e1f0db309950ae1f77",
+      "sha256": "90a5cc5db2b9cc3d37a654f6ac8ab3fbf1cc498f1aa8bc3481e58cb00e6cde72",
       "executable": false
     },
     "RELEASE.json": {
