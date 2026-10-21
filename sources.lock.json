@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "8da693019c96fab187a18a28a3d05be34e69a37b435637271207a2e595e7be3e",
+      "sha256": "f7ab29c827cf2a1646332431dfadeb96c4c70c8993149a303004976b7a7077d9",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -3864,7 +3864,7 @@
       "executable": false
     },
     "scripts/archive/migration-ledger.mjs": {
-      "sha256": "6b3c1c0c491f4e0105c92c66680e9c76a73344e5babd5b733ae8d551cdfb820e",
+      "sha256": "0e265bc01c388dade765ab87fd123fcf927ab5d0c78195bff03e30a2c552f46d",
       "executable": false
     },
     "scripts/archive/policy.mjs": {
@@ -6940,7 +6940,7 @@
       "executable": false
     },
     "tests/archive-prior-release.test.mjs": {
-      "sha256": "f78ec939a30c8d5180ff5dc577cd217a84b43fbbd395e964ce6916dcfb76ecb5",
+      "sha256": "085e01704ab0707038664689fb37491034e90015476a64dd615dee1de2926c6a",
       "executable": false
     },
     "tests/archive/artifact.mjs": {
@@ -6989,6 +6989,10 @@
     },
     "tests/archive/status-fixture.mjs": {
       "sha256": "4efad8f46d19e85323333e79d28a9b9bb23ad2101d9b0c8662f6117f7aab9da7",
+      "executable": false
+    },
+    "tests/archive/storage-state.mjs": {
+      "sha256": "8d205ac2288e95ddf3b639edd17d210bd8e0e042c6180e0cadd11e6c2bc344a0",
       "executable": false
     },
     "tests/archive/transfer.mjs": {
