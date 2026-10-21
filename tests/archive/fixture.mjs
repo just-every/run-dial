@@ -83,6 +83,9 @@ const overrides = {
   calendar_deletion_probes: { state: 'pending', occurrence_id: 'booking_occurrences-1' },
   operator_mail_invocations: { state: 'invoking', attempt_number: 2 },
   base_mail_dispatch: { state: 'uncertain' },
+  payment_connections: { status: 'connected', account_id: 'acct_fixture', ach_enabled: 1 },
+  event_type_prices: { duration_minutes: 0, amount_cents: 5000 },
+  booking_payments: { amount_cents: 5000, account_id: 'acct_fixture', checkout_session_id: 'cs_test_fixture', payment_intent_id: 'pi_test_fixture' },
 };
 export async function fixture() {
   const model = await schemaModel();

@@ -42,6 +42,7 @@ import { Route as AppEventTypesIdAvailabilityRouteImport } from './routes/app.ev
 import { Route as AppEventTypesIdPreviewRouteImport } from './routes/app.event-types_.$id_.preview'
 import { Route as BookHandleSlugConfirmedRouteImport } from './routes/book.$handle_.$slug_.confirmed'
 import { Route as BookHandleSlugDetailsRouteImport } from './routes/book.$handle_.$slug_.details'
+import { Route as BookHandleSlugPaidRouteImport } from './routes/book.$handle_.$slug_.paid'
 import { Route as BookHandleSlugRequestRouteImport } from './routes/book.$handle_.$slug_.request'
 import { Route as EmbedHandleSlugConfirmedRouteImport } from './routes/embed.$handle.$slug_.confirmed'
 import { Route as EmbedHandleSlugDetailsRouteImport } from './routes/embed.$handle.$slug_.details'
@@ -214,6 +215,11 @@ const BookHandleSlugDetailsRoute = BookHandleSlugDetailsRouteImport.update({
   path: '/book/$handle/$slug/details',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookHandleSlugPaidRoute = BookHandleSlugPaidRouteImport.update({
+  id: '/book/$handle_/$slug_/paid',
+  path: '/book/$handle/$slug/paid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookHandleSlugRequestRoute = BookHandleSlugRequestRouteImport.update({
   id: '/book/$handle_/$slug_/request',
   path: '/book/$handle/$slug/request',
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/app/event-types/$id/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle/$slug/confirmed': typeof BookHandleSlugConfirmedRoute
   '/book/$handle/$slug/details': typeof BookHandleSlugDetailsRoute
+  '/book/$handle/$slug/paid': typeof BookHandleSlugPaidRoute
   '/book/$handle/$slug/request': typeof BookHandleSlugRequestRoute
   '/embed/$handle/$slug/confirmed': typeof EmbedHandleSlugConfirmedRoute
   '/embed/$handle/$slug/details': typeof EmbedHandleSlugDetailsRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/app/event-types/$id/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle/$slug/confirmed': typeof BookHandleSlugConfirmedRoute
   '/book/$handle/$slug/details': typeof BookHandleSlugDetailsRoute
+  '/book/$handle/$slug/paid': typeof BookHandleSlugPaidRoute
   '/book/$handle/$slug/request': typeof BookHandleSlugRequestRoute
   '/embed/$handle/$slug/confirmed': typeof EmbedHandleSlugConfirmedRoute
   '/embed/$handle/$slug/details': typeof EmbedHandleSlugDetailsRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/app/event-types_/$id_/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle_/$slug_/confirmed': typeof BookHandleSlugConfirmedRoute
   '/book/$handle_/$slug_/details': typeof BookHandleSlugDetailsRoute
+  '/book/$handle_/$slug_/paid': typeof BookHandleSlugPaidRoute
   '/book/$handle_/$slug_/request': typeof BookHandleSlugRequestRoute
   '/embed/$handle/$slug_/confirmed': typeof EmbedHandleSlugConfirmedRoute
   '/embed/$handle/$slug_/details': typeof EmbedHandleSlugDetailsRoute
@@ -397,6 +406,7 @@ export interface FileRouteTypes {
     | '/app/event-types/$id/preview'
     | '/book/$handle/$slug/confirmed'
     | '/book/$handle/$slug/details'
+    | '/book/$handle/$slug/paid'
     | '/book/$handle/$slug/request'
     | '/embed/$handle/$slug/confirmed'
     | '/embed/$handle/$slug/details'
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/app/event-types/$id/preview'
     | '/book/$handle/$slug/confirmed'
     | '/book/$handle/$slug/details'
+    | '/book/$handle/$slug/paid'
     | '/book/$handle/$slug/request'
     | '/embed/$handle/$slug/confirmed'
     | '/embed/$handle/$slug/details'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/app/event-types_/$id_/preview'
     | '/book/$handle_/$slug_/confirmed'
     | '/book/$handle_/$slug_/details'
+    | '/book/$handle_/$slug_/paid'
     | '/book/$handle_/$slug_/request'
     | '/embed/$handle/$slug_/confirmed'
     | '/embed/$handle/$slug_/details'
@@ -498,6 +510,7 @@ export interface RootRouteChildren {
   ManageInviteTokenRoute: typeof ManageInviteTokenRoute
   BookHandleSlugConfirmedRoute: typeof BookHandleSlugConfirmedRoute
   BookHandleSlugDetailsRoute: typeof BookHandleSlugDetailsRoute
+  BookHandleSlugPaidRoute: typeof BookHandleSlugPaidRoute
   BookHandleSlugRequestRoute: typeof BookHandleSlugRequestRoute
   EmbedHandleSlugConfirmedRoute: typeof EmbedHandleSlugConfirmedRoute
   EmbedHandleSlugDetailsRoute: typeof EmbedHandleSlugDetailsRoute
@@ -737,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookHandleSlugDetailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book/$handle_/$slug_/paid': {
+      id: '/book/$handle_/$slug_/paid'
+      path: '/book/$handle/$slug/paid'
+      fullPath: '/book/$handle/$slug/paid'
+      preLoaderRoute: typeof BookHandleSlugPaidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/book/$handle_/$slug_/request': {
       id: '/book/$handle_/$slug_/request'
       path: '/book/$handle/$slug/request'
@@ -845,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManageInviteTokenRoute: ManageInviteTokenRoute,
   BookHandleSlugConfirmedRoute: BookHandleSlugConfirmedRoute,
   BookHandleSlugDetailsRoute: BookHandleSlugDetailsRoute,
+  BookHandleSlugPaidRoute: BookHandleSlugPaidRoute,
   BookHandleSlugRequestRoute: BookHandleSlugRequestRoute,
   EmbedHandleSlugConfirmedRoute: EmbedHandleSlugConfirmedRoute,
   EmbedHandleSlugDetailsRoute: EmbedHandleSlugDetailsRoute,

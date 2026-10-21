@@ -21,6 +21,9 @@ export const runtimeEnvironmentSchema: z.ZodObject<{
   GOOGLE_OAUTH_CLIENT_ID: z.ZodOptional<z.ZodString>;
   GOOGLE_OAUTH_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
   CALENDAR_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;
+  STRIPE_SECRET_KEY: z.ZodOptional<z.ZodString>;
+  STRIPE_CONNECT_CLIENT_ID: z.ZodOptional<z.ZodString>;
+  STRIPE_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;
   RESEND_API_KEY: z.ZodOptional<z.ZodString>;
   RESEND_FROM_EMAIL: z.ZodOptional<z.ZodString>;
   RESEND_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;

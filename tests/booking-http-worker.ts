@@ -1,3 +1,4 @@
+import { PaymentsRepository, PaymentsService } from "../src/core/features/payments";
 import { ensureTestOperator } from "./auth-fixture";
 import { Hono } from "hono";
 import { AvailabilityRepository, AvailabilityService, type CalendarBusyReader } from "../src/core/features/availability";
@@ -57,7 +58,9 @@ function servicesFor(binding: D1Database) {
   const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile);
   const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
+  const payments = new PaymentsService(new PaymentsRepository(binding), runtime);
   return {
+    payments,
     operators: new OperatorsService(binding, runtime),
     hostProfile,
     eventTypes,
@@ -66,7 +69,7 @@ function servicesFor(binding: D1Database) {
     invitationManage: new InvitationManageService(binding, runtime),
     bookings: new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime, {
       probes: new CalendarDeletionProbesRepository(binding), inspect: async () => { throw new Error("The booking HTTP Worker has no calendar provider."); },
-    }, bookingLinks),
+    }, bookingLinks, payments),
     spaSurface: { async serve(_request: Request, status: number) { return new Response("surface", { status }); } },
   };
 }

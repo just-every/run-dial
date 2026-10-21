@@ -1,8 +1,10 @@
+import { initializeStripeWire, stripeHosts, stripeWire } from "./stripe-wire";
 /** Contract-shaped provider wire fixtures; production Google and Base mail adapters consume these. */
 export function wireTransport(db: D1Database): typeof fetch {
   return async (input, init = {}) => {
     const url = new URL(String(input)), method = init.method ?? "GET";
     if (url.hostname === "oauth2.googleapis.com") return googleToken(db, url, method, String(init.body ?? ""));
+    if (stripeHosts.includes(url.hostname)) return stripeWire(db, url, method, init);
     const body = init.body ? JSON.parse(String(init.body)) as Record<string, unknown> : undefined;
     await db.prepare("INSERT INTO wire_calls(url,method,body,headers) VALUES(?,?,?,?)").bind(url.toString(), method, body ? JSON.stringify(body) : null, JSON.stringify(Object.fromEntries(new Headers(init.headers)))).run();
     if (new Headers(init.headers).get("authorization") !== `Bearer ${url.hostname === "api.sendgrid.com" ? "wire-mail-key" : "synthetic-access"}`) throw new Error("Unexpected authorization");
@@ -103,6 +105,7 @@ export async function initializeWire(db: D1Database) {
     db.prepare("CREATE TABLE IF NOT EXISTS wire_events(id TEXT PRIMARY KEY,payload TEXT)"),
     db.prepare("CREATE TABLE IF NOT EXISTS wire_controls(name TEXT PRIMARY KEY,value INTEGER)"),
   ]);
+  await initializeStripeWire(db);
 }
 async function control(db: D1Database, name: string) {
   return (await db.prepare("SELECT value FROM wire_controls WHERE name=?").bind(name).first<{ value: string | number }>())?.value;

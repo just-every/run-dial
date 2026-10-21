@@ -1,4 +1,5 @@
 import { BookingChangeTerms } from "./booking-change-terms";
+import { PaymentSummary } from "./pay-step";
 import { LockedBookingTime, LockedTimezoneNotice, useBrowserTimezone } from "./locked-timezone";
 import { HostAvatar } from "../../host-profile";
 import { format, formatTime } from "./flow-shell";
@@ -46,6 +47,7 @@ export function BookingConfirmationPage({ token, embedded = false }: { token: st
     <p>{booking.event.eventTitle} with {booking.host.name}</p>
     {booking.lockedTimezone ? <><LockedTimezoneNotice timezone={booking.lockedTimezone} /><LockedBookingTime startAt={booking.occurrence.startAt} endAt={booking.occurrence.endAt} timezone={booking.lockedTimezone} browserTimezone={browserTimezone} /><p>{booking.event.durationMinutes} minutes</p></> : <><p>{format(booking.occurrence.startAt, booking.inviteeTimezone)} – {formatTime(booking.occurrence.endAt, booking.inviteeTimezone)} · {booking.inviteeTimezone} · {booking.event.durationMinutes} minutes</p>
     <p>Host time: {format(booking.occurrence.startAt, booking.host.timezone)} – {formatTime(booking.occurrence.endAt, booking.host.timezone)} · {booking.host.timezone}</p></>}
+    {booking.payment ? <PaymentSummary payment={booking.payment} /> : null}
     <BookingChangeTerms policy={booking.changePolicy?.effectivePolicy} />
     {!cancelled && booking.location.state === "ready" ? <p>{booking.location.label}{booking.location.value && !joinUrl ? <>: {booking.location.value}</> : null}</p> : null}
     {!cancelled && booking.location.state === "ready" && joinUrl ? <a className="pb-primary-link" href={joinUrl}>Join session</a> : null}

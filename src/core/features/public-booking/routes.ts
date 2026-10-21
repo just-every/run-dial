@@ -162,12 +162,16 @@ function selectionResult(context: Context<AppEnvironment>, result: Awaited<Retur
   if (result.kind === "expired") return apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.");
   if (result.kind === "calendar_unavailable") return context.json(availabilityResponseSchema.parse({ state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] }), 503);
   if (result.kind === "invalid_timezone") return apiError(context, 400, "invalid_request", "Choose a valid IANA timezone.");
+  if (result.kind === "payments_unavailable") return paymentsUnavailable(context, result.reason);
   return apiError(context, 409, "slot_unavailable", "That time is no longer available. Choose another time.");
 }
 
 function confirmationResult(context: Context<AppEnvironment>, result: Awaited<ReturnType<AppEnvironment["Variables"]["services"]["bookings"]["confirmPublic"]>>) {
   if (result.kind === "invalid_duration") return invalidDuration(context);
   if (result.kind === "created") return context.json(result.booking, 201);
+  // PAY-001: the slot is held; the booking confirms only on Stripe's signed event.
+  if (result.kind === "payment_required") return context.json({ paymentRequired: true, payment: result.payment }, 202);
+  if (result.kind === "payments_unavailable") return paymentsUnavailable(context, result.reason);
   if (result.kind === "replayed") return context.json(result.booking);
   if (result.kind === "invalid_answers") return apiError(context, 400, "invalid_answers", "Review the required booking details.");
   if (result.kind === "invalid_nonce") return apiError(context, 404, "booking_nonce_not_found", "This booking selection is not valid.");
@@ -187,6 +191,10 @@ function rescheduleResult(context: Context<AppEnvironment>, result: Awaited<Retu
   if (result.kind === "calendar_unavailable") return context.json(availabilityResponseSchema.parse({ state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] }), 503);
   if (result.kind === "payload_mismatch") return apiError(context, 409, "booking_replay_mismatch", "This booking selection was already used with different details.");
   return apiError(context, 409, result.kind === "slot_taken" ? "slot_taken" : "slot_unavailable", "That time is no longer available. Choose another time.");
+}
+
+function paymentsUnavailable(context: Context<AppEnvironment>, reason: string) {
+  return apiError(context, 503, "payments_unavailable", "Payments for this event are unavailable right now. No booking was made; contact the host.", [reason]);
 }
 
 function invalidDuration(context: Context<AppEnvironment>) {

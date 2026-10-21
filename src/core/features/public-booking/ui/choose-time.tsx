@@ -1,3 +1,4 @@
+import { formatUsd, priceForDuration } from "../../../shared/event-price";
 import { BookingChangeTerms } from "./booking-change-terms";
 import { resolveLockedTimezone } from "../../../shared/timezone-lock";
 import { LockedTimezoneNotice, useBrowserTimezone } from "./locked-timezone";
@@ -103,7 +104,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
   const changeWeek = (days: number) => { if (shownWeek) { const next = days < 0 && shiftHostDate(shownWeek, days) < today ? today : shiftHostDate(shownWeek, days); setWeek(next); setSelectedDay(undefined); if (!lockedTimezone) setInviteeTimezone(displayTimezone); remember({ week: next, timezone: displayTimezone, day: "" }); } };
   return <FlowShell data={{ ...data, eventType: { ...data.eventType, durationMinutes } }} embedded={embedded} step={1}>
     {preview ? <p className="pb-preview-banner">Operator preview — providers are not used from preview.</p> : null}
-    <div className="pb-event-heading"><div><p className="pb-eyebrow">{data.eventType.title} · {durationMinutes} minutes</p><h1>Choose a day and time.</h1><p>Times are checked against the host’s availability before confirmation.</p></div></div>
+    <div className="pb-event-heading"><div><p className="pb-eyebrow">{data.eventType.title} · {durationMinutes} minutes{data.eventType.price && priceForDuration(data.eventType.price, durationMinutes) !== undefined ? ` · ${formatUsd(priceForDuration(data.eventType.price, durationMinutes)!)}` : ""}</p><h1>Choose a day and time.</h1><p>Times are checked against the host’s availability before confirmation.</p></div></div>
     {new URLSearchParams(search).get("notice") === "slot_changed" ? <p className="pb-request-notice" role="status">That choice is no longer available. Choose another time.{hasRecoveryDraft ? " Your details are saved for this booking." : null}</p> : null}
     <DurationChoice options={eventDurationOptions(data.eventType)} selected={durationMinutes} disabled={Boolean(selecting) || checking} onChange={duration => { selectionReads.current.invalidate(); const day = selectedDay ?? (availability?.state === "available" && availability.slots[0] ? dateInZone(availability.slots[0].startAt, displayTimezone) : undefined); if (day) setSelectedDay(day); setDurationMinutes(duration); remember({ durationMinutes: String(duration), ...(day ? { day } : {}) }); }} />{lockedTimezone ? <LockedTimezoneNotice timezone={lockedTimezone} /> : <TimezoneControl timezone={displayTimezone} hostTimezone={data.profile.timezone} disabled={Boolean(selecting)} onChange={zone => { setInviteeTimezone(zone); remember({ timezone: zone }); }} />}
     {checking ? <p role="status">Checking current times…</p> : null}

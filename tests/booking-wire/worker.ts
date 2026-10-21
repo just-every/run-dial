@@ -12,11 +12,15 @@ import { consumeJobs, runScheduledWork } from "../../src/core/app/background-wor
 import { initializeWire, wireTransport } from "./transport";
 import { connectionWatchObservers } from "../../src/core/app/connection-watch";
 import { captureAuthMail, captureMail, capturedMail } from "../mail-capture";
-type WireBindings = AppBindings & { PROVIDER_DB?: D1Database };
+import { paymentFixtures } from "./payment-fixtures";
+// STRIPE_EDGE=live is the local-only PAY-001 test-mode proof: Stripe calls go to api.stripe.com.
+type WireBindings = AppBindings & { PROVIDER_DB?: D1Database; STRIPE_EDGE?: "live"; STRIPE_EDGE_RELAY?: string };
+// A sandbox without direct egress relays the unchanged request bytes through a local forwarder to Stripe.
+const liveStripe = (relay?: string): typeof fetch => relay ? (input, init) => { const url = new URL(String(input)); return fetch(`${relay}/${url.hostname}${url.pathname}${url.search}`, init); } : fetch;
 const providerDb = (env: WireBindings) => env.PROVIDER_DB ?? env.DB;
 const servicesFor = (env: WireBindings) => {
   const runtime = parseRuntimeEnvironment(env), wire = wireTransport(providerDb(env));
-  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) });
+  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env), paymentsTransport: env.STRIPE_EDGE === "live" ? liveStripe(env.STRIPE_EDGE_RELAY) : wire });
 };
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: WireBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);
@@ -27,9 +31,10 @@ export default {
     if (url.pathname === "/__test/mail") return capturedMail(env.DB);
     if (url.pathname === "/wire/init") { await initializeWire(providerDb(env)); return Response.json({ ok: true }); }
     if (url.pathname === "/wire/state") {
-      const tables = ["calendar_connection_health_changes", "calendar_push_channels", "calendar_busy_read_windows", "wire_calls", "wire_events", "booking_reschedule_requests", "booking_request_history", "booking_links", "event_booking_policies", "booking_presentation", "event_correspondence", "booking_correspondence", "base_mail_dispatch", "calendar_connections", "bookings", "booking_occurrences", "booking_nonces", "booking_history", "booking_calendar_conflicts", "delivery_outbox", "delivery_attempts", "availability_requests", "availability_request_windows", "calendar_deletion_probes"];
+      const tables = ["calendar_connection_health_changes", "calendar_push_channels", "calendar_busy_read_windows", "wire_calls", "wire_events", "booking_reschedule_requests", "booking_request_history", "booking_links", "event_booking_policies", "booking_presentation", "event_correspondence", "booking_correspondence", "base_mail_dispatch", "calendar_connections", "bookings", "booking_occurrences", "booking_nonces", "booking_history", "booking_calendar_conflicts", "delivery_outbox", "delivery_attempts", "availability_requests", "availability_request_windows", "calendar_deletion_probes", "payment_connections", "payment_oauth_states", "payment_holds", "booking_payments", "event_type_prices", "wire_stripe_sessions"];
       return Response.json(Object.fromEntries(await Promise.all(tables.map(async table => [table, (await (table.startsWith("wire_") ? providerDb(env) : env.DB).prepare(`SELECT * FROM ${table}`).all()).results]))));
     }
+    if (url.pathname.startsWith("/__fixtures/payments/")) return paymentFixtures(url, request, env.DB, providerDb(env), servicesFor(env));
     if (url.pathname === "/__fixtures/calendar-channel-expiry") {
       const { expiresAt } = await request.json<{ expiresAt: string }>();
       await env.DB.prepare("UPDATE calendar_push_channels SET expires_at=?").bind(expiresAt).run();

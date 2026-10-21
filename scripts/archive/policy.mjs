@@ -20,6 +20,8 @@ export const exported = [
   'booking_calendar_conflicts', 'booking_links', 'anonymized_audit', 'erased_calendar_targets', 'calendar_deletion_probes',
   'oc_owner_claims', 'operator_setup_identity', 'operator_mail_invocations', 'oa_operators', 'oa_bootstrap', 'base_mail_dispatch',
   'operator_creation_receipts', 'operator_creation_tombstones', 'oa_invitation_cancellations', 'oa_domain_rules',
+  // PAY-001: the connected Stripe account ID (no credential), event prices and each booking's payment record.
+  'payment_connections', 'event_type_prices', 'booking_payments',
 ].sort();
 export { excluded } from "../../src/core/shared/archive-exclusions.mjs";
 import { excluded } from "../../src/core/shared/archive-exclusions.mjs";

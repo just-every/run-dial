@@ -1,3 +1,4 @@
+import { stripeTransport } from "../booking-wire/stripe-wire";
 import start from "@tanstack/react-start/server-entry";
 import { createWorker } from "../../src/core/app/worker";
 import { BookingCoordinator as ProductionCoordinator } from "../../src/core/app/booking-coordinator";
@@ -8,7 +9,7 @@ import type { AppBindings } from "../../src/core/app/bindings";
 import { fixtureProviders } from "./providers";
 import { handleFixtures } from "./fixture-routes";
 
-const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { ...fixtureProviders((env as AppBindings & { PROVIDER_DB?: D1Database }).PROVIDER_DB ?? env.DB), files: env.FILES, calendarChanges: coordinatedCalendarChanges(env) });
+const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { ...fixtureProviders((env as AppBindings & { PROVIDER_DB?: D1Database }).PROVIDER_DB ?? env.DB), paymentsTransport: stripeTransport((env as AppBindings & { PROVIDER_DB?: D1Database }).PROVIDER_DB ?? env.DB), files: env.FILES, calendarChanges: coordinatedCalendarChanges(env) });
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const production = createWorker(servicesFor);
 export default {

@@ -40,7 +40,7 @@ Dial stays small on purpose. It does not offer:
 - Group events, classes, waitlists or resource capacity.
 - Extra guests on a booking.
 - Bookings that wait for your approval before they are confirmed.
-- Payments, deposits, refunds or booking fees.
+- Deposits, refunds, cancellation or no-show fees, packages, coupons, sales tax, invoices and payment reconciliation. Paid bookings through your own Stripe account are included; Dial issues no refund, so refund in Stripe until deposits, refunds and fees arrive (PAY-003).
 - Recurring booking series or scheduling polls.
 - A marketplace, ratings or reviews from clients.
 - Text messages, WhatsApp, phone automation, a CRM or marketing campaigns.
@@ -56,6 +56,7 @@ This is version 0.1.0. The scheduling and request workflows work and are covered
 - Connecting a real Google Calendar and creating Google Meet links.
 - How long a Google sign-in lasts before you must reconnect.
 - A deploy with `pnpm run deploy` to a real Cloudflare account. Its tests use a stand-in for Cloudflare's API.
+- Connecting a real Stripe account, Stripe sending payment events to a deployed Dial, and US bank account (ACH) payments. A Stripe test-mode run paid a real Checkout Session that Dial created; the test harness, not Stripe, delivered the payment event to Dial.
 
 Export supports local installs and a hosted install through its native owner session. Restore goes into an empty local installation; hosted restore is not exposed. See [Backups and export](backups.md) for the commands and private settings to keep. Live provider recovery remains unverified.
 

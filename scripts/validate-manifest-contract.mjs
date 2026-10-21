@@ -57,9 +57,10 @@ for (const name of ["ENVIRONMENT", "APP_URL", "SESSION_SECRET"]) {
   assert.ok(manifest.env.some((entry) => entry.name === name && entry.required === true), `${name} must be a required runtime variable`);
 }
 for (const entry of manifest.env.filter((entry) => entry.required === false)) {
+  // An optional variable belongs to a declared adapter, or to a declared external integration outside one.
   assert.ok(
-    manifest.extensionPoints.adapters.some((adapter) => entry.why.includes(adapter)),
-    `${entry.name} is not required and must name a declared adapter in its why`,
+    manifest.extensionPoints.adapters.some((adapter) => entry.why.includes(adapter)) || manifest.externals.some((external) => entry.why.includes(`external ${external.id}`)),
+    `${entry.name} is not required and must name a declared adapter or external in its why`,
   );
 }
 

@@ -1,3 +1,4 @@
+import { paymentFixtures } from "../booking-wire/payment-fixtures";
 import { CalendarConnectionRepository } from "../../src/core/features/calendar-connection";
 import { processCoordinatedDelivery, coordinatedCalendarChanges } from "../../src/core/app/booking-coordination";
 import { DeliveryRepository } from "../../src/core/features/delivery";
@@ -16,6 +17,7 @@ export async function handleFixtures(request: Request, env: AppBindings & { PROV
       return Response.json({ keys: listed.objects.map(object => object.key) });
     }
   const providerDb = env.PROVIDER_DB ?? env.DB;
+    if (url.pathname.startsWith("/__fixtures/payments/")) return paymentFixtures(url, request, env.DB, providerDb, servicesFor(env));
     if (url.pathname === "/__fixtures/booking-ended" && request.method === "POST") {
       const { id } = await request.json<{ id: string }>();
       const end = new Date(Date.now() - 86400000);

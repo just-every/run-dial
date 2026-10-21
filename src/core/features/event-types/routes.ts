@@ -3,6 +3,7 @@ import { postBookingRedirectSchema, validateEventRedirect } from "./redirect-val
 import { Hono } from "hono";
 import { toPublicEventType } from "./public";
 import { z } from "zod";
+import { isPaid } from "../payments";
 import type { AppEnvironment } from "../../app/context";
 import { apiError } from "../../shared/http";
 import { hostDateSchema, timeWindowSchema, validateNonOverlappingWindows } from "../../shared/scheduling";
@@ -108,7 +109,10 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       if (offer?.kind === "used") return context.json({linkState:"used" as const});
       if (offer?.kind === "expired") return apiError(context,offer.event.bookingLink?.kind === "one_off" ? 404 : 410,"link_expired","This booking link has expired.");
       const eventType = offer ? toPublicEventType(offer.event) : undefined;
-      return eventType ? context.json({ profile: toPublicProfile(profile), eventType }) : apiError(context, 404, "event_not_available", "This event type is not publicly available.");
+      if (!eventType) return apiError(context, 404, "event_not_available", "This event type is not publicly available.");
+      // PAY-001: a paid event shows its USD price, or the price of each offered duration.
+      const price = await context.get("services").payments.eventPrice(offer!.event.id);
+      return context.json({ profile: toPublicProfile(profile), eventType: isPaid(price) ? { ...eventType, price } : eventType });
     })
     .get("/api/app/event-types", async (context) => context.json(await context.get("services").eventTypes.listEventTypes()))
     .post("/api/app/event-types", validate("json", eventTypeCreationSchema), async (context) => context.json(await context.get("services").eventTypes.createEventType(context.req.valid("json")), 201))

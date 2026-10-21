@@ -1,0 +1,82 @@
+{
+  "mode": "test",
+  "startedAt": "2026-10-20T23:10:50.179Z",
+  "steps": [
+    {
+      "name": "Connect Standard test account unavailable; the platform account is used",
+      "reason": "Stripe POST /v1/accounts 400 invalid_request_error"
+    },
+    {
+      "name": "throwaway webhook endpoint created for its signing secret",
+      "endpoint": "we_1USmBD5ErG20QHq8f17PNU5h"
+    },
+    {
+      "name": "Dial created a real Checkout Session through its own confirm route",
+      "session": "cs_test_a1MzVln9fgjvrj7z2438zVJwfgtXnkqGng95pg7yjY5jsWwUVmyFdIrVY0",
+      "amountTotal": 2500,
+      "currency": "usd",
+      "paymentMethodTypes": [
+        "card",
+        "link"
+      ],
+      "excludedPaymentMethodTypes": [
+        "us_bank_account"
+      ],
+      "expiresAt": 1792539741
+    },
+    {
+      "name": "test card 4242 paid on Stripe's hosted Checkout page; Stripe returned to Dial's return URL",
+      "returnedTo": "/book/dial-host/paid-proof/paid"
+    },
+    {
+      "name": "the return URL alone created no booking"
+    },
+    {
+      "name": "the real signed checkout.session.completed confirmed exactly one booking (a mis-signed copy was 401, a duplicate added nothing)",
+      "event": "evt_1USmBn5ErG20QHq8KeSYvY72",
+      "eventHasAccount": false,
+      "paymentIntent": "pi_3USmBm5ErG20QHq80y2t8Opd",
+      "amountCents": 2500
+    },
+    {
+      "name": "Dial's sweep expired the second real session through POST /v1/checkout/sessions/:id/expire and released the slot",
+      "session": "cs_test_a1NSKad4OMG699EiRldSRhhzLXOsjy8MDtCXCSji2BBCAT83GViroHvMiQ",
+      "stripeStatus": "expired",
+      "holdState": "released"
+    }
+  ],
+  "cleanup": {
+    "refund": {
+      "id": "re_3USmBm5ErG20QHq80kOKDW3e",
+      "status": "succeeded",
+      "amount": 2500
+    },
+    "sessions": [
+      {
+        "id": "cs_test_a1MzVln9fgjvrj7z2438zVJwfgtXnkqGng95pg7yjY5jsWwUVmyFdIrVY0",
+        "status": "complete"
+      },
+      {
+        "id": "cs_test_a1NSKad4OMG699EiRldSRhhzLXOsjy8MDtCXCSji2BBCAT83GViroHvMiQ",
+        "status": "expired"
+      }
+    ],
+    "openSessionsCreatedByRun": 0,
+    "refundsReadback": [
+      {
+        "id": "re_3USmBm5ErG20QHq80kOKDW3e",
+        "status": "succeeded",
+        "amount": 2500
+      }
+    ],
+    "webhookEndpointsOfThisRun": 0,
+    "customersCreated": 0
+  },
+  "notProven": [
+    "Stripe-to-Dial webhook delivery: the local Worker is not reachable from Stripe, so the real event was fetched with GET /v1/events and delivered by this harness",
+    "A real Connect OAuth grant: the fleet holds no Connect client ID; the connected account was recorded through a test-only fixture"
+  ],
+  "transport": "Dial's Worker request bytes relayed unchanged by a local forwarder because the sandbox Worker runtime has no direct egress",
+  "envelopeAccountAddedByHarness": true,
+  "finishedAt": "2026-10-20T23:11:42.900Z"
+}

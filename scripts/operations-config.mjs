@@ -29,7 +29,7 @@ export function invalidConfigurationNames(env) {
     const local = env.ENVIRONMENT !== "production" && isLoopbackHost(url.hostname);
     if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.pathname !== "/" || url.search || url.hash || (!local && url.protocol !== "https:")) invalid.push("APP_URL");
   } catch { invalid.push("APP_URL"); }
-  for (const group of [["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "CALENDAR_WEBHOOK_SECRET"], ["RESEND_API_KEY", "RESEND_FROM_EMAIL", "RESEND_WEBHOOK_SECRET"]]) {
+  for (const group of [["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "CALENDAR_WEBHOOK_SECRET"], ["STRIPE_SECRET_KEY", "STRIPE_CONNECT_CLIENT_ID", "STRIPE_WEBHOOK_SECRET"], ["RESEND_API_KEY", "RESEND_FROM_EMAIL", "RESEND_WEBHOOK_SECRET"]]) {
     if (group.some((key) => env[key])) for (const key of group) if (typeof env[key] !== "string" || !env[key].trim()) invalid.push(key);
   }
   const bootstrap = ["OWNER_EMAIL", "SETUP_TOKEN", "MAIL_PROVIDER", "MAIL_API_KEY", "MAIL_FROM"];

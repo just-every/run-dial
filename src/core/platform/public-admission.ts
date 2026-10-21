@@ -3,7 +3,7 @@ import { createId } from "../shared/ids";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 import { hashToken } from "./auth/tokens";
 
-export type CallbackProvider = "google_calendar" | "resend" | "sendgrid";
+export type CallbackProvider = "google_calendar" | "resend" | "sendgrid" | "stripe";
 export type Admission = { kind: "admitted" } | { kind: "limited"; retryAfterSeconds: number };
 export type AdmitCallback = () => Promise<Admission>;
 type Rule = { predicate: string; args: (string | number)[]; windowMs: number; limit: number };
@@ -14,7 +14,7 @@ export class PublicAdmissionError extends Error {
 
 export function isAuthenticatedCallbackPath(request: Request) {
   const path = new URL(request.url).pathname;
-  return request.method === "POST" && ["/api/webhooks/google-calendar", "/api/webhooks/resend", "/api/webhooks/sendgrid"].includes(path);
+  return request.method === "POST" && ["/api/webhooks/google-calendar", "/api/webhooks/resend", "/api/webhooks/sendgrid", "/api/webhooks/stripe"].includes(path);
 }
 
 export function requiresPublicAdmission(path: string) {

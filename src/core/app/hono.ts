@@ -35,6 +35,7 @@ import type { AppServices } from "./services";
 import { createServices } from "./services";
 import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse, type Admission, type CallbackProvider } from "../platform/public-admission";
 import { publicAbuseRoutes } from "../features/public-abuse";
+import { paymentRoutes } from "../features/payments";
 
 /** Compose typed sub-apps so AppType retains the complete Hono RPC schema. */
 export function createApp(documents?: { fetch(request: Request): Promise<Response> }, servicesFactory?: (env: AppBindings) => AppServices, admitProvider?: (request: Request, env: AppBindings, provider: CallbackProvider) => Promise<Admission>) {
@@ -95,6 +96,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", moveInRoutes)
     .route("/", embedRoutes)
     .route("/", invitationManageRoutes)
+    .route("/", paymentRoutes)
     .route("/", publicBookingRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
     .get("/app", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
