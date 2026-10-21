@@ -7,6 +7,7 @@ import { readArchive } from '@runeditrun/rer/modules/portability';
 import { contract } from './contract.mjs';
 import { checkout, run } from './archive/transfer.mjs';
 import { platformLedgerDdl } from './archive/deployed-fixture.mjs';
+import { storageState } from './archive/storage-state.mjs';
 import { quote } from '../scripts/archive/schema.mjs';
 import { splitSqlStatements } from '../scripts/delivery/base/sql-statements.mjs';
 
@@ -92,4 +93,30 @@ contract('DATA-001', 'a backup made by the listed release restores through rer i
     await proxy?.dispose();
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+contract('DATA-001', 'a Platform ledger missing a required column refuses export and import before any write, leaving storage unchanged', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'dial-malformed-ledger-'));
+  const { getPlatformProxy } = await import('wrangler');
+  try {
+    // Export is refused from a populated installation, import into an otherwise empty migrated one.
+    for (const [command, args, populate] of [['export', ['export', '--target', 'local', '--output', 'exports/probe.rer'], true], ['import', ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes'], false]]) {
+      const root = join(directory, command);
+      await checkout(root);
+      const settings = await readFile(join(root, '.dev.vars'), 'utf8');
+      await writeFile(join(root, '.dev.vars'), settings.replace(/^SESSION_SECRET=.*$/m, `SESSION_SECRET=${salt}`), { mode: 0o600 });
+      await platformMigrations(root, getPlatformProxy);
+      await copyFile(fixture, join(root, 'exports/prior.rer')); await chmod(join(root, 'exports/prior.rer'), 0o600);
+      if (populate) await run(root, ['import', '--target', 'local', '--input', 'exports/prior.rer', '--yes']);
+      const proxy = await getPlatformProxy(local(root));
+      try {
+        // Portability's runtime lease table is created on first use, so none may already stand in for a write.
+        await proxy.env.DB.prepare('DROP TABLE IF EXISTS rer_portability_import_leases').run();
+        await proxy.env.DB.prepare('ALTER TABLE rer_migrations DROP COLUMN applied_at').run();
+      } finally { await proxy.dispose(); }
+      const before = await storageState(root);
+      await assert.rejects(run(root, args), /"exitCode":4/, `${command} is refused`);
+      assert.deepEqual(await storageState(root), before, `${command}: no table, row or ledger changed`);
+    }
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });
