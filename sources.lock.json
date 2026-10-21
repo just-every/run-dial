@@ -936,7 +936,7 @@
       "executable": false
     },
     "docs/backups.md": {
-      "sha256": "6a74bd7e1141d9e4b427a73bbc5d8b7b19a7b53299f07e877116993b7559b51b",
+      "sha256": "5298493df5edd62f75b7be4af9ea1bf8c2870b492941db9f92613610217febf7",
       "executable": false
     },
     "docs/booking-page.md": {
@@ -3864,7 +3864,7 @@
       "executable": false
     },
     "scripts/archive/migration-ledger.mjs": {
-      "sha256": "386d13fe8911ad2305931199ff5ad3b19865f76c78cd5a4119cad2ff2cb197cb",
+      "sha256": "6b3c1c0c491f4e0105c92c66680e9c76a73344e5babd5b733ae8d551cdfb820e",
       "executable": false
     },
     "scripts/archive/policy.mjs": {
@@ -4199,6 +4199,10 @@
       "sha256": "bd7bd296393c1b7705da2ca582b7fd37e7223565eb0cacd90919e74df7d1ed08",
       "executable": false
     },
+    "scripts/local/ledger.mjs": {
+      "sha256": "3c535c5654b0fb4d505ecf9ea572efa9eef01d77c195bdfde03fe6d1fc656be4",
+      "executable": false
+    },
     "scripts/local/legacy-state.mjs": {
       "sha256": "95c6fddeb99deac4c0aee5ba281c3bfc9babfc963d45bc9a5f476b2015a3f87c",
       "executable": false
@@ -4224,7 +4228,7 @@
       "executable": false
     },
     "scripts/local/portability.mjs": {
-      "sha256": "80cc47808e08356a00d060d06cb9adc1daa215611d36fc75c9147c53841613fc",
+      "sha256": "d166db25632673899c09d5b1979401625f537fefb89ed2498978b439965656a5",
       "executable": false
     },
     "scripts/local/remote-export.mjs": {
@@ -6936,7 +6940,7 @@
       "executable": false
     },
     "tests/archive-prior-release.test.mjs": {
-      "sha256": "1847f56873c0b971a6fa84b06fb9cd998d4c37d292e1ab788179ecfd7a9138b8",
+      "sha256": "f78ec939a30c8d5180ff5dc577cd217a84b43fbbd395e964ce6916dcfb76ecb5",
       "executable": false
     },
     "tests/archive/artifact.mjs": {

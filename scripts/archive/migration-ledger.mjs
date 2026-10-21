@@ -4,11 +4,24 @@
 // records each completed file's name and hash in rer_migrations, and an
 // interrupted Platform release leaves '<file>#<start>-<end>' progress rows.
 const ledgers = { d1_migrations: 'id', _rer_deploy_migrations: 'name', rer_migrations: 'name' };
+const ledgerTables = async db => (await db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name IN (${Object.keys(ledgers).map(name => `'${name}'`).join(',')})`).all()).results;
+// Wrangler cannot read rer_migrations, so it would apply every file again to a
+// database Platform migrated: Platform's runner stays its only migration
+// authority. Such a database holds that ledger alone, with every file of this
+// revision completed by its hash. True for it, false for any other database.
+export async function platformLedger(db, migrations) {
+ const tables = (await ledgerTables(db)).map(row => row.name);
+ if (!tables.includes('rer_migrations')) return false;
+ if (tables.length > 1) throw Error('migration_ledger:multiple:rer_migrations');
+ const applied = new Set((await db.prepare("SELECT sha256 FROM rer_migrations WHERE instr(name,'#')=0").all()).results.map(row => row.sha256));
+ const pending = migrations.find(({ sha256 }) => !applied.has(sha256));
+ if (pending) throw Error('migration_ledger:unapplied:' + pending.file.split('/').at(-1));
+ return true;
+}
 export async function assertMigrationLedger(db, migrations) {
  const expected = migrations.map(({ file, sha256 }) => ({ name: file.split('/').at(-1), sha256 }));
  const byName = [...expected].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
- const tables = (await db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name IN (${Object.keys(ledgers).map(name => `'${name}'`).join(',')})`).all()).results;
- for (const { name } of tables) {
+ for (const { name } of await ledgerTables(db)) {
   const columns = (await db.prepare(`PRAGMA table_info(${name})`).all()).results.map(row => row.name);
   const claims = name === '_rer_deploy_migrations' || name === 'd1_migrations' && (columns.includes('sha256') || columns.includes('state'));
   const fields = name === 'rer_migrations' ? ['name', 'sha256'] : claims ? ['name', 'sha256', 'state'] : ['name'];

@@ -2,6 +2,22 @@ import { lstat } from 'node:fs/promises';
 import { RerError, refuse, missing } from '@runeditrun/rer/errors';
 import { remoteExportFailure } from './export-diagnostic.mjs';
 // Base's CLI accepts only unserved locations (exports/ or an absolute path outside the checkout) before this hook runs.
+// A database RER Managed (Run Edit Run Platform) migrated records its files in rer_migrations, which Wrangler cannot
+// read: Wrangler would apply every file again. Its runner stays the only migration authority, so Wrangler is skipped
+// and the database must already hold every migration here; the transfer checks the exact history again before moving data.
+async function platformLedger({ root, store, signal }, env) {
+ let output = '';
+ const child = store.spawn('Checking migration history', process.execPath, ['scripts/local/ledger.mjs'], { cwd: root, signal, env });
+ child.stdout.on('data', chunk => { output += chunk; });
+ const closed = new Promise(resolve => child.once('close', code => resolve(code)));
+ await new Promise(resolve => { child.once('exit', resolve); child.once('error', resolve); });
+ await store.stop(child);
+ const code = await closed;
+ let receipt; try { receipt = JSON.parse(output.trim().split('\n').at(-1)); } catch { receipt = undefined; }
+ if (receipt?.refused) throw new RerError('restore_refused', `Local transfer refused (${receipt.refused}): this database carries RER Managed's migration ledger, so only RER Managed may migrate it, and it must hold that ledger alone with every migration of this version applied. Nothing was changed.`, 4);
+ if (code !== 0 || typeof receipt?.platform !== 'boolean') throw new RerError('transfer_failed', 'Dial could not read the migration history of this installation. Nothing was changed; run the same command again.', 1);
+ return receipt.platform;
+}
 async function transfer({ root, path, journal, store, signal, operationToken, target, origin, sessionFile }, direction) {
  if (target === 'remote' && direction !== 'export') throw refuse('Remote restore is not exposed. Import the hosted archive into an empty local installation.');
  if (target === 'remote' && (!origin || !sessionFile)) throw missing('Hosted export requires --origin and a private --session-file holding one native owner cookie.');
@@ -10,7 +26,7 @@ async function transfer({ root, path, journal, store, signal, operationToken, ta
  const env = { ...process.env, RER_LOCAL_OPERATION: operationToken, WRANGLER_SEND_METRICS: 'false' };
  if (target !== 'remote') {
  await store.run('Preparing local bindings', process.execPath, ['scripts/render-wrangler.mjs'], { cwd: root, signal, env });
- await store.run('Applying local data migrations', 'pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'dial-local', '--local', '--persist-to', '.wrangler/state', '--config', 'wrangler.toml'], { cwd: root, signal, env });
+ if (!await platformLedger({ root, store, signal }, env)) await store.run('Applying local data migrations', 'pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'dial-local', '--local', '--persist-to', '.wrangler/state', '--config', 'wrangler.toml'], { cwd: root, signal, env });
  }
  let output = '';
  const child = store.spawn(target === 'remote' ? 'Downloading complete hosted Dial data' : 'Moving complete local Dial data', process.execPath, target === 'remote' ? ['scripts/local/remote-export.mjs', origin, sessionFile, path] : ['scripts/local/transfer.mjs', direction, path, ...(journal ? [journal] : [])], { cwd: root, signal, env });
