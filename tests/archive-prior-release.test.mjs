@@ -95,7 +95,16 @@ contract('DATA-001', 'a backup made by the listed release restores through rer i
   }
 });
 
-contract('DATA-001', 'a Platform ledger missing a required column refuses export and import before any write, leaving storage unchanged', async () => {
+for (const [shape, statements] of [
+  ['missing a required column', ['ALTER TABLE rer_migrations DROP COLUMN applied_at']],
+  ['with an extra column', ['ALTER TABLE rer_migrations ADD COLUMN unknown_note TEXT']],
+  ['with a wrong-type nullable timestamp holding NULL', [
+    'ALTER TABLE rer_migrations RENAME TO prior_ledger',
+    'CREATE TABLE rer_migrations(name TEXT PRIMARY KEY, sha256 TEXT NOT NULL, applied_at INTEGER)',
+    'INSERT INTO rer_migrations(name,sha256) SELECT name,sha256 FROM prior_ledger',
+    'DROP TABLE prior_ledger',
+  ]],
+]) contract('DATA-001', `a Platform ledger ${shape} refuses export and import before any write, leaving storage unchanged`, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'dial-malformed-ledger-'));
   const { getPlatformProxy } = await import('wrangler');
   try {
@@ -112,7 +121,7 @@ contract('DATA-001', 'a Platform ledger missing a required column refuses export
       try {
         // Portability's runtime lease table is created on first use, so none may already stand in for a write.
         await proxy.env.DB.prepare('DROP TABLE IF EXISTS rer_portability_import_leases').run();
-        await proxy.env.DB.prepare('ALTER TABLE rer_migrations DROP COLUMN applied_at').run();
+        await proxy.env.DB.batch(statements.map(sql => proxy.env.DB.prepare(sql)));
       } finally { await proxy.dispose(); }
       const before = await storageState(root);
       await assert.rejects(run(root, args), /"exitCode":4/, `${command} is refused`);
