@@ -6,7 +6,9 @@ Dial is a self-hosted scheduler for one business or one independent host. Client
 
 Dial is for a single host: a consultant, a clinic, a studio, a small business that takes appointments. You set up one host profile and one or more event types, such as a 30-minute intro call. You can invite other people to run the workspace with you, and they all have the same access.
 
-If you need several hosts, team round-robin or paid bookings, Dial is not the right tool. See [what Dial does not do](#what-dial-does-not-do).
+An event type can be free or paid. For a paid one, you connect your own Stripe account and set a price in US dollars, or a price for each length you offer; see [Stripe payments](install.md#stripe-payments-optional-pay-001). Your client pays on Stripe's checkout page while Dial holds the time for 10 minutes, and the booking is confirmed only when Stripe's signed payment event reaches Dial. The receipt, the client's manage page, the emails and your booking record show the amount and Stripe's reference. Dial issues no refunds, so refund in Stripe. Not yet proven against live Stripe: a real Stripe Connect OAuth grant, Stripe delivering its payment events to a deployed Dial, and an ACH Direct Debit payment end to end. A Stripe test-mode run paid a real Checkout Session that Dial created; the test harness, not Stripe, delivered the payment event to Dial.
+
+If you need several hosts or team round-robin, Dial is not the right tool. See [what Dial does not do](#what-dial-does-not-do).
 
 ## How a booking works
 

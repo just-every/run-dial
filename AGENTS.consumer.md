@@ -13,7 +13,7 @@ The following describes the product requirements; consult its handover for imple
 
 Dial is an invitee-first scheduler for one business or independent host. Operators publish a host profile and event types, connect the host's calendars, and define availability; invitees book a genuinely free time without an account, receive calendar and email follow-through, and can reschedule, cancel, or request another window.
 
-This seed intentionally does not include team routing, pooled availability, payments, campaigns, or a marketplace. Its core promise is a reliable one-to-one booking lifecycle whose calendar, meeting, and mail failures remain visible and recoverable.
+This seed intentionally does not include team routing, pooled availability, campaigns, or a marketplace. Paid bookings go through the host's own Stripe account (PAY-001); refunds, deposits and fees are not included. Its core promise is a reliable one-to-one booking lifecycle whose calendar, meeting, and mail failures remain visible and recoverable.
 
 ## Run the product
 
