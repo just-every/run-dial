@@ -19,7 +19,7 @@ export type CheckoutSession = {
   metadata?: Record<string, string>;
 };
 /** The parts of Stripe's PaymentIntent, SetupIntent and Refund objects Dial reads; never card details. */
-export type PaymentIntent = { id: string; status: string; amount: number; currency: string; customer: string | null; payment_method: string | null };
+export type PaymentIntent = { id: string; status: string; amount: number; amount_received?: number; currency: string; customer: string | null; payment_method: string | null };
 export type SetupIntent = { id: string; status: string; customer: string | null; payment_method: string | null };
 export type Refund = { id: string; status: string; amount: number; payment_intent: string | null };
 /** PAY-005: a Stripe Tax calculation and an invoice, read only for their amounts, jurisdiction and hosted page. */

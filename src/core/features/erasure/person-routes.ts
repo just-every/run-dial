@@ -23,7 +23,7 @@ export const personErasureRoutes=new Hono<AppEnvironment>()
       const response=await forwardBookingRequest(c.env,kind==="bookings"?id:`request:${id}`,request);
       await response.arrayBuffer();
       if(!response.ok)throw new ErasureError("erasure_incomplete",503);
-    });
+    },email=>c.get("services").payments.erasePendingHolds(email));
     return c.json(receipt);
   })
   .get("/api/app/privacy/receipts/:id",validate("param",z.object({id:z.string().length(26)})),async c=>{

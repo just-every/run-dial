@@ -7,6 +7,7 @@ import { createId, nowIso } from "../../shared/ids";
 import type { SessionRecord } from "../operators";
 import { assertErasureCensus, erasurePortability } from "./portability";
 import { addressRemainders, deleteRows } from "./address";
+import { erasePendingPayments, type CleanupPendingPayments } from "./pending-payments";
 // @ts-expect-error Maintained native authentication HMAC and constant comparison.
 import { hashToken, constantEqual } from "../../../../modules/operator-auth/crypto.mjs";
 
@@ -19,7 +20,7 @@ export class PersonErasure {
   constructor(private readonly db: D1Database, private readonly secret: string) {}
   private records(email: string) { return personalRecords(this.db, email); }
   private signature(email: string, records: Awaited<ReturnType<PersonErasure["records"]>>, session: SessionRecord, expiresAt: number, operatorIdentityRetained: boolean) {
-    return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
+    return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,records.holds,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
   }
   async preview(raw: string, session: SessionRecord) {
     await assertErasureCensus(this.db);
@@ -27,10 +28,10 @@ export class PersonErasure {
     const email=foldEmail(raw), records=await this.records(raw), expiresAt=Date.now()+300_000;
     const pending=Boolean(await this.db.prepare("SELECT 1 FROM person_erasure_locks WHERE email=?").bind(email).first());
     const operatorIdentityRetained=await operatorOverlap(this.db,email);
-    return { bookings: records.bookings.length, requests: records.requests.length+records.approvals.length, pending, operatorIdentityRetained, expiresAt,
+    return { bookings: records.bookings.length, requests: records.requests.length+records.approvals.length, payments: records.holds.length, pending, operatorIdentityRetained, expiresAt,
       confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
   }
-  async erase(input: PersonConfirmation, session: SessionRecord, eraseEntity: EraseEntity) {
+  async erase(input: PersonConfirmation, session: SessionRecord, eraseEntity: EraseEntity, cleanupPending?: CleanupPendingPayments) {
     await assertErasureCensus(this.db);
     const email=foldEmail(input.email), records=await this.records(input.email);
     const operatorIdentityRetained=await operatorOverlap(this.db,email);
@@ -50,9 +51,10 @@ export class PersonErasure {
       this.db.prepare(`SELECT CASE WHEN (SELECT json_group_array(id) FROM (SELECT id FROM bookings WHERE invitee_email_folded=? ORDER BY id))=?
         AND (SELECT json_group_array(id) FROM (SELECT id FROM availability_requests WHERE ${emailFoldSql("invitee_email") }=? ORDER BY id))=?
         AND (SELECT json_group_array(id) FROM (SELECT id FROM booking_approval_requests WHERE ${emailFoldSql("invitee_email")}=? ORDER BY id))=?
+        AND (SELECT json_group_array(id) FROM (SELECT id FROM payment_holds WHERE invitee_email_folded=? ORDER BY id))=?
         AND ${operatorOverlapSql()}=?
-        THEN 1 ELSE abs(-9223372036854775808) END`).bind(email,JSON.stringify(records.bookings),email,JSON.stringify(records.requests),email,JSON.stringify(records.approvals),email,email,operatorIdentityRetained?1:0),
-      this.db.prepare("INSERT INTO person_erasure_receipts(id,bookings,requests,requested_at,operator_identity_retained,stripe_customers_retained) SELECT ?,?,?,?,?,0 WHERE EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=? AND receipt_id IS NULL)").bind(proposedId,records.bookings.length,records.requests.length+records.approvals.length,requestedAt,operatorIdentityRetained?1:0,email),
+        THEN 1 ELSE abs(-9223372036854775808) END`).bind(email,JSON.stringify(records.bookings),email,JSON.stringify(records.requests),email,JSON.stringify(records.approvals),email,JSON.stringify(records.holds),email,email,operatorIdentityRetained?1:0),
+      this.db.prepare("INSERT INTO person_erasure_receipts(id,bookings,requests,requested_at,operator_identity_retained,stripe_customers_retained,stripe_sessions_retained) SELECT ?,?,?,?,?,0,0 WHERE EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=? AND receipt_id IS NULL)").bind(proposedId,records.bookings.length,records.requests.length+records.approvals.length,requestedAt,operatorIdentityRetained?1:0,email),
       this.db.prepare("UPDATE person_erasure_locks SET receipt_id=?,addresses_json=? WHERE email=? AND receipt_id IS NULL").bind(proposedId,JSON.stringify(records.addresses),email),
       this.db.prepare(authority.sql).bind(...authority.params),
     ]);
@@ -60,12 +62,13 @@ export class PersonErasure {
     if(!pending?.receipt_id)throw new ErasureError("erasure_incomplete",503);
     const id=pending.receipt_id;
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
+    await erasePendingPayments(this.db,email,session,cleanupPending);
     await erasePersonSourceCustody(this.db, email, custody.custodyOnly, custody.values, session);
     await erasePersonSharedCustody(this.db, custody.values, custody.sharedFields, custody.sharedInvitees, session);
     for (const booking of records.bookings) await eraseEntity("bookings",booking);
     for (const request of records.requests) await eraseEntity("availability-requests",request);
     const remaining=await this.records(email);
-    if(remaining.bookings.length || remaining.requests.length) throw new ErasureError("erasure_incomplete",503);
+    if(remaining.bookings.length || remaining.requests.length || remaining.holds.length) throw new ErasureError("erasure_incomplete",503);
     const fence=await erasurePortability(this.db);
     const mailEngine=createErasure({db:this.db,portability:fence,declarations:[mailGraph()]});
     const approvalIds=new Set((await this.db.prepare(`SELECT id FROM booking_approval_requests WHERE ${emailFoldSql("invitee_email")}=?`).bind(email).all<{id:string}>()).results.map(row=>row.id));
@@ -82,7 +85,7 @@ export class PersonErasure {
     return this.receipt(id);
   }
   async receipt(id: string) {
-    const row=await this.db.prepare("SELECT id,bookings,requests,requested_at AS requestedAt,completed_at AS completedAt,operator_identity_retained AS operatorIdentityRetained,COALESCE(saved_cards_detached,0) AS savedCardsDetached,COALESCE(saved_card_failures,0) AS savedCardFailures,stripe_customers_retained AS stripeCustomersRetained FROM person_erasure_receipts WHERE id=?").bind(id).first<{id:string;bookings:number;requests:number;requestedAt:string;completedAt:string|null;operatorIdentityRetained:number;savedCardsDetached:number;savedCardFailures:number;stripeCustomersRetained:number|null}>();
+    const row=await this.db.prepare("SELECT id,bookings,requests,requested_at AS requestedAt,completed_at AS completedAt,operator_identity_retained AS operatorIdentityRetained,COALESCE(saved_cards_detached,0) AS savedCardsDetached,COALESCE(saved_card_failures,0) AS savedCardFailures,stripe_customers_retained AS stripeCustomersRetained,stripe_sessions_retained AS stripeSessionsRetained FROM person_erasure_receipts WHERE id=?").bind(id).first<{id:string;bookings:number;requests:number;requestedAt:string;completedAt:string|null;operatorIdentityRetained:number;savedCardsDetached:number;savedCardFailures:number;stripeCustomersRetained:number|null;stripeSessionsRetained:number|null}>();
     if(!row) return null;
     const targets=(await this.db.prepare("SELECT completed_at,last_error_code FROM erased_calendar_targets WHERE receipt_id=?").bind(id).all<{completed_at:string|null;last_error_code:string|null}>()).results;
     // D7: a receipt from before the count existed reads null (not counted), never zero.

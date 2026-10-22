@@ -161,16 +161,53 @@ for (const mail of invoiceReceipts) assert.ok(textBody(mail).includes("Invoice p
 assert.deepEqual((await data(`/api/app/bookings/${operatorBooking.id}`)).money.movements.map(row => [row.kind, row.status, row.amountCents, row.taxCents]), [["invoice", "succeeded", 21775, 1775]]);
 checks.push("an operator-created booking is invoiced for $200.00 plus $17.75 New York tax on a Stripe-hosted invoice emailed to the invitee; issuing again returns the same invoice; only the signed invoice.paid marks it paid, once, and its receipt carries the same amounts");
 
-// Refunds refund tax in proportion, and the record, receipts and report agree.
-await data(`/api/app/bookings/${ny.booking.id}/refunds`, { amountCents: 5000, reason: "Ended early", idempotencyKey: randomUUID() });
-const refunded = await data(`/api/app/bookings/${ny.booking.id}`);
-assert.deepEqual(refunded.money.movements.map(row => [row.kind, row.amountCents, row.taxCents]), [["refund", 5000, 408]], "a $50.00 refund of the $217.75 payment returns $4.08 of its $17.75 tax");
-assert.deepEqual([refunded.money.ledger.paidCents, refunded.money.ledger.refundedCents, refunded.money.ledger.taxCents], [21775, 5000, 1367]);
-const report = (await data(`/api/app/reports/scheduling?${new URLSearchParams({ fromDate: day(-1), throughDate: day(1) })}`)).tiles.find(tile => tile.key === "revenue");
-const money = Object.fromEntries(report.figures.map(figure => [figure.key, figure.value]));
-// Hand count: payments $217.75 (New York), $200.00 (Oregon), $21.78 + $87.10 (deposit and balance), $217.75 (Lee), $217.75 (invoice); fee $30.00; refund $50.00.
-assert.deepEqual([money.revenue, money.fees, money.refunds], [21775 + 20000 + 2178 + 8710 + 21775 + 21775, 3000, 5000], "the report's revenue, fees and refunds match the receipts");
-checks.push("a $50.00 partial refund returns $4.08 of tax; the booking record nets the tax to $13.67, and the report's revenue, fees and refunds equal the receipts' amounts");
+// PAY-003/PAY-005: cumulative refund tax must conserve the original $17.75 collected on $217.75.
+// These amounts and the pro-rata oracle come from that payment, independently of Dial's allocation code.
+// Rounding three thirds separately over-refunds tax; rounding three $50 parts separately drifts before a full refund.
+const chosenPartial = await select("session", await slot("session", day(15)));
+const partial = await book("session", chosenPartial, { name: "synthetic-dial-1", email: "synthetic-dial-1@example.test" }, newYork, (await tax("session", chosenPartial, newYork)).dueNowTaxCents);
+await deliver();
+const refundCases = [
+  { name: "three partial refunds completing a full refund", paid: ny, amounts: [7258, 7258, 7259], cumulative: [7258, 14516, 21775] },
+  { name: "three partial refunds leaving money paid", paid: partial, amounts: [5000, 5000, 5000], cumulative: [5000, 10000, 15000] },
+];
+// Hand count of the payments above, including the second New York booking; only Lee's fee adds $30.
+const revenueCents = 21775 + 20000 + 2178 + 8710 + 21775 + 21775 + 21775;
+const refundTaxFailures = [];
+let previousRefundsCents = 0;
+for (const scenario of refundCases) {
+  const checkpoints = [];
+  for (const [index, amountCents] of scenario.amounts.entries()) {
+    await data(`/api/app/bookings/${scenario.paid.booking.id}/refunds`, { amountCents, reason: "Ended early", idempotencyKey: randomUUID() });
+    const record = await data(`/api/app/bookings/${scenario.paid.booking.id}`);
+    const receipt = (await data(`/api/public/manage/${scenario.paid.manage}`)).payment;
+    const report = (await data(`/api/app/reports/scheduling?${new URLSearchParams({ fromDate: day(-1), throughDate: day(1) })}`)).tiles.find(tile => tile.key === "revenue");
+    const money = Object.fromEntries(report.figures.map(figure => [figure.key, figure.value]));
+    const refundedCents = scenario.cumulative[index], netCents = 21775 - refundedCents;
+    const refunds = record.money.movements.filter(row => row.kind === "refund");
+    assert.deepEqual(refunds.map(row => [row.status, row.amountCents]), scenario.amounts.slice(0, index + 1).map(amount => ["succeeded", amount]));
+    assert.deepEqual([record.money.ledger.paidCents, record.money.ledger.refundedCents, record.money.ledger.netCents], [21775, refundedCents, netCents]);
+    assert.deepEqual([receipt.paidCents, receipt.refundedCents, receipt.netCents, receipt.taxCents], [21775, refundedCents, netCents, record.money.ledger.taxCents], "the public booking receipt agrees with the operator's refund and net tax");
+    assert.deepEqual(receipt.payments.map(row => [row.amountCents, row.taxCents]), [[21775, 1775]], "the receipt retains the original payment and collected tax");
+    assert.deepEqual(receipt.movements.filter(row => row.kind === "refund").map(row => [row.amountCents, row.status, row.reference]), refunds.map(row => [row.amountCents, row.status, row.processorRef]), "refund amounts and processor references agree on the receipt");
+    assert.deepEqual(money, { revenue: revenueCents, fees: 3000, refunds: previousRefundsCents + refundedCents, net: revenueCents + 3000 - previousRefundsCents - refundedCents }, "the report agrees after every partial refund");
+    checkpoints.push({ refundedCents, taxCents: refunds.reduce((total, row) => total + row.taxCents, 0), netTaxCents: record.money.ledger.taxCents });
+  }
+  // Run both sequences before reporting a tax failure, so the baseline exposes both rounding defects.
+  try {
+    for (const checkpoint of checkpoints) {
+      const label = `${scenario.name} after refunding ${checkpoint.refundedCents} cents`;
+      assert.ok(checkpoint.taxCents >= 0 && checkpoint.taxCents <= 1775, `${label}: cumulative tax refunded (${checkpoint.taxCents}) never exceeds the 1775 cents collected`);
+      assert.ok(Math.abs(checkpoint.taxCents * 21775 - checkpoint.refundedCents * 1775) <= 21775, `${label}: cumulative tax (${checkpoint.taxCents}) stays within one cent of the original payment's pro-rata tax`);
+      assert.ok(checkpoint.netTaxCents >= 0, `${label}: the ledger never reports negative net tax`);
+      assert.equal(checkpoint.netTaxCents, 1775 - checkpoint.taxCents, `${label}: net tax conserves the collected tax`);
+      if (checkpoint.refundedCents === 21775) assert.deepEqual([checkpoint.taxCents, checkpoint.netTaxCents], [1775, 0], "a full refund returns exactly all collected tax");
+    }
+  } catch (error) { refundTaxFailures.push(`${scenario.name}: ${error.message}`); }
+  previousRefundsCents += scenario.cumulative.at(-1);
+}
+assert.deepEqual(refundTaxFailures, [], "cumulative tax is conserved for both refund sequences");
+checks.push("three partial refunds of $72.58, $72.58 and $72.59 return exactly the $17.75 tax on a $217.75 payment; three $50.00 partial refunds keep cumulative tax within one cent of pro-rata before a full refund; net tax remains nonnegative, and the record, public receipt and report agree after each refund");
 
 await writeFile(evidencePath("payment-tax-wire.json"), JSON.stringify({ title: "PAY-005 Stripe Tax, receipts and invoices carry matching amounts", checks, scope: "Native local D1 and production services with Stripe, Stripe Tax and signed webhooks synthetic at the HTTP edge" }, null, 2));
 console.log("PAY-005 sales tax, receipts and invoices journey passed.");

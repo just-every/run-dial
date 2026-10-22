@@ -1,5 +1,5 @@
 import { foldEmail, mailRecipientMatches, emailFoldSql, personalRecords } from "./identity";
-import { toD1Sql, type PortabilityFence } from "../../../modules/erasure/index.mjs";
+import { ErasureError, toD1Sql, type PortabilityFence } from "../../../modules/erasure/index.mjs";
 import type { ErasureStatement } from "./booking-statements";
 // @ts-expect-error Maintained native authentication hashing implementation.
 import { hashToken } from "../../../../modules/operator-auth/crypto.mjs";
@@ -69,8 +69,8 @@ export async function addressRemainders(db: D1Database, fence: PortabilityFence,
   // A pending paid booking can carry guests before its booking rows exist. Remove the guest and its unsent notice,
   // preserving the payer and the money claim; calendar payloads read guests from live rows, never a personal copy.
   statements.push({sql:`UPDATE payment_holds SET claim_json=json_set(claim_json,'$.invitee.guests',json(COALESCE((SELECT json_group_array(value) FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))<>?), '[]')),'$.emails',json(COALESCE((SELECT json_group_array(json(value)) FROM json_each(claim_json,'$.emails') WHERE lower(trim(json_extract(value,'$.to')))<>?), '[]'))) WHERE claim_json IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))=?)`,params:[email,email,email]});
-  // PAY-001: a pending payment hold carries the payer's folded address and pending booking.
-  statements.push(...await deleteRows(db, fence, "payment_holds", "invitee_email_folded=?", [foldEmail(email)]));
+  // Remote payment cleanup must finish before its local authority can disappear.
+  if (await db.prepare("SELECT 1 FROM payment_holds WHERE invitee_email_folded=? LIMIT 1").bind(foldEmail(email)).first()) throw new ErasureError("payment_erasure_incomplete",503);
   statements.push(...await deleteRows(db, fence, "availability_request_review_nonces", `${emailFoldSql("invitee_email")}=? OR (invitee_email IS NULL AND request_id IS NULL)`, [foldEmail(email)]));
   // Old receipts have no delivery correlation. Keeping a payload hash would retain
   // an unverifiable identity fingerprint; these mail-only facts carry no calendar authority.

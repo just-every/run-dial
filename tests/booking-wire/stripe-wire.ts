@@ -1,6 +1,7 @@
 /** Contract-shaped Stripe API and Connect OAuth at the HTTP edge (PAY-001, PAY-003, PAY-005). Production's StripeApi
  * talks to these exactly as to api.stripe.com and connect.stripe.com; no Stripe secret exists in CI. */
 export const stripeHosts = ["api.stripe.com", "connect.stripe.com"];
+import { stripeGate } from "./stripe-gates";
 
 type Stored = { id: string; type: string; payload: Record<string, unknown> };
 
@@ -17,6 +18,7 @@ export async function stripeWire(db: D1Database, url: URL, method: string, init:
   }
   const account = headers.get("stripe-account");
   if (account !== "acct_wirehost") return stripeError(403, "account_invalid");
+  await stripeGate(db, url.pathname, method);
   // Stripe replays the first response to a repeated idempotency key, errors included.
   const key = method === "POST" ? headers.get("idempotency-key") : null;
   if (key && !url.pathname.startsWith("/v1/checkout/sessions")) {
@@ -49,7 +51,7 @@ async function checkoutSessions(db: D1Database, url: URL, method: string, form: 
     const session = { id: sessionId, object: "checkout.session", url: `https://checkout.stripe.com/c/pay/${sessionId}`, status: "open", payment_status: mode === "setup" ? "no_payment_required" : "unpaid", mode,
       amount_total: mode === "setup" ? null : items.reduce((total, index) => total + Number(form.get(`line_items[${index}][price_data][unit_amount]`)) * Number(form.get(`line_items[${index}][quantity]`) ?? 1), 0),
       currency: "usd", payment_intent: null, setup_intent: null, customer: null, expires_at: Number(form.get("expires_at")),
-      client_reference_id: form.get("client_reference_id"), metadata: prefixed(form, "metadata"), customer_creation: form.get("customer_creation"),
+      client_reference_id: form.get("client_reference_id"), metadata: prefixed(form, "metadata"), customer_creation: form.get("customer_creation"), customer_email: form.get("customer_email"),
       payment_intent_data: { metadata: prefixed(form, "payment_intent_data[metadata]"), setup_future_usage: form.get("payment_intent_data[setup_future_usage]") },
       line_items: items.map(index => ({ name: form.get(`line_items[${index}][price_data][product_data][name]`), amount: Number(form.get(`line_items[${index}][price_data][unit_amount]`)) })),
       excluded_payment_method_types: [...form.entries()].filter(([name]) => name.startsWith("excluded_payment_method_types[")).map(([, value]) => value) };
@@ -102,11 +104,13 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
   }
   if (url.pathname === "/v1/tax/calculations" && method === "POST") return taxCalculation(db, form);
   if (url.pathname === "/v1/customers" && method === "POST") {
+    if (await control(db, "stripe-customer-refused")) return stripeError(400, "customer_refused");
     const customer = { id: `cus_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`, object: "customer", email: form.get("email"), name: form.get("name"), address: prefixed(form, "address") };
     await save(db, customer.id, "customers", customer);
     return Response.json(customer);
   }
   if (url.pathname === "/v1/invoices" && method === "POST") {
+    if (await control(db, "stripe-invoice-refused")) return stripeError(400, "invoice_refused");
     if (!(await object(db, form.get("customer") ?? "")) || form.get("collection_method") !== "send_invoice" || !form.get("days_until_due")) return stripeError(400, "parameter_invalid");
     const draft = { id: `in_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`, object: "invoice", status: "draft", customer: form.get("customer"), total: 0, amount_due: 0, amount_paid: 0, currency: "usd", lines: [] as Array<{ amount: number; description: string | null }>, hosted_invoice_url: null, number: null, payment_intent: null, metadata: prefixed(form, "metadata") };
     await save(db, draft.id, "invoices", draft);
@@ -155,8 +159,11 @@ export async function payStripeSession(db: D1Database, id: string, paymentStatus
   const row = await db.prepare("SELECT payload FROM wire_stripe_sessions WHERE id=?").bind(id).first<{ payload: string }>();
   if (!row) return undefined;
   const session = JSON.parse(row.payload) as Record<string, unknown> & { mode: string; amount_total: number | null; customer_creation: string | null; payment_intent_data: { metadata: Record<string, string>; setup_future_usage: string | null } };
+  if (session.status === "complete") return session;
+  if (session.status !== "open") return undefined;
   const suffix = id.slice(-12), saveCard = session.mode === "setup" || session.payment_intent_data.setup_future_usage === "off_session";
   const customer = session.customer_creation === "always" ? `cus_wire${suffix}` : null, card = saveCard ? `pm_wire${suffix}` : null;
+  if (customer) await save(db, customer, "customers", { id: customer, object: "customer", email: session.customer_email });
   if (card) await save(db, card, "payment_methods", { id: card, object: "payment_method", type: "card", customer });
   const completed = { ...session, status: "complete", url: null, customer,
     // Stripe holds the payer and card on its own objects; Dial must not copy them.
@@ -203,6 +210,7 @@ export async function initializeStripeWire(db: D1Database) {
     db.prepare("CREATE TABLE IF NOT EXISTS wire_stripe_objects(id TEXT PRIMARY KEY,type TEXT NOT NULL,payload TEXT NOT NULL)"),
     db.prepare("CREATE TABLE IF NOT EXISTS wire_stripe_replies(idempotency_key TEXT PRIMARY KEY,status INTEGER NOT NULL,body TEXT NOT NULL)"),
     db.prepare("CREATE TABLE IF NOT EXISTS wire_controls(name TEXT PRIMARY KEY,value INTEGER)"),
+    db.prepare("CREATE TABLE IF NOT EXISTS wire_stripe_gates(name TEXT PRIMARY KEY,path TEXT,method TEXT,entered INTEGER,released INTEGER)"),
   ]);
 }
 

@@ -19,7 +19,8 @@ export async function personalRecords(db: D1Database, email: string) {
   const bookings = (await db.prepare("SELECT id,invitee_email AS email FROM bookings WHERE invitee_email_folded=? ORDER BY id").bind(foldEmail(email)).all<{id:string;email:string}>()).results;
   const requests = (await db.prepare(`SELECT id,invitee_email AS email FROM availability_requests WHERE ${emailFoldSql('invitee_email')}=? ORDER BY id`).bind(foldEmail(email)).all<{id:string;email:string}>()).results;
   const approvals=(await db.prepare(`SELECT id,invitee_email AS email FROM booking_approval_requests WHERE ${emailFoldSql("invitee_email")}=? ORDER BY id`).bind(foldEmail(email)).all<{id:string;email:string}>()).results;
-  return { approvals:approvals.map(row=>row.id), bookings: bookings.map(row=>row.id), requests: requests.map(row=>row.id), addresses: [...new Set([email,...bookings.map(row=>row.email),...requests.map(row=>row.email),...approvals.map(row=>row.email)].map(value=>value.trim().toLowerCase()))].sort() };
+  const holds=(await db.prepare("SELECT id FROM payment_holds WHERE invitee_email_folded=? ORDER BY id").bind(foldEmail(email)).all<{id:string}>()).results;
+  return { holds:holds.map(row=>row.id), approvals:approvals.map(row=>row.id), bookings: bookings.map(row=>row.id), requests: requests.map(row=>row.id), addresses: [...new Set([email,...bookings.map(row=>row.email),...requests.map(row=>row.email),...approvals.map(row=>row.email)].map(value=>value.trim().toLowerCase()))].sort() };
 }
 export const operatorOverlapSql = () => `EXISTS(SELECT 1 FROM oa_operators WHERE ${emailFoldSql('email')}=? UNION ALL SELECT 1 FROM operators WHERE erased_at IS NULL AND ${emailFoldSql('normalized_email')}=?)`;
 export async function operatorOverlap(db: D1Database, email: string) {
@@ -29,7 +30,7 @@ export async function operatorOverlap(db: D1Database, email: string) {
 
 export async function hasPersonalRecords(db: D1Database, email: string) {
   const records=await personalRecords(db,email);
-  return records.bookings.length>0 || records.requests.length>0 || records.approvals.length>0;
+  return records.bookings.length>0 || records.requests.length>0 || records.approvals.length>0 || records.holds.length>0;
 }
 
 /** Orphan mail is selected by its structured recipient, not substring matches

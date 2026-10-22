@@ -216,12 +216,16 @@ export function bookingCancellationMail(input: BookingMailDetails & {
   const reasonLine = `Reason: ${input.reason?.trim() || "No reason provided"}.`;
   const timeFacts = bookingTimeFacts(input, "Previous");
   const location = locationText(input);
+  // The cancellation outcome already names the refund/fee amount. Keep its processor reference beside it
+  // without repeating the original payment amount as though it were a second money movement.
+  const moneyFacts = input.payment?.notes?.length ? [{ label: "Stripe reference", value: input.payment.reference }, { label: "Refunds and fees", value: input.payment.notes.join(" ") }] : changeFacts(input);
+  const moneyLines = input.payment?.notes?.length ? [`Stripe reference: ${input.payment.reference}`, input.payment.notes.join(" ")] : changeLines(input);
   const facts: BrandedMailFact[] = [
     { label: "Event", value: input.eventTitle },
     ...timeFacts,
     { label: "Duration", value: `${input.durationMinutes} minutes` },
     { label: "Location", value: `${bookingLocationLabel(input)}: ${location}` },
-    ...changeFacts(input),
+    ...moneyFacts,
     ...(input.recipientRole === "operator" ? [{ label: "Calendar state", value: calendarStatus(input.calendarState) }] : []),
   ];
   if (input.recipientRole === "operator") facts.push({ label: "Invitee", value: `${input.inviteeName} <${input.inviteeEmail}>` });
@@ -232,7 +236,7 @@ export function bookingCancellationMail(input: BookingMailDetails & {
     timeFactsText(timeFacts),
     `Duration: ${input.durationMinutes} minutes`,
     `Location: ${bookingLocationLabel(input)}: ${location}`,
-    ...changeLines(input),
+    ...moneyLines,
     reasonLine,
     ...(input.recipientRole === "operator" ? [`Calendar state: ${calendarStatus(input.calendarState)}.`] : []),
     ...(input.recipientRole === "operator" ? [`Invitee: ${input.inviteeName} <${input.inviteeEmail}>`] : []),

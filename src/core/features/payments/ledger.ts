@@ -3,7 +3,7 @@ import type { Movement } from "./movements-repository";
 import type { BookingPayment } from "./repository";
 
 /** One captured Stripe payment a refund can draw from, with its tax and what is already refunded or being refunded. */
-export type Charge = { ref: string; amountCents: number; taxCents: number; refundedCents: number; at: string };
+export type Charge = { ref: string; amountCents: number; taxCents: number; refundedCents: number; refundedTaxCents: number; at: string };
 export type Ledger = {
   priceCents: number; paidCents: number; feesCents: number; refundedCents: number; netCents: number;
   /** PAY-005: sales tax collected net of the tax refunded with it. */
@@ -20,7 +20,14 @@ export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnaps
   const balancePaid = sum(["balance"]), feesCents = sum(["late_cancel_fee", "no_show_fee"]), refundedCents = sum(["refund"]);
   const paidCents = (payment?.amountCents ?? 0) + balancePaid + sum(["invoice"]);
   const refunds = movements.filter(movement => movement.kind === "refund" && movement.status !== "failed");
-  const charge = (ref: string | null, amountCents: number, taxCents: number, at: string): Charge[] => ref ? [{ ref, amountCents, taxCents, at, refundedCents: refunds.filter(refund => refund.sourceRef === ref).reduce((total, refund) => total + refund.amountCents, 0) }] : [];
+  const charge = (ref: string | null, amountCents: number, taxCents: number, at: string): Charge[] => {
+    if (!ref) return [];
+    const reserved = refunds.filter(refund => refund.sourceRef === ref);
+    return [{ ref, amountCents, taxCents, at,
+      refundedCents: reserved.reduce((total, refund) => total + refund.amountCents, 0),
+      refundedTaxCents: reserved.reduce((total, refund) => total + refund.taxCents, 0),
+    }];
+  };
   const charges = [
     ...charge(payment?.paymentIntentId ?? null, payment?.amountCents ?? 0, payment?.taxCents ?? 0, payment?.paidAt ?? ""),
     ...succeeded.filter(movement => movement.kind !== "refund").flatMap(movement => charge(movement.processorRef, movement.amountCents, movement.taxCents, movement.updatedAt)),
@@ -37,8 +44,8 @@ export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnaps
   };
 }
 
-/** Split a refund across captured payments, newest first, so each Stripe refund stays within its payment; each part
- * refunds its payment's sales tax in proportion. */
+/** Split a refund across captured payments, newest first, so each Stripe refund stays within its payment. Round
+ * cumulative tax once per charge and subtract tax already refunded or reserved, so partial refunds conserve tax. */
 export function allocateRefund(charges: Charge[], amountCents: number) {
   const parts: Array<{ ref: string; amountCents: number; taxCents: number }> = [];
   let left = amountCents;
@@ -46,7 +53,11 @@ export function allocateRefund(charges: Charge[], amountCents: number) {
     const available = entry.amountCents - entry.refundedCents;
     if (left <= 0 || available <= 0) continue;
     const part = Math.min(available, left);
-    parts.push({ ref: entry.ref, amountCents: part, taxCents: entry.amountCents ? Math.round(part * entry.taxCents / entry.amountCents) : 0 });
+    const cumulativeTaxCents = Math.round((entry.refundedCents + part) * entry.taxCents / entry.amountCents);
+    // Older individually rounded refunds can exceed this cumulative target. Keep their history and allocate no
+    // additional tax until the target catches up; a refund never carries negative tax.
+    const taxCents = Math.max(0, cumulativeTaxCents - entry.refundedTaxCents);
+    parts.push({ ref: entry.ref, amountCents: part, taxCents });
     left -= part;
   }
   return left > 0 ? undefined : parts;

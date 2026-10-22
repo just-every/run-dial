@@ -20,6 +20,7 @@ import { receiptOperators, receiptStatements } from "./receipts";
 import type { PaymentSettings } from "./money-repository";
 import { verifyStripeSignature } from "./webhook-signature";
 import type { Admission } from "../../platform/public-admission";
+import { erasePendingPayments } from "./erasure";
 
 /** The slot is held for the payment window; Stripe's own minimum session lifetime is 30 minutes, so Dial
  * expires the session itself when its window ends. */
@@ -136,6 +137,8 @@ export class PaymentsService {
   releaseHold(holdId: string, reason: string) { return this.repository.endHold(holdId, "released", reason); }
 
   async bookingPayment(bookingId: string) { return this.repository.bookingPayment(bookingId); }
+
+  erasePendingHolds(email: string) { return erasePendingPayments(this.db, email, () => this.money.live()); }
 
   /** The return page reads state only. Neither its query nor Stripe's session ID can confirm a booking. */
   async returnStatus(token: string) {

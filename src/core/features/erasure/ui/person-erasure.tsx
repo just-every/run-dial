@@ -3,9 +3,9 @@ import { api, errorMessage } from "../../../api/client";
 import { Button, Card, Input, noticeClassName } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
 
-type Preview = { bookings: number; requests: number; pending: boolean; operatorIdentityRetained: boolean; expiresAt: number; confirmation: string };
+type Preview = { bookings: number; requests: number; payments: number; pending: boolean; operatorIdentityRetained: boolean; expiresAt: number; confirmation: string };
 type Receipt = { operatorIdentityRetained: boolean; id: string; bookings: number; requests: number; completedAt: string | null; localComplete: boolean; calendarCleanup: string; calendarFailures: (string | null)[];
-  savedCardsDetached: number; savedCardFailures: number; stripeCustomersRetained: number | null; stripeCustomersNotice: string | null };
+  savedCardsDetached: number; savedCardFailures: number; stripeCustomersRetained: number | null; stripeCustomersNotice: string | null; stripeSessionsRetained: number | null };
 
 export function PersonErasureCard() {
   const errorId = useId();
@@ -65,6 +65,7 @@ export function PersonErasureCard() {
     {preview ? <div className="mt-4 rounded-[14px] border border-danger-line bg-danger-wash p-4 text-ink">
       {preview.pending ? <p role="status" className="mb-2">An earlier erasure is incomplete. New matching records are held; confirm below to finish the remaining work.</p> : null}
       <p role="status">{preview.bookings} bookings and {preview.requests} requests match this email.</p>
+      {preview.payments ? <p className="mt-2">{preview.payments} pending Checkout {preview.payments === 1 ? "payment" : "payments"} will be closed before erasure. Any captured payment is refunded first.</p> : null}
       {preview.operatorIdentityRetained ? <p className="mt-2">The associated operator identity and sign-in access will be retained. This erases their matching invitee records. Remove an operator separately in Operator access; self-removal and protected-owner holds still apply.</p> : null}
       <p className="mt-2 text-sm">This action is permanent. Downloaded copies cannot be recalled. Use a current archive for future restores.</p>
       <div className="mt-3 flex flex-wrap gap-3">
@@ -79,6 +80,7 @@ export function PersonErasureCard() {
       <p>Calendar cleanup: {receipt.calendarCleanup}.</p>
       {receipt.savedCardsDetached || receipt.savedCardFailures ? <p>Saved cards: {receipt.savedCardsDetached} detached at Stripe, {receipt.savedCardFailures} not detached.</p> : null}
       {receipt.stripeCustomersRetained ? <p>Stripe customers kept: {receipt.stripeCustomersRetained}. {receipt.stripeCustomersNotice}</p> : null}
+      {receipt.stripeSessionsRetained ? <p>Stripe Checkout sessions kept: {receipt.stripeSessionsRetained}.</p> : null}
       {receipt.calendarFailures.length ? <p>Calendar cleanup needs attention: {receipt.calendarFailures.join(", ")}</p> : null}
       {receipt.calendarCleanup !== "completed" ? <Button type="button" variant="secondary" className="mt-3" disabled={working} onClick={() => void refresh()}>Refresh cleanup status</Button> : null}
     </div> : null}

@@ -90,6 +90,12 @@ export class MovementsRepository {
   }
 
   /** Persist the remote identity before any finalization call can lose its response. */
+  async attachCustomer(id: string, customerId: string) {
+    await this.db.prepare("UPDATE payment_movements SET stripe_customer_id=?, stripe_customer_observed=1, updated_at=? WHERE id=? AND (stripe_customer_id IS NULL OR stripe_customer_id=?)").bind(customerId, nowIso(), id, customerId).run();
+  }
+
+  async customerRefused(id: string) { await this.db.prepare("UPDATE payment_movements SET stripe_customer_observed=1 WHERE id=? AND stripe_customer_id IS NULL").bind(id).run(); }
+
   async attachInvoiceDraft(id: string, invoiceId: string) {
     await this.db.prepare("UPDATE payment_movements SET invoice_id=?, updated_at=? WHERE id=? AND status='pending' AND invoice_id IS NULL").bind(invoiceId, nowIso(), id).run();
   }

@@ -73,10 +73,10 @@ export class ErasureRepository {
  * (the customer Checkout created for a saved card, and the one each invoice created), read before the rows go. Dial
  * does not ask Stripe to delete them, so they stay in the host's Stripe account. */
 function stripeCustomerCount(bookingId: string, email: string): ErasureStatement {
-  return { sql: `UPDATE person_erasure_receipts SET stripe_customers_retained = COALESCE(stripe_customers_retained, 0)
+  return { sql: `UPDATE person_erasure_receipts SET stripe_customers_retained = CASE WHEN stripe_customers_retained IS NULL OR EXISTS(SELECT 1 FROM payment_movements WHERE booking_id=? AND kind='invoice' AND stripe_customer_observed=0) THEN NULL ELSE stripe_customers_retained
       + (SELECT count(*) FROM booking_card_consents WHERE booking_id = ? AND stripe_customer_id IS NOT NULL)
-      + (SELECT count(*) FROM payment_movements WHERE booking_id = ? AND kind = 'invoice')
-    WHERE id = (SELECT receipt_id FROM person_erasure_locks WHERE email = ?) AND EXISTS (SELECT 1 FROM bookings WHERE id = ?)`, params: [bookingId, bookingId, email, bookingId] };
+      + (SELECT count(DISTINCT stripe_customer_id) FROM payment_movements WHERE booking_id = ? AND kind = 'invoice') END
+    WHERE id = (SELECT receipt_id FROM person_erasure_locks WHERE email = ?) AND EXISTS (SELECT 1 FROM bookings WHERE id = ?)`, params: [bookingId, bookingId, bookingId, email, bookingId] };
 }
 
 /** The detach outcome joins the anonymized audit and, inside a person erasure, its receipt. When Stripe could not

@@ -46,9 +46,12 @@ export class InvoiceService {
     await this.movements.insert([{ bookingId, kind: "invoice", amountCents: priceCents + taxCents, taxCents, taxSummary: tax?.summary ?? null, actorType: "operator", actorId: operatorId, reason: "Invoice instead of upfront payment", accountId: live.accountId, sourceRef: null, idempotencyKey: key }]);
     const movement = (await this.movements.byKey(key))!;
     const businessName = settings.businessName ?? settings.hostName ?? "Dial";
+    let customerCreated = false;
     try {
       const customer = await live.api.createCustomer(live.accountId, { email: booking.inviteeEmail, name: booking.inviteeName.slice(0, 200), "metadata[dial_booking_id]": bookingId,
         ...(address ? { "address[line1]": address.line1, ...(address.line2 ? { "address[line2]": address.line2 } : {}), "address[city]": address.city, "address[state]": address.state, "address[postal_code]": address.postalCode, "address[country]": address.country } : {}) }, `dial-invoice-${movement.id}-customer`);
+      customerCreated = true;
+      await this.movements.attachCustomer(movement.id, customer.id);
       const draft = await live.api.createInvoice(live.accountId, { customer: customer.id, collection_method: "send_invoice", days_until_due: String(dueInDays), auto_advance: "false", description: `${booking.eventTitle} with ${businessName}`.slice(0, 500),
         "metadata[dial_movement_id]": movement.id, "metadata[dial_booking_id]": bookingId }, `dial-invoice-${movement.id}-invoice`);
       await this.movements.attachInvoiceDraft(movement.id, draft.id);
@@ -61,7 +64,10 @@ export class InvoiceService {
       return { kind: "issued" as const, invoice: view((await this.movements.get(movement.id))!) };
     } catch (error) {
       // A definite refusal is recorded; a lost response stays pending, and issuing again resumes with the same keys.
-      if (error instanceof StripeApiError && error.status >= 400 && error.status < 500 && error.status !== 409 && error.status !== 429) await this.movements.fail(movement.id, error.code);
+      if (error instanceof StripeApiError && error.status >= 400 && error.status < 500 && error.status !== 409 && error.status !== 429) {
+        if (!customerCreated) await this.movements.customerRefused(movement.id);
+        await this.movements.fail(movement.id, error.code);
+      }
       return { kind: "failed" as const, reason: error instanceof StripeApiError ? error.code : "stripe_unavailable" };
     }
   }

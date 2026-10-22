@@ -3,6 +3,8 @@ import { createHmac, randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { evidencePath } from "../../scripts/evidence-path.mjs";
 import { bookingMail, textBody } from "./mail-contracts.mjs";
+import { cancellationProbes } from "./payment-cancellation-probes.mjs";
+import { paymentErasureProbes } from "./payment-erasure-probes.mjs";
 
 // PAY-003 through the public and operator doors, with Stripe synthetic at the HTTP edge (tests/booking-wire/stripe-wire.ts).
 // The webhook signing secret is the synthetic test value in worker.wrangler.toml.
@@ -239,13 +241,8 @@ assert.equal((await (await call(`/api/public/payments/balance/${balanceF}`, {}, 
 assert.equal(await invoiceRefusal(bookingF.id), "booking_cancelled", "a cancelled booking cannot be invoiced");
 const mailF = await cancelMail(bookingF.id, "frank@dial.test");
 assert.ok(mailF.includes("refunds everything paid, $25.00 USD") && mailF.includes("No fee is charged") && mailF.includes("The balance is no longer due"), "the cancellation mail states the full refund, no fee and the void");
-// A balance Stripe captured before the expiry reached it is recorded and refunded in full, once.
-const lateBalance = stripeEvent("checkout.session.completed", await data("/__fixtures/payments/pay", { sessionId: openBalanceF }));
-await webhook(lateBalance); await webhook(lateBalance);
-snap = await state();
-assert.deepEqual(movementsOf(snap, bookingF.id), [["balance", "succeeded", 7500, "invitee", null], ["refund", "succeeded", 2500, "operator", null], ["refund", "succeeded", 7500, "policy", null]], "a late balance is recorded and refunded once");
-assert.deepEqual((await data(`/api/public/manage/${manageF}`)).payment.refundedCents, 10000);
-checks.push("an operator cancelling a paid deposit booking refunds the $25 deposit in full once with no fee, expires the open balance Checkout and refuses the balance link and an invoice; a balance Stripe captured before the expiry is recorded and refunded once; the mail states the refund, no fee and the void");
+// Captures racing cancellation are exercised below while the Session is still open at Stripe.
+checks.push("an operator cancelling a paid deposit booking refunds the $25 deposit in full once with no fee, expires the open balance Checkout and refuses the balance link and an invoice; the mail states the refund, no fee and the void");
 
 // The operator may refund less, or nothing, only with a reason, which the invitee's mail states.
 const heldG = await hold("coaching", await slot("coaching", day(15)), "gina@dial.test", "Gina Partial", true);
@@ -398,7 +395,7 @@ await probe("lost invoice finalization response", async () => {
   assert.equal(after.movements.filter(row => row.kind === "refund").length, 1);
 });
 await data("/wire/control", { name: "stripe-finalize-response-lost", value: 0 });
-assert.deepEqual(probeFailures, [], "all money source-review probes pass");
+await cancellationProbes({ data, call, state, hold, complete, slot, day, webhook, stripeEvent, sessionOf, deliver, coaching });
 
 // Erasing a payer asks Stripe to detach the saved card, removes references and consent, and keeps amounts in the anonymized audit.
 const preview = await data("/api/app/privacy/preview", { email: "avery@dial.test" });
@@ -412,6 +409,9 @@ for (const detail of ["avery@dial.test", "Avery Deposit", consentA.stripe_paymen
 const audit = snap.anonymized_audit.filter(row => row.entity_kind === "payment").map(row => [row.action, row.amount_cents]).sort();
 assert.deepEqual(audit, [["balance:succeeded", 7500], ["deposit", 2500], ["refund:succeeded", 2500], ["refund:succeeded", 7500], ["saved_card_detached", null]], "amounts and Stripe references survive anonymized");
 checks.push("erasing a payer detaches the saved card at Stripe, deletes consent, card references and movements with the booking, and keeps each amount and Stripe reference in the anonymized audit; the receipt counts the detached card");
+
+await paymentErasureProbes({ data, call, state, hold, slot, day, webhook, stripeEvent, coaching, probe });
+assert.deepEqual(probeFailures, [], "all money source-review probes pass");
 
 // Fail closed: with the connection deauthorized, refunds and fees are refused and an automatic refund is recorded failed, never done.
 const heldE = await hold("coaching", await slot("coaching", day(12)), "erin@dial.test", "Erin Closed", true);

@@ -12,6 +12,7 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  'core/0074_payment_erasure.sql': (table,row) => table==='payment_movements'?{...row,stripe_customer_id:null,stripe_customer_observed:0}:table==='person_erasure_receipts'?{...row,stripe_sessions_retained:null}:table==='anonymized_audit'?{...row,reason:null}:row,
   'core/0073_booking_approval_requests.sql': (table,row) => table==='event_types'?{...row,approval_required:0,approval_window_hours:24}:row,
   'core/0072_invitee_guests.sql': (table,row) => ['event_types','bookings'].includes(table) ? {...row,guest_limit:0} : row,
   // D7: an older erasure receipt never counted the payer's Stripe customers; NULL says so.
