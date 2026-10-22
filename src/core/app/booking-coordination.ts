@@ -21,6 +21,8 @@ export async function bookingMutationTarget(request: Request, env: AppBindings) 
   if (annotation) return annotation[1] === "booking" ? annotation[2] : `request:${annotation[2]}`;
   const requestTarget = /^\/api\/app\/availability-requests\/([^/]+)(?:\/|$)/.exec(path);
   if (requestTarget) return `request:${requestTarget[1]}`;
+  const approval = /^\/api\/app\/booking-approvals\/([^/]+)\/decision$/.exec(path);
+  if(approval)return (await env.DB.prepare("SELECT booking_id AS id FROM booking_approval_requests WHERE id=?").bind(approval[1]).first<{id:string}>())?.id;
   const operator = /^\/api\/app\/(?:bookings|erasures)\/([^/]+)(?:\/|$)/.exec(path);
   if (operator) return operator[1];
   // PAY-003: a balance link's Checkout is opened under its booking's coordinator, so two clicks share one session.
@@ -85,4 +87,9 @@ export async function forwardBookingRequest(env: AppBindings, bookingId: string,
 export async function processDueRescheduleRequests(env: AppBindings) {
   const requests = await new BookingsRepository(env.DB).requests.due(new Date().toISOString());
   for (const request of requests) await forwardBookingRequest(env,request.bookingId,new Request("http://coordinator.internal/__reschedule-request",{method:"POST",body:JSON.stringify(request)}));
+}
+
+export async function processDueApprovalRequests(env:AppBindings){
+  const requests=await new BookingsRepository(env.DB).approvals.due();
+  for(const request of requests)await forwardBookingRequest(env,request.bookingId,new Request("http://coordinator.internal/__approval-expiry",{method:"POST",body:JSON.stringify({id:request.id})}));
 }

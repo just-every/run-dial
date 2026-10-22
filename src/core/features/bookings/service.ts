@@ -1,3 +1,5 @@
+import { ApprovalService } from "./approval-service";
+import type { ApprovalSettings } from "./approvals";
 import { guestNotice, normalizedGuests } from "./guests";
 import type { BookingLinksService } from "../booking-links";
 import { resolveBookingLocation } from "../event-types";
@@ -21,7 +23,7 @@ import { hostDateForInstant } from "../availability";
 import { BookingsRepository } from "./repository";
 import { reconcileCalendarChange, type CalendarReconciliationChange } from "./calendar-reconciliation";
 import { ManageCapabilityService } from "./manage-capability";
-import type { BookingConfirmation, BookingEmail, BookingNonce, BookingRecord } from "./types";
+import type { BookingClaim, BookingConfirmation, BookingEmail, BookingNonce, BookingRecord } from "./types";
 import { validateInvitee } from "./types";
 import { bookingIcs, initialBookingIcs } from "./calendar-file";
 import { reconcileDeletionProbe, type DeletionReconciliationDependencies } from "./deletion-reconciliation";
@@ -42,6 +44,7 @@ export type BookingSelectionResult =
   | { kind: "policy_blocked"; reason?: string }
   | { kind: "payments_unavailable"; reason: string };
 export type BookingConfirmationResult =
+  | { kind: "approval_required"; approval: { url:string; expiresAt:string } }
   | { kind: "created"; booking: BookingConfirmation }
   | { kind: "replayed"; booking: BookingConfirmation }
   | { kind: "invalid_nonce" | "expired_nonce" | "slot_invalid" | "calendar_unavailable" | "invalid_answers" | "payload_mismatch" | "slot_taken" | "blocked" | "invalid_duration" | "card_consent_required" | "billing_address_required" }
@@ -54,6 +57,7 @@ export type PublicSelectionLookupResult =
     selection: {
       nonce: string;
       guestLimit: number;
+      approval?: {windowHours:number};
       expiresAt: string;
       selection: { startAt: string; endAt: string; hostTimezone: string; inviteeTimezone: string };
       event: ReturnType<typeof toPublicEventType>;
@@ -64,6 +68,7 @@ export type PublicSelectionLookupResult =
   | { kind: "not_found" | "expired" };
 
 export class BookingsService {
+  private readonly approvals:ApprovalService;
   constructor(
     private readonly repository: BookingsRepository,
     private readonly availability: AvailabilityService,
@@ -73,7 +78,14 @@ export class BookingsService {
     private readonly deletions: Pick<DeletionReconciliationDependencies, "inspect" | "probes">,
     private readonly bookingLinks?: BookingLinksService,
     private readonly payments?: PaymentsService,
-  ) {}
+  ) { this.approvals=new ApprovalService({repository,availability,profiles,eventTypes,runtime,payments,confirmationEmails:input=>this.confirmationEmails(input),toConfirmation:(booking,profile,token)=>this.toConfirmation(booking,profile,token)}); }
+
+  async approvalSettings(eventId:string){return this.approvals.settings(eventId);}
+  async saveApprovalSettings(eventId:string,input:ApprovalSettings){return this.approvals.saveSettings(eventId,input);}
+  async pendingApprovals(){return this.approvals.pending();}
+  async dueApprovals(){return this.approvals.due();}
+  async expireApproval(id:string){return this.approvals.expire(id);}
+  async decideApproval(id:string,operatorId:string,decision:"approve"|"decline",reason?:string){return this.approvals.decide(id,operatorId,decision,reason);}
 
   async guestSettings(eventId: string) { return await this.eventTypes.getEventType(eventId) ? { guestLimit: await this.repository.guests.limit(eventId) } : undefined; }
   async saveGuestSettings(eventId: string, guestLimit: number) { return this.repository.guests.saveLimit(eventId,guestLimit); }
@@ -128,6 +140,7 @@ export class BookingsService {
       selection: {
         nonce: input.nonce,
         guestLimit: await this.repository.guests.limit(event.event.id),
+        ...((await this.repository.approvals.settings(event.event.id)).required ? {approval:{windowHours:(await this.repository.approvals.settings(event.event.id)).windowHours}} : {}),
         expiresAt: nonce.expiresAt,
         selection: { startAt: nonce.selectionStartAt, endAt: nonce.selectionEndAt, hostTimezone: profile.timezone, inviteeTimezone: nonce.inviteeTimezone },
         event: toPublicEventType({ ...event.event, durationMinutes: selectedDuration }),
@@ -154,6 +167,7 @@ export class BookingsService {
     if (nonce.consumedAt) {
       if (nonce.payloadHash !== payloadHash) return { kind: "payload_mismatch" };
       const booking = await this.repository.getByConsumedNonce(nonce);
+      if (!booking) { const approval=await this.repository.approvals.forNonce(nonce.id); if(approval)return {kind:"approval_required",approval:{url:new URL(`/manage/${await this.approvals.token(input.nonce)}`,this.runtime.APP_URL).toString(),expiresAt:approval.expiresAt}}; }
       if (!booking) return (this.payments ? await paidReplay(this.payments, this.runtime, nonce.id, input.nonce, input.handle, input.slug) : undefined) ?? { kind: "invalid_nonce" };
       return { kind: "replayed", booking: await this.toInitialConfirmation(booking, profile, await this.replayManageToken(nonce.id, input.nonce)) };
     }
@@ -202,6 +216,7 @@ export class BookingsService {
     };
     const quote = await this.payments?.quote(event.id, selectedDuration);
     if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
+    if (quote && (await this.repository.approvals.settings(event.id)).required) return {kind:"payments_unavailable",reason:"approval_payments_not_supported"};
     // PAY-003: a fee-bearing event needs the invitee's explicit consent to the stated amounts before anything is held.
     if (quote?.saveCard && !(input.cardConsent?.accepted === true && input.cardConsent.version === cardConsentVersion(quote.snapshot))) return { kind: "card_consent_required" };
     if (quote && this.payments) {
@@ -214,7 +229,7 @@ export class BookingsService {
     const manageToken = await this.managedTokenFromNonce(input.nonce);
     const manageTokenHash = await hashToken(manageToken, this.runtime.SESSION_SECRET);
     const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired });
-    const claim = await this.repository.claim({
+    const claimInput: BookingClaim = {
       attribution,
       postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution }),
       bookingId,
@@ -235,7 +250,15 @@ export class BookingsService {
       now,
       calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, lockedTimezone: event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
       emails,
-    });
+    };
+    const approvalSettings=await this.repository.approvals.settings(event.id);
+    if(approvalSettings.required){
+      const token=await this.approvals.token(input.nonce),url=new URL(`/manage/${token}`,this.runtime.APP_URL).toString();
+      const expiry=new Date(Math.min(Date.parse(selection.slot.startAt),Date.now()+approvalSettings.windowHours*3600000)).toISOString();
+      const pending=await this.repository.approvals.hold(claimInput,await hashToken(token,this.runtime.SESSION_SECRET),approvalSettings.windowHours,await this.approvals.emails({title:event.title,startAt:selection.slot.startAt,endAt:selection.slot.endAt,expiresAt:expiry,inviteeName:invitee.name,inviteeEmail:invitee.email,publicUrl:url},"pending"));
+      return pending?{kind:"approval_required",approval:{url,expiresAt:pending.expiresAt}}:{kind:"slot_taken"};
+    }
+    const claim = await this.repository.claim(claimInput);
     if (claim === "blocked" || claim === "slot_taken") {
       return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: claim };
     }
@@ -270,7 +293,7 @@ export class BookingsService {
 
   async getManageBooking(token: string) {
     const result = await this.repository.findManageToken(await hashToken(token, this.runtime.SESSION_SECRET), nowIso());
-    if (!result) return { kind: "not_found" as const };
+    if (!result) { const approval=await this.repository.approvals.byToken(await hashToken(token,this.runtime.SESSION_SECRET)); return approval ? this.approvals.confirmation(approval,token) : {kind:"not_found" as const}; }
     if (result.status !== "active") return { kind: "expired" as const };
     const profile = await this.profiles.getProfile();
     if (!profile) return { kind: "not_found" as const };

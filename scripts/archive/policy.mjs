@@ -15,7 +15,7 @@ export const exported = [
   'availability_date_override_windows', 'calendar_connections', 'calendar_connection_calendars', 'calendar_connection_health_changes',
   'provider_connection_health', 'calendar_busy_intervals', 'calendar_busy_read_windows',
   'delivery_outbox', 'delivery_attempts', 'provider_webhook_events', 'operator_delivery_preferences',
-  'bookings', 'booking_guests', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_request_history', 'booking_reschedule_requests', 'booking_attendance', 'booking_presentation', 'booking_correspondence',
+  'bookings', 'booking_approval_requests', 'booking_guests', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_request_history', 'booking_reschedule_requests', 'booking_attendance', 'booking_presentation', 'booking_correspondence',
   'blocked_address_rules', 'availability_requests', 'availability_request_windows', 'embed_allowed_origins',
   'booking_calendar_conflicts', 'booking_links', 'anonymized_audit', 'erased_calendar_targets', 'calendar_deletion_probes',
   'oc_owner_claims', 'operator_setup_identity', 'operator_mail_invocations', 'oa_operators', 'oa_bootstrap', 'base_mail_dispatch',
@@ -60,6 +60,7 @@ export function canonicalRow(name, source, secrets = []) {
   // is removed too, which is the pairing import checks.
   if (name === 'operators' && row.normalized_email.endsWith('@dev.localhost')) row.removed_at ??= row.updated_at;
   if (name === 'availability_requests') row.nonce_hash = `restored:${source.id}`;
+  if(name==='booking_approval_requests') { row.claim_json=null; if(row.state==='pending'){row.state='expired';row.reason='Restored historical request; create a fresh request to reserve a time.';} }
   if (name === 'delivery_outbox') {
     const payload = parseJsonText(row.payload_json);
     row.payload_json = JSON.stringify({ ...payload, archiveHistorical: true });

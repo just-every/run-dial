@@ -65,6 +65,8 @@ const attendanceSchema = z.object({ status: z.enum(["attended", "no_show"]), not
 
 /** Session-gated lifecycle endpoints. Booking IDs and delivery detail never cross this boundary. */
 export const bookingOperatorRoutes = new Hono<AppEnvironment>()
+  .get("/api/app/booking-approvals",async context=>context.json(await context.get("services").bookings.pendingApprovals()))
+  .post("/api/app/booking-approvals/:id/decision",validate("param",bookingIdSchema),validate("json",z.object({decision:z.enum(["approve","decline"]),reason:z.string().trim().max(500).optional()}).strict()),async context=>{const result=await context.get("services").bookings.decideApproval(context.req.valid("param").id,context.get("session").id,context.req.valid("json").decision,context.req.valid("json").reason);return result.kind==="approved"||result.kind==="declined"?context.json(result):apiError(context,result.kind==="not_found"?404:409,result.kind,"This request cannot be approved. Its deadline, event settings or availability may have changed.");})
   .post("/api/app/bookings/:id/reschedule-request", validate("param", bookingIdSchema), validate("json", z.object({ message:z.string().trim().max(1000).default(""),releaseTime:z.boolean(),expiresInDays:z.number().int().min(1).max(30).default(14),reminderHours:z.number().int().min(1).max(168).nullable().default(null) }).strict()), async context=> {
     const result=await context.get("services").bookings.requestReschedule(context.req.valid("param").id,context.get("session").id,context.req.valid("json"));
     if(result.kind==="created") return context.json(result.booking);

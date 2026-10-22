@@ -70,7 +70,9 @@ contract('DATA-001', 'a backup made by the listed release restores through rer i
         assert.deepEqual(actual, expected, `${label}: every archived value: ${table.name}`);
         // Columns added after the backup (0062) hold their default for restored rows.
         for (const column of columns.filter(name => !archived.includes(name))) {
-          const defaultValue = ['event_types', 'bookings'].includes(table.name) && column === 'guest_limit' ? 0 : null;
+          const defaultValue = ['event_types', 'bookings'].includes(table.name) && column === 'guest_limit' ? 0
+            : table.name === 'event_types' && column === 'approval_required' ? 0
+              : table.name === 'event_types' && column === 'approval_window_hours' ? 24 : null;
           assert.equal((await DB.prepare(`SELECT count(*) AS n FROM ${quote(table.name)} WHERE ${quote(column)} IS NOT ?`).bind(defaultValue).first()).n, 0, `${label}: ${table.name}.${column} has its additive default`);
         }
         rows += expected.length;

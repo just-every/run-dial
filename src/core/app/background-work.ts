@@ -3,7 +3,7 @@ import type { AppServices } from "./services";
 import { parseRuntimeEnvironment } from "../shared/runtime-env";
 import { isPlatformHealthJob } from "../platform/health";
 import { PublicAdmissionGate } from "../platform/public-admission";
-import { processCoordinatedDelivery, processDueCalendarDeletionProbes, processDueRescheduleRequests } from "./booking-coordination";
+import { processCoordinatedDelivery, processDueCalendarDeletionProbes, processDueRescheduleRequests, processDueApprovalRequests } from "./booking-coordination";
 
 /** The Worker's Queue handler: every delivery job runs under its booking's coordinator. */
 export async function consumeJobs(batch: MessageBatch<unknown>, env: AppBindings, services: AppServices) {
@@ -20,6 +20,7 @@ export async function consumeJobs(batch: MessageBatch<unknown>, env: AppBindings
 /** The Worker's Cron handler: connection health and alerts (its healthy check also times the next connection probe), calendar sync and channel renewal, due deliveries. */
 export async function runScheduledWork(env: AppBindings, services: AppServices) {
   await processDueRescheduleRequests(env);
+  await processDueApprovalRequests(env);
   // PAY-001: end payment windows by expiring their Checkout Sessions, then free the slots.
   await services.payments.sweepExpiredHolds();
   // PAY-003: re-send, with the same idempotency key, any refund or fee whose Stripe call was cut off.

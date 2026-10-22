@@ -30,6 +30,8 @@ export const applicationTables = [
   "booking_search_casefold",
   "bookings",
   "booking_guests",
+  "booking_approval_requests",
+  "booking_approval_tokens",
   "calendar_busy_intervals",
   "calendar_busy_read_windows",
   "calendar_connection_calendars",

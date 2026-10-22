@@ -42,6 +42,7 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  booking_approval_tokens: 'Live approval request capabilities; restored requests are historical and never reserve time',
   oa_auth_audit: 'Installation-local authentication audit; never restore source identity authority',
   oa_credentials: 'Live credential authority; recreate at the destination',
   oa_provider_sessions: 'Live provider sessions; sign in at the destination',

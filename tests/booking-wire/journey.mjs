@@ -1,3 +1,4 @@
+import { approvalJourney } from "./approval-journey.mjs";
 import { guestJourney } from "./guest-journey.mjs";
 import { offeredTimesJourney } from "./offered-times-journey.mjs";
 import { rescheduleRequestJourney } from "./reschedule-request-journey.mjs";
@@ -228,6 +229,7 @@ await rescheduleRequestJourney({ data, call, state, deliver, future, checks });
 await bookingLinksJourney({ data, call, state, deliver, future, checks });
 await offeredTimesJourney({data,call,future,checks});
 await guestJourney({data,call,state,deliver,future,checks});
+await approvalJourney({data,call,state,deliver,future,checks});
 await data("/wire/ambiguous", {});
 await book(12); await deliver(); snap = await state();
 assert.ok(snap.base_mail_dispatch.some(row => row.state === "uncertain"));
