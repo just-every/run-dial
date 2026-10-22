@@ -15,7 +15,7 @@ export const exported = [
   'availability_date_override_windows', 'calendar_connections', 'calendar_connection_calendars', 'calendar_connection_health_changes',
   'provider_connection_health', 'calendar_busy_intervals', 'calendar_busy_read_windows',
   'delivery_outbox', 'delivery_attempts', 'provider_webhook_events', 'operator_delivery_preferences',
-  'bookings', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_request_history', 'booking_reschedule_requests', 'booking_attendance', 'booking_presentation', 'booking_correspondence',
+  'bookings', 'booking_guests', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_request_history', 'booking_reschedule_requests', 'booking_attendance', 'booking_presentation', 'booking_correspondence',
   'blocked_address_rules', 'availability_requests', 'availability_request_windows', 'embed_allowed_origins',
   'booking_calendar_conflicts', 'booking_links', 'anonymized_audit', 'erased_calendar_targets', 'calendar_deletion_probes',
   'oc_owner_claims', 'operator_setup_identity', 'operator_mail_invocations', 'oa_operators', 'oa_bootstrap', 'base_mail_dispatch',

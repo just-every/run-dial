@@ -31,6 +31,7 @@ export async function duplicateEvent(binding: D1Database, id: string): Promise<s
       booking_start_date, booking_end_date, before_buffer_minutes, after_buffer_minutes, host_day_booking_limit, post_booking_redirect_json,
       ?, ? FROM event_types WHERE id = ? AND updated_at = ? RETURNING id
   `).bind(duplicateId, slug, title, timestamp, timestamp, id, source.updated_at)];
+  statements.push(binding.prepare("UPDATE event_types SET guest_limit=(SELECT guest_limit FROM event_types WHERE id=?) WHERE id=?").bind(id,duplicateId));
   const guard = "AND EXISTS (SELECT 1 FROM event_types WHERE id = ?)";
   statements.push(binding.prepare(`INSERT INTO event_schedule_bindings (event_type_id,schedule_id,created_at,updated_at) SELECT ?,schedule_id,?,? FROM event_schedule_bindings WHERE event_type_id=? ${guard}`).bind(duplicateId, timestamp, timestamp, id, duplicateId));
   statements.push(binding.prepare(`INSERT INTO booking_limit_policies (scope,limits_json,created_at,updated_at) SELECT ?,limits_json,?,? FROM booking_limit_policies WHERE scope=? ${guard}`).bind(duplicateId, timestamp, timestamp, id, duplicateId));

@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { DatabaseSync } from 'node:sqlite';
 import { contract } from './contract.mjs';
 import { fixture, testPlatform } from './archive/fixture.mjs';
 import { createArchive } from './archive/artifact.mjs';
 import { captures, operators, request, runtime, token } from './archive/auth.mjs';
-import { schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
+import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
 
@@ -17,6 +18,29 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.ok(Object.hasOwn(excluded, 'rer_mail_development_outbox'));
     assert.ok(!names.includes('development_magic_link_sink'));
     assert.deepEqual(source.db.prepare('PRAGMA table_info(oa_invitation_cancellations)').all().map(row => row.name), ['operator_id', 'operator_version']);
+    // EVENT-009: a populated prior-schema database receives only additive defaults and an empty guest table.
+    const prior = new DatabaseSync(':memory:');
+    try {
+      const migrations=await migrationFiles(),guestMigration=migrations.find(row=>row.file==='core/0072_invitee_guests.sql');
+      for(const migration of migrations.filter(row=>row!==guestMigration))prior.exec(migration.sql);
+      prior.exec('PRAGMA foreign_keys=OFF');
+      const priorTriggers=prior.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger'").all();
+      for(const trigger of priorTriggers)prior.exec(`DROP TRIGGER "${trigger.name}"`);
+      const before={};
+      for(const {name} of prior.prepare(tableQuery).all()) {
+        if(name==='sqlite_sequence')continue;
+        const columns=prior.prepare(`PRAGMA table_info("${name}")`).all().map(row=>row.name);
+        const rows=source.db.prepare(`SELECT ${columns.map(column=>`"${column}"`).join(',')} FROM "${name}"`).all();
+        prior.exec(`DELETE FROM "${name}"`);
+        for(const row of rows)prior.prepare(`INSERT INTO "${name}" (${columns.map(column=>`"${column}"`).join(',')}) VALUES (${columns.map(()=>'?').join(',')})`).run(...columns.map(column=>row[column]));
+        before[name]={columns,rows};
+      }
+      for(const trigger of priorTriggers)prior.exec(trigger.sql);
+      prior.exec(guestMigration.sql);
+      for(const [name,{columns,rows}] of Object.entries(before))assert.deepEqual(prior.prepare(`SELECT ${columns.map(column=>`"${column}"`).join(',')} FROM "${name}"`).all(),rows,`${name}: guest migration preserves prior rows`);
+      for(const name of ['event_types','bookings'])assert.ok(prior.prepare(`SELECT guest_limit FROM ${name}`).all().every(row=>row.guest_limit===0),'existing rows keep guests disabled');
+      assert.equal(prior.prepare('SELECT count(*) AS n FROM booking_guests').get().n,0);
+    } finally { prior.close(); }
     const archive = await createArchive(testPlatform(source.db));
     for (const table of archive.tables) {
       if (table.name === "operator_erasure_subjects") assert.equal(table.rows.length, 0, "unfinished operator erasure cannot be archived");
@@ -42,7 +66,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.deepEqual(await createArchive(destination), archive);
     assert.equal(target.db.prepare('SELECT browser_timezone FROM availability_requests').get().browser_timezone, 'America/Los_Angeles', 'AVAIL-012 request browser zone survives the public archive round trip');
     assert.equal(target.db.prepare('SELECT browser_timezone FROM booking_presentation').get().browser_timezone, 'America/New_York', 'AVAIL-012 booking preserves its independent invitee observation');
-    for (const table of ['payment_connections', 'event_type_prices', 'booking_payments']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-001 ${table} survives the archive round trip`);
+    for (const table of ['booking_guests', 'payment_connections', 'event_type_prices', 'booking_payments']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-001 ${table} survives the archive round trip`);
     assert.ok(!archive.tables.some(table => ['payment_holds', 'payment_oauth_states'].includes(table.name)), 'PAY-001 live holds and OAuth state never travel');
     for (const table of ['event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements', 'payment_settings']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-003 ${table} survives the archive round trip`);
     assert.ok(!archive.tables.some(table => table.name === 'payment_link_tokens'), 'PAY-003 balance-link capabilities never travel');

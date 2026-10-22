@@ -5,7 +5,7 @@ import type { BookingEmail } from "./types";
 
 export function cancellationOutboxStatements(binding: D1Database, bookingId: string, emails: BookingEmail[], now: string) {
   return emails.map((email) => {
-    if (!email.html || email.mailTemplate?.kind !== "booking-cancellation") throw new Error("Cancellation mail is missing its shared layout template");
+    if (!email.guest && (!email.html || email.mailTemplate?.kind !== "booking-cancellation")) throw new Error("Cancellation mail is missing its shared layout template");
     const admission = operatorRecipientAdmission(email);
     return binding.prepare(`INSERT INTO delivery_outbox (id, kind, idempotency_key, booking_id, occurrence_id, request_id, payload_json, state, attempts, next_attempt_at, created_at, updated_at)
     SELECT ?, 'mail_send', ? || occurrence.id || ':mail:cancel:' || ?, booking.id, occurrence.id, NULL, ?,

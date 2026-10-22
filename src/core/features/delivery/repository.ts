@@ -25,6 +25,8 @@ export type DeliveryOutboxRecord = {
 };
 
 export class DeliveryRepository {
+  async guestsEnabled(bookingId: string) { return Boolean((await this.binding.prepare("SELECT guest_limit AS n FROM bookings WHERE id=?").bind(bookingId).first<{n:number}>())?.n); }
+  async guestEmails(bookingId: string) { return (await this.binding.prepare("SELECT email FROM booking_guests WHERE booking_id=? ORDER BY email").bind(bookingId).all<{email:string}>()).results.map(row=>row.email); }
   private readonly db;
   readonly confirmations: ConfirmationDeliveryRepository;
 

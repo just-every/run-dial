@@ -69,6 +69,7 @@ export type ManagedCalendarEvent = {
   endAt: string;
   timeZone: string;
   inviteeEmail: string;
+  guestEmails?: string[];
   requestGoogleMeet: boolean;
 };
 

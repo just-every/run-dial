@@ -40,6 +40,15 @@ export async function recordAddressStatements(db: D1Database, fence: Portability
 
 export async function addressRemainders(db: D1Database, fence: PortabilityFence, email: string, secret: string, aliases: string[] = [email]) {
   const statements = await knownRateStatements(db,fence,secret,aliases);
+  // Remove the external attendee using the same managed event; the dispatch reads remaining guests after deletion.
+  statements.push({sql:`INSERT INTO delivery_outbox(id,kind,idempotency_key,booking_id,occurrence_id,payload_json,state,attempts,next_attempt_at,created_at,updated_at)
+    SELECT lower(hex(randomblob(16))),'calendar_upsert','guest-erasure:'||lower(hex(randomblob(16))),b.id,o.id,
+      json_object('bookingId',b.id,'icalUid',b.ical_uid,'eventTitle',b.event_title,'startAt',o.start_at,'endAt',o.end_at,'hostTimezone',b.host_timezone,'invitee',json_object('name',b.invitee_name,'email',b.invitee_email),'location',b.location_value,'locationType',b.location_type),
+      'pending',0,strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')
+    FROM bookings b JOIN booking_occurrences o ON o.id=b.current_occurrence_id WHERE b.state<>'cancelled' AND b.calendar_required=1 AND EXISTS(SELECT 1 FROM booking_guests g WHERE g.booking_id=b.id AND ${emailFoldSql("g.email")}=?)`,params:[foldEmail(email)]});
+  // Retire selection replay hashes that incorporated the erased guest's submitted address.
+  statements.push(...await deleteRows(db,fence,"booking_nonces",`result_booking_id IN(SELECT booking_id FROM booking_guests WHERE ${emailFoldSql("email")} = ?)`,[foldEmail(email)]));
+  statements.push(...await deleteRows(db,fence,"booking_guests",`${emailFoldSql("email")}=?`,[foldEmail(email)]));
   // The matching account keeps its native authority, but erased invitee audit
   // facts must not retain a bridge back to that identity (including self-erasure).
   statements.push({ sql: `UPDATE anonymized_audit SET actor_id=NULL WHERE actor_id IN (
@@ -49,6 +58,9 @@ export async function addressRemainders(db: D1Database, fence: PortabilityFence,
   statements.push(...await deleteRows(db, fence, "blocked_address_rules", `kind='email' AND ${emailFoldSql("value")}=?`, [foldEmail(email)]));
   const captures=(await db.prepare("SELECT rowid AS row_number,message FROM rer_mail_development_outbox").all<{row_number:number;message:string}>()).results.filter(row=>mailRecipientMatches(row.message,email)).map(row=>row.row_number);
   statements.push(...await deleteRows(db, fence, "rer_mail_development_outbox", "rowid IN (SELECT value FROM json_each(?))", [JSON.stringify(captures)]));
+  // A pending paid booking can carry guests before its booking rows exist. Remove the guest and its unsent notice,
+  // preserving the payer and the money claim; calendar payloads read guests from live rows, never a personal copy.
+  statements.push({sql:`UPDATE payment_holds SET claim_json=json_set(claim_json,'$.invitee.guests',json(COALESCE((SELECT json_group_array(value) FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))<>?), '[]')),'$.emails',json(COALESCE((SELECT json_group_array(json(value)) FROM json_each(claim_json,'$.emails') WHERE lower(trim(json_extract(value,'$.to')))<>?), '[]'))) WHERE claim_json IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))=?)`,params:[email,email,email]});
   // PAY-001: a pending payment hold carries the payer's folded address and pending booking.
   statements.push(...await deleteRows(db, fence, "payment_holds", "invitee_email_folded=?", [foldEmail(email)]));
   statements.push(...await deleteRows(db, fence, "availability_request_review_nonces", `${emailFoldSql("invitee_email")}=? OR (invitee_email IS NULL AND request_id IS NULL)`, [foldEmail(email)]));

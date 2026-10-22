@@ -1,3 +1,4 @@
+import { GuestsRepository } from "./guests";
 import { offeredHoldPredicate } from "../booking-links";
 import { RescheduleRequestsRepository } from "./reschedule-requests";
 import { bookingCorrespondenceStatements } from "./booking-correspondence";
@@ -74,7 +75,8 @@ function operatorBookingWhere(filters: OperatorBookingFilters, now: string) {
 
 export class BookingsRepository {
   readonly requests: RescheduleRequestsRepository;
-  constructor(private readonly binding: D1Database) { this.requests = new RescheduleRequestsRepository(binding); }
+  readonly guests: GuestsRepository;
+  constructor(private readonly binding: D1Database) { this.requests = new RescheduleRequestsRepository(binding); this.guests = new GuestsRepository(binding); }
 
   async createNonce(input: {
     nonceHash: string;
@@ -120,6 +122,7 @@ export class BookingsRepository {
       ).bind(input.occurrenceId, input.bookingId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.bookingId),
       this.binding.prepare("UPDATE bookings SET current_occurrence_id = ? WHERE id = ? AND current_occurrence_id IS NULL").bind(input.occurrenceId, input.bookingId),
       ...bookingCorrespondenceStatements(this.binding, input.bookingId, event.id, input.now),
+      ...this.guests.claimStatements(input),
       ...bookingPresentationStatements(this.binding, input, true),
       ...answerStatements(this.binding, input.bookingId, event.questions, input.invitee.answers, input.now),
       this.binding.prepare(
@@ -196,6 +199,7 @@ export class BookingsRepository {
       ).bind(input.occurrenceId, input.bookingId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, input.now, input.bookingId),
       this.binding.prepare("UPDATE bookings SET current_occurrence_id = ? WHERE id = ? AND current_occurrence_id IS NULL").bind(input.occurrenceId, input.bookingId),
       ...bookingCorrespondenceStatements(this.binding, input.bookingId, event.id, input.now),
+      ...this.guests.claimStatements(input),
       ...bookingPresentationStatements(this.binding, input, false, input.requestId),
       ...answerStatements(this.binding, input.bookingId, event.questions, input.invitee.answers, input.now),
       this.binding.prepare(

@@ -1,3 +1,4 @@
+import { guestNotice, normalizedGuests } from "./guests";
 import type { BookingLinksService } from "../booking-links";
 import { resolveBookingLocation } from "../event-types";
 import { suppressesMail } from "../../platform/mail/development";
@@ -52,6 +53,7 @@ export type PublicSelectionLookupResult =
     kind: "found";
     selection: {
       nonce: string;
+      guestLimit: number;
       expiresAt: string;
       selection: { startAt: string; endAt: string; hostTimezone: string; inviteeTimezone: string };
       event: ReturnType<typeof toPublicEventType>;
@@ -72,6 +74,18 @@ export class BookingsService {
     private readonly bookingLinks?: BookingLinksService,
     private readonly payments?: PaymentsService,
   ) {}
+
+  async guestSettings(eventId: string) { return await this.eventTypes.getEventType(eventId) ? { guestLimit: await this.repository.guests.limit(eventId) } : undefined; }
+  async saveGuestSettings(eventId: string, guestLimit: number) { return this.repository.guests.saveLimit(eventId,guestLimit); }
+  async replaceGuests(token: string, candidate: string[]) {
+    const access=await this.repository.findManageToken(await hashToken(token,this.runtime.SESSION_SECRET),nowIso());
+    if(!access || access.status!=="active")return {kind:"not_found" as const};
+    if(access.booking.state==="cancelled" || Date.parse(access.booking.occurrence.startAt)<=Date.now())return {kind:"closed" as const};
+    const guests=normalizedGuests(candidate,access.booking.inviteeEmail,await this.repository.guests.bookingLimit(access.booking.id));
+    if(!guests)return {kind:"invalid" as const};
+    await this.repository.guests.replace(access.booking,guests);
+    return this.getManageBooking(token);
+  }
 
   async issuePublicSelection(handle: string, slug: string, startAt: string, inviteeTimezone: string, durationMinutes?: number, link?: string): Promise<BookingSelectionResult> {
     if (!isCanonicalIanaTimeZone(inviteeTimezone) || !isIsoInstant(startAt)) return { kind: "invalid_timezone" };
@@ -113,6 +127,7 @@ export class BookingsService {
       kind: "found",
       selection: {
         nonce: input.nonce,
+        guestLimit: await this.repository.guests.limit(event.event.id),
         expiresAt: nonce.expiresAt,
         selection: { startAt: nonce.selectionStartAt, endAt: nonce.selectionEndAt, hostTimezone: profile.timezone, inviteeTimezone: nonce.inviteeTimezone },
         event: toPublicEventType({ ...event.event, durationMinutes: selectedDuration }),
@@ -122,7 +137,7 @@ export class BookingsService {
     };
   }
 
-  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number }): Promise<BookingConfirmationResult> {
+  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number }): Promise<BookingConfirmationResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
@@ -130,7 +145,7 @@ export class BookingsService {
     if (!nonce) return { kind: "invalid_nonce" };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
     const attribution = cleanAttribution(input.attribution);
-    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
+    const payloadHash = await hashPayload({ ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
     const profile = await this.profiles.getPublicProfile(input.handle);
     if (!profile) return { kind: "invalid_nonce" };
     const offer = this.bookingLinks ? await this.bookingLinks.resolve(input.slug, input.link) : undefined;
@@ -154,6 +169,9 @@ export class BookingsService {
     if (requestedDuration !== selectedDuration) return { kind: "invalid_nonce" };
     const invitee = validateInvitee(event, { name: input.name, email: input.email, answers: input.answers });
     if (!invitee) return { kind: "invalid_answers" };
+    const guests = normalizedGuests(input.guests, invitee.email, await this.repository.guests.limit(event.id));
+    if (!guests) return { kind: "invalid_answers" };
+    invitee.guests = guests;
     if (await this.repository.isBlocked(invitee.email)) return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: "blocked" };
     const selection = await this.availability.verifyResolvedPublicSelection(profile, { ...event, ...(offer?.event.bookingLink ? {bookingLink:offer.event.bookingLink} : {}) }, input.startAt, new Date(), undefined, selectedDuration);
     if (selection.kind !== "valid") {
@@ -605,6 +623,7 @@ export class BookingsService {
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     return {
       bookingReference: booking.id,
+      guests: await this.repository.guests.list(booking.id), guestLimit: await this.repository.guests.bookingLimit(booking.id),
       ...(booking.rescheduleRequest ? { rescheduleRequest: booking.rescheduleRequest } : {}),
       ...(booking.lockedTimezone ? { lockedTimezone: booking.lockedTimezone, browserTimezone: booking.browserTimezone ?? null } : {}),
       ...(booking.changePolicy ? { changePolicy: booking.changePolicy } : {}),
@@ -622,7 +641,7 @@ export class BookingsService {
     };
   }
 
-  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]> }; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean; payment?: PaymentMailFacts }): Promise<BookingEmail[]> {
+  private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]>; guests?: string[] }; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean; payment?: PaymentMailFacts }): Promise<BookingEmail[]> {
     const { profile, event, invitee, startAt, endAt, inviteeTimezone, manageToken, bookingId } = input;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     const location = event.locationType === "google_meet" ? "Google Meet link pending" : event.locationValue;
@@ -644,6 +663,7 @@ export class BookingsService {
     };
     return [
       { to: invitee.email, recipientRole: "invitee", messageKind: "confirmation", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), ...calendarFile },
+      ...(invitee.guests ?? []).map(to => guestNotice({ eventTitle: event.title, startAt, endAt, location: event.locationType === "google_meet" ? undefined : event.locationValue }, to, "confirmation")),
       ...operators.map(({ email: to, id, generation }) => ({ to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `New booking: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "operator" }) })),
     ];
   }
@@ -683,7 +703,8 @@ export class BookingsService {
       const inviteeMail = bookingCancellationMail({ ...mailDetails, calendarState: (change.calendarRequired ?? (booking.calendarState !== "not_required")) ? "pending" : "not_required", actor: template.actor, reason: template.reason, recipientRole: "invitee", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
       return [
         { to: booking.inviteeEmail, recipientRole: "invitee" as const, messageKind: "cancellation", subject: inviteeMail.subject, text: inviteeMail.text, html: inviteeMail.html, mailTemplate: template },
-        ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
+        ...(await this.repository.guests.list(booking.id)).map(to => guestNotice({ eventTitle: booking.eventTitle, startAt, endAt, location: booking.meetingUrl ?? booking.locationValue }, to, "cancellation")),
+      ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
           const operatorMail = bookingCancellationMail({ ...mailDetails, calendarState: (change.calendarRequired ?? (booking.calendarState !== "not_required")) ? "pending" : "not_required", actor: template.actor, reason: template.reason, recipientRole: "operator", inviteeName: booking.inviteeName, inviteeEmail: booking.inviteeEmail });
           return { to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: operatorMail.subject, text: operatorMail.text, html: operatorMail.html, mailTemplate: template };
         }),
@@ -692,6 +713,7 @@ export class BookingsService {
     const inviteeMail = bookingChangeHtml({ ...mailDetails, recipientRole: "invitee", ...(inviteeManageUrl ? { manageUrl: inviteeManageUrl } : {}) });
     return [
       { to: booking.inviteeEmail, recipientRole: "invitee", messageKind: "reschedule", changeReason: normalizedReason, subject: `Rescheduled: ${booking.eventTitle}`, text: inviteeMail.text, ...(inviteeManageUrl ? { manageUrl: inviteeManageUrl } : {}), html: inviteeMail.html },
+      ...(await this.repository.guests.list(booking.id)).map(to => guestNotice({ eventTitle: booking.eventTitle, startAt, endAt, location: booking.meetingUrl ?? booking.locationValue }, to, "reschedule")),
       ...(await this.repository.listOperatorRecipients()).map(({ email: to, id, generation }) => {
         const operatorMail = bookingChangeHtml({ ...mailDetails, recipientRole: "operator" });
         return { to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `Rescheduled: ${booking.eventTitle}`, text: operatorMail.text, html: operatorMail.html };

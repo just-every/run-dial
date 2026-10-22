@@ -438,6 +438,12 @@
       "name": "0071_erasure_stripe_customers.sql",
       "sha256": "ab57260599f9afc5e6accf9e7604b6507acc85652a23e358989951cba8911ba0",
       "sql": "-- PAY-003 (D7): a person erasure's receipt counts the Stripe customers Dial created or used for the payer, which stay\n-- in the host's own Stripe account because Dial does not ask Stripe to delete them.\n-- Additive: receipts written before this migration keep NULL, meaning they were never counted.\nALTER TABLE person_erasure_receipts ADD COLUMN stripe_customers_retained INTEGER;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0072_invitee_guests.sql",
+      "sha256": "307732262dc69452d0020fba74bced5b4295ed5f4426e5e6fb43bd7a35d91311",
+      "sql": "-- EVENT-009: guest access is disabled for all existing event types and bookings.\nALTER TABLE event_types ADD COLUMN guest_limit INTEGER NOT NULL DEFAULT 0 CHECK (guest_limit BETWEEN 0 AND 20);\nALTER TABLE bookings ADD COLUMN guest_limit INTEGER NOT NULL DEFAULT 0 CHECK (guest_limit BETWEEN 0 AND 20);\nCREATE TABLE booking_guests (\n  id TEXT PRIMARY KEY NOT NULL,\n  booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n  email TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  UNIQUE (booking_id, email)\n);\nCREATE INDEX booking_guests_email_idx ON booking_guests(email);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
