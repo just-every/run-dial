@@ -1,3 +1,4 @@
+import { approvalHoldPredicate } from "./approval-holds";
 import { offeredHoldPredicate } from "../booking-links";
 import { BookingLimits } from "../availability";
 import { blockedAddressSql, blockedAddressValues } from "../public-abuse";
@@ -10,9 +11,10 @@ type GuardInput = Pick<BookingClaim, "event" | "hostTimezone" | "selection" | "i
 /** The single atomic slot check (BOOK-002) shared by a free confirmation, a payment hold and a paid
  * conversion: no blocked address, an admitting capability, no overlapping booking or active payment hold,
  * the host-day cap, offered-time holds and booking limits. */
-export async function slotClaimGuard(binding: D1Database, input: GuardInput, admission: Admission, linkId?: string | null, exceptHoldId?: string) {
+export async function slotClaimGuard(binding: D1Database, input: GuardInput, admission: Admission, linkId?: string | null, exceptHoldId?: string, exceptApprovalId?: string) {
   const holds = offeredHoldPredicate(input.occupiedStartAt, input.occupiedEndAt, linkId ?? undefined);
   const limits = await new BookingLimits(binding).predicate(input.event.id, input.hostTimezone, input.selection.startAt, input.selection.endAt, input.invitee.email, undefined);
+  const approval = approvalHoldPredicate(input.occupiedStartAt,input.occupiedEndAt,exceptApprovalId);
   const paid = paymentHoldPredicate(input.occupiedStartAt, input.occupiedEndAt, exceptHoldId);
   return {
     sql: `NOT ${blockedAddressSql}
@@ -24,8 +26,8 @@ export async function slotClaimGuard(binding: D1Database, input: GuardInput, adm
           AND existing.state IN ('confirmed', 'rescheduled')
           AND occurrence.occupied_start_at < ?
           AND occurrence.occupied_end_at > ?
-      ) AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND o.blocks_time = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?) AND ${holds.sql} AND ${limits.sql} AND ${paid.sql}`,
-    params: [...blockedAddressValues(input.invitee.email), ...admission.params, input.occupiedEndAt, input.occupiedStartAt, input.event.hostDayBookingLimit, input.hostDate, input.event.hostDayBookingLimit, ...holds.params, ...limits.params, ...paid.params],
+      ) AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND o.blocks_time = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?) AND ${holds.sql} AND ${limits.sql} AND ${paid.sql} AND ${approval.sql}`,
+    params: [...blockedAddressValues(input.invitee.email), ...admission.params, input.occupiedEndAt, input.occupiedStartAt, input.event.hostDayBookingLimit, input.hostDate, input.event.hostDayBookingLimit, ...holds.params, ...limits.params, ...paid.params, ...approval.params],
   };
 }
 

@@ -36,6 +36,34 @@ try {
   await json(await owner.request.post(`${origin}/api/app/event-types/${event.id}/publish`, { headers, data: {} }));
   for (const width of widths) await capture(width, "event-terms", `/app/event-types/${event.id}`, page => termsForm(page, "25.00"));
 
+  // A fee edit while the details page is open refuses the old consent, refreshes the terms and unchecks consent.
+  const staleConsentErrors = [];
+  const originalTerms = { deposit: { kind: "fixed", amountCents: 2500 }, balanceDueHours: 24, freeWindowHours: 48, lateCancelFeeCents: 4000, noShowFeeCents: 6000 };
+  for (const width of widths) {
+    const consentWeek = new Date(Date.now() + 22 * 86400000).toISOString().slice(0, 10);
+    const consentSlot = (await json(await owner.request.get(`${origin}/api/public/book/dial-host/coaching/availability?week=${consentWeek}&durationMinutes=60`))).slots[0].startAt;
+    const consentSelection = await json(await owner.request.post(`${origin}/api/public/book/dial-host/coaching/selection`, { headers, data: { startAt: consentSlot, inviteeTimezone: "UTC", durationMinutes: 60 } }), 201);
+    const consentDetails = `/book/dial-host/coaching/details?${new URLSearchParams({ nonce: consentSelection.nonce, startAt: consentSlot, inviteeTimezone: "UTC", durationMinutes: "60" })}`;
+    try {
+      await capture(width, "stale-consent-new-terms", consentDetails, async page => {
+        await page.getByLabel("Name", { exact: true }).fill(`synthetic-dial-${width}`);
+        await page.getByLabel("Email", { exact: true }).fill(`synthetic-dial-${width}@example.test`);
+        await page.getByRole("checkbox", { name: /I agree that Stripe saves my card/u }).check();
+        await json(await owner.request.put(`${origin}/api/app/event-types/${event.id}/payment-terms`, { headers, data: { ...originalTerms, lateCancelFeeCents: 9000 } }));
+        const refused = page.waitForResponse(response => new URL(response.url()).pathname.endsWith("/confirm") && response.request().method() === "POST");
+        await page.getByRole("button", { name: "Continue to payment · $25.00 USD" }).click();
+        assert.equal((await refused).status(), 400);
+        const newConsent = page.getByRole("checkbox", { name: /90\.00/u });
+        try { await newConsent.waitFor({ timeout: 5000 }); }
+        catch (error) { await page.screenshot({ path: `${folder}/stale-consent-before-${width}.png`, fullPage: true }); throw error; }
+        assert.equal(await newConsent.isChecked(), false, "new terms require a fresh unchecked consent");
+        assert.equal(await page.getByLabel("Name", { exact: true }).inputValue(), `synthetic-dial-${width}`, "a refused fee edit keeps the invitee details");
+      }, { session: false });
+    } catch (error) { staleConsentErrors.push({ width, message: error.message.split("\n")[0] }); }
+    finally { await json(await owner.request.put(`${origin}/api/app/event-types/${event.id}/payment-terms`, { headers, data: originalTerms })); }
+  }
+  assert.deepEqual(staleConsentErrors, [], "stale consent refreshes the shown terms at both widths");
+
   const week = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
   const slot = (await json(await owner.request.get(`${origin}/api/public/book/dial-host/coaching/availability?week=${week}&durationMinutes=60`))).slots[0].startAt;
   const selection = await json(await owner.request.post(`${origin}/api/public/book/dial-host/coaching/selection`, { headers, data: { startAt: slot, inviteeTimezone: "America/New_York", durationMinutes: 60 } }), 201);

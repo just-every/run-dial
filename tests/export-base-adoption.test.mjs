@@ -70,6 +70,10 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.ok(!archive.tables.some(table => ['payment_holds', 'payment_oauth_states'].includes(table.name)), 'PAY-001 live holds and OAuth state never travel');
     for (const table of ['event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements', 'payment_settings']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-003 ${table} survives the archive round trip`);
     assert.ok(!archive.tables.some(table => table.name === 'payment_link_tokens'), 'PAY-003 balance-link capabilities never travel');
+    const approvals=archive.tables.find(table=>table.name==='booking_approval_requests');
+    assert.ok(approvals.rows.every(row=>row.claim_json===null && row.state!=='pending'),'approval archives are historical and contain no executable claim');
+    assert.ok(!archive.tables.some(table=>table.name==='booking_approval_tokens'),'approval request capabilities never travel');
+    assert.deepEqual(target.db.prepare('SELECT state,claim_json FROM booking_approval_requests').all().map(row=>[row.state,row.claim_json]),[['expired',null]],'restored pending requests reserve no time and cannot be approved');
     assert.throws(() => target.db.exec("UPDATE oa_operators SET status='active' WHERE id='zz-cancelled'"), /invitation_required/);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox').get().n, 0);
     // Future clipboard storage must be classified from its eventual migration,

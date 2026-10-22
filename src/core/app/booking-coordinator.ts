@@ -71,6 +71,7 @@ export class BookingCoordinator extends DurableObject<AppBindings> {
         if (parsed.data.bookingId) await services.erasure.reconcileCalendarFact(parsed.data.bookingId, parsed.data.kind, parsed.data.updatedAt ?? parsed.data.providerEventId);
         return new Response(null, { status: 204 });
       }
+      if(path==="/__approval-expiry" && request.method==="POST"){const body=z.object({id:z.string().length(26)}).parse(await request.json());await this.coordinatedServices(this.env).bookings.expireApproval(body.id);return new Response(null,{status:204});}
       if (path === "/__reschedule-request" && request.method === "POST") {
         const body=z.object({bookingId:z.string().length(26)}).parse(await request.json());
         await this.coordinatedServices(this.env).bookings.processRescheduleRequest(body.bookingId);

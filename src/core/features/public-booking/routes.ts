@@ -191,6 +191,7 @@ function confirmationResult(context: Context<AppEnvironment>, result: Awaited<Re
   if (result.kind === "invalid_duration") return invalidDuration(context);
   if (result.kind === "created") return context.json(result.booking, 201);
   // PAY-001: the slot is held; the booking confirms only on Stripe's signed event.
+  if (result.kind === "approval_required") return context.json({approvalRequired:true,approval:result.approval},202);
   if (result.kind === "payment_required") return context.json({ paymentRequired: true, payment: result.payment }, 202);
   if (result.kind === "payments_unavailable") return paymentsUnavailable(context, result.reason);
   if (result.kind === "replayed") return context.json(result.booking);

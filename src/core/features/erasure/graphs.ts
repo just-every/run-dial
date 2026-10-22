@@ -11,7 +11,9 @@ const mailEdges: Edge[] = [
 export function bookingGraph(statements?: Declaration["statements"]) {
   return defineErasure({ entity: "booking", root: { table: "bookings" }, statements,
     edges: [
-      ...["booking_guests", "booking_reschedule_requests", "booking_request_history", "booking_answers", "booking_attendance", "booking_calendar_conflicts", "booking_correspondence", "booking_history", "booking_manage_tokens", "booking_nonces", "booking_occurrences", "booking_presentation", "calendar_deletion_probes", "operator_creation_receipts", "ext_custom_field_values", "move_in_differences", "booking_payments", "payment_holds", "booking_payment_terms", "payment_link_tokens", "booking_card_consents", "payment_movements"].map(table => child(table, "bookings", "booking_id")),
+      ...["booking_approval_requests", "booking_guests", "booking_reschedule_requests", "booking_request_history", "booking_answers", "booking_attendance", "booking_calendar_conflicts", "booking_correspondence", "booking_history", "booking_manage_tokens", "booking_nonces", "booking_occurrences", "booking_presentation", "calendar_deletion_probes", "operator_creation_receipts", "ext_custom_field_values", "move_in_differences", "booking_payments", "payment_holds", "booking_payment_terms", "payment_link_tokens", "booking_card_consents", "payment_movements"].map(table => child(table, "bookings", "booking_id")),
+      child("booking_approval_tokens", "booking_approval_requests", "request_id"),
+      {table:"delivery_outbox",from:"booking_approval_requests",where:"json_extract(payload_json,'$.approvalRequestId')=?",params:["id"]},
       // The erasure's own provider cleanup command (calendar_cancel without an occurrence) keeps only the
       // booking lookup key; the helper's completion pass must not treat it as a late copy and delete it.
       { table: "delivery_outbox", from: "bookings", where: "booking_id=? AND NOT (kind='calendar_cancel' AND occurrence_id IS NULL)", params: ["id"] },

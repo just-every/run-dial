@@ -32,7 +32,7 @@ export async function recordAddressStatements(db: D1Database, fence: Portability
   const row = await db.prepare(`SELECT invitee_email AS email FROM ${table} WHERE id=?`).bind(id).first<{ email: string }>();
   if (!row) return [];
   const others = await personalRecords(db,row.email);
-  if (others.bookings.some(other=>table!=="bookings"||other!==id) || others.requests.some(other=>table!=="availability_requests"||other!==id)) {
+  if (others.bookings.some(other=>table!=="bookings"||other!==id) || others.requests.some(other=>table!=="availability_requests"||other!==id) || others.approvals.length>0) {
     return knownRateStatements(db,fence,secret,others.addresses);
   }
   return addressRemainders(db,fence,row.email,secret,others.addresses);
@@ -58,6 +58,14 @@ export async function addressRemainders(db: D1Database, fence: PortabilityFence,
   statements.push(...await deleteRows(db, fence, "blocked_address_rules", `kind='email' AND ${emailFoldSql("value")}=?`, [foldEmail(email)]));
   const captures=(await db.prepare("SELECT rowid AS row_number,message FROM rer_mail_development_outbox").all<{row_number:number;message:string}>()).results.filter(row=>mailRecipientMatches(row.message,email)).map(row=>row.row_number);
   statements.push(...await deleteRows(db, fence, "rer_mail_development_outbox", "rowid IN (SELECT value FROM json_each(?))", [JSON.stringify(captures)]));
+  // Approval claims are tentative, not confirmed bookings. Erasure removes their invitee record, capability and
+  // every request/decision notice (including host copies), so an erased request can never be approved later.
+  const approvals=(await db.prepare(`SELECT id FROM booking_approval_requests WHERE ${emailFoldSql("invitee_email")}=?`).bind(foldEmail(email)).all<{id:string}>()).results.map(row=>row.id);
+  const approvalIds=JSON.stringify(approvals);
+  statements.push(...await deleteRows(db,fence,"delivery_outbox","json_extract(payload_json,'$.approvalRequestId') IN(SELECT value FROM json_each(?))",[approvalIds]));
+  statements.push(...await deleteRows(db,fence,"booking_approval_tokens","request_id IN(SELECT value FROM json_each(?))",[approvalIds]));
+  statements.push(...await deleteRows(db,fence,"booking_approval_requests","id IN(SELECT value FROM json_each(?))",[approvalIds]));
+  statements.push({sql:`UPDATE booking_approval_requests SET claim_json=json_set(claim_json,'$.invitee.guests',json(COALESCE((SELECT json_group_array(value) FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))<>?), '[]')),'$.emails',json(COALESCE((SELECT json_group_array(json(value)) FROM json_each(claim_json,'$.emails') WHERE lower(trim(json_extract(value,'$.to')))<>?), '[]'))) WHERE claim_json IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))=?)`,params:[email,email,email]});
   // A pending paid booking can carry guests before its booking rows exist. Remove the guest and its unsent notice,
   // preserving the payer and the money claim; calendar payloads read guests from live rows, never a personal copy.
   statements.push({sql:`UPDATE payment_holds SET claim_json=json_set(claim_json,'$.invitee.guests',json(COALESCE((SELECT json_group_array(value) FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))<>?), '[]')),'$.emails',json(COALESCE((SELECT json_group_array(json(value)) FROM json_each(claim_json,'$.emails') WHERE lower(trim(json_extract(value,'$.to')))<>?), '[]'))) WHERE claim_json IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(claim_json,'$.invitee.guests') WHERE lower(trim(value))=?)`,params:[email,email,email]});

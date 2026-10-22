@@ -149,7 +149,8 @@ export type BookingConfirmation = {
   meetingState: DeliveryState | "not_required";
   manageUrl: string;
   icsUrl: string;
-  state: BookingState;
+  approval?: { state: "pending"|"approved"|"declined"|"expired"; expiresAt: string };
+  state: BookingState | "pending_approval" | "declined" | "expired";
   payment?: PaymentSummary;
 };
 

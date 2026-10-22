@@ -1,3 +1,4 @@
+import { ApprovalRequests } from "./approval-requests";
 import { ErasureRecovery } from "./delivery-actions";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -81,6 +82,7 @@ function BookingList(): React.JSX.Element {
     {eventTypesError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{eventTypesError}</p> : null}
     {erasedId ? <ErasureRecovery bookingId={erasedId} /> : null}
     {filters.report ? <ReportDrillNotice filters={filters} /> : null}
+    <ApprovalRequests onChanged={load} />
     <BookingsFilterBar filters={filters} eventTypes={eventTypes} hostTimezone={hostTimezone} onChange={changeFilters} onClear={clearFilters} />
     <p className="text-sm font-semibold text-soft" role="status" aria-live="polite">
       {loading ? "Loading bookings…" : bookings === undefined ? "Bookings unavailable" : `Showing ${firstVisible.toLocaleString()}–${lastVisible.toLocaleString()} of ${totalCount.toLocaleString()} matching booking${totalCount === 1 ? "" : "s"}`}

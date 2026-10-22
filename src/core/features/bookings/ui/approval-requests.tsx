@@ -1,0 +1,14 @@
+import {useCallback,useEffect,useState} from "react";
+import {api,errorMessage} from "../../../api/client";
+import {Button,Card,Input} from "../../../app/ui/primitives";
+import {useHydrated} from "../../../app/use-hydrated";
+type RequestRecord={id:string;inviteeName:string;inviteeEmail:string;eventTitle:string;startAt:string;endAt:string;expiresAt:string};
+export function ApprovalRequests({onChanged}:{onChanged:()=>Promise<void>}){
+  const [requests,setRequests]=useState<RequestRecord[]>([]),[notice,setNotice]=useState(""),[working,setWorking]=useState(false);const hydrated=useHydrated();
+  const load=useCallback(async()=>{const response=await api.api.app["booking-approvals"].$get();if(!response.ok){setNotice(await errorMessage(response));return;}setRequests(await response.json());},[]);
+  useEffect(()=>{void load().catch(()=>setNotice("Approval requests could not be loaded."));},[load]);
+  async function decide(id:string,decision:"approve"|"decline",reason:string){setWorking(true);setNotice("");try{const response=await api.api.app["booking-approvals"][":id"].decision.$post({param:{id},json:{decision,reason:reason||undefined}});setNotice(response.ok?decision==="approve"?"Request approved. Confirmation and calendar delivery queued.":"Request declined. The time is released.":await errorMessage(response));await load();await onChanged();}catch{setNotice("The decision could not be checked. Refresh the requests before trying again.");}finally{setWorking(false);}}
+  if(!requests.length&&!notice)return null;
+  return <section aria-label="Approval requests" className="grid gap-4"><h2 className="text-xl font-bold">Requests awaiting approval</h2>{notice?<p role="status">{notice}</p>:null}{requests.map(request=><RequestCard key={request.id} request={request} disabled={!hydrated||working} decide={decide}/>)}</section>;
+}
+function RequestCard({request,disabled,decide}:{request:RequestRecord;disabled:boolean;decide:(id:string,decision:"approve"|"decline",reason:string)=>Promise<void>}){const [reason,setReason]=useState("");return <Card className="grid gap-3 p-5"><h3 className="font-bold">{request.inviteeName}</h3><p className="break-words text-sm">{request.inviteeEmail} · {request.eventTitle}</p><p className="text-sm">Requested time: {new Date(request.startAt).toLocaleString()} – {new Date(request.endAt).toLocaleTimeString()}</p><p className="text-sm text-muted">Approval deadline: {new Date(request.expiresAt).toLocaleString()}</p><fieldset disabled={disabled} className="grid gap-3 border-0 p-0"><label className="grid gap-2 text-sm">Decision note (optional)<Input maxLength={500} value={reason} onChange={event=>setReason(event.target.value)}/></label><div className="flex flex-wrap gap-3"><Button type="button" onClick={()=>void decide(request.id,"approve",reason)}>Approve request</Button><Button variant="secondary" type="button" onClick={()=>void decide(request.id,"decline",reason)}>Decline request</Button></div></fieldset></Card>;}

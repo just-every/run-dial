@@ -1,6 +1,6 @@
 import { paymentFixtures } from "../booking-wire/payment-fixtures";
 import { CalendarConnectionRepository } from "../../src/core/features/calendar-connection";
-import { processCoordinatedDelivery, coordinatedCalendarChanges } from "../../src/core/app/booking-coordination";
+import { processCoordinatedDelivery, coordinatedCalendarChanges, processDueApprovalRequests } from "../../src/core/app/booking-coordination";
 import { DeliveryRepository } from "../../src/core/features/delivery";
 import { calendarChangeSchema } from "../../src/core/features/calendar-connection";
 import type { AppBindings } from "../../src/core/app/bindings";
@@ -19,6 +19,7 @@ export async function handleFixtures(request: Request, env: AppBindings & { PROV
     }
   const providerDb = env.PROVIDER_DB ?? env.DB;
     if (url.pathname.startsWith("/__fixtures/payments/")) return paymentFixtures(url, request, env.DB, providerDb, servicesFor(env));
+    if(url.pathname==="/__fixtures/approval-expiry"&&request.method==="POST"){const {id}=await request.json<{id:string}>();await env.DB.prepare("UPDATE booking_approval_requests SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(id).run();await processDueApprovalRequests(env);return new Response(null,{status:204});}
     if (url.pathname === "/__fixtures/booking-ended" && request.method === "POST") {
       const { id } = await request.json<{ id: string }>();
       const end = new Date(Date.now() - 86400000);

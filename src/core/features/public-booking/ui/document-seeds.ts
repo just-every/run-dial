@@ -49,7 +49,7 @@ export function seedSelection(value: unknown, handle: string, slug: string, capa
     || !Number.isFinite(Date.parse(capability.startAt)) || Date.parse(value.selection.endAt) <= Date.parse(capability.startAt)
     || value.selection.hostTimezone !== value.host.timezone) return undefined;
   const payment = selectionPayment(value.payment);
-  return { guestLimit: typeof value.guestLimit === "number" && Number.isInteger(value.guestLimit) && value.guestLimit >= 0 && value.guestLimit <= 20 ? value.guestLimit : 0, nonce: capability.nonce, expiresAt: value.expiresAt, selection: { startAt: capability.startAt, endAt: value.selection.endAt, hostTimezone: value.host.timezone, inviteeTimezone: capability.inviteeTimezone }, host: profile(value.host), event: event(value.event), ...(payment ? { payment } : {}) };
+  return { ...(record(value.approval)&&typeof value.approval.windowHours==="number"?{approval:{windowHours:value.approval.windowHours}}:{}), guestLimit: typeof value.guestLimit === "number" && Number.isInteger(value.guestLimit) && value.guestLimit >= 0 && value.guestLimit <= 20 ? value.guestLimit : 0, nonce: capability.nonce, expiresAt: value.expiresAt, selection: { startAt: capability.startAt, endAt: value.selection.endAt, hostTimezone: value.host.timezone, inviteeTimezone: capability.inviteeTimezone }, host: profile(value.host), event: event(value.event), ...(payment ? { payment } : {}) };
 }
 
 /** PAY-001 and PAY-003: the pay step's amounts, balance, policy and consent, or nothing for a free booking. */

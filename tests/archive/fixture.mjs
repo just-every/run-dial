@@ -27,6 +27,7 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  booking_approval_requests: {nonce_id:'synthetic-dial-approval-nonce',booking_id:'bookings-1',event_type_id:'event_types-1',state:'pending',invitee_email:'synthetic-dial-approval@example.test',invitee_name:'Synthetic Dial Approval',event_title:'Synthetic approval',start_at:instant,end_at:end,occupied_start_at:instant,occupied_end_at:end,host_date:'2026-10-07',claim_json:JSON.stringify({emails:[],invitee:{guests:[]}})},
   booking_guests: { booking_id:'bookings-1',email:'synthetic-dial-guest@example.test' },
   booking_links: { kind:'single_use',overrides_json:null,expires_at:end,consumed_at:instant,consumed_booking_id:'bookings-1',revoked_at:null },
   booking_reschedule_requests: { state:'open',message:'Please choose a new time.',release_time:1,actor_id:'owner',expires_at:end,reminder_at:null,reminded_at:null },
