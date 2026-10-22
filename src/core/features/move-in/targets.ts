@@ -3,13 +3,14 @@ import { insertJsonRows } from '../../../../modules/import-kit/src/d1/sets.ts';
 import { canonicalJson, sha256 } from '../../../../modules/import-kit/src/provenance/identity.ts';
 import { json, type NativeValue, type Row } from './model';
 import { conjunction } from './native-predicates';
+import { approvalHoldPredicate } from '../bookings/approval-holds';
 import { assertCustodyColumns, includeCustodyTable } from './custody-tables';
 const groups:Record<string,Record<string,string>>={
  profile:{host_profiles:'id',profile_focus_areas:'profile_id',social_proof_entries:'profile_id'},
- event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id',event_schedule_bindings:'event_type_id',booking_limit_policies:'scope',event_booking_policies:'event_type_id',event_correspondence:'event_type_id',booking_links:'event_type_id',booking_link_tokens:'link_id IN (SELECT id FROM booking_links WHERE event_type_id'},
- booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id',booking_presentation:'booking_id',booking_correspondence:'booking_id',booking_reschedule_requests:'booking_id',booking_request_history:'booking_id',booking_links:'consumed_booking_id',booking_link_tokens:'link_id IN (SELECT id FROM booking_links WHERE consumed_booking_id'},
+ event:{event_types:'id',ext_custom_field_values:'event_type_id',event_questions:'event_type_id',recurring_availability_windows:'event_type_id',availability_date_overrides:'event_type_id',availability_date_override_windows:'override_id IN (SELECT id FROM availability_date_overrides WHERE event_type_id',event_schedule_bindings:'event_type_id',booking_limit_policies:'scope',event_booking_policies:'event_type_id',event_correspondence:'event_type_id',booking_approval_requests:'event_type_id',booking_approval_tokens:'request_id IN (SELECT id FROM booking_approval_requests WHERE event_type_id',booking_links:'event_type_id',booking_link_tokens:'link_id IN (SELECT id FROM booking_links WHERE event_type_id'},
+ booking:{bookings:'id',ext_custom_field_values:'booking_id',booking_occurrences:'booking_id',booking_answers:'booking_id',booking_manage_tokens:'booking_id',booking_history:'booking_id',booking_attendance:'booking_id',booking_calendar_conflicts:'booking_id',booking_presentation:'booking_id',booking_correspondence:'booking_id',booking_reschedule_requests:'booking_id',booking_request_history:'booking_id',booking_guests:'booking_id',booking_links:'consumed_booking_id',booking_link_tokens:'link_id IN (SELECT id FROM booking_links WHERE consumed_booking_id'},
 };
-const parentTables:Record<string,{table:string;foreign:string}>={availability_date_override_windows:{table:'availability_date_overrides',foreign:'override_id'},booking_link_tokens:{table:'booking_links',foreign:'link_id'}};
+const parentTables:Record<string,{table:string;foreign:string}>={availability_date_override_windows:{table:'availability_date_overrides',foreign:'override_id'},booking_link_tokens:{table:'booking_links',foreign:'link_id'},booking_approval_tokens:{table:'booking_approval_requests',foreign:'request_id'}};
 function scope(kind:string,table:string){const key=groups[kind]?.[table];if(!key)throw new Error('Unsupported import native table.');return key.includes(' IN ')?`${key}=?)`:`${key}=?`;}
 // Search columns are a deterministic projection, not source-owned content.
 // Keep old applied snapshots and undo guards comparable after the additive upgrade.
@@ -41,7 +42,7 @@ function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
  }
  // 0058 and 0060 add physical defaults to SELECT *; omit each only when
  // unchanged, and only accept the complete retained source hash below.
- for(const [table,column,defaultValue] of [['event_types','locations_json',null],['booking_occurrences','blocks_time',1]] as const){
+ for(const [table,column,defaultValue] of [['event_types','locations_json',null],['booking_occurrences','blocks_time',1],['event_types','guest_limit',0],['bookings','guest_limit',0],['event_types','approval_required',0],['event_types','approval_window_hours',24]] as const){
   for(const candidate of [...eventVersions])if(candidate[table]?.length&&candidate[table].every(row=>row[column]===defaultValue))eventVersions.push({...candidate,[table]:candidate[table].map(row=>{const source={...row};delete source[column];return source;})});
  }
  for(const candidate of eventVersions){
@@ -62,6 +63,7 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
  if(table==='bookings'){
   const index=columns.indexOf('calendar_required');if(index!==-1)predicates.splice(index,1);
   predicates.push(`actual.calendar_required IS CASE WHEN json_type(wanted.value,'$.calendar_required') IS NULL THEN 1 ELSE json_extract(wanted.value,'$.calendar_required') END`);
+  if(!columns.includes('guest_limit'))predicates.push('actual.guest_limit IS 0');
   if(!columns.includes('attribution_json'))predicates.push("actual.attribution_json IS '{}'");
   if(!columns.includes('post_booking_redirect_url'))predicates.push('actual.post_booking_redirect_url IS NULL');
  }
@@ -70,6 +72,7 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
   if(!columns.includes('booking_horizon_mode'))predicates.push("actual.booking_horizon_mode IS 'calendar_days'");
   for(const key of ['booking_start_date','booking_end_date'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
   if(!columns.includes('post_booking_redirect_json'))predicates.push('actual.post_booking_redirect_json IS NULL');
+  for(const [key,defaultValue] of [['guest_limit',0],['approval_required',0],['approval_window_hours',24]] as const)if(!columns.includes(key))predicates.push(`actual.${key} IS ${defaultValue}`);
   if(!columns.includes('locations_json'))predicates.push('actual.locations_json IS NULL');
  }
  if(table==='booking_occurrences'){
@@ -106,8 +109,9 @@ export const importTargets:D1TargetAdapter={
   }
   if(row.targetKind==='booking'){
    const booking=value(row).tables.bookings[0],occurrence=value(row).tables.booking_occurrences[0];
+   const approvalGuard=approvalHoldPredicate(String(occurrence.occupied_start_at),String(occurrence.occupied_end_at));
    // Fail the complete atomic kit batch if another native confirmation won after preview.
-   statements.unshift({sql:`INSERT INTO move_in_guard(ok) SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM booking_occurrences o JOIN bookings b ON b.id=o.booking_id WHERE o.is_current=1 AND o.blocks_time=1 AND b.state IN ('confirmed','rescheduled') AND o.occupied_start_at<? AND o.occupied_end_at>?) AND EXISTS(SELECT 1 FROM event_types WHERE id=?) THEN 1 ELSE 0 END`,params:[occurrence.occupied_end_at,occurrence.occupied_start_at,booking.event_type_id]});
+   statements.unshift({sql:`INSERT INTO move_in_guard(ok) SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM booking_occurrences o JOIN bookings b ON b.id=o.booking_id WHERE o.is_current=1 AND o.blocks_time=1 AND b.state IN ('confirmed','rescheduled') AND o.occupied_start_at<? AND o.occupied_end_at>?) AND EXISTS(SELECT 1 FROM event_types WHERE id=?) AND ${approvalGuard.sql} THEN 1 ELSE 0 END`,params:[occurrence.occupied_end_at,occurrence.occupied_start_at,booking.event_type_id,...approvalGuard.params]});
    statements.push({sql:'DELETE FROM move_in_guard'});
   }
   statements.push({sql:'INSERT INTO move_in_targets(kind,id,revision) VALUES(?,?,?)',params:[row.targetKind,row.targetId,row.revision]});return statements;
