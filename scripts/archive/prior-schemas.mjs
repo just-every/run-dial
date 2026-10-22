@@ -12,6 +12,9 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // PAY-005: tax starts off; existing payments, terms and movements carry no tax and no invoice.
+  'core/0070_sales_tax_receipts_invoices.sql': (table, row) => ['booking_payments', 'booking_payment_terms'].includes(table) ? { ...row, tax_cents: 0, tax_summary: null }
+    : table === 'payment_movements' ? { ...row, tax_cents: 0, tax_summary: null, invoice_id: null, invoice_number: null, invoice_url: null } : row,
   // Additive PAY-003 tables start empty. An existing payment was the full price; older audit and erasure-receipt
   // rows carry no amount, Stripe reference or saved-card counts.
   'core/0069_deposits_refunds_fees.sql': (table, row) => table === 'booking_payments' ? { ...row, kind: 'payment' }

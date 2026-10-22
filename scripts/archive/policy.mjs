@@ -25,6 +25,8 @@ export const exported = [
   // PAY-003: event payment terms, each booking's terms snapshot, card consent (Stripe references, never card data)
   // and money movements.
   'event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements',
+  // PAY-005: Stripe Tax on or off and the business name on receipts and invoices.
+  'payment_settings',
 ].sort();
 export { excluded } from "../../src/core/shared/archive-exclusions.mjs";
 import { excluded } from "../../src/core/shared/archive-exclusions.mjs";

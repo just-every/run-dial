@@ -10,9 +10,14 @@ import { eventPrice, priceForDuration, validatePrice, type EventPriceInput } fro
 import { MoneyRepository } from "./money-repository";
 import { MoneyService } from "./money-service";
 import { MovementsRepository } from "./movements-repository";
+import { InvoiceService } from "./invoices";
 import { PaymentsRepository, type PaymentHold } from "./repository";
 import { StripeApi, StripeApiError, type CheckoutSession } from "./stripe-api";
 import { cardRequired, termsFromRow, termsSnapshot, validateTerms, type PaymentTermsInput, type TermsSnapshot } from "./terms";
+import { dueNowTaxCents } from "../../shared/payment-terms";
+import { calculateTax, type BillingAddress } from "./tax";
+import { receiptOperators, receiptStatements } from "./receipts";
+import type { PaymentSettings } from "./money-repository";
 import { verifyStripeSignature } from "./webhook-signature";
 import type { Admission } from "../../platform/public-admission";
 
@@ -25,21 +30,26 @@ const returnLifetimeMs = 24 * 60 * 60 * 1000;
 export type PaidConversion = (claim: BookingClaim, payment: { holdId: string; statements: D1PreparedStatement[] }) => Promise<"claimed" | "slot_taken" | "blocked">;
 /** What a booking costs now: a payment (the full price or a deposit) or, for a free event with stated fees, a
  * setup that only saves the consented card. */
-export type Quote = { kind: "available"; mode: "payment" | "setup"; amountCents: number; snapshot: TermsSnapshot; saveCard: boolean; accountId: string; achEnabled: boolean };
+export type Quote = { kind: "available"; mode: "payment" | "setup"; amountCents: number; snapshot: TermsSnapshot; saveCard: boolean; taxRequired: boolean; accountId: string; achEnabled: boolean };
 type StripeEvent = { id: string; type: string; account?: string; data: { object: Record<string, unknown> } };
 export type WebhookResult = { kind: "unauthorized" | "processed" | "ignored" | "rejected" } | { kind: "limited"; retryAfterSeconds: number };
 
 export class PaymentsService {
   readonly connection: StripeConnection;
   readonly money: MoneyService;
+  readonly invoices: InvoiceService;
   private readonly repository: PaymentsRepository;
   private readonly terms: MoneyRepository;
+  private readonly db: D1Database;
   private convert?: PaidConversion;
   constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, private readonly transport: typeof fetch = fetch) {
+    this.db = db;
     this.repository = new PaymentsRepository(db);
     this.terms = new MoneyRepository(db);
     this.connection = new StripeConnection(this.repository, runtime, transport);
-    this.money = new MoneyService(db, this.repository, this.terms, new MovementsRepository(db), runtime, transport);
+    const movements = new MovementsRepository(db);
+    this.money = new MoneyService(db, this.repository, this.terms, movements, runtime, transport);
+    this.invoices = new InvoiceService(db, this.repository, this.terms, movements, this.money);
   }
 
   setConversion(convert: PaidConversion) { this.convert = convert; }
@@ -60,6 +70,20 @@ export class PaymentsService {
   }
 
   async eventTerms(eventTypeId: string) { return termsFromRow(await this.terms.eventTerms(eventTypeId)); }
+
+  /** PAY-005: Stripe Tax on or off, and the business name receipts and invoices carry. */
+  async settings() {
+    const settings = await this.terms.settings();
+    return { taxEnabled: settings.taxEnabled, businessName: settings.businessName, effectiveBusinessName: settings.businessName ?? settings.hostName ?? "Dial" };
+  }
+  saveSettings(settings: PaymentSettings) { return this.terms.saveSettings(settings); }
+
+  /** The sales tax Stripe Tax calculates on a booking's whole price at the invitee's address. */
+  async taxFor(quote: Quote, address: BillingAddress, reference: string) {
+    const figures = await calculateTax(this.api(), quote.accountId, { amountCents: quote.snapshot.priceCents, reference, address });
+    const snapshot = { ...quote.snapshot, taxCents: figures.taxCents, taxSummary: figures.summary };
+    return { quote: { ...quote, snapshot, amountCents: snapshot.dueNowCents + dueNowTaxCents(snapshot) }, figures };
+  }
 
   async saveTerms(event: EventTypeRecord, input: PaymentTermsInput) {
     const refusal = validateTerms(input, await this.eventPrice(event.id), offeredDurations(event), await this.terms.cancellationCutoffMinutes(event.id));
@@ -83,7 +107,8 @@ export class PaymentsService {
     const connection = await this.repository.connection();
     if (!stripeConfiguration(this.runtime)) return { kind: "unavailable", amountCents: snapshot.dueNowCents, reason: "payments_not_configured" };
     if (connection?.status !== "connected" || !connection.accountId) return { kind: "unavailable", amountCents: snapshot.dueNowCents, reason: connection?.status === "deauthorized" ? "stripe_deauthorized" : "stripe_not_connected" };
-    return { kind: "available", mode: snapshot.dueNowCents > 0 ? "payment" : "setup", amountCents: snapshot.dueNowCents, snapshot, saveCard, accountId: connection.accountId, achEnabled: connection.achEnabled };
+    const taxRequired = snapshot.priceCents > 0 && (await this.terms.settings()).taxEnabled;
+    return { kind: "available", mode: snapshot.dueNowCents > 0 ? "payment" : "setup", amountCents: snapshot.dueNowCents, snapshot, saveCard, taxRequired, accountId: connection.accountId, achEnabled: connection.achEnabled };
   }
 
   /** The payment-return capability (AUTH-007): derived from the selection nonce's 256 random bits, bound to one
@@ -97,7 +122,7 @@ export class PaymentsService {
   holdForNonce(nonceId: string) { return this.repository.holdByNonce(nonceId); }
 
   async openCheckout(input: { holdId: string; quote: Quote; eventTitle: string; durationMinutes: number; returnUrl: string; customerEmail: string }) {
-    const params = checkoutParams({ holdId: input.holdId, mode: input.quote.mode, amountCents: input.quote.amountCents, deposit: input.quote.snapshot.depositCents > 0, saveCard: input.quote.saveCard,
+    const params = checkoutParams({ holdId: input.holdId, mode: input.quote.mode, amountCents: input.quote.snapshot.dueNowCents, taxCents: dueNowTaxCents(input.quote.snapshot), taxSummary: input.quote.snapshot.taxSummary, deposit: input.quote.snapshot.depositCents > 0, saveCard: input.quote.saveCard,
       eventTitle: input.eventTitle, durationMinutes: input.durationMinutes, returnUrl: input.returnUrl, customerEmail: input.customerEmail, achEnabled: input.quote.achEnabled,
       expiresAt: Math.floor(Date.now() / 1000) + checkoutLifetimeSeconds });
     return this.api().createCheckoutSession(input.quote.accountId, params, `dial-hold-${input.holdId}`);
@@ -138,7 +163,10 @@ export class PaymentsService {
     }
     const object = event.data.object;
     const movementId = metadata(object, "dial_movement_id");
-    if (movementId) return this.money.receiveBalanceEvent(event, movementId);
+    if (movementId) {
+      const movement = await this.money.movements.get(movementId);
+      return movement?.kind === "invoice" ? this.invoices.receiveInvoiceEvent(event, movement) : this.money.receiveBalanceEvent(event, movementId);
+    }
     const holdId = metadata(object, "dial_hold_id");
     const hold = event.type.startsWith("checkout.session.") && typeof object.id === "string" ? await this.repository.holdBySession(object.id) : holdId ? await this.repository.hold(holdId) : undefined;
     if (!hold) return { kind: "ignored" };
@@ -189,10 +217,15 @@ export class PaymentsService {
     if (!this.convert) throw new Error("Paid booking conversion is not configured");
     const claim = JSON.parse(hold.claimJson) as BookingClaim, now = nowIso(), money = claim.money;
     const card = money?.consent ? await this.savedCard(hold, paid, paymentIntentId) : undefined;
+    const kind = money && money.snapshot.depositCents > 0 ? "deposit" as const : "payment" as const, taxCents = money ? dueNowTaxCents(money.snapshot) : 0;
+    // PAY-005: the first payment's receipt is queued with the booking, keyed by its Stripe reference.
+    const receipt = setup ? [] : receiptStatements(this.db, { id: claim.bookingId, inviteeName: claim.invitee.name, inviteeEmail: claim.invitee.email, eventTitle: claim.event.title, startAt: claim.selection.startAt, hostTimezone: claim.hostTimezone, inviteeTimezone: claim.selection.inviteeTimezone, ...(money?.manageUrl ? { manageUrl: money.manageUrl } : {}) },
+      { ref: hold.checkoutSessionId, kind, amountCents: hold.amountCents, taxCents, taxSummary: money?.snapshot.taxSummary ?? null, paidAt: now }, (await this.settings()).effectiveBusinessName, await receiptOperators(this.db));
     const outcome = await this.convert({ ...claim, now }, { holdId: hold.id, statements: [
-      ...(setup ? [] : [this.repository.bookingPaymentStatement({ bookingId: claim.bookingId, accountId: hold.accountId, amountCents: hold.amountCents, checkoutSessionId: hold.checkoutSessionId, paymentIntentId, paidAt: now, kind: money && money.snapshot.depositCents > 0 ? "deposit" : "payment" })]),
+      ...(setup ? [] : [this.repository.bookingPaymentStatement({ bookingId: claim.bookingId, accountId: hold.accountId, amountCents: hold.amountCents, checkoutSessionId: hold.checkoutSessionId, paymentIntentId, paidAt: now, kind, taxCents, taxSummary: money?.snapshot.taxSummary ?? null })]),
       ...(money ? this.terms.confirmationStatements(claim.bookingId, money, card, money.balanceSalt ? await this.money.balanceTokenHash(money.balanceSalt) : undefined, now) : []),
       this.repository.confirmHoldStatement(hold.id, claim.bookingId, now),
+      ...receipt,
     ] });
     if (outcome !== "claimed") {
       const current = await this.repository.hold(hold.id);

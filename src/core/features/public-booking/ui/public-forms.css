@@ -69,3 +69,4 @@
 .pb-payment-summary code, .pb-recovery code { overflow-wrap: anywhere; word-break: break-all; }
 .pb-consent { display: flex !important; gap: 10px; align-items: flex-start; margin-top: 12px; color: var(--ink) !important; font-size: 14px; font-weight: 650; line-height: 1.5; }
 .pb-consent input { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+.pb-tax-line { margin: 4px 0 0; color: var(--ink) !important; font-size: 14px; font-weight: 650; line-height: 1.5; }

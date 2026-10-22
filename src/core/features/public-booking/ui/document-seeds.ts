@@ -61,5 +61,5 @@ function selectionPayment(value: unknown): SelectionPayment | undefined {
   const consent = record(value.consent) && typeof value.consent.version === "string" && typeof value.consent.text === "string" && Number.isInteger(value.consent.lateCancelFeeCents) && Number.isInteger(value.consent.noShowFeeCents)
     ? { version: value.consent.version, text: value.consent.text, lateCancelFeeCents: value.consent.lateCancelFeeCents as number, noShowFeeCents: value.consent.noShowFeeCents as number } : undefined;
   return { amountCents: value.amountCents as number, currency: "usd", mode: value.mode as SelectionPayment["mode"], priceCents: value.priceCents as number, depositCents: value.depositCents as number, balanceCents: value.balanceCents as number,
-    balanceDueAt: instant(value.balanceDueAt), freeWindowEndsAt: instant(value.freeWindowEndsAt), policy: value.policy as string[], ...(consent ? { consent } : {}) };
+    balanceDueAt: instant(value.balanceDueAt), freeWindowEndsAt: instant(value.freeWindowEndsAt), policy: value.policy as string[], taxRequired: value.taxRequired === true, ...(consent ? { consent } : {}) };
 }

@@ -1,5 +1,5 @@
-/** Contract-shaped Stripe API and Connect OAuth at the HTTP edge (PAY-001, PAY-003). Production's StripeApi talks to
- * these exactly as to api.stripe.com and connect.stripe.com; no Stripe secret exists in CI. */
+/** Contract-shaped Stripe API and Connect OAuth at the HTTP edge (PAY-001, PAY-003, PAY-005). Production's StripeApi
+ * talks to these exactly as to api.stripe.com and connect.stripe.com; no Stripe secret exists in CI. */
 export const stripeHosts = ["api.stripe.com", "connect.stripe.com"];
 
 type Stored = { id: string; type: string; payload: Record<string, unknown> };
@@ -92,6 +92,34 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
     await save(db, refund.id, "refunds", refund);
     return Response.json(refund);
   }
+  if (url.pathname === "/v1/tax/calculations" && method === "POST") return taxCalculation(db, form);
+  if (url.pathname === "/v1/customers" && method === "POST") {
+    const customer = { id: `cus_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`, object: "customer", email: form.get("email"), name: form.get("name"), address: prefixed(form, "address") };
+    await save(db, customer.id, "customers", customer);
+    return Response.json(customer);
+  }
+  if (url.pathname === "/v1/invoices" && method === "POST") {
+    if (!(await object(db, form.get("customer") ?? "")) || form.get("collection_method") !== "send_invoice" || !form.get("days_until_due")) return stripeError(400, "parameter_invalid");
+    const draft = { id: `in_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`, object: "invoice", status: "draft", customer: form.get("customer"), total: 0, amount_due: 0, amount_paid: 0, currency: "usd", lines: [] as Array<{ amount: number; description: string | null }>, hosted_invoice_url: null, number: null, payment_intent: null, metadata: prefixed(form, "metadata") };
+    await save(db, draft.id, "invoices", draft);
+    return Response.json(draft);
+  }
+  if (url.pathname === "/v1/invoiceitems" && method === "POST") {
+    const invoice = await object(db, form.get("invoice") ?? "");
+    if (!invoice || invoice.payload.status !== "draft" || invoice.payload.customer !== form.get("customer") || form.get("currency") !== "usd") return stripeError(400, "parameter_invalid");
+    const amount = Number(form.get("amount")), lines = [...invoice.payload.lines as Array<{ amount: number; description: string | null }>, { amount, description: form.get("description") }];
+    await save(db, invoice.id, "invoices", { ...invoice.payload, lines, total: lines.reduce((total, line) => total + line.amount, 0), amount_due: lines.reduce((total, line) => total + line.amount, 0) });
+    return Response.json({ id: `ii_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`, object: "invoiceitem", amount, invoice: invoice.id });
+  }
+  const finalize = /^\/v1\/invoices\/([^/]+)\/finalize$/.exec(url.pathname);
+  if (finalize && method === "POST") {
+    const invoice = await object(db, finalize[1]);
+    if (!invoice || invoice.payload.status !== "draft") return stripeError(400, "invoice_not_editable");
+    const count = (await db.prepare("SELECT count(*) AS n FROM wire_stripe_objects WHERE type='invoices' AND json_extract(payload, '$.number') IS NOT NULL").first<{ n: number }>())?.n ?? 0;
+    const open = { ...invoice.payload, status: "open", number: `WIRE-${String(count + 1).padStart(4, "0")}`, hosted_invoice_url: `https://invoice.stripe.com/i/acct_wirehost/${invoice.id}` };
+    await save(db, invoice.id, "invoices", open);
+    return Response.json(open);
+  }
   const detach = /^\/v1\/payment_methods\/([^/]+)\/detach$/.exec(url.pathname);
   if (detach && method === "POST") {
     const card = await object(db, detach[1]);
@@ -126,6 +154,28 @@ export async function payStripeSession(db: D1Database, id: string, paymentStatus
   }
   await db.prepare("UPDATE wire_stripe_sessions SET payload=? WHERE id=?").bind(JSON.stringify(completed), id).run();
   return completed;
+}
+
+/** Synthetic Stripe Tax: sales tax by the address's state, none where the state has no sales tax. */
+const salesTax: Record<string, { rate: number; name: string }> = { NY: { rate: 0.08875, name: "Sales Tax" }, WA: { rate: 0.1025, name: "Sales Tax" }, TX: { rate: 0.0825, name: "Sales Tax" } };
+async function taxCalculation(db: D1Database, form: URLSearchParams) {
+  if (await control(db, "stripe-tax-inactive")) return stripeError(400, "stripe_tax_inactive");
+  const amount = Number(form.get("line_items[0][amount]")), state = form.get("customer_details[address][state]") ?? "";
+  if (form.get("currency") !== "usd" || !Number.isInteger(amount) || form.get("customer_details[address][country]") !== "US" || !/^\d{5}/.test(form.get("customer_details[address][postal_code]") ?? "") || form.get("line_items[0][tax_behavior]") !== "exclusive") return stripeError(400, "parameter_invalid");
+  const rule = salesTax[state], tax = rule ? Math.round(amount * rule.rate) : 0;
+  return Response.json({ id: `taxcalc_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`, object: "tax.calculation", currency: "usd", amount_total: amount + tax, tax_amount_exclusive: tax, tax_amount_inclusive: 0,
+    tax_breakdown: [{ amount: tax, inclusive: false, taxable_amount: rule ? amount : 0, taxability_reason: rule ? "standard_rated" : "not_subject_to_tax", tax_rate_details: { country: "US", state, display_name: rule?.name ?? "Sales Tax", percentage_decimal: rule ? String(Number((rule.rate * 100).toFixed(4))) : "0.0", tax_type: "sales_tax" } }] });
+}
+
+/** The payer pays a hosted invoice: it is paid by a new PaymentIntent that a refund can draw on. */
+export async function payStripeInvoice(db: D1Database, id: string) {
+  const invoice = await object(db, id);
+  if (!invoice || invoice.payload.status !== "open") return undefined;
+  const intent = { id: `pi_wire_inv${id.slice(-10)}`, object: "payment_intent", status: "succeeded", amount: invoice.payload.total, amount_received: invoice.payload.total, amount_refunded: 0, currency: "usd", customer: invoice.payload.customer, payment_method: `pm_wire_inv${id.slice(-10)}`, metadata: {} };
+  await save(db, intent.id, "payment_intents", intent);
+  const paid = { ...invoice.payload, status: "paid", amount_paid: invoice.payload.total, amount_due: 0, payment_intent: intent.id };
+  await save(db, id, "invoices", paid);
+  return paid;
 }
 
 export async function initializeStripeWire(db: D1Database) {

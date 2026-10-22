@@ -11,7 +11,7 @@ export type PaymentHold = {
   claimJson: string | null; bookingId: string | null; endedReason: string | null; expiresAt: string; createdAt: string;
 };
 /** The booking's first payment: the full price or, under PAY-003, a deposit. */
-export type BookingPayment = { amountCents: number; currency: "usd"; checkoutSessionId: string; paymentIntentId: string | null; accountId: string; paidAt: string; kind: "payment" | "deposit" };
+export type BookingPayment = { amountCents: number; currency: "usd"; checkoutSessionId: string; paymentIntentId: string | null; accountId: string; paidAt: string; kind: "payment" | "deposit"; taxCents: number; taxSummary: string | null };
 
 const holdColumns = `id, nonce_id AS nonceId, event_type_id AS eventTypeId, account_id AS accountId, state, kind, start_at AS startAt, end_at AS endAt,
   amount_cents AS amountCents, currency, checkout_session_id AS checkoutSessionId, checkout_url AS checkoutUrl, return_expires_at AS returnExpiresAt,
@@ -101,20 +101,20 @@ export class PaymentsRepository {
   }
 
   async bookingPayment(bookingId: string): Promise<BookingPayment | undefined> {
-    return await this.db.prepare("SELECT amount_cents AS amountCents, currency, checkout_session_id AS checkoutSessionId, payment_intent_id AS paymentIntentId, account_id AS accountId, paid_at AS paidAt, kind FROM booking_payments WHERE booking_id=?")
+    return await this.db.prepare("SELECT amount_cents AS amountCents, currency, checkout_session_id AS checkoutSessionId, payment_intent_id AS paymentIntentId, account_id AS accountId, paid_at AS paidAt, kind, tax_cents AS taxCents, tax_summary AS taxSummary FROM booking_payments WHERE booking_id=?")
       .bind(bookingId).first<BookingPayment>() ?? undefined;
   }
 
   async bookingPayments(bookingIds: string[]): Promise<Map<string, BookingPayment>> {
     if (!bookingIds.length) return new Map();
-    const rows = (await this.db.prepare("SELECT booking_id AS bookingId, amount_cents AS amountCents, currency, checkout_session_id AS checkoutSessionId, payment_intent_id AS paymentIntentId, account_id AS accountId, paid_at AS paidAt, kind FROM booking_payments WHERE booking_id IN (SELECT value FROM json_each(?))")
+    const rows = (await this.db.prepare("SELECT booking_id AS bookingId, amount_cents AS amountCents, currency, checkout_session_id AS checkoutSessionId, payment_intent_id AS paymentIntentId, account_id AS accountId, paid_at AS paidAt, kind, tax_cents AS taxCents, tax_summary AS taxSummary FROM booking_payments WHERE booking_id IN (SELECT value FROM json_each(?))")
       .bind(JSON.stringify(bookingIds)).all<BookingPayment & { bookingId: string }>()).results;
     return new Map(rows.map(({ bookingId, ...payment }) => [bookingId, payment]));
   }
 
-  bookingPaymentStatement(input: { bookingId: string; accountId: string; amountCents: number; checkoutSessionId: string; paymentIntentId: string | null; paidAt: string; kind: "payment" | "deposit" }) {
-    return this.db.prepare("INSERT INTO booking_payments (id, booking_id, provider, account_id, amount_cents, currency, checkout_session_id, payment_intent_id, status, paid_at, created_at, updated_at, kind) SELECT ?, ?, 'stripe', ?, ?, 'usd', ?, ?, 'paid', ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id=?)")
-      .bind(createId(), input.bookingId, input.accountId, input.amountCents, input.checkoutSessionId, input.paymentIntentId, input.paidAt, input.paidAt, input.paidAt, input.kind, input.bookingId);
+  bookingPaymentStatement(input: { bookingId: string; accountId: string; amountCents: number; checkoutSessionId: string; paymentIntentId: string | null; paidAt: string; kind: "payment" | "deposit"; taxCents: number; taxSummary: string | null }) {
+    return this.db.prepare("INSERT INTO booking_payments (id, booking_id, provider, account_id, amount_cents, currency, checkout_session_id, payment_intent_id, status, paid_at, created_at, updated_at, kind, tax_cents, tax_summary) SELECT ?, ?, 'stripe', ?, ?, 'usd', ?, ?, 'paid', ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id=?)")
+      .bind(createId(), input.bookingId, input.accountId, input.amountCents, input.checkoutSessionId, input.paymentIntentId, input.paidAt, input.paidAt, input.paidAt, input.kind, input.taxCents, input.taxSummary, input.bookingId);
   }
 
   confirmHoldStatement(holdId: string, bookingId: string, now: string) {

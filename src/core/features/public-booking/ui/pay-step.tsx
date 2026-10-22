@@ -21,9 +21,16 @@ export function PayStepNotice({ payment, timezone, consented, onConsent, error }
 
 /** The booking's money on the receipt and manage page: what was paid, the balance and its link, refunds and fees,
  * and the cancellation policy it was booked under. */
+const paymentLabels: Record<string, string> = { payment: "Payment", deposit: "Deposit", balance: "Balance", invoice: "Invoice payment", late_cancel_fee: "Late-cancellation fee", no_show_fee: "No-show fee" };
+
 export function PaymentSummary({ payment, timezone, open = true }: { payment: PaymentSummaryView; timezone: string; open?: boolean }) {
   return <div className="pb-payment-summary">
-    <p><strong>{payment.kind === "setup" ? "Card saved with Stripe for the stated fees" : `${payment.kind === "deposit" ? "Deposit paid" : "Paid"} ${formatUsd(payment.amountCents)}`}</strong>{payment.reference ? <> · Stripe reference <code>{payment.reference}</code></> : null}</p>
+    {payment.businessName ? <p>Paid to {payment.businessName}</p> : null}
+    {payment.kind === "invoice" && payment.invoice ? <p><strong>{payment.invoice.paid ? "Invoice paid" : "Invoice issued"} {formatUsd(payment.invoice.amountCents)}</strong>{payment.invoice.number ? <> · Invoice <code>{payment.invoice.number}</code></> : null}</p>
+      : <p><strong>{payment.kind === "setup" ? "Card saved with Stripe for the stated fees" : `${payment.kind === "deposit" ? "Deposit paid" : "Paid"} ${formatUsd(payment.amountCents)}`}</strong>{payment.reference ? <> · Stripe reference <code>{payment.reference}</code></> : null}</p>}
+    {payment.payments && payment.payments.length > 1 ? <ul aria-label="Payments">{payment.payments.map(entry => <li key={`${entry.kind}:${entry.reference}`}>{paymentLabels[entry.kind] ?? entry.kind}: {formatUsd(entry.amountCents)}{entry.taxCents ? ` (sales tax ${formatUsd(entry.taxCents)})` : ""} · <code>{entry.reference}</code></li>)}</ul> : null}
+    {payment.taxCents ? <p>Sales tax included: {formatUsd(payment.taxCents)}{payment.taxSummary ? ` (${payment.taxSummary})` : ""}</p> : null}
+    {payment.invoice && !payment.invoice.paid && open ? <p>Invoice {payment.invoice.number ?? ""} for {formatUsd(payment.invoice.amountCents)}: <a href={payment.invoice.url}>Pay the invoice on Stripe</a></p> : null}
     {payment.balanceDueCents > 0 && payment.balanceDueAt ? <p>Balance due: {formatUsd(payment.balanceDueCents)} by {format(payment.balanceDueAt, timezone)}.{payment.balanceUrl && open ? <> <a href={payment.balanceUrl}>Pay the balance</a></> : null}</p> : null}
     {payment.paidCents !== payment.amountCents ? <p>Paid in all: {formatUsd(payment.paidCents)}</p> : null}
     {payment.feesCents ? <p>Fees charged: {formatUsd(payment.feesCents)}</p> : null}

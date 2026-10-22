@@ -106,7 +106,7 @@ export type PaymentSummary = {
   amountCents: number;
   currency: "usd";
   reference: string;
-  kind: "payment" | "deposit" | "setup";
+  kind: "payment" | "deposit" | "setup" | "invoice";
   priceCents: number;
   paidCents: number;
   refundedCents: number;
@@ -118,6 +118,12 @@ export type PaymentSummary = {
   freeWindowEndsAt: string | null;
   policy: string[];
   cardSaved: boolean;
+  /** PAY-005: sales tax net of refunds, the business receipts name, each payment with its tax, and an issued invoice. */
+  taxCents: number;
+  taxSummary: string | null;
+  businessName: string;
+  payments: Array<{ kind: string; amountCents: number; taxCents: number; reference: string; paidAt: string }>;
+  invoice?: { url: string; number: string | null; amountCents: number; taxCents: number; paid: boolean };
   movements: Array<{ kind: string; amountCents: number; status: string; createdAt: string; reference: string | null }>;
   /** What cancelling now would do, while the booking is still open. */
   cancellation?: { outcome: "refund" | "late_fee" | "none"; amountCents: number };

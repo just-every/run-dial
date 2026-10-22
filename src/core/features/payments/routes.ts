@@ -7,6 +7,7 @@ import { validate } from "../../shared/validation";
 import { stripeCallbackPath, stripeWebhookPath } from "./config";
 import { eventPriceInputSchema } from "./pricing";
 import { paymentTermsInputSchema, termsRefusalMessages } from "./terms";
+import { billingAddressSchema } from "./tax";
 import type { MoneyRefusal } from "./money-service";
 
 const callbackSchema = z.object({ state: z.string().min(1).max(4_096).optional(), code: z.string().min(1).max(4_096).optional(), error: z.string().max(200).optional() });
@@ -54,9 +55,26 @@ export const paymentRoutes = new Hono<AppEnvironment>()
     const result = await context.get("services").payments.saveTerms(event, context.req.valid("json"));
     return result.kind === "saved" ? context.json(result.terms) : apiError(context, 400, result.refusal, termsRefusalMessages[result.refusal]);
   })
+  // PAY-005: Stripe Tax on or off, and the business name receipts and invoices carry.
+  .get("/api/app/payments/settings", async context => context.json(await context.get("services").payments.settings()))
+  .put("/api/app/payments/settings", validate("json", z.object({ taxEnabled: z.boolean(), businessName: z.string().trim().max(120).nullable() }).strict()), async context => {
+    const input = context.req.valid("json");
+    await context.get("services").payments.saveSettings({ taxEnabled: input.taxEnabled, businessName: input.businessName || null });
+    return context.json(await context.get("services").payments.settings());
+  })
+  .post("/api/app/bookings/:id/invoice", validate("param", bookingSchema), validate("json", z.object({ billingAddress: billingAddressSchema.optional() }).strict()), async context => {
+    const { id } = context.req.valid("param");
+    const result = await context.get("services").payments.invoices.issue(id, context.get("session").id, context.req.valid("json").billingAddress);
+    if (result.kind === "issued") return context.json({ invoice: result.invoice, money: (await context.get("services").bookings.getForOperator(id))?.money ?? null });
+    if (result.kind === "not_found") return apiError(context, 404, "booking_not_found", "The booking does not exist.");
+    if (result.kind === "refused") return apiError(context, 409, "payments_unavailable", moneyRefusalMessages[result.reason], [result.reason]);
+    if (result.kind === "address_required") return apiError(context, 400, "billing_address_required", "Enter the invitee's billing address: Stripe Tax calculates the invoice's sales tax from it.", ["billingAddress"]);
+    if (result.kind === "failed") return apiError(context, 503, "invoice_failed", "Stripe did not issue the invoice. Try again.", [result.reason]);
+    return apiError(context, 409, "invoice_not_available", result.reason === "paid_upfront" ? "This booking was paid when it was booked." : result.reason === "booking_cancelled" ? "A cancelled booking cannot be invoiced." : "This booking's event type and duration have no price.", [result.reason]);
+  })
   .get("/api/app/bookings/:id/money", validate("param", bookingSchema), async context => {
     const booking = await context.get("services").bookings.getForOperator(context.req.valid("param").id);
-    return booking ? context.json({ money: booking.money ?? null }) : apiError(context, 404, "booking_not_found", "The booking does not exist.");
+    return booking ? context.json({ money: booking.money ?? null, invoiceOffer: await context.get("services").payments.invoices.offer(booking.id) ?? null }) : apiError(context, 404, "booking_not_found", "The booking does not exist.");
   })
   .post("/api/app/bookings/:id/refunds", validate("param", bookingSchema), validate("json", refundSchema), async context => {
     const { id } = context.req.valid("param");

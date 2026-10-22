@@ -22,6 +22,9 @@ export type CheckoutSession = {
 export type PaymentIntent = { id: string; status: string; amount: number; currency: string; customer: string | null; payment_method: string | null };
 export type SetupIntent = { id: string; status: string; customer: string | null; payment_method: string | null };
 export type Refund = { id: string; status: string; amount: number; payment_intent: string | null };
+/** PAY-005: a Stripe Tax calculation and an invoice, read only for their amounts, jurisdiction and hosted page. */
+export type TaxCalculation = { id: string; amount_total: number; tax_amount_exclusive: number; tax_breakdown: Array<{ amount: number; taxability_reason?: string; tax_rate_details?: { display_name?: string; percentage_decimal?: string; state?: string | null; country?: string } }> };
+export type Invoice = { id: string; number: string | null; status: string; total: number; amount_due: number; hosted_invoice_url: string | null; payment_intent?: string | null; metadata?: Record<string, string> };
 
 const apiOrigin = "https://api.stripe.com";
 const connectOrigin = "https://connect.stripe.com";
@@ -73,6 +76,26 @@ export class StripeApi {
   /** PAY-003: a stated fee charged once to the invitee's saved card while they are not present. */
   chargeSavedCard(accountId: string, params: Record<string, string>, idempotencyKey: string) {
     return this.request<PaymentIntent>(`${apiOrigin}/v1/payment_intents`, { ...params, off_session: "true", confirm: "true" }, { account: accountId, idempotencyKey });
+  }
+
+  createTaxCalculation(accountId: string, params: Record<string, string>) {
+    return this.request<TaxCalculation>(`${apiOrigin}/v1/tax/calculations`, params, { account: accountId });
+  }
+
+  createCustomer(accountId: string, params: Record<string, string>, idempotencyKey: string) {
+    return this.request<{ id: string }>(`${apiOrigin}/v1/customers`, params, { account: accountId, idempotencyKey });
+  }
+
+  createInvoice(accountId: string, params: Record<string, string>, idempotencyKey: string) {
+    return this.request<Invoice>(`${apiOrigin}/v1/invoices`, params, { account: accountId, idempotencyKey });
+  }
+
+  createInvoiceItem(accountId: string, params: Record<string, string>, idempotencyKey: string) {
+    return this.request<{ id: string }>(`${apiOrigin}/v1/invoiceitems`, params, { account: accountId, idempotencyKey });
+  }
+
+  finalizeInvoice(accountId: string, invoiceId: string, idempotencyKey: string) {
+    return this.request<Invoice>(`${apiOrigin}/v1/invoices/${encodeURIComponent(invoiceId)}/finalize`, { auto_advance: "false" }, { account: accountId, idempotencyKey });
   }
 
   detachPaymentMethod(accountId: string, paymentMethodId: string) {

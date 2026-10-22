@@ -3,6 +3,7 @@ import { api, errorMessage } from "../../../api/client";
 import { Badge, Button, Card, noticeClassName } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
 import { operatorTimestamp } from "../../../shared/operator-format";
+import { TaxSettings } from "./tax-settings";
 
 type StripeStatus = { redirectUri: string; webhookUrl: string; webhookEvents: string[]; configured: boolean; state: "connected" | "deauthorized" | "disconnected"; accountId: string | null; livemode: boolean; achEnabled: boolean; statusChangedAt: string | null };
 
@@ -39,6 +40,7 @@ export function StripeConnectionCard({ timezone }: { timezone: string | null }) 
       {status ? <p className="mt-3 font-semibold">{status.configured ? "Required Stripe secrets are present." : "Required Stripe secrets are missing. Add all three before connecting."}</p> : null}
     </details>
     {connected ? <label className="mt-5 flex items-start gap-3 text-sm text-ink"><input className="mt-0.5 h-[18px] w-[18px]" type="checkbox" checked={status.achEnabled} disabled={working} onChange={event => void act(() => api.api.app.payments.stripe.ach.$put({ json: { enabled: event.target.checked } }), () => "Payment methods saved.")} /><span>Offer <strong>ACH Direct Debit</strong> (US bank account) as well as cards, Apple Pay, Google Pay and Link. A bank payment holds the time until Stripe confirms it.</span></label> : null}
+    {connected ? <TaxSettings /> : null}
     {error ? <p role="alert" className={noticeClassName("error", "mt-4")}>{error}</p> : null}
     {notice ? <p role="status" className={noticeClassName("success", "mt-4")}>{notice}</p> : null}
     <div className="mt-5 flex flex-wrap gap-3">{connected ? <Button variant="danger" type="button" disabled={working} onClick={() => void act(() => api.api.app.payments.stripe.$delete(), body => (body as { revoked: boolean }).revoked ? "Stripe disconnected and Dial's access revoked." : "Stripe disconnected in Dial. Revoke Dial's access in your Stripe dashboard if it is still listed.")}>{working ? "Disconnecting…" : "Disconnect Stripe"}</Button> : <Button type="button" disabled={!status?.configured || working} onClick={() => window.location.assign("/api/app/payments/stripe/oauth/start")}>Connect Stripe</Button>}</div>

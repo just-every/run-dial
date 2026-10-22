@@ -1,5 +1,5 @@
 import type { AppServices } from "../../src/core/app/services";
-import { payStripeSession } from "./stripe-wire";
+import { payStripeInvoice, payStripeSession } from "./stripe-wire";
 
 /** PAY-001 test-only controls: the payer finishing Stripe's page, a payment window or OAuth state reaching its
  * end, the production sweep, and a full-table scan for payer details. */
@@ -8,6 +8,11 @@ export async function paymentFixtures(url: URL, request: Request, db: D1Database
     const { sessionId, paymentStatus } = await request.json<{ sessionId: string; paymentStatus?: "paid" | "unpaid" }>();
     const session = await payStripeSession(providerDb, sessionId, paymentStatus);
     return session ? Response.json(session) : new Response(null, { status: 404 });
+  }
+  if (url.pathname === "/__fixtures/payments/pay-invoice") {
+    const { invoiceId } = await request.json<{ invoiceId: string }>();
+    const invoice = await payStripeInvoice(providerDb, invoiceId);
+    return invoice ? Response.json(invoice) : new Response(null, { status: 404 });
   }
   if (url.pathname === "/__fixtures/payments/window-ended") {
     const { holdId } = await request.json<{ holdId: string }>();

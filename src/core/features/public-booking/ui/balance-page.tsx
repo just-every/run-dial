@@ -6,7 +6,7 @@ import { format } from "./flow-shell";
 import { PublicFooter, PublicHeader, PublicTheme } from "./public-shell";
 import { PublicRecoveryPage } from "./recovery-page";
 
-type BalanceStatus = { state: "due" | "paid" | "expired" | "cancelled"; amountCents: number; balanceDueCents: number; dueAt: string; eventTitle: string; startAt: string; reference: string | null; processing: boolean };
+type BalanceStatus = { state: "due" | "paid" | "expired" | "cancelled"; amountCents: number; taxCents: number; taxSummary: string | null; balanceDueCents: number; dueAt: string; eventTitle: string; startAt: string; reference: string | null; processing: boolean };
 
 /** PAY-003's balance link: what is still due on a deposit booking and until when, paid on Stripe Checkout. Only
  * Stripe's signed event marks it paid; returning from Stripe only reads the state again. */
@@ -45,8 +45,8 @@ export function BalancePage({ token }: { token: string }) {
     {!status ? <p>{error || "Loading your balance…"}</p> : <>
       <h1>{status.state === "paid" ? "Balance paid." : status.state === "cancelled" ? "This booking is cancelled." : status.state === "expired" ? "This payment link has closed." : returned ? "Waiting for Stripe to confirm your payment." : `${formatUsd(status.balanceDueCents)} due.`}</h1>
       <p>{status.eventTitle} · {format(status.startAt, timezone)} · {timezone}</p>
-      {status.state === "due" ? <p>Due by {format(status.dueAt, timezone)}. You pay securely on Stripe Checkout; Dial never sees your card number.</p> : null}
-      {status.state === "paid" ? <p>{formatUsd(status.amountCents)} paid{status.reference ? <> · Stripe reference <code>{status.reference}</code></> : null}.</p> : null}
+      {status.state === "due" ? <p>Due by {format(status.dueAt, timezone)}.{status.taxCents ? ` Includes ${formatUsd(status.taxCents)} sales tax${status.taxSummary ? ` (${status.taxSummary})` : ""}.` : ""} You pay securely on Stripe Checkout; Dial never sees your card number.</p> : null}
+      {status.state === "paid" ? <p>{formatUsd(status.amountCents)} paid{status.reference ? <> · Stripe reference <code>{status.reference}</code></> : null}. Your receipt is on its way by email.</p> : null}
       {status.state === "cancelled" ? <p>Nothing more is due. The booking's cancellation policy decides any refund; see your manage link.</p> : null}
       {status.state === "expired" ? <p>The meeting has started, so this link no longer takes payment. Contact the host to settle the balance.</p> : null}
       {status.state === "due" && !returned ? <button type="button" className="pb-primary-button mt-5" disabled={!hydrated || working} onClick={() => void pay()}>{working ? "Opening Stripe…" : `Pay the balance · ${formatUsd(status.balanceDueCents)}`}</button> : null}

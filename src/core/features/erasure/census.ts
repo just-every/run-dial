@@ -124,6 +124,8 @@ export const applicationTables = [
   // PAY-001: a pending hold carries the payer's folded email and pending booking until it ends; erased by email and with its booking.
   "payment_holds",
   "payment_oauth_states",
+  // PAY-005: Stripe Tax on or off and the business name receipts carry; host configuration, no personal data.
+  "payment_settings",
   // PAY-003: an event type's deposit, balance due time and cancellation policy; host configuration, no personal data.
   "event_type_payment_terms",
   // PAY-003: the amounts and windows a booking was shown; erased with its booking.

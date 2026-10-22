@@ -63,7 +63,7 @@ export function buildSchedulingReport(facts: BookingFact[], context: ReportConte
     // Money counts at the time Stripe confirmed it: revenue is first payments, deposits and balances; fees are
     // Dial's late-cancellation and no-show fees; refunds are refunds Dial issued.
     const moved = fact.money.filter(entry => inside(entry.at, context));
-    for (const [bucket, kinds] of [["revenue", ["payment", "balance"]], ["fees", ["fee"]], ["refunds", ["refund"]]] as const) {
+    for (const [bucket, kinds] of [["revenue", ["payment", "balance", "invoice"]], ["fees", ["fee"]], ["refunds", ["refund"]]] as const) {
       const entries = moved.filter(entry => (kinds as readonly string[]).includes(entry.kind));
       if (!entries.length) continue;
       money[bucket] += entries.reduce((total, entry) => total + entry.amountCents, 0);

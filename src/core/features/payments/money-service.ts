@@ -9,6 +9,8 @@ import type { Movement, MovementsRepository, NewMovement } from "./movements-rep
 import type { BookingPayment, PaymentsRepository } from "./repository";
 import { StripeApi, StripeApiError } from "./stripe-api";
 import type { TermsSnapshot } from "./terms";
+import { balanceTaxCents } from "../../shared/payment-terms";
+import { receiptAudience, receiptStatements, type ReceiptKind } from "./receipts";
 
 export type MoneyRefusal = "payments_not_configured" | "stripe_not_connected" | "stripe_deauthorized";
 export type BookingMoney = { payment?: BookingPayment; snapshot?: TermsSnapshot; consent?: CardConsent; movements: Movement[]; ledger: Ledger; balanceUrl?: string };
@@ -52,7 +54,7 @@ export class MoneyService {
     const accountId = consent?.accountId ?? payment?.accountId;
     if (outcome.kind === "refund" && summary.refundableCents > 0 && accountId) {
       const parts = allocateRefund(summary.charges, summary.refundableCents) ?? [];
-      return { outcome, refundCents: summary.refundableCents, statements: parts.map(part => this.movements.insertStatement({ bookingId, kind: "refund", amountCents: part.amountCents, actorType: "policy", actorId: null, reason: "Cancelled inside the free cancellation window", accountId, sourceRef: part.ref, idempotencyKey: `policy-refund:${bookingId}:${part.ref}` }, now, condition)) };
+      return { outcome, refundCents: summary.refundableCents, statements: parts.map(part => this.movements.insertStatement({ bookingId, kind: "refund", amountCents: part.amountCents, taxCents: part.taxCents, actorType: "policy", actorId: null, reason: "Cancelled inside the free cancellation window", accountId, sourceRef: part.ref, idempotencyKey: `policy-refund:${bookingId}:${part.ref}` }, now, condition)) };
     }
     if (outcome.kind === "late_fee" && consent?.paymentMethodId && consent.lateCancelFeeCents === outcome.feeCents) {
       return { outcome, refundCents: 0, statements: [this.movements.insertStatement({ bookingId, kind: "late_cancel_fee", amountCents: outcome.feeCents, actorType: "policy", actorId: null, reason: "Cancelled after the free cancellation window", accountId: consent.accountId, sourceRef: null, idempotencyKey: `policy-fee:${bookingId}` }, now, condition)] };
@@ -87,7 +89,7 @@ export class MoneyService {
       const summary = ledger(await this.payments.bookingPayment(bookingId), await this.money.snapshot(bookingId), await this.movements.forBooking(bookingId));
       const parts = input.amountCents <= summary.refundableCents ? allocateRefund(summary.charges, input.amountCents) : undefined;
       if (!parts?.length) return { kind: "exceeds_refundable" as const, refundableCents: summary.refundableCents };
-      await this.movements.insert(parts.map((part, index): NewMovement => ({ bookingId, kind: "refund", amountCents: part.amountCents, actorType: "operator", actorId: operatorId, reason: input.reason, accountId: live.accountId, sourceRef: part.ref, idempotencyKey: `${input.idempotencyKey}:${index}` })));
+      await this.movements.insert(parts.map((part, index): NewMovement => ({ bookingId, kind: "refund", amountCents: part.amountCents, taxCents: part.taxCents, actorType: "operator", actorId: operatorId, reason: input.reason, accountId: live.accountId, sourceRef: part.ref, idempotencyKey: `${input.idempotencyKey}:${index}` })));
     } else if (replayed.bookingId !== bookingId) return { kind: "key_reused" as const };
     await this.settle(bookingId);
     return { kind: "done" as const };
@@ -127,13 +129,21 @@ export class MoneyService {
         description: `${movement.kind === "no_show_fee" ? "No-show fee" : "Late-cancellation fee"}: ${facts?.eventTitle ?? "booking"}`.slice(0, 200),
         "metadata[dial_movement_id]": movement.id, "metadata[dial_booking_id]": movement.bookingId,
       }, `dial-movement-${movement.id}`);
-      if (intent.status === "succeeded" && intent.amount === movement.amountCents) await this.movements.succeed(movement.id, intent.id);
+      if (intent.status === "succeeded" && intent.amount === movement.amountCents) await this.movements.succeed(movement.id, intent.id, await this.receipt(movement, intent.id));
       else await this.movements.fail(movement.id, `payment_${intent.status}`.replace(/[^a-z0-9_]/gi, "").slice(0, 80));
     } catch (error) {
       // A definite refusal settles the movement as failed and is never retried; a lost or failed transport leaves it
       // pending for the sweep, which repeats the same idempotent request.
       if (error instanceof StripeApiError && error.status >= 400 && error.status < 500 && error.status !== 409 && error.status !== 429) await this.movements.fail(movement.id, error.code);
     }
+  }
+
+  /** PAY-005: a settled charge's receipt, queued in the same batch that settles it. Fees carry no added tax. */
+  async receipt(movement: Movement, ref: string) {
+    const audience = await receiptAudience(this.db, movement.bookingId);
+    if (!audience) return [];
+    const settings = await this.money.settings();
+    return receiptStatements(this.db, audience.booking, { ref, kind: movement.kind as ReceiptKind, amountCents: movement.amountCents, taxCents: movement.taxCents, taxSummary: movement.taxSummary, paidAt: nowIso() }, settings.businessName ?? settings.hostName ?? "Dial", audience.operators);
   }
 
   private facts(bookingId: string) {
@@ -151,7 +161,7 @@ export class MoneyService {
     const summary = ledger(payment, snapshot, movements), balance = movements.find(movement => movement.kind === "balance");
     const state = balance?.status === "succeeded" ? "paid" as const : facts.state === "cancelled" ? "cancelled" as const : facts.startAt <= nowIso() ? "expired" as const : "due" as const;
     return { kind: "found" as const, bookingId, facts, snapshot, status: {
-      state, amountCents: snapshot.balanceCents, balanceDueCents: summary.balanceDueCents, dueAt: new Date(Date.parse(facts.startAt) - snapshot.balanceDueHours * 3_600_000).toISOString(),
+      state, amountCents: snapshot.balanceCents + balanceTaxCents(snapshot), taxCents: balanceTaxCents(snapshot), taxSummary: snapshot.taxSummary, balanceDueCents: summary.balanceDueCents, dueAt: new Date(Date.parse(facts.startAt) - snapshot.balanceDueHours * 3_600_000).toISOString(),
       eventTitle: facts.eventTitle, startAt: facts.startAt, reference: balance?.processorRef ?? null, processing: balance?.status === "pending" && Boolean(balance.checkoutSessionId),
     } };
   }
@@ -164,15 +174,16 @@ export class MoneyService {
     if (found.status.state !== "due" || found.status.balanceDueCents <= 0) return { kind: "not_due" as const, state: found.status.state };
     const live = await this.live();
     if ("refusal" in live) return { kind: "refused" as const, reason: live.refusal };
-    const key = `balance:${found.bookingId}`;
-    await this.movements.insert([{ bookingId: found.bookingId, kind: "balance", amountCents: found.status.balanceDueCents, actorType: "invitee", actorId: null, reason: "Balance after the deposit", accountId: live.accountId, sourceRef: null, idempotencyKey: key }]);
+    const key = `balance:${found.bookingId}`, taxCents = balanceTaxCents(found.snapshot);
+    await this.movements.insert([{ bookingId: found.bookingId, kind: "balance", amountCents: found.status.balanceDueCents, taxCents, taxSummary: found.snapshot.taxSummary, actorType: "invitee", actorId: null, reason: "Balance after the deposit", accountId: live.accountId, sourceRef: null, idempotencyKey: key }]);
     const movement = await this.movements.byKey(key);
     if (!movement || movement.status !== "pending") return { kind: "not_due" as const, state: "paid" as const };
     if (movement.checkoutUrl) return { kind: "checkout" as const, checkoutUrl: movement.checkoutUrl };
     const returnUrl = new URL(`/manage/balance/${token}`, this.runtime.APP_URL).toString();
     const session = await live.api.createCheckoutSession(live.accountId, {
-      mode: "payment", "line_items[0][quantity]": "1", "line_items[0][price_data][currency]": "usd", "line_items[0][price_data][unit_amount]": String(movement.amountCents),
+      mode: "payment", "line_items[0][quantity]": "1", "line_items[0][price_data][currency]": "usd", "line_items[0][price_data][unit_amount]": String(movement.amountCents - movement.taxCents),
       "line_items[0][price_data][product_data][name]": `Balance: ${found.facts.eventTitle} (${found.facts.durationMinutes} minutes)`.slice(0, 250),
+      ...(movement.taxCents > 0 ? { "line_items[1][quantity]": "1", "line_items[1][price_data][currency]": "usd", "line_items[1][price_data][unit_amount]": String(movement.taxCents), "line_items[1][price_data][product_data][name]": `Sales tax${movement.taxSummary ? ` (${movement.taxSummary})` : ""}`.slice(0, 250) } : {}),
       "excluded_payment_method_types[0]": "us_bank_account",
       success_url: `${returnUrl}?paid=1&session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${returnUrl}?canceled=1`,
       expires_at: String(Math.floor(Date.now() / 1000) + balanceCheckoutSeconds), client_reference_id: movement.id, customer_email: found.facts.inviteeEmail,
@@ -202,7 +213,7 @@ export class MoneyService {
       case "payment_intent.succeeded":
         if (movement.status === "succeeded") return { kind: "processed" as const };
         if (amount !== movement.amountCents || object.currency !== "usd" || !paymentIntent) return { kind: "rejected" as const };
-        await this.movements.succeed(movement.id, paymentIntent);
+        await this.movements.succeed(movement.id, paymentIntent, await this.receipt(movement, paymentIntent));
         return { kind: "processed" as const, settled: movement.id };
       case "checkout.session.expired":
       case "checkout.session.async_payment_failed":

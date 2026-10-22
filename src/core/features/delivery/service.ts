@@ -177,7 +177,8 @@ export class ProviderDeliveryService {
       payload = { ...payload, ...reminder };
     }
     if (typeof payload.rescheduleRequestId === "string" && !await this.repository.activeRescheduleRequest(payload.rescheduleRequestId,now.toISOString())) throw new ProviderFailure("superseded_occurrence",false);
-    if (record.kind === "mail_send" && !await this.repository.currentBookingMail(record, payload.bookingState === "cancelled", payload.messageKind === "host_contact")) throw new ProviderFailure("superseded_occurrence", false);
+    // Direct messages, receipts and invoices (PAY-005) belong to the booking, not to one of its times.
+    if (record.kind === "mail_send" && !await this.repository.currentBookingMail(record, payload.bookingState === "cancelled", ["host_contact", "receipt", "invoice"].includes(String(payload.messageKind)))) throw new ProviderFailure("superseded_occurrence", false);
     const providerKey = string(payload.providerIdempotencyKey) ?? record.idempotencyKey;
     // Freeze the exact provider bytes before the effect. An ambiguous explicit
     // retry retains both those bytes and the original provider identity.

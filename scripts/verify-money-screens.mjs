@@ -4,10 +4,12 @@ import { chromium } from "@playwright/test";
 import { completeEmptyWorkspace } from "../tests/booking-axe/first-run-fixture.mjs";
 import { screenRecorder, screenshotFolder, widths } from "./screens-support.mjs";
 
-// PAY-003 browser proof on the review rig, with Stripe synthetic at the HTTP edge: the event type's deposit and
-// cancellation policy, the pay step with its consent (and the refusal without it), the manage page's balance, the
-// balance link due, paid and invalid, the booking record's payments with the refund form and a refused refund, and
-// the receipt after a refund, at 1440 and 390 pixels with axe. Run with DIAL_MONEY_SCREENS set to the evidence folder.
+// PAY-003 and PAY-005 browser proof on the review rig, with Stripe and Stripe Tax synthetic at the HTTP edge: the event
+// type's deposit and cancellation policy, the pay step with its consent (and the refusal without it), the manage page's
+// balance, the balance link due, paid and invalid, the booking record's payments with the refund form and a refused
+// refund, the receipt after a refund; then Stripe Tax settings, the pay step's billing address with taxable and
+// non-taxable tax, the receipt with tax and the booking record's invoice, at 1440 and 390 pixels with axe.
+// Run with DIAL_MONEY_SCREENS set to the evidence folder.
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752", folder = await screenshotFolder("DIAL_MONEY_SCREENS"), headers = { Origin: origin };
 const webhookSecret = "whsec_wiretest";
 const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
@@ -77,5 +79,33 @@ try {
     await capture(width, "booking-record-refunded", record, async page => { const section = await payments(page); await section.getByText("Started ten minutes late").waitFor(); await section.scrollIntoViewIfNeeded(); });
     await capture(width, "receipt-refunded", `/book/dial-host/coaching/confirmed?token=${token}`, async page => { await page.getByText("Refunded: $10.00 USD").waitFor(); }, { session: false });
   }
-  console.log(`PAY-003 browser proof: ${shots.length} screenshots (${shots.join(", ")}).`);
+  // PAY-005: Stripe Tax on, with the business name receipts carry.
+  await json(await owner.request.put(`${origin}/api/app/payments/settings`, { headers, data: { taxEnabled: true, businessName: "Morgan Bell Coaching" } }));
+  for (const width of widths) await capture(width, "settings-tax", "/app/settings", async page => { const form = page.getByRole("form", { name: "Sales tax and receipts" }); await form.getByRole("checkbox", { name: /Stripe Tax/u }).waitFor(); for (let attempt = 0; await form.getByLabel("Business name on receipts and invoices").inputValue() !== "Morgan Bell Coaching"; attempt++) { assert.ok(attempt < 100, "saved business name loads"); await page.waitForTimeout(100); } await form.scrollIntoViewIfNeeded(); return form; });
+  const taxWeek = new Date(Date.now() + 12 * 86400000).toISOString().slice(0, 10);
+  const taxSlot = (await json(await owner.request.get(`${origin}/api/public/book/dial-host/coaching/availability?week=${taxWeek}&durationMinutes=60`))).slots[0].startAt;
+  const taxSelection = await json(await owner.request.post(`${origin}/api/public/book/dial-host/coaching/selection`, { headers, data: { startAt: taxSlot, inviteeTimezone: "America/New_York", durationMinutes: 60 } }), 201);
+  const taxDetails = `/book/dial-host/coaching/details?${new URLSearchParams({ nonce: taxSelection.nonce, startAt: taxSlot, inviteeTimezone: "America/New_York", durationMinutes: "60" })}`;
+  const address = async (page, street, city, state, zip) => { await page.getByLabel("Street address").fill(street); await page.getByLabel("City").fill(city); await page.getByLabel("State").fill(state); await page.getByLabel("ZIP code").fill(zip); };
+  for (const width of widths) {
+    await capture(width, "pay-step-tax", taxDetails, async page => { await address(page, "350 Fifth Avenue", "New York", "NY", "10118"); await page.getByText("Sales tax: $2.22 USD", { exact: false }).waitFor(); await page.getByRole("button", { name: "Continue to payment · $27.22 USD" }).waitFor(); }, { session: false });
+    await capture(width, "pay-step-no-tax", taxDetails, async page => { await address(page, "1221 SW 4th Avenue", "Portland", "OR", "97204"); await page.getByText("No sales tax applies to this address.", { exact: false }).waitFor(); }, { session: false });
+  }
+  const taxShown = (await json(await owner.request.get(`${origin}/api/public/book/dial-host/coaching/selection?${new URLSearchParams({ nonce: taxSelection.nonce, startAt: taxSlot, inviteeTimezone: "America/New_York" })}`))).payment;
+  const newYork = { line1: "350 Fifth Avenue", city: "New York", state: "NY", postalCode: "10118", country: "US" };
+  const taxQuote = await json(await owner.request.post(`${origin}/api/public/book/dial-host/coaching/tax`, { headers, data: { nonce: taxSelection.nonce, startAt: taxSlot, inviteeTimezone: "America/New_York", billingAddress: newYork } }));
+  const taxStep = await json(await owner.request.post(`${origin}/api/public/book/dial-host/coaching/confirm`, { headers, data: { nonce: taxSelection.nonce, startAt: taxSlot, durationMinutes: 60, inviteeTimezone: "America/New_York", name: "Tara Tax", email: "tara.tax@example.test", answers: {}, cardConsent: { accepted: true, version: taxShown.consent.version }, billingAddress: newYork, shownTaxCents: taxQuote.dueNowTaxCents } }), 202);
+  await pay(taxStep.payment.checkoutUrl);
+  const taxStatus = await json(await owner.request.get(`${origin}/api/public/payments/${new URL(taxStep.payment.returnUrl).searchParams.get("return")}`));
+  const taxToken = new URL(taxStatus.manageUrl).pathname.split("/").at(-1);
+  for (const width of widths) await capture(width, "receipt-tax", `/book/dial-host/coaching/confirmed?token=${taxToken}`, async page => { await page.getByText("Sales tax included: $2.22 USD", { exact: false }).waitFor(); await page.getByText("Paid to Morgan Bell Coaching").waitFor(); }, { session: false });
+  const invoiceWeek = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+  const invoiceSlot = (await json(await owner.request.get(`${origin}/api/public/book/dial-host/coaching/availability?week=${invoiceWeek}&durationMinutes=60`))).slots[0].startAt;
+  const invoiced = await json(await owner.request.post(`${origin}/api/app/bookings`, { headers, data: { eventTypeId: event.id, startAt: invoiceSlot, inviteeTimezone: "America/New_York", name: "Ivy Invoice", email: "ivy.invoice@example.test", answers: {} } }), 201);
+  const invoiceRecord = "/app/bookings?query=Ivy%20Invoice";
+  const invoiceSection = async page => { await page.getByRole("heading", { name: "Ivy Invoice", exact: true }).waitFor(); const section = page.getByRole("region", { name: "Payments" }); await section.waitFor(); return section; };
+  for (const width of widths) await capture(width, "booking-record-invoice-form", invoiceRecord, async page => { const section = await invoiceSection(page); await section.getByRole("button", { name: "Issue invoice" }).click(); await section.getByRole("form", { name: "Issue invoice" }).getByLabel("ZIP code").waitFor(); await section.scrollIntoViewIfNeeded(); });
+  await json(await owner.request.post(`${origin}/api/app/bookings/${invoiced.id}/invoice`, { headers, data: { billingAddress: newYork } }));
+  for (const width of widths) await capture(width, "booking-record-invoiced", invoiceRecord, async page => { const section = await invoiceSection(page); await section.getByRole("link", { name: "Stripe-hosted invoice" }).waitFor(); await section.scrollIntoViewIfNeeded(); });
+  console.log(`PAY-003 and PAY-005 browser proof: ${shots.length} screenshots (${shots.join(", ")}).`);
 } finally { await owner.close(); await browser.close(); }

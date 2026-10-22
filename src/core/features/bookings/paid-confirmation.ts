@@ -19,7 +19,7 @@ export async function beginPaidConfirmation(deps: { repository: BookingsReposito
   const { payments, runtime } = deps, { quote } = input;
   const returnToken = await payments.returnToken(input.nonce), manageToken = await payments.manageToken(returnToken);
   const balanceSalt = quote.snapshot.balanceCents > 0 ? createOpaqueToken() : undefined;
-  const money: PendingMoney = { snapshot: quote.snapshot, ...(input.consent ? { consent: { version: input.consent.version, acceptedAt: input.claim.now } } : {}), ...(balanceSalt ? { balanceSalt } : {}) };
+  const money: PendingMoney = { snapshot: quote.snapshot, manageUrl: new URL(`/manage/${manageToken}`, runtime.APP_URL).toString(), ...(input.consent ? { consent: { version: input.consent.version, acceptedAt: input.claim.now } } : {}), ...(balanceSalt ? { balanceSalt } : {}) };
   const claim: BookingClaim = { ...input.claim, manageTokenHash: await hashToken(manageToken, runtime.SESSION_SECRET), emails: [], money };
   const holdId = createId(), timing = payments.holdTiming(Date.parse(input.claim.now));
   const outcome = await deps.repository.claimPaymentHold(claim, { id: holdId, kind: quote.mode, accountId: quote.accountId, amountCents: quote.amountCents, returnTokenHash: await payments.hashReturnToken(returnToken), ...timing });

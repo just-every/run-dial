@@ -5,11 +5,11 @@ export type BookingFact = {
   cancelledAt: string | null; cancelledReason: string | null;
   rescheduledAt: string[]; attendance: "attended" | "no_show" | null;
   /** Money Stripe confirmed for the booking (PAY-001 first payment, PAY-003 movements), each at its settled time. */
-  money: Array<{ kind: "payment" | "balance" | "fee" | "refund"; amountCents: number; at: string }>;
+  money: Array<{ kind: "payment" | "balance" | "invoice" | "fee" | "refund"; amountCents: number; at: string }>;
 };
 
 type Row = Omit<BookingFact, "attribution" | "rescheduledAt" | "imported" | "money"> & { imported: number; attributionJson: string; rescheduledJson: string; moneyJson: string; paidAt: string | null; paidCents: number | null };
-const movementKind: Record<string, BookingFact["money"][number]["kind"]> = { balance: "balance", refund: "refund", late_cancel_fee: "fee", no_show_fee: "fee" };
+const movementKind: Record<string, BookingFact["money"][number]["kind"]> = { balance: "balance", invoice: "invoice", refund: "refund", late_cancel_fee: "fee", no_show_fee: "fee" };
 
 /** One narrow row per booking that the period can touch: created, started, first scheduled, cancelled,
  * rescheduled or paid inside it. The report computes every tile from these rows. */

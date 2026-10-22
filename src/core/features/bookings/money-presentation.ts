@@ -1,23 +1,31 @@
 import { formatUsd, priceForDuration, type EventPrice } from "../../shared/event-price";
-import { balanceDueAt, cancellationOutcome, cancellationPolicyLines, cardConsentText, cardConsentVersion, cardRequired, freeWindowEndsAt, noPaymentTerms, termsSnapshot, type CancellationOutcome, type PaymentTerms, type TermsSnapshot } from "../../shared/payment-terms";
+import { balanceDueAt, cancellationOutcome, cancellationPolicyLines, cardConsentText, cardConsentVersion, cardRequired, dueNowTaxCents, freeWindowEndsAt, noPaymentTerms, termsSnapshot, type CancellationOutcome, type PaymentTerms, type TermsSnapshot } from "../../shared/payment-terms";
 import type { BookingMoney } from "../payments";
 import type { PaymentSummary } from "./types";
 
-/** A booking paid before PAY-003 carries no terms: it reads as the full price with no cancellation policy. */
+/** A booking paid before PAY-003, or invoiced (PAY-005), carries no terms: it reads as its amount with no cancellation policy. */
 function snapshotOf(money: BookingMoney): TermsSnapshot {
-  return money.snapshot ?? termsSnapshot(noPaymentTerms, money.payment?.amountCents ?? 0);
+  return money.snapshot ?? termsSnapshot(noPaymentTerms, money.payment?.amountCents ?? money.movements.find(movement => movement.kind === "invoice")?.amountCents ?? 0);
 }
 
 /** The receipt and manage page's view of the booking's money, from the same ledger the operator record reads. */
-export function paymentSummary(money: BookingMoney | undefined, startAt: string, open: boolean, now: string): PaymentSummary | undefined {
+export function paymentSummary(money: BookingMoney | undefined, startAt: string, open: boolean, now: string, businessName: string): PaymentSummary | undefined {
   if (!money) return undefined;
+  const invoice = money.movements.find(movement => movement.kind === "invoice" && movement.invoiceUrl);
+  // PAY-005: the receipt page lists each payment with its tax and Stripe reference, as its receipt email does.
+  const payments = [
+    ...(money.payment ? [{ kind: money.payment.kind as string, amountCents: money.payment.amountCents, taxCents: money.payment.taxCents, reference: money.payment.checkoutSessionId, paidAt: money.payment.paidAt }] : []),
+    ...money.movements.filter(movement => movement.status === "succeeded" && movement.kind !== "refund").map(movement => ({ kind: movement.kind as string, amountCents: movement.amountCents, taxCents: movement.taxCents, reference: movement.processorRef ?? "", paidAt: movement.updatedAt })),
+  ];
   const snapshot = snapshotOf(money), { ledger } = money;
   const outcome = cancellationOutcome(snapshot, startAt, now, "invitee");
   const cardSaved = Boolean(money.consent?.paymentMethodId);
   return {
     amountCents: money.payment?.amountCents ?? 0, currency: "usd", reference: money.payment?.checkoutSessionId ?? "",
-    kind: money.payment ? money.payment.kind : "setup",
+    kind: money.payment ? money.payment.kind : money.consent ? "setup" : "invoice",
     priceCents: ledger.priceCents, paidCents: ledger.paidCents, refundedCents: ledger.refundedCents, feesCents: ledger.feesCents, netCents: ledger.netCents,
+    taxCents: ledger.taxCents, taxSummary: money.payment?.taxSummary ?? snapshot.taxSummary, businessName, payments,
+    ...(invoice ? { invoice: { url: invoice.invoiceUrl!, number: invoice.invoiceNumber, amountCents: invoice.amountCents, taxCents: invoice.taxCents, paid: invoice.status === "succeeded" } } : {}),
     balanceDueCents: ledger.balanceDueCents, balanceDueAt: ledger.balanceDueCents > 0 ? balanceDueAt(snapshot, startAt) : null,
     ...(money.balanceUrl ? { balanceUrl: money.balanceUrl } : {}),
     freeWindowEndsAt: freeWindowEndsAt(snapshot, startAt),
@@ -42,7 +50,7 @@ export function cancellationNotes(money: BookingMoney | undefined, plan: { outco
 
 /** What the booking step shows before anything is held: the price, what is due now, the balance and its due
  * time, the cancellation policy and, for stated fees, the unchecked consent the invitee must give. */
-export function selectionPayment(price: EventPrice, terms: PaymentTerms, durationMinutes: number, startAt: string) {
+export function selectionPayment(price: EventPrice, terms: PaymentTerms, durationMinutes: number, startAt: string, taxEnabled: boolean) {
   const amountCents = priceForDuration(price, durationMinutes), saveCard = cardRequired(terms);
   if (amountCents === undefined && !saveCard) return undefined;
   const snapshot = termsSnapshot(terms, amountCents ?? 0);
@@ -50,6 +58,8 @@ export function selectionPayment(price: EventPrice, terms: PaymentTerms, duratio
     amountCents: snapshot.dueNowCents, currency: "usd" as const, mode: snapshot.dueNowCents > 0 ? "payment" as const : "setup" as const,
     priceCents: snapshot.priceCents, depositCents: snapshot.depositCents, balanceCents: snapshot.balanceCents,
     balanceDueAt: balanceDueAt(snapshot, startAt), freeWindowEndsAt: freeWindowEndsAt(snapshot, startAt), policy: cancellationPolicyLines(snapshot),
+    // PAY-005: with Stripe Tax on, the invitee's billing address prices the sales tax before anything is held.
+    taxRequired: taxEnabled && snapshot.priceCents > 0,
     ...(saveCard ? { consent: { version: cardConsentVersion, text: cardConsentText(snapshot), lateCancelFeeCents: snapshot.lateCancelFeeCents, noShowFeeCents: snapshot.noShowFeeCents } } : {}),
   };
 }
@@ -59,11 +69,12 @@ export type PaymentMailFacts = ReturnType<typeof paymentMailFacts>;
 /** The payment lines of confirmation and change mails: the first payment, the balance and the policy. */
 export function paymentMailFacts(money: { amountCents: number; reference: string; snapshot: TermsSnapshot; balanceUrl?: string }, startAt: string) {
   const { snapshot } = money;
-  const due = balanceDueAt(snapshot, startAt);
+  const due = balanceDueAt(snapshot, startAt), tax = dueNowTaxCents(snapshot), balanceTax = snapshot.taxCents - tax;
   return {
     amount: formatUsd(money.amountCents), reference: money.reference,
     kind: snapshot.dueNowCents === 0 ? "setup" as const : snapshot.depositCents > 0 ? "deposit" as const : "payment" as const,
-    ...(snapshot.balanceCents > 0 && due ? { balance: formatUsd(snapshot.balanceCents), balanceDueAt: due, ...(money.balanceUrl ? { balanceUrl: money.balanceUrl } : {}) } : {}),
+    ...(tax > 0 ? { tax: `${formatUsd(tax)} included${snapshot.taxSummary ? ` (${snapshot.taxSummary})` : ""}` } : {}),
+    ...(snapshot.balanceCents > 0 && due ? { balance: formatUsd(snapshot.balanceCents + balanceTax), balanceDueAt: due, ...(money.balanceUrl ? { balanceUrl: money.balanceUrl } : {}) } : {}),
     policy: cancellationPolicyLines(snapshot),
   };
 }

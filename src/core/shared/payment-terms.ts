@@ -26,9 +26,20 @@ export type TermsSnapshot = {
   lateCancelFeeCents: number;
   noShowFeeCents: number;
   version: number;
+  /** PAY-005: the sales tax Stripe Tax calculated on the whole price, and its jurisdiction summary. */
+  taxCents: number;
+  taxSummary: string | null;
 };
 
 export const cardConsentVersion = "card-consent.v1";
+
+/** The first payment carries the tax in proportion to what it pays of the price; the balance carries the rest. */
+export function dueNowTaxCents(snapshot: Pick<TermsSnapshot, "priceCents" | "dueNowCents" | "taxCents">) {
+  return snapshot.priceCents > 0 && snapshot.taxCents > 0 ? Math.round(snapshot.taxCents * snapshot.dueNowCents / snapshot.priceCents) : 0;
+}
+export function balanceTaxCents(snapshot: Pick<TermsSnapshot, "priceCents" | "dueNowCents" | "taxCents">) {
+  return snapshot.taxCents - dueNowTaxCents(snapshot);
+}
 
 /** A stated fee can only be charged to a card the invitee agreed to save. */
 export function cardRequired(terms: Pick<PaymentTerms, "lateCancelFeeCents" | "noShowFeeCents">) {
@@ -39,7 +50,7 @@ export function termsSnapshot(terms: PaymentTerms, priceCents: number): TermsSna
   const depositCents = priceCents === 0 || terms.deposit.kind === "none" ? 0
     : terms.deposit.kind === "fixed" ? terms.deposit.amountCents : Math.round(priceCents * terms.deposit.percent / 100);
   const dueNowCents = depositCents || priceCents;
-  return { priceCents, depositCents, dueNowCents, balanceCents: priceCents - dueNowCents, balanceDueHours: terms.balanceDueHours, freeWindowHours: terms.freeWindowHours, lateCancelFeeCents: terms.lateCancelFeeCents, noShowFeeCents: terms.noShowFeeCents, version: terms.version };
+  return { priceCents, depositCents, dueNowCents, balanceCents: priceCents - dueNowCents, balanceDueHours: terms.balanceDueHours, freeWindowHours: terms.freeWindowHours, lateCancelFeeCents: terms.lateCancelFeeCents, noShowFeeCents: terms.noShowFeeCents, version: terms.version, taxCents: 0, taxSummary: null };
 }
 
 /** The instant the balance is due and the instant the free cancellation window closes, both from the current start. */
