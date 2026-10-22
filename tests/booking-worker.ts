@@ -48,6 +48,8 @@ export default {
       return Response.json({ result });
     }
     if (url.pathname === "/status") {
+      // Claims snapshot the persisted event guest policy, just as the production service does.
+      await env.DB.prepare("INSERT OR IGNORE INTO event_types(id,status,slug,title,description,duration_minutes,color,location_type,location_label,created_at,updated_at) VALUES('event-test','published','d1-claim','D1 claim','Transaction test',30,'#176b5a','fixed_link','Private call','2030-01-01','2030-01-01')").run();
       const count = await env.DB.prepare("SELECT count(*) AS count FROM bookings WHERE state = 'confirmed'").first<{ count: number }>();
       const outbox = await env.DB.prepare("SELECT count(*) AS count FROM delivery_outbox WHERE kind = 'calendar_upsert'").first<{ count: number }>();
       return Response.json({ confirmed: count?.count ?? 0, calendarCommands: outbox?.count ?? 0 });

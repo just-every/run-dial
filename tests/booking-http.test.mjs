@@ -21,6 +21,7 @@ contract("AUTH-002", "the public Hono flow binds a nonce to its selected event a
   assert.deepEqual(await readJson(selectionReload, "selection reload"), {
     nonce: selection.nonce,
     expiresAt: selection.expiresAt,
+    guestLimit: 0,
     selection: { startAt: selection.selection.startAt, endAt: selection.selection.endAt, hostTimezone: "UTC", inviteeTimezone: "UTC" },
     event: event.eventType,
     host: { avatarKey: null, handle: "dial-host", name: "Dial Host", title: "Host", biography: "Booking tests", timezone: "UTC", focusAreas: [], socialProof: [] },
