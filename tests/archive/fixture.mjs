@@ -27,6 +27,7 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  booking_guests: { booking_id:'bookings-1',email:'synthetic-dial-guest@example.test' },
   booking_links: { kind:'single_use',overrides_json:null,expires_at:end,consumed_at:instant,consumed_booking_id:'bookings-1',revoked_at:null },
   booking_reschedule_requests: { state:'open',message:'Please choose a new time.',release_time:1,actor_id:'owner',expires_at:end,reminder_at:null,reminded_at:null },
   booking_request_history: {action:'reschedule_requested',actor_type:'operator',actor_id:'owner',reason:'Please choose a new time.'},

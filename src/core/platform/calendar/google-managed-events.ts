@@ -11,7 +11,7 @@ export function googleEventPayload(event: ManagedCalendarEvent, conferenceExists
     location: event.location,
     start: { dateTime: event.startAt, timeZone: event.timeZone },
     end: { dateTime: event.endAt, timeZone: event.timeZone },
-    attendees: [{ email: event.inviteeEmail }],
+    attendees: [{ email: event.inviteeEmail }, ...(event.guestEmails ?? []).map(email => ({ email }))],
     extendedProperties: { private: { "dial-idempotency-key": event.idempotencyKey, "dial-booking-id": event.bookingId, "dial-occurrence-id": event.occurrenceId, "dial-ical-uid": event.icalUid } },
     ...(event.requestGoogleMeet && !conferenceExists
       ? { conferenceData: { createRequest: { requestId: event.idempotencyKey, conferenceSolutionKey: { type: "hangoutsMeet" } } } }

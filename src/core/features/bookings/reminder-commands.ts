@@ -4,7 +4,7 @@ import type { BookingEmail } from "./types";
 
 /** Offsets already elapsed at claim time are never scheduled. Commands hold no answer copy. */
 export function reminderStatements(binding: D1Database, bookingId: string, occurrenceId: string, emails: BookingEmail[], now: string) {
-  return emails.flatMap((email) => {
+  return emails.filter(email => !email.guest).flatMap((email) => {
     const admission = operatorRecipientAdmission(email);
     return [1440, 60].map((offsetMinutes) => binding.prepare(`
     INSERT INTO delivery_outbox (id, kind, idempotency_key, booking_id, occurrence_id, request_id, payload_json, state, attempts, next_attempt_at, created_at, updated_at)

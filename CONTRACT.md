@@ -336,8 +336,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 70 | 6 | 0 | 76 |
-| Target and push further | 14 | 14 | 70 | 98 |
-| All | 84 | 20 | 70 | 174 |
+| Target and push further | 15 | 14 | 69 | 98 |
+| All | 85 | 20 | 69 | 174 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -372,7 +372,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `EVENT-006` | Publication readiness | published | done | `tests/availability-diagnostics.test.mjs`, `tests/host-setup-journey.test.mjs`, `tests/booking-axe/request-only.mjs` |  |
 | `EVENT-007` | Group events and capacity | target | missing |  | No implementing code yet. |
 | `EVENT-008` | Bookings that need host approval | target | missing |  | No implementing code yet. |
-| `EVENT-009` | Invitee guests | target | missing |  | No implementing code yet. |
+| `EVENT-009` | Invitee guests | target | done | `tests/booking-wire/guest-journey.mjs` (`guestJourney`, called by `tests/booking-wire/journey.mjs`), `tests/export-base-adoption.test.mjs`, `scripts/verify-guest-screens.mjs`, `migrations/core/0072_invitee_guests.sql`, `ERASURE.md` | Guest access defaults off; the host configures a maximum. The invitee adds two guests, each gets the destination calendar invitation and one capability-free Dial confirmation, removing a guest sends one cancellation and patches attendees once on replay, and an email address grants no manage access. Guest erasure removes guest rows and notices while preserving the invitee booking and controls. Calendar descriptions stay capability-free even after the last guest is removed. Current archives and populated prior-schema upgrades include the new record kind; settings, booking and manage screens pass at 1440 and 390. Providers are synthetic at the HTTP edge. |
 | `EVENT-010` | Recurring bookings | target | missing |  | No implementing code yet. |
 | `EVENT-011` | Invitee-selectable durations | target | done | `tests/booking-wire/duration-journey.mjs`, `tests/booking-wire/occurrence-duration-journey.mjs`, `tests/move-in-runtime.test.mjs`; `evidence/contract/2026-10-17/EVENT-011/` | Duration-specific pricing, team assignment, webhook payloads and reports are carried by `PAY-001`, `TEAM-003`, `TEAM-005`, `API-002` and `REPORT-001`, which each name this clause. |
 | `LINK-001` | Single-use links and one-off meetings | target | done | `tests/booking-wire/booking-links-journey.mjs`, `src/core/features/booking-links/` |  |
@@ -493,7 +493,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `DATA-002` | Destructive personal erasure | published | partial | `tests/person-erasure.test.mjs`, `tests/import-custody-erasure.test.mjs`, `ERASURE.md` | Owner case; role scope missing. |
 | `DATA-003` | Move-in import | published | done | `tests/move-in-runtime.test.mjs`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs`, `tests/move-in-portability.test.mjs`, `tests/move-in-download.test.mjs` |  |
 | `DATA-004` | Full-scope portability and erasure | target | done | `tests/export-base-adoption.test.mjs`, `tests/person-erasure.test.mjs`, `ERASURE.md`; Verify 39673090704 and Run site 39673090829 success on f553bfdc224bc544d74f68a5aaa7eca63ed3b322 | Classification gate and current-kind round trip asserted. Target kinds carried by `DATA-005`–`DATA-008`. |
-| `DATA-005` | Target record kinds in the archive | target | partial | `tests/export-base-adoption.test.mjs` | Host profile, schedules and payment references round-trip; other kinds await their feature clauses. |
+| `DATA-005` | Target record kinds in the archive | target | partial | `tests/export-base-adoption.test.mjs` | Host profile, schedules, guests and payment references round-trip; other kinds await their feature clauses. |
 | `DATA-006` | Target personal rows in erasure | target | missing |  | Phone fields exist but are not asserted; votes, guests, SMS consent and client records are not built. |
 | `DATA-007` | Processor deletion requests | target | missing |  | Stripe Customer objects are not yet deleted or anonymized at Stripe; the receipt reports only the aggregate calendar state. |
 | `DATA-008` | CRM deletion requests | target | missing |  | No CRM integration exists. |

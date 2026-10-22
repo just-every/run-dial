@@ -5,7 +5,7 @@ import type { BookingCancellationTemplate } from "../delivery";
 import { normalizePhoneNumber } from "../../shared/phone";
 
 export type InviteeAnswers = Record<string, string | string[]>;
-export type ValidatedInvitee = { name: string; email: string; answers: InviteeAnswers };
+export type ValidatedInvitee = { name: string; email: string; answers: InviteeAnswers; guests?: string[] };
 export type BookingState = "confirmed" | "cancelled" | "rescheduled";
 export type DeliveryState = "pending" | "succeeded" | "failed";
 export type BookingOccurrence = {
@@ -133,6 +133,7 @@ export type BookingSelection = { startAt: string; endAt: string; inviteeTimezone
 export type BookingNonce = { nonce: string; expiresAt: string; selection: BookingSelection };
 export type BookingActor = { type: "invitee" } | { type: "operator"; operatorId: string } | { type: "calendar_provider" };
 export type BookingConfirmation = {
+  guests?: string[]; guestLimit?: number;
   rescheduleRequest?: import("./reschedule-requests").RescheduleRequest;
   lockedTimezone?: string;
   browserTimezone?: string | null;
@@ -153,6 +154,7 @@ export type BookingConfirmation = {
 };
 
 export type BookingEmail = {
+  guest?: true;
   changeReason?: string;
   messageKind?: "confirmation" | "reschedule" | "cancellation";
   operatorAccess?: { id: string; generation: number };

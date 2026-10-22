@@ -22,7 +22,7 @@ const selectionLookupSchema = z.object({
 });
 const confirmedLookupSchema = z.object({ token: z.string().min(1).max(512).optional() });
 const answerValueSchema = z.union([z.string().max(4_000), z.array(z.string().max(500)).max(50)]);
-const confirmationSchema = selectionSchema.extend({ locationId:z.string().max(80).optional(),locationInput:z.string().max(1000).optional(), nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema), attribution: attributionSchema.optional(),
+const confirmationSchema = selectionSchema.extend({ guests: z.array(z.string().max(320)).max(20).optional(), locationId:z.string().max(80).optional(),locationInput:z.string().max(1000).optional(), nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema), attribution: attributionSchema.optional(),
   // PAY-003: the invitee's explicit agreement to a saved card for the stated fees, with the wording version shown.
   cardConsent: z.object({ accepted: z.boolean(), version: z.string().max(40) }).strict().optional(),
   // PAY-005: the billing address Stripe Tax prices, and the tax the booking step showed for it.
@@ -77,6 +77,13 @@ export const publicBookingRoutes = new Hono<AppEnvironment>()
     return result.kind === "expired"
       ? apiError(context, 410, "manage_token_expired", "This management link has expired. Start a new booking or contact the host.")
       : apiError(context, 404, "manage_token_not_found", "This management link is not valid.");
+  })
+  .put("/api/public/manage/:token/guests", validate("param", recoverySchema), validate("json", z.object({ guests: z.array(z.string().max(320)).max(20) }).strict()), async context => {
+    const result=await context.get("services").bookings.replaceGuests(context.req.valid("param").token,context.req.valid("json").guests);
+    if(result.kind==="found")return context.json(result.booking);
+    if(result.kind==="invalid")return apiError(context,400,"invalid_guests","Enter distinct guest email addresses within the booking's guest limit.");
+    if(result.kind==="closed")return apiError(context,409,"booking_closed","Guests cannot be changed after the booking starts or is cancelled.");
+    return apiError(context,404,"manage_token_not_found","This management link is not valid.");
   })
   .post("/api/public/manage/:token/contact-host", validate("param", recoverySchema), validate("json", z.object({ idempotencyKey: z.string().min(16).max(80).regex(/^[A-Za-z0-9_-]+$/), message: z.string().trim().max(1000).optional() }).strict()), async context => {
     const body = context.req.valid("json");

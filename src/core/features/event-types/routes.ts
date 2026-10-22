@@ -96,6 +96,8 @@ const dateAvailabilityOverrideBodySchema = z
 const publicEventSchema = z.object({ handle: z.string().regex(/^[a-z0-9-]+$/), slug: z.string().regex(/^[a-z0-9-]+$/) });
 
 export const eventTypeRoutes = new Hono<AppEnvironment>()
+  .get("/api/app/event-types/:id/guests",validate("param",idSchema),async context=>{ const settings=await context.get("services").bookings.guestSettings(context.req.valid("param").id); return settings?context.json(settings):apiError(context,404,"not_found","Event type not found."); })
+  .put("/api/app/event-types/:id/guests",validate("param",idSchema),validate("json",z.object({guestLimit:z.number().int().min(0).max(20)}).strict()),async context=>{ const guestLimit=context.req.valid("json").guestLimit; return await context.get("services").bookings.saveGuestSettings(context.req.valid("param").id,guestLimit)?context.json({guestLimit}):apiError(context,404,"not_found","Event type not found."); })
     .post("/api/app/event-types/:id/open-requests", validate("param", idSchema), async (context) => {
       const result = await context.get("services").eventTypes.openRequests(context.req.valid("param").id);
       if (result.kind === "published") return context.json(result.eventType);
