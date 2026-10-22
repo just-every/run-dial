@@ -3,7 +3,7 @@ import { insertJsonRows } from '../../../../modules/import-kit/src/d1/sets.ts';
 import { canonicalJson, sha256 } from '../../../../modules/import-kit/src/provenance/identity.ts';
 import { json, type NativeValue, type Row } from './model';
 import { conjunction } from './native-predicates';
-import { approvalHoldPredicate } from '../bookings/approval-holds';
+import { approvalHoldPredicate } from '../availability';
 import { assertCustodyColumns, includeCustodyTable } from './custody-tables';
 const groups:Record<string,Record<string,string>>={
  profile:{host_profiles:'id',profile_focus_areas:'profile_id',social_proof_entries:'profile_id'},

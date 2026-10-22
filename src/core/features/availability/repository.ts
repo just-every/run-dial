@@ -1,4 +1,4 @@
-import { activeApprovalIntervals } from "../bookings/approval-holds";
+import { activeApprovalIntervals } from "./approval-holds";
 import type { BusyInterval, InternalClaim } from "./engine";
 import { BookingLimits } from "./booking-limits";
 import { activeHoldIntervals } from "../payments";

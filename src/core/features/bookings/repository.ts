@@ -1,4 +1,3 @@
-import { activeApprovalIntervals, approvalHoldPredicate } from "./approval-holds";
 import { ApprovalsRepository } from "./approvals";
 import { GuestsRepository } from "./guests";
 import { offeredHoldPredicate } from "../booking-links";
@@ -7,7 +6,7 @@ import { bookingCorrespondenceStatements } from "./booking-correspondence";
 import { contactHost } from "./contact-host";
 import { inviteeChangePolicyPredicate } from "../event-types";
 import { bookingPresentationStatements } from "./booking-presentation";
-import { BookingLimits } from "../availability";
+import { BookingLimits, activeApprovalIntervals, approvalHoldPredicate } from "../availability";
 import { foldBookingSearch } from "./search/case-fold.mjs";
 import { PublicAbuseRepository, blockedAddressSql, blockedAddressValues } from "../public-abuse";
 import { linkedBookingAcknowledgement } from "../availability-requests";

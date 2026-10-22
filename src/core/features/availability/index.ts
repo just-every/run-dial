@@ -1,5 +1,6 @@
 export { buildRecommendationContext, evaluateSlot, hostDateForInstant, listAvailableSlots, offsetMinutesForInstant, rankSlots } from "./engine";
 export type { AvailableSlot, AvailabilityConstraints, AvailabilityWindow, BusyInterval, DateOverride, InternalClaim, SlotEngineInput, SlotEvaluation, SlotExclusion } from "./engine";
+export { activeApprovalIntervals, approvalHoldPredicate } from "./approval-holds";
 export { AvailabilityRepository } from "./repository";
 export { AvailabilityService } from "./service";
 export type { AvailabilityResult, CalendarBusyRead, CalendarBusyReader } from "./service";

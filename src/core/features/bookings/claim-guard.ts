@@ -1,6 +1,5 @@
-import { approvalHoldPredicate } from "./approval-holds";
 import { offeredHoldPredicate } from "../booking-links";
-import { BookingLimits } from "../availability";
+import { BookingLimits, approvalHoldPredicate } from "../availability";
 import { blockedAddressSql, blockedAddressValues } from "../public-abuse";
 import { paymentHoldPredicate } from "../payments";
 import type { BookingClaim } from "./types";
