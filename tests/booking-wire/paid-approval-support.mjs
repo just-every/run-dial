@@ -8,7 +8,7 @@ export const providerCalls=(snap,path)=>snap.wire_calls.filter(row=>new URL(row.
 export function noBooking(snap,request){assert.ok(!snap.bookings.some(row=>row.id===request.booking_id),'approval request creates no booking');assert.ok(!snap.delivery_outbox.some(row=>row.booking_id===request.booking_id&&['calendar_upsert','reminder'].includes(row.kind)),'no calendar or reminders before signed capture');}
 export function audit(snap,action,reference,amount,actor){const rows=snap.anonymized_audit.filter(row=>row.action===action&&row.processor_ref===reference);assert.equal(rows.length,1,`${action} recorded once`);assert.equal(rows[0].amount_cents,amount);assert.equal(rows[0].actor_type,actor);assert.ok(rows[0].reason,`${action} records its reason`);}
 export async function paidApprovalSupport(context){
-  const {data,call,state,future}=context,origin=context.origin??process.env.DIAL_REVIEW_ORIGIN;
+  const {data,state,future}=context,origin=context.origin??process.env.DIAL_REVIEW_ORIGIN;
   const config=await readFile(new URL('./worker.wrangler.toml',import.meta.url),'utf8');
   const secret=config.match(/^STRIPE_WEBHOOK_SECRET = "([^"]+)"/m)[1];
   const event=(type,object,account='acct_wirehost')=>JSON.stringify({id:`synthetic-pay007-${type}-${object.id}`,object:'event',type,account,created:Math.floor(Date.now()/1000),livemode:false,data:{object}});
