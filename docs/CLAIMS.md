@@ -20,4 +20,4 @@ REPORT-001 is partial on the single-host surface: Bookings has a scheduling repo
 
 Evidence: `tests/scheduling-report.test.mjs` with its seeded month in `tests/review/report-month.ts`, and the 1440 and 390 screen proof `scripts/verify-report-screens.mjs`.
 
-The contract census is 83 done / 20 partial / 67 missing (170 clauses). DATA-004 remains partial. Other claims and their evidence remain in the CONTRACT.md Status table.
+The contract census is 84 done / 20 partial / 70 missing (174 clauses). DATA-004 is done for the classification gate and current record kinds; DATA-005–DATA-008 carry the target kinds, personal rows and external deletion requests. Other claims and their evidence remain in the CONTRACT.md Status table.

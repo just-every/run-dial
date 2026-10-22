@@ -311,7 +311,11 @@
     {
       "id": "full-scope-portability",
       "clauses": [
-        "DATA-004"
+        "DATA-004",
+        "DATA-005",
+        "DATA-006",
+        "DATA-007",
+        "DATA-008"
       ]
     },
     {
