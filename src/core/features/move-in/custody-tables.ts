@@ -1,6 +1,9 @@
 import type { Row } from './model';
 
 const additiveColumns:Record<string,string[]>={
+ booking_guests:['id','booking_id','email','created_at','updated_at'],
+ booking_approval_requests:['id','nonce_id','link_id','booking_id','event_type_id','state','invitee_email','invitee_name','event_title','start_at','end_at','occupied_start_at','occupied_end_at','host_date','expires_at','claim_json','decided_by','reason','created_at','updated_at'],
+ booking_approval_tokens:['request_id','token_hash','created_at','updated_at'],
  event_schedule_bindings:['event_type_id','schedule_id','created_at','updated_at'],
  booking_limit_policies:['scope','limits_json','created_at','updated_at'],
  event_booking_policies:['event_type_id','locked_timezone','reschedule_cutoff_minutes','cancellation_cutoff_minutes','reschedule_cap','created_at','updated_at'],
