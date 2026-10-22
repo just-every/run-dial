@@ -78,7 +78,7 @@ export class PersonErasure {
     return this.receipt(id);
   }
   async receipt(id: string) {
-    const row=await this.db.prepare("SELECT id,bookings,requests,requested_at AS requestedAt,completed_at AS completedAt,operator_identity_retained AS operatorIdentityRetained FROM person_erasure_receipts WHERE id=?").bind(id).first<{id:string;bookings:number;requests:number;requestedAt:string;completedAt:string|null;operatorIdentityRetained:number}>();
+    const row=await this.db.prepare("SELECT id,bookings,requests,requested_at AS requestedAt,completed_at AS completedAt,operator_identity_retained AS operatorIdentityRetained,COALESCE(saved_cards_detached,0) AS savedCardsDetached,COALESCE(saved_card_failures,0) AS savedCardFailures FROM person_erasure_receipts WHERE id=?").bind(id).first<{id:string;bookings:number;requests:number;requestedAt:string;completedAt:string|null;operatorIdentityRetained:number;savedCardsDetached:number;savedCardFailures:number}>();
     if(!row) return null;
     const targets=(await this.db.prepare("SELECT completed_at,last_error_code FROM erased_calendar_targets WHERE receipt_id=?").bind(id).all<{completed_at:string|null;last_error_code:string|null}>()).results;
     return {...row,operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};

@@ -62,6 +62,7 @@ export const excluded = {
   calendar_oauth_states: 'Session-bound OAuth capabilities', booking_nonces: 'Single-use booking capabilities',
   payment_oauth_states: 'Session-bound Stripe Connect OAuth capabilities',
   payment_holds: 'Live payment holds, pending payer details and payment-return capabilities; a restore never resumes a pending checkout',
+  payment_link_tokens: 'Balance-link capabilities (salt and lookup hash); old links must cease to work after a restore',
   booking_link_tokens: 'Private booking link authority; restored definitions require a new link',
   booking_manage_tokens: 'Private manage capabilities; old links must cease to work',
   availability_request_review_nonces: 'Single-use request capabilities', public_rate_events: 'Ephemeral admission identities',

@@ -22,6 +22,9 @@ export const exported = [
   'operator_creation_receipts', 'operator_creation_tombstones', 'oa_invitation_cancellations', 'oa_domain_rules',
   // PAY-001: the connected Stripe account ID (no credential), event prices and each booking's payment record.
   'payment_connections', 'event_type_prices', 'booking_payments',
+  // PAY-003: event payment terms, each booking's terms snapshot, card consent (Stripe references, never card data)
+  // and money movements.
+  'event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements',
 ].sort();
 export { excluded } from "../../src/core/shared/archive-exclusions.mjs";
 import { excluded } from "../../src/core/shared/archive-exclusions.mjs";

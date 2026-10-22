@@ -30,7 +30,7 @@ import { HostProfileRepository } from "../features/host-profile/repository";
 import { HostProfileService } from "../features/host-profile/service";
 import { AvatarStorage } from "../features/host-profile/avatar-storage";
 import { OperatorsService } from "../features/operators";
-import { PaymentsRepository, PaymentsService } from "../features/payments";
+import { PaymentsService } from "../features/payments";
 import { ReportFactsRepository, ReportsService } from "../features/reports";
 import { PublicAbuseRepository } from "../features/public-abuse";
 import { createSpaSurface } from "../platform/assets/spa-surface";
@@ -51,7 +51,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
   const bookingsRepository = new BookingsRepository(binding);
-  const payments = new PaymentsService(new PaymentsRepository(binding), runtime, adapters.paymentsTransport);
+  const payments = new PaymentsService(binding, runtime, adapters.paymentsTransport);
   payments.setConversion((claim, payment) => bookingsRepository.claim(claim, payment));
   const bookings = new BookingsService(bookingsRepository, availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
@@ -73,7 +73,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     moveIn: new MoveInService(binding, runtime.SESSION_SECRET),
     switchOver: new SwitchOverService(binding, eventTypes, hostProfile, installPublicOrigin(runtime.APP_URL)),
     eraseImportedBooking: (id: string, session: SessionRecord) => eraseImportedBooking(binding, id, session, runtime.SESSION_SECRET),
-    erasure: new ErasureRepository(binding, runtime.SESSION_SECRET),
+    erasure: new ErasureRepository(binding, runtime.SESSION_SECRET, id => payments.money.detachSavedCard(id)),
     personErasure: new PersonErasure(binding, runtime.SESSION_SECRET),
     deliveryRecovery: new DeliveryRecovery(binding),
     deliveryPreferences: new DeliveryPreferencesRepository(binding),

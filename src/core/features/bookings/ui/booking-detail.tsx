@@ -1,5 +1,4 @@
 import { ExtensionSlot } from "../../../app/extensions";
-import { formatUsd } from "../../../shared/event-price";
 import { Badge, Button, Card } from "../../../app/ui/primitives";
 import type { BookingRecord } from "../types";
 import { BookingChanges } from "./booking-changes";
@@ -8,6 +7,7 @@ import { timeRange } from "./operator-time";
 import { BookingHistory } from "./booking-history";
 import { calendarStatus, meetingStatus } from "../../../shared/booking-status";
 import { RescheduleRequestSummary } from "./reschedule-request-summary";
+import { BookingMoney } from "./booking-money";
 
 export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onErased }: { booking: BookingRecord; onChanged(notice?: string): Promise<void>; onCancel(id: string): Promise<void>; onAttendance(id: string, status: "attended" | "no_show"): Promise<void>; onErased(notice: string, id: string): void }) {
   return <Card className="min-w-0 p-5 sm:p-6">
@@ -17,10 +17,10 @@ export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onEr
       <Fact label="Invitee time" value={timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone)} />
       {booking.lockedTimezone ? <><Fact label="Meeting timezone" value={booking.lockedTimezone} /><Fact label="Invitee browser zone" value={booking.browserTimezone ?? "Zone not provided by invitee"} /></> : null}
       <Fact label="Location" value={booking.meetingUrl || booking.locationValue || booking.locationLabel} /><Fact label="Calendar delivery" value={booking.imported ? "Original calendar entry retained" : calendarStatus(booking.calendarState)} /><Fact label="Meeting" value={meetingStatus(booking.meetingState)} />
-      {booking.payment ? <><Fact label="Payment" value={`${formatUsd(booking.payment.amountCents)} paid through Stripe`} /><Fact label="Stripe reference" value={[booking.payment.checkoutSessionId, booking.payment.paymentIntentId].filter(Boolean).join(" · ")} /><div className="sm:col-span-2"><dt className="text-[13px] font-[650] text-muted">Refunds</dt><dd className="mt-1 text-[15px] text-ink">Dial issues no refund when this booking is cancelled or moved; refund the payment in Stripe.</dd></div></> : null}
       {Object.keys(booking.attribution).length ? <div className="sm:col-span-2"><dt className="text-[13px] font-[650] text-muted">Booking source</dt><dd className="mt-2 grid gap-2">{Object.entries(booking.attribution).map(([key, value]) => <span className="break-words text-[15px]" key={key}><strong>{key}: </strong>{value}</span>)}</dd></div> : null}
       {booking.answers.length ? <div className="sm:col-span-2"><dt className="text-[13px] font-[650] text-muted">Answers</dt><dd className="mt-2 grid gap-2">{booking.answers.map((answer) => <span className="break-words rounded-xl bg-row px-3.5 py-3 text-[15px]" key={answer.key}><strong>{answer.label}: </strong>{Array.isArray(answer.value) ? answer.value.join(", ") : answer.value}</span>)}</dd></div> : null}
     </dl>
+    <BookingMoney key={`${booking.id}:${booking.state}:${booking.attendance?.status ?? ""}`} bookingId={booking.id} timezone={booking.hostTimezone} noShow={booking.attendance?.status === "no_show"} onChanged={onChanged} />
     <ExtensionSlot id="booking.detail.sidebar.after.v1" entityId={booking.id} />
     <RescheduleRequestSummary booking={booking} />
     <BookingChanges key={booking.occurrence.id} booking={booking} onChanged={onChanged} onCancel={onCancel} />

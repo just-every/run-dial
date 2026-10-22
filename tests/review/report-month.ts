@@ -1,12 +1,14 @@
 /** REPORT-001's seeded month, synthetic: March 2026 for a host in America/New_York, whose clocks moved on 8 March.
  * Rows are written straight to the tables with exact instants; the hand counts live in tests/scheduling-report.test.mjs. */
 type Seed = { name: string; event: "intro" | "deep"; created: string; first: string; current?: string; minutes: number; state: "confirmed" | "rescheduled" | "cancelled"; cancelled?: { at: string; reason: string | null };
-  attendance?: "attended" | "no_show"; moves?: string[]; imported?: boolean; attribution?: Record<string, string>; paid?: { at: string; cents: number } };
+  attendance?: "attended" | "no_show"; moves?: string[]; imported?: boolean; attribution?: Record<string, string>; paid?: { at: string; cents: number; kind?: "payment" | "deposit" };
+  /** PAY-003 money movements, each settled (or failed) at its time. */
+  movements?: Array<{ kind: "balance" | "refund" | "late_cancel_fee" | "no_show_fee"; cents: number; at: string; status?: "succeeded" | "failed" }> };
 const z = (day: string, time: string) => `2026-${day}T${time}:00.000Z`;
 
 export const reportMonth: Seed[] = [
   { name: "Ada", event: "intro", created: z("03-02", "15:00"), first: z("03-04", "15:00"), minutes: 30, state: "confirmed", attendance: "attended", attribution: { utm_source: "newsletter", utm_medium: "email", source: "homepage" } },
-  { name: "Bea", event: "intro", created: z("03-02", "16:00"), first: z("03-03", "16:00"), minutes: 30, state: "confirmed", attendance: "no_show", attribution: { utm_source: "newsletter" } },
+  { name: "Bea", event: "intro", created: z("03-02", "16:00"), first: z("03-03", "16:00"), minutes: 30, state: "confirmed", attendance: "no_show", attribution: { utm_source: "newsletter" }, movements: [{ kind: "no_show_fee", cents: 2500, at: z("03-05", "10:00"), status: "failed" }] },
   { name: "Cy", event: "intro", created: z("03-03", "12:00"), first: z("03-10", "14:00"), minutes: 30, state: "confirmed", attendance: "attended", attribution: { utm_source: "partner", source: "homepage" } },
   { name: "Dee", event: "intro", created: z("03-04", "09:00"), first: z("03-04", "21:00"), minutes: 30, state: "cancelled", cancelled: { at: z("03-04", "10:00"), reason: "Plans changed" } },
   { name: "Eli", event: "deep", created: z("03-05", "18:00"), first: z("03-08", "14:00"), current: z("03-12", "15:00"), minutes: 60, state: "rescheduled", moves: [z("03-06", "12:00")], attribution: { utm_source: "partner", utm_campaign: "spring" } },
@@ -22,8 +24,9 @@ export const reportMonth: Seed[] = [
   { name: "Oz", event: "intro", created: z("03-18", "10:00"), first: z("03-25", "10:00"), minutes: 30, state: "cancelled", cancelled: { at: z("03-20", "09:00"), reason: "Found another provider" }, attribution: { utm_source: "partner" } },
   { name: "Pam", event: "intro", created: z("03-19", "10:00"), first: z("03-26", "10:00"), minutes: 30, state: "cancelled", cancelled: { at: z("03-21", "09:00"), reason: null } },
   { name: "Quin", event: "intro", created: z("03-20", "10:00"), first: z("04-10", "10:00"), minutes: 30, state: "cancelled", cancelled: { at: z("04-02", "09:00"), reason: "Plans changed" } },
-  { name: "Rae", event: "deep", created: z("03-16", "10:00"), first: z("03-17", "15:00"), minutes: 60, state: "confirmed", attendance: "attended", attribution: { utm_source: "newsletter" }, paid: { at: z("03-16", "10:05"), cents: 9000 } },
-  { name: "Sue", event: "intro", created: z("03-17", "11:00"), first: z("03-18", "15:00"), minutes: 30, state: "confirmed", attendance: "no_show", paid: { at: z("03-17", "11:05"), cents: 5000 } },
+  { name: "Rae", event: "deep", created: z("03-16", "10:00"), first: z("03-17", "15:00"), minutes: 60, state: "confirmed", attendance: "attended", attribution: { utm_source: "newsletter" }, paid: { at: z("03-16", "10:05"), cents: 9000, kind: "deposit" },
+    movements: [{ kind: "balance", cents: 3000, at: z("03-17", "10:00") }, { kind: "refund", cents: 2000, at: z("03-20", "12:00") }, { kind: "refund", cents: 1000, at: z("04-02", "12:00") }] },
+  { name: "Sue", event: "intro", created: z("03-17", "11:00"), first: z("03-18", "15:00"), minutes: 30, state: "confirmed", attendance: "no_show", paid: { at: z("03-17", "11:05"), cents: 5000 }, movements: [{ kind: "no_show_fee", cents: 2500, at: z("03-19", "12:00") }] },
   { name: "Tom", event: "intro", created: z("03-09", "10:00"), first: z("03-30", "14:00"), current: z("03-30", "16:00"), minutes: 30, state: "rescheduled", moves: [z("03-10", "10:00"), z("03-11", "10:00")] },
   { name: "Uma", event: "intro", created: z("03-13", "10:00"), first: z("03-27", "14:00"), current: z("04-06", "14:00"), minutes: 30, state: "rescheduled", moves: [z("04-05", "10:00")] },
 ];
@@ -47,8 +50,12 @@ export async function seedReportMonth(db: D1Database, input: { operatorId: strin
     statements.push(db.prepare("UPDATE bookings SET current_occurrence_id = ? WHERE id = ?").bind(currentOccurrence, id));
     for (const [move, at] of (seed.moves ?? []).entries()) statements.push(db.prepare("INSERT INTO booking_history (id, booking_id, occurrence_id, action, actor_type, actor_id, previous_start_at, new_start_at, created_at) VALUES (?, ?, ?, 'rescheduled', 'invitee', NULL, ?, ?, ?)").bind(`qa-report-move-${String(index + 1).padStart(8, "0")}-${move}`, id, currentOccurrence, seed.first, current, at));
     if (seed.attendance) statements.push(db.prepare("INSERT INTO booking_attendance (booking_id, status, note, marked_by_operator_id, marked_at) VALUES (?, ?, 'Seeded mark', ?, ?)").bind(id, seed.attendance, input.operatorId, add(current, seed.minutes + 5)));
-    if (seed.paid) statements.push(db.prepare(`INSERT INTO booking_payments (id, booking_id, provider, account_id, amount_cents, currency, checkout_session_id, payment_intent_id, status, paid_at, created_at, updated_at) VALUES (?, ?, 'stripe', 'acct_wirehost', ?, 'usd', ?, NULL, 'paid', ?, ?, ?)`)
-      .bind(`qa-report-pay-${String(index + 1).padStart(12, "0")}`, id, seed.paid.cents, `cs_test_report_${index + 1}`, seed.paid.at, seed.paid.at, seed.paid.at));
+    if (seed.paid) statements.push(db.prepare(`INSERT INTO booking_payments (id, booking_id, provider, account_id, amount_cents, currency, checkout_session_id, payment_intent_id, status, paid_at, created_at, updated_at, kind) VALUES (?, ?, 'stripe', 'acct_wirehost', ?, 'usd', ?, ?, 'paid', ?, ?, ?, ?)`)
+      .bind(`qa-report-pay-${String(index + 1).padStart(12, "0")}`, id, seed.paid.cents, `cs_test_report_${index + 1}`, `pi_test_report_${index + 1}`, seed.paid.at, seed.paid.at, seed.paid.at, seed.paid.kind ?? "payment"));
+    for (const [move, entry] of (seed.movements ?? []).entries()) statements.push(db.prepare(`INSERT INTO payment_movements (id, booking_id, kind, amount_cents, currency, status, actor_type, actor_id, reason, account_id, source_ref, processor_ref, idempotency_key, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'usd', ?, ?, ?, 'Seeded movement', 'acct_wirehost', ?, ?, ?, ?, ?)`)
+      .bind(`qa-report-money-${String(index + 1).padStart(8, "0")}-${move}`, id, entry.kind, entry.cents, entry.status ?? "succeeded", entry.kind === "balance" ? "invitee" : "operator", entry.kind === "balance" ? null : input.operatorId,
+        entry.kind === "refund" ? `pi_test_report_${index + 1}` : null, entry.status === "failed" ? null : `ref_test_report_${index + 1}_${move}`, `report-money-${index + 1}-${move}`, entry.at, entry.at));
   }
   await db.batch(statements);
   return { count: reportMonth.length };

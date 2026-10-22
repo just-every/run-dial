@@ -50,13 +50,15 @@ contract("REPORT-001", "each scheduling tile matches a hand count of a seeded mo
     assert.equal(figures(march.source).untagged, 10);
     // Chosen duration (EVENT-011): three 60-minute bookings (Eli, Ivy, Rae) and sixteen of 30 minutes.
     assert.deepEqual(rows(march.duration, "Length"), { "30 minutes": 16, "60 minutes": 3 });
-    // Revenue: Rae paid $90.00 and Sue $50.00 inside March.
-    assert.deepEqual([march.revenue.count, figures(march.revenue).revenue], [2, 14000]);
+    // Money settled in March: revenue is Rae's $90.00 deposit and $30.00 balance and Sue's $50.00; fees are Sue's $25.00
+    // no-show fee (Bea's failed charge is not money); refunds are Rae's $20.00 (her $10.00 refund on 2 April is outside).
+    assert.equal(march.revenue.count, 2);
+    assert.deepEqual(figures(march.revenue), { revenue: 17000, fees: 2500, refunds: 2000, net: 17500 });
     for (const tile of Object.values(march)) assert.ok(tile.definition.length > 40, `${tile.key} states its definition`);
 
     // One event type: the 60-minute Deep dive has Eli, Ivy and Rae.
     const only = await tiles({ eventTypeId: deep.id });
-    assert.deepEqual([only.created.count, only.rescheduled.count, only.cancelled.count, only.attendance.count, figures(only.attendance).attendance_rate, figures(only.revenue).revenue], [3, 1, 0, 3, 100, 9000]);
+    assert.deepEqual([only.created.count, only.rescheduled.count, only.cancelled.count, only.attendance.count, figures(only.attendance).attendance_rate, figures(only.revenue).revenue, figures(only.revenue).refunds], [3, 1, 0, 3, 100, 12000, 2000]);
 
     // Drill-through: the bookings list opens on exactly the counted bookings.
     const names = async query => {
@@ -84,6 +86,9 @@ contract("REPORT-001", "each scheduling tile matches a hand count of a seeded mo
     assert.deepEqual(await drill("source", "untagged"), ["Dee", "Hal", "Ivy", "Jo", "Max", "Pam", "Quin", "Sue", "Tom", "Uma"]);
     assert.deepEqual(await drill("duration", "duration:60"), ["Eli", "Ivy", "Rae"]);
     assert.deepEqual(await drill("revenue"), ["Rae", "Sue"]);
+    assert.deepEqual(await drill("revenue", "money:revenue"), ["Rae", "Sue"]);
+    assert.deepEqual(await drill("revenue", "money:fees"), ["Sue"]);
+    assert.deepEqual(await drill("revenue", "money:refunds"), ["Rae"]);
     assert.deepEqual(await drill("created", undefined, { eventTypeId: deep.id }), ["Eli", "Ivy", "Rae"]);
     assert.equal((await drill("popular_days", "weekday:6")).length, 0, "a bucket nothing counts lists no booking");
 

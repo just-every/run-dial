@@ -6,7 +6,7 @@ import { manageToken } from "./navigation";
 import { PublicFooter, PublicHeader, PublicTheme } from "./public-shell";
 import { PublicRecoveryPage } from "./recovery-page";
 
-type ReturnStatus = { state: "held" | "processing" | "confirmed" | "released" | "unbookable"; amountCents: number; currency: "usd"; startAt: string; endAt: string; expiresAt: string; reference: string | null; checkoutUrl: string | null; manageUrl?: string; reason?: string };
+type ReturnStatus = { state: "held" | "processing" | "confirmed" | "released" | "unbookable"; mode?: "payment" | "setup"; amountCents: number; currency: "usd"; startAt: string; endAt: string; expiresAt: string; reference: string | null; checkoutUrl: string | null; manageUrl?: string; reason?: string };
 
 /** Stripe returns the invitee here. The page only reads the hold: its URL, and Stripe's session ID in it,
  * never confirm anything. The receipt opens once Stripe's signed event has confirmed the booking. */
@@ -38,8 +38,8 @@ export function PaymentReturnPage({ handle, slug, token }: { handle: string; slu
   return <PublicTheme><PublicHeader step={3} /><main className="pb-recovery"><section aria-live="polite">
     <p className="pb-eyebrow">Payment</p>
     {!status ? <p>{error || "Checking your payment with Stripe…"}</p> : <>
-      <h1>{status.state === "confirmed" ? "Payment confirmed." : status.state === "released" ? "This payment window has closed." : status.state === "unbookable" ? "Payment received, but the time is no longer available." : "Waiting for Stripe to confirm your payment."}</h1>
-      <p>{formatUsd(status.amountCents)} · {format(status.startAt, timezone)} · {timezone}</p>
+      <h1>{status.state === "confirmed" ? status.mode === "setup" ? "Card saved." : "Payment confirmed." : status.state === "released" ? "This payment window has closed." : status.state === "unbookable" ? status.mode === "setup" ? "Card saved, but the time is no longer available." : "Payment received, but the time is no longer available." : status.mode === "setup" ? "Waiting for Stripe to confirm your card." : "Waiting for Stripe to confirm your payment."}</h1>
+      <p>{status.mode === "setup" ? "Nothing charged" : formatUsd(status.amountCents)} · {format(status.startAt, timezone)} · {timezone}</p>
       {status.reference ? <p>Stripe reference <code>{status.reference}</code></p> : null}
       {status.state === "held" ? <p>Your time is held until {format(status.expiresAt, timezone)}. If you have not paid yet, return to Stripe to finish. The booking is confirmed only when Stripe confirms the payment.</p> : null}
       {status.state === "processing" ? <p>Your bank payment is processing. Your time stays held, and you will receive a confirmation email once Stripe confirms the payment.</p> : null}

@@ -5,6 +5,7 @@ export const attributionLabels: Record<string, string> = { utm_source: "UTM sour
 export const leadBuckets = [["lt1d", "Under 1 day", 0, 24], ["1to3d", "1 to under 3 days", 24, 72], ["3to7d", "3 to under 7 days", 72, 168], ["ge7d", "7 days or more", 168, Infinity]] as const;
 const outcomes: Record<string, string> = { attended: "Attended", no_show: "No-show", unmarked: "Not marked", untagged: "No UTM or source", any: "" };
 
+export const moneyLabels = { revenue: "Payments and balances", fees: "Late-cancellation and no-show fees", refunds: "Refunds" } as const;
 export const hourLabel = (hour: number) => `${String(hour).padStart(2, "0")}:00`;
 export const durationLabel = (minutes: number) => `${minutes} minutes`;
 export const reasonLabel = (reason: string | null) => reason || "No reason given";
@@ -18,6 +19,7 @@ export function bucketLabel(bucket: string) {
   if (kind === "duration") return durationLabel(Number(value));
   if (kind === "lead") return leadBuckets.find(([key]) => key === value)?.[1] ?? value;
   if (kind === "reason") return reasonLabel(value);
+  if (kind === "money") return moneyLabels[value as keyof typeof moneyLabels] ?? value;
   if (Object.hasOwn(attributionLabels, kind)) return `${attributionLabels[kind]}: ${value}`;
   return bucket;
 }

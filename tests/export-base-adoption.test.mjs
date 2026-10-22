@@ -44,6 +44,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.equal(target.db.prepare('SELECT browser_timezone FROM booking_presentation').get().browser_timezone, 'America/New_York', 'AVAIL-012 booking preserves its independent invitee observation');
     for (const table of ['payment_connections', 'event_type_prices', 'booking_payments']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-001 ${table} survives the archive round trip`);
     assert.ok(!archive.tables.some(table => ['payment_holds', 'payment_oauth_states'].includes(table.name)), 'PAY-001 live holds and OAuth state never travel');
+    for (const table of ['event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-003 ${table} survives the archive round trip`);
+    assert.ok(!archive.tables.some(table => table.name === 'payment_link_tokens'), 'PAY-003 balance-link capabilities never travel');
     assert.throws(() => target.db.exec("UPDATE oa_operators SET status='active' WHERE id='zz-cancelled'"), /invitation_required/);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox').get().n, 0);
     // Future clipboard storage must be classified from its eventual migration,

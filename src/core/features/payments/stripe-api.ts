@@ -7,14 +7,21 @@ export class StripeApiError extends Error {
 export type CheckoutSession = {
   id: string;
   url: string | null;
+  mode?: "payment" | "setup";
   status: "open" | "complete" | "expired";
   payment_status: "paid" | "unpaid" | "no_payment_required";
   amount_total: number | null;
   currency: string | null;
   payment_intent: string | null;
+  setup_intent?: string | null;
+  customer?: string | null;
   expires_at: number;
   metadata?: Record<string, string>;
 };
+/** The parts of Stripe's PaymentIntent, SetupIntent and Refund objects Dial reads; never card details. */
+export type PaymentIntent = { id: string; status: string; amount: number; currency: string; customer: string | null; payment_method: string | null };
+export type SetupIntent = { id: string; status: string; customer: string | null; payment_method: string | null };
+export type Refund = { id: string; status: string; amount: number; payment_intent: string | null };
 
 const apiOrigin = "https://api.stripe.com";
 const connectOrigin = "https://connect.stripe.com";
@@ -48,6 +55,28 @@ export class StripeApi {
 
   getCheckoutSession(accountId: string, sessionId: string) {
     return this.request<CheckoutSession>(`${apiOrigin}/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, undefined, { account: accountId });
+  }
+
+  getPaymentIntent(accountId: string, id: string) {
+    return this.request<PaymentIntent>(`${apiOrigin}/v1/payment_intents/${encodeURIComponent(id)}`, undefined, { account: accountId });
+  }
+
+  getSetupIntent(accountId: string, id: string) {
+    return this.request<SetupIntent>(`${apiOrigin}/v1/setup_intents/${encodeURIComponent(id)}`, undefined, { account: accountId });
+  }
+
+  /** PAY-003: a refund of part or all of one captured payment. */
+  createRefund(accountId: string, params: Record<string, string>, idempotencyKey: string) {
+    return this.request<Refund>(`${apiOrigin}/v1/refunds`, params, { account: accountId, idempotencyKey });
+  }
+
+  /** PAY-003: a stated fee charged once to the invitee's saved card while they are not present. */
+  chargeSavedCard(accountId: string, params: Record<string, string>, idempotencyKey: string) {
+    return this.request<PaymentIntent>(`${apiOrigin}/v1/payment_intents`, { ...params, off_session: "true", confirm: "true" }, { account: accountId, idempotencyKey });
+  }
+
+  detachPaymentMethod(accountId: string, paymentMethodId: string) {
+    return this.request<{ id: string }>(`${apiOrigin}/v1/payment_methods/${encodeURIComponent(paymentMethodId)}/detach`, {}, { account: accountId });
   }
 
   private async request<T>(url: string, form?: Record<string, string>, options: { account?: string; idempotencyKey?: string } = {}): Promise<T> {

@@ -12,6 +12,11 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Additive PAY-003 tables start empty. An existing payment was the full price; older audit and erasure-receipt
+  // rows carry no amount, Stripe reference or saved-card counts.
+  'core/0069_deposits_refunds_fees.sql': (table, row) => table === 'booking_payments' ? { ...row, kind: 'payment' }
+    : table === 'anonymized_audit' ? { ...row, amount_cents: null, processor_ref: null }
+    : table === 'person_erasure_receipts' ? { ...row, saved_cards_detached: null, saved_card_failures: null } : row,
   // Additive payment tables start empty; an older backup has no prices, connection or payments.
   'core/0068_stripe_payments.sql': (_table, row) => row,
   // Historical requests have no invitee browser observation; do not infer one.

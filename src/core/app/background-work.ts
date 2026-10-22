@@ -22,6 +22,8 @@ export async function runScheduledWork(env: AppBindings, services: AppServices) 
   await processDueRescheduleRequests(env);
   // PAY-001: end payment windows by expiring their Checkout Sessions, then free the slots.
   await services.payments.sweepExpiredHolds();
+  // PAY-003: re-send, with the same idempotency key, any refund or fee whose Stripe call was cut off.
+  await services.payments.money.sweepPending();
   await services.delivery.reconcileConnections();
   await services.calendar.syncManagedEvents();
   await processDueCalendarDeletionProbes(env);

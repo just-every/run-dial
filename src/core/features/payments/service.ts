@@ -5,9 +5,14 @@ import type { EventTypeRecord } from "../event-types";
 import type { BookingClaim } from "../bookings";
 import { stripeConfiguration } from "./config";
 import { StripeConnection } from "./connection";
+import { checkoutParams } from "./checkout-params";
 import { eventPrice, priceForDuration, validatePrice, type EventPriceInput } from "./pricing";
-import type { PaymentHold, PaymentsRepository } from "./repository";
+import { MoneyRepository } from "./money-repository";
+import { MoneyService } from "./money-service";
+import { MovementsRepository } from "./movements-repository";
+import { PaymentsRepository, type PaymentHold } from "./repository";
 import { StripeApi, StripeApiError, type CheckoutSession } from "./stripe-api";
+import { cardRequired, termsFromRow, termsSnapshot, validateTerms, type PaymentTermsInput, type TermsSnapshot } from "./terms";
 import { verifyStripeSignature } from "./webhook-signature";
 import type { Admission } from "../../platform/public-admission";
 
@@ -18,14 +23,23 @@ const checkoutLifetimeSeconds = 31 * 60;
 const returnLifetimeMs = 24 * 60 * 60 * 1000;
 
 export type PaidConversion = (claim: BookingClaim, payment: { holdId: string; statements: D1PreparedStatement[] }) => Promise<"claimed" | "slot_taken" | "blocked">;
+/** What a booking costs now: a payment (the full price or a deposit) or, for a free event with stated fees, a
+ * setup that only saves the consented card. */
+export type Quote = { kind: "available"; mode: "payment" | "setup"; amountCents: number; snapshot: TermsSnapshot; saveCard: boolean; accountId: string; achEnabled: boolean };
 type StripeEvent = { id: string; type: string; account?: string; data: { object: Record<string, unknown> } };
 export type WebhookResult = { kind: "unauthorized" | "processed" | "ignored" | "rejected" } | { kind: "limited"; retryAfterSeconds: number };
 
 export class PaymentsService {
   readonly connection: StripeConnection;
+  readonly money: MoneyService;
+  private readonly repository: PaymentsRepository;
+  private readonly terms: MoneyRepository;
   private convert?: PaidConversion;
-  constructor(private readonly repository: PaymentsRepository, private readonly runtime: RuntimeEnvironment, private readonly transport: typeof fetch = fetch) {
-    this.connection = new StripeConnection(repository, runtime, transport);
+  constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, private readonly transport: typeof fetch = fetch) {
+    this.repository = new PaymentsRepository(db);
+    this.terms = new MoneyRepository(db);
+    this.connection = new StripeConnection(this.repository, runtime, transport);
+    this.money = new MoneyService(db, this.repository, this.terms, new MovementsRepository(db), runtime, transport);
   }
 
   setConversion(convert: PaidConversion) { this.convert = convert; }
@@ -35,19 +49,41 @@ export class PaymentsService {
   async eventPrice(eventTypeId: string) { return eventPrice(await this.repository.prices(eventTypeId)); }
 
   async savePrice(event: EventTypeRecord, input: EventPriceInput) {
-    if (!validatePrice(input, event.durationOptionsMinutes?.length ? event.durationOptionsMinutes : [event.durationMinutes])) return { kind: "invalid_price" as const };
+    const durations = offeredDurations(event);
+    if (!validatePrice(input, durations)) return { kind: "invalid_price" as const };
+    const next = eventPrice([...(input.amountCents === null ? [] : [{ durationMinutes: 0, amountCents: input.amountCents }]), ...input.durationPrices]);
+    // A price change may not leave the saved deposit at or above a price, or without one.
+    const current = await this.eventTerms(event.id);
+    if (current.deposit.kind !== "none" && validateTerms(current, next, durations, null)?.startsWith("deposit")) return { kind: "deposit_conflict" as const };
     await this.repository.replacePrices(event.id, [...(input.amountCents === null ? [] : [{ durationMinutes: 0, amountCents: input.amountCents }]), ...input.durationPrices]);
     return { kind: "saved" as const, price: await this.eventPrice(event.id) };
   }
 
+  async eventTerms(eventTypeId: string) { return termsFromRow(await this.terms.eventTerms(eventTypeId)); }
+
+  async saveTerms(event: EventTypeRecord, input: PaymentTermsInput) {
+    const refusal = validateTerms(input, await this.eventPrice(event.id), offeredDurations(event), await this.terms.cancellationCutoffMinutes(event.id));
+    if (refusal) return { kind: "invalid_terms" as const, refusal };
+    await this.terms.saveEventTerms(event.id, input);
+    return { kind: "saved" as const, terms: await this.eventTerms(event.id) };
+  }
+
+  /** BOOK-015's cut-off editor refuses a cut-off that would start inside the event's free cancellation window. */
+  async cutoffConflicts(eventTypeId: string, cancellationCutoffMinutes: number | null) {
+    const terms = await this.eventTerms(eventTypeId);
+    return terms.freeWindowHours !== null && (cancellationCutoffMinutes ?? 0) > terms.freeWindowHours * 60;
+  }
+
   /** Undefined is a free booking. A paid event without a working connection fails closed with a named reason. */
-  async quote(eventTypeId: string, durationMinutes: number) {
-    const amountCents = priceForDuration(await this.eventPrice(eventTypeId), durationMinutes);
-    if (amountCents === undefined) return undefined;
+  async quote(eventTypeId: string, durationMinutes: number): Promise<Quote | { kind: "unavailable"; amountCents: number; reason: string } | undefined> {
+    const [price, terms] = await Promise.all([this.eventPrice(eventTypeId), this.eventTerms(eventTypeId)]);
+    const amountCents = priceForDuration(price, durationMinutes), saveCard = cardRequired(terms);
+    if (amountCents === undefined && !saveCard) return undefined;
+    const snapshot = termsSnapshot(terms, amountCents ?? 0);
     const connection = await this.repository.connection();
-    if (!stripeConfiguration(this.runtime)) return { kind: "unavailable" as const, amountCents, reason: "payments_not_configured" };
-    if (connection?.status !== "connected" || !connection.accountId) return { kind: "unavailable" as const, amountCents, reason: connection?.status === "deauthorized" ? "stripe_deauthorized" : "stripe_not_connected" };
-    return { kind: "available" as const, amountCents, accountId: connection.accountId, achEnabled: connection.achEnabled };
+    if (!stripeConfiguration(this.runtime)) return { kind: "unavailable", amountCents: snapshot.dueNowCents, reason: "payments_not_configured" };
+    if (connection?.status !== "connected" || !connection.accountId) return { kind: "unavailable", amountCents: snapshot.dueNowCents, reason: connection?.status === "deauthorized" ? "stripe_deauthorized" : "stripe_not_connected" };
+    return { kind: "available", mode: snapshot.dueNowCents > 0 ? "payment" : "setup", amountCents: snapshot.dueNowCents, snapshot, saveCard, accountId: connection.accountId, achEnabled: connection.achEnabled };
   }
 
   /** The payment-return capability (AUTH-007): derived from the selection nonce's 256 random bits, bound to one
@@ -60,25 +96,11 @@ export class PaymentsService {
 
   holdForNonce(nonceId: string) { return this.repository.holdByNonce(nonceId); }
 
-  async openCheckout(input: { holdId: string; accountId: string; amountCents: number; eventTitle: string; durationMinutes: number; returnUrl: string; customerEmail: string; achEnabled: boolean }) {
-    const params: Record<string, string> = {
-      mode: "payment",
-      "line_items[0][quantity]": "1",
-      "line_items[0][price_data][currency]": "usd",
-      "line_items[0][price_data][unit_amount]": String(input.amountCents),
-      "line_items[0][price_data][product_data][name]": `${input.eventTitle} (${input.durationMinutes} minutes)`.slice(0, 250),
-      // Stripe manages Checkout's methods (cards, Apple Pay, Google Pay, Link) from the account's Dashboard and
-      // refuses payment_method_types; ACH Direct Debit is excluded unless the host enabled it in Dial.
-      ...(input.achEnabled ? {} : { "excluded_payment_method_types[0]": "us_bank_account" }),
-      success_url: `${input.returnUrl}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${input.returnUrl}&canceled=1`,
-      expires_at: String(Math.floor(Date.now() / 1000) + checkoutLifetimeSeconds),
-      client_reference_id: input.holdId,
-      customer_email: input.customerEmail,
-      "metadata[dial_hold_id]": input.holdId,
-      "payment_intent_data[metadata][dial_hold_id]": input.holdId,
-    };
-    return this.api().createCheckoutSession(input.accountId, params, `dial-hold-${input.holdId}`);
+  async openCheckout(input: { holdId: string; quote: Quote; eventTitle: string; durationMinutes: number; returnUrl: string; customerEmail: string }) {
+    const params = checkoutParams({ holdId: input.holdId, mode: input.quote.mode, amountCents: input.quote.amountCents, deposit: input.quote.snapshot.depositCents > 0, saveCard: input.quote.saveCard,
+      eventTitle: input.eventTitle, durationMinutes: input.durationMinutes, returnUrl: input.returnUrl, customerEmail: input.customerEmail, achEnabled: input.quote.achEnabled,
+      expiresAt: Math.floor(Date.now() / 1000) + checkoutLifetimeSeconds });
+    return this.api().createCheckoutSession(input.quote.accountId, params, `dial-hold-${input.holdId}`);
   }
 
   attachCheckout(holdId: string, session: CheckoutSession, claim: BookingClaim) {
@@ -96,11 +118,11 @@ export class PaymentsService {
     if (!hold) return { kind: "not_found" as const };
     if (hold.returnExpiresAt <= nowIso()) return { kind: "expired" as const };
     const manageUrl = hold.state === "confirmed" ? new URL(`/manage/${await this.manageToken(token)}`, this.runtime.APP_URL).toString() : undefined;
-    return { kind: "found" as const, status: { state: hold.state, amountCents: hold.amountCents, currency: hold.currency, startAt: hold.startAt, endAt: hold.endAt, expiresAt: hold.expiresAt, reference: hold.checkoutSessionId, checkoutUrl: hold.state === "held" ? hold.checkoutUrl : null, ...(manageUrl ? { manageUrl } : {}), ...(hold.endedReason ? { reason: hold.endedReason } : {}) } };
+    return { kind: "found" as const, status: { state: hold.state, mode: hold.kind, amountCents: hold.amountCents, currency: hold.currency, startAt: hold.startAt, endAt: hold.endAt, expiresAt: hold.expiresAt, reference: hold.checkoutSessionId, checkoutUrl: hold.state === "held" ? hold.checkoutUrl : null, ...(manageUrl ? { manageUrl } : {}), ...(hold.endedReason ? { reason: hold.endedReason } : {}) } };
   }
 
   /** AUTH-005: an unsigned, mis-signed or stale event, or one whose connected account is not the hold's,
-   * returns 401 and changes nothing. Every accepted event is idempotent through the hold's state. */
+   * returns 401 and changes nothing. Every accepted event is idempotent through the hold's or movement's state. */
   async receiveWebhook(payload: string, signature: string | null, admit: () => Promise<Admission>): Promise<WebhookResult> {
     const config = stripeConfiguration(this.runtime);
     if (!config || !await verifyStripeSignature(payload, signature, config.webhookSecret)) return { kind: "unauthorized" };
@@ -115,13 +137,15 @@ export class PaymentsService {
       return { kind: "processed" };
     }
     const object = event.data.object;
-    const holdId = typeof (object.metadata as Record<string, unknown> | undefined)?.dial_hold_id === "string" ? (object.metadata as Record<string, string>).dial_hold_id : undefined;
+    const movementId = metadata(object, "dial_movement_id");
+    if (movementId) return this.money.receiveBalanceEvent(event, movementId);
+    const holdId = metadata(object, "dial_hold_id");
     const hold = event.type.startsWith("checkout.session.") && typeof object.id === "string" ? await this.repository.holdBySession(object.id) : holdId ? await this.repository.hold(holdId) : undefined;
     if (!hold) return { kind: "ignored" };
     if (event.account !== hold.accountId) return { kind: "unauthorized" };
     switch (event.type) {
       case "checkout.session.completed":
-        if (object.payment_status === "paid") return this.confirm(hold, object, typeof object.payment_intent === "string" ? object.payment_intent : null);
+        if (hold.kind === "setup" || object.payment_status === "paid") return this.confirm(hold, object, typeof object.payment_intent === "string" ? object.payment_intent : null);
         if (object.payment_status === "unpaid") { await this.repository.markProcessing(hold.id); return { kind: "processed" }; }
         return { kind: "rejected" };
       case "checkout.session.async_payment_succeeded":
@@ -149,7 +173,7 @@ export class PaymentsService {
         if (!(error instanceof StripeApiError) || error.status !== 400) throw error;
         // Only an open session can be expired: the payer finished first, so read Stripe's outcome.
         const session = await this.api().getCheckoutSession(hold.accountId, hold.checkoutSessionId);
-        if (session.status === "complete" && session.payment_status === "paid") await this.confirm(hold, session as unknown as Record<string, unknown>, session.payment_intent);
+        if (session.status === "complete" && (session.payment_status === "paid" || hold.kind === "setup")) await this.confirm(hold, session as unknown as Record<string, unknown>, session.payment_intent);
         else if (session.status === "complete") await this.repository.markProcessing(hold.id);
         else if (session.status === "expired") await this.repository.endHold(hold.id, "released", "checkout_expired");
       }
@@ -159,12 +183,15 @@ export class PaymentsService {
   private async confirm(hold: PaymentHold, paid: Record<string, unknown>, paymentIntentId: string | null): Promise<WebhookResult> {
     if (hold.state === "confirmed") return { kind: "processed" };
     if (!["held", "processing"].includes(hold.state) || !hold.claimJson || !hold.checkoutSessionId) return { kind: "processed" };
-    // Dial confirms only the amount the invitee was shown, in USD.
-    if (paid.amount_total !== hold.amountCents || paid.currency !== "usd") return { kind: "rejected" };
+    // Dial confirms only the amount the invitee was shown, in USD; a setup confirms only a completed card setup.
+    const setup = hold.kind === "setup";
+    if (setup ? paid.mode !== "setup" || paid.status !== "complete" || typeof paid.setup_intent !== "string" : paid.amount_total !== hold.amountCents || paid.currency !== "usd") return { kind: "rejected" };
     if (!this.convert) throw new Error("Paid booking conversion is not configured");
-    const claim = JSON.parse(hold.claimJson) as BookingClaim, now = nowIso();
+    const claim = JSON.parse(hold.claimJson) as BookingClaim, now = nowIso(), money = claim.money;
+    const card = money?.consent ? await this.savedCard(hold, paid, paymentIntentId) : undefined;
     const outcome = await this.convert({ ...claim, now }, { holdId: hold.id, statements: [
-      this.repository.bookingPaymentStatement({ bookingId: claim.bookingId, accountId: hold.accountId, amountCents: hold.amountCents, checkoutSessionId: hold.checkoutSessionId, paymentIntentId, paidAt: now }),
+      ...(setup ? [] : [this.repository.bookingPaymentStatement({ bookingId: claim.bookingId, accountId: hold.accountId, amountCents: hold.amountCents, checkoutSessionId: hold.checkoutSessionId, paymentIntentId, paidAt: now, kind: money && money.snapshot.depositCents > 0 ? "deposit" : "payment" })]),
+      ...(money ? this.terms.confirmationStatements(claim.bookingId, money, card, money.balanceSalt ? await this.money.balanceTokenHash(money.balanceSalt) : undefined, now) : []),
       this.repository.confirmHoldStatement(hold.id, claim.bookingId, now),
     ] });
     if (outcome !== "claimed") {
@@ -175,11 +202,26 @@ export class PaymentsService {
     return { kind: "processed" };
   }
 
+  /** The saved card's references come from Stripe's own objects: the SetupIntent of a setup session, or the
+   * PaymentIntent that kept the card during payment. Dial never reads card details. */
+  private async savedCard(hold: PaymentHold, paid: Record<string, unknown>, paymentIntentId: string | null) {
+    const api = this.api();
+    const intent = hold.kind === "setup" ? await api.getSetupIntent(hold.accountId, paid.setup_intent as string) : paymentIntentId ? await api.getPaymentIntent(hold.accountId, paymentIntentId) : undefined;
+    return { accountId: hold.accountId, customerId: intent?.customer ?? (typeof paid.customer === "string" ? paid.customer : null), paymentMethodId: intent?.payment_method ?? null };
+  }
+
   private api() {
     const config = stripeConfiguration(this.runtime);
     if (!config) throw new Error("Missing Stripe configuration: STRIPE_SECRET_KEY, STRIPE_CONNECT_CLIENT_ID, STRIPE_WEBHOOK_SECRET");
     return new StripeApi(config.secretKey, this.transport);
   }
+}
+
+function offeredDurations(event: EventTypeRecord) { return event.durationOptionsMinutes?.length ? event.durationOptionsMinutes : [event.durationMinutes]; }
+
+function metadata(object: Record<string, unknown>, key: string) {
+  const value = (object.metadata as Record<string, unknown> | undefined)?.[key];
+  return typeof value === "string" ? value : undefined;
 }
 
 function parseEvent(payload: string): StripeEvent | undefined {

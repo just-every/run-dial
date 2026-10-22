@@ -15,5 +15,5 @@ export const definitions: Record<ReportTileKey, string> = {
   popular_hours: `Bookings that were not canceled and start inside the period, by starting hour. ${zone} ${period} ${imported}`,
   source: `Bookings created inside the period, by each UTM and source value the invitee arrived with on a tracked booking link; a booking that arrived with none is counted as untagged. ${period} ${imported}`,
   duration: `Bookings created inside the period, by the length of their current time, which is the length the invitee chose. ${period} ${imported}`,
-  revenue: `Payments through Stripe whose payment time falls inside the period, in USD. Bookings that were not paid through Stripe carry no revenue. ${period}`,
+  revenue: `Money Stripe confirmed inside the period, in USD, counted at the time it settled: revenue is first payments, deposits and balances; fees are the late-cancellation and no-show fees Dial charged under a booking's cancellation policy, not Stripe's own processing fees; refunds are refunds Dial issued; net is revenue plus fees minus refunds. ${period}`,
 };

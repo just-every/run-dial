@@ -21,7 +21,9 @@ const selectionLookupSchema = z.object({
 });
 const confirmedLookupSchema = z.object({ token: z.string().min(1).max(512).optional() });
 const answerValueSchema = z.union([z.string().max(4_000), z.array(z.string().max(500)).max(50)]);
-const confirmationSchema = selectionSchema.extend({ locationId:z.string().max(80).optional(),locationInput:z.string().max(1000).optional(), nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema), attribution: attributionSchema.optional() });
+const confirmationSchema = selectionSchema.extend({ locationId:z.string().max(80).optional(),locationInput:z.string().max(1000).optional(), nonce: z.string().max(200).optional(), name: z.string().max(160), email: z.string().max(320), answers: z.record(z.string().max(100), answerValueSchema), attribution: attributionSchema.optional(),
+  // PAY-003: the invitee's explicit agreement to a saved card for the stated fees, with the wording version shown.
+  cardConsent: z.object({ accepted: z.boolean(), version: z.string().max(40) }).strict().optional() });
 const manageRescheduleSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), reason: z.string().trim().max(500).optional() });
 const cancelSchema = z.object({ reason: z.string().trim().max(500).optional() });
 
@@ -174,6 +176,7 @@ function confirmationResult(context: Context<AppEnvironment>, result: Awaited<Re
   if (result.kind === "payments_unavailable") return paymentsUnavailable(context, result.reason);
   if (result.kind === "replayed") return context.json(result.booking);
   if (result.kind === "invalid_answers") return apiError(context, 400, "invalid_answers", "Review the required booking details.");
+  if (result.kind === "card_consent_required") return apiError(context, 400, "card_consent_required", "Agree to the saved card and the stated fees to book this event.", ["cardConsent"]);
   if (result.kind === "invalid_nonce") return apiError(context, 404, "booking_nonce_not_found", "This booking selection is not valid.");
   if (result.kind === "expired_nonce") return apiError(context, 410, "booking_nonce_expired", "This booking selection has expired. Choose a new time.");
   if (result.kind === "calendar_unavailable") return context.json(availabilityResponseSchema.parse({ state: "temporarily_unavailable", provider: "calendar_provider_unavailable", slots: [] }), 503);

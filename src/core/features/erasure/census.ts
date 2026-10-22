@@ -124,6 +124,18 @@ export const applicationTables = [
   // PAY-001: a pending hold carries the payer's folded email and pending booking until it ends; erased by email and with its booking.
   "payment_holds",
   "payment_oauth_states",
+  // PAY-003: an event type's deposit, balance due time and cancellation policy; host configuration, no personal data.
+  "event_type_payment_terms",
+  // PAY-003: the amounts and windows a booking was shown; erased with its booking.
+  "booking_payment_terms",
+  // PAY-003: the balance link's salt and lookup hash; erased with its booking and never archived.
+  "payment_link_tokens",
+  // PAY-003: card consent with the payer's Stripe customer and payment-method references; erased with its booking
+  // after Stripe is asked to detach the card.
+  "booking_card_consents",
+  // PAY-003: balances, refunds and fees; erased with the booking while each amount, kind, actor type and Stripe
+  // reference survives in the anonymized audit.
+  "payment_movements",
   "operator_erasure_subjects",
   "operator_creation_receipts",
   "operator_creation_tombstones",

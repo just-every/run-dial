@@ -191,7 +191,7 @@ export class ProviderDeliveryService {
         ...payload,
         ...bookingCancellationMail({
           ...snapshot,
-          payment: snapshot.paymentAmountCents && snapshot.paymentReference ? { amount: formatUsd(snapshot.paymentAmountCents), reference: snapshot.paymentReference } : undefined,
+          payment: template.payment ?? (snapshot.paymentAmountCents && snapshot.paymentReference ? { amount: formatUsd(snapshot.paymentAmountCents), reference: snapshot.paymentReference } : undefined),
           hostName: template.hostName,
           calendarState: snapshot.calendarState,
           actor: template.actor,
@@ -326,7 +326,10 @@ function asProviderFailure(error: unknown) {
 function bookingCancellationTemplate(value: unknown): BookingCancellationTemplate | undefined {
   if (!isRecord(value) || value.kind !== "booking-cancellation" || typeof value.hostName !== "string" || typeof value.actor !== "string") return undefined;
   if (value.reason !== undefined && typeof value.reason !== "string") return undefined;
-  return { kind: "booking-cancellation", hostName: value.hostName, actor: value.actor, ...(typeof value.reason === "string" ? { reason: value.reason } : {}) };
+  const payment = isRecord(value.payment) && typeof value.payment.amount === "string" && typeof value.payment.reference === "string" && ["payment", "deposit", "setup"].includes(String(value.payment.kind)) && Array.isArray(value.payment.notes) && value.payment.notes.every(note => typeof note === "string")
+    ? { amount: value.payment.amount, reference: value.payment.reference, kind: value.payment.kind as "payment" | "deposit" | "setup", notes: value.payment.notes as string[] } : undefined;
+  if (value.payment !== undefined && !payment) return undefined;
+  return { kind: "booking-cancellation", hostName: value.hostName, actor: value.actor, ...(typeof value.reason === "string" ? { reason: value.reason } : {}), ...(payment ? { payment } : {}) };
 }
 
 function refreshInviteeManageLinks(payload: Record<string, unknown>, manageUrl: string) {

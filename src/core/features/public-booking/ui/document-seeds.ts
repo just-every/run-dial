@@ -1,4 +1,4 @@
-import type { PublicEvent, PublicEventPayload, PublicProfile } from "./types";
+import type { PublicEvent, PublicEventPayload, PublicProfile, SelectionPayment } from "./types";
 import type { BookingDetailsCapability, PublicSelectionLookup } from "./selection-types";
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
@@ -48,6 +48,18 @@ export function seedSelection(value: unknown, handle: string, slug: string, capa
     || typeof value.selection.endAt !== "string" || !Number.isFinite(Date.parse(value.selection.endAt))
     || !Number.isFinite(Date.parse(capability.startAt)) || Date.parse(value.selection.endAt) <= Date.parse(capability.startAt)
     || value.selection.hostTimezone !== value.host.timezone) return undefined;
-  const payment = record(value.payment) && Number.isInteger(value.payment.amountCents) && value.payment.currency === "usd" ? { amountCents: value.payment.amountCents as number, currency: "usd" as const } : undefined;
+  const payment = selectionPayment(value.payment);
   return { nonce: capability.nonce, expiresAt: value.expiresAt, selection: { startAt: capability.startAt, endAt: value.selection.endAt, hostTimezone: value.host.timezone, inviteeTimezone: capability.inviteeTimezone }, host: profile(value.host), event: event(value.event), ...(payment ? { payment } : {}) };
+}
+
+/** PAY-001 and PAY-003: the pay step's amounts, balance, policy and consent, or nothing for a free booking. */
+function selectionPayment(value: unknown): SelectionPayment | undefined {
+  if (!record(value) || value.currency !== "usd" || !["payment", "setup"].includes(String(value.mode)) || !Array.isArray(value.policy) || !value.policy.every(line => typeof line === "string")) return undefined;
+  const amounts = ["amountCents", "priceCents", "depositCents", "balanceCents"] as const;
+  if (amounts.some(key => !Number.isInteger(value[key]))) return undefined;
+  const instant = (entry: unknown) => typeof entry === "string" && Number.isFinite(Date.parse(entry)) ? entry : null;
+  const consent = record(value.consent) && typeof value.consent.version === "string" && typeof value.consent.text === "string" && Number.isInteger(value.consent.lateCancelFeeCents) && Number.isInteger(value.consent.noShowFeeCents)
+    ? { version: value.consent.version, text: value.consent.text, lateCancelFeeCents: value.consent.lateCancelFeeCents as number, noShowFeeCents: value.consent.noShowFeeCents as number } : undefined;
+  return { amountCents: value.amountCents as number, currency: "usd", mode: value.mode as SelectionPayment["mode"], priceCents: value.priceCents as number, depositCents: value.depositCents as number, balanceCents: value.balanceCents as number,
+    balanceDueAt: instant(value.balanceDueAt), freeWindowEndsAt: instant(value.freeWindowEndsAt), policy: value.policy as string[], ...(consent ? { consent } : {}) };
 }

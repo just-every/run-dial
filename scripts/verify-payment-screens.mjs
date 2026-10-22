@@ -61,8 +61,8 @@ try {
   const token = new URL(status.manageUrl).pathname.split("/").at(-1);
   for (const width of [1440, 390]) {
     await capture(width, "receipt", `/book/dial-host/paid-session/confirmed?token=${token}`, async page => { await page.getByText("Paid $90.00 USD", { exact: false }).waitFor(); await page.getByText(sessionId).waitFor(); });
-    await capture(width, "manage", `/manage/${token}`, async page => { await page.getByText("No refund is issued by Dial", { exact: false }).waitFor(); await page.getByText(sessionId).waitFor(); });
-    await capture(width, "booking-record", "/app/bookings?query=Avery%20Payer", async page => { await page.getByRole("heading", { name: "Avery Payer", exact: true }).waitFor(); await page.getByText("$90.00 USD paid through Stripe").waitFor(); }, true);
+    await capture(width, "manage", `/manage/${token}`, async page => { await page.getByRole("region", { name: "Cancellation policy" }).waitFor(); await page.getByText(sessionId).waitFor(); });
+    await capture(width, "booking-record", "/app/bookings?query=Avery%20Payer", async page => { await page.getByRole("heading", { name: "Avery Payer", exact: true }).waitFor(); await page.getByRole("region", { name: "Payments" }).getByText("$90.00 USD · Stripe", { exact: false }).waitFor(); }, true);
   }
   console.log(`PAY-001 browser proof: ${shots.length} screenshots (${shots.join(", ")}).`);
 } finally { await owner.close(); await browser.close(); }

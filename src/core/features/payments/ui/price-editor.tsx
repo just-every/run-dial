@@ -47,7 +47,7 @@ export function PriceEditor({ eventId, durations }: { eventId: string; durations
         <label className="grid gap-2 text-sm font-[650] text-ink">Price (USD){durations.length > 1 ? " for every duration" : ""}<Input inputMode="decimal" placeholder="Free" value={price} disabled={!hydrated || !loaded || saving} onChange={event => { setPrice(event.target.value); setStatus(""); }} /></label>
         {durations.length > 1 ? durations.map(duration => <label key={duration} className="grid gap-2 text-sm font-[650] text-ink">Price for {duration} minutes (USD)<Input inputMode="decimal" placeholder={price ? `$${price}` : "Not priced"} value={perDuration[duration] ?? ""} disabled={!hydrated || !loaded || saving} onChange={event => { setPerDuration(current => ({ ...current, [duration]: event.target.value })); setStatus(""); }} /></label>) : null}
       </div>
-      <p className="mt-4 text-sm leading-6 text-soft">The chosen duration's price applies; a reschedule keeps the amount already paid. Dial never sees card numbers. Refunds, deposits and fees are not issued by Dial yet: refund in Stripe.</p>
+      <p className="mt-4 text-sm leading-6 text-soft">The chosen duration's price applies; a reschedule keeps the amount already paid. Dial never sees card numbers. Set a deposit and the cancellation policy below, and refund from each booking record.</p>
       {error ? <p role="alert" className={noticeClassName("error", "mt-4")}>{error}</p> : null}
       {status ? <p role="status" className={noticeClassName("success", "mt-4")}>{status}</p> : null}
       <Button className="mt-5" type="submit" disabled={!hydrated || !loaded || saving}>{saving ? "Saving…" : "Save price"}</Button>

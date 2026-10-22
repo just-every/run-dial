@@ -9,6 +9,8 @@ const actions: Record<BookingHistoryEntry["action"], string> = {
   attendance_marked: "Attendance recorded", calendar_cancelled: "Cancelled by calendar provider",
   reschedule_requested: "Invitee asked to pick a new time", reschedule_request_reminded: "Reschedule request reminder sent",
   reschedule_request_picked: "New time picked", reschedule_request_expired: "Reschedule request expired",
+  payment_received: "Payment received", payment_balance: "Balance paid", payment_refund: "Refund",
+  payment_late_cancel_fee: "Late-cancellation fee", payment_no_show_fee: "No-show fee",
 };
 
 export function BookingHistory({ booking }: { booking: BookingRecord }) {

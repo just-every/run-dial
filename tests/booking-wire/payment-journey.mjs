@@ -77,7 +77,9 @@ async function hold(startAt, duration, email, name = "Paying guest") {
 // S2/S3: the pay step holds the slot through the BOOK-002 claim and opens Stripe Checkout for the chosen duration's price.
 const [first, second] = await slots(60);
 const lookupSelection = await data(`${book}/selection`, { startAt: first, inviteeTimezone: "UTC", durationMinutes: 60 }, 201);
-assert.deepEqual((await data(`${book}/selection?${new URLSearchParams({ nonce: lookupSelection.nonce, startAt: first, inviteeTimezone: "UTC" })}`)).payment, { amountCents: 9000, currency: "usd" });
+const shown = (await data(`${book}/selection?${new URLSearchParams({ nonce: lookupSelection.nonce, startAt: first, inviteeTimezone: "UTC" })}`)).payment;
+assert.deepEqual([shown.amountCents, shown.currency, shown.priceCents, shown.balanceCents, shown.freeWindowEndsAt, shown.consent], [9000, "usd", 9000, 0, null, undefined], "the full price is due now and no fee or consent applies");
+assert.ok(shown.policy.length, "the booking step states that the event has no cancellation policy");
 const payer = await hold(first, 60, "payer@dial.test", "Avery Payer");
 assert.equal(payer.step.paymentRequired, true);
 assert.equal(payer.step.payment.amountCents, 9000);
@@ -146,7 +148,8 @@ const returned = await data(`/api/public/payments/${payer.returnToken}`);
 assert.equal(returned.state, "confirmed");
 const manage = new URL(returned.manageUrl).pathname.split("/").at(-1);
 const receipt = await data(`/api/public/manage/${manage}`);
-assert.deepEqual(receipt.payment, { amountCents: 9000, currency: "usd", reference: session.id, refundIssuedByDial: false });
+assert.deepEqual([receipt.payment.amountCents, receipt.payment.currency, receipt.payment.reference, receipt.payment.kind, receipt.payment.paidCents, receipt.payment.refundedCents, receipt.payment.balanceDueCents], [9000, "usd", session.id, "payment", 9000, 0, 0]);
+assert.deepEqual(receipt.payment.cancellation, { outcome: "none", amountCents: 0 }, "without a cancellation policy, cancelling moves no money");
 assert.deepEqual((await data(`${book}/confirm`, payer.payload, 200)).manageUrl, returned.manageUrl, "a replayed confirmation returns the paid receipt");
 const record = await data(`/api/app/bookings/${paidBookings[0].id}`);
 assert.deepEqual([record.payment.amountCents, record.payment.checkoutSessionId, record.payment.paymentIntentId], [9000, session.id, paidSession.payment_intent]);
@@ -182,12 +185,16 @@ const moved = await data(`/api/public/manage/${manage}/reschedule`, { nonce: mov
 assert.deepEqual(moved.payment, receipt.payment, "a reschedule keeps the amount paid");
 await deliver();
 const cancelled = await data(`/api/public/manage/${manage}/cancel`, { reason: "Plans changed" });
-assert.equal(cancelled.state, "cancelled"); assert.deepEqual(cancelled.payment, receipt.payment, "cancel does not drop the payment record");
+const kept = Object.fromEntries(Object.entries(receipt.payment).filter(([key]) => key !== "cancellation"));
+assert.equal(cancelled.state, "cancelled"); assert.deepEqual(cancelled.payment, kept, "cancel does not drop the payment record");
 await deliver();
 snap = await state();
 assert.equal(snap.booking_payments.length, 1);
-for (const mail of bookingMail(snap, paidBookings[0].id).filter(mail => /^Rescheduled:|^Booking cancelled:/.test(mail.subject))) assert.ok(textBody(mail).includes("No refund is issued by Dial. The host refunds payments in Stripe."), `${mail.subject} states that Dial issues no refund`);
-checks.push("reschedule keeps $90 paid; cancel keeps the payment record; change and cancellation mail say no refund is issued by Dial");
+assert.deepEqual([snap.payment_movements.length, snap.wire_calls.filter(row => new URL(row.url).pathname === "/v1/refunds").length], [0, 0], "with no cancellation policy, Dial issues no automatic refund (PAY-003)");
+const changeMail = bookingMail(snap, paidBookings[0].id).filter(mail => /^Rescheduled:|^Booking cancelled:/.test(mail.subject));
+assert.equal(changeMail.length, 4);
+for (const mail of changeMail) assert.ok(textBody(mail).includes(`Payment: $90.00 USD paid · Stripe reference ${session.id}`), `${mail.subject} states the payment it keeps`);
+checks.push("reschedule keeps $90 paid; cancel keeps the payment record and, with no cancellation policy, issues no refund; change and cancellation mail state the payment kept");
 
 // S1: account.application.deauthorized marks the connection unhealthy and stops new paid bookings with a named reason.
 await webhook(stripeEvent("account.application.deauthorized", { id: "ca_wire", object: "application" }, "acct_someoneelse"), 401);
@@ -205,9 +212,12 @@ const before = JSON.stringify(await data("/__fixtures/payments/all-rows"));
 for (const detail of ["4242", "Card Holder Name", "payer-card-holder@dial.test", "customer_details", "dial-never-stores"]) assert.ok(!before.includes(detail), `${detail} never reaches a product table`);
 const preview = await data("/api/app/privacy/preview", { email: "payer@dial.test" });
 await data("/api/app/privacy/erase", { email: "payer@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
-const after = JSON.stringify(await data("/__fixtures/payments/all-rows"));
+const { anonymized_audit: audit, ...tables } = await data("/__fixtures/payments/all-rows");
+const after = JSON.stringify(tables);
 for (const detail of ["payer@dial.test", "Avery Payer", session.id, paidSession.payment_intent]) assert.ok(!after.includes(detail), `erased payer's ${detail.includes("@") ? "address" : "detail"} is gone from every product table`);
-checks.push("no card number, payer name or Stripe customer detail is ever stored; erasing the payer removes the booking, its payment record and every trace of the address");
+assert.ok(!JSON.stringify(audit).includes("payer@dial.test") && !JSON.stringify(audit).includes("Avery Payer"), "the anonymized audit keeps no payer detail");
+assert.deepEqual(audit.filter(row => row.entity_kind === "payment").map(row => [row.action, row.amount_cents, row.processor_ref]), [["payment", 9000, paidSession.payment_intent]], "the payment's amount and Stripe reference survive only in the anonymized audit (PAY-003 custody)");
+checks.push("no card number, payer name or Stripe customer detail is ever stored; erasing the payer removes the booking, its payment record and every trace of the address, keeping only the payment's amount and Stripe reference in the anonymized audit");
 
 await writeFile(evidencePath("payment-wire.json"), JSON.stringify({ title: "PAY-001 a paid booking confirms only after Stripe's signed event", checks, scope: "Native local D1 and production services with Stripe API, Connect OAuth and signed webhooks synthetic at the HTTP edge" }, null, 2));
 console.log("PAY-001 paid booking journey passed.");

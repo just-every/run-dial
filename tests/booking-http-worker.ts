@@ -1,4 +1,4 @@
-import { PaymentsRepository, PaymentsService } from "../src/core/features/payments";
+import { PaymentsService } from "../src/core/features/payments";
 import { ensureTestOperator } from "./auth-fixture";
 import { Hono } from "hono";
 import { AvailabilityRepository, AvailabilityService, type CalendarBusyReader } from "../src/core/features/availability";
@@ -58,7 +58,7 @@ function servicesFor(binding: D1Database) {
   const eventTypes = new EventTypesService(new EventTypesRepository(binding), hostProfile);
   const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
-  const payments = new PaymentsService(new PaymentsRepository(binding), runtime);
+  const payments = new PaymentsService(binding, runtime);
   return {
     payments,
     operators: new OperatorsService(binding, runtime),

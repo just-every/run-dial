@@ -146,14 +146,14 @@ export class BookingsRepository {
 
   /** PAY-001: hold the slot for one payer through the same atomic guard, consuming the selection nonce so a
    * replay finds this hold. The pending claim and payer address live only on the active hold. */
-  async claimPaymentHold(input: BookingClaim, hold: { id: string; accountId: string; amountCents: number; returnTokenHash: string; returnExpiresAt: string; expiresAt: string }): Promise<"claimed" | "slot_taken" | "blocked"> {
+  async claimPaymentHold(input: BookingClaim, hold: { id: string; kind: "payment" | "setup"; accountId: string; amountCents: number; returnTokenHash: string; returnExpiresAt: string; expiresAt: string }): Promise<"claimed" | "slot_taken" | "blocked"> {
     const nonce = await this.getNonce(input.nonceHash);
     const guard = await slotClaimGuard(this.binding, input, nonceAdmission(input.nonceId, input.nonceHash, input.now), nonce?.linkId);
     const results = await this.binding.batch([
-      this.binding.prepare(`INSERT INTO payment_holds (id, nonce_id, event_type_id, link_id, account_id, state, start_at, end_at, occupied_start_at, occupied_end_at, host_date, amount_cents, currency, checkout_session_id, checkout_url, return_token_hash, return_expires_at, claim_json, invitee_email_folded, booking_id, ended_reason, expires_at, created_at, updated_at)
-        SELECT ?, ?, ?, ?, ?, 'held', ?, ?, ?, ?, ?, ?, 'usd', NULL, NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?
+      this.binding.prepare(`INSERT INTO payment_holds (id, nonce_id, event_type_id, link_id, account_id, state, start_at, end_at, occupied_start_at, occupied_end_at, host_date, amount_cents, currency, checkout_session_id, checkout_url, return_token_hash, return_expires_at, claim_json, invitee_email_folded, booking_id, ended_reason, expires_at, created_at, updated_at, kind)
+        SELECT ?, ?, ?, ?, ?, 'held', ?, ?, ?, ?, ?, ?, 'usd', NULL, NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?
         WHERE ${guard.sql} AND (? IS NULL OR NOT EXISTS (SELECT 1 FROM payment_holds other WHERE other.link_id = ? AND other.state IN ('held', 'processing')))`)
-        .bind(hold.id, input.nonceId, input.event.id, nonce?.linkId ?? null, hold.accountId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, hold.amountCents, hold.returnTokenHash, hold.returnExpiresAt, JSON.stringify({ ...input, emails: [] }), foldBookingSearch(input.invitee.email), hold.expiresAt, input.now, input.now, ...guard.params, nonce?.linkId ?? null, nonce?.linkId ?? null),
+        .bind(hold.id, input.nonceId, input.event.id, nonce?.linkId ?? null, hold.accountId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, hold.amountCents, hold.returnTokenHash, hold.returnExpiresAt, JSON.stringify({ ...input, emails: [] }), foldBookingSearch(input.invitee.email), hold.expiresAt, input.now, input.now, hold.kind, ...guard.params, nonce?.linkId ?? null, nonce?.linkId ?? null),
       this.binding.prepare("UPDATE booking_nonces SET consumed_at = ?, payload_hash = ? WHERE id = ? AND nonce_hash = ? AND consumed_at IS NULL AND EXISTS (SELECT 1 FROM payment_holds WHERE id = ?)").bind(input.now, input.payloadHash, input.nonceId, input.nonceHash, hold.id),
       blockedProbe(this.binding, input.invitee.email),
     ]);
@@ -334,7 +334,8 @@ export class BookingsRepository {
     return new BookingLimits(this.binding).evaluate(eventId, zone, startAt, endAt, email, excludedBookingId);
   }
 
-  async cancel(booking: BookingRecord, actor: { type: "invitee" | "operator" | "calendar_provider" | "system"; id?: string }, reason: string | undefined, now: string, emails: BookingEmail[]) {
+  /** `money` holds PAY-003's pending refund or fee movements, each conditioned on this cancellation winning. */
+  async cancel(booking: BookingRecord, actor: { type: "invitee" | "operator" | "calendar_provider" | "system"; id?: string }, reason: string | undefined, now: string, emails: BookingEmail[], money: D1PreparedStatement[] = []) {
     if (booking.state === "cancelled") return booking;
     const policy = actor.type === "invitee" ? inviteeChangePolicyPredicate({ bookingId: booking.id, action: "cancel", now }) : { sql: "1", params: [] };
     // This transaction deliberately selects `current_occurrence_id` after it wins the
@@ -368,6 +369,7 @@ export class BookingsRepository {
         .bind(createId(), `booking:${booking.id}:occurrence:`, now, now, now, booking.id, now),
       ...cancellationOutboxStatements(this.binding, booking.id, emails, now),
       closeCalendarConflicts(this.binding, booking.id, now),
+      ...money,
     ];
     await this.binding.batch(statements);
     return this.getById(booking.id);

@@ -13,6 +13,8 @@ export const bookingPolicyRoutes = new Hono<AppEnvironment>()
     return policy ? context.json(policy) : apiError(context, 404, "event_not_found", "The event type does not exist.");
   })
   .put("/api/app/event-types/:id/booking-policy", validate("param", id), validate("json", eventBookingPolicySchema), async context => {
+    // PAY-003: a cancellation cut-off may not start inside the event's free cancellation window.
+    if (await context.get("services").payments.cutoffConflicts(context.req.valid("param").id, context.req.valid("json").cancellationCutoffMinutes ?? null)) return apiError(context, 400, "window_inside_cutoff", "The cancellation cut-off must not start inside the free cancellation window, or invitees could not cancel inside it. Shorten the cut-off or lengthen the window.", ["cancellationCutoffMinutes"]);
     const policy = await context.get("services").bookingPolicies.save(context.req.valid("param").id, context.req.valid("json"), nowIso());
     return policy ? context.json(policy) : apiError(context, 404, "event_not_found", "The event type does not exist.");
   });

@@ -85,7 +85,11 @@ const overrides = {
   base_mail_dispatch: { state: 'uncertain' },
   payment_connections: { status: 'connected', account_id: 'acct_fixture', ach_enabled: 1 },
   event_type_prices: { duration_minutes: 0, amount_cents: 5000 },
-  booking_payments: { amount_cents: 5000, account_id: 'acct_fixture', checkout_session_id: 'cs_test_fixture', payment_intent_id: 'pi_test_fixture' },
+  booking_payments: { amount_cents: 5000, account_id: 'acct_fixture', checkout_session_id: 'cs_test_fixture', payment_intent_id: 'pi_test_fixture', kind: 'deposit' },
+  event_type_payment_terms: { deposit_kind: 'fixed', deposit_value: 1000, balance_due_hours: 24, free_window_hours: 48, late_cancel_fee_cents: 1500, no_show_fee_cents: 2500 },
+  booking_payment_terms: { price_cents: 6000, deposit_cents: 5000, due_now_cents: 5000, balance_cents: 1000, balance_due_hours: 24, free_window_hours: 48, late_cancel_fee_cents: 1500, no_show_fee_cents: 2500, terms_version: 2 },
+  booking_card_consents: { consent_text_version: 'card-consent.v1', free_window_hours: 48, late_cancel_fee_cents: 1500, no_show_fee_cents: 2500, account_id: 'acct_fixture', stripe_customer_id: 'cus_test_fixture', stripe_payment_method_id: 'pm_test_fixture' },
+  payment_movements: { kind: 'refund', amount_cents: 1200, status: 'succeeded', actor_type: 'operator', actor_id: 'owner', reason: 'Partial refund for a late start', account_id: 'acct_fixture', source_ref: 'pi_test_fixture', processor_ref: 're_test_fixture', checkout_session_id: null, idempotency_key: 'fixture-refund:0' },
 };
 export async function fixture() {
   const model = await schemaModel();

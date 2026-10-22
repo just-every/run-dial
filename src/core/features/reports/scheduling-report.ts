@@ -2,7 +2,7 @@ import { reportTileKeys, reportTileTitles, type ReportFigure, type ReportRow, ty
 import { definitions } from "./definitions";
 import type { BookingFact } from "./facts";
 import { hostWeekdayAndHour } from "./zoned";
-import { attributionLabels, durationLabel, hourLabel, leadBuckets, reasonLabel, weekdayNames, weekdayOrder } from "./buckets";
+import { attributionLabels, durationLabel, hourLabel, leadBuckets, moneyLabels, reasonLabel, weekdayNames, weekdayOrder } from "./buckets";
 
 export type ReportContext = { timezone: string; from: string; to: string; now: string };
 const inside = (value: string | null, context: ReportContext) => value !== null && value >= context.from && value <= context.to;
@@ -28,7 +28,8 @@ export function buildSchedulingReport(facts: BookingFact[], context: ReportConte
     count(key, fact, bucket);
   };
   const figures = new Map<ReportTileKey, ReportFigure[]>();
-  let reschedules = 0, attended = 0, noShow = 0, unmarked = 0, untagged = 0, paymentCents = 0;
+  let reschedules = 0, attended = 0, noShow = 0, unmarked = 0, untagged = 0;
+  const money = { revenue: 0, fees: 0, refunds: 0 };
   const leads: number[] = [];
   for (const fact of facts) {
     if (inside(fact.createdAt, context)) {
@@ -59,7 +60,15 @@ export function buildSchedulingReport(facts: BookingFact[], context: ReportConte
         else { unmarked += 1; row("attendance", "unmarked", "Not marked", fact, "attendance"); }
       }
     }
-    if (inside(fact.paidAt, context)) { paymentCents += fact.paidCents; count("revenue", fact); }
+    // Money counts at the time Stripe confirmed it: revenue is first payments, deposits and balances; fees are
+    // Dial's late-cancellation and no-show fees; refunds are refunds Dial issued.
+    const moved = fact.money.filter(entry => inside(entry.at, context));
+    for (const [bucket, kinds] of [["revenue", ["payment", "balance"]], ["fees", ["fee"]], ["refunds", ["refund"]]] as const) {
+      const entries = moved.filter(entry => (kinds as readonly string[]).includes(entry.kind));
+      if (!entries.length) continue;
+      money[bucket] += entries.reduce((total, entry) => total + entry.amountCents, 0);
+      row("revenue", `money:${bucket}`, moneyLabels[bucket], fact, "revenue");
+    }
   }
   const marked = attended + noShow;
   const percent = (part: number) => marked ? Math.round(part / marked * 1000) / 10 : null;
@@ -71,13 +80,16 @@ export function buildSchedulingReport(facts: BookingFact[], context: ReportConte
     { key: "attendance_rate", label: "Attendance rate", value: percent(attended), unit: "percent" }, { key: "no_show_rate", label: "No-show rate", value: percent(noShow), unit: "percent" }]);
   figures.set("lead_time", [{ key: "average_hours", label: "Average lead time", value: leads.length ? Math.round(leads.reduce((sum, value) => sum + value, 0) / leads.length * 10) / 10 : null, unit: "hours" }, { key: "median_hours", label: "Median lead time", value: median === null ? null : Math.round(median * 10) / 10, unit: "hours" }]);
   figures.set("source", [{ key: "untagged", label: "Arrived with no UTM or source", value: untagged, unit: "bookings" }]);
-  figures.set("revenue", [{ key: "revenue", label: "Revenue", value: paymentCents, unit: "usd_cents" }]);
+  figures.set("revenue", [
+    { key: "revenue", label: "Revenue", value: money.revenue, unit: "usd_cents" }, { key: "fees", label: "Fees", value: money.fees, unit: "usd_cents" },
+    { key: "refunds", label: "Refunds", value: money.refunds, unit: "usd_cents" }, { key: "net", label: "Net", value: money.revenue + money.fees - money.refunds, unit: "usd_cents" }]);
   const group = (title: string, name: string, order?: (rows: ReportRow[]) => ReportRow[]) => {
     const list = [...(rows.get(name) ?? new Map()).entries()].map(([bucket, value]): ReportRow => ({ label: value.label, count: value.count, bucket }));
     return list.length ? [{ title, rows: order ? order(list) : list.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)) }] : [];
   };
   const groups: Record<ReportTileKey, Array<{ title: string; rows: ReportRow[] }>> = {
-    created: [], rescheduled: [], revenue: [],
+    created: [], rescheduled: [],
+    revenue: group("Bookings with money in the period", "revenue", list => ["revenue", "fees", "refunds"].flatMap(bucket => list.filter(entry => entry.bucket === `money:${bucket}`))),
     cancelled: group("Reasons", "cancelled"),
     attendance: group("Outcomes", "attendance", list => ["attended", "no_show", "unmarked"].flatMap(bucket => list.filter(entry => entry.bucket === bucket))),
     lead_time: group("Lead time", "lead_time", list => leadBuckets.flatMap(([key]) => list.filter(entry => entry.bucket === `lead:${key}`))),

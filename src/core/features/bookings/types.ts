@@ -22,7 +22,8 @@ export type BookingOccurrence = {
 export type BookingHistoryEntry = {
   id: string;
   occurrenceId: string | null;
-  action: "manage_link_rotated" | "created" | "rescheduled" | "cancelled" | "attendance_marked" | "calendar_cancelled" | "reschedule_requested" | "reschedule_request_reminded" | "reschedule_request_picked" | "reschedule_request_expired";
+  action: "manage_link_rotated" | "created" | "rescheduled" | "cancelled" | "attendance_marked" | "calendar_cancelled" | "reschedule_requested" | "reschedule_request_reminded" | "reschedule_request_picked" | "reschedule_request_expired"
+    | "payment_received" | "payment_balance" | "payment_refund" | "payment_late_cancel_fee" | "payment_no_show_fee";
   actorType: "invitee" | "operator" | "calendar_provider" | "system";
   actorId: string | null;
   previousStartAt: string | null;
@@ -95,6 +96,31 @@ export type BookingRecord = {
   calendarConflicts: BookingCalendarConflict[];
   /** PAY-001: present when the booking was paid through Stripe; cancel and reschedule keep it. */
   payment?: import("../payments").BookingPayment;
+  /** PAY-003: the terms shown, the saved-card consent and every later money movement (operator record only). */
+  money?: import("../payments").BookingMoney;
+};
+
+/** PAY-003: a booking's money as the invitee's receipt and manage page show it. */
+export type PaymentSummary = {
+  /** The first payment (PAY-001): the full price or a deposit; zero when only a card was saved. */
+  amountCents: number;
+  currency: "usd";
+  reference: string;
+  kind: "payment" | "deposit" | "setup";
+  priceCents: number;
+  paidCents: number;
+  refundedCents: number;
+  feesCents: number;
+  netCents: number;
+  balanceDueCents: number;
+  balanceDueAt: string | null;
+  balanceUrl?: string;
+  freeWindowEndsAt: string | null;
+  policy: string[];
+  cardSaved: boolean;
+  movements: Array<{ kind: string; amountCents: number; status: string; createdAt: string; reference: string | null }>;
+  /** What cancelling now would do, while the booking is still open. */
+  cancellation?: { outcome: "refund" | "late_fee" | "none"; amountCents: number };
 };
 
 export type BookingSelection = { startAt: string; endAt: string; inviteeTimezone: string };
@@ -117,7 +143,7 @@ export type BookingConfirmation = {
   manageUrl: string;
   icsUrl: string;
   state: BookingState;
-  payment?: { amountCents: number; currency: "usd"; reference: string; refundIssuedByDial: false };
+  payment?: PaymentSummary;
 };
 
 export type BookingEmail = {
@@ -136,6 +162,8 @@ export type BookingEmail = {
 };
 
 export type BookingClaim = {
+  /** PAY-003: the terms snapshot, card consent and balance-link salt a payment hold carries until confirmation. */
+  money?: import("../payments").PendingMoney;
   attribution?: BookingAttribution;
   postBookingRedirectUrl?: string | null;
   bookingId: string;

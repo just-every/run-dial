@@ -35,6 +35,7 @@ import { Route as AppEventTypesNewRouteImport } from './routes/app.event-types_.
 import { Route as BookHandleSlugRouteImport } from './routes/book.$handle_.$slug'
 import { Route as EmbedHandleSlugRouteImport } from './routes/embed.$handle.$slug'
 import { Route as EmbedManageTokenRouteImport } from './routes/embed.manage.$token'
+import { Route as ManageBalanceTokenRouteImport } from './routes/manage.balance.$token'
 import { Route as ManageInviteTokenRouteImport } from './routes/manage.invite.$token'
 import { Route as SetupEventTypesIdRouteImport } from './routes/setup.event-types_.$id'
 import { Route as SetupEventTypesNewRouteImport } from './routes/setup.event-types_.new'
@@ -179,6 +180,11 @@ const EmbedManageTokenRoute = EmbedManageTokenRouteImport.update({
   path: '/embed/manage/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManageBalanceTokenRoute = ManageBalanceTokenRouteImport.update({
+  id: '/manage/balance/$token',
+  path: '/manage/balance/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManageInviteTokenRoute = ManageInviteTokenRouteImport.update({
   id: '/manage/invite/$token',
   path: '/manage/invite/$token',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
+  '/manage/balance/$token': typeof ManageBalanceTokenRoute
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
+  '/manage/balance/$token': typeof ManageBalanceTokenRoute
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/book/$handle_/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
+  '/manage/balance/$token': typeof ManageBalanceTokenRoute
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types_/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types_/new': typeof SetupEventTypesNewRoute
@@ -399,6 +408,7 @@ export interface FileRouteTypes {
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
+    | '/manage/balance/$token'
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
+    | '/manage/balance/$token'
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/book/$handle_/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
+    | '/manage/balance/$token'
     | '/manage/invite/$token'
     | '/setup/event-types_/$id'
     | '/setup/event-types_/new'
@@ -507,6 +519,7 @@ export interface RootRouteChildren {
   BookHandleSlugRoute: typeof BookHandleSlugRoute
   EmbedHandleSlugRoute: typeof EmbedHandleSlugRoute
   EmbedManageTokenRoute: typeof EmbedManageTokenRoute
+  ManageBalanceTokenRoute: typeof ManageBalanceTokenRoute
   ManageInviteTokenRoute: typeof ManageInviteTokenRoute
   BookHandleSlugConfirmedRoute: typeof BookHandleSlugConfirmedRoute
   BookHandleSlugDetailsRoute: typeof BookHandleSlugDetailsRoute
@@ -701,6 +714,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedManageTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/manage/balance/$token': {
+      id: '/manage/balance/$token'
+      path: '/manage/balance/$token'
+      fullPath: '/manage/balance/$token'
+      preLoaderRoute: typeof ManageBalanceTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manage/invite/$token': {
       id: '/manage/invite/$token'
       path: '/manage/invite/$token'
@@ -862,6 +882,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookHandleSlugRoute: BookHandleSlugRoute,
   EmbedHandleSlugRoute: EmbedHandleSlugRoute,
   EmbedManageTokenRoute: EmbedManageTokenRoute,
+  ManageBalanceTokenRoute: ManageBalanceTokenRoute,
   ManageInviteTokenRoute: ManageInviteTokenRoute,
   BookHandleSlugConfirmedRoute: BookHandleSlugConfirmedRoute,
   BookHandleSlugDetailsRoute: BookHandleSlugDetailsRoute,

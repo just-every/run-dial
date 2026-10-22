@@ -70,7 +70,8 @@ export async function hydrateOperatorBookings(binding: D1Database, rows: Operato
   const idSet = "IN (SELECT value FROM json_each(?))";
   const [answers, history, deliveries, attendance, calendarConflicts, presentations, policies] = await Promise.all([
     binding.prepare(`SELECT booking_id AS bookingId, question_key AS key, question_label AS label, question_kind AS kind, value_json AS valueJson FROM booking_answers WHERE booking_id ${idSet} ORDER BY created_at`).bind(bookingIdsJson).all<BookingAnswerRow>(),
-    binding.prepare(`SELECT booking_id AS bookingId, id, occurrence_id AS occurrenceId, action, actor_type AS actorType, actor_id AS actorId, previous_start_at AS previousStartAt, new_start_at AS newStartAt, reason, created_at AS createdAt FROM booking_history WHERE booking_id ${idSet} UNION ALL SELECT booking_id AS bookingId,id,occurrence_id AS occurrenceId,action,actor_type AS actorType,actor_id AS actorId,NULL AS previousStartAt,NULL AS newStartAt,reason,created_at AS createdAt FROM booking_request_history WHERE booking_id ${idSet} ORDER BY createdAt`).bind(bookingIdsJson,bookingIdsJson).all<BookingHistoryRow>(),
+    binding.prepare(`SELECT booking_id AS bookingId, id, occurrence_id AS occurrenceId, action, actor_type AS actorType, actor_id AS actorId, previous_start_at AS previousStartAt, new_start_at AS newStartAt, reason, created_at AS createdAt FROM booking_history WHERE booking_id ${idSet} UNION ALL SELECT booking_id AS bookingId,id,occurrence_id AS occurrenceId,action,actor_type AS actorType,actor_id AS actorId,NULL AS previousStartAt,NULL AS newStartAt,reason,created_at AS createdAt FROM booking_request_history WHERE booking_id ${idSet}
+      UNION ALL ${paymentHistory(idSet)} ORDER BY createdAt`).bind(bookingIdsJson,bookingIdsJson,bookingIdsJson,bookingIdsJson).all<BookingHistoryRow>(),
     binding.prepare(`SELECT booking_id AS bookingId, id, kind, occurrence_id AS occurrenceId, payload_json AS payloadJson, state, attempts, last_error_code AS lastErrorCode, created_at AS createdAt, succeeded_at AS succeededAt FROM delivery_outbox WHERE booking_id ${idSet} ORDER BY created_at`).bind(bookingIdsJson).all<BookingDeliveryRow>(),
     binding.prepare(`SELECT booking_id AS bookingId, status, note, marked_by_operator_id AS operatorId, marked_at AS markedAt FROM booking_attendance WHERE booking_id ${idSet}`).bind(bookingIdsJson).all<BookingAttendanceRow>(),
     binding.prepare(`SELECT booking_id AS bookingId, id, occurrence_id AS occurrenceId, provider_event_id AS providerEventId, provider_updated_at AS providerUpdatedAt, canonical_start_at AS canonicalStartAt, canonical_end_at AS canonicalEndAt, canonical_location AS canonicalLocation, external_start_at AS externalStartAt, external_end_at AS externalEndAt, external_location AS externalLocation, state, created_at AS createdAt FROM booking_calendar_conflicts WHERE booking_id ${idSet} ORDER BY created_at DESC`).bind(bookingIdsJson).all<BookingCalendarConflictRow>(),
@@ -133,4 +134,14 @@ function toOperatorDelivery(row: DeliveryRow): BookingDelivery {
   const payload = JSON.parse(row.payloadJson) as Record<string, unknown>;
   if (typeof payload.to !== "string" || typeof payload.subject !== "string" || typeof payload.text !== "string") return delivery;
   return { ...delivery, email: { to: payload.to, subject: payload.subject, text: payload.text.replace(/https?:\/\/[^\s]+\/manage\/[^\s]+/gu, "[private manage link]") } };
+}
+
+/** PAY-001 and PAY-003: the first payment and every later money movement join the booking's history (BOOK-010),
+ * each with its actor, amount, outcome, reason and Stripe reference. Dial's automatic policy reads as the system. */
+function paymentHistory(idSet: string) {
+  const reference = (column: string) => `CASE WHEN ${column} IS NOT NULL THEN ' · Stripe ' || ${column} ELSE '' END`;
+  return `SELECT booking_id AS bookingId, id, NULL AS occurrenceId, 'payment_received' AS action, 'invitee' AS actorType, NULL AS actorId, NULL AS previousStartAt, NULL AS newStartAt,
+      printf('%s $%.2f USD', CASE kind WHEN 'deposit' THEN 'Deposit' ELSE 'Payment' END, amount_cents / 100.0) || ${reference("COALESCE(payment_intent_id, checkout_session_id)")} AS reason, paid_at AS createdAt FROM booking_payments WHERE booking_id ${idSet}
+    UNION ALL SELECT booking_id AS bookingId, id, NULL AS occurrenceId, 'payment_' || kind AS action, CASE actor_type WHEN 'policy' THEN 'system' ELSE actor_type END AS actorType, actor_id AS actorId, NULL AS previousStartAt, NULL AS newStartAt,
+      printf('$%.2f USD %s · %s', amount_cents / 100.0, status, reason) || CASE WHEN failure_code IS NOT NULL THEN ' · ' || failure_code ELSE '' END || ${reference("processor_ref")} AS reason, created_at AS createdAt FROM payment_movements WHERE booking_id ${idSet}`;
 }
