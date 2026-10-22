@@ -1,15 +1,28 @@
 import type { AppServices } from "../../src/core/app/services";
 import { payStripeInvoice, payStripeSession } from "./stripe-wire";
 import { stripeGateFixture } from "./stripe-gates";
+import { stripeAuthorization } from "./stripe-authorization";
 
 /** PAY-001 test-only controls: the payer finishing Stripe's page, a payment window or OAuth state reaching its
  * end, the production sweep, and a full-table scan for payer details. */
 export async function paymentFixtures(url: URL, request: Request, db: D1Database, providerDb: D1Database, services: AppServices) {
   if (url.pathname === "/__fixtures/payments/gate") return stripeGateFixture(providerDb, request);
+  if (url.pathname === "/__fixtures/payments/processor-state") {
+    return Response.json(Object.fromEntries(await Promise.all(["wire_stripe_sessions","wire_stripe_objects","wire_calls"].map(async name => [name,(await providerDb.prepare(`SELECT * FROM ${name}`).all()).results]))));
+  }
+  if (url.pathname === "/__fixtures/payments/control") {
+    const {name,value}=await request.json<{name:string;value:number}>();
+    await providerDb.prepare("INSERT INTO wire_controls(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=excluded.value").bind(name,value).run();
+    return Response.json({ok:true});
+  }
   if (url.pathname === "/__fixtures/payments/pay") {
-    const { sessionId, paymentStatus } = await request.json<{ sessionId: string; paymentStatus?: "paid" | "unpaid" }>();
-    const session = await payStripeSession(providerDb, sessionId, paymentStatus);
-    return session ? Response.json(session) : new Response(null, { status: 404 });
+    const { sessionId, paymentStatus, paymentMethod } = await request.json<{ sessionId: string; paymentStatus?: "paid" | "unpaid"; paymentMethod?: string }>();
+    const session = await payStripeSession(providerDb, sessionId, paymentStatus, paymentMethod);
+    return session ? Response.json(session, { status: "error" in session ? 400 : 200 }) : new Response(null, { status: 404 });
+  }
+  if (url.pathname === "/__fixtures/payments/capture") {
+    const { intentId, amountCents } = await request.json<{intentId:string;amountCents:number}>();
+    return (await stripeAuthorization(providerDb, new URL(`https://api.stripe.com/v1/payment_intents/${encodeURIComponent(intentId)}/capture`), "POST", new URLSearchParams({amount_to_capture:String(amountCents)})))!;
   }
   if (url.pathname === "/__fixtures/payments/pay-invoice") {
     const { invoiceId } = await request.json<{ invoiceId: string }>();

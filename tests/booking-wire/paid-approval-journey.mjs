@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import {bookingMail,recipient,textBody,wireMail} from './mail-contracts.mjs';
+import {paidApprovalSupport,feeTerms,providerObject,providerCalls,noBooking,audit} from './paid-approval-support.mjs';
+import {approvalReleaseCases,approvalErasureCases} from './paid-approval-release.mjs';
+import {approvalDepositAndSetup} from './paid-approval-setup.mjs';
+import {approvalMoneyMovements} from './paid-approval-movements.mjs';
+export async function paidApprovalJourney(context){
+  const h=await paidApprovalSupport(context),{data,call,state,deliver,checks}=h;
+  const pass=(number,label)=>{console.log(`PAY-007 ${number}: PASS ${label}`);checks.push(`PAY-007 ${number}: ${label}`);};
+  const start=new URL((await call('/api/app/payments/stripe/oauth/start',undefined,302)).headers.get('location'));
+  await call('/api/payments/stripe/oauth/callback?'+new URLSearchParams({state:start.searchParams.get('state'),code:'wire-stripe-consent'}),undefined,302);
+  const priced=await h.makeEvent('synthetic-pay007-priced',{price:6400}),setup=await h.makeEvent('synthetic-pay007-setup',{terms:feeTerms});
+  for(const [path,body] of [[`/api/app/event-types/${priced.id}/payment-terms`,feeTerms],[`/api/app/event-types/${setup.id}/price`,{amountCents:6400,durationPrices:[]}]])assert.equal((await(await call(path,body,409,'PUT')).json()).error.code,'approval_price_and_saved_card_conflict');
+  pass(1,'priced and free saved-card-fee approvals supported; combining both refuses in either settings direction');
+  const selected=await h.selection(priced);assert.deepEqual(selected.approval.allowedPaymentMethods,['card','link']);assert.equal(selected.approval.paymentMethodReason,'approval_requires_card_or_link');
+  const first=await h.hold(priced,{selection:selected});
+  for(const paymentMethod of ['us_bank_account','klarna']){
+    const before=await state(),reply=await(await call('/__fixtures/payments/pay',{sessionId:first.session.id,paymentMethod},400)).json();assert.equal(reply.error.code,'approval_requires_card_or_link');const after=await state();
+    for(const name of ['bookings','booking_approval_requests','payment_holds','wire_stripe_objects'])assert.deepEqual(after[name],before[name],`${paymentMethod} cannot mutate ${name}`);
+  }
+  assert.equal(first.session.payment_intent_data.capture_method,'manual');assert.deepEqual(first.session.allowed_payment_method_types,['card','link']);
+  const authorized=await h.authorize(first,'card');assert.deepEqual([authorized.intent.status,authorized.intent.amount_received,authorized.intent.amount_capturable],['requires_capture',0,6400]);
+  const linked=await h.authorize(await h.hold(priced),'link');assert.equal(linked.intent.status,'requires_capture');
+  pass(2,'Dial names card/Link requirement; both authorize; ACH and another method refuse before processor or booking writes');
+  let snap=await state();noBooking(snap,authorized.request);assert.equal(snap.booking_payments.length,0);assert.equal(snap.payment_link_tokens.length,0);
+  assert.equal(Date.parse(authorized.step.payment.expiresAt)-Date.parse(snap.payment_holds.find(row=>row.id===authorized.session.metadata.dial_hold_id).created_at),10*60_000);
+  const uncompleted=await h.hold(priced);await call('/__fixtures/payments/window-ended',{holdId:uncompleted.session.metadata.dial_hold_id},204);assert.ok((await h.slots(priced)).some(row=>row.startAt===uncompleted.payload.startAt));assert.equal(JSON.parse((await state()).wire_stripe_sessions.find(row=>row.id===uncompleted.session.id).payload).status,'expired');
+  const raceAt=(await h.slots(priced))[0].startAt,selections=await Promise.all([h.selection(priced,raceAt),h.selection(priced,raceAt)]),responses=await Promise.all(selections.map((selection,index)=>call(h.base(priced)+'/confirm',{nonce:selection.nonce,startAt:raceAt,inviteeTimezone:'UTC',name:'Jordan Miller',email:`synthetic-pay007-race-${index}@example.test`,answers:{},shownPaymentCents:6400},[202,409])));assert.deepEqual(responses.map(row=>row.status).sort(),[202,409],'only one concurrent payer owns the slot');
+  pass(3,'shown total held with manual capture and no charge/booking; authorization expires at ten minutes; same-slot claim atomic');
+  const authEvent=h.event('payment_intent.amount_capturable_updated',authorized.intent),beforeBad=await state();
+  for(const signature of [null,'t=1,v1=bad',h.signature(authEvent,Math.floor(Date.now()/1000)-301)])await h.webhook(authEvent,401,signature);
+  await h.webhook(h.event('payment_intent.amount_capturable_updated',authorized.intent,'acct_other'),401);
+  const afterBad=await state();for(const table of ['bookings','booking_approval_requests','payment_holds','anonymized_audit'])assert.deepEqual(afterBad[table],beforeBad[table],'invalid callbacks change no state');
+  await call(`/api/public/payments/${authorized.returnToken}?session_id=${authorized.session.id}`,undefined,200);noBooking(await state(),authorized.request);
+  const waiting=await data(`/api/app/booking-approvals/${authorized.request.id}/decision`,{decision:'approve',reason:'Consultation approved'});assert.equal(waiting.kind,'capture_pending');snap=await state();noBooking(snap,authorized.request);
+  const captured=providerObject(snap,authorized.intent.id);assert.equal(captured.amount_received,6400);const complete=h.event('payment_intent.succeeded',captured);
+  const beforeCaptureAdmission=await state();
+  for(const header of [null,'t=1,v1=bad',h.signature(complete,Math.floor(Date.now()/1000)-301)])await h.webhook(complete,401,header);
+  await h.webhook(h.event('payment_intent.succeeded',captured,'acct_other'),401);
+  const afterCaptureAdmission=await state();for(const table of ['bookings','booking_approval_requests','payment_holds','anonymized_audit'])assert.deepEqual(afterCaptureAdmission[table],beforeCaptureAdmission[table],'invalid capture callbacks change nothing');
+  await call(`/api/public/payments/${authorized.returnToken}?session_id=${authorized.session.id}`,undefined,200);noBooking(await state(),authorized.request);
+  await h.webhook(complete);await h.webhook(complete);await deliver();await deliver();snap=await state();const confirmed=snap.bookings.find(row=>row.id===authorized.request.booking_id);assert.equal(confirmed.state,'confirmed');assert.equal(snap.bookings.filter(row=>row.id===confirmed.id).length,1);assert.equal(snap.wire_events.filter(row=>row.id===confirmed.calendar_provider_event_id).length,1);
+  pass(4,'approval waits for signed capture; bad/missing/stale signatures and foreign account change nothing; return alone never confirms; duplicate confirms once');
+  await approvalReleaseCases(h,priced,linked);pass(5,'decline, expiry and host cancel void once, release time and notify once; void cannot capture');
+  await data(`/api/app/event-types/${priced.id}/approval`,{required:true},200,'PUT');assert.equal((await data(`/api/app/event-types/${priced.id}/approval`)).windowHours,24);await data(`/api/app/event-types/${priced.id}/approval`,{required:true,windowHours:168},200,'PUT');assert.equal((await data(`/api/app/event-types/${priced.id}/approval`)).windowHours,168);assert.equal((await(await call(`/api/app/event-types/${priced.id}/approval`,{required:true,windowHours:169},409,'PUT')).json()).error.code,'approval_window_too_long');await data(`/api/app/event-types/${priced.id}/approval`,{required:true,windowHours:24},200,'PUT');pass(6,'default twenty-four-hour approval and seven-day maximum; longer window has named refusal');
+  await approvalDepositAndSetup(h,setup,pass);
+  const frozen=await h.authorize(await h.hold(priced));await data(`/api/app/event-types/${priced.id}/price`,{amountCents:9900,durationPrices:[]},200,'PUT');const frozenCapture=await h.capture(frozen);assert.equal(frozenCapture.intent.amount_received,6400,'host edits cannot increase frozen shown authorization');await deliver();await deliver();snap=await state();
+  const mails=bookingMail(snap,frozen.request.booking_id);const expectedRecipients=[frozen.payload.email,...(await data('/api/app/operators')).operators.filter(row=>!row.mailMuted).map(row=>row.email)];for(const email of expectedRecipients)assert.equal(mails.filter(mail=>recipient(mail).includes(email)).length,1,'one confirmation or receipt per recipient');
+  for(const mail of mails){assert.ok(textBody(mail).includes('$64.00 USD'),'approval confirmation matches the captured total');assert.ok(textBody(mail).includes(frozen.session.id),'confirmation carries the actual Checkout reference');assert.ok(textBody(mail).includes('Northbank Consultation Studio'),'confirmation carries the configured business');}
+  audit(snap,'authorization',frozen.intent.id,6400,'invitee');audit(snap,'capture',frozen.intent.id,6400,'operator');
+  const stale=await h.selection(priced);await data(`/api/app/event-types/${priced.id}/price`,{amountCents:10500,durationPrices:[]},200,'PUT');const beforeStale=await state();const refusal=await(await call(h.base(priced)+'/confirm',{nonce:stale.nonce,startAt:stale.selection.startAt,inviteeTimezone:'UTC',name:'Alex Brown',email:'synthetic-pay007-stale@example.test',answers:{},shownPaymentCents:9900},409)).json();assert.equal(refusal.error.code,'payment_terms_changed');assert.equal((await state()).wire_stripe_sessions.length,beforeStale.wire_stripe_sessions.length);
+  const captures=providerCalls(snap,`/v1/payment_intents/${frozen.intent.id}/capture`);assert.equal(Number(JSON.parse(captures[0].body).amount_to_capture),6400);
+  await approvalMoneyMovements(h,priced,setup);
+  pass(9,'frozen shown total caps capture; stale price refused; one confirmation per recipient; authorization/capture/void/detach/fee/refund carry actor amount reason reference');
+  await approvalErasureCases(h,priced,setup);console.log('PAY-007 erasure: PASS pending hold void and saved-card detach; late callbacks never create bookings');checks.push('PAY-007 erasure pending manual/setup cleanup and late-event no-booking');
+  assert.ok(!wireMail(snap).some(mail=>/receipt/i.test(mail.subject)&&recipient(mail).includes(linked.payload.email)),'declined payer gets no receipt');
+}

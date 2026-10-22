@@ -19,7 +19,7 @@ export type CheckoutSession = {
   metadata?: Record<string, string>;
 };
 /** The parts of Stripe's PaymentIntent, SetupIntent and Refund objects Dial reads; never card details. */
-export type PaymentIntent = { id: string; status: string; amount: number; amount_received?: number; currency: string; customer: string | null; payment_method: string | null };
+export type PaymentIntent = { id: string; status: string; amount: number; amount_received: number; amount_capturable: number; capture_method: "automatic" | "automatic_async" | "manual"; currency: string; customer: string | null; payment_method: string | null };
 export type SetupIntent = { id: string; status: string; customer: string | null; payment_method: string | null };
 export type Refund = { id: string; status: string; amount: number; payment_intent: string | null };
 /** PAY-005: a Stripe Tax calculation and an invoice, read only for their amounts, jurisdiction and hosted page. */
@@ -62,6 +62,16 @@ export class StripeApi {
 
   getPaymentIntent(accountId: string, id: string) {
     return this.request<PaymentIntent>(`${apiOrigin}/v1/payment_intents/${encodeURIComponent(id)}`, undefined, { account: accountId });
+  }
+
+  /** PAY-007: capture only the total the invitee authorized, using the durable approval command's key. */
+  capturePaymentIntent(accountId: string, id: string, amountCents: number, idempotencyKey: string) {
+    return this.request<PaymentIntent>(`${apiOrigin}/v1/payment_intents/${encodeURIComponent(id)}/capture`, { amount_to_capture: String(amountCents) }, { account: accountId, idempotencyKey });
+  }
+
+  /** Checkout permits direct cancellation only after its PaymentIntent reaches requires_capture. */
+  cancelPaymentIntent(accountId: string, id: string, idempotencyKey: string, reason?: "duplicate" | "fraudulent" | "requested_by_customer" | "abandoned") {
+    return this.request<PaymentIntent>(`${apiOrigin}/v1/payment_intents/${encodeURIComponent(id)}/cancel`, reason ? { cancellation_reason: reason } : {}, { account: accountId, idempotencyKey });
   }
 
   getSetupIntent(accountId: string, id: string) {

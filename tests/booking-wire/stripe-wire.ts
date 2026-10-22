@@ -2,6 +2,7 @@
  * talks to these exactly as to api.stripe.com and connect.stripe.com; no Stripe secret exists in CI. */
 export const stripeHosts = ["api.stripe.com", "connect.stripe.com"];
 import { stripeGate } from "./stripe-gates";
+import { stripeAuthorization } from "./stripe-authorization";
 
 type Stored = { id: string; type: string; payload: Record<string, unknown> };
 
@@ -26,9 +27,12 @@ export async function stripeWire(db: D1Database, url: URL, method: string, init:
     if (prior) return new Response(prior.body, { status: prior.status, headers: { "content-type": "application/json" } });
     // Transport faults happen outside Stripe's idempotent execution: a retry sees the original result.
     if (url.pathname === "/v1/refunds" && await control(db, "stripe-refund-unavailable")) return stripeError(503, "unavailable");
+    const operation = /\/payment_intents\/[^/]+\/(capture|cancel)$/.exec(url.pathname)?.[1];
+    if (operation && await control(db, `stripe-${operation}-unavailable`)) return stripeError(503, "unavailable");
     const response = await stripeObjects(db, url, method, form);
     await db.prepare("INSERT INTO wire_stripe_replies(idempotency_key,status,body) VALUES(?,?,?)").bind(key, response.status, await response.clone().text()).run();
     if (/\/invoices\/[^/]+\/finalize$/.test(url.pathname) && response.ok && await control(db, "stripe-finalize-response-lost")) return stripeError(503, "unavailable");
+    if (operation && response.ok && await control(db, `stripe-${operation}-response-lost`)) return stripeError(503, "unavailable");
     return response;
   }
   if (url.pathname.startsWith("/v1/checkout/sessions")) return checkoutSessions(db, url, method, form, headers.get("idempotency-key"));
@@ -44,7 +48,7 @@ async function checkoutSessions(db: D1Database, url: URL, method: string, form: 
     if (prior) return Response.json(JSON.parse(prior.payload));
     const mode = form.get("mode");
     const items = [...new Set([...form.keys()].map(name => /^line_items\[(\d+)\]/.exec(name)?.[1]).filter(Boolean))];
-    // Stripe refuses payment_method_types on Checkout Sessions; methods come from the Dashboard.
+    // The current Checkout API uses allowed_payment_method_types, and rejects the old parameter.
     if ([...form.keys()].some(name => name.startsWith("payment_method_types[")) || !form.get("success_url")?.includes("{CHECKOUT_SESSION_ID}")) return stripeError(400, "parameter_invalid");
     if (mode === "payment" ? !items.length || items.some(index => form.get(`line_items[${index}][price_data][currency]`) !== "usd") : mode !== "setup" || form.get("currency") !== "usd" || items.length) return stripeError(400, "parameter_invalid");
     const sessionId = `cs_test_wire${crypto.randomUUID().replaceAll("-", "")}`;
@@ -52,7 +56,9 @@ async function checkoutSessions(db: D1Database, url: URL, method: string, form: 
       amount_total: mode === "setup" ? null : items.reduce((total, index) => total + Number(form.get(`line_items[${index}][price_data][unit_amount]`)) * Number(form.get(`line_items[${index}][quantity]`) ?? 1), 0),
       currency: "usd", payment_intent: null, setup_intent: null, customer: null, expires_at: Number(form.get("expires_at")),
       client_reference_id: form.get("client_reference_id"), metadata: prefixed(form, "metadata"), customer_creation: form.get("customer_creation"), customer_email: form.get("customer_email"),
-      payment_intent_data: { metadata: prefixed(form, "payment_intent_data[metadata]"), setup_future_usage: form.get("payment_intent_data[setup_future_usage]") },
+      allowed_payment_method_types: [...form.entries()].filter(([name]) => name.startsWith("allowed_payment_method_types[")).map(([, value]) => value),
+      setup_intent_data: { metadata: prefixed(form, "setup_intent_data[metadata]") },
+      payment_intent_data: { capture_method: form.get("payment_intent_data[capture_method]") ?? "automatic", metadata: prefixed(form, "payment_intent_data[metadata]"), setup_future_usage: form.get("payment_intent_data[setup_future_usage]") },
       line_items: items.map(index => ({ name: form.get(`line_items[${index}][price_data][product_data][name]`), amount: Number(form.get(`line_items[${index}][price_data][unit_amount]`)) })),
       excluded_payment_method_types: [...form.entries()].filter(([name]) => name.startsWith("excluded_payment_method_types[")).map(([, value]) => value) };
     await db.prepare("INSERT INTO wire_stripe_sessions(id,idempotency_key,payload) VALUES(?,?,?)").bind(sessionId, key, JSON.stringify(session)).run();
@@ -73,6 +79,8 @@ async function checkoutSessions(db: D1Database, url: URL, method: string, form: 
 
 /** PaymentIntents, SetupIntents, refunds and saved payment methods (PAY-003). */
 async function stripeObjects(db: D1Database, url: URL, method: string, form: URLSearchParams) {
+  const authorization = await stripeAuthorization(db, url, method, form);
+  if (authorization) return authorization;
   const intent = /^\/v1\/(payment_intents|setup_intents)\/([^/]+)$/.exec(url.pathname);
   if (intent && method === "GET") {
     const found = await object(db, intent[2]);
@@ -83,7 +91,7 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
     const card = await object(db, form.get("payment_method") ?? "");
     if (form.get("off_session") !== "true" || form.get("confirm") !== "true" || form.get("currency") !== "usd" || !card || card.payload.customer !== form.get("customer")) return stripeError(400, "parameter_invalid");
     if (await control(db, "stripe-card-decline")) return stripeError(402, "card_declined");
-    const created = { id: `pi_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`, object: "payment_intent", status: "succeeded", amount: Number(form.get("amount")), amount_received: Number(form.get("amount")), amount_refunded: 0, currency: "usd", customer: form.get("customer"), payment_method: card.id, off_session: true, description: form.get("description"), metadata: prefixed(form, "metadata") };
+    const created = { id: `pi_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`, object: "payment_intent", status: "succeeded", amount: Number(form.get("amount")), amount_received: Number(form.get("amount")), amount_capturable: 0, capture_method: "automatic", amount_refunded: 0, currency: "usd", customer: form.get("customer"), payment_method: card.id, off_session: true, description: form.get("description"), metadata: prefixed(form, "metadata") };
     await save(db, created.id, "payment_intents", created);
     return Response.json(created);
   }
@@ -155,10 +163,11 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
 
 /** The payer completes Stripe's hosted page. A payment session gets its PaymentIntent and, when the payer agreed
  * to save the card, a customer and an attached card; a setup session gets its SetupIntent and the saved card. */
-export async function payStripeSession(db: D1Database, id: string, paymentStatus: "paid" | "unpaid" = "paid") {
+export async function payStripeSession(db: D1Database, id: string, paymentStatus: "paid" | "unpaid" = "paid", paymentMethod = "card") {
   const row = await db.prepare("SELECT payload FROM wire_stripe_sessions WHERE id=?").bind(id).first<{ payload: string }>();
   if (!row) return undefined;
-  const session = JSON.parse(row.payload) as Record<string, unknown> & { mode: string; amount_total: number | null; customer_creation: string | null; payment_intent_data: { metadata: Record<string, string>; setup_future_usage: string | null } };
+  const session = JSON.parse(row.payload) as Record<string, unknown> & { mode: string; amount_total: number | null; customer_creation: string | null; allowed_payment_method_types: string[]; setup_intent_data: { metadata: Record<string, string> }; payment_intent_data: { capture_method: string; metadata: Record<string, string>; setup_future_usage: string | null } };
+  if (session.allowed_payment_method_types.length && !session.allowed_payment_method_types.includes(paymentMethod)) return { error: { code: session.payment_intent_data.capture_method === "manual" ? "approval_requires_card_or_link" : "payment_method_not_allowed" } };
   if (session.status === "complete") return session;
   if (session.status !== "open") return undefined;
   const suffix = id.slice(-12), saveCard = session.mode === "setup" || session.payment_intent_data.setup_future_usage === "off_session";
@@ -169,13 +178,14 @@ export async function payStripeSession(db: D1Database, id: string, paymentStatus
     // Stripe holds the payer and card on its own objects; Dial must not copy them.
     customer_details: { email: "payer-card-holder@dial.test", name: "Card Holder Name" }, payment_method_details: { card: { last4: "4242" } } };
   if (session.mode === "setup") {
-    const setup = { id: `seti_wire${suffix}`, object: "setup_intent", status: "succeeded", customer, payment_method: card, usage: "off_session" };
+    const setup = { id: `seti_wire${suffix}`, object: "setup_intent", status: "succeeded", customer, payment_method: card, usage: "off_session", metadata: session.setup_intent_data.metadata };
     await save(db, setup.id, "setup_intents", setup);
     Object.assign(completed, { setup_intent: setup.id, payment_status: "no_payment_required" });
   } else {
-    const intent = { id: `pi_wire${suffix}`, object: "payment_intent", status: paymentStatus === "paid" ? "succeeded" : "processing", amount: session.amount_total, amount_received: paymentStatus === "paid" ? session.amount_total : 0, amount_refunded: 0, currency: "usd", customer, payment_method: card ?? `pm_wire_once${suffix}`, setup_future_usage: session.payment_intent_data.setup_future_usage, metadata: session.payment_intent_data.metadata };
+    const manual = session.payment_intent_data.capture_method === "manual";
+    const intent = { id: `pi_wire${suffix}`, object: "payment_intent", status: manual ? "requires_capture" : paymentStatus === "paid" ? "succeeded" : "processing", capture_method: manual ? "manual" : "automatic", amount: session.amount_total, amount_capturable: manual ? session.amount_total : 0, amount_received: !manual && paymentStatus === "paid" ? session.amount_total : 0, payment_method_types: [paymentMethod], amount_refunded: 0, currency: "usd", customer, payment_method: card ?? `pm_wire_once${suffix}`, setup_future_usage: session.payment_intent_data.setup_future_usage, metadata: session.payment_intent_data.metadata };
     await save(db, intent.id, "payment_intents", intent);
-    Object.assign(completed, { payment_intent: intent.id, payment_status: paymentStatus });
+    Object.assign(completed, { payment_intent: intent.id, payment_status: manual ? "unpaid" : paymentStatus });
   }
   await db.prepare("UPDATE wire_stripe_sessions SET payload=? WHERE id=?").bind(JSON.stringify(completed), id).run();
   return completed;
@@ -196,7 +206,7 @@ async function taxCalculation(db: D1Database, form: URLSearchParams) {
 export async function payStripeInvoice(db: D1Database, id: string) {
   const invoice = await object(db, id);
   if (!invoice || invoice.payload.status !== "open") return undefined;
-  const intent = { id: `pi_wire_inv${id.slice(-10)}`, object: "payment_intent", status: "succeeded", amount: invoice.payload.total, amount_received: invoice.payload.total, amount_refunded: 0, currency: "usd", customer: invoice.payload.customer, payment_method: `pm_wire_inv${id.slice(-10)}`, metadata: {} };
+  const intent = { id: `pi_wire_inv${id.slice(-10)}`, object: "payment_intent", status: "succeeded", amount: invoice.payload.total, amount_received: invoice.payload.total, amount_capturable: 0, capture_method: "automatic", amount_refunded: 0, currency: "usd", customer: invoice.payload.customer, payment_method: `pm_wire_inv${id.slice(-10)}`, metadata: {} };
   await save(db, intent.id, "payment_intents", intent);
   const paid = { ...invoice.payload, status: "paid", amount_paid: invoice.payload.total, amount_due: 0, payment_intent: intent.id };
   await save(db, id, "invoices", paid);

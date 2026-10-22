@@ -80,13 +80,14 @@ export function selectionPayment(price: EventPrice, terms: PaymentTerms, duratio
 export type PaymentMailFacts = ReturnType<typeof paymentMailFacts>;
 
 /** The payment lines of confirmation and change mails: the first payment, the balance and the policy. */
-export function paymentMailFacts(money: { amountCents: number; reference: string; snapshot: TermsSnapshot; balanceUrl?: string }, startAt: string) {
+export function paymentMailFacts(money: { amountCents: number; reference: string; snapshot: TermsSnapshot; balanceUrl?: string; businessName?:string }, startAt: string) {
   const { snapshot } = money;
   const due = balanceDueAt(snapshot, startAt), tax = dueNowTaxCents(snapshot), balanceTax = snapshot.taxCents - tax;
   return {
     amount: formatUsd(money.amountCents), reference: money.reference,
+    ...(money.businessName ? {businessName:money.businessName} : {}),
     kind: snapshot.dueNowCents === 0 ? "setup" as const : snapshot.depositCents > 0 ? "deposit" as const : "payment" as const,
-    ...(tax > 0 ? { tax: `${formatUsd(tax)} included${snapshot.taxSummary ? ` (${snapshot.taxSummary})` : ""}` } : {}),
+    ...(tax > 0 ? { tax: `${formatUsd(tax)} included${snapshot.taxSummary ? ` (${snapshot.taxSummary})` : ""}` } : money.businessName ? {tax:"None"} : {}),
     ...(snapshot.balanceCents > 0 && due ? { balance: formatUsd(snapshot.balanceCents + balanceTax), balanceDueAt: due, ...(money.balanceUrl ? { balanceUrl: money.balanceUrl } : {}) } : {}),
     policy: cancellationPolicyLines(snapshot),
   };

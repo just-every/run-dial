@@ -26,7 +26,7 @@ const confirmationSchema = selectionSchema.extend({ guests: z.array(z.string().m
   // PAY-003: the invitee's explicit agreement to a saved card for the stated fees, with the wording version shown.
   cardConsent: z.object({ accepted: z.boolean(), version: z.string().max(40) }).strict().optional(),
   // PAY-005: the billing address Stripe Tax prices, and the tax the booking step showed for it.
-  billingAddress: billingAddressSchema.optional(), shownTaxCents: z.number().int().min(0).max(99_999_999).optional() });
+  shownPaymentCents:z.number().int().min(0).max(99_999_999).optional(), billingAddress: billingAddressSchema.optional(), shownTaxCents: z.number().int().min(0).max(99_999_999).optional() });
 const taxQuoteSchema = z.object({ link: z.string().max(200).optional(), nonce: z.string().min(1).max(200), startAt: z.string().max(40), inviteeTimezone: z.string().max(80), billingAddress: billingAddressSchema }).strict();
 const manageRescheduleSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), reason: z.string().trim().max(500).optional() });
 const cancelSchema = z.object({ reason: z.string().trim().max(500).optional() });
@@ -198,6 +198,7 @@ function confirmationResult(context: Context<AppEnvironment>, result: Awaited<Re
   if (result.kind === "invalid_answers") return apiError(context, 400, "invalid_answers", "Review the required booking details.");
   if (result.kind === "card_consent_required") return apiError(context, 400, "card_consent_required", "Agree to the saved card and the stated fees to book this event.", ["cardConsent"]);
   if (result.kind === "billing_address_required") return apiError(context, 400, "billing_address_required", "Enter the billing address that sales tax is calculated for.", ["billingAddress"]);
+  if (result.kind === "payment_terms_changed") return apiError(context,409,"payment_terms_changed","The price changed. Review the current total before authorizing.",["shownPaymentCents"]);
   if (result.kind === "tax_changed") return apiError(context, 409, "tax_changed", "The sales tax for this address has changed. Review the new total before paying.", [String(result.taxCents)]);
   if (result.kind === "invalid_nonce") return apiError(context, 404, "booking_nonce_not_found", "This booking selection is not valid.");
   if (result.kind === "expired_nonce") return apiError(context, 410, "booking_nonce_expired", "This booking selection has expired. Choose a new time.");
@@ -219,6 +220,7 @@ function rescheduleResult(context: Context<AppEnvironment>, result: Awaited<Retu
 }
 
 function paymentsUnavailable(context: Context<AppEnvironment>, reason: string) {
+  if(reason==="approval_price_and_saved_card_conflict")return apiError(context,409,reason,"Priced approval cannot also require a saved card for fees.");
   return apiError(context, 503, "payments_unavailable", "Payments for this event are unavailable right now. No booking was made; contact the host.", [reason]);
 }
 

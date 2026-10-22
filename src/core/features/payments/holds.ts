@@ -11,9 +11,9 @@ export function paymentHoldPredicate(startAt: string, endAt: string, exceptHoldI
 }
 
 /** Held intervals for availability, in the same shape as internal booking claims. */
-export async function activeHoldIntervals(binding: D1Database, startAt: string, endAt: string) {
+export async function activeHoldIntervals(binding: D1Database, startAt: string, endAt: string, excludedBookingId?: string) {
   const result = await binding.prepare(`SELECT occupied_start_at AS startAt, occupied_end_at AS endAt, '' AS hostDate, start_at AS bookingStartAt, end_at AS bookingEndAt
-    FROM payment_holds WHERE state IN ${activeHoldStates} AND occupied_start_at < ? AND occupied_end_at > ?`).bind(endAt, startAt)
+    FROM payment_holds WHERE state IN ${activeHoldStates} AND occupied_start_at < ? AND occupied_end_at > ? AND (? IS NULL OR json_extract(claim_json,'$.bookingId')<>?)`).bind(endAt, startAt, excludedBookingId ?? null, excludedBookingId ?? null)
     .all<{ startAt: string; endAt: string; hostDate: string; bookingStartAt: string; bookingEndAt: string }>();
   return result.results;
 }

@@ -7,12 +7,13 @@ import { captures, operators, request, runtime, token } from './archive/auth.mjs
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
-import { paymentErasureUpgrade } from './archive/payment-erasure-upgrade.mjs';
+import { paymentErasureUpgrade, paidApprovalUpgrade } from './archive/payment-erasure-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
     await paymentErasureUpgrade(source.db);
+    await paidApprovalUpgrade(source.db);
     source.db.exec("UPDATE payment_movements SET stripe_customer_id='synthetic-dial-customer-1',stripe_customer_observed=1; UPDATE person_erasure_receipts SET stripe_sessions_retained=1; UPDATE anonymized_audit SET reason='Person erasure before payment confirmation'");
     source.db.exec("UPDATE event_types SET booking_horizon_mode='fixed_range', booking_start_date='2026-10-07', booking_end_date='2026-10-31', slot_increment_minutes=45");
     const names = source.db.prepare(tableQuery).all().map(row => row.name);
@@ -77,6 +78,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.ok(approvals.rows.every(row=>row.claim_json===null && row.state!=='pending'),'approval archives are historical and contain no executable claim');
     assert.ok(!archive.tables.some(table=>table.name==='booking_approval_tokens'),'approval request capabilities never travel');
     assert.deepEqual(target.db.prepare('SELECT state,claim_json FROM booking_approval_requests').all().map(row=>[row.state,row.claim_json]),[['expired',null]],'restored pending requests reserve no time and cannot be approved');
+    assert.deepEqual(target.db.prepare('SELECT payment_json FROM booking_approval_requests').all(),source.db.prepare('SELECT payment_json FROM booking_approval_requests').all(),'PAY-007 processor history survives without its live claim, hold or capability');
     assert.throws(() => target.db.exec("UPDATE oa_operators SET status='active' WHERE id='zz-cancelled'"), /invitation_required/);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox').get().n, 0);
     // Future clipboard storage must be classified from its eventual migration,

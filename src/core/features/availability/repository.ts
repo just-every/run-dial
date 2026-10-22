@@ -34,7 +34,7 @@ export class AvailabilityRepository {
       WHERE l.consumed_at IS NULL AND l.revoked_at IS NULL AND l.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now') AND l.hold_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')
         AND json_extract(s.value,'$.occupiedStartAt')<? AND json_extract(s.value,'$.occupiedEndAt')>? AND (? IS NULL OR l.id<>?)`).bind(endAt,startAt,excludedLinkId ?? null,excludedLinkId ?? null).all<InternalClaim>();
     // An active payment hold (PAY-001) occupies its slot until Dial releases it.
-    return [...result.results,...holds.results,...await activeHoldIntervals(this.binding,startAt,endAt),...await activeApprovalIntervals(this.binding,startAt,endAt,excludedBookingId)];
+    return [...result.results,...holds.results,...await activeHoldIntervals(this.binding,startAt,endAt,excludedBookingId),...await activeApprovalIntervals(this.binding,startAt,endAt,excludedBookingId)];
   }
 
   /** Where Dial's own managed events sat when a busy read was observed: each booking's last confirmed placement (an

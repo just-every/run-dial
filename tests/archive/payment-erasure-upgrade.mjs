@@ -4,8 +4,25 @@ import { migrationFiles, tableQuery } from "../../scripts/archive/schema.mjs";
 
 /** Populated rows made before payment erasure metadata upgrade without invented processor identities. */
 export async function paymentErasureUpgrade(source) {
+  return preservedUpgrade(source, "core/0074_payment_erasure.sql", prior => {
+    assert.ok(prior.prepare("SELECT stripe_customer_id FROM payment_movements").all().every(row => row.stripe_customer_id === null), "older invoices have no invented Customer identity");
+    assert.ok(prior.prepare("SELECT stripe_customer_observed FROM payment_movements").all().every(row => row.stripe_customer_observed === 0), "older invoice Customer creation is explicitly unobserved");
+    assert.ok(prior.prepare("SELECT stripe_sessions_retained FROM person_erasure_receipts").all().every(row => row.stripe_sessions_retained === null), "older receipts say Checkout was not counted");
+  });
+}
+
+export async function paidApprovalUpgrade(source) {
+  return preservedUpgrade(source, "core/0075_paid_approval.sql", prior => {
+    const requests = prior.prepare("SELECT payment_json FROM booking_approval_requests").all();
+    assert.ok(requests.length > 0, "the prior schema has a populated approval request");
+    assert.ok(requests.every(row => row.payment_json === null), "existing free requests acquire no authorization, money command or invented processor reference");
+  });
+}
+
+async function preservedUpgrade(source, file, check) {
   const prior = new DatabaseSync(":memory:"), migrations = await migrationFiles();
-  const upgrade = migrations.find(row => row.file === "core/0074_payment_erasure.sql");
+  const upgrade = migrations.find(row => row.file === file);
+  assert.ok(upgrade, file);
   try {
     for (const migration of migrations.filter(row => row !== upgrade)) prior.exec(migration.sql);
     prior.exec("PRAGMA foreign_keys=OFF");
@@ -23,9 +40,7 @@ export async function paymentErasureUpgrade(source) {
     }
     for (const trigger of triggers) prior.exec(trigger.sql);
     prior.exec(upgrade.sql);
-    for (const { name, fields, rows } of before) assert.deepEqual(prior.prepare(`SELECT ${fields} FROM "${name}"`).all(), rows, `${name}: payment erasure upgrade preserves previous facts`);
-    assert.ok(prior.prepare("SELECT stripe_customer_id FROM payment_movements").all().every(row => row.stripe_customer_id === null), "older invoices have no invented Customer identity");
-    assert.ok(prior.prepare("SELECT stripe_customer_observed FROM payment_movements").all().every(row => row.stripe_customer_observed === 0), "older invoice Customer creation is explicitly unobserved");
-    assert.ok(prior.prepare("SELECT stripe_sessions_retained FROM person_erasure_receipts").all().every(row => row.stripe_sessions_retained === null), "older receipts say Checkout was not counted");
+    for (const { name, fields, rows } of before) assert.deepEqual(prior.prepare(`SELECT ${fields} FROM "${name}"`).all(), rows, `${name}: ${file} preserves previous facts`);
+    check(prior);
   } finally { prior.close(); }
 }

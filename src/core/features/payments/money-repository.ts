@@ -4,7 +4,7 @@ import type { PaymentTermsInput, TermsRow } from "./terms";
 
 export type CardConsent = { consentTextVersion: string; freeWindowHours: number | null; lateCancelFeeCents: number; noShowFeeCents: number; acceptedAt: string; accountId: string; customerId: string | null; paymentMethodId: string | null };
 /** A pending booking's money as the hold carries it until Stripe's signed event confirms the booking. */
-export type PendingMoney = { snapshot: TermsSnapshot; consent?: { version: string; acceptedAt: string }; balanceSalt?: string; manageUrl?: string };
+export type PendingMoney = { snapshot: TermsSnapshot; consent?: { version: string; acceptedAt: string }; balanceSalt?: string; manageUrl?: string; approval?: { windowHours: number; tokenHash: string; url: string; returnUrl: string } };
 
 const snapshotColumns = "price_cents AS priceCents, deposit_cents AS depositCents, due_now_cents AS dueNowCents, balance_cents AS balanceCents, balance_due_hours AS balanceDueHours, free_window_hours AS freeWindowHours, late_cancel_fee_cents AS lateCancelFeeCents, no_show_fee_cents AS noShowFeeCents, terms_version AS version, tax_cents AS taxCents, tax_summary AS taxSummary";
 export type PaymentSettings = { taxEnabled: boolean; businessName: string | null };

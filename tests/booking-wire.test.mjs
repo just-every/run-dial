@@ -31,4 +31,4 @@ async function wireJourney(t, feature) {
 
 test("NOTIFY-001/NOTIFY-009/AUTH-007: production Google lifecycle and Base SendGrid outbox run on native D1; request-only needs no Google connection", t => wireJourney(t));
 test("EVENT-009 invitee guests receive invitations and changes without booking authority", t => wireJourney(t, "guests"));
-test("EVENT-008 free approval requests hold time and only owner approval confirms", t => wireJourney(t, "approval"));
+test("EVENT-008/PAY-007 approval requests authorize shown terms and confirm only after host approval and signed capture", t => wireJourney(t, "approval"));

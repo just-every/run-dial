@@ -1,7 +1,7 @@
 /** Stripe Checkout Session parameters for a payment hold (PAY-001, PAY-003). */
 export type CheckoutInput = {
   holdId: string; mode: "payment" | "setup"; amountCents: number; taxCents: number; taxSummary: string | null; deposit: boolean; saveCard: boolean;
-  eventTitle: string; durationMinutes: number; returnUrl: string; customerEmail: string; achEnabled: boolean; expiresAt: number;
+  eventTitle: string; durationMinutes: number; returnUrl: string; customerEmail: string; achEnabled: boolean; expiresAt: number; approval?: boolean;
 };
 
 export function checkoutParams(input: CheckoutInput): Record<string, string> {
@@ -12,9 +12,10 @@ export function checkoutParams(input: CheckoutInput): Record<string, string> {
     client_reference_id: input.holdId,
     customer_email: input.customerEmail,
     "metadata[dial_hold_id]": input.holdId,
+    ...(input.approval ? { "allowed_payment_method_types[0]": "card", "allowed_payment_method_types[1]": "link" } : {}),
   };
   // Nothing is due at booking: Checkout in setup mode creates the SetupIntent that saves the consented card.
-  if (input.mode === "setup") return { ...common, mode: "setup", currency: "usd", customer_creation: "always", "excluded_payment_method_types[0]": "us_bank_account", "setup_intent_data[metadata][dial_hold_id]": input.holdId };
+  if (input.mode === "setup") return { ...common, mode: "setup", currency: "usd", customer_creation: "always", ...(input.approval ? {} : { "excluded_payment_method_types[0]": "us_bank_account" }), "setup_intent_data[metadata][dial_hold_id]": input.holdId };
   const name = `${input.deposit ? "Deposit: " : ""}${input.eventTitle} (${input.durationMinutes} minutes)`;
   return {
     ...common,
@@ -28,8 +29,9 @@ export function checkoutParams(input: CheckoutInput): Record<string, string> {
     // Stripe manages Checkout's methods (cards, Apple Pay, Google Pay, Link) from the account's Dashboard and
     // refuses payment_method_types; ACH Direct Debit is excluded unless the host enabled it in Dial, and always when
     // a card is saved for stated fees.
-    ...(input.achEnabled && !input.saveCard ? {} : { "excluded_payment_method_types[0]": "us_bank_account" }),
+    ...(input.approval || input.achEnabled && !input.saveCard ? {} : { "excluded_payment_method_types[0]": "us_bank_account" }),
     "payment_intent_data[metadata][dial_hold_id]": input.holdId,
+    ...(input.approval ? { "payment_intent_data[capture_method]": "manual" } : {}),
     // The invitee's consent lets Stripe keep the card from this payment for a later off-session fee.
     ...(input.saveCard ? { "payment_intent_data[setup_future_usage]": "off_session", customer_creation: "always" } : {}),
   };

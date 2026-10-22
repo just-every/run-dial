@@ -22,7 +22,7 @@ export type BookingMailDetails = {
   meetingState?: string;
   /** PAY-001: the amount paid through Stripe and its reference; PAY-003: a deposit's balance, a saved card and the
    * cancellation policy, and what a cancellation did about the money. */
-  payment?: { amount: string; reference: string; kind?: "payment" | "deposit" | "setup"; tax?: string; balance?: string; balanceDueAt?: string; balanceUrl?: string; policy?: string[]; notes?: string[] };
+  payment?: { amount: string; reference: string; businessName?: string; kind?: "payment" | "deposit" | "setup"; tax?: string; balance?: string; balanceDueAt?: string; balanceUrl?: string; policy?: string[]; notes?: string[] };
 };
 
 const recipientZone = (input: BookingMailDetails & { recipientRole?: "invitee" | "operator" }) => input.lockedTimezone ?? (input.recipientRole === "operator" ? input.hostTimezone : input.inviteeTimezone);
@@ -31,12 +31,14 @@ const paymentLine = (payment: NonNullable<BookingMailDetails["payment"]>) => pay
 const paymentLabel = (payment: NonNullable<BookingMailDetails["payment"]>) => payment.kind === "deposit" ? "Deposit" : payment.kind === "setup" ? "Card" : "Payment";
 const balanceLine = (input: BookingMailDetails & { recipientRole?: "invitee" | "operator" }) => input.payment?.balance ? `${input.payment.balance} due by ${dueText(input)}` : "";
 const paymentFacts = (input: BookingMailDetails & { recipientRole?: "invitee" | "operator" }): BrandedMailFact[] => input.payment ? [
+  ...(input.payment.businessName ? [{ label: "Business", value: input.payment.businessName }] : []),
   { label: paymentLabel(input.payment), value: paymentLine(input.payment) },
   ...(input.payment.tax ? [{ label: "Sales tax", value: input.payment.tax }] : []),
   ...(input.payment.balance ? [{ label: "Balance", value: balanceLine(input) }] : []),
   ...(input.payment.policy?.length ? [{ label: "Cancellation policy", value: input.payment.policy.join(" ") }] : []),
 ] : [];
 const paymentText = (input: BookingMailDetails & { recipientRole?: "invitee" | "operator" }) => input.payment ? [
+  ...(input.payment.businessName ? [`\nBusiness: ${input.payment.businessName}`] : []),
   `\n${paymentLabel(input.payment)}: ${paymentLine(input.payment)}`,
   ...(input.payment.tax ? [`\nSales tax: ${input.payment.tax}`] : []),
   ...(input.payment.balance ? [`\nBalance: ${balanceLine(input)}`] : []),

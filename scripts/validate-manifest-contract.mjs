@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateContractStatus } from "./contract-status.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const [contract, baseline, manifestText] = await Promise.all([
@@ -11,6 +12,7 @@ const [contract, baseline, manifestText] = await Promise.all([
 ]);
 const manifest = JSON.parse(manifestText);
 const clauseIds = matches(contract, /\*\*([A-Z][A-Z-]*-\d{3})\s+—/g);
+await validateContractStatus(root, contract, clauseIds);
 const mappedIds = manifest.capabilities.flatMap((capability) => capability.clauses);
 
 assert.equal(typeof manifest.name, "string", "manifest name is required");

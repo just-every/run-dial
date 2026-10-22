@@ -9,6 +9,8 @@ import type { ErasureStatement } from "./booking-statements";
 export type PendingPaymentCleanup = {
   holdId: string; customerId: string | null; savedCard: "detached" | "not_saved";
   paymentIntentId: string | null; paymentMethodId: string | null; amountCents: number; refundId: string | null;
+  approval?: boolean; audit?: Partial<Record<"authorize" | "capture" | "void" | "detach" | "refund", string>>;
+  voidedIntentId?: string; authorizedCents?: number;
 };
 export type CleanupPendingPayments = (email: string) => Promise<PendingPaymentCleanup[]>;
 
@@ -31,12 +33,17 @@ export async function erasePendingPayments(db: D1Database, email: string, sessio
   }];
   const now = nowIso();
   for (const outcome of outcomes) {
-    const facts: Array<[string, string, number | null, string | null]> = [];
-    if (outcome.paymentIntentId && outcome.refundId) facts.push(["payment", "invitee", outcome.amountCents, outcome.paymentIntentId], ["refund:succeeded", "policy", outcome.amountCents, outcome.refundId]);
-    if (outcome.savedCard === "detached") facts.push(["saved_card_detached", "operator", 0, outcome.paymentMethodId]);
-    for (const [action, actor, amount, reference] of facts) statements.push({
-      sql: "INSERT INTO anonymized_audit(id,entity_kind,action,actor_type,actor_id,happened_at,erased_at,amount_cents,processor_ref,reason) VALUES(?,'payment',?,?,?,?,?,?,?,'Person erasure before payment confirmation')",
-      params: [createId(), action, action === "payment" ? actor : "operator", action === "payment" ? null : session.id, now, now, amount, reference],
+    const facts: Array<[string, "invitee" | "operator", number, string | null, string | undefined]> = [];
+    if (outcome.approval && outcome.authorizedCents !== undefined && outcome.paymentIntentId) facts.push(["authorization", "invitee", outcome.authorizedCents, outcome.paymentIntentId, outcome.audit?.authorize]);
+    if (outcome.paymentIntentId && outcome.refundId) facts.push([outcome.approval ? "capture" : "payment", "invitee", outcome.amountCents, outcome.paymentIntentId, outcome.audit?.capture], [outcome.approval ? "refund" : "refund:succeeded", "operator", outcome.amountCents, outcome.refundId, outcome.audit?.refund]);
+    if (outcome.voidedIntentId) {
+      if (outcome.authorizedCents === undefined) throw new ErasureError("payment_erasure_incomplete", 503);
+      facts.push(["void", "operator", outcome.authorizedCents, outcome.voidedIntentId, outcome.audit?.void]);
+    }
+    if (outcome.savedCard === "detached") facts.push([outcome.approval ? "saved_card_detach" : "saved_card_detached", "operator", 0, outcome.paymentMethodId, outcome.audit?.detach]);
+    for (const [action, actor, amount, reference, id] of facts) statements.push({
+      sql: "INSERT INTO anonymized_audit(id,entity_kind,action,actor_type,actor_id,happened_at,erased_at,amount_cents,processor_ref,reason) VALUES(?,'payment',?,?,?,?,?,?,?,'Person erasure before payment confirmation') ON CONFLICT(id) DO NOTHING",
+      params: [id ?? createId(), action, actor, actor === "invitee" ? null : session.id, now, now, amount, reference],
     });
   }
   const ids = JSON.stringify(holds.map(hold => hold.id));

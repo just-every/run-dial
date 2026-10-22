@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {wireMail,bookingMail,recipient} from './mail-contracts.mjs';
+import {paidApprovalJourney} from './paid-approval-journey.mjs';
 export async function approvalJourney({data,call,state,deliver,future,checks}){
   const event=await data('/api/app/event-types',{slug:'synthetic-dial-approval',title:'Approval consultation',description:'A synthetic approval request.',durationMinutes:30,color:'#176b5a',locationType:'fixed_link',locationLabel:'Meeting room',locationValue:'https://meet.example.test/approval-room',listed:true,alternativeRequestsEnabled:false,slotIncrementMinutes:30,minimumNoticeMinutes:0,bookingHorizonDays:90,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,questions:[],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:600,endMinute:1200}))},201);
   assert.deepEqual(await data(`/api/app/event-types/${event.id}/approval`),{required:false,windowHours:24});
@@ -47,10 +48,6 @@ export async function approvalJourney({data,call,state,deliver,future,checks}){
   const preview=await data('/api/app/privacy/preview',{email:erased.payload.email});assert.deepEqual([preview.bookings,preview.requests],[0,1],'preview counts the tentative approval request');const receipt=await data('/api/app/privacy/erase',{email:erased.payload.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});assert.equal(receipt.requests,1,'receipt counts the approval request erased');snap=await state();
   assert.ok(!snap.booking_approval_requests.some(item=>item.id===eraseRow.id));assert.ok(!snap.booking_approval_tokens.some(item=>item.request_id===eraseRow.id));assert.ok(!JSON.stringify(snap.delivery_outbox).includes(erased.payload.email));assert.ok(!JSON.stringify(snap.base_mail_dispatch).includes(erased.payload.email),'host copies of approval request are erased too');
   await call(`/api/app/booking-approvals/${eraseRow.id}/decision`,{decision:'approve'},404);await call('/api/public/manage/'+new URL(erased.step.approval.url).pathname.split('/').at(-1),undefined,404);
-  // Conservative payment timing: neither a priced nor a card-saving event can require approval in this build.
-  await call(`/api/app/event-types/${event.id}/price`,{amountCents:1000,durationPrices:[]},409,'PUT');
-  await call(`/api/app/event-types/${event.id}/payment-terms`,{deposit:{kind:'none'},balanceDueHours:24,freeWindowHours:null,lateCancelFeeCents:0,noShowFeeCents:1000},409,'PUT');
-  await data(`/api/app/event-types/${event.id}/approval`,{required:false,windowHours:24},200,'PUT');
-  await data(`/api/app/event-types/${event.id}/price`,{amountCents:1000,durationPrices:[]},200,'PUT');await call(`/api/app/event-types/${event.id}/approval`,{required:true,windowHours:24},409,'PUT');
-  checks.push('EVENT-008 free requests hold the slot without booking/calendar/reminder, refuse second public and operator claims, owner approval confirms once with one event/mail and guest invitation, decline and expiry each release once with one notice, recipients stay invitee/hosts, anonymous decisions are refused, erasure removes pending claims/capabilities/host mail, priced approval denied by default');
+  await paidApprovalJourney({data,call,state,deliver,future,checks});
+  checks.push('EVENT-008 free requests hold the slot without booking/calendar/reminder, refuse second public and operator claims, owner approval confirms once with one event/mail and guest invitation, decline and expiry each release once with one notice, recipients stay invitee/hosts, anonymous decisions are refused, erasure removes pending claims/capabilities/host mail');
 }

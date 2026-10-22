@@ -21,6 +21,7 @@ import type { PaymentSettings } from "./money-repository";
 import { verifyStripeSignature } from "./webhook-signature";
 import type { Admission } from "../../platform/public-admission";
 import { erasePendingPayments } from "./erasure";
+import type { ApprovalPayment, StripeEvent } from "./approval-state";
 
 /** The slot is held for the payment window; Stripe's own minimum session lifetime is 30 minutes, so Dial
  * expires the session itself when its window ends. */
@@ -28,11 +29,11 @@ export const paymentWindowMs = 10 * 60 * 1000;
 const checkoutLifetimeSeconds = 31 * 60;
 const returnLifetimeMs = 24 * 60 * 60 * 1000;
 
-export type PaidConversion = (claim: BookingClaim, payment: { holdId: string; statements: D1PreparedStatement[] }) => Promise<"claimed" | "slot_taken" | "blocked">;
+export type PaidConversion = (claim: BookingClaim, payment: { holdId: string; statements: D1PreparedStatement[] }, approval?: {id:string;operatorId:string}) => Promise<"claimed" | "slot_taken" | "blocked">;
 /** What a booking costs now: a payment (the full price or a deposit) or, for a free event with stated fees, a
  * setup that only saves the consented card. */
 export type Quote = { kind: "available"; mode: "payment" | "setup"; amountCents: number; snapshot: TermsSnapshot; saveCard: boolean; taxRequired: boolean; accountId: string; achEnabled: boolean };
-type StripeEvent = { id: string; type: string; account?: string; data: { object: Record<string, unknown> } };
+type ApprovalLifecycle = {receive(hold:PaymentHold,event:StripeEvent):Promise<WebhookResult>;expire(hold:PaymentHold):Promise<void>;resume(hold:PaymentHold):Promise<PaymentHold|undefined>};
 export type WebhookResult = { kind: "unauthorized" | "processed" | "ignored" | "rejected" } | { kind: "limited"; retryAfterSeconds: number };
 
 export class PaymentsService {
@@ -43,6 +44,7 @@ export class PaymentsService {
   private readonly terms: MoneyRepository;
   private readonly db: D1Database;
   private convert?: PaidConversion;
+  private approvalLifecycle?: ApprovalLifecycle;
   constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, private readonly transport: typeof fetch = fetch) {
     this.db = db;
     this.repository = new PaymentsRepository(db);
@@ -54,6 +56,9 @@ export class PaymentsService {
   }
 
   setConversion(convert: PaidConversion) { this.convert = convert; }
+  setApprovalLifecycle(lifecycle:ApprovalLifecycle) { this.approvalLifecycle=lifecycle; }
+  approvalProcessor() { return this.api(); }
+  async resumeApprovalCheckout(hold:PaymentHold) { if(!this.approvalLifecycle)throw new Error("Approval payment lifecycle is not configured"); return this.approvalLifecycle.resume(hold); }
 
   setAch(enabled: boolean) { return this.repository.setAch(enabled); }
 
@@ -122,10 +127,10 @@ export class PaymentsService {
 
   holdForNonce(nonceId: string) { return this.repository.holdByNonce(nonceId); }
 
-  async openCheckout(input: { holdId: string; quote: Quote; eventTitle: string; durationMinutes: number; returnUrl: string; customerEmail: string }) {
+  async openCheckout(input: { holdId: string; quote: Quote; eventTitle: string; durationMinutes: number; returnUrl: string; customerEmail: string; approval?:boolean;createdAt?:string }) {
     const params = checkoutParams({ holdId: input.holdId, mode: input.quote.mode, amountCents: input.quote.snapshot.dueNowCents, taxCents: dueNowTaxCents(input.quote.snapshot), taxSummary: input.quote.snapshot.taxSummary, deposit: input.quote.snapshot.depositCents > 0, saveCard: input.quote.saveCard,
       eventTitle: input.eventTitle, durationMinutes: input.durationMinutes, returnUrl: input.returnUrl, customerEmail: input.customerEmail, achEnabled: input.quote.achEnabled,
-      expiresAt: Math.floor(Date.now() / 1000) + checkoutLifetimeSeconds });
+      approval:input.approval, expiresAt: Math.floor((input.createdAt ? Date.parse(input.createdAt) : Date.now()) / 1000) + checkoutLifetimeSeconds });
     return this.api().createCheckoutSession(input.quote.accountId, params, `dial-hold-${input.holdId}`);
   }
 
@@ -146,7 +151,9 @@ export class PaymentsService {
     if (!hold) return { kind: "not_found" as const };
     if (hold.returnExpiresAt <= nowIso()) return { kind: "expired" as const };
     const manageUrl = hold.state === "confirmed" ? new URL(`/manage/${await this.manageToken(token)}`, this.runtime.APP_URL).toString() : undefined;
-    return { kind: "found" as const, status: { state: hold.state, mode: hold.kind, amountCents: hold.amountCents, currency: hold.currency, startAt: hold.startAt, endAt: hold.endAt, expiresAt: hold.expiresAt, reference: hold.checkoutSessionId, checkoutUrl: hold.state === "held" ? hold.checkoutUrl : null, ...(manageUrl ? { manageUrl } : {}), ...(hold.endedReason ? { reason: hold.endedReason } : {}) } };
+    const request = await this.repository.approvalForNonce(hold.nonceId), claim = hold.claimJson ? JSON.parse(hold.claimJson) as BookingClaim : undefined;
+    const approval = claim?.money?.approval ?? (request?.claimJson ? (JSON.parse(request.claimJson) as BookingClaim).money?.approval : undefined);
+    return { kind: "found" as const, status: { ...(approval || request ? {approvalRequired:true} : {}), ...(request && approval && hold.state!=="confirmed" ? {approvalUrl:approval.url} : {}), state: hold.state, mode: hold.kind, amountCents: hold.amountCents, currency: hold.currency, startAt: hold.startAt, endAt: hold.endAt, expiresAt: hold.expiresAt, reference: hold.checkoutSessionId, checkoutUrl: hold.state === "held" ? hold.checkoutUrl : null, ...(manageUrl ? { manageUrl } : {}), ...(hold.endedReason ? { reason: hold.endedReason } : {}) } };
   }
 
   /** AUTH-005: an unsigned, mis-signed or stale event, or one whose connected account is not the hold's,
@@ -172,9 +179,13 @@ export class PaymentsService {
       return movement?.kind === "invoice" ? this.invoices.receiveInvoiceEvent(event, movement) : this.money.receiveBalanceEvent(event, movementId);
     }
     const holdId = metadata(object, "dial_hold_id");
-    const hold = event.type.startsWith("checkout.session.") && typeof object.id === "string" ? await this.repository.holdBySession(object.id) : holdId ? await this.repository.hold(holdId) : undefined;
+    const hold = event.type.startsWith("checkout.session.") && typeof object.id === "string" ? await this.repository.holdBySession(object.id) ?? (holdId ? await this.repository.hold(holdId) : undefined) : holdId ? await this.repository.hold(holdId) : event.type.startsWith("refund.") && typeof object.payment_intent==="string" ? await this.repository.holdByApprovalIntent(object.payment_intent) : undefined;
     if (!hold) return { kind: "ignored" };
     if (event.account !== hold.accountId) return { kind: "unauthorized" };
+    if ((hold.claimJson && (JSON.parse(hold.claimJson) as BookingClaim).money?.approval) || await this.repository.approvalForNonce(hold.nonceId)) {
+      if(!this.approvalLifecycle)throw new Error("Approval payment lifecycle is not configured");
+      return this.approvalLifecycle.receive(hold,event);
+    }
     switch (event.type) {
       case "checkout.session.completed":
         if (hold.kind === "setup" || object.payment_status === "paid") return this.confirm(hold, object, typeof object.payment_intent === "string" ? object.payment_intent : null);
@@ -197,6 +208,7 @@ export class PaymentsService {
   /** Release holds whose window ended: Dial expires the Checkout Session first, so a released slot can never be paid. */
   async sweepExpiredHolds(now = nowIso()) {
     for (const hold of await this.repository.dueHolds(now)) {
+      if(hold.claimJson && (JSON.parse(hold.claimJson) as BookingClaim).money?.approval) { if(!this.approvalLifecycle)throw new Error("Approval payment lifecycle is not configured"); await this.approvalLifecycle.expire(hold);continue; }
       if (!hold.checkoutSessionId) { await this.repository.endHold(hold.id, "released", "payment_window_expired"); continue; }
       try {
         await this.api().expireCheckoutSession(hold.accountId, hold.checkoutSessionId);
@@ -212,7 +224,11 @@ export class PaymentsService {
     }
   }
 
-  private async confirm(hold: PaymentHold, paid: Record<string, unknown>, paymentIntentId: string | null): Promise<WebhookResult> {
+  async confirmApproval(hold:PaymentHold,payment:ApprovalPayment,approval:{id:string;operatorId:string}) {
+    await this.confirm(hold,payment.mode==="setup" ? {mode:"setup",status:"complete",setup_intent:payment.setupIntentId,customer:payment.customerId} : {amount_total:payment.amountCents,currency:"usd"},payment.paymentIntentId,{...approval,payment});
+    return (await this.repository.hold(hold.id))?.state==="confirmed";
+  }
+  private async confirm(hold: PaymentHold, paid: Record<string, unknown>, paymentIntentId: string | null, approval?:{id:string;operatorId:string;payment:ApprovalPayment}): Promise<WebhookResult> {
     if (hold.state === "confirmed") return { kind: "processed" };
     if (!["held", "processing"].includes(hold.state) || !hold.claimJson || !hold.checkoutSessionId) return { kind: "processed" };
     // Dial confirms only the amount the invitee was shown, in USD; a setup confirms only a completed card setup.
@@ -220,21 +236,21 @@ export class PaymentsService {
     if (setup ? paid.mode !== "setup" || paid.status !== "complete" || typeof paid.setup_intent !== "string" : paid.amount_total !== hold.amountCents || paid.currency !== "usd") return { kind: "rejected" };
     if (!this.convert) throw new Error("Paid booking conversion is not configured");
     const claim = JSON.parse(hold.claimJson) as BookingClaim, now = nowIso(), money = claim.money;
-    const card = money?.consent ? await this.savedCard(hold, paid, paymentIntentId) : undefined;
+    const card = money?.consent ? approval ? {accountId:hold.accountId,customerId:approval.payment.customerId,paymentMethodId:approval.payment.paymentMethodId} : await this.savedCard(hold, paid, paymentIntentId) : undefined;
     const kind = money && money.snapshot.depositCents > 0 ? "deposit" as const : "payment" as const, taxCents = money ? dueNowTaxCents(money.snapshot) : 0;
     // PAY-005: the first payment's receipt is queued with the booking, keyed by its Stripe reference.
-    const receipt = setup ? [] : receiptStatements(this.db, { id: claim.bookingId, inviteeName: claim.invitee.name, inviteeEmail: claim.invitee.email, eventTitle: claim.event.title, startAt: claim.selection.startAt, hostTimezone: claim.hostTimezone, inviteeTimezone: claim.selection.inviteeTimezone, ...(money?.manageUrl ? { manageUrl: money.manageUrl } : {}) },
+    const receipt = setup || approval ? [] : receiptStatements(this.db, { id: claim.bookingId, inviteeName: claim.invitee.name, inviteeEmail: claim.invitee.email, eventTitle: claim.event.title, startAt: claim.selection.startAt, hostTimezone: claim.hostTimezone, inviteeTimezone: claim.selection.inviteeTimezone, ...(money?.manageUrl ? { manageUrl: money.manageUrl } : {}) },
       { ref: hold.checkoutSessionId, kind, amountCents: hold.amountCents, taxCents, taxSummary: money?.snapshot.taxSummary ?? null, paidAt: now }, (await this.settings()).effectiveBusinessName, await receiptOperators(this.db));
     const outcome = await this.convert({ ...claim, now }, { holdId: hold.id, statements: [
       ...(setup ? [] : [this.repository.bookingPaymentStatement({ bookingId: claim.bookingId, accountId: hold.accountId, amountCents: hold.amountCents, checkoutSessionId: hold.checkoutSessionId, paymentIntentId, paidAt: now, kind, taxCents, taxSummary: money?.snapshot.taxSummary ?? null })]),
       ...(money ? this.terms.confirmationStatements(claim.bookingId, money, card, money.balanceSalt ? await this.money.balanceTokenHash(money.balanceSalt) : undefined, now) : []),
       this.repository.confirmHoldStatement(hold.id, claim.bookingId, now),
       ...receipt,
-    ] });
+    ] },approval ? {id:approval.id,operatorId:approval.operatorId} : undefined);
     if (outcome !== "claimed") {
       const current = await this.repository.hold(hold.id);
       // A concurrent duplicate already confirmed it; otherwise the paid slot can no longer be booked.
-      if (current?.state !== "confirmed") await this.repository.endHold(hold.id, "unbookable", outcome === "blocked" ? "invitee_blocked" : "slot_unavailable");
+      if (current?.state !== "confirmed" && !approval) await this.repository.endHold(hold.id, "unbookable", outcome === "blocked" ? "invitee_blocked" : "slot_unavailable");
     }
     return { kind: "processed" };
   }

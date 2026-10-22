@@ -80,6 +80,8 @@ export class PaymentsRepository {
   async holdByNonce(nonceId: string) { return this.db.prepare(`SELECT ${holdColumns} FROM payment_holds WHERE nonce_id=?`).bind(nonceId).first<PaymentHold>().then(row => row ?? undefined); }
   async holdBySession(sessionId: string) { return this.db.prepare(`SELECT ${holdColumns} FROM payment_holds WHERE checkout_session_id=?`).bind(sessionId).first<PaymentHold>().then(row => row ?? undefined); }
   async holdByReturnToken(hash: string) { return this.db.prepare(`SELECT ${holdColumns} FROM payment_holds WHERE return_token_hash=?`).bind(hash).first<PaymentHold>().then(row => row ?? undefined); }
+  async approvalForNonce(nonceId: string) { return this.db.prepare("SELECT claim_json AS claimJson,payment_json AS paymentJson,state FROM booking_approval_requests WHERE nonce_id=? AND payment_json IS NOT NULL").bind(nonceId).first<{claimJson:string|null;paymentJson:string;state:string}>(); }
+  async holdByApprovalIntent(intentId: string) { const row=await this.db.prepare("SELECT json_extract(payment_json,'$.holdId') AS id FROM booking_approval_requests WHERE json_extract(payment_json,'$.paymentIntentId')=?").bind(intentId).first<{id:string}>(); return row ? this.hold(row.id) : undefined; }
 
   async attachCheckout(holdId: string, sessionId: string, url: string, claimJson: string) {
     await this.db.prepare("UPDATE payment_holds SET checkout_session_id=?, checkout_url=?, claim_json=?, updated_at=? WHERE id=? AND state='held'").bind(sessionId, url, claimJson, nowIso(), holdId).run();

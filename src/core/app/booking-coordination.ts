@@ -5,10 +5,12 @@ import { hashToken } from "../platform/auth/tokens";
 import { deliveryJobSchema } from "../features/delivery";
 import type { CalendarExternalChange, CalendarExternalChangeHandler } from "../features/calendar-connection";
 import { parseRuntimeEnvironment } from "../shared/runtime-env";
+import { paymentApprovalTarget } from "./payment-approval-coordination";
 
 export async function bookingMutationTarget(request: Request, env: AppBindings) {
   if (!["POST", "PATCH", "PUT", "DELETE"].includes(request.method)) return undefined;
   const path = new URL(request.url).pathname;
+  if (path === "/api/webhooks/stripe" && request.method === "POST") return paymentApprovalTarget(request, env.DB);
   if (/^\/api\/public\/book\/[^/]+\/[^/]+\/confirm$/.test(path) && request.method === "POST") {
     const body = await request.clone().json().catch(() => null) as { nonce?: unknown } | null;
     if (typeof body?.nonce === "string") return `nonce:${await hashToken(body.nonce, parseRuntimeEnvironment(env).SESSION_SECRET)}`;
@@ -21,7 +23,7 @@ export async function bookingMutationTarget(request: Request, env: AppBindings) 
   if (annotation) return annotation[1] === "booking" ? annotation[2] : `request:${annotation[2]}`;
   const requestTarget = /^\/api\/app\/availability-requests\/([^/]+)(?:\/|$)/.exec(path);
   if (requestTarget) return `request:${requestTarget[1]}`;
-  const approval = /^\/api\/app\/booking-approvals\/([^/]+)\/decision$/.exec(path);
+  const approval = /^\/api\/app\/booking-approvals\/([^/]+)\/(?:decision|cancel)$/.exec(path);
   if(approval)return (await env.DB.prepare("SELECT booking_id AS id FROM booking_approval_requests WHERE id=?").bind(approval[1]).first<{id:string}>())?.id;
   const operator = /^\/api\/app\/(?:bookings|erasures)\/([^/]+)(?:\/|$)/.exec(path);
   if (operator) return operator[1];

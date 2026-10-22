@@ -1,3 +1,6 @@
+import { PaymentApprovals } from "./payment-approvals";
+import { approvalPayment, publicApprovalPayment } from "../payments";
+import type { PaymentMailFacts } from "./money-presentation";
 import { isPaid } from "../../shared/event-price";
 import { cardRequired } from "../../shared/payment-terms";
 import { approvalMail, type ApprovalRequest, type ApprovalSettings } from "./approvals";
@@ -20,6 +23,7 @@ type ConfirmationInput = {
     manageToken: string;
     bookingId: string;
     calendarRequired?: boolean;
+    payment?: PaymentMailFacts;
 };
 type Dependencies = {
     repository: BookingsRepository;
@@ -33,24 +37,40 @@ type Dependencies = {
 };
 /** EVENT-008 request lifecycle, separate from confirmed bookings and every payment path. */
 export class ApprovalService {
-    constructor(private readonly deps: Dependencies) { }
+    private readonly payment?: PaymentApprovals;
+    constructor(private readonly deps: Dependencies) {
+        if (deps.payments) {
+            this.payment = new PaymentApprovals({repository:deps.repository.approvals,payments:deps.payments,
+                notices:(claim,state,expiresAt,reason)=>this.emails({title:claim.event.title,startAt:claim.selection.startAt,endAt:claim.selection.endAt,inviteeName:claim.invitee.name,inviteeEmail:claim.invitee.email,publicUrl:claim.money!.approval!.url,expiresAt,reason},state),
+                available:(request,claim)=>this.available(request,claim),
+                confirmationEmails:async(claim,payment)=>{const profile=await deps.profiles.getProfile();if(!profile)throw new Error("Approval host profile missing");const manageToken=new URL(claim.money!.manageUrl!).pathname.split("/").at(-1)!;return deps.confirmationEmails({profile:{...profile,timezone:claim.hostTimezone},event:claim.event,invitee:claim.invitee,startAt:claim.selection.startAt,endAt:claim.selection.endAt,inviteeTimezone:claim.selection.inviteeTimezone,manageToken,bookingId:claim.bookingId,calendarRequired:Boolean(claim.calendarPayload),payment});},
+            });
+            deps.payments.setApprovalLifecycle({receive:(hold,event)=>this.payment!.receive(hold,event),expire:hold=>this.payment!.expireHold(hold),resume:hold=>this.payment!.resume(hold)});
+        }
+    }
+    private async available(request:ApprovalRequest,claim:BookingClaim) {
+        const profile=await this.deps.profiles.getProfile(),event=await this.deps.eventTypes.getEventType(request.eventTypeId);
+        if(!profile || !event || event.status!=="published")return false;
+        return (await this.deps.availability.verifyResolvedPublicSelection({...profile,timezone:claim.hostTimezone},event,claim.selection.startAt,new Date(),claim.bookingId,(Date.parse(claim.selection.endAt)-Date.parse(claim.selection.startAt))/60000)).kind==="valid";
+    }
     token(nonce: string) { return deriveOpaqueToken(nonce, this.deps.runtime.SESSION_SECRET, "booking-approval.v1"); }
     async settings(eventId: string) { return await this.deps.eventTypes.getEventType(eventId) ? this.deps.repository.approvals.settings(eventId) : undefined; }
     async saveSettings(eventId: string, input: ApprovalSettings) {
         const event = await this.deps.eventTypes.getEventType(eventId);
         if (!event)
             return { kind: "not_found" as const };
-        if (input.required && this.deps.payments && (isPaid(await this.deps.payments.eventPrice(eventId)) || cardRequired(await this.deps.payments.eventTerms(eventId))))
-            return { kind: "money_not_supported" as const };
+        if(input.windowHours>168)return {kind:"approval_window_too_long" as const};
+        if (input.required && this.deps.payments && isPaid(await this.deps.payments.eventPrice(eventId)) && cardRequired(await this.deps.payments.eventTerms(eventId)))
+            return { kind: "approval_price_and_saved_card_conflict" as const };
         await this.deps.repository.approvals.saveSettings(eventId, input);
         return { kind: "saved" as const, settings: input };
     }
-    async pending() { return (await this.deps.repository.approvals.pending()).map(request => ({ id: request.id, bookingId: request.bookingId, state: request.state, inviteeName: request.inviteeName, inviteeEmail: request.inviteeEmail, eventTitle: request.eventTitle, startAt: request.startAt, endAt: request.endAt, expiresAt: request.expiresAt })); }
+    async pending() { return (await this.deps.repository.approvals.pending()).map(request => ({ id: request.id, bookingId: request.bookingId, state: request.state, inviteeName: request.inviteeName, inviteeEmail: request.inviteeEmail, eventTitle: request.eventTitle, startAt: request.startAt, endAt: request.endAt, expiresAt: request.expiresAt,...(request.paymentJson?{payment:publicApprovalPayment(approvalPayment(request.paymentJson))}:{}) })); }
     async due() { return this.deps.repository.approvals.due(); }
     async emails(input: Parameters<typeof approvalMail>[0], state: ApprovalRequest["state"]) {
         return [approvalMail(input, input.inviteeEmail, state), ...(await this.deps.repository.listOperatorRecipients()).map(({ email, id, generation }) => approvalMail({ ...input, hostUrl: new URL("/app/bookings", this.deps.runtime.APP_URL).toString() }, email, state, { id, generation }))];
     }
-    async expire(id: string) { const request = await this.deps.repository.approvals.get(id); if (!request || request.state !== "pending" || request.expiresAt > nowIso())
+    async expire(id: string) { const request = await this.deps.repository.approvals.get(id); if(request?.paymentJson){if(!this.payment)throw new Error("Approval payments unavailable");return this.payment.expire(request);} if (!request || request.state !== "pending" || request.expiresAt > nowIso())
         return; await this.deps.repository.approvals.decide(request, "expired", null, "The host did not approve before the deadline.", await this.emails({ title: request.eventTitle, startAt: request.startAt, endAt: request.endAt, inviteeName: request.inviteeName, inviteeEmail: request.inviteeEmail }, "expired")); }
     async decide(id: string, operatorId: string, decision: "approve" | "decline", reason?: string) {
         const request = await this.deps.repository.approvals.get(id);
@@ -58,6 +78,7 @@ export class ApprovalService {
             return { kind: "not_found" as const };
         if (request.state !== "pending")
             return { kind: "closed" as const, state: request.state };
+        if(request.paymentJson){if(!this.payment)throw new Error("Approval payments unavailable");return this.payment.decide(request,operatorId,decision,reason);}
         if (request.expiresAt <= nowIso()) {
             await this.expire(id);
             return { kind: "closed" as const, state: "expired" };
@@ -71,8 +92,6 @@ export class ApprovalService {
         const claim = JSON.parse(request.claimJson) as BookingClaim, profile = await this.deps.profiles.getProfile(), event = await this.deps.eventTypes.getEventType(request.eventTypeId);
         if (!profile || !event || event.status !== "published")
             return { kind: "not_available" as const };
-        if (await this.deps.payments?.quote(event.id, (Date.parse(claim.selection.endAt) - Date.parse(claim.selection.startAt)) / 60000))
-            return { kind: "money_not_supported" as const };
         const verified = await this.deps.availability.verifyResolvedPublicSelection(profile, event, claim.selection.startAt, new Date(), claim.bookingId, (Date.parse(claim.selection.endAt) - Date.parse(claim.selection.startAt)) / 60000);
         if (verified.kind !== "valid")
             return { kind: "not_available" as const };
@@ -102,7 +121,8 @@ export class ApprovalService {
                 return { kind: "found", booking: await this.deps.toConfirmation(booking, profile, manage) };
             }
         }
-        const state = request.state === "pending" && request.expiresAt <= nowIso() ? "expired" : request.state;
-        return { kind: "found", booking: { approval: { state, expiresAt: request.expiresAt }, event: { eventTitle: request.eventTitle, durationMinutes: (Date.parse(request.endAt) - Date.parse(request.startAt)) / 60000 }, host: { name: profile.name, timezone: profile.timezone }, occurrence: { startAt: request.startAt, endAt: request.endAt }, inviteeTimezone: "UTC", location: { label: "Shown after approval", state: "pending" }, calendarState: "not_required", meetingState: "not_required", manageUrl: new URL(`/manage/${token}`, this.deps.runtime.APP_URL).toString(), icsUrl: "", state: state === "pending" ? "pending_approval" : state === "approved" ? "expired" : state } };
+        const payment=publicApprovalPayment(approvalPayment(request.paymentJson));
+        const state = request.state === "pending" && !payment && request.expiresAt <= nowIso() ? "expired" : request.state;
+        return { kind: "found", booking: { approval: { state, expiresAt: request.expiresAt,...(payment?{paymentState:payment.state,amountCents:payment.amountCents,mode:payment.mode}:{}) }, event: { eventTitle: request.eventTitle, durationMinutes: (Date.parse(request.endAt) - Date.parse(request.startAt)) / 60000 }, host: { name: profile.name, timezone: profile.timezone }, occurrence: { startAt: request.startAt, endAt: request.endAt }, inviteeTimezone: "UTC", location: { label: "Shown after approval", state: "pending" }, calendarState: "not_required", meetingState: "not_required", manageUrl: new URL(`/manage/${token}`, this.deps.runtime.APP_URL).toString(), icsUrl: "", state: state === "pending" ? "pending_approval" : state === "approved" ? "expired" : state } };
     }
 }

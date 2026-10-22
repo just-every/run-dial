@@ -52,7 +52,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
   const bookingsRepository = new BookingsRepository(binding);
   const payments = new PaymentsService(binding, runtime, adapters.paymentsTransport);
-  payments.setConversion((claim, payment) => bookingsRepository.claim(claim, payment));
+  payments.setConversion((claim, payment, approval) => bookingsRepository.claim(claim, payment, approval));
   const bookings = new BookingsService(bookingsRepository, availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
   }, bookingLinks, payments);

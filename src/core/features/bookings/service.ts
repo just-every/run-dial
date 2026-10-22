@@ -47,7 +47,7 @@ export type BookingConfirmationResult =
   | { kind: "approval_required"; approval: { url:string; expiresAt:string } }
   | { kind: "created"; booking: BookingConfirmation }
   | { kind: "replayed"; booking: BookingConfirmation }
-  | { kind: "invalid_nonce" | "expired_nonce" | "slot_invalid" | "calendar_unavailable" | "invalid_answers" | "payload_mismatch" | "slot_taken" | "blocked" | "invalid_duration" | "card_consent_required" | "billing_address_required" }
+  | { kind: "invalid_nonce" | "expired_nonce" | "slot_invalid" | "calendar_unavailable" | "invalid_answers" | "payload_mismatch" | "slot_taken" | "blocked" | "invalid_duration" | "card_consent_required" | "billing_address_required" | "payment_terms_changed" }
   | { kind: "tax_changed"; taxCents: number }
   | { kind: "payment_required"; payment: PaymentStep }
   | { kind: "payments_unavailable"; reason: string };
@@ -57,7 +57,7 @@ export type PublicSelectionLookupResult =
     selection: {
       nonce: string;
       guestLimit: number;
-      approval?: {windowHours:number};
+      approval?: {windowHours:number;allowedPaymentMethods:["card","link"];paymentMethodReason:"approval_requires_card_or_link"};
       expiresAt: string;
       selection: { startAt: string; endAt: string; hostTimezone: string; inviteeTimezone: string };
       event: ReturnType<typeof toPublicEventType>;
@@ -86,6 +86,7 @@ export class BookingsService {
   async dueApprovals(){return this.approvals.due();}
   async expireApproval(id:string){return this.approvals.expire(id);}
   async decideApproval(id:string,operatorId:string,decision:"approve"|"decline",reason?:string){return this.approvals.decide(id,operatorId,decision,reason);}
+  async cancelApproval(id:string,operatorId:string,reason?:string){return this.approvals.decide(id,operatorId,"decline",reason?.trim() || "The host cancelled this request.");}
 
   async guestSettings(eventId: string) { return await this.eventTypes.getEventType(eventId) ? { guestLimit: await this.repository.guests.limit(eventId) } : undefined; }
   async saveGuestSettings(eventId: string, guestLimit: number) { return this.repository.guests.saveLimit(eventId,guestLimit); }
@@ -140,7 +141,7 @@ export class BookingsService {
       selection: {
         nonce: input.nonce,
         guestLimit: await this.repository.guests.limit(event.event.id),
-        ...((await this.repository.approvals.settings(event.event.id)).required ? {approval:{windowHours:(await this.repository.approvals.settings(event.event.id)).windowHours}} : {}),
+        ...((await this.repository.approvals.settings(event.event.id)).required ? {approval:{windowHours:(await this.repository.approvals.settings(event.event.id)).windowHours,allowedPaymentMethods:["card","link"] as ["card","link"],paymentMethodReason:"approval_requires_card_or_link" as const}} : {}),
         expiresAt: nonce.expiresAt,
         selection: { startAt: nonce.selectionStartAt, endAt: nonce.selectionEndAt, hostTimezone: profile.timezone, inviteeTimezone: nonce.inviteeTimezone },
         event: toPublicEventType({ ...event.event, durationMinutes: selectedDuration }),
@@ -150,7 +151,7 @@ export class BookingsService {
     };
   }
 
-  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number }): Promise<BookingConfirmationResult> {
+  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number; shownPaymentCents?:number }): Promise<BookingConfirmationResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
@@ -158,7 +159,7 @@ export class BookingsService {
     if (!nonce) return { kind: "invalid_nonce" };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
     const attribution = cleanAttribution(input.attribution);
-    const payloadHash = await hashPayload({ ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
+    const payloadHash = await hashPayload({ ...(input.shownPaymentCents===undefined?{}:{shownPaymentCents:input.shownPaymentCents}), ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
     const profile = await this.profiles.getPublicProfile(input.handle);
     if (!profile) return { kind: "invalid_nonce" };
     const offer = this.bookingLinks ? await this.bookingLinks.resolve(input.slug, input.link) : undefined;
@@ -216,14 +217,17 @@ export class BookingsService {
     };
     const quote = await this.payments?.quote(event.id, selectedDuration);
     if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
-    if (quote && (await this.repository.approvals.settings(event.id)).required) return {kind:"payments_unavailable",reason:"approval_payments_not_supported"};
+    const paymentApproval = await this.repository.approvals.settings(event.id);
+    if (quote && paymentApproval.required && quote.mode==="payment" && quote.saveCard) return {kind:"payments_unavailable",reason:"approval_price_and_saved_card_conflict"};
     // PAY-003: a fee-bearing event needs the invitee's explicit consent to the stated amounts before anything is held.
     if (quote?.saveCard && !(input.cardConsent?.accepted === true && input.cardConsent.version === cardConsentVersion(quote.snapshot))) return { kind: "card_consent_required" };
     if (quote && this.payments) {
       const priced = quote.taxRequired ? await this.taxedQuote(quote, input.billingAddress, input.shownTaxCents, `event:${event.id}`) : { kind: "ready" as const, quote };
-      if (priced.kind !== "ready") return priced;
+      if (priced.kind !== "ready") return paymentApproval.required && quote.mode==="payment" && priced.kind==="tax_changed" ? {kind:"payment_terms_changed"} : priced;
+      if (paymentApproval.required && quote.mode==="payment" && input.shownPaymentCents!==priced.quote.amountCents)return {kind:"payment_terms_changed"};
+      const approvalToken=paymentApproval.required ? await this.approvals.token(input.nonce) : undefined;
       const paid = await beginPaidConfirmation({ repository: this.repository, payments: this.payments, runtime: this.runtime, confirmationEmails: (manageToken, payment) => this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired, payment }) },
-        { claim: claimBase, nonce: input.nonce, handle: input.handle, slug: input.slug, quote: priced.quote, durationMinutes: selectedDuration, consent: quote.saveCard ? { version: cardConsentVersion(quote.snapshot) } : undefined });
+        { claim: claimBase, nonce: input.nonce, handle: input.handle, slug: input.slug, quote: priced.quote, durationMinutes: selectedDuration, consent: quote.saveCard ? { version: cardConsentVersion(quote.snapshot) } : undefined,...(approvalToken?{approval:{windowHours:paymentApproval.windowHours,tokenHash:await hashToken(approvalToken,this.runtime.SESSION_SECRET),url:new URL(`/manage/${approvalToken}`,this.runtime.APP_URL).toString()}}:{}) });
       return paid.kind === "slot_taken" || paid.kind === "blocked" ? await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? paid : paid;
     }
     const manageToken = await this.managedTokenFromNonce(input.nonce);
