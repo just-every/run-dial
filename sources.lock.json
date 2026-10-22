@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "db36d73d77ff3f83234dbfb2d30ac07b0509592696c3cc6a1631a8ef687f0597",
+      "sha256": "a26c7df3723c10ec627937a47cce71ed739580235ffc1e917b4562532048c076",
       "executable": false
     },
     "DEMO.md": {
@@ -5704,7 +5704,7 @@
       "executable": false
     },
     "src/core/features/move-in/custody-tables.ts": {
-      "sha256": "1b637fe03e7f64427855c64203a0cb5f2ba22cd5ba752e55300b2a1b127f077a",
+      "sha256": "55cceb433333f471c84d7d721934068379e3628d8026fa577544a1250f270f8d",
       "executable": false
     },
     "src/core/features/move-in/difference-report.ts": {
@@ -5784,7 +5784,7 @@
       "executable": false
     },
     "src/core/features/move-in/targets.ts": {
-      "sha256": "7a30f1d945a3414bc2ae5006421f6c939149b2145982ba54a43d19a573138339",
+      "sha256": "c33ac053905b1aaf00783bb9588a9cee7b9624db9a3e84e819f3af251e1b672d",
       "executable": false
     },
     "src/core/features/move-in/ui/differences-list.tsx": {
@@ -7412,7 +7412,7 @@
       "executable": false
     },
     "tests/booking-http.test.mjs": {
-      "sha256": "6c2737a93a4230abb69c607b4b28254671a5a6a1de217ee88ba2679842096164",
+      "sha256": "6c0150ba4f687133ac7337dbf9e25d044340bc379900d76507176c711bfdbc3b",
       "executable": false
     },
     "tests/booking-lifecycle.test.mjs": {
@@ -7536,7 +7536,7 @@
       "executable": false
     },
     "tests/booking-worker.ts": {
-      "sha256": "a156ab61305d06f1aafaeb684e83e42b9921f54b1c3e3bc22b26e13dd9ae0493",
+      "sha256": "5d3d359c9b63f2f0782c119dcbbe52aeea2cdd8d96a5f37966f83680102e8fa8",
       "executable": false
     },
     "tests/booking-worker.wrangler.toml": {
