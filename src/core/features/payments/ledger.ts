@@ -13,8 +13,8 @@ export type Ledger = {
 
 /** The booking's money from its first payment and its movements: paid covers the first payment, any balance and
  * any invoice, fees the charged late-cancellation and no-show fees, refunded every refund Stripe accepted. Amounts
- * include their sales tax. */
-export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnapshot | undefined, movements: Movement[]): Ledger {
+ * include their sales tax. A cancelled booking owes no balance. */
+export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnapshot | undefined, movements: Movement[], cancelled = false): Ledger {
   const succeeded = movements.filter(movement => movement.status === "succeeded");
   const sum = (kinds: Movement["kind"][], field: "amountCents" | "taxCents" = "amountCents") => succeeded.filter(movement => kinds.includes(movement.kind)).reduce((total, movement) => total + movement[field], 0);
   const balancePaid = sum(["balance"]), feesCents = sum(["late_cancel_fee", "no_show_fee"]), refundedCents = sum(["refund"]);
@@ -25,7 +25,7 @@ export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnaps
     ...charge(payment?.paymentIntentId ?? null, payment?.amountCents ?? 0, payment?.taxCents ?? 0, payment?.paidAt ?? ""),
     ...succeeded.filter(movement => movement.kind !== "refund").flatMap(movement => charge(movement.processorRef, movement.amountCents, movement.taxCents, movement.updatedAt)),
   ];
-  const balanceTotal = snapshot && snapshot.balanceCents > 0 ? snapshot.balanceCents + balanceTaxCents(snapshot) : 0;
+  const balanceTotal = snapshot && snapshot.balanceCents > 0 && !cancelled ? snapshot.balanceCents + balanceTaxCents(snapshot) : 0;
   const invoice = movements.find(movement => movement.kind === "invoice" && movement.status !== "failed");
   return {
     priceCents: snapshot?.priceCents ?? payment?.amountCents ?? (invoice ? invoice.amountCents - invoice.taxCents : 0),

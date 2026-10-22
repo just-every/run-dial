@@ -11,9 +11,14 @@ import { StripeApi, StripeApiError } from "./stripe-api";
 import type { TermsSnapshot } from "./terms";
 import { balanceTaxCents } from "../../shared/payment-terms";
 import { receiptAudience, receiptStatements, type ReceiptKind } from "./receipts";
+import { hostRefund, type HostCancellation, type HostRefundOutcome } from "./host-cancellation";
+import { voidAtStripe } from "./cancellation-voids";
 
 export type MoneyRefusal = "payments_not_configured" | "stripe_not_connected" | "stripe_deauthorized";
 export type BookingMoney = { payment?: BookingPayment; snapshot?: TermsSnapshot; consent?: CardConsent; movements: Movement[]; ledger: Ledger; balanceUrl?: string };
+/** What a cancellation does to the money, and the movements that carry it out, committed with the cancellation. */
+export type CancellationPlan = { outcome: CancellationOutcome | HostRefundOutcome; refundCents: number; voids: Array<"balance" | "invoice">; statements: D1PreparedStatement[] };
+type Condition = { sql: string; params: unknown[] };
 type Live = { accountId: string; api: StripeApi };
 type BookingFacts = { id: string; state: string; startAt: string; endAt: string; eventTitle: string; durationMinutes: number; inviteeEmail: string; attendance: string | null };
 const staleAfterMs = 2 * 60 * 1000;
@@ -38,28 +43,68 @@ export class MoneyService {
   async balanceTokenHash(salt: string) { return hashToken(await this.balanceToken(salt), this.runtime.SESSION_SECRET); }
 
   async bookingMoney(bookingId: string, payment?: BookingPayment): Promise<BookingMoney | undefined> {
-    const [snapshot, consent, movements, salt] = await Promise.all([this.money.snapshot(bookingId), this.money.consent(bookingId), this.movements.forBooking(bookingId), this.money.balanceLink(bookingId)]);
+    const [snapshot, consent, movements, salt, facts] = await Promise.all([this.money.snapshot(bookingId), this.money.consent(bookingId), this.movements.forBooking(bookingId), this.money.balanceLink(bookingId), this.facts(bookingId)]);
     if (!payment && !snapshot && !movements.length) return undefined;
-    const summary = ledger(payment, snapshot, movements);
+    const summary = ledger(payment, snapshot, movements, facts?.state === "cancelled");
     const balanceUrl = salt && summary.balanceDueCents > 0 ? new URL(`/manage/balance/${await this.balanceToken(salt)}`, this.runtime.APP_URL).toString() : undefined;
     return { ...(payment ? { payment } : {}), ...(snapshot ? { snapshot } : {}), ...(consent ? { consent } : {}), movements, ledger: summary, ...(balanceUrl ? { balanceUrl } : {}) };
   }
 
-  /** What an invitee's (or a host's) cancellation does to the money, and the pending movements that carry it out.
-   * The statements insert only if `condition` holds, so they commit with the cancellation that won. */
-  async cancellationPlan(bookingId: string, startAt: string, now: string, actor: "invitee" | "host", condition: { sql: string; params: unknown[] }): Promise<{ outcome: CancellationOutcome; refundCents: number; statements: D1PreparedStatement[] } | undefined> {
+  private async cancellationFacts(bookingId: string, now: string, condition: Condition) {
     const [payment, snapshot, consent, movements] = await Promise.all([this.payments.bookingPayment(bookingId), this.money.snapshot(bookingId), this.money.consent(bookingId), this.movements.forBooking(bookingId)]);
-    if (!snapshot) return undefined;
-    const outcome = cancellationOutcome(snapshot, startAt, now, actor), summary = ledger(payment, snapshot, movements);
-    const accountId = consent?.accountId ?? payment?.accountId;
+    const voids = [...new Set(movements.filter(movement => (movement.kind === "balance" || movement.kind === "invoice") && movement.status === "pending").map(movement => movement.kind as "balance" | "invoice"))];
+    const accountId = payment?.accountId ?? consent?.accountId ?? movements.find(movement => movement.status === "succeeded")?.accountId;
+    return { payment, snapshot, consent, movements, accountId, voids, voidStatements: voids.length ? [this.movements.voidOpenStatement(bookingId, now, condition)] : [] };
+  }
+
+  /** What an invitee's cancellation does to the money under the policy they were shown. The statements insert only
+   * if `condition` holds, so they commit with the cancellation that won; any open balance or invoice is voided. */
+  async inviteeCancellationPlan(bookingId: string, startAt: string, now: string, condition: Condition): Promise<CancellationPlan | undefined> {
+    const { payment, snapshot, consent, movements, accountId, voids, voidStatements } = await this.cancellationFacts(bookingId, now, condition);
+    if (!snapshot) return voids.length ? { outcome: { kind: "none", reason: "no_policy" }, refundCents: 0, voids, statements: voidStatements } : undefined;
+    const outcome = cancellationOutcome(snapshot, startAt, now), summary = ledger(payment, snapshot, movements);
     if (outcome.kind === "refund" && summary.refundableCents > 0 && accountId) {
       const parts = allocateRefund(summary.charges, summary.refundableCents) ?? [];
-      return { outcome, refundCents: summary.refundableCents, statements: parts.map(part => this.movements.insertStatement({ bookingId, kind: "refund", amountCents: part.amountCents, taxCents: part.taxCents, actorType: "policy", actorId: null, reason: "Cancelled inside the free cancellation window", accountId, sourceRef: part.ref, idempotencyKey: `policy-refund:${bookingId}:${part.ref}` }, now, condition)) };
+      return { outcome, refundCents: summary.refundableCents, voids, statements: [...voidStatements, ...parts.map(part => this.movements.insertStatement({ bookingId, kind: "refund", amountCents: part.amountCents, taxCents: part.taxCents, actorType: "policy", actorId: null, reason: "Cancelled inside the free cancellation window", accountId, sourceRef: part.ref, idempotencyKey: `policy-refund:${bookingId}:${part.ref}` }, now, condition))] };
     }
     if (outcome.kind === "late_fee" && consent?.paymentMethodId && consent.lateCancelFeeCents === outcome.feeCents) {
-      return { outcome, refundCents: 0, statements: [this.movements.insertStatement({ bookingId, kind: "late_cancel_fee", amountCents: outcome.feeCents, actorType: "policy", actorId: null, reason: "Cancelled after the free cancellation window", accountId: consent.accountId, sourceRef: null, idempotencyKey: `policy-fee:${bookingId}` }, now, condition)] };
+      return { outcome, refundCents: 0, voids, statements: [...voidStatements, this.movements.insertStatement({ bookingId, kind: "late_cancel_fee", amountCents: outcome.feeCents, actorType: "policy", actorId: null, reason: "Cancelled after the free cancellation window", accountId: consent.accountId, sourceRef: null, idempotencyKey: `policy-fee:${bookingId}` }, now, condition)] };
     }
-    return { outcome: outcome.kind === "late_fee" ? { kind: "none", reason: "late_without_fee" } : outcome, refundCents: 0, statements: [] };
+    return { outcome: outcome.kind === "late_fee" ? { kind: "none", reason: "late_without_fee" } : outcome, refundCents: 0, voids, statements: voidStatements };
+  }
+
+  /** PAY-003 (D4): a host-side cancellation refunds everything captured, once, charges no fee and voids any open
+   * balance or invoice; an operator may refund less, or nothing, with a reason. */
+  async hostCancellationPlan(bookingId: string, now: string, by: HostCancellation, condition: Condition): Promise<CancellationPlan | { kind: "exceeds_refundable"; refundableCents: number } | undefined> {
+    const { payment, snapshot, movements, accountId, voids, voidStatements } = await this.cancellationFacts(bookingId, now, condition);
+    if (!payment && !snapshot && !movements.length) return undefined;
+    const refund = hostRefund(bookingId, ledger(payment, snapshot, movements), accountId, by);
+    if (refund.kind === "exceeds_refundable") return refund;
+    return { outcome: refund.outcome, refundCents: refund.refundCents, voids, statements: [...voidStatements, ...refund.movements.map(movement => this.movements.insertStatement(movement, now, condition))] };
+  }
+
+  /** After a cancellation commits: its refunds and the voids of what Stripe could still collect run together. */
+  async afterCancellation(bookingId: string) {
+    const [pending, voids] = await Promise.all([this.movements.pendingFor(bookingId), this.movements.voidsPending(bookingId)]);
+    if (!pending.length && !voids.length) return;
+    const live = await this.live();
+    await Promise.all([(async () => { for (const movement of pending) await this.execute(movement, live); })(), voidAtStripe(this.movements, voids, live)]);
+  }
+
+  /** D4: Stripe captured a balance or an invoice for a booking already cancelled, because it was paid before Dial's
+   * void reached Stripe. The payment is recorded with its receipt and, in the same transaction, a full refund of it
+   * that its key makes once-only; the refund then runs. */
+  private async settleLatePayment(movement: Movement, ref: string) {
+    const refund = this.movements.insertStatement({ bookingId: movement.bookingId, kind: "refund", amountCents: movement.amountCents, taxCents: movement.taxCents, actorType: "policy", actorId: null, reason: "Paid after the booking was cancelled", accountId: movement.accountId, sourceRef: ref, idempotencyKey: `late-payment-refund:${movement.id}` },
+      nowIso(), { sql: "EXISTS (SELECT 1 FROM payment_movements WHERE id = ? AND status = 'succeeded' AND processor_ref = ?)", params: [movement.id, ref] });
+    await this.db.batch([this.movements.succeedLateStatement(movement.id, ref), ...await this.receipt(movement, ref), refund]);
+    await this.settle(movement.bookingId);
+  }
+
+  /** A signed balance or invoice payment settles its movement, or, for a cancelled booking, is refunded (D4). */
+  async settlePayment(movement: Movement, ref: string) {
+    if ((await this.facts(movement.bookingId))?.state === "cancelled") return this.settleLatePayment(movement, ref);
+    await this.movements.succeed(movement.id, ref, await this.receipt(movement, ref));
   }
 
   /** Carry out a booking's pending refunds and fees. */
@@ -73,10 +118,11 @@ export class MoneyService {
   /** Crash recovery: a movement whose call was cut off is re-sent with the same idempotency key, so Stripe answers
    * with the original outcome instead of moving money twice. */
   async sweepPending(now = Date.now()) {
-    const stale = await this.movements.stalePending(new Date(now - staleAfterMs).toISOString());
-    if (!stale.length) return;
+    const before = new Date(now - staleAfterMs).toISOString();
+    const [stale, voids] = await Promise.all([this.movements.stalePending(before), this.movements.staleVoids(before)]);
+    if (!stale.length && !voids.length) return;
     const live = await this.live();
-    for (const movement of stale) await this.execute(movement, live);
+    await Promise.all([(async () => { for (const movement of stale) await this.execute(movement, live); })(), voidAtStripe(this.movements, voids, live)]);
   }
 
   async refund(bookingId: string, operatorId: string, input: { amountCents: number; reason: string; idempotencyKey: string }) {
@@ -213,7 +259,7 @@ export class MoneyService {
       case "payment_intent.succeeded":
         if (movement.status === "succeeded") return { kind: "processed" as const };
         if (amount !== movement.amountCents || object.currency !== "usd" || !paymentIntent) return { kind: "rejected" as const };
-        await this.movements.succeed(movement.id, paymentIntent, await this.receipt(movement, paymentIntent));
+        await this.settlePayment(movement, paymentIntent);
         return { kind: "processed" as const, settled: movement.id };
       case "checkout.session.expired":
       case "checkout.session.async_payment_failed":

@@ -120,6 +120,16 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
     await save(db, invoice.id, "invoices", open);
     return Response.json(open);
   }
+  // Stripe voids only an open invoice; a paid one stays paid.
+  const voiding = /^\/v1\/invoices\/([^/]+)\/void$/.exec(url.pathname);
+  if (voiding && method === "POST") {
+    const invoice = await object(db, voiding[1]);
+    if (!invoice) return stripeError(404, "resource_missing");
+    if (invoice.payload.status !== "open") return stripeError(400, "invoice_not_open");
+    const voided = { ...invoice.payload, status: "void", amount_due: 0 };
+    await save(db, invoice.id, "invoices", voided);
+    return Response.json(voided);
+  }
   const detach = /^\/v1\/payment_methods\/([^/]+)\/detach$/.exec(url.pathname);
   if (detach && method === "POST") {
     const card = await object(db, detach[1]);

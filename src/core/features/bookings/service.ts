@@ -25,13 +25,15 @@ import { validateInvitee } from "./types";
 import { bookingIcs, initialBookingIcs } from "./calendar-file";
 import { reconcileDeletionProbe, type DeletionReconciliationDependencies } from "./deletion-reconciliation";
 import { bookingCancellationMail, bookingChangeHtml, bookingConfirmationMail, formatTimeRange } from "../delivery/mail";
-import { type BillingAddress, type PaymentsService, type Quote } from "../payments";
+import { type BillingAddress, type CancellationPlan, type HostCancellation, type PaymentsService, type Quote } from "../payments";
 import { balanceTaxCents, cardConsentVersion, dueNowTaxCents } from "../../shared/payment-terms";
 import { beginPaidConfirmation, paidReplay, type PaymentStep } from "./paid-confirmation";
 import { cancellationNotes, paymentSummary, selectionPayment, type PaymentMailFacts } from "./money-presentation";
 
 const nonceLifetimeMs = 30 * 60 * 1000;
 const manageTokenLifetimeMs = 90 * 24 * 60 * 60 * 1000;
+/** Money statements of a cancellation commit only with the cancellation that won at `now`. */
+const cancelledAt = (bookingId: string, now: string) => ({ sql: "EXISTS (SELECT 1 FROM bookings WHERE id = ? AND state = 'cancelled' AND cancelled_at = ?)", params: [bookingId, now] });
 
 export type BookingSelectionResult =
   | { kind: "issued"; nonce: BookingNonce }
@@ -326,20 +328,30 @@ export class BookingsService {
     if (!booking || !profile || !request || request.archiveHistorical || !["open","expired"].includes(request.state)) return;
     if (request.expiresAt <= stamp) {
       await this.repository.requests.expire(booking,stamp);
-      if (request.releaseTime) await this.repository.cancel(booking,{type:"system"},"no new time picked",stamp,
-        await this.changeEmails(profile,booking,"booking_cancelled","no new time picked",{actor:"the request expiry"}));
+      if (request.releaseTime) await this.cancelForHost(booking, profile, { by: { cause: "request_expired" }, actor: { type: "system" }, reason: "no new time picked", mailActor: "the request expiry", now: stamp });
     } else {
       const manageUrl = await this.repository.storedManageUrl(id);
       if (manageUrl) await this.repository.requests.remind(booking,requestEmail(booking,profile.name,manageUrl,request.message,true),stamp);
     }
   }
 
-  async cancelForOperator(id: string, operatorId: string, reason?: string) {
+  /** An operator cancels from the booking record; everything paid is refunded unless they chose less, with a reason. */
+  async cancelForOperator(id: string, operatorId: string, reason?: string, refund?: { amountCents: number; reason: string }) {
     const booking = await this.repository.getById(id);
     const profile = await this.profiles.getProfile();
-    if (!booking || !profile) return undefined;
-    const emails = await this.changeEmails(profile, booking, "booking_cancelled", reason, { actor: "an operator", money: await this.cancellationMoney(booking, undefined, "host") });
-    return this.repository.cancel(booking, { type: "operator", id: operatorId }, reason?.trim() || undefined, nowIso(), booking.imported ? emails.filter(email => email.recipientRole === "invitee") : emails);
+    if (!booking || !profile) return { kind: "not_found" as const };
+    return this.cancelForHost(booking, profile, { by: { cause: "operator", operatorId, ...(refund ? { refund } : {}) }, actor: { type: "operator", id: operatorId }, reason: reason?.trim() || undefined, mailActor: "an operator", now: nowIso(), inviteeMailOnly: Boolean(booking.imported) });
+  }
+
+  /** PAY-003 (D4): every host-side cancellation refunds what was captured (in full unless an operator chose less),
+   * charges no fee and voids any open balance or invoice, all committed with the cancellation that wins. */
+  private async cancelForHost(booking: BookingRecord, profile: ProfileRecord, input: { by: HostCancellation; actor: Parameters<BookingsRepository["cancel"]>[1]; reason?: string; mailActor: string; now: string; inviteeMailOnly?: boolean }) {
+    const plan = booking.state === "cancelled" ? undefined : await this.payments?.money.hostCancellationPlan(booking.id, input.now, input.by, cancelledAt(booking.id, input.now));
+    if (plan && "kind" in plan) return plan;
+    const emails = await this.changeEmails(profile, booking, "booking_cancelled", input.reason, { actor: input.mailActor, money: await this.cancellationMoney(booking, plan) });
+    const cancelled = await this.repository.cancel(booking, input.actor, input.reason, input.now, input.inviteeMailOnly ? emails.filter(email => email.recipientRole === "invitee") : emails, plan?.statements);
+    if (cancelled?.state === "cancelled" && plan?.statements.length) await this.payments?.money.afterCancellation(booking.id);
+    return cancelled ? { kind: "cancelled" as const, booking: cancelled } : { kind: "not_found" as const };
   }
 
   /** Release an imported booking the source already cancelled: frees its time and buffers and records
@@ -395,8 +407,7 @@ export class BookingsService {
     await reconcileCalendarChange({
       repository: this.repository,
       probes: this.deletions.probes,
-      profiles: this.profiles,
-      cancellationEmails: (profile, booking) => this.changeEmails(profile, booking, "booking_cancelled", "deleted_in_google_calendar", { actor: "the connected calendar" }),
+      cancelDeleted: (booking, providerEventId) => this.cancelDeletedInCalendar(booking, providerEventId),
       reconcileUntimedDeletion: async (booking, providerEventId) => {
         await this.deletions.probes.stage(booking.id, providerEventId, booking.occurrence.id, nowIso());
         await this.reconcileDeletionProbe(booking.id, providerEventId);
@@ -405,12 +416,13 @@ export class BookingsService {
   }
 
   async reconcileDeletionProbe(bookingId: string, providerEventId: string) {
-    await reconcileDeletionProbe({ ...this.deletions, repository: this.repository, reconcilePresent: (event) => this.reconcileCalendarChange(event), cancel: async (booking, eventId) => {
-      const profile = await this.profiles.getProfile();
-      if (!profile) throw new Error("Host profile is required to notify a managed-event deletion");
-      await this.repository.cancel(booking, { type: "calendar_provider", id: eventId }, "deleted_in_google_calendar", nowIso(),
-        await this.changeEmails(profile, booking, "booking_cancelled", "deleted_in_google_calendar", { actor: "the connected calendar" }));
-    } }, bookingId, providerEventId);
+    await reconcileDeletionProbe({ ...this.deletions, repository: this.repository, reconcilePresent: (event) => this.reconcileCalendarChange(event), cancel: (booking, eventId) => this.cancelDeletedInCalendar(booking, eventId) }, bookingId, providerEventId);
+  }
+
+  private async cancelDeletedInCalendar(booking: BookingRecord, providerEventId: string) {
+    const profile = await this.profiles.getProfile();
+    if (!profile) throw new Error("Host profile is required to notify a managed-event deletion");
+    await this.cancelForHost(booking, profile, { by: { cause: "calendar" }, actor: { type: "calendar_provider", id: providerEventId }, reason: "deleted_in_google_calendar", mailActor: "the connected calendar", now: nowIso() });
   }
 
   async calendarDeletionStatus(bookingId: string) {
@@ -455,10 +467,13 @@ export class BookingsService {
   }
 
   /** The money a cancellation mail states: the first payment and what the cancellation does about it. */
-  private async cancellationMoney(booking: BookingRecord, plan: Awaited<ReturnType<PaymentsService["money"]["cancellationPlan"]>>, actor: "invitee" | "host") {
+  private async cancellationMoney(booking: BookingRecord, plan: CancellationPlan | undefined) {
     const money = this.payments ? await this.payments.money.bookingMoney(booking.id, booking.payment) : undefined;
-    const notes = cancellationNotes(money, plan, actor);
+    const notes = cancellationNotes(money, plan);
     if (!money || !notes) return undefined;
+    // An invoiced booking (PAY-005) has no first payment: its line is what the invoice collected, by invoice number.
+    const invoice = money.movements.find(movement => movement.kind === "invoice");
+    if (!money.payment && !money.consent && invoice) return { amount: formatUsdAmount(money.ledger.paidCents), reference: invoice.invoiceNumber ?? invoice.invoiceId ?? "", kind: "payment" as const, notes };
     return { amount: formatUsdAmount(money.payment?.amountCents ?? 0), reference: money.payment?.checkoutSessionId ?? "", kind: money.payment?.kind ?? "setup" as const, notes };
   }
 
@@ -489,11 +504,11 @@ export class BookingsService {
     // PAY-003: the policy's refund or fee is decided at the cancellation time and its pending movements commit with
     // the cancellation that wins; a repeated cancel finds the booking cancelled and moves no more money.
     const now = nowIso();
-    const plan = result.booking.state === "cancelled" ? undefined : await this.payments?.money.cancellationPlan(result.booking.id, result.booking.occurrence.startAt, now, "invitee", { sql: "EXISTS (SELECT 1 FROM bookings WHERE id = ? AND state = 'cancelled' AND cancelled_at = ?)", params: [result.booking.id, now] });
-    const emails = await this.changeEmails(profile, result.booking, "booking_cancelled", reason, { actor: "the invitee", money: await this.cancellationMoney(result.booking, plan, "invitee") });
+    const plan = result.booking.state === "cancelled" ? undefined : await this.payments?.money.inviteeCancellationPlan(result.booking.id, result.booking.occurrence.startAt, now, cancelledAt(result.booking.id, now));
+    const emails = await this.changeEmails(profile, result.booking, "booking_cancelled", reason, { actor: "the invitee", money: await this.cancellationMoney(result.booking, plan) });
     const booking = await this.repository.cancel(result.booking, { type: "invitee" }, reason?.trim() || undefined, now, emails, plan?.statements);
     if (booking && booking.state !== "cancelled") return { kind: "policy_blocked" as const, reason: booking.changePolicy?.cancellationReason ?? "cancellation_cutoff" };
-    if (booking && plan?.statements.length) await this.payments?.money.settle(booking.id);
+    if (booking && plan?.statements.length) await this.payments?.money.afterCancellation(booking.id);
     return booking ? { kind: "cancelled" as const, booking: await this.toConfirmation(booking, profile, token) } : { kind: "not_found" as const };
   }
 

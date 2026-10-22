@@ -61,10 +61,9 @@ export function freeWindowEndsAt(snapshot: Pick<TermsSnapshot, "freeWindowHours"
   return snapshot.freeWindowHours === null ? null : new Date(Date.parse(startAt) - snapshot.freeWindowHours * 3_600_000).toISOString();
 }
 
-/** What an invitee's cancellation at `now` does under the snapshot. A host's cancellation does neither (D4). */
-export type CancellationOutcome = { kind: "refund" } | { kind: "late_fee"; feeCents: number } | { kind: "none"; reason: "no_policy" | "late_without_fee" | "host_cancelled" };
-export function cancellationOutcome(snapshot: Pick<TermsSnapshot, "freeWindowHours" | "lateCancelFeeCents">, startAt: string, now: string, actor: "invitee" | "host"): CancellationOutcome {
-  if (actor === "host") return { kind: "none", reason: "host_cancelled" };
+/** What an invitee's cancellation at `now` does under the snapshot. A host-side cancellation refunds in full instead (D4). */
+export type CancellationOutcome = { kind: "refund" } | { kind: "late_fee"; feeCents: number } | { kind: "none"; reason: "no_policy" | "late_without_fee" };
+export function cancellationOutcome(snapshot: Pick<TermsSnapshot, "freeWindowHours" | "lateCancelFeeCents">, startAt: string, now: string): CancellationOutcome {
   const closes = freeWindowEndsAt(snapshot, startAt);
   if (closes === null) return { kind: "none", reason: "no_policy" };
   if (now <= closes) return { kind: "refund" };
@@ -83,7 +82,7 @@ export function cancellationPolicyLines(snapshot: Pick<TermsSnapshot, "priceCent
     lines.push(snapshot.lateCancelFeeCents > 0 ? `After that, a late-cancellation fee of ${formatUsd(snapshot.lateCancelFeeCents)} is charged to your saved card.${kept}` : `After that, cancelling costs nothing more.${kept}`);
   }
   if (snapshot.noShowFeeCents > 0) lines.push(`If you do not attend, the host may charge a no-show fee of ${formatUsd(snapshot.noShowFeeCents)} to your saved card.`);
-  lines.push("If the host cancels, Dial issues no automatic refund or fee; the host refunds from the booking record.");
+  if (snapshot.priceCents > 0) lines.push("If the host cancels, Dial refunds everything you paid, automatically, and charges no fee.");
   return lines;
 }
 

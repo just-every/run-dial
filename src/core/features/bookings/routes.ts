@@ -57,6 +57,8 @@ const operatorCreateSchema = z.object({
   overrideNoticeAndHorizon: z.boolean().default(false),
 });
 const cancellationSchema = z.object({ reason: z.string().trim().max(500).optional() });
+/** PAY-003 (D4): an operator's cancellation refunds everything paid unless they choose less, or nothing, with a reason. */
+const operatorCancellationSchema = cancellationSchema.extend({ refund: z.object({ amountCents: z.number().int().min(0).max(99_999_999), reason: z.string().trim().min(1).max(500) }).strict().optional() });
 const deletionRetrySchema = z.object({ providerEventId: z.string().min(1).max(1024) }).strict();
 const rescheduleSchema = z.object({ durationMinutes: z.number().int().min(5).max(480).optional(), startAt: instantSchema, inviteeTimezone: ianaTimeZoneSchema, reason: z.string().trim().max(500).optional(), overridePublishedAvailability: z.boolean().default(false) });
 const attendanceSchema = z.object({ status: z.enum(["attended", "no_show"]), note: z.string().trim().max(4_000) });
@@ -113,9 +115,11 @@ export const bookingOperatorRoutes = new Hono<AppEnvironment>()
     await services.moveIn.released(id);
     return context.json(await services.bookings.getForOperator(id));
   })
-  .post("/api/app/bookings/:id/cancel", validate("param", bookingIdSchema), validate("json", cancellationSchema), async (context) => {
-    const booking = await context.get("services").bookings.cancelForOperator(context.req.valid("param").id, context.get("session").id, context.req.valid("json").reason);
-    return booking ? context.json(booking) : apiError(context, 404, "booking_not_found", "The booking does not exist.");
+  .post("/api/app/bookings/:id/cancel", validate("param", bookingIdSchema), validate("json", operatorCancellationSchema), async (context) => {
+    const { reason, refund } = context.req.valid("json");
+    const result = await context.get("services").bookings.cancelForOperator(context.req.valid("param").id, context.get("session").id, reason, refund);
+    if (result.kind === "exceeds_refundable") return apiError(context, 400, "refund_exceeds_paid", `At most ${(result.refundableCents / 100).toFixed(2)} USD can be refunded.`, ["refund"]);
+    return result.kind === "cancelled" ? context.json(result.booking) : apiError(context, 404, "booking_not_found", "The booking does not exist.");
   })
   .get("/api/app/bookings/:id/calendar-deletion/status", validate("param", bookingIdSchema), async (context) => {
     const probes = await context.get("services").bookings.calendarDeletionStatus(context.req.valid("param").id);

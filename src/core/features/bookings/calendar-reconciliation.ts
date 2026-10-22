@@ -1,8 +1,6 @@
-import type { HostProfileService, ProfileRecord } from "../host-profile";
-import { nowIso } from "../../shared/ids";
 import { BookingsRepository } from "./repository";
 import type { CalendarDeletionProbesRepository } from "./deletion-probes";
-import type { BookingEmail, BookingRecord } from "./types";
+import type { BookingRecord } from "./types";
 
 export type CalendarReconciliationChange =
   | { kind: "deleted"; providerEventId: string; updatedAt?: string; bookingId?: string; occurrenceId?: string }
@@ -11,8 +9,8 @@ export type CalendarReconciliationChange =
 type Dependencies = {
   repository: BookingsRepository;
   probes: CalendarDeletionProbesRepository;
-  profiles: HostProfileService;
-  cancellationEmails(profile: ProfileRecord, booking: BookingRecord): Promise<BookingEmail[]>;
+  /** Cancels the booking as the host's calendar deletion, with its mail and money (PAY-003 D4). */
+  cancelDeleted(booking: BookingRecord, providerEventId: string): Promise<void>;
   reconcileUntimedDeletion(booking: BookingRecord, providerEventId: string): Promise<void>;
 };
 
@@ -51,15 +49,7 @@ export async function reconcileCalendarChange(dependencies: Dependencies, change
       await dependencies.reconcileUntimedDeletion(booking, change.providerEventId);
       return;
     }
-    const profile = await dependencies.profiles.getProfile();
-    if (!profile) throw new Error("Host profile is required to notify a managed-event deletion");
-    await dependencies.repository.cancel(
-      booking,
-      { type: "calendar_provider", id: change.providerEventId },
-      "deleted_in_google_calendar",
-      nowIso(),
-      await dependencies.cancellationEmails(profile, booking),
-    );
+    await dependencies.cancelDeleted(booking, change.providerEventId);
     return;
   }
 

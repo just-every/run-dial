@@ -65,7 +65,8 @@ export class InvoiceService {
     }
   }
 
-  /** Stripe's signed `invoice.paid` settles the invoice once and queues its receipt; nothing else marks it paid. */
+  /** Stripe's signed `invoice.paid` settles the invoice once and queues its receipt; nothing else marks it paid. For
+   * a cancelled booking (paid before the void reached Stripe) the payment is recorded and refunded in full, once (D4). */
   async receiveInvoiceEvent(event: { type: string; account?: string; data: { object: Record<string, unknown> } }, movement: Movement) {
     if (event.account !== movement.accountId) return { kind: "unauthorized" as const };
     if (event.type !== "invoice.paid") return { kind: "ignored" as const };
@@ -73,7 +74,7 @@ export class InvoiceService {
     if (movement.status === "succeeded") return { kind: "processed" as const };
     if (object.id !== movement.invoiceId || object.status !== "paid" || object.amount_paid !== movement.amountCents || object.currency !== "usd") return { kind: "rejected" as const };
     const ref = typeof object.payment_intent === "string" ? object.payment_intent : object.id as string;
-    await this.movements.succeed(movement.id, ref, await this.service.receipt(movement, ref));
+    await this.service.settlePayment(movement, ref);
     return { kind: "processed" as const };
   }
 }

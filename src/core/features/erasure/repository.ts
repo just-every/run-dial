@@ -30,7 +30,7 @@ export class ErasureRepository {
     const address = await recordAddressStatements(this.db, fence, "bookings", id, this.secret);
     const savedCard = this.savedCards ? await this.savedCards(id) : "not_saved";
     // The helper re-reads its planned rows first; address cleanup that overlaps them runs after.
-    const statements = [erasureAuthority(session), ...bookingErasureCapture(id, session.id), ...savedCardOutcome(id, email, session.id, savedCard), ...plan.statements, ...address, ...bookingErasureFinish(id),
+    const statements = [erasureAuthority(session), ...bookingErasureCapture(id, session.id), ...savedCardOutcome(id, email, session.id, savedCard), stripeCustomerCount(id, email), ...plan.statements, ...address, ...bookingErasureFinish(id),
       ...await deleteRows(this.db, fence, "person_erasure_locks", "email=? AND receipt_id IS NULL", [email]), erasureAuthority(session)];
     if (commit) await commit(statements);
     else await this.db.batch(statements.map(statement => this.db.prepare(statement.sql).bind(...statement.params)));
@@ -67,6 +67,16 @@ export class ErasureRepository {
   async cleanupStatus(id: string) {
     return this.db.prepare("SELECT booking_id AS id, created_at AS createdAt, completed_at AS completedAt, last_error_code AS lastErrorCode FROM erased_calendar_targets WHERE booking_id = ?").bind(id).first<{ id: string; createdAt: string; completedAt: string | null; lastErrorCode: string | null }>();
   }
+}
+
+/** D7: inside a person erasure, the receipt counts the Stripe customers Dial created or used for this booking's payer
+ * (the customer Checkout created for a saved card, and the one each invoice created), read before the rows go. Dial
+ * does not ask Stripe to delete them, so they stay in the host's Stripe account. */
+function stripeCustomerCount(bookingId: string, email: string): ErasureStatement {
+  return { sql: `UPDATE person_erasure_receipts SET stripe_customers_retained = COALESCE(stripe_customers_retained, 0)
+      + (SELECT count(*) FROM booking_card_consents WHERE booking_id = ? AND stripe_customer_id IS NOT NULL)
+      + (SELECT count(*) FROM payment_movements WHERE booking_id = ? AND kind = 'invoice')
+    WHERE id = (SELECT receipt_id FROM person_erasure_locks WHERE email = ?) AND EXISTS (SELECT 1 FROM bookings WHERE id = ?)`, params: [bookingId, bookingId, email, bookingId] };
 }
 
 /** The detach outcome joins the anonymized audit and, inside a person erasure, its receipt. When Stripe could not

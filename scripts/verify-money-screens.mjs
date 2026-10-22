@@ -107,5 +107,39 @@ try {
   for (const width of widths) await capture(width, "booking-record-invoice-form", invoiceRecord, async page => { const section = await invoiceSection(page); await section.getByRole("button", { name: "Issue invoice" }).click(); await section.getByRole("form", { name: "Issue invoice" }).getByLabel("ZIP code").waitFor(); await section.scrollIntoViewIfNeeded(); });
   await json(await owner.request.post(`${origin}/api/app/bookings/${invoiced.id}/invoice`, { headers, data: { billingAddress: newYork } }));
   for (const width of widths) await capture(width, "booking-record-invoiced", invoiceRecord, async page => { const section = await invoiceSection(page); await section.getByRole("link", { name: "Stripe-hosted invoice" }).waitFor(); await section.scrollIntoViewIfNeeded(); });
+  // PAY-003 (D4): the host cancels a paid booking from its record; everything paid is refunded unless the operator
+  // refunds less with a reason, which the invitee's cancellation email and manage page then state.
+  const cancelForm = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); const form = page.getByRole("form", { name: "Cancel booking" }); await form.getByText("Refund everything paid, $90.00 USD.", { exact: false }).waitFor(); return form; };
+  for (const width of widths) {
+    await capture(width, "booking-record-cancel-form", record, async page => { const form = await cancelForm(page); await form.scrollIntoViewIfNeeded(); return form; });
+    await capture(width, "booking-record-cancel-less-refused", record, async page => {
+      const form = await cancelForm(page); await form.getByRole("radio", { name: "Refund less, or nothing, with a reason" }).check();
+      await form.getByLabel("Amount to refund (USD)").fill("40.00"); await form.getByRole("button", { name: "Cancel booking" }).click();
+      await form.getByRole("alert").getByText("Give the reason for refunding less.", { exact: false }).waitFor(); await form.scrollIntoViewIfNeeded(); return form;
+    });
+  }
+  await json(await owner.request.post(`${origin}/api/app/bookings/${booking.id}/cancel`, { headers, data: { reason: "Host travel", refund: { amountCents: 4000, reason: "Half the session plan was delivered" } } }));
+  await json(await owner.request.post(origin + "/__fixtures/deliver", { headers, data: {} }));
+  for (const width of widths) {
+    await capture(width, "booking-record-host-cancelled", record, async page => { const section = await payments(page); await section.getByText("Half the session plan was delivered").waitFor(); await section.scrollIntoViewIfNeeded(); });
+    await capture(width, "manage-host-cancelled", `/manage/${token}`, async page => { await page.getByText("This booking has been cancelled.").waitFor(); await page.getByText("$50.00 USD", { exact: false }).first().waitFor(); }, { session: false });
+  }
+  // The invitee's cancellation email as delivered, rendered from its own HTML.
+  const note = "The host cancelled and refunds $40.00 USD of the $90.00 USD paid. Reason: Half the session plan was delivered. No fee is charged.";
+  const delivered = (await json(await owner.request.get(origin + "/__fixtures/status"))).fixture_mail.map(row => JSON.parse(row.message_json)).filter(message => message.to === "avery.deposit@example.test" && /^Booking cancelled:/u.test(message.subject ?? ""));
+  assert.equal(delivered.length, 1, "one cancellation email reaches the invitee");
+  assert.ok(delivered[0].text.includes(note), "the email states the amount refunded and the reason");
+  for (const width of widths) {
+    const context = await browser.newContext({ viewport: { width, height: width === 1440 ? 1024 : 844 } });
+    try {
+      const page = await context.newPage();
+      await page.setContent(delivered[0].html ?? `<pre style="white-space:pre-wrap">${delivered[0].text}</pre>`);
+      await page.getByText("Half the session plan was delivered", { exact: false }).first().waitFor();
+      const overflow = await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.document.documentElement.clientWidth + 1);
+      assert.ok(overflow, `cancellation email at ${width} has no horizontal overflow`);
+      await page.screenshot({ path: `${folder}/invitee-cancellation-email-${width}.png`, fullPage: true });
+      shots.push(`invitee-cancellation-email-${width}.png`);
+    } finally { await context.close(); }
+  }
   console.log(`PAY-003 and PAY-005 browser proof: ${shots.length} screenshots (${shots.join(", ")}).`);
 } finally { await owner.close(); await browser.close(); }

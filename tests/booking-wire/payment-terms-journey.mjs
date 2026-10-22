@@ -214,12 +214,111 @@ assert.deepEqual(await drill("money:refunds"), ["Avery Deposit", "Dana Noshow"])
 assert.deepEqual(await drill("money:fees"), ["Blake Late", "Dana Noshow"]);
 checks.push("a $10 partial refund needs a reason, never exceeds what was paid, refunds once on replay, and updates the booking record (fees $30, refunded $10, net $20) and the report's revenue, fees, refunds and net with drill-through to the bookings counted");
 
+// Host-side cancellation (D4): an operator's, the host calendar's and an expired host request's cancellation each refund
+// everything captured, once, charge no fee and void the open balance Checkout or invoice.
+const movementsOf = (snapshot, id) => snapshot.payment_movements.filter(row => row.booking_id === id).map(row => [row.kind, row.status, row.amount_cents, row.actor_type, row.failure_code]).sort();
+const cancelMail = async (id, email) => { await deliver(); return textBody(bookingMail(await state(), id).find(mail => /^Booking cancelled:/.test(mail.subject) && mail.personalizations[0].to[0].email === email)); };
+const invoiceRefusal = async id => (await (await call(`/api/app/bookings/${id}/invoice`, {}, 409)).json()).error.details[0];
+const heldF = await hold("coaching", await slot("coaching", day(14)), "frank@dial.test", "Frank Hostcancel", true);
+const { manage: manageF, booking: bookingF } = await complete(heldF);
+assert.equal(await invoiceRefusal(bookingF.id), "paid_upfront", "an upfront-paid booking cannot be invoiced");
+const balanceF = new URL((await data(`/api/public/manage/${manageF}`)).payment.balanceUrl).pathname.split("/").at(-1);
+const openBalanceF = sessionOf((await data(`/api/public/payments/balance/${balanceF}`, {})).checkoutUrl);
+const chargesBefore = calls(await state(), "/v1/payment_intents").length;
+await call(`/api/app/bookings/${bookingF.id}/cancel`, { reason: "Host is unwell" });
+await call(`/api/app/bookings/${bookingF.id}/cancel`, { reason: "Host is unwell" });
+await webhook(stripeEvent("checkout.session.completed", await data("/__fixtures/payments/pay", { sessionId: heldF.sessionId })));
+snap = await state();
+assert.deepEqual(movementsOf(snap, bookingF.id), [["balance", "failed", 7500, "invitee", "voided"], ["refund", "succeeded", 2500, "operator", null]], "the deposit is refunded in full once and the open balance is voided");
+const refundF = snap.payment_movements.find(row => row.booking_id === bookingF.id && row.kind === "refund");
+assert.ok(refundF.actor_id === operatorId && refundF.reason && refundF.processor_ref.startsWith("re_"), "the refund records the operator, a reason and Stripe's reference");
+assert.equal(calls(snap, "/v1/payment_intents").length, chargesBefore, "no fee is charged");
+assert.equal(calls(snap, `/v1/checkout/sessions/${openBalanceF}/expire`).length, 1, "the open balance Checkout is expired at Stripe");
+assert.equal((await data(`/api/public/payments/balance/${balanceF}`)).state, "cancelled");
+assert.equal((await (await call(`/api/public/payments/balance/${balanceF}`, {}, 410)).json()).error.code, "balance_link_closed", "the balance link opens no new Checkout");
+assert.equal(await invoiceRefusal(bookingF.id), "booking_cancelled", "a cancelled booking cannot be invoiced");
+const mailF = await cancelMail(bookingF.id, "frank@dial.test");
+assert.ok(mailF.includes("refunds everything paid, $25.00 USD") && mailF.includes("No fee is charged") && mailF.includes("The balance is no longer due"), "the cancellation mail states the full refund, no fee and the void");
+// A balance Stripe captured before the expiry reached it is recorded and refunded in full, once.
+const lateBalance = stripeEvent("checkout.session.completed", await data("/__fixtures/payments/pay", { sessionId: openBalanceF }));
+await webhook(lateBalance); await webhook(lateBalance);
+snap = await state();
+assert.deepEqual(movementsOf(snap, bookingF.id), [["balance", "succeeded", 7500, "invitee", null], ["refund", "succeeded", 2500, "operator", null], ["refund", "succeeded", 7500, "policy", null]], "a late balance is recorded and refunded once");
+assert.deepEqual((await data(`/api/public/manage/${manageF}`)).payment.refundedCents, 10000);
+checks.push("an operator cancelling a paid deposit booking refunds the $25 deposit in full once with no fee, expires the open balance Checkout and refuses the balance link and an invoice; a balance Stripe captured before the expiry is recorded and refunded once; the mail states the refund, no fee and the void");
+
+// The operator may refund less, or nothing, only with a reason, which the invitee's mail states.
+const heldG = await hold("coaching", await slot("coaching", day(15)), "gina@dial.test", "Gina Partial", true);
+const { booking: bookingG } = await complete(heldG);
+assert.equal((await (await call(`/api/app/bookings/${bookingG.id}/cancel`, { refund: { amountCents: 1000, reason: "" } }, 400)).json()).error.code, "invalid_request", "a smaller refund needs a reason");
+assert.equal((await (await call(`/api/app/bookings/${bookingG.id}/cancel`, { refund: { amountCents: 2501, reason: "Too much" } }, 400)).json()).error.code, "refund_exceeds_paid");
+assert.equal((await data(`/api/app/bookings/${bookingG.id}`)).state, "confirmed", "a refused cancellation changes nothing");
+await call(`/api/app/bookings/${bookingG.id}/cancel`, { reason: "Calendar change", refund: { amountCents: 1000, reason: "Preparation was already done" } });
+await call(`/api/app/bookings/${bookingG.id}/cancel`, { reason: "Calendar change", refund: { amountCents: 1000, reason: "Preparation was already done" } });
+snap = await state();
+assert.deepEqual(movementsOf(snap, bookingG.id), [["refund", "succeeded", 1000, "operator", null]]);
+assert.equal(snap.payment_movements.find(row => row.booking_id === bookingG.id).reason, "Preparation was already done");
+const mailG = await cancelMail(bookingG.id, "gina@dial.test");
+assert.ok(mailG.includes("refunds $10.00 USD of the $25.00 USD paid") && mailG.includes("Reason: Preparation was already done"), "the mail states the amount refunded and the reason");
+const heldH = await hold("coaching", await slot("coaching", day(15)), "hana@dial.test", "Hana Norefund", true);
+const { booking: bookingH } = await complete(heldH);
+const refundsBeforeH = calls(await state(), "/v1/refunds").length;
+await call(`/api/app/bookings/${bookingH.id}/cancel`, { refund: { amountCents: 0, reason: "Invitee asked to keep it as credit" } });
+snap = await state();
+assert.deepEqual([movementsOf(snap, bookingH.id), calls(snap, "/v1/refunds").length], [[], refundsBeforeH], "no refund reaches Stripe");
+assert.ok((await cancelMail(bookingH.id, "hana@dial.test")).includes("refunds nothing of the $25.00 USD paid. Reason: Invitee asked to keep it as credit"));
+checks.push("an operator refunding less ($10 of $25) or nothing must give a reason, cannot exceed what was paid, refunds once on a repeated cancel, and the invitee's mail states the amount and the reason");
+
+// The host's calendar deletion and an expired host reschedule request refund in full, once, by Dial's policy.
+const heldI = await hold("coaching", await slot("coaching", day(16)), "iris@dial.test", "Iris Calendar", true);
+const { booking: bookingI } = await complete(heldI);
+await deliver();
+const eventI = (await state()).bookings.find(row => row.id === bookingI.id).calendar_provider_event_id;
+await data("/wire/delete", { id: eventI }); await data("/wire/delete", { id: eventI });
+snap = await state();
+assert.equal(snap.bookings.find(row => row.id === bookingI.id).state, "cancelled");
+assert.deepEqual(movementsOf(snap, bookingI.id), [["refund", "succeeded", 2500, "policy", null]], "a calendar deletion refunds the deposit once");
+assert.ok((await cancelMail(bookingI.id, "iris@dial.test")).includes("refunds everything paid, $25.00 USD"));
+const heldJ = await hold("coaching", await slot("coaching", day(17)), "jules@dial.test", "Jules Expiry", true);
+const { booking: bookingJ } = await complete(heldJ);
+await deliver();
+const requestJ = await data(`/api/app/bookings/${bookingJ.id}/reschedule-request`, { message: "Please pick another time.", releaseTime: true, expiresInDays: 1, reminderHours: null });
+const expiryJ = new Date(Date.parse(requestJ.rescheduleRequest.expiresAt) + 1000).toISOString();
+await call("/__fixtures/request-time", { id: bookingJ.id, now: expiryJ }, 204); await call("/__fixtures/request-time", { id: bookingJ.id, now: expiryJ }, 204);
+snap = await state();
+assert.equal(snap.bookings.find(row => row.id === bookingJ.id).state, "cancelled");
+assert.deepEqual(movementsOf(snap, bookingJ.id), [["refund", "succeeded", 2500, "policy", null]], "an expired host request refunds the deposit once");
+checks.push("a booking cancelled by the host's Google Calendar deletion, and one cancelled by an expired host reschedule request, each refund the $25 deposit in full once with no fee, and replays refund nothing more");
+
+// Cancelling voids an open invoice at Stripe; an invoice Stripe marked paid before the void is recorded and refunded once.
+const invoiced = async (name, email, offset) => {
+  const booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(offset)), inviteeTimezone: "UTC", name, email, answers: {} }, 201);
+  return { booking, invoice: (await data(`/api/app/bookings/${booking.id}/invoice`, {})).invoice };
+};
+const voided = await invoiced("Kim Invoice", "kim@dial.test", 18);
+await call(`/api/app/bookings/${voided.booking.id}/cancel`, {});
+snap = await state();
+assert.equal(JSON.parse(snap.wire_stripe_objects.find(row => row.id === voided.invoice.id).payload).status, "void", "the open invoice is voided at Stripe");
+assert.deepEqual(movementsOf(snap, voided.booking.id), [["invoice", "failed", 10000, "operator", "voided"]]);
+await call("/__fixtures/payments/pay-invoice", { invoiceId: voided.invoice.id }, 404);
+assert.ok((await cancelMail(voided.booking.id, "kim@dial.test")).includes("The open invoice is void and can no longer be paid"));
+const raced = await invoiced("Lou Invoice", "lou@dial.test", 19);
+const racedPaid = await data("/__fixtures/payments/pay-invoice", { invoiceId: raced.invoice.id });
+await call(`/api/app/bookings/${raced.booking.id}/cancel`, {});
+const racedEvent = stripeEvent("invoice.paid", racedPaid);
+await webhook(racedEvent); await webhook(racedEvent);
+snap = await state();
+assert.deepEqual(movementsOf(snap, raced.booking.id), [["invoice", "succeeded", 10000, "operator", null], ["refund", "succeeded", 10000, "policy", null]], "invoice.paid on a cancelled booking is recorded and refunded once, never silently settled");
+assert.equal(calls(snap, "/v1/refunds").filter(row => JSON.parse(row.body).payment_intent === racedPaid.payment_intent).length, 1);
+checks.push("cancelling an invoiced booking voids its open Stripe invoice so it can no longer be paid; an invoice paid at Stripe before the void reached it is recorded on invoice.paid and refunded in full once, a replayed event refunding nothing more");
+
 // Erasing a payer asks Stripe to detach the saved card, removes references and consent, and keeps amounts in the anonymized audit.
 const preview = await data("/api/app/privacy/preview", { email: "avery@dial.test" });
 const receipt = await data("/api/app/privacy/erase", { email: "avery@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
 snap = await state();
 assert.equal(calls(snap, `/v1/payment_methods/${consentA.stripe_payment_method_id}/detach`).length, 1, "Stripe is asked to detach the saved card");
-assert.equal(receipt.savedCardsDetached, 1);
+assert.deepEqual([receipt.savedCardsDetached, receipt.savedCardFailures, receipt.stripeCustomersRetained], [1, 0, 1], "the receipt counts the detached card and the Stripe customer left in the host's account");
+assert.equal(receipt.stripeCustomersNotice, "These Stripe customers remain in the host's Stripe account with the payer's email, name and any billing address; remove them in Stripe.");
 const rows = JSON.stringify(await data("/__fixtures/payments/all-rows"));
 for (const detail of ["avery@dial.test", "Avery Deposit", consentA.stripe_payment_method_id, consentA.stripe_customer_id]) assert.ok(!rows.includes(detail), `erased payer's ${detail.startsWith("pm_") ? "card reference" : detail.startsWith("cus_") ? "customer reference" : "detail"} is gone from every table`);
 const audit = snap.anonymized_audit.filter(row => row.entity_kind === "payment").map(row => [row.action, row.amount_cents]).sort();

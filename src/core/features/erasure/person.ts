@@ -11,6 +11,8 @@ import { addressRemainders, deleteRows } from "./address";
 import { hashToken, constantEqual } from "../../../../modules/operator-auth/crypto.mjs";
 
 export type PersonConfirmation = { email: string; confirmation: string; expiresAt: number };
+/** D7: what the receipt tells the host about the payer's Stripe customers Dial did not ask Stripe to delete. */
+const stripeCustomersNotice = "These Stripe customers remain in the host's Stripe account with the payer's email, name and any billing address; remove them in Stripe.";
 type EraseEntity = (kind: "bookings" | "availability-requests", id: string) => Promise<void>;
 
 export class PersonErasure {
@@ -49,7 +51,7 @@ export class PersonErasure {
         AND (SELECT json_group_array(id) FROM (SELECT id FROM availability_requests WHERE ${emailFoldSql("invitee_email") }=? ORDER BY id))=?
         AND ${operatorOverlapSql()}=?
         THEN 1 ELSE abs(-9223372036854775808) END`).bind(email,JSON.stringify(records.bookings),email,JSON.stringify(records.requests),email,email,operatorIdentityRetained?1:0),
-      this.db.prepare("INSERT INTO person_erasure_receipts(id,bookings,requests,requested_at,operator_identity_retained) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=? AND receipt_id IS NULL)").bind(proposedId,records.bookings.length,records.requests.length,requestedAt,operatorIdentityRetained?1:0,email),
+      this.db.prepare("INSERT INTO person_erasure_receipts(id,bookings,requests,requested_at,operator_identity_retained,stripe_customers_retained) SELECT ?,?,?,?,?,0 WHERE EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=? AND receipt_id IS NULL)").bind(proposedId,records.bookings.length,records.requests.length,requestedAt,operatorIdentityRetained?1:0,email),
       this.db.prepare("UPDATE person_erasure_locks SET receipt_id=?,addresses_json=? WHERE email=? AND receipt_id IS NULL").bind(proposedId,JSON.stringify(records.addresses),email),
       this.db.prepare(authority.sql).bind(...authority.params),
     ]);
@@ -78,9 +80,10 @@ export class PersonErasure {
     return this.receipt(id);
   }
   async receipt(id: string) {
-    const row=await this.db.prepare("SELECT id,bookings,requests,requested_at AS requestedAt,completed_at AS completedAt,operator_identity_retained AS operatorIdentityRetained,COALESCE(saved_cards_detached,0) AS savedCardsDetached,COALESCE(saved_card_failures,0) AS savedCardFailures FROM person_erasure_receipts WHERE id=?").bind(id).first<{id:string;bookings:number;requests:number;requestedAt:string;completedAt:string|null;operatorIdentityRetained:number;savedCardsDetached:number;savedCardFailures:number}>();
+    const row=await this.db.prepare("SELECT id,bookings,requests,requested_at AS requestedAt,completed_at AS completedAt,operator_identity_retained AS operatorIdentityRetained,COALESCE(saved_cards_detached,0) AS savedCardsDetached,COALESCE(saved_card_failures,0) AS savedCardFailures,stripe_customers_retained AS stripeCustomersRetained FROM person_erasure_receipts WHERE id=?").bind(id).first<{id:string;bookings:number;requests:number;requestedAt:string;completedAt:string|null;operatorIdentityRetained:number;savedCardsDetached:number;savedCardFailures:number;stripeCustomersRetained:number|null}>();
     if(!row) return null;
     const targets=(await this.db.prepare("SELECT completed_at,last_error_code FROM erased_calendar_targets WHERE receipt_id=?").bind(id).all<{completed_at:string|null;last_error_code:string|null}>()).results;
-    return {...row,operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
+    // D7: a receipt from before the count existed reads null (not counted), never zero.
+    return {...row,stripeCustomersNotice:row.stripeCustomersRetained?stripeCustomersNotice:null,operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
   }
 }

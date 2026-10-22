@@ -98,6 +98,11 @@ export class StripeApi {
     return this.request<Invoice>(`${apiOrigin}/v1/invoices/${encodeURIComponent(invoiceId)}/finalize`, { auto_advance: "false" }, { account: accountId, idempotencyKey });
   }
 
+  /** D4: a cancelled booking's open invoice can no longer be paid. */
+  voidInvoice(accountId: string, invoiceId: string, idempotencyKey: string) {
+    return this.request<Invoice>(`${apiOrigin}/v1/invoices/${encodeURIComponent(invoiceId)}/void`, {}, { account: accountId, idempotencyKey });
+  }
+
   detachPaymentMethod(accountId: string, paymentMethodId: string) {
     return this.request<{ id: string }>(`${apiOrigin}/v1/payment_methods/${encodeURIComponent(paymentMethodId)}/detach`, {}, { account: accountId });
   }

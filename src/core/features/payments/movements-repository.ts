@@ -66,6 +66,29 @@ export class MovementsRepository {
     return this.db.prepare("UPDATE payment_movements SET status='succeeded', processor_ref=?, checkout_url=NULL, failure_code=NULL, updated_at=? WHERE id=? AND status='pending'").bind(processorRef, nowIso(), id);
   }
 
+  /** D4: cancelling closes the booking's open balance and invoice in the cancellation's own transaction. Each is then
+   * voided at Stripe (`voided`), or Stripe refuses because it already took or closed the payment (`void_refused`). */
+  voidOpenStatement(bookingId: string, now: string, condition: { sql: string; params: unknown[] }) {
+    return this.db.prepare(`UPDATE payment_movements SET status='failed', failure_code='void_pending', checkout_url=NULL, updated_at=? WHERE booking_id=? AND kind IN ('balance', 'invoice') AND status='pending' AND ${condition.sql}`).bind(now, bookingId, ...condition.params);
+  }
+
+  voidsPending(bookingId: string) {
+    return this.db.prepare(`SELECT ${columns} FROM payment_movements WHERE booking_id=? AND status='failed' AND failure_code='void_pending'`).bind(bookingId).all<Movement>().then(result => result.results);
+  }
+
+  staleVoids(before: string) {
+    return this.db.prepare(`SELECT ${columns} FROM payment_movements WHERE status='failed' AND failure_code='void_pending' AND updated_at<=? ORDER BY updated_at LIMIT 50`).bind(before).all<Movement>().then(result => result.results);
+  }
+
+  async markVoid(id: string, code: "voided" | "void_refused") {
+    await this.db.prepare("UPDATE payment_movements SET failure_code=?, updated_at=? WHERE id=? AND status='failed' AND failure_code='void_pending'").bind(code, nowIso(), id).run();
+  }
+
+  /** A payment Stripe captured although its booking was cancelled settles its movement, open or voided. */
+  succeedLateStatement(id: string, processorRef: string) {
+    return this.db.prepare("UPDATE payment_movements SET status='succeeded', processor_ref=?, checkout_url=NULL, failure_code=NULL, updated_at=? WHERE id=? AND (status='pending' OR (status='failed' AND failure_code IN ('void_pending', 'voided', 'void_refused')))").bind(processorRef, nowIso(), id);
+  }
+
   async attachInvoice(id: string, invoice: { id: string; number: string | null; url: string }) {
     await this.db.prepare("UPDATE payment_movements SET invoice_id=?, invoice_number=?, invoice_url=?, updated_at=? WHERE id=? AND status='pending' AND invoice_id IS NULL").bind(invoice.id, invoice.number, invoice.url, nowIso(), id).run();
   }
