@@ -312,6 +312,94 @@ assert.deepEqual(movementsOf(snap, raced.booking.id), [["invoice", "succeeded", 
 assert.equal(calls(snap, "/v1/refunds").filter(row => JSON.parse(row.body).payment_intent === racedPaid.payment_intent).length, 1);
 checks.push("cancelling an invoiced booking voids its open Stripe invoice so it can no longer be paid; an invoice paid at Stripe before the void reached it is recorded on invoice.paid and refunded in full once, a replayed event refunding nothing more");
 
+// sd-dial-c9: exercise the four source-review suspects through the real public/operator doors.
+const probeFailures = [];
+async function probe(name, run) {
+  try { await run(); checks.push(`${name}: passed`); console.log(`PROBE ${name}: PASS`); }
+  catch (error) { probeFailures.push({ name, message: error.message }); console.log(`PROBE ${name}: FAIL ${redact(error.message)}`); }
+}
+await probe("stale fee consent", async () => {
+  const startAt = await slot("coaching", day(20));
+  const selection = await data("/api/public/book/dial-host/coaching/selection", { startAt, inviteeTimezone: "UTC", durationMinutes: 60 }, 201);
+  const shown = (await data(`/api/public/book/dial-host/coaching/selection?${new URLSearchParams({ nonce: selection.nonce, startAt, inviteeTimezone: "UTC" })}`)).payment;
+  assert.equal(shown.consent.lateCancelFeeCents, 4000);
+  await data(`/api/app/event-types/${coaching.id}/payment-terms`, { ...terms, lateCancelFeeCents: 9000 }, 200, "PUT");
+  const response = await call("/api/public/book/dial-host/coaching/confirm", { nonce: selection.nonce, startAt, durationMinutes: 60, inviteeTimezone: "UTC", name: "synthetic-dial-1", email: "synthetic-dial-1@example.test", answers: {}, cardConsent: { accepted: true, version: shown.consent.version } }, [400, 202]);
+  // Refuse before any Checkout can collect money; the refreshed step must show the new fee.
+  assert.equal(response.status, 400, "the original $40 consent must not accept the host's new $90 fee");
+  assert.equal((await response.json()).error.code, "card_consent_required");
+  const refreshed = (await data(`/api/public/book/dial-host/coaching/selection?${new URLSearchParams({ nonce: selection.nonce, startAt, inviteeTimezone: "UTC" })}`)).payment;
+  assert.equal(refreshed.consent.lateCancelFeeCents, 9000);
+  assert.notEqual(refreshed.consent.version, shown.consent.version);
+});
+await data(`/api/app/event-types/${coaching.id}/payment-terms`, terms, 200, "PUT");
+await probe("pending refund and later failure", async () => {
+  const held = await hold("coaching", await slot("coaching", day(21)), "synthetic-dial-2@example.test", "synthetic-dial-2", true);
+  const { booking, manage } = await complete(held);
+  await data("/wire/control", { name: "stripe-refund-pending", value: 1 });
+  await call(`/api/app/bookings/${booking.id}/cancel`, {});
+  const current = await state();
+  const movement = current.payment_movements.find(row => row.booking_id === booking.id && row.kind === "refund");
+  assert.equal(movement.status, "pending", "Stripe pending is not a completed refund");
+  assert.ok(movement.processor_ref, "a pending refund retains its processor reference");
+  assert.equal((await data(`/api/app/bookings/${booking.id}/money`)).money.ledger.refundedCents, 0);
+  assert.equal((await data(`/api/public/manage/${manage}`)).payment.refundedCents, 0, "the receipt reports no refund before completion");
+  assert.ok((await cancelMail(booking.id, held.payload.email)).includes("refund request"), "cancellation mail distinguishes a request from a completed refund");
+  const refund = JSON.parse(current.wire_stripe_objects.find(row => row.id === movement.processor_ref).payload);
+  const failed = stripeEvent("refund.failed", { ...refund, status: "failed", failure_reason: "lost_or_stolen_card" });
+  await webhook(stripeEvent("refund.failed", { ...refund, status: "failed" }, "acct_someoneelse"), 401);
+  await webhook(failed); await webhook(failed);
+  const after = (await data(`/api/app/bookings/${booking.id}/money`)).money;
+  assert.deepEqual(after.movements.filter(row => row.kind === "refund").map(row => [row.status, row.failureCode]), [["failed", "refund_failed"]]);
+  assert.equal(after.ledger.refundedCents, 0);
+});
+await data("/wire/control", { name: "stripe-refund-pending", value: 0 });
+await probe("transient refund response recovers once", async () => {
+  const held = await hold("coaching", await slot("coaching", day(22)), "synthetic-dial-3@example.test", "synthetic-dial-3", true);
+  const { booking } = await complete(held);
+  await data("/wire/control", { name: "stripe-refund-unavailable", value: 1 });
+  await call(`/api/app/bookings/${booking.id}/cancel`, {});
+  const pending = (await data(`/api/app/bookings/${booking.id}/money`)).money.movements.find(row => row.kind === "refund");
+  assert.equal(pending.status, "pending");
+  await data("/wire/control", { name: "stripe-refund-unavailable", value: 0 });
+  // A repeated cancellation is a public-door retry, sharing the pending movement's original key.
+  await call(`/api/app/bookings/${booking.id}/cancel`, {});
+  await call(`/api/app/bookings/${booking.id}/cancel`, {});
+  const current = await state(), moves = current.payment_movements.filter(row => row.booking_id === booking.id && row.kind === "refund");
+  assert.deepEqual(moves.map(row => [row.id, row.status, row.amount_cents]), [[pending.id, "succeeded", 2500]]);
+  const requests = calls(current, "/v1/refunds").filter(row => JSON.parse(row.body)["metadata[dial_booking_id]"] === booking.id);
+  assert.equal(requests.length, 2);
+  assert.equal(new Set(requests.map(row => JSON.parse(row.headers).idempotency)).size, 1);
+});
+await data("/wire/control", { name: "stripe-refund-unavailable", value: 0 });
+await probe("lost invoice finalization response", async () => {
+  const booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(23)), inviteeTimezone: "UTC", name: "synthetic-dial-4", email: "synthetic-dial-4@example.test", answers: {} }, 201);
+  await data("/wire/control", { name: "stripe-finalize-response-lost", value: 1 });
+  await call(`/api/app/bookings/${booking.id}/invoice`, {}, [409, 502, 503]);
+  await data("/wire/control", { name: "stripe-finalize-response-lost", value: 0 });
+  const current = await state(), provider = current.wire_stripe_objects.map(row => JSON.parse(row.payload)).find(row => row.object === "invoice" && row.metadata?.dial_booking_id === booking.id);
+  assert.equal(provider.status, "open", "finalization succeeded at Stripe despite the lost response");
+  // The same fault with no payment yet must void the provider invoice, not merely its local movement.
+  const unpaid = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(24)), inviteeTimezone: "UTC", name: "synthetic-dial-5", email: "synthetic-dial-5@example.test", answers: {} }, 201);
+  await data("/wire/control", { name: "stripe-finalize-response-lost", value: 1 });
+  await call(`/api/app/bookings/${unpaid.id}/invoice`, {}, 503);
+  await data("/wire/control", { name: "stripe-finalize-response-lost", value: 0 });
+  const remoteUnpaid = (await state()).wire_stripe_objects.map(row => JSON.parse(row.payload)).find(row => row.object === "invoice" && row.metadata?.dial_booking_id === unpaid.id);
+  await call(`/api/app/bookings/${unpaid.id}/cancel`, {});
+  assert.equal(JSON.parse((await state()).wire_stripe_objects.find(row => row.id === remoteUnpaid.id).payload).status, "void");
+  await call("/__fixtures/payments/pay-invoice", { invoiceId: remoteUnpaid.id }, 404);
+  // Capture before cancellation, but delay the event until after the void attempt.
+  const paid = await data("/__fixtures/payments/pay-invoice", { invoiceId: provider.id });
+  await call(`/api/app/bookings/${booking.id}/cancel`, {});
+  const event = stripeEvent("invoice.paid", paid);
+  await webhook(event); await webhook(event);
+  const after = (await data(`/api/app/bookings/${booking.id}/money`)).money;
+  assert.deepEqual([after.ledger.paidCents, after.ledger.refundedCents], [10000, 10000], "the lost finalization response must not hide a payment after cancellation");
+  assert.equal(after.movements.filter(row => row.kind === "refund").length, 1);
+});
+await data("/wire/control", { name: "stripe-finalize-response-lost", value: 0 });
+assert.deepEqual(probeFailures, [], "all money source-review probes pass");
+
 // Erasing a payer asks Stripe to detach the saved card, removes references and consent, and keeps amounts in the anonymized audit.
 const preview = await data("/api/app/privacy/preview", { email: "avery@dial.test" });
 const receipt = await data("/api/app/privacy/erase", { email: "avery@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });

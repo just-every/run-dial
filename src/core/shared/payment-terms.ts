@@ -31,7 +31,8 @@ export type TermsSnapshot = {
   taxSummary: string | null;
 };
 
-export const cardConsentVersion = "card-consent.v1";
+/** Consent identifies both its wording and the exact event terms shown, so a later fee edit requires consent again. */
+export function cardConsentVersion(terms: Pick<PaymentTerms, "version">) { return `card-consent.v1:${terms.version}`; }
 
 /** The first payment carries the tax in proportion to what it pays of the price; the balance carries the rest. */
 export function dueNowTaxCents(snapshot: Pick<TermsSnapshot, "priceCents" | "dueNowCents" | "taxCents">) {

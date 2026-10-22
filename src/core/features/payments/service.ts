@@ -165,6 +165,7 @@ export class PaymentsService {
     const movementId = metadata(object, "dial_movement_id");
     if (movementId) {
       const movement = await this.money.movements.get(movementId);
+      if (movement?.kind === "refund") return this.money.receiveRefundEvent(event, movement);
       return movement?.kind === "invoice" ? this.invoices.receiveInvoiceEvent(event, movement) : this.money.receiveBalanceEvent(event, movementId);
     }
     const holdId = metadata(object, "dial_hold_id");

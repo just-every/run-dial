@@ -161,8 +161,10 @@ export class MoneyService {
     try {
       if (movement.kind === "refund") {
         if (!movement.sourceRef) { await this.movements.fail(movement.id, "refund_source_missing"); return; }
-        const refund = await live.api.createRefund(movement.accountId, { payment_intent: movement.sourceRef, amount: String(movement.amountCents), "metadata[dial_movement_id]": movement.id, "metadata[dial_booking_id]": movement.bookingId }, `dial-movement-${movement.id}`);
-        if (["succeeded", "pending"].includes(refund.status) && refund.amount === movement.amountCents) await this.movements.succeed(movement.id, refund.id);
+        const refund = movement.processorRef ? await live.api.getRefund(movement.accountId, movement.processorRef) : await live.api.createRefund(movement.accountId, { payment_intent: movement.sourceRef, amount: String(movement.amountCents), "metadata[dial_movement_id]": movement.id, "metadata[dial_booking_id]": movement.bookingId }, `dial-movement-${movement.id}`);
+        if (refund.amount !== movement.amountCents || refund.payment_intent !== movement.sourceRef) return;
+        if (refund.status === "succeeded") await this.movements.succeed(movement.id, refund.id);
+        else if (["pending", "requires_action"].includes(refund.status)) await this.movements.pendingRefund(movement.id, refund.id);
         else await this.movements.fail(movement.id, `refund_${refund.status}`.replace(/[^a-z0-9_]/gi, "").slice(0, 80));
         return;
       }
@@ -182,6 +184,19 @@ export class MoneyService {
       // pending for the sweep, which repeats the same idempotent request.
       if (error instanceof StripeApiError && error.status >= 400 && error.status < 500 && error.status !== 409 && error.status !== 429) await this.movements.fail(movement.id, error.code);
     }
+  }
+
+  /** Only a matching signed refund event settles a pending refund; repeats and out-of-order pending events do nothing. */
+  async receiveRefundEvent(event: { type: string; account?: string; data: { object: Record<string, unknown> } }, movement: Movement) {
+    if (event.account !== movement.accountId) return { kind: "unauthorized" as const };
+    if (!["refund.created", "refund.updated", "refund.failed"].includes(event.type)) return { kind: "ignored" as const };
+    const object = event.data.object;
+    if (typeof object.id !== "string" || (movement.processorRef && object.id !== movement.processorRef) || object.amount !== movement.amountCents || object.payment_intent !== movement.sourceRef || object.currency !== "usd") return { kind: "rejected" as const };
+    if (movement.status !== "pending") return { kind: "processed" as const };
+    await this.movements.pendingRefund(movement.id, object.id);
+    if (object.status === "succeeded") await this.movements.succeed(movement.id, object.id);
+    else if (["failed", "canceled"].includes(String(object.status))) await this.movements.fail(movement.id, `refund_${object.status}`);
+    return { kind: "processed" as const };
   }
 
   /** PAY-005: a settled charge's receipt, queued in the same batch that settles it. Fees carry no added tax. */

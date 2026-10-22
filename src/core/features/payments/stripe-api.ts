@@ -73,6 +73,10 @@ export class StripeApi {
     return this.request<Refund>(`${apiOrigin}/v1/refunds`, params, { account: accountId, idempotencyKey });
   }
 
+  getRefund(accountId: string, refundId: string) {
+    return this.request<Refund>(`${apiOrigin}/v1/refunds/${encodeURIComponent(refundId)}`, undefined, { account: accountId });
+  }
+
   /** PAY-003: a stated fee charged once to the invitee's saved card while they are not present. */
   chargeSavedCard(accountId: string, params: Record<string, string>, idempotencyKey: string) {
     return this.request<PaymentIntent>(`${apiOrigin}/v1/payment_intents`, { ...params, off_session: "true", confirm: "true" }, { account: accountId, idempotencyKey });

@@ -51,6 +51,7 @@ export class InvoiceService {
         ...(address ? { "address[line1]": address.line1, ...(address.line2 ? { "address[line2]": address.line2 } : {}), "address[city]": address.city, "address[state]": address.state, "address[postal_code]": address.postalCode, "address[country]": address.country } : {}) }, `dial-invoice-${movement.id}-customer`);
       const draft = await live.api.createInvoice(live.accountId, { customer: customer.id, collection_method: "send_invoice", days_until_due: String(dueInDays), auto_advance: "false", description: `${booking.eventTitle} with ${businessName}`.slice(0, 500),
         "metadata[dial_movement_id]": movement.id, "metadata[dial_booking_id]": bookingId }, `dial-invoice-${movement.id}-invoice`);
+      await this.movements.attachInvoiceDraft(movement.id, draft.id);
       await live.api.createInvoiceItem(live.accountId, { customer: customer.id, invoice: draft.id, amount: String(priceCents), currency: "usd", description: `${booking.eventTitle} (${booking.durationMinutes} minutes)`.slice(0, 500) }, `dial-invoice-${movement.id}-item-0`);
       if (taxCents > 0) await live.api.createInvoiceItem(live.accountId, { customer: customer.id, invoice: draft.id, amount: String(taxCents), currency: "usd", description: `Sales tax${tax?.summary ? ` (${tax.summary})` : ""}`.slice(0, 500) }, `dial-invoice-${movement.id}-item-1`);
       const invoice = await live.api.finalizeInvoice(live.accountId, draft.id, `dial-invoice-${movement.id}-finalize`);

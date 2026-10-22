@@ -22,8 +22,11 @@ export async function stripeWire(db: D1Database, url: URL, method: string, init:
   if (key && !url.pathname.startsWith("/v1/checkout/sessions")) {
     const prior = await db.prepare("SELECT status, body FROM wire_stripe_replies WHERE idempotency_key=?").bind(key).first<{ status: number; body: string }>();
     if (prior) return new Response(prior.body, { status: prior.status, headers: { "content-type": "application/json" } });
+    // Transport faults happen outside Stripe's idempotent execution: a retry sees the original result.
+    if (url.pathname === "/v1/refunds" && await control(db, "stripe-refund-unavailable")) return stripeError(503, "unavailable");
     const response = await stripeObjects(db, url, method, form);
     await db.prepare("INSERT INTO wire_stripe_replies(idempotency_key,status,body) VALUES(?,?,?)").bind(key, response.status, await response.clone().text()).run();
+    if (/\/invoices\/[^/]+\/finalize$/.test(url.pathname) && response.ok && await control(db, "stripe-finalize-response-lost")) return stripeError(503, "unavailable");
     return response;
   }
   if (url.pathname.startsWith("/v1/checkout/sessions")) return checkoutSessions(db, url, method, form, headers.get("idempotency-key"));
@@ -82,13 +85,18 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
     await save(db, created.id, "payment_intents", created);
     return Response.json(created);
   }
+  const refundRead = /^\/v1\/refunds\/([^/]+)$/.exec(url.pathname);
+  if (refundRead && method === "GET") {
+    const refund = await object(db, refundRead[1]);
+    return refund?.type === "refunds" ? Response.json(refund.payload) : stripeError(404, "resource_missing");
+  }
   if (url.pathname === "/v1/refunds" && method === "POST") {
     const charged = await object(db, form.get("payment_intent") ?? "");
     const amount = Number(form.get("amount"));
     if (!charged || charged.type !== "payment_intents" || charged.payload.status !== "succeeded") return stripeError(400, "resource_missing");
     if (!Number.isInteger(amount) || amount < 1 || amount > Number(charged.payload.amount) - Number(charged.payload.amount_refunded ?? 0)) return stripeError(400, "amount_too_large");
     await save(db, charged.id, "payment_intents", { ...charged.payload, amount_refunded: Number(charged.payload.amount_refunded ?? 0) + amount });
-    const refund = { id: `re_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`, object: "refund", status: "succeeded", amount, currency: "usd", payment_intent: charged.id, metadata: prefixed(form, "metadata") };
+    const refund = { id: `re_wire${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`, object: "refund", status: await control(db, "stripe-refund-pending") ? "pending" : "succeeded", amount, currency: "usd", payment_intent: charged.id, metadata: prefixed(form, "metadata") };
     await save(db, refund.id, "refunds", refund);
     return Response.json(refund);
   }
