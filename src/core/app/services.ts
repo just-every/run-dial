@@ -31,6 +31,7 @@ import { HostProfileService } from "../features/host-profile/service";
 import { AvatarStorage } from "../features/host-profile/avatar-storage";
 import { OperatorsService } from "../features/operators";
 import { PaymentsRepository, PaymentsService } from "../features/payments";
+import { ReportFactsRepository, ReportsService } from "../features/reports";
 import { PublicAbuseRepository } from "../features/public-abuse";
 import { createSpaSurface } from "../platform/assets/spa-surface";
 import { SendGridWebhookReceiver } from "../features/delivery/sendgrid-webhook";
@@ -91,6 +92,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     availability,
     bookings,
     payments,
+    reports: new ReportsService(new ReportFactsRepository(binding), hostProfile),
     availabilityRequests: new AvailabilityRequestsService(new AvailabilityRequestsRepository(binding), eventTypes, hostProfile, runtime),
     embeds: new EmbedsService(new EmbedsRepository(binding), eventTypes, hostProfile),
     spaSurface: createSpaSurface(assets),

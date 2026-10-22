@@ -1,6 +1,7 @@
 export { BookingsRepository } from "./repository";
 export { CalendarDeletionProbesRepository } from "./deletion-probes";
 export { bookingOperatorRoutes } from "./routes";
+export { hostDateFilterBounds } from "./operator-date-filters";
 export { BookingsService } from "./service";
 export { ManageCapabilityService } from "./manage-capability";
 export type { CalendarReconciliationChange } from "./calendar-reconciliation";

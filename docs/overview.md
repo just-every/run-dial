@@ -29,7 +29,7 @@ If nothing suits them, they can send you a request with other dates and times in
 1. Set up your profile, mail and availability, and publish an event type. Google Calendar is optional for fixed links, phone calls and in-person bookings; Google Meet requires it.
 2. Share the booking link, or embed the booking flow on your own site.
 3. When someone books, Dial rechecks your saved schedule and existing Dial bookings, then records the booking and emails you and your client. With a connected calendar, it also rechecks live busy times and creates a calendar event; if the calendar cannot be checked, confirmation stops.
-4. Manage bookings and requests from the operator app. You can reschedule, cancel, mark attendance or create a booking for someone yourself. Filter bookings by lifecycle state, future or past start, event type, date range or failed external delivery, then search invitee names and email addresses. Add private annotations to event types, bookings and requests.
+4. Manage bookings and requests from the operator app. You can reschedule, cancel, mark attendance or create a booking for someone yourself. Filter bookings by lifecycle state, future or past start, event type, date range or failed external delivery, then search invitee names and email addresses. Add private annotations to event types, bookings and requests. Open the scheduling report from Bookings to see, for a period and an event type, what was booked, moved, canceled, attended and paid for; each figure says what it counts and lists those bookings.
 
 Read [Your booking page](booking-page.md) for every setting, and [Calendar and email](calendar-and-email.md) for what Dial sends and reads.
 

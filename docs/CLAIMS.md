@@ -8,4 +8,8 @@ AVAIL-012 is done on the native single-host surface: locked location time and th
 
 Evidence: `tests/booking-wire/booking-policy-journey.mjs`, `tests/export-base-adoption.test.mjs`, `tests/archive-prior-release.test.mjs`, migration `0067_request_browser_timezone.sql` and screenshots in `evidence/contract/2026-10-21/AVAIL-012/`.
 
-The contract census is 81 done / 19 partial / 70 missing (170 clauses). DATA-004 remains partial. Other claims and their evidence remain in the CONTRACT.md Status table.
+REPORT-001 is partial on the single-host surface: Bookings has a scheduling report for a chosen period and event type with bookings created, rescheduled and canceled (with reasons), attendance and no-show rates, lead time, popular days and hours in the host's zone, bookings by UTM and source and by duration, and revenue. Every figure states its definition and opens the bookings list on exactly the bookings it counts. Host and team choice, routing-form conversion, round-robin distribution and a member seeing only their own figures wait for the clauses that build teams, routing forms and roles; refunds and fees wait for PAY-003.
+
+Evidence: `tests/scheduling-report.test.mjs` with its seeded month in `tests/review/report-month.ts`, and the 1440 and 390 screen proof `scripts/verify-report-screens.mjs`.
+
+The contract census is 81 done / 20 partial / 69 missing (170 clauses). DATA-004 remains partial. Other claims and their evidence remain in the CONTRACT.md Status table.

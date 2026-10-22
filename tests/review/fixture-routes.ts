@@ -7,6 +7,7 @@ import type { AppBindings } from "../../src/core/app/bindings";
 import type { AppServices } from "../../src/core/app/services";
 import { EventTypesRepository } from "../../src/core/features/event-types";
 import { bulkBookingsFixture } from "./bookings-fixture";
+import { seedReportMonth } from "./report-month";
 import { setup, status } from "./setup";
 
 export async function handleFixtures(request: Request, env: AppBindings & { PROVIDER_DB?: D1Database }, servicesFor: (env: AppBindings) => AppServices) {
@@ -25,6 +26,7 @@ export async function handleFixtures(request: Request, env: AppBindings & { PROV
       await env.DB.prepare("UPDATE booking_occurrences SET start_at = ?, end_at = ? WHERE id = (SELECT current_occurrence_id FROM bookings WHERE id = ?)").bind(start.toISOString(), end.toISOString(), id).run();
       return new Response(null, { status: 204 });
     }
+    if (url.pathname === "/__fixtures/report-month" && request.method === "POST") return Response.json(await seedReportMonth(env.DB, await request.json()));
     if (url.pathname === "/__fixtures/bookings-501") return bulkBookingsFixture(request, env, servicesFor(env));
     if (url.pathname === "/__fixtures/setup" && request.method === "POST") return Response.json(await setup(env, servicesFor(env)));
     if (url.pathname === "/__fixtures/schedule" && request.method === "POST") {

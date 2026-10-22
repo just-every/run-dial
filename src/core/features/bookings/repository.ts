@@ -47,6 +47,8 @@ type OperatorBookingFilters = {
   offset?: number;
   deliveryFailed?: boolean;
   query?: string;
+  /** A drill-through from the scheduling report: exactly the bookings one figure counts. */
+  ids?: string[];
 };
 
 function operatorBookingWhere(filters: OperatorBookingFilters, now: string) {
@@ -61,6 +63,7 @@ function operatorBookingWhere(filters: OperatorBookingFilters, now: string) {
   if (filters.to) { clauses.push("o.start_at <= ?"); values.push(filters.to); }
   if (filters.deliveryFailed === true) clauses.push("EXISTS (SELECT 1 FROM delivery_outbox d WHERE d.booking_id = b.id AND d.state = 'failed' AND d.last_error_code IS NOT 'reschedule_requested')");
   if (filters.deliveryFailed === false) clauses.push("NOT EXISTS (SELECT 1 FROM delivery_outbox d WHERE d.booking_id = b.id AND d.state = 'failed' AND d.last_error_code IS NOT 'reschedule_requested')");
+  if (filters.ids) { clauses.push("b.id IN (SELECT value FROM json_each(?))"); values.push(JSON.stringify(filters.ids)); }
   if (filters.query) {
     clauses.push("(instr(CAST(b.invitee_name_folded AS BLOB), CAST(? AS BLOB)) > 0 OR instr(CAST(b.invitee_email_folded AS BLOB), CAST(? AS BLOB)) > 0)");
     const folded = foldBookingSearch(filters.query);

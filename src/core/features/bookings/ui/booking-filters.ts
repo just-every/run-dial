@@ -1,4 +1,5 @@
 import type { BookingRecord } from "../types";
+import { reportTileKeys, type ReportTileKey } from "../../reports/client";
 
 export type BookingFilters = {
   state?: BookingRecord["state"];
@@ -9,9 +10,14 @@ export type BookingFilters = {
   deliveryFailed?: "true" | "false";
   rescheduleRequest?: "open" | "picked" | "expired" | "cancelled";
   query?: string;
+  /** A drill-through from the scheduling report: the tile, its bucket and the report's period (REPORT-001). */
+  report?: ReportTileKey;
+  bucket?: string;
+  periodFrom?: string;
+  periodThrough?: string;
 };
 
-const filterKeys = ["state", "time", "eventTypeId", "from", "to", "deliveryFailed", "rescheduleRequest", "query"] as const;
+const filterKeys = ["state", "time", "eventTypeId", "from", "to", "deliveryFailed", "rescheduleRequest", "query", "report", "bucket", "periodFrom", "periodThrough"] as const;
 const bookingStates = ["confirmed", "rescheduled", "cancelled"] as const;
 export const bookingPageSize = 100;
 
@@ -41,8 +47,12 @@ export function readBookingFilters(search: string): BookingFilters {
   const deliveryFailed = params.get("deliveryFailed");
   const rescheduleRequest = params.get("rescheduleRequest");
   const query = params.get("query")?.slice(0, 160) || undefined;
+  const report = reportTileKeys.find(key => key === params.get("report"));
+  const periodFrom = dateValue(params.get("periodFrom")), periodThrough = dateValue(params.get("periodThrough"));
+  const bucket = params.get("bucket")?.slice(0, 200) || undefined;
 
   return {
+    ...(report && periodFrom && periodThrough ? { report, periodFrom, periodThrough, ...(bucket ? { bucket } : {}) } : {}),
     ...(bookingStates.includes(state as BookingRecord["state"]) ? { state: state as BookingRecord["state"] } : {}),
     ...(time === "future" || time === "past" ? { time } : {}),
     ...(eventTypeId && eventTypeId.length === 26 ? { eventTypeId } : {}),
@@ -64,6 +74,7 @@ export function bookingListQuery(filters: BookingFilters, page = 1) {
     ...(filters.deliveryFailed ? { deliveryFailed: filters.deliveryFailed } : {}),
     ...(filters.rescheduleRequest ? { rescheduleRequest: filters.rescheduleRequest } : {}),
     ...(filters.query?.trim() ? { query: filters.query.trim().slice(0, 160) } : {}),
+    ...(filters.report && filters.periodFrom && filters.periodThrough ? { report: filters.report, periodFrom: filters.periodFrom, periodThrough: filters.periodThrough, ...(filters.bucket ? { bucket: filters.bucket } : {}) } : {}),
     limit: String(bookingPageSize),
     offset: String((Math.max(1, page) - 1) * bookingPageSize),
   };

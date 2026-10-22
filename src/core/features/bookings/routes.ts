@@ -7,6 +7,8 @@ import { hostDateSchema, ianaTimeZoneSchema } from "../../shared/scheduling";
 import { validate } from "../../shared/validation";
 import { hasSupportedInstantPrecision } from "../../shared/instants";
 import { unavailableTimeMessage, type SlotExclusion } from "../availability";
+import { reportRefusal } from "../reports";
+import { reportTileKeys } from "../reports/client";
 
 const bookingIdSchema = z.object({ id: z.string().length(26) });
 const calendarConflictSchema = bookingIdSchema.extend({ conflictId: z.string().length(26) });
@@ -28,7 +30,14 @@ const operatorListSchema = z.object({
   offset: z.coerce.number().int().min(0).max(1_000_000).optional(),
   deliveryFailed: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
   query: z.string().trim().min(1).max(160).optional(),
+  // A drill-through from the scheduling report (REPORT-001): the tile, its bucket and the report's period in host dates.
+  report: z.enum(reportTileKeys).optional(),
+  bucket: z.string().max(200).optional(),
+  periodFrom: hostDateSchema.optional(),
+  periodThrough: hostDateSchema.optional(),
 }).superRefine((input, context) => {
+  if (input.report && !(input.periodFrom && input.periodThrough)) context.addIssue({ code: "custom", path: ["periodFrom"], message: "A report drill-through names its period." });
+  if (!input.report && (input.bucket || input.periodFrom || input.periodThrough)) context.addIssue({ code: "custom", path: ["report"], message: "A period or bucket belongs to a report tile." });
   if (input.fromDate && input.throughDate && input.fromDate > input.throughDate) context.addIssue({ code: "custom", path: ["throughDate"], message: "The end of the date range must follow its start." });
   if ((input.fromDate || input.throughDate) && (input.from || input.to)) context.addIssue({ code: "custom", path: ["fromDate"], message: "Choose either host dates or instant boundaries for the date range." });
   if (input.from && input.to && input.from > input.to) context.addIssue({ code: "custom", path: ["to"], message: "The end of the date range must follow its start." });
@@ -61,11 +70,13 @@ export const bookingOperatorRoutes = new Hono<AppEnvironment>()
   })
   .get("/api/app/bookings", validate("query", operatorListSchema), async (context) => {
     const services = context.get("services");
-    const { fromDate, throughDate, ...filters } = context.req.valid("query");
+    const { fromDate, throughDate, report, bucket, periodFrom, periodThrough, ...filters } = context.req.valid("query");
     const profile = await services.hostProfile.getProfile();
+    const drill = report ? await services.reports.members({ fromDate: periodFrom, throughDate: periodThrough, eventTypeId: filters.eventTypeId }, report, bucket) : undefined;
+    if (drill && drill.kind !== "members") return reportRefusal(context, drill.kind);
     if ((fromDate || throughDate) && !profile) return apiError(context, 409, "host_profile_required", "Set up the host profile before filtering bookings by host date.");
     const bounds = profile ? hostDateFilterBounds(fromDate, throughDate, profile.timezone) : {};
-    const { bookings, totalCount } = await services.bookings.listForOperatorWithCount({ ...filters, ...bounds });
+    const { bookings, totalCount } = await services.bookings.listForOperatorWithCount({ ...filters, ...bounds, ...(drill ? { ids: drill.ids } : {}) });
     if (profile) context.header("X-Host-Timezone", profile.timezone);
     context.header("X-Total-Count", String(totalCount));
     return context.json(bookings);

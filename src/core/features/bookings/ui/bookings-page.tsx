@@ -1,4 +1,3 @@
-import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { ErasureRecovery } from "./delivery-actions";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -6,36 +5,41 @@ import { api, errorMessage } from "../../../api/client";
 import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader } from "../../../app/ui/page-header";
 import { Card, buttonClassName, noticeClassName } from "../../../app/ui/primitives";
-import type { EventTypeRecord } from "../../event-types";
 import { BookingDetail, BookingBadge } from "./booking-detail";
 import { bookingPageSize, hasBookingFilters, type BookingFilters } from "./booking-filters";
 import { BookingsFilterBar } from "./bookings-filter-bar";
 
 import { useBookingWorkspace } from "./use-booking-workspace";
 import { useBookingList } from "./use-booking-list";
+import { useEventTypes } from "./use-event-types";
+import { SchedulingReportView } from "./scheduling-report";
+import { ReportDrillNotice } from "./report-drill-notice";
 import { startTime } from "./operator-time";
 
-export function BookingsPage() {
-  const initialEvents = useWorkspaceRead<EventTypeRecord[]>("/api/app/event-types");
-  const [eventTypes, setEventTypes] = useState<EventTypeRecord[]>(initialEvents ?? []);
+/** The bookings list, or the scheduling report (REPORT-001) that drills into it. */
+export function BookingsPage(): React.JSX.Element {
+  const { view } = useBookingWorkspace();
+  return view === "report" ? <ReportWorkspace /> : <BookingList />;
+}
+
+function ReportWorkspace(): React.JSX.Element {
+  const { filters, navigate } = useBookingWorkspace();
+  const { eventTypes } = useEventTypes();
+  return <SchedulingReportView filters={filters} eventTypes={eventTypes} onChange={change => void navigate({ ...filters, ...change }, 1, true)} />;
+}
+
+function BookingList(): React.JSX.Element {
+  const { eventTypes, error: eventTypesError } = useEventTypes();
   const [selected, setSelected] = useState<string>();
   const [notice, setNotice] = useState("");
   const noticeElement = useRef<HTMLParagraphElement>(null);
   const focusNotice = useRef(false);
-  const [eventTypesError, setEventTypesError] = useState("");
   const { filters, page, erasedId, navigate } = useBookingWorkspace();
   const moveToPage = useCallback((nextPage: number) => navigate(filters, nextPage, true), [filters, navigate]);
   const { bookings, totalCount, hostTimezone, loading, listError, load } = useBookingList(filters, page, moveToPage);
   useEffect(() => {
     if (!loading && notice && focusNotice.current) { noticeElement.current?.focus(); focusNotice.current = false; }
   }, [loading, notice]);
-
-  useEffect(() => {
-    void api.api.app["event-types"].$get({}).then(async (response) => {
-      if (response.ok) setEventTypes(await response.json() as EventTypeRecord[]);
-      else setEventTypesError(await errorMessage(response));
-    }).catch(() => setEventTypesError("Event types could not be loaded."));
-  }, []);
 
   function changeFilters(change: Partial<BookingFilters>) {
     const next = { ...filters, ...change };
@@ -71,11 +75,12 @@ export function BookingsPage() {
   const lastVisible = Math.min(page * bookingPageSize, totalCount);
 
   return <div className="grid gap-7">
-    <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review bookings, delivery state, and attendance." actions={<Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link>} />
+    <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review bookings, delivery state, and attendance." actions={<><Link to="/app/bookings" search={() => ({ view: "report" })} className={buttonClassName("secondary")}>Scheduling report</Link><Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link></>} />
     {notice ? <p ref={noticeElement} tabIndex={-1} role="status" aria-label="Booking update" className={noticeClassName("success", "font-semibold")}>{notice}</p> : null}
     {listError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{listError}</p> : null}
     {eventTypesError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{eventTypesError}</p> : null}
     {erasedId ? <ErasureRecovery bookingId={erasedId} /> : null}
+    {filters.report ? <ReportDrillNotice filters={filters} /> : null}
     <BookingsFilterBar filters={filters} eventTypes={eventTypes} hostTimezone={hostTimezone} onChange={changeFilters} onClear={clearFilters} />
     <p className="text-sm font-semibold text-soft" role="status" aria-live="polite">
       {loading ? "Loading bookings…" : bookings === undefined ? "Bookings unavailable" : `Showing ${firstVisible.toLocaleString()}–${lastVisible.toLocaleString()} of ${totalCount.toLocaleString()} matching booking${totalCount === 1 ? "" : "s"}`}
