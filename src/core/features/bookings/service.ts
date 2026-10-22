@@ -185,12 +185,12 @@ export class BookingsService {
     const quote = await this.payments?.quote(event.id, selectedDuration);
     if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
     // PAY-003: a fee-bearing event needs the invitee's explicit consent to the stated amounts before anything is held.
-    if (quote?.saveCard && !(input.cardConsent?.accepted === true && input.cardConsent.version === cardConsentVersion)) return { kind: "card_consent_required" };
+    if (quote?.saveCard && !(input.cardConsent?.accepted === true && input.cardConsent.version === cardConsentVersion(quote.snapshot))) return { kind: "card_consent_required" };
     if (quote && this.payments) {
       const priced = quote.taxRequired ? await this.taxedQuote(quote, input.billingAddress, input.shownTaxCents, `event:${event.id}`) : { kind: "ready" as const, quote };
       if (priced.kind !== "ready") return priced;
       const paid = await beginPaidConfirmation({ repository: this.repository, payments: this.payments, runtime: this.runtime, confirmationEmails: (manageToken, payment) => this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired, payment }) },
-        { claim: claimBase, nonce: input.nonce, handle: input.handle, slug: input.slug, quote: priced.quote, durationMinutes: selectedDuration, consent: quote.saveCard ? { version: cardConsentVersion } : undefined });
+        { claim: claimBase, nonce: input.nonce, handle: input.handle, slug: input.slug, quote: priced.quote, durationMinutes: selectedDuration, consent: quote.saveCard ? { version: cardConsentVersion(quote.snapshot) } : undefined });
       return paid.kind === "slot_taken" || paid.kind === "blocked" ? await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? paid : paid;
     }
     const manageToken = await this.managedTokenFromNonce(input.nonce);
@@ -350,7 +350,7 @@ export class BookingsService {
     if (plan && "kind" in plan) return plan;
     const emails = await this.changeEmails(profile, booking, "booking_cancelled", input.reason, { actor: input.mailActor, money: await this.cancellationMoney(booking, plan) });
     const cancelled = await this.repository.cancel(booking, input.actor, input.reason, input.now, input.inviteeMailOnly ? emails.filter(email => email.recipientRole === "invitee") : emails, plan?.statements);
-    if (cancelled?.state === "cancelled" && plan?.statements.length) await this.payments?.money.afterCancellation(booking.id);
+    if (cancelled?.state === "cancelled") await this.payments?.money.afterCancellation(booking.id);
     return cancelled ? { kind: "cancelled" as const, booking: cancelled } : { kind: "not_found" as const };
   }
 

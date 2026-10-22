@@ -11,7 +11,11 @@ type Live = { accountId: string; api: StripeApi } | { refusal: MoneyRefusal };
 export async function voidAtStripe(movements: MovementsRepository, pending: Movement[], live: Live) {
   await Promise.all(pending.map(async movement => {
     const target = movement.kind === "invoice" ? movement.invoiceId : movement.checkoutSessionId;
-    if (!target) { await movements.markVoid(movement.id, "voided"); return; }
+    if (!target) {
+      // No invoice identity is not proof that Stripe has no invoice (a creation response may have been lost).
+      if (movement.kind !== "invoice") await movements.markVoid(movement.id, "voided");
+      return;
+    }
     if ("refusal" in live || live.accountId !== movement.accountId) return;
     try {
       if (movement.kind === "invoice") await live.api.voidInvoice(movement.accountId, target, `dial-invoice-${movement.id}-void`);

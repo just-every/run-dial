@@ -45,7 +45,7 @@ export function cancellationNotes(money: BookingMoney | undefined, plan: Cancell
     ...(plan?.voids.includes("invoice") ? ["The open invoice is void and can no longer be paid."] : []),
     ...(plan?.voids.includes("balance") || money.ledger.balanceDueCents > 0 ? ["The balance is no longer due."] : []),
   ];
-  return [outcomeNote(money, plan), ...voids];
+  return [outcomeNote(money, plan), ...(plan?.refundCents ? ["This is a refund request, not confirmation that money has been refunded. Stripe may keep it pending or fail it; check the booking receipt for the completed amount."] : []), ...voids];
 }
 
 function outcomeNote(money: BookingMoney, plan: CancellationPlan | undefined) {
@@ -73,7 +73,7 @@ export function selectionPayment(price: EventPrice, terms: PaymentTerms, duratio
     balanceDueAt: balanceDueAt(snapshot, startAt), freeWindowEndsAt: freeWindowEndsAt(snapshot, startAt), policy: cancellationPolicyLines(snapshot),
     // PAY-005: with Stripe Tax on, the invitee's billing address prices the sales tax before anything is held.
     taxRequired: taxEnabled && snapshot.priceCents > 0,
-    ...(saveCard ? { consent: { version: cardConsentVersion, text: cardConsentText(snapshot), lateCancelFeeCents: snapshot.lateCancelFeeCents, noShowFeeCents: snapshot.noShowFeeCents } } : {}),
+    ...(saveCard ? { consent: { version: cardConsentVersion(snapshot), text: cardConsentText(snapshot), lateCancelFeeCents: snapshot.lateCancelFeeCents, noShowFeeCents: snapshot.noShowFeeCents } } : {}),
   };
 }
 

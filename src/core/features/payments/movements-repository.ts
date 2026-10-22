@@ -89,8 +89,17 @@ export class MovementsRepository {
     return this.db.prepare("UPDATE payment_movements SET status='succeeded', processor_ref=?, checkout_url=NULL, failure_code=NULL, updated_at=? WHERE id=? AND (status='pending' OR (status='failed' AND failure_code IN ('void_pending', 'voided', 'void_refused')))").bind(processorRef, nowIso(), id);
   }
 
+  /** Persist the remote identity before any finalization call can lose its response. */
+  async attachInvoiceDraft(id: string, invoiceId: string) {
+    await this.db.prepare("UPDATE payment_movements SET invoice_id=?, updated_at=? WHERE id=? AND status='pending' AND invoice_id IS NULL").bind(invoiceId, nowIso(), id).run();
+  }
+
+  async pendingRefund(id: string, processorRef: string) {
+    await this.db.prepare("UPDATE payment_movements SET processor_ref=?, updated_at=? WHERE id=? AND kind='refund' AND status='pending' AND (processor_ref IS NULL OR processor_ref=?)").bind(processorRef, nowIso(), id, processorRef).run();
+  }
+
   async attachInvoice(id: string, invoice: { id: string; number: string | null; url: string }) {
-    await this.db.prepare("UPDATE payment_movements SET invoice_id=?, invoice_number=?, invoice_url=?, updated_at=? WHERE id=? AND status='pending' AND invoice_id IS NULL").bind(invoice.id, invoice.number, invoice.url, nowIso(), id).run();
+    await this.db.prepare("UPDATE payment_movements SET invoice_id=?, invoice_number=?, invoice_url=?, updated_at=? WHERE id=? AND status='pending' AND (invoice_id IS NULL OR invoice_id=?)").bind(invoice.id, invoice.number, invoice.url, nowIso(), id, invoice.id).run();
   }
 
   async fail(id: string, code: string) {

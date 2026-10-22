@@ -15,8 +15,8 @@ const webhookSecret = "whsec_wiretest";
 const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 const owner = await browser.newContext();
 const json = async (response, expected = 200) => { assert.equal(response.status(), expected, await response.text()); return response.json(); };
-const webhook = async object => {
-  const body = JSON.stringify({ id: `evt_${randomUUID().replaceAll("-", "")}`, object: "event", type: "checkout.session.completed", account: "acct_wirehost", livemode: false, created: Math.floor(Date.now() / 1000), data: { object } });
+const webhook = async (object, type = "checkout.session.completed") => {
+  const body = JSON.stringify({ id: `evt_${randomUUID().replaceAll("-", "")}`, object: "event", type, account: "acct_wirehost", livemode: false, created: Math.floor(Date.now() / 1000), data: { object } });
   const timestamp = Math.floor(Date.now() / 1000);
   assert.equal((await owner.request.post(origin + "/api/webhooks/stripe", { headers: { "content-type": "application/json", "stripe-signature": `t=${timestamp},v1=${createHmac("sha256", webhookSecret).update(`${timestamp}.${body}`).digest("hex")}` }, data: body })).status(), 200);
 };
@@ -107,6 +107,31 @@ try {
   for (const width of widths) await capture(width, "booking-record-invoice-form", invoiceRecord, async page => { const section = await invoiceSection(page); await section.getByRole("button", { name: "Issue invoice" }).click(); await section.getByRole("form", { name: "Issue invoice" }).getByLabel("ZIP code").waitFor(); await section.scrollIntoViewIfNeeded(); });
   await json(await owner.request.post(`${origin}/api/app/bookings/${invoiced.id}/invoice`, { headers, data: { billingAddress: newYork } }));
   for (const width of widths) await capture(width, "booking-record-invoiced", invoiceRecord, async page => { const section = await invoiceSection(page); await section.getByRole("link", { name: "Stripe-hosted invoice" }).waitFor(); await section.scrollIntoViewIfNeeded(); });
+  const invoiceMoney = (await json(await owner.request.get(`${origin}/api/app/bookings/${invoiced.id}/money`))).money;
+  const invoiceId = invoiceMoney.movements.find(movement => movement.kind === "invoice").invoiceId;
+  await webhook(await json(await owner.request.post(origin + "/__fixtures/payments/pay-invoice", { headers, data: { invoiceId } })), "invoice.paid");
+  for (const width of widths) {
+    await capture(width, "paid-invoice-cancel-refund-choice", invoiceRecord, async page => {
+      await invoiceSection(page);
+      // The invoice is paid through the general ledger and has no booking_payments row.
+      await page.getByRole("button", { name: "Cancel booking", exact: true }).click();
+      const form = page.getByRole("form", { name: "Cancel booking" });
+      await form.waitFor({ timeout: 5000 });
+      await form.getByText("Refund everything paid, $108.88 USD.", { exact: false }).waitFor();
+      await form.getByRole("radio", { name: "Refund less, or nothing, with a reason" }).check();
+      await form.getByLabel("Amount to refund (USD)").fill("0.00");
+      await form.getByRole("button", { name: "Cancel booking" }).click();
+      await form.getByRole("alert").getByText("Give the reason for refunding less.", { exact: false }).waitFor();
+      await form.getByLabel("Amount to refund (USD)").fill("40.00");
+      await form.getByLabel("Reason for the smaller refund").fill("Preparation was delivered");
+      await form.scrollIntoViewIfNeeded(); return form;
+    });
+  }
+  await json(await owner.request.post(`${origin}/api/app/bookings/${invoiced.id}/cancel`, { headers, data: { refund: { amountCents: 4000, reason: "Preparation was delivered" } } }));
+  await json(await owner.request.post(origin + "/__fixtures/deliver", { headers, data: {} }));
+  const invoiceCancellation = (await json(await owner.request.get(origin + "/__fixtures/status"))).fixture_mail.map(row => JSON.parse(row.message_json)).filter(message => message.to === "ivy.invoice@example.test" && /^Booking cancelled:/u.test(message.subject ?? ""));
+  assert.equal(invoiceCancellation.length, 1);
+  assert.ok(invoiceCancellation[0].text.includes("$40.00 USD") && invoiceCancellation[0].text.includes("Preparation was delivered"));
   // PAY-003 (D4): the host cancels a paid booking from its record; everything paid is refunded unless the operator
   // refunds less with a reason, which the invitee's cancellation email and manage page then state.
   const cancelForm = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); const form = page.getByRole("form", { name: "Cancel booking" }); await form.getByText("Refund everything paid, $90.00 USD.", { exact: false }).waitFor(); return form; };
