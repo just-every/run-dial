@@ -39,7 +39,13 @@ export function BookingChanges({ booking, onChanged, onCancel }: Props) {
   async function cancel() {
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setWorking(true); setNotice("");
-    try { await onCancel(booking.id); }
+    try {
+      const response = await api.api.app.bookings[":id"].money.$get({ param: { id: booking.id } });
+      if (!response.ok) { setNotice(await errorMessage(response)); return; }
+      const { money } = await response.json() as { money: BookingRecord["money"] | null };
+      if (money) { setEditing(false); setRequesting(false); setConflictsOpen(false); setCancelling(current => !current); }
+      else await onCancel(booking.id);
+    }
     catch { setNotice("Cancellation could not be checked. Refresh the booking before trying again."); }
     finally { setWorking(false); }
   }
@@ -61,7 +67,7 @@ export function BookingChanges({ booking, onChanged, onCancel }: Props) {
       })}
     </section></FocusDialog> : null}</> : null}
     {notice ? <p role="status" className="text-sm text-[#755010]">{notice}</p> : null}
-    {booking.state !== "cancelled" ? <div className="flex flex-wrap gap-3"><Button variant="secondary" type="button" disabled={!booking.eventTypeId} onClick={() => { setRequesting(false); setCancelling(false); setEditing(current => !current); }}>Reschedule booking</Button>{hydrated && booking.eventTypeId && futureStart && (booking.rescheduleRequest?.archiveHistorical || booking.rescheduleRequest?.state !== "open") ? <Button variant="secondary" type="button" aria-expanded={requesting} onClick={() => { setEditing(false); setCancelling(false); setRequesting(current => !current); }}>Ask invitee to pick a new time</Button> : null}<Button variant="danger" type="button" aria-expanded={cancelling} onClick={() => { setEditing(false); setRequesting(false); setCancelling(current => !current); }}>Cancel booking</Button></div> : null}
+    {booking.state !== "cancelled" ? <div className="flex flex-wrap gap-3"><Button variant="secondary" type="button" disabled={!booking.eventTypeId} onClick={() => { setRequesting(false); setCancelling(false); setEditing(current => !current); }}>Reschedule booking</Button>{hydrated && booking.eventTypeId && futureStart && (booking.rescheduleRequest?.archiveHistorical || booking.rescheduleRequest?.state !== "open") ? <Button variant="secondary" type="button" aria-expanded={requesting} onClick={() => { setEditing(false); setCancelling(false); setRequesting(current => !current); }}>Ask invitee to pick a new time</Button> : null}<Button variant="danger" type="button" aria-expanded={cancelling} onClick={() => void cancel()}>Cancel booking</Button></div> : null}
     {cancelling && booking.state !== "cancelled" ? <CancelBookingForm booking={booking} onWorking={setWorking} onClose={() => setCancelling(false)} onCancelled={async notice => { setCancelling(false); await onChanged(notice); }} /> : null}
     {editing && booking.state !== "cancelled" ? <RescheduleForm booking={booking} onWorking={setWorking} onChanged={async () => { setEditing(false); await onChanged("Reschedule saved. Calendar and notifications queued."); }} /> : null}
     {requesting && booking.state !== "cancelled" && (booking.rescheduleRequest?.archiveHistorical || booking.rescheduleRequest?.state !== "open") ? <RescheduleRequestForm booking={booking} onWorking={setWorking} onChanged={async () => { setRequesting(false); await onChanged("Reschedule request sent. Invitee email queued."); }} /> : null}
