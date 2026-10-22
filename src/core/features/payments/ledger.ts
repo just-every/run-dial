@@ -26,8 +26,9 @@ export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnaps
     ...succeeded.filter(movement => movement.kind !== "refund").flatMap(movement => charge(movement.processorRef, movement.amountCents, movement.taxCents, movement.updatedAt)),
   ];
   const balanceTotal = snapshot && snapshot.balanceCents > 0 ? snapshot.balanceCents + balanceTaxCents(snapshot) : 0;
+  const invoice = movements.find(movement => movement.kind === "invoice" && movement.status !== "failed");
   return {
-    priceCents: snapshot?.priceCents ?? payment?.amountCents ?? 0,
+    priceCents: snapshot?.priceCents ?? payment?.amountCents ?? (invoice ? invoice.amountCents - invoice.taxCents : 0),
     paidCents, feesCents, refundedCents, netCents: paidCents + feesCents - refundedCents,
     taxCents: (payment?.taxCents ?? 0) + sum(["balance", "invoice"], "taxCents") - sum(["refund"], "taxCents"),
     balanceDueCents: Math.max(0, balanceTotal - balancePaid),

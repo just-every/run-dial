@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { api, errorMessage } from "../../../api/client";
 import type { BookingHistoryEntry, BookingRecord } from "../types";
 import { startTime } from "./operator-time";
+import { useOperators } from "./use-operators";
 
 const actions: Record<BookingHistoryEntry["action"], string> = {
   manage_link_rotated: "Manage link replaced",
@@ -10,28 +9,11 @@ const actions: Record<BookingHistoryEntry["action"], string> = {
   reschedule_requested: "Invitee asked to pick a new time", reschedule_request_reminded: "Reschedule request reminder sent",
   reschedule_request_picked: "New time picked", reschedule_request_expired: "Reschedule request expired",
   payment_received: "Payment received", payment_balance: "Balance paid", payment_refund: "Refund",
-  payment_late_cancel_fee: "Late-cancellation fee", payment_no_show_fee: "No-show fee",
+  payment_late_cancel_fee: "Late-cancellation fee", payment_no_show_fee: "No-show fee", payment_invoice: "Invoice",
 };
 
 export function BookingHistory({ booking }: { booking: BookingRecord }) {
-  const [operators, setOperators] = useState<Array<{ id: string; email: string }>>([]);
-  const [error, setError] = useState("");
-  const hasOperator = booking.history.some(entry => entry.actorType === "operator");
-  useEffect(() => {
-    if (!hasOperator) return;
-    let active = true;
-    void (async () => {
-      try {
-        const response = await api.api.app.operators.$get();
-        if (!response.ok) throw new Error(await errorMessage(response));
-        const result = await response.json();
-        if (active) setOperators(result.operators);
-      } catch (error) {
-        if (active) setError(error instanceof Error ? error.message : "Operator names could not be loaded.");
-      }
-    })();
-    return () => { active = false; };
-  }, [hasOperator]);
+  const { operators, error } = useOperators(booking.history.some(entry => entry.actorType === "operator"));
   const actor = (entry: BookingHistoryEntry) => {
     if (entry.actorType === "operator") {
       const operator = operators.find(operator => operator.id === entry.actorId);

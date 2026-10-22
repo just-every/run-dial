@@ -4,6 +4,7 @@ import { Badge, Button, Input, noticeClassName } from "../../../app/ui/primitive
 import { formatUsd } from "../../../shared/event-price";
 import type { BookingMoney as Money } from "../../payments";
 import { startTime } from "./operator-time";
+import { useOperators } from "./use-operators";
 
 const kinds: Record<string, string> = { balance: "Balance paid", invoice: "Invoice", refund: "Refund", late_cancel_fee: "Late-cancellation fee", no_show_fee: "No-show fee" };
 type Offer = { priceCents: number; taxRequired: boolean };
@@ -18,6 +19,7 @@ export function BookingMoney({ bookingId, timezone, noShow, onChanged }: { booki
   const [address, setAddress] = useState({ line1: "", city: "", state: "", postalCode: "" }), [invoicing, setInvoicing] = useState(false);
   const [amount, setAmount] = useState(""), [reason, setReason] = useState(""), [refunding, setRefunding] = useState(false);
   const key = useRef(crypto.randomUUID());
+  const { operators } = useOperators(Boolean(money?.movements.some(movement => movement.actorType === "operator")));
   const load = useCallback(async () => {
     try {
       const response = await api.api.app.bookings[":id"].money.$get({ param: { id: bookingId } });
@@ -80,7 +82,7 @@ export function BookingMoney({ bookingId, timezone, noShow, onChanged }: { booki
     </dl>
     {money.movements.length ? <ol className="mt-5 grid gap-3 text-sm text-muted">{money.movements.map(movement => <li key={movement.id} className="min-w-0 break-words rounded-xl bg-row px-3.5 py-3">
       <p className="flex flex-wrap items-center gap-2 font-[650] text-ink">{kinds[movement.kind]} · {withTax(movement.amountCents, movement.taxCents)} <Badge tone={movement.status === "succeeded" ? "success" : movement.status === "failed" ? "danger" : "warning"}>{movement.status}</Badge></p>
-      <p>{actors[movement.actorType]}{movement.actorId ? ` ${movement.actorId}` : ""} · {startTime(movement.createdAt, timezone)}</p>
+      <p>{actors[movement.actorType]}{movement.actorId ? ` ${operators.find(operator => operator.id === movement.actorId)?.email ?? movement.actorId}` : ""} · {startTime(movement.createdAt, timezone)}</p>
       <p>{movement.reason}{movement.failureCode ? ` · Stripe: ${movement.failureCode}` : ""}</p>
       {movement.processorRef ? <p>Stripe reference <code className="break-all">{movement.processorRef}</code></p> : null}
       {movement.invoiceUrl ? <p>Invoice {movement.invoiceNumber ?? movement.invoiceId}: <a className="font-semibold underline underline-offset-4" href={movement.invoiceUrl}>Stripe-hosted invoice</a></p> : null}

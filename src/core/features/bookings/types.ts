@@ -23,7 +23,7 @@ export type BookingHistoryEntry = {
   id: string;
   occurrenceId: string | null;
   action: "manage_link_rotated" | "created" | "rescheduled" | "cancelled" | "attendance_marked" | "calendar_cancelled" | "reschedule_requested" | "reschedule_request_reminded" | "reschedule_request_picked" | "reschedule_request_expired"
-    | "payment_received" | "payment_balance" | "payment_refund" | "payment_late_cancel_fee" | "payment_no_show_fee";
+    | "payment_received" | "payment_balance" | "payment_refund" | "payment_late_cancel_fee" | "payment_no_show_fee" | "payment_invoice";
   actorType: "invitee" | "operator" | "calendar_provider" | "system";
   actorId: string | null;
   previousStartAt: string | null;

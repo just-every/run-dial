@@ -10,7 +10,7 @@ function Policy({ lines }: { lines: string[] }) {
  * and the unchecked consent a booking with stated fees needs before anything is held. */
 export function PayStepNotice({ payment, timezone, consented, onConsent, error }: { payment: SelectionPayment; timezone: string; consented: boolean; onConsent(value: boolean): void; error?: string }) {
   return <div className="pb-pay-step" role="note">
-    <p className="pb-pay-amount">{payment.mode === "setup" ? "Nothing to pay now" : formatUsd(payment.amountCents)}</p>
+    <p className="pb-pay-amount">{payment.mode === "setup" ? "Nothing to pay now" : `${formatUsd(payment.amountCents)}${payment.taxRequired ? " plus sales tax" : ""}`}</p>
     {payment.depositCents > 0 && payment.balanceDueAt ? <p>This is a deposit on the {formatUsd(payment.priceCents)} price. The balance of {formatUsd(payment.balanceCents)} is due by {format(payment.balanceDueAt, timezone)}; Dial emails you a link to pay it.</p> : null}
     <p>{payment.mode === "setup" ? "Stripe saves your card on its secure page; nothing is charged now. Dial never sees your card number." : "You pay securely on Stripe Checkout (card, Apple Pay, Google Pay or Link; US bank account when the host allows it). Your time is held for 10 minutes while you pay, and the booking is confirmed as soon as Stripe confirms the payment. Dial never sees your card number."}</p>
     <Policy lines={payment.policy} />
@@ -24,11 +24,12 @@ export function PayStepNotice({ payment, timezone, consented, onConsent, error }
 const paymentLabels: Record<string, string> = { payment: "Payment", deposit: "Deposit", balance: "Balance", invoice: "Invoice payment", late_cancel_fee: "Late-cancellation fee", no_show_fee: "No-show fee" };
 
 export function PaymentSummary({ payment, timezone, open = true }: { payment: PaymentSummaryView; timezone: string; open?: boolean }) {
+  const payments = payment.payments && payment.payments.length > 1 ? payment.payments : undefined;
   return <div className="pb-payment-summary">
     {payment.businessName ? <p>Paid to {payment.businessName}</p> : null}
     {payment.kind === "invoice" && payment.invoice ? <p><strong>{payment.invoice.paid ? "Invoice paid" : "Invoice issued"} {formatUsd(payment.invoice.amountCents)}</strong>{payment.invoice.number ? <> · Invoice <code>{payment.invoice.number}</code></> : null}</p>
-      : <p><strong>{payment.kind === "setup" ? "Card saved with Stripe for the stated fees" : `${payment.kind === "deposit" ? "Deposit paid" : "Paid"} ${formatUsd(payment.amountCents)}`}</strong>{payment.reference ? <> · Stripe reference <code>{payment.reference}</code></> : null}</p>}
-    {payment.payments && payment.payments.length > 1 ? <ul aria-label="Payments">{payment.payments.map(entry => <li key={`${entry.kind}:${entry.reference}`}>{paymentLabels[entry.kind] ?? entry.kind}: {formatUsd(entry.amountCents)}{entry.taxCents ? ` (sales tax ${formatUsd(entry.taxCents)})` : ""} · <code>{entry.reference}</code></li>)}</ul> : null}
+      : payments ? null : <p><strong>{payment.kind === "setup" ? "Card saved with Stripe for the stated fees" : `${payment.kind === "deposit" ? "Deposit paid" : "Paid"} ${formatUsd(payment.amountCents)}`}</strong>{payment.reference ? <> · Stripe reference <code>{payment.reference}</code></> : null}</p>}
+    {payments ? <ul aria-label="Payments">{payments.map(entry => <li key={`${entry.kind}:${entry.reference}`}>{paymentLabels[entry.kind] ?? entry.kind}: {formatUsd(entry.amountCents)}{entry.taxCents ? ` (sales tax ${formatUsd(entry.taxCents)})` : ""} · <code>{entry.reference}</code></li>)}</ul> : null}
     {payment.taxCents ? <p>Sales tax included: {formatUsd(payment.taxCents)}{payment.taxSummary ? ` (${payment.taxSummary})` : ""}</p> : null}
     {payment.invoice && !payment.invoice.paid && open ? <p>Invoice {payment.invoice.number ?? ""} for {formatUsd(payment.invoice.amountCents)}: <a href={payment.invoice.url}>Pay the invoice on Stripe</a></p> : null}
     {payment.balanceDueCents > 0 && payment.balanceDueAt ? <p>Balance due: {formatUsd(payment.balanceDueCents)} by {format(payment.balanceDueAt, timezone)}.{payment.balanceUrl && open ? <> <a href={payment.balanceUrl}>Pay the balance</a></> : null}</p> : null}
