@@ -33,7 +33,10 @@ assert.equal(signedIn.status, 303); cookie = signedIn.headers.get("set-cookie").
 const event = await data("/api/public/events/dial-host/intro");
 const week = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
 const availability = await data(`/api/public/book/dial-host/intro/availability?week=${week}&inviteeTimezone=America%2FNew_York`);
-const slots = availability.slots.filter((slot) => Date.parse(slot.startAt) > Date.now() + 2 * 86400000);
+// Slots are typed below as Europe/London wall times, so each must name one instant: London's repeated autumn hour
+// names two (an hour apart), and a wall time read from a real instant never falls in its skipped spring hour.
+const londonWallTimeIsUnique = (slot) => [-3600000, 3600000].every((shift) => localTime(Date.parse(slot.startAt) + shift, "Europe/London") !== localTime(slot.startAt, "Europe/London"));
+const slots = availability.slots.filter((slot) => Date.parse(slot.startAt) > Date.now() + 2 * 86400000 && londonWallTimeIsUnique(slot));
 assert.ok(slots.length > 20);
 async function create(index, name) {
   const slot = slots[index];
