@@ -52,19 +52,24 @@ async function cancelledCapturedApproval(h,priced){
   const {data,call,state}=h;
   const request=await h.authorize(await h.hold(priced,{name:'Jordan Miller',email:'synthetic-pay007-captured-cancel@example.test'}));
   const shownAmount=request.selected.payment.amountCents;
+  const token=new URL((await data(`/api/public/payments/${request.returnToken}`)).approvalUrl).pathname.split("/").at(-1);
   assert.equal((await data(`/api/app/booking-approvals/${request.request.id}/decision`,{decision:'approve',reason:'Approved the requested time'})).kind,'capture_pending');
   let snap=await state();noBooking(snap,request.request);
   const captured=providerObject(snap,request.intent.id);
   assert.deepEqual([captured.status,captured.amount_received],['succeeded',shownAmount],'Stripe captured the shown total while its signed fact is withheld');
+  await data('/__fixtures/payments/control',{name:'stripe-refund-unavailable',value:1});
   await data(`/api/app/booking-approvals/${request.request.id}/cancel`,{reason:'Host unavailable after reviewing the request'});
+  const pendingView=await data(`/api/public/manage/${token}`);assert.equal(pendingView.approval.paymentState,'refund_pending','public status distinguishes a captured refund from an uncharged authorization');assert.equal(pendingView.approval.capturedCents,shownAmount);assert.equal(pendingView.approval.refundedCents,0);
+  await data('/__fixtures/payments/control',{name:'stripe-refund-unavailable',value:0});
   await call(`/api/app/booking-approvals/${request.request.id}/cancel`,{reason:'Host unavailable after reviewing the request'},[200,409]);
   snap=await state();noBooking(snap,request.request);
+  const closedView=await data(`/api/public/manage/${token}`);assert.equal(closedView.approval.paymentState,'refunded');assert.equal(closedView.approval.refundedCents,shownAmount);
   const refunds=snap.wire_stripe_objects.map(row=>JSON.parse(row.payload)).filter(row=>row.object==='refund'&&row.payment_intent===captured.id);
   assert.equal(refunds.length,1,'cancelling after a processor capture produces one full refund');
   assert.deepEqual([refunds[0].status,refunds[0].amount],['succeeded',shownAmount]);
   const reconciled=providerObject(snap,captured.id);
   assert.deepEqual([reconciled.amount_received,reconciled.amount_refunded],[shownAmount,shownAmount],'processor ledger nets the cancelled authorization to zero');
-  assert.equal(providerCalls(snap,'/v1/refunds').filter(row=>JSON.parse(row.body).payment_intent===captured.id).length,1);
+  const attempts=providerCalls(snap,'/v1/refunds').filter(row=>JSON.parse(row.body).payment_intent===captured.id);assert.equal(attempts.length,2,'one transport refusal and one accepted refund');assert.equal(new Set(attempts.map(row=>JSON.parse(row.headers).idempotency)).size,1,'recovery keeps the same refund command identity');
   audit(snap,'capture',captured.id,shownAmount,'operator');
   audit(snap,'refund',refunds[0].id,shownAmount,'operator');
   const capturedAudit=snap.anonymized_audit.find(row=>row.action==='capture'&&row.processor_ref===captured.id),refundAudit=snap.anonymized_audit.find(row=>row.action==='refund'&&row.processor_ref===refunds[0].id);
@@ -72,6 +77,6 @@ async function cancelledCapturedApproval(h,priced){
   assert.equal(refundAudit.actor_id,capturedAudit.actor_id,'host cancellation and capture record their native actor');
   const late=h.event('payment_intent.succeeded',captured);await h.webhook(late);await h.webhook(late);
   const after=await state();noBooking(after,request.request);
-  assert.equal(providerCalls(after,'/v1/refunds').filter(row=>JSON.parse(row.body).payment_intent===captured.id).length,1,'late signed capture replays neither book nor refund twice');
+  assert.equal(providerCalls(after,'/v1/refunds').filter(row=>JSON.parse(row.body).payment_intent===captured.id).length,attempts.length,'late signed capture replays neither book nor refund twice');
   await call(`/api/app/bookings/${request.request.booking_id}/money`,undefined,404);
 }

@@ -1,7 +1,9 @@
 export async function setupApprovalScreens(h,setup){
   const {capture,data,call}=h,selection=await h.selection(setup);
   await capture('saved-card-request-details',h.details(selection),async page=>{await page.getByRole('button',{name:'Continue to save your card',exact:true}).waitFor();await page.getByLabel('Name',{exact:true}).fill('Leah Patel');await page.getByLabel('Email',{exact:true}).fill('synthetic-pay007-leah@example.test');await page.locator('.pb-consent input').check();});
-  const saved=await h.authorize(await h.hold(setup,{selection,name:'Leah Patel'})),url=await h.manage(saved);
+  const held=await h.hold(setup,{selection,name:'Leah Patel'});
+  await capture('saved-card-authorization-return',held.step.payment.returnUrl,async page=>{await page.getByRole('heading',{name:'Waiting for Stripe to confirm your saved card.',exact:true}).waitFor();});
+  const saved=await h.authorize(held),url=await h.manage(saved);
   await capture('saved-card-pending',url,async page=>{await page.getByRole('heading',{name:'Waiting for host approval.',exact:true}).waitFor();await page.getByText('Your card is saved with Stripe',{exact:false}).waitFor();});
   await capture('owner-saved-card','/app/bookings',async page=>{const section=page.getByRole('region',{name:'Approval requests'});await section.getByText('Card saved with consent',{exact:false}).waitFor();return section;},{session:true});
   await data(`/api/app/booking-approvals/${saved.request.id}/decision`,{decision:'approve'});

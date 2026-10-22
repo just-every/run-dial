@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {feeTerms,providerObject} from './paid-approval-support.mjs';
 import {paidApprovalScreensSupport} from './paid-approval-screen-support.mjs';
 import {setupApprovalScreens} from './paid-approval-setup-screens.mjs';
+import {capturedRefundScreens} from './paid-approval-refund-screens.mjs';
 /** Parent supplies its current Playwright browser; this module starts no browser, server or watcher. */
 export async function runPaidApprovalScreens(options){
   const h=await paidApprovalScreensSupport(options),{data,call,state,capture,manage}=h;
@@ -28,6 +29,6 @@ export async function runPaidApprovalScreens(options){
     await capture('authorization-declined',declineUrl,async page=>{await page.getByRole('heading',{name:'The host declined this request.',exact:true}).waitFor();});
     const expired=await h.authorize(await h.hold(priced,{name:'Alex Brown'})),expiredUrl=await manage(expired);await call('/__fixtures/approval-expiry',{id:expired.request.id},204);
     await capture('authorization-expired',expiredUrl,async page=>{await page.getByRole('heading',{name:'This request has expired.',exact:true}).waitFor();});
-    await setupApprovalScreens(h,setup);await h.finish();return {shots:h.shots};
+    await capturedRefundScreens(h,priced);await setupApprovalScreens(h,setup);await h.finish();return {shots:h.shots};
   }finally{await h.close();}
 }

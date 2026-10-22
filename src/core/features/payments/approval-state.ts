@@ -13,7 +13,7 @@ export function approvalPayment(json: string | null): ApprovalPayment | undefine
 export function approvalAuditIds(): ApprovalPayment["audit"] { return { authorize: createId(), capture: createId(), void: createId(), detach: createId(), refund: createId() }; }
 export function publicApprovalPayment(payment: ApprovalPayment | undefined) {
   if (!payment) return undefined;
-  return { mode: payment.mode, amountCents: payment.amountCents, state: payment.state === "authorized" || payment.state === "capture_pending" ? payment.state : "void_pending" as const };
+  return { mode: payment.mode, amountCents: payment.amountCents, state: payment.state, ...(payment.capturedCents === undefined ? {} : {capturedCents:payment.capturedCents}), refundedCents: payment.state === "refunded" ? payment.capturedCents : 0 };
 }
 /** Anonymous processor facts have durable IDs on the command, so recovery and erasure record each once. */
 export function approvalAudit(db: D1Database, payment: ApprovalPayment, action: keyof ApprovalPayment["audit"], condition = { sql: "1", params: [] as unknown[] }) {
