@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "612282a9ddc84e6ab5543c40335a9bf8a8beb563b18a9cea625218ba5f9d3478",
+      "sha256": "1cc8fa7faa20f8ef007909141fd1eb449d0f549ffe25c3fa3f9943b514cd6ba5",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e1e06ad83bd24105b2df2cd34dab1e6dc74166a525af73121f1968ee09d92d34",
+      "sha256": "50d703a6d7d112dac0bb60ff56c749c870acabe6a119f31eac6902c777e7514e",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "2405b1331e6c0b9227e5af9d81ddd4db0ad2bfb168bd709bede7632af3307a20",
+      "sha256": "b3f51268a7b85c92f23d114dbdd29b184e7dd95aae096268d9fd184121ef5f87",
       "executable": false
     },
     "docs/importing.md": {
@@ -960,7 +960,7 @@
       "executable": false
     },
     "docs/overview.md": {
-      "sha256": "73f89b10672b2d093173649ebbf887eb588883b4ebe6bec3e76b53dbe362dc25",
+      "sha256": "a8f5f752f5507ce313f1ab732ed04de9dd6aebffab5aeaa55d18e7867c9132ba",
       "executable": false
     },
     "docs/site.json": {
