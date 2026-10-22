@@ -193,7 +193,10 @@ assert.equal(snap.booking_payments.length, 1);
 assert.deepEqual([snap.payment_movements.length, snap.wire_calls.filter(row => new URL(row.url).pathname === "/v1/refunds").length], [0, 0], "with no cancellation policy, Dial issues no automatic refund (PAY-003)");
 const changeMail = bookingMail(snap, paidBookings[0].id).filter(mail => /^Rescheduled:|^Booking cancelled:/.test(mail.subject));
 assert.equal(changeMail.length, 4);
-for (const mail of changeMail) assert.ok(textBody(mail).includes(`Payment: $90.00 USD paid · Stripe reference ${session.id}`), `${mail.subject} states the payment it keeps`);
+for (const mail of changeMail) {
+  assert.equal(textBody(mail).split("$90.00 USD").length - 1, 1, `${mail.subject} states the retained amount once`);
+  assert.ok(textBody(mail).includes(session.id), `${mail.subject} keeps the processor reference`);
+}
 checks.push("reschedule keeps $90 paid; cancel keeps the payment record and, with no cancellation policy, issues no refund; change and cancellation mail state the payment kept");
 
 // S1: account.application.deauthorized marks the connection unhealthy and stops new paid bookings with a named reason.

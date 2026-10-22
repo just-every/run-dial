@@ -218,8 +218,9 @@ export function bookingCancellationMail(input: BookingMailDetails & {
   const location = locationText(input);
   // The cancellation outcome already names the refund/fee amount. Keep its processor reference beside it
   // without repeating the original payment amount as though it were a second money movement.
-  const moneyFacts = input.payment?.notes?.length ? [{ label: "Stripe reference", value: input.payment.reference }, { label: "Refunds and fees", value: input.payment.notes.join(" ") }] : changeFacts(input);
-  const moneyLines = input.payment?.notes?.length ? [`Stripe reference: ${input.payment.reference}`, input.payment.notes.join(" ")] : changeLines(input);
+  const amountInOutcome = input.payment?.notes?.some(note => note.includes(input.payment!.amount));
+  const moneyFacts = amountInOutcome ? [{ label: "Stripe reference", value: input.payment!.reference }, { label: "Refunds and fees", value: input.payment!.notes!.join(" ") }] : changeFacts(input);
+  const moneyLines = amountInOutcome ? [`Stripe reference: ${input.payment!.reference}`, input.payment!.notes!.join(" ")] : changeLines(input);
   const facts: BrandedMailFact[] = [
     { label: "Event", value: input.eventTitle },
     ...timeFacts,
