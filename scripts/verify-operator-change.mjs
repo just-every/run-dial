@@ -57,7 +57,7 @@ async function externalConflict(current, seconds = 2) {
 await externalConflict(booking);
 // Deliberately remove published hours; the operator must explicitly authorize the override.
 const configuration = await data(`/api/app/event-types/${fixture.eventId}`, undefined, 200, true);
-await data(`/api/app/event-types/${fixture.eventId}`, { ...configuration, availability: [{ weekday: 0, startMinute: 540, endMinute: 570 }] }, 200, true, "PATCH");
+await data(`/api/app/event-types/${fixture.eventId}`, { ...configuration, availability: [] }, 200, true, "PATCH");
 const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 let page;
 try {
@@ -221,8 +221,9 @@ try {
   await page.getByRole("heading", { name: "Calendar conflicts", exact: true }).waitFor();
   let cancellationRequests = 0;
   page.on("request", (request) => { if (request.url() === `${origin}/api/app/bookings/${blocked.id}/cancel`) cancellationRequests++; });
-  page.once("dialog", (dialog) => dialog.dismiss());
+  const dismissed = new Promise((resolve) => page.once("dialog", async (dialog) => { await dialog.dismiss(); resolve(); }));
   await page.getByRole("button", { name: "Cancel booking instead", exact: true }).click();
+  await dismissed;
   assert.equal(cancellationRequests, 0, "dismissing the cancellation prompt does not mutate the booking");
   page.once("dialog", (dialog) => dialog.accept("Synthetic conflict cancellation"));
   const cancelledResponse = page.waitForResponse((response) => response.url() === `${origin}/api/app/bookings/${blocked.id}/cancel`);

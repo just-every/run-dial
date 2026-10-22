@@ -4476,7 +4476,7 @@
       "executable": false
     },
     "scripts/verify-operator-change.mjs": {
-      "sha256": "35dabb010e9eb757250429fe44b1271e13e2f9d1893f6fde8213c91f722e42cd",
+      "sha256": "c4bf71150c1b0351318f034e6390773ebdcac4a7409d9d38ced6fd62cf5dc63c",
       "executable": false
     },
     "scripts/verify-operator-creation-recovery.mjs": {
