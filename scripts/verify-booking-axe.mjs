@@ -10,6 +10,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "@playwright/test";
 import { operatorJourney } from "../tests/booking-axe/operator.mjs";
 import { publicSiteAudits, publicSiteJourney } from "../tests/booking-axe/public-site.mjs";
+import {runPaidApprovalScreens} from "../tests/booking-wire/paid-approval-screens.mjs";
 import { runPaymentErasureScreens } from "./verify-payment-erasure-screens.mjs";
 import { evidencePath } from "./evidence-path.mjs";
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752";
@@ -17,7 +18,10 @@ const browser = await chromium.launch({ headless: true, args: ["--use-mock-keych
 const scans = [], errors = [], keyboardChecks = [];
 let storageState;
 try {
-  if(process.env.DIAL_ERASURE_ONLY){
+  if(process.env.DIAL_PAID_APPROVAL_ONLY){
+    const result=await runPaidApprovalScreens({browser,origin,folder:evidencePath("paid-approval-screens")});
+    console.log(`PAY-007 approval screens: PASS ${result.shots.length} screens at 1440 and 390, no overflow or serious axe finding; all controls visibly labeled.`);
+  }else if(process.env.DIAL_ERASURE_ONLY){
     const owner=await browser.newContext();
     try{await runPaymentErasureScreens({browser,owner,origin,folder:evidencePath("processor-erasure-screens"),initialize:true});}
     finally{await owner.close();}
@@ -62,6 +66,7 @@ try {
     const erasureOwner=await browser.newContext({storageState});
     try{await runPaymentErasureScreens({browser,owner:erasureOwner,origin,folder:evidencePath("processor-erasure-screens")});}
     finally{await erasureOwner.close();}
+    if(!process.env.DIAL_KEYBOARD_ONLY){const result=await runPaidApprovalScreens({browser,origin,folder:evidencePath("paid-approval-screens"),storageState,initialize:false});console.log(`PAY-007 approval screens: PASS ${result.shots.length} screens at 1440 and 390, no overflow or serious axe finding; all controls visibly labeled.`);}
     assert.deepEqual(keyboardChecks.filter(check => check.passed === false), [], "Every keyboard outcome passes");
   }
   assert.deepEqual(errors, []);

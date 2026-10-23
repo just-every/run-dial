@@ -1,3 +1,4 @@
+import {combinedApprovalScreens} from './paid-approval-combined-screens.mjs';
 import assert from 'node:assert/strict';
 import {feeTerms,providerObject} from './paid-approval-support.mjs';
 import {paidApprovalScreensSupport} from './paid-approval-screen-support.mjs';
@@ -29,6 +30,6 @@ export async function runPaidApprovalScreens(options){
     await capture('authorization-declined',declineUrl,async page=>{await page.getByRole('heading',{name:'The host declined this request.',exact:true}).waitFor();});
     const expired=await h.authorize(await h.hold(priced,{name:'Alex Brown'})),expiredUrl=await manage(expired);await call('/__fixtures/approval-expiry',{id:expired.request.id},204);
     await capture('authorization-expired',expiredUrl,async page=>{await page.getByRole('heading',{name:'This request has expired.',exact:true}).waitFor();});
-    await capturedRefundScreens(h,priced);await setupApprovalScreens(h,setup);await h.finish();return {shots:h.shots};
+    await capturedRefundScreens(h,priced);await setupApprovalScreens(h,setup);await combinedApprovalScreens(h);await h.finish();return {shots:h.shots};
   }finally{await h.close();}
 }
