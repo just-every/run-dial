@@ -41,7 +41,7 @@ export async function pollScreens(browser,owner,origin,scans,errors){
     const replay=await context.request.get(`${origin}/api/public/polls/${id}?token=${link.token}`);assert.equal(replay.status(),404);
     if(index===0){await participant.getByLabel('Availability',{exact:true}).first().selectOption('no');const changed=participant.waitForResponse(r=>r.url().endsWith(`/polls/${id}/votes`)&&r.status()===200);await participant.getByRole('button',{name:'Save votes',exact:true}).click();await changed;}
    }
-   const toggled=page.waitForResponse(r=>r.url().endsWith(`/polls/${id}/tally`)&&r.status()===200);await page.getByLabel('Show counts to participants',{exact:true}).check();await toggled;
+   const [toggled]=await Promise.all([page.waitForResponse(r=>r.url().endsWith(`/polls/${id}/tally`)),page.getByLabel('Show counts to participants',{exact:true}).check()]);assert.equal(toggled.status(),200);
    const publicPage=participants[0].pages()[0];await publicPage.reload();await publicPage.locator('[data-poll-participant-ready="true"]').waitFor();
    const visible=await (await participants[0].request.get(`${origin}/api/public/polls/${id}?token=${new URL(publicPage.url()).searchParams.get('token')}`)).json();assert.equal(visible.tally.length,2);assert.ok(visible.tally.every(t=>Object.keys(t).sort().join(',')==='candidateId,ifNeeded,no,yes'));
    await auditor(publicPage,width,scans)('poll-tally');
