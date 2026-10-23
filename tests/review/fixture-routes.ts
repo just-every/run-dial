@@ -1,3 +1,4 @@
+import { noticeFixtures } from '../booking-wire/notice-fixtures';
 import { paymentFixtures } from "../booking-wire/payment-fixtures";
 import { CalendarConnectionRepository } from "../../src/core/features/calendar-connection";
 import { processCoordinatedDelivery, coordinatedCalendarChanges, processDueApprovalRequests } from "../../src/core/app/booking-coordination";
@@ -18,6 +19,7 @@ export async function handleFixtures(request: Request, env: AppBindings & { PROV
       return Response.json({ keys: listed.objects.map(object => object.key) });
     }
   const providerDb = env.PROVIDER_DB ?? env.DB;
+  if(url.pathname.startsWith("/__fixtures/notices/"))return noticeFixtures(url,request,env.DB,providerDb);
     if (url.pathname.startsWith("/__fixtures/payments/")) return paymentFixtures(url, request, env.DB, providerDb, servicesFor(env));
     if(url.pathname==="/__fixtures/approval-expiry"&&request.method==="POST"){const {id}=await request.json<{id:string}>();await env.DB.prepare("UPDATE booking_approval_requests SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(id).run();await processDueApprovalRequests(env);return new Response(null,{status:204});}
     if (url.pathname === "/__fixtures/booking-ended" && request.method === "POST") {
@@ -56,10 +58,13 @@ export async function handleFixtures(request: Request, env: AppBindings & { PROV
       return new Response(null, { status: 204 });
     }
     if (url.pathname === "/__fixtures/deliver" && request.method === "POST") {
-      const input = await request.json<{ id?: string }>();
+      const input = await request.json<{ id?: string; channel?: "notice" }>();
+      if(input.channel==="notice"&&input.id){const job={outboxId:input.id,channel:"notice" as const};await processCoordinatedDelivery(job,env,()=>servicesFor(env).delivery.processUnknown(job));return Response.json({attempted:1});}
       const ids = input.id ? [input.id] : await new DeliveryRepository(env.DB).dueIds(new Date().toISOString(), 100);
       const results = await Promise.all(ids.map((outboxId) => processCoordinatedDelivery({ outboxId }, env, () => servicesFor(env).delivery.processUnknown({ outboxId }))));
-      return Response.json({ attempted: results.length });
+      const noticeIds=await servicesFor(env).notices.delivery.dueIds(new Date().toISOString(),100);
+      const noticeResults=await Promise.all(noticeIds.map(outboxId=>processCoordinatedDelivery({outboxId,channel:"notice"},env,()=>servicesFor(env).delivery.processUnknown({outboxId,channel:"notice"}))));
+      return Response.json({ attempted: results.length+noticeResults.length });
     }
     if (url.pathname === "/__fixtures/due" && request.method === "POST") {
       const input = await request.json<{ id: string; processing?: boolean }>();

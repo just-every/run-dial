@@ -28,6 +28,8 @@ export type AppBindings = {
   GOOGLE_OAUTH_CLIENT_ID?: string;
   GOOGLE_OAUTH_CLIENT_SECRET?: string;
   CALENDAR_WEBHOOK_SECRET?: string;
+  SLACK_CLIENT_ID?: string;
+  SLACK_CLIENT_SECRET?: string;
   QBO_CLIENT_ID?: string;
   QBO_CLIENT_SECRET?: string;
   STRIPE_SECRET_KEY?: string;

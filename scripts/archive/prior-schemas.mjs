@@ -12,6 +12,7 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  'core/0078_workspace_notices.sql': (_table,row) => row,
   'core/0077_payment_reconciliation.sql': (_table,row) => row,
   'core/0076_processor_erasure_requests.sql': (_table,row) => row,
   'core/0075_paid_approval.sql': (table,row) => table==='booking_approval_requests'?{...row,payment_json:null}:row,

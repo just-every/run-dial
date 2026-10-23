@@ -8,3 +8,6 @@ export { DeliveryRecovery } from "./recovery";
 export { revokeOperatorMail } from "./operator-mail";
 export { bookingCancellationMail, bookingChangeHtml, bookingConfirmationMail, bookingLinkReadyMail, formatTimeRange, requestSubmissionMail, requestUpdateMail } from "./mail";
 export type { BookingCancellationTemplate } from "./mail";
+
+export { renderBrandedMail } from './branded-layout';
+export { operatorRecipientAdmission } from './operator-mail';

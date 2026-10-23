@@ -1,9 +1,11 @@
+import { isNoticeHost,noticeWire } from './notice-wire';
 import { accountingHosts, accountingWire } from "./accounting-wire";
 import { initializeStripeWire, stripeHosts, stripeWire } from "./stripe-wire";
 /** Contract-shaped provider wire fixtures; production Google and Base mail adapters consume these. */
 export function wireTransport(db: D1Database): typeof fetch {
   return async (input, init = {}) => {
     const url = new URL(String(input)), method = init.method ?? "GET";
+    if(isNoticeHost(url.hostname))return noticeWire(db,url,init);
     if (url.hostname === "oauth2.googleapis.com") return googleToken(db, url, method, String(init.body ?? ""));
     if (accountingHosts.includes(url.hostname)) return accountingWire(db,url,method,init);
     if (stripeHosts.includes(url.hostname)) return stripeWire(db, url, method, init);

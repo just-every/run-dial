@@ -1,3 +1,4 @@
+import { NoticeErasure } from '../workspace-notices';
 import { importPersonValues, erasePersonSourceCustody, erasePersonSharedCustody, finishPersonCustody } from "../move-in";
 import { admitErasure, erasureAuthority, requireErasureSession } from "./admission";
 import { foldEmail, mailRecipientMatches, emailFoldSql, personalRecords, operatorOverlap, operatorOverlapSql } from "./identity";
@@ -28,7 +29,7 @@ export class PersonErasure {
     const pending=Boolean(await this.db.prepare("SELECT 1 FROM person_erasure_locks WHERE email=?").bind(email).first());
     const operatorIdentityRetained=await operatorOverlap(this.db,email);
     return { bookings: records.bookings.length, requests: records.requests.length+records.approvals.length, payments: records.holds.length, pending, operatorIdentityRetained, expiresAt,
-      externalRequests: processorReceiptItems(await new ProcessorRequestsRepository(this.db).preview(email)), confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
+      externalRequests: [...processorReceiptItems(await new ProcessorRequestsRepository(this.db).preview(email)),...await NoticeErasure.preview(this.db,email)], confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
   }
   async erase(input: PersonConfirmation, session: SessionRecord, eraseEntity: EraseEntity, cleanupPending?: CleanupPendingPayments) {
     await assertErasureCensus(this.db);
@@ -96,6 +97,6 @@ export class PersonErasure {
     if(!row) return null;
     const targets=(await this.db.prepare("SELECT completed_at,last_error_code FROM erased_calendar_targets WHERE receipt_id=?").bind(id).all<{completed_at:string|null;last_error_code:string|null}>()).results;
     // D7: a receipt from before the count existed reads null (not counted), never zero.
-    return {...row,externalRequests:processorReceiptItems(await new ProcessorRequestsRepository(this.db).list(id)),operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
+    return {...row,externalRequests:[...processorReceiptItems(await new ProcessorRequestsRepository(this.db).list(id)),...await NoticeErasure.items(this.db,id)],operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
   }
 }

@@ -1,3 +1,4 @@
+import { noticeRoutes } from '../features/workspace-notices';
 import { invitationManageRoutes } from "../features/public-booking/invitation-routes";
 import { bookingLinkRoutes } from "../features/booking-links/routes";
 import { correspondenceRoutes } from "../features/event-types/correspondence-routes";
@@ -100,6 +101,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", invitationManageRoutes)
     .route("/", paymentRoutes)
     .route("/", accountingRoutes)
+    .route("/", noticeRoutes)
     .route("/", reportRoutes)
     .route("/", publicBookingRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))

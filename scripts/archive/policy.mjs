@@ -26,6 +26,7 @@ export const exported = [
   // and money movements.
   'event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements',
   // PAY-005: Stripe Tax on or off and the business name on receipts and invoices.
+  'workspace_notice_destinations','workspace_notice_deliveries','notice_erasure_requests',
   'payment_settings', 'payment_processor_facts', 'accounting_connections', 'accounting_exports',
 ].sort();
 export { excluded } from "../../src/core/shared/archive-exclusions.mjs";
@@ -51,6 +52,9 @@ export function canonicalRow(name, source, secrets = []) {
     row.invitee_name_folded = foldBookingSearch(row.invitee_name);
     row.invitee_email_folded = foldBookingSearch(row.invitee_email);
   }
+  if(name==='workspace_notice_destinations'){row.credential_ciphertext=null;row.status='needs_reconnect';row.reason='reauthorization_required';row.active_delivery_id=null;row.cooldown_until=null;}
+  if(name==='workspace_notice_deliveries'&&['pending','invoking'].includes(row.state)){row.state='failed';row.reason='restored_historical_command';}
+  if(name==='notice_erasure_requests')row.archive_historical=1;
   if (name === 'accounting_connections') { for (const key of ['access_token_ciphertext','refresh_token_ciphertext','expires_at']) row[key]=null; row.status='unhealthy'; row.reason='reauthorization_required'; }
   if (name === 'calendar_connections') {
     for (const key of ['access_token_ciphertext', 'refresh_token_ciphertext', 'access_token_expires_at', 'channel_id', 'channel_resource_id', 'channel_expires_at']) row[key] = null;

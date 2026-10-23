@@ -1,10 +1,11 @@
+import { noticeStatements } from '../workspace-notices';
 import { operatorRecipientAdmission } from "../delivery/mail";
 import { reminderStatements } from "./reminder-commands";
 import { createId } from "../../shared/ids";
 import type { BookingEmail } from "./types";
 
 export function cancellationOutboxStatements(binding: D1Database, bookingId: string, emails: BookingEmail[], now: string) {
-  return emails.map((email) => {
+  return [...noticeStatements(binding,bookingId,undefined,now,true),...emails.map((email) => {
     if (!email.guest && (!email.html || email.mailTemplate?.kind !== "booking-cancellation")) throw new Error("Cancellation mail is missing its shared layout template");
     const admission = operatorRecipientAdmission(email);
     return binding.prepare(`INSERT INTO delivery_outbox (id, kind, idempotency_key, booking_id, occurrence_id, request_id, payload_json, state, attempts, next_attempt_at, created_at, updated_at)
@@ -14,11 +15,12 @@ export function cancellationOutboxStatements(binding: D1Database, bookingId: str
     WHERE booking.id = ? AND booking.state = 'cancelled' AND booking.cancelled_at = ? AND ${admission.sql}
     ON CONFLICT(idempotency_key) DO NOTHING`)
       .bind(createId(), `booking:${bookingId}:occurrence:`, `${email.recipientRole}:${email.to.toLowerCase()}`, JSON.stringify({ ...email, bookingState: "cancelled" }), now, now, now, bookingId, now, ...admission.params);
-  });
+  })];
 }
 
 export function outboxStatements(binding: D1Database, bookingId: string, occurrenceId: string, calendarPayload: Record<string, unknown> | undefined, emails: BookingEmail[], now: string) {
   return [
+    ...noticeStatements(binding,bookingId,occurrenceId,now),
     ...reminderStatements(binding, bookingId, occurrenceId, emails, now),
     ...(calendarPayload ? [binding.prepare("INSERT INTO delivery_outbox (id, kind, idempotency_key, booking_id, occurrence_id, request_id, payload_json, state, attempts, next_attempt_at, created_at, updated_at) SELECT ?, 'calendar_upsert', ?, ?, ?, NULL, ?, 'pending', 0, ?, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ? AND current_occurrence_id = ? AND state IN ('confirmed', 'rescheduled')) ON CONFLICT(idempotency_key) DO NOTHING").bind(createId(), `booking:${bookingId}:occurrence:${occurrenceId}:calendar`, bookingId, occurrenceId, JSON.stringify(calendarPayload), now, now, now, bookingId, occurrenceId)] : []),
     ...emails.map((email) => {
