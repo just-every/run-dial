@@ -11,8 +11,9 @@ test("OPER-002 migration preserves prior operator identity, session and authored
   const config = "tests/operator-management/worker.wrangler.toml";
   const run = (args) => new Promise((done, reject) => {
     const child = spawn("pnpm", ["exec", "wrangler", "d1", "execute", "dial-operator-management-test", "--local", "--persist-to", temporary, "--config", config, ...args], { cwd: new URL("../", import.meta.url), env: process.env, stdio: "pipe" });
-    let output = ""; child.stdout.on("data", (chunk) => { output += chunk; }); child.stderr.on("data", (chunk) => { output += chunk; });
-    child.once("error", reject); child.once("exit", (code) => code === 0 ? done(output) : reject(new Error(output.slice(-8000))));
+    let output = "", diagnostics = "";
+    child.stdout.on("data", (chunk) => { output += chunk; }); child.stderr.on("data", (chunk) => { diagnostics += chunk; });
+    child.once("error", reject); child.once("exit", (code) => code === 0 ? done(output) : reject(new Error((output + diagnostics).slice(-8000))));
   });
   const migrationDirectory = new URL("../migrations/core/", import.meta.url);
   const names = (await readdir(migrationDirectory)).filter((name) => name.endsWith(".sql") && name < "0013").sort();
