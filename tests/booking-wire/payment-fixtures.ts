@@ -8,7 +8,7 @@ import { stripeAuthorization } from "./stripe-authorization";
 export async function paymentFixtures(url: URL, request: Request, db: D1Database, providerDb: D1Database, services: AppServices) {
   if(url.pathname==='/__fixtures/payments/payout'){
     const {intentId,payoutId}=await request.json<{intentId:string;payoutId:string}>();
-    const value={id:'synthetic-dial-208',object:'balance_transaction',payout:payoutId,amount:2500,fee:100,net:2400,source:{id:'synthetic-dial-202',payment_intent:intentId}};
+    const value={id:'synthetic-dial-208',object:'balance_transaction',payout:payoutId,currency:'usd',amount:2500,fee:100,net:2400,source:{id:'synthetic-dial-202',payment_intent:intentId}};
     await providerDb.prepare("INSERT INTO wire_stripe_objects(id,type,payload) VALUES(?,'balance_transactions',?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload").bind(value.id,JSON.stringify(value)).run();return Response.json(value);
   }
   if (url.pathname === "/__fixtures/payments/accounting-expired") { await db.prepare("UPDATE accounting_oauth_states SET expires_at='2000-01-01T00:00:00Z'").run();return new Response(null,{status:204}); }
