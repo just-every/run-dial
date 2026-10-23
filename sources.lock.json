@@ -5636,7 +5636,7 @@
       "executable": false
     },
     "src/core/features/event-types/repository.ts": {
-      "sha256": "b992ea33d2e31e0e9ff399fd23d7c1ae42e02700fc892106f44602ef4236af34",
+      "sha256": "ecbddb0831627ee382ed361601be41be44850ebaba81fa37a2f42ada22de62d0",
       "executable": false
     },
     "src/core/features/event-types/routes.ts": {
@@ -7984,11 +7984,15 @@
       "executable": false
     },
     "tests/custom-fields.test.mjs": {
-      "sha256": "f86701bbefd1c9752fdfb758442e0e08b1991f493a9144ff263990e2deda5cf2",
+      "sha256": "e802fe0fa4a064c4cf352e6a7c81bd8f6455638ad0535c57d7a186fefe41ed96",
       "executable": false
     },
     "tests/custom-fields/fixture.mjs": {
       "sha256": "57370285127bf2f0e6edf51a55f9b0dacd86a97496ca0522c59a7bc51aa25a6f",
+      "executable": false
+    },
+    "tests/custom-fields/poll-deletion.mjs": {
+      "sha256": "50bab0e7c9ce6b23c57cf99f8b6cdf740aabb1e2092ba9cee39c2aa3d52e09e4",
       "executable": false
     },
     "tests/custom-fields/runtime.mjs": {
@@ -7996,7 +8000,7 @@
       "executable": false
     },
     "tests/custom-fields/worker.ts": {
-      "sha256": "4b9aab4fea19654bb6247c7ccc7282f26f4bd1c809cd040a111873088f9a87af",
+      "sha256": "39ce201b03be8ac1d82c262f1c6db6103f53eef306a13c28fb6aad67121522f1",
       "executable": false
     },
     "tests/deletion-fixtures/providers.ts": {
