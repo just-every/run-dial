@@ -1,3 +1,5 @@
+import { closeApprovalSetup } from "./approval-card";
+import type { ApprovalPayment } from "./approval-state";
 import { StripeApi, StripeApiError } from "./stripe-api";
 import { pendingRefundKey, pendingRefundParams } from "./pending-refund";
 
@@ -25,7 +27,11 @@ export async function erasePendingPayments(db: D1Database, email: string, live: 
     if (claim.money?.approval) {
       outcome.approval = true;
       const request = await db.prepare("SELECT payment_json FROM booking_approval_requests WHERE booking_id=?").bind(claim.bookingId).first<{ payment_json: string | null }>();
-      if (request?.payment_json) outcome.audit = (JSON.parse(request.payment_json) as { audit: ApprovalAudit }).audit;
+      if (request?.payment_json) {
+        const payment=JSON.parse(request.payment_json) as ApprovalPayment;
+        outcome.audit=payment.audit;
+        if(payment.saveCard)await closeApprovalSetup(connection.api,payment);
+      }
     }
     // Creation can have reached Stripe before Dial attached its response. Reconcile that attempt before erasing.
     if (!hold.sessionId) throw new Error("payment_erasure_checkout_unresolved");

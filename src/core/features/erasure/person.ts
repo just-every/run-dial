@@ -63,6 +63,7 @@ export class PersonErasure {
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
     await this.processors?.prepare(email,id,session.id);
     await erasePendingPayments(this.db,email,session,cleanupPending);
+    await this.processors?.retry(id);
     await erasePersonSourceCustody(this.db, email, custody.custodyOnly, custody.values, session);
     await erasePersonSharedCustody(this.db, custody.values, custody.sharedFields, custody.sharedInvitees, session);
     for (const booking of records.bookings) await eraseEntity("bookings",booking);

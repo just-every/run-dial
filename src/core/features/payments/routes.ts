@@ -41,7 +41,6 @@ export const paymentRoutes = new Hono<AppEnvironment>()
     const event = await context.get("services").eventTypes.getEventType(context.req.valid("param").id);
     if (!event) return apiError(context, 404, "event_type_not_found", "Event type not found.");
     const priceInput=context.req.valid("json");
-    if((priceInput.amountCents!==null||priceInput.durationPrices.length>0)&&(await context.get("services").bookings.approvalSettings(event.id))?.required && ((await context.get("services").payments.eventTerms(event.id)).lateCancelFeeCents>0 || (await context.get("services").payments.eventTerms(event.id)).noShowFeeCents>0))return apiError(context,409,"approval_price_and_saved_card_conflict","Priced approval cannot also require a saved card for fees.");
     const result = await context.get("services").payments.savePrice(event, context.req.valid("json"));
     if (result.kind === "deposit_conflict") return apiError(context, 409, "deposit_conflict", "The saved deposit must stay below every price. Change the deposit first.", ["deposit"]);
     return result.kind === "saved" ? context.json(result.price) : apiError(context, 400, "invalid_price", "Price each offered duration at least $0.50, or set one event price.", ["durationPrices"]);
@@ -55,7 +54,6 @@ export const paymentRoutes = new Hono<AppEnvironment>()
     const event = await context.get("services").eventTypes.getEventType(context.req.valid("param").id);
     if (!event) return apiError(context, 404, "event_type_not_found", "Event type not found.");
     const termsInput=context.req.valid("json");
-    if((termsInput.lateCancelFeeCents>0||termsInput.noShowFeeCents>0)&&(await context.get("services").bookings.approvalSettings(event.id))?.required && ((await context.get("services").payments.eventPrice(event.id)).amountCents!==null || (await context.get("services").payments.eventPrice(event.id)).durationPrices.length>0))return apiError(context,409,"approval_price_and_saved_card_conflict","Priced approval cannot also require a saved card for fees.");
     const result = await context.get("services").payments.saveTerms(event, context.req.valid("json"));
     return result.kind === "saved" ? context.json(result.terms) : apiError(context, 400, result.refusal, termsRefusalMessages[result.refusal]);
   })

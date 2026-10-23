@@ -13,8 +13,8 @@ async function approvedSavedCardFee(h,setup){
   const {data,call,state}=h;
   const request=await h.authorize(await h.hold(setup,{name:'Leah Patel',email:'synthetic-pay007-fee-ledger@example.test'}));
   const shownFee=request.selected.payment.consent.noShowFeeCents;
-  assert.equal(request.intent.object,'setup_intent');
-  const approved=await data(`/api/app/booking-approvals/${request.request.id}/decision`,{decision:'approve',reason:'Approved the consented consultation'});
+  if(request.intent.object==='payment_intent')await h.capture(request);
+  const approved=request.intent.object==='payment_intent'?{kind:'approved'}:await data(`/api/app/booking-approvals/${request.request.id}/decision`,{decision:'approve',reason:'Approved the consented consultation'});
   assert.equal(approved.kind,'approved');
   const bookingId=request.request.booking_id;
   const consent=(await state()).booking_card_consents.find(row=>row.booking_id===bookingId);
@@ -44,7 +44,7 @@ async function approvedSavedCardFee(h,setup){
   assert.equal(returned.sourceRef,fee.processorRef,'the refund identifies the original fee charge');
   assert.deepEqual([providerRefund.status,providerRefund.amount,providerRefund.payment_intent],['succeeded',700,fee.processorRef]);
   assert.equal(providerCalls(snap,'/v1/refunds').filter(row=>JSON.parse(row.body).payment_intent===fee.processorRef).length,1,'one actual partial refund reaches Stripe');
-  assert.deepEqual([money.ledger.paidCents,money.ledger.feesCents,money.ledger.refundedCents,money.ledger.netCents],[0,shownFee,700,shownFee-700]);
+  assert.deepEqual([money.ledger.paidCents,money.ledger.feesCents,money.ledger.refundedCents,money.ledger.netCents],[request.intent.object==='payment_intent'?request.intent.amount:0,shownFee,700,(request.intent.object==='payment_intent'?request.intent.amount:0)+shownFee-700]);
   assert.equal(providerObject(snap,fee.processorRef).amount_refunded,700);
 }
 
@@ -75,6 +75,7 @@ async function cancelledCapturedApproval(h,priced){
   const capturedAudit=snap.anonymized_audit.find(row=>row.action==='capture'&&row.processor_ref===captured.id),refundAudit=snap.anonymized_audit.find(row=>row.action==='refund'&&row.processor_ref===refunds[0].id);
   assert.ok(capturedAudit.actor_id&&refundAudit.actor_id,'both money facts retain the operator identity');
   assert.equal(refundAudit.actor_id,capturedAudit.actor_id,'host cancellation and capture record their native actor');
+  if(JSON.parse(request.request.payment_json).saveCard){assert.equal(providerObject(snap,request.intent.payment_method).customer,null);audit(snap,'saved_card_detach',request.intent.payment_method,0,'operator');}
   const late=h.event('payment_intent.succeeded',captured);await h.webhook(late);await h.webhook(late);
   const after=await state();noBooking(after,request.request);
   assert.equal(providerCalls(after,'/v1/refunds').filter(row=>JSON.parse(row.body).payment_intent===captured.id).length,attempts.length,'late signed capture replays neither book nor refund twice');

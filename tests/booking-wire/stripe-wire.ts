@@ -2,6 +2,7 @@
  * talks to these exactly as to api.stripe.com and connect.stripe.com; no Stripe secret exists in CI. */
 export const stripeHosts = ["api.stripe.com", "connect.stripe.com"];
 import { stripeCustomerErasure } from "./stripe-erasure";
+import { stripeApprovalSetup } from "./stripe-approval-setup";
 import { stripeGate } from "./stripe-gates";
 import { stripeAuthorization } from "./stripe-authorization";
 
@@ -29,11 +30,13 @@ export async function stripeWire(db: D1Database, url: URL, method: string, init:
     // Transport faults happen outside Stripe's idempotent execution: a retry sees the original result.
     if (url.pathname === "/v1/refunds" && await control(db, "stripe-refund-unavailable")) return stripeError(503, "unavailable");
     if (/\/customers\/[^/]+$/.test(url.pathname) && await control(db, "stripe-anonymize-unavailable")) return stripeError(503, "unavailable");
+    if(url.pathname==="/v1/setup_intents" && await control(db,"stripe-setup-unavailable"))return stripeError(503,"unavailable");
     const operation = /\/payment_intents\/[^/]+\/(capture|cancel)$/.exec(url.pathname)?.[1];
     if (operation && await control(db, `stripe-${operation}-unavailable`)) return stripeError(503, "unavailable");
     const response = await stripeObjects(db, url, method, form);
     await db.prepare("INSERT INTO wire_stripe_replies(idempotency_key,status,body) VALUES(?,?,?)").bind(key, response.status, await response.clone().text()).run();
     if (/\/invoices\/[^/]+\/finalize$/.test(url.pathname) && response.ok && await control(db, "stripe-finalize-response-lost")) return stripeError(503, "unavailable");
+    if(url.pathname==="/v1/setup_intents" && response.ok && await control(db,"stripe-setup-response-lost"))return stripeError(503,"unavailable");
     if (operation && response.ok && await control(db, `stripe-${operation}-response-lost`)) return stripeError(503, "unavailable");
     return response;
   }
@@ -81,6 +84,8 @@ async function checkoutSessions(db: D1Database, url: URL, method: string, form: 
 
 /** PaymentIntents, SetupIntents, refunds and saved payment methods (PAY-003). */
 async function stripeObjects(db: D1Database, url: URL, method: string, form: URLSearchParams) {
+  const setup=await stripeApprovalSetup(db,url,method,form);
+  if(setup)return setup;
   const erasure = await stripeCustomerErasure(db,url,method,form);
   if(erasure)return erasure;
   const authorization = await stripeAuthorization(db, url, method, form);

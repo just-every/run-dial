@@ -38,7 +38,7 @@ export class ApprovalsRepository {
     async forNonce(id: string) { return await this.db.prepare(`SELECT ${columns} FROM booking_approval_requests WHERE nonce_id=?`).bind(id).first<ApprovalRequest>() ?? undefined; }
     async byToken(hash: string) { return await this.db.prepare(`SELECT ${columns} FROM booking_approval_requests WHERE id=(SELECT request_id FROM booking_approval_tokens WHERE token_hash=?)`).bind(hash).first<ApprovalRequest>() ?? undefined; }
     async pending() { return (await this.db.prepare(`SELECT ${columns} FROM booking_approval_requests WHERE state='pending' ORDER BY created_at LIMIT 100`).all<ApprovalRequest>()).results; }
-    async due() { return (await this.db.prepare("SELECT id,booking_id AS bookingId FROM booking_approval_requests a WHERE state='pending' AND claim_json IS NOT NULL AND (expires_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now') OR json_extract(payment_json,'$.state') IN ('capture_pending','void_pending','refund_pending')) AND (payment_json IS NULL OR EXISTS(SELECT 1 FROM payment_holds h WHERE h.id=json_extract(a.payment_json,'$.holdId') AND h.state IN ('held','processing') AND h.claim_json IS NOT NULL)) LIMIT 100").all<{
+    async due() { return (await this.db.prepare("SELECT id,booking_id AS bookingId FROM booking_approval_requests a WHERE state='pending' AND claim_json IS NOT NULL AND (expires_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now') OR json_extract(payment_json,'$.state') IN ('setup_pending','capture_pending','void_pending','refund_pending')) AND (payment_json IS NULL OR EXISTS(SELECT 1 FROM payment_holds h WHERE h.id=json_extract(a.payment_json,'$.holdId') AND h.state IN ('held','processing') AND h.claim_json IS NOT NULL)) LIMIT 100").all<{
         id: string;
         bookingId: string;
     }>()).results; }
@@ -78,12 +78,20 @@ export class ApprovalsRepository {
         return this.forNonce(claim.nonceId);
     }
     async paymentCommand(request: ApprovalRequest, payment: ApprovalPayment, capture: boolean) {
-        await this.db.prepare(`UPDATE booking_approval_requests SET payment_json=?,decided_by=?,reason=?,updated_at=? WHERE id=? AND state='pending' AND claim_json IS NOT NULL AND json_extract(payment_json,'$.state') IN (${capture ? "'authorized'" : "'authorized','capture_pending'"}) AND EXISTS(SELECT 1 FROM payment_holds h WHERE h.id=? AND h.state IN ('held','processing') AND h.claim_json IS NOT NULL) ${capture ? "AND expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now') AND NOT EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=?)" : ""}`)
+        await this.db.prepare(`UPDATE booking_approval_requests SET payment_json=?,decided_by=?,reason=?,updated_at=? WHERE id=? AND state='pending' AND claim_json IS NOT NULL AND json_extract(payment_json,'$.state') IN (${capture ? "'authorized'" : "'setup_pending','authorized','capture_pending'"}) AND EXISTS(SELECT 1 FROM payment_holds h WHERE h.id=? AND h.state IN ('held','processing') AND h.claim_json IS NOT NULL) ${capture ? "AND expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now') AND NOT EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=?)" : ""}`)
             .bind(JSON.stringify(payment), payment.actorId ?? null, payment.voidReason ?? null, nowIso(), request.id, payment.holdId, ...(capture ? [foldBookingSearch(request.inviteeEmail)] : [])).run();
         return this.get(request.id);
     }
     async replacePayment(request: ApprovalRequest, from: ApprovalPayment["state"], payment: ApprovalPayment) {
         await this.db.prepare("UPDATE booking_approval_requests SET payment_json=?,updated_at=? WHERE id=? AND state='pending' AND claim_json IS NOT NULL AND json_extract(payment_json,'$.state')=? AND EXISTS(SELECT 1 FROM payment_holds h WHERE h.id=? AND h.state IN ('held','processing') AND h.claim_json IS NOT NULL)").bind(JSON.stringify(payment), nowIso(), request.id, from, payment.holdId).run();
+        return this.get(request.id);
+    }
+    async readyPayment(request: ApprovalRequest, payment: ApprovalPayment, emails: BookingEmail[]) {
+        const now=nowIso(),expiresAt=new Date(Math.min(Date.parse(request.startAt),Date.parse(payment.authorizedAt)+JSON.parse(request.claimJson!).money.approval.windowHours*3600000)).toISOString();
+        await this.db.batch([
+            this.db.prepare("UPDATE booking_approval_requests SET payment_json=?,expires_at=?,updated_at=? WHERE id=? AND state='pending' AND json_extract(payment_json,'$.state')='setup_pending' AND NOT EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=?)").bind(JSON.stringify(payment),expiresAt,now,request.id,foldBookingSearch(request.inviteeEmail)),
+            ...emails.map(email=>this.mail(request.id,"pending",email,now,"authorized")),
+        ]);
         return this.get(request.id);
     }
     async paymentFact(payment: ApprovalPayment, action: keyof ApprovalPayment["audit"]) { await approvalAudit(this.db, payment, action).run(); }
@@ -99,7 +107,7 @@ export class ApprovalsRepository {
         ]);
     }
     /** Request/decision notices are linked through their structured request id for privacy erasure. */
-    private mail(id: string, state: ApprovalRequest['state'], email: BookingEmail, now: string) { const admission = operatorRecipientAdmission(email); return this.db.prepare(`INSERT INTO delivery_outbox(id,kind,idempotency_key,payload_json,state,attempts,next_attempt_at,created_at,updated_at) SELECT ?,'mail_send',?,?,'pending',0,?,?,? WHERE EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=? AND state=?) AND ${admission.sql} ON CONFLICT(idempotency_key) DO NOTHING`).bind(createId(), `approval:${id}:${state}:${email.recipientRole}:${email.operatorAccess?.id ?? "invitee"}`, JSON.stringify({ ...email, approvalRequestId: id }), now, now, now, id, state, ...admission.params); }
+    private mail(id: string, state: ApprovalRequest['state'], email: BookingEmail, now: string, paymentState?: string) { const admission = operatorRecipientAdmission(email); return this.db.prepare(`INSERT INTO delivery_outbox(id,kind,idempotency_key,payload_json,state,attempts,next_attempt_at,created_at,updated_at) SELECT ?,'mail_send',?,?,'pending',0,?,?,? WHERE EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=? AND state=? AND (? IS NULL OR json_extract(payment_json,'$.state')=?)) AND ${admission.sql} ON CONFLICT(idempotency_key) DO NOTHING`).bind(createId(), `approval:${id}:${state}:${email.recipientRole}:${email.operatorAccess?.id ?? "invitee"}`, JSON.stringify({ ...email, approvalRequestId: id }), now, now, now, id, state, paymentState??null,paymentState??null, ...admission.params); }
 }
 export function approvalMail(input: {
     title: string;

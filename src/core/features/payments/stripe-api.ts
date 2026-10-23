@@ -78,6 +78,13 @@ export class StripeApi {
     return this.request<SetupIntent>(`${apiOrigin}/v1/setup_intents/${encodeURIComponent(id)}`, undefined, { account: accountId });
   }
 
+  createSetupIntent(accountId: string, params: Record<string,string>, idempotencyKey: string) {
+    return this.request<SetupIntent>(`${apiOrigin}/v1/setup_intents`,params,{account:accountId,idempotencyKey});
+  }
+  cancelSetupIntent(accountId:string,id:string,idempotencyKey:string) {
+    return this.request<SetupIntent>(`${apiOrigin}/v1/setup_intents/${encodeURIComponent(id)}/cancel`,{cancellation_reason:"abandoned"},{account:accountId,idempotencyKey});
+  }
+
   /** PAY-003: a refund of part or all of one captured payment. */
   createRefund(accountId: string, params: Record<string, string>, idempotencyKey: string) {
     return this.request<Refund>(`${apiOrigin}/v1/refunds`, params, { account: accountId, idempotencyKey });

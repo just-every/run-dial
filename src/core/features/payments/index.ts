@@ -13,3 +13,5 @@ export { pendingRefundKey, pendingRefundParams } from "./pending-refund";
 export { StripeApiError, type CheckoutSession } from "./stripe-api";
 export type { PaymentHold } from "./repository";
 export type { WebhookResult } from "./service";
+
+export { approvalCardSetup, closeApprovalSetup } from "./approval-card";

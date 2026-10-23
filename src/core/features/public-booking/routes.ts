@@ -220,7 +220,6 @@ function rescheduleResult(context: Context<AppEnvironment>, result: Awaited<Retu
 }
 
 function paymentsUnavailable(context: Context<AppEnvironment>, reason: string) {
-  if(reason==="approval_price_and_saved_card_conflict")return apiError(context,409,reason,"Priced approval cannot also require a saved card for fees.");
   return apiError(context, 503, "payments_unavailable", "Payments for this event are unavailable right now. No booking was made; contact the host.", [reason]);
 }
 

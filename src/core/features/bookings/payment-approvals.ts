@@ -1,3 +1,4 @@
+import { approvalCardSetup } from "../payments";
 import { nowIso } from "../../shared/ids";
 import { approvalAuditIds, approvalPayment, type ApprovalPayment, type StripeEvent } from "../payments";
 import { StripeApiError, type CheckoutSession } from "../payments";
@@ -25,6 +26,7 @@ export class PaymentApprovals {
     if (!hold.claimJson || !["held","processing"].includes(hold.state)) return {kind:"processed"};
     const request = await this.deps.repository.forNonce(hold.nonceId), object = event.data.object;
     if (request) {
+      if(approvalPayment(request.paymentJson)?.state==="setup_pending") { await this.prepareCard(request); return {kind:"processed"}; }
       const payment = approvalPayment(request.paymentJson);
       if (!payment || !await this.commands.live(request,payment)) return {kind:"processed"};
       if (event.type==="payment_intent.succeeded") {
@@ -63,20 +65,42 @@ export class PaymentApprovals {
       if (typeof id!=="string") return {kind:"rejected"};
       const intent = await api.getPaymentIntent(hold.accountId,id);
       if (intent.id!==id || intent.status!=="requires_capture" || intent.capture_method!=="manual" || intent.amount!==hold.amountCents || intent.amount_capturable!==hold.amountCents || intent.amount_received!==0 || intent.currency!=="usd") return {kind:"rejected"};
-      payment={holdId:hold.id,mode:"payment",amountCents:hold.amountCents,accountId:hold.accountId,paymentIntentId:id,setupIntentId:null,customerId:intent.customer,paymentMethodId:intent.payment_method,state:"authorized",authorizedAt:nowIso(),audit:approvalAuditIds()};
+      payment={holdId:hold.id,mode:"payment",amountCents:hold.amountCents,accountId:hold.accountId,paymentIntentId:id,setupIntentId:null,customerId:intent.customer,paymentMethodId:intent.payment_method,state:claim.money.consent?"setup_pending":"authorized",saveCard:Boolean(claim.money.consent),consentVersion:claim.money.consent?.version,authorizedAt:nowIso(),audit:approvalAuditIds()};
     }
     const late = hold.expiresAt<=nowIso();
     const expires = new Date(Math.min(Date.parse(claim.selection.startAt),Date.now()+claim.money.approval.windowHours*3600000)).toISOString();
-    const request = await this.deps.repository.holdPayment(claim,payment,late ? [] : await this.deps.notices(claim,"pending",expires));
+    const request = await this.deps.repository.holdPayment(claim,payment,late || payment.saveCard ? [] : await this.deps.notices(claim,"pending",expires));
     if (!request) return {kind:"rejected"};
+    if(payment.saveCard && !late) await this.prepareCard(request);
     if (late) await this.commands.beginVoid(request,approvalPayment(request.paymentJson)!,"expired",null,"The payment authorization window expired.");
     return {kind:"processed"};
+  }
+  private async prepareCard(request:ApprovalRequest) {
+    const payment=approvalPayment(request.paymentJson)!;
+    if(payment.state!=="setup_pending" || !await this.commands.live(request,payment))return;
+    const hold=await this.commands.live(request,payment);
+    if(!hold)return;
+    try {
+      const setup=await approvalCardSetup(this.deps.payments.approvalProcessor(),payment);
+      const next={...payment,setupIntentId:setup.id};
+      const saved=await this.deps.repository.replacePayment(request,"setup_pending",next);
+      if(!saved || approvalPayment(saved.paymentJson)?.state!=="setup_pending")return;
+      if(setup.status!=="succeeded" || hold.expiresAt<=nowIso() || await this.deps.repository.erasing(request.inviteeEmail)) {
+        await this.commands.beginVoid(saved,next,"expired",null,setup.status!=="succeeded"?"Saved-card consent could not be completed.":"The payment and consent window expired.");return;
+      }
+      const ready:ApprovalPayment={...next,state:"authorized",authorizedAt:nowIso()};
+      const expires=new Date(Math.min(Date.parse(request.startAt),Date.parse(ready.authorizedAt)+JSON.parse(request.claimJson!).money.approval.windowHours*3600000)).toISOString();
+      await this.deps.repository.readyPayment(saved,ready,await this.deps.notices(JSON.parse(request.claimJson!) as BookingClaim,"pending",expires));
+    } catch(error) {
+      if(error instanceof StripeApiError && error.status>=400 && error.status<500 && ![409,429].includes(error.status)) await this.commands.beginVoid(request,{...payment,setupRefused:true},"expired",null,"Saved-card consent was refused.");
+      // Unknown creation remains durable and unapprovable, and is resolved with the original key.
+    }
   }
   async decide(request: ApprovalRequest, actorId: string, decision: "approve" | "decline", reason?: string) {
     const payment = approvalPayment(request.paymentJson)!;
     if (!await this.commands.live(request,payment)) return {kind:"closed" as const,state:request.state};
     if (decision==="decline") {
-      const current = ["authorized","capture_pending"].includes(payment.state) ? await this.commands.beginVoid(request,payment,"declined",actorId,reason?.trim() || "The host declined this request.") : (await this.commands.recover(request),await this.deps.repository.get(request.id));
+      const current = ["setup_pending","authorized","capture_pending"].includes(payment.state) ? await this.commands.beginVoid(request,payment,"declined",actorId,reason?.trim() || "The host declined this request.") : (await this.commands.recover(request),await this.deps.repository.get(request.id));
       return current?.state==="declined" ? {kind:"declined" as const} : {kind:"void_pending" as const};
     }
     if (payment.state!=="authorized") { await this.commands.recover(request); return {kind:payment.state==="capture_pending" ? "capture_pending" as const : "void_pending" as const}; }
@@ -98,6 +122,7 @@ export class PaymentApprovals {
   }
   async expire(request: ApprovalRequest) {
     const payment = approvalPayment(request.paymentJson)!;
+    if(payment.state==="setup_pending") { await this.prepareCard(request); return; }
     if (payment.state==="authorized" && request.expiresAt<=nowIso()) await this.commands.beginVoid(request,payment,"expired",null,"The host did not approve before the deadline.");
     else await this.commands.recover(request);
   }

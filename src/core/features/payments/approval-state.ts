@@ -3,7 +3,8 @@ import { createId, nowIso } from "../../shared/ids";
 export type ApprovalPayment = {
   holdId: string; mode: "payment" | "setup"; amountCents: number; accountId: string;
   paymentIntentId: string | null; setupIntentId: string | null; customerId: string | null; paymentMethodId: string | null;
-  state: "authorized" | "capture_pending" | "void_pending" | "captured" | "voided" | "refund_pending" | "refunded";
+  saveCard?: boolean; consentVersion?: string; setupRefused?: boolean;
+  state: "setup_pending" | "authorized" | "capture_pending" | "void_pending" | "captured" | "voided" | "refund_pending" | "refunded";
   authorizedAt: string; actorId?: string | null; captureActorId?: string | null;
   voidState?: "declined" | "expired"; voidReason?: string; capturedCents?: number; refundId?: string; lastError?: string;
   audit: { authorize: string; capture: string; void: string; detach: string; refund: string };
@@ -13,7 +14,7 @@ export function approvalPayment(json: string | null): ApprovalPayment | undefine
 export function approvalAuditIds(): ApprovalPayment["audit"] { return { authorize: createId(), capture: createId(), void: createId(), detach: createId(), refund: createId() }; }
 export function publicApprovalPayment(payment: ApprovalPayment | undefined) {
   if (!payment) return undefined;
-  return { mode: payment.mode, amountCents: payment.amountCents, state: payment.state, ...(payment.capturedCents === undefined ? {} : {capturedCents:payment.capturedCents}), refundedCents: payment.state === "refunded" ? payment.capturedCents : 0 };
+  return { mode: payment.mode, saveCard: Boolean(payment.saveCard), amountCents: payment.amountCents, state: payment.state, ...(payment.capturedCents === undefined ? {} : {capturedCents:payment.capturedCents}), refundedCents: payment.state === "refunded" ? payment.capturedCents : 0 };
 }
 /** Anonymous processor facts have durable IDs on the command, so recovery and erasure record each once. */
 export function approvalAudit(db: D1Database, payment: ApprovalPayment, action: keyof ApprovalPayment["audit"], condition = { sql: "1", params: [] as unknown[] }) {

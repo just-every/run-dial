@@ -1,8 +1,6 @@
 import { PaymentApprovals } from "./payment-approvals";
 import { approvalPayment, publicApprovalPayment } from "../payments";
 import type { PaymentMailFacts } from "./money-presentation";
-import { isPaid } from "../../shared/event-price";
-import { cardRequired } from "../../shared/payment-terms";
 import { approvalMail, type ApprovalRequest, type ApprovalSettings } from "./approvals";
 import type { BookingsRepository } from "./repository";
 import type { AvailabilityService } from "../availability";
@@ -60,8 +58,6 @@ export class ApprovalService {
         if (!event)
             return { kind: "not_found" as const };
         if(input.windowHours>168)return {kind:"approval_window_too_long" as const};
-        if (input.required && this.deps.payments && isPaid(await this.deps.payments.eventPrice(eventId)) && cardRequired(await this.deps.payments.eventTerms(eventId)))
-            return { kind: "approval_price_and_saved_card_conflict" as const };
         await this.deps.repository.approvals.saveSettings(eventId, input);
         return { kind: "saved" as const, settings: input };
     }
@@ -123,6 +119,6 @@ export class ApprovalService {
         }
         const payment=publicApprovalPayment(approvalPayment(request.paymentJson));
         const state = request.state === "pending" && !payment && request.expiresAt <= nowIso() ? "expired" : request.state;
-        return { kind: "found", booking: { approval: { state, expiresAt: request.expiresAt,...(payment?{paymentState:payment.state,amountCents:payment.amountCents,capturedCents:payment.capturedCents,refundedCents:payment.refundedCents,mode:payment.mode}:{}) }, event: { eventTitle: request.eventTitle, durationMinutes: (Date.parse(request.endAt) - Date.parse(request.startAt)) / 60000 }, host: { name: profile.name, timezone: profile.timezone }, occurrence: { startAt: request.startAt, endAt: request.endAt }, inviteeTimezone: "UTC", location: { label: "Shown after approval", state: "pending" }, calendarState: "not_required", meetingState: "not_required", manageUrl: new URL(`/manage/${token}`, this.deps.runtime.APP_URL).toString(), icsUrl: "", state: state === "pending" ? "pending_approval" : state === "approved" ? "expired" : state } };
+        return { kind: "found", booking: { approval: { state, expiresAt: request.expiresAt,...(payment?{paymentState:payment.state,saveCard:payment.saveCard,amountCents:payment.amountCents,capturedCents:payment.capturedCents,refundedCents:payment.refundedCents,mode:payment.mode}:{}) }, event: { eventTitle: request.eventTitle, durationMinutes: (Date.parse(request.endAt) - Date.parse(request.startAt)) / 60000 }, host: { name: profile.name, timezone: profile.timezone }, occurrence: { startAt: request.startAt, endAt: request.endAt }, inviteeTimezone: "UTC", location: { label: "Shown after approval", state: "pending" }, calendarState: "not_required", meetingState: "not_required", manageUrl: new URL(`/manage/${token}`, this.deps.runtime.APP_URL).toString(), icsUrl: "", state: state === "pending" ? "pending_approval" : state === "approved" ? "expired" : state } };
     }
 }

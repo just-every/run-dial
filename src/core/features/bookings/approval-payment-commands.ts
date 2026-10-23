@@ -1,4 +1,4 @@
-import { approvalPayment, type ApprovalPayment } from "../payments";
+import { closeApprovalSetup, approvalPayment, type ApprovalPayment } from "../payments";
 import { pendingRefundKey, pendingRefundParams } from "../payments";
 import { StripeApiError } from "../payments";
 import type { PaymentsService } from "../payments";
@@ -37,16 +37,20 @@ export class ApprovalPaymentCommands {
     return this.deps.repository.get(request.id);
   }
   async recover(request: ApprovalRequest) {
-    const payment = approvalPayment(request.paymentJson);
+    let payment = approvalPayment(request.paymentJson);
     if (!payment || !await this.live(request,payment)) return;
     if (payment.state === "capture_pending") return this.capture(request,payment);
     if (payment.state === "refund_pending") return this.refund(request,payment);
     if (payment.state !== "void_pending") return;
     const api = this.deps.payments.approvalProcessor();
     try {
+      if(payment.saveCard) {
+        payment=await closeApprovalSetup(api,payment);
+        await this.deps.repository.replacePayment(request,"void_pending",payment);
+      }
       if (payment.mode === "setup") {
         if (!payment.paymentMethodId) throw new Error("approval_saved_card_missing");
-        try { await api.detachPaymentMethod(payment.accountId,payment.paymentMethodId); }
+        try { await this.detach(request,payment); }
         catch(error) { if (!(error instanceof StripeApiError) || error.status!==400 || !["resource_missing","payment_method_unexpected_state"].includes(error.code)) throw error; }
         await this.finish(request,{...payment,state:"voided"},["detach"]);
         return;
@@ -63,7 +67,8 @@ export class ApprovalPaymentCommands {
         const canceled = await api.cancelPaymentIntent(payment.accountId,intent.id,`dial-approval-void-${payment.holdId}`);
         if (canceled.id!==intent.id || canceled.status!=="canceled") throw new Error("approval_void_unresolved");
       } else if (intent.status!=="canceled" && !(intent.status==="requires_payment_method" && intent.amount_received===0 && intent.amount_capturable===0)) throw new Error("approval_void_unresolved");
-      await this.finish(request,{...payment,state:"voided"},["void"]);
+      if(payment.saveCard)await this.detach(request,payment);
+      await this.finish(request,{...payment,state:"voided"},payment.saveCard?["void","detach"]:["void"]);
     } catch(error) { await this.failed(request,payment,error); }
   }
   async beginRefund(request: ApprovalRequest, payment: ApprovalPayment) {
@@ -80,10 +85,18 @@ export class ApprovalPaymentCommands {
       await this.deps.repository.replacePayment(request,"refund_pending",next);
       if (refund.payment_intent!==payment.paymentIntentId || refund.amount!==amount) throw new Error("approval_refund_mismatch");
       if (refund.status!=="succeeded") { await this.failed(request,next,new Error("approval_refund_pending")); return; }
-      await this.finish(request,{...next,state:"refunded"},["refund"]);
+      if(next.saveCard) { await closeApprovalSetup(api,next); await this.detach(request,next); }
+      await this.finish(request,{...next,state:"refunded"},next.saveCard?["refund","detach"]:["refund"]);
     } catch(error) { await this.failed(request,payment,error); }
   }
+  private async detach(request:ApprovalRequest,payment:ApprovalPayment) {
+    if(!payment.paymentMethodId)throw new Error("approval_saved_card_missing");
+    if(await this.deps.repository.erasing(request.inviteeEmail)) {
+      if(!await this.deps.payments.processorErasure.detach(request.inviteeEmail,payment.accountId,payment.paymentMethodId))throw new Error("approval_detach_unresolved");
+    } else await this.deps.payments.approvalProcessor().detachPaymentMethod(payment.accountId,payment.paymentMethodId,`dial-approval-detach-${payment.holdId}`);
+  }
   private async finish(request: ApprovalRequest, payment: ApprovalPayment, actions: Array<keyof ApprovalPayment["audit"]>) {
+    if(await this.deps.repository.erasing(request.inviteeEmail))return;
     await this.deps.repository.finishPayment(request,payment,await this.deps.notices(request,payment.voidState ?? "expired",payment.voidReason ?? "The request expired."),actions);
   }
   private async failed(request: ApprovalRequest, payment: ApprovalPayment, error: unknown) {

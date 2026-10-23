@@ -1,3 +1,4 @@
+import {combinedApprovals} from './paid-approval-combined.mjs';
 import assert from 'node:assert/strict';
 import {bookingMail,recipient,textBody,wireMail} from './mail-contracts.mjs';
 import {paidApprovalSupport,feeTerms,providerObject,providerCalls,noBooking,audit} from './paid-approval-support.mjs';
@@ -54,5 +55,6 @@ export async function paidApprovalJourney(context){
   await approvalMoneyMovements(h,priced,setup);
   pass(9,'frozen shown total caps capture; stale price refused; one confirmation per recipient; authorization/capture/void/detach/fee/refund carry actor amount reason reference');
   await approvalErasureCases(h,priced,setup);console.log('PAY-007 erasure: PASS pending hold void and saved-card detach; late callbacks never create bookings');checks.push('PAY-007 erasure pending manual/setup cleanup and late-event no-booking');
+  await combinedApprovals(h,combined);
   assert.ok(!wireMail(snap).some(mail=>/receipt/i.test(mail.subject)&&recipient(mail).includes(linked.payload.email)),'declined payer gets no receipt');
 }

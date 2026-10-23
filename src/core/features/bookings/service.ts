@@ -218,7 +218,6 @@ export class BookingsService {
     const quote = await this.payments?.quote(event.id, selectedDuration);
     if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
     const paymentApproval = await this.repository.approvals.settings(event.id);
-    if (quote && paymentApproval.required && quote.mode==="payment" && quote.saveCard) return {kind:"payments_unavailable",reason:"approval_price_and_saved_card_conflict"};
     // PAY-003: a fee-bearing event needs the invitee's explicit consent to the stated amounts before anything is held.
     if (quote?.saveCard && !(input.cardConsent?.accepted === true && input.cardConsent.version === cardConsentVersion(quote.snapshot))) return { kind: "card_consent_required" };
     if (quote && this.payments) {

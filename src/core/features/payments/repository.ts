@@ -99,7 +99,7 @@ export class PaymentsRepository {
   }
 
   async dueHolds(now: string) {
-    return (await this.db.prepare(`SELECT ${holdColumns} FROM payment_holds WHERE state='held' AND expires_at<=? ORDER BY expires_at LIMIT 50`).bind(now).all<PaymentHold>()).results;
+    return (await this.db.prepare(`SELECT ${holdColumns} FROM payment_holds WHERE (state='held' AND expires_at<=?) OR (state='processing' AND EXISTS(SELECT 1 FROM booking_approval_requests a WHERE json_extract(a.payment_json,'$.holdId')=payment_holds.id AND a.state='pending' AND json_extract(a.payment_json,'$.state')='setup_pending')) ORDER BY expires_at LIMIT 50`).bind(now).all<PaymentHold>()).results;
   }
 
   async bookingPayment(bookingId: string): Promise<BookingPayment | undefined> {
