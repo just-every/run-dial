@@ -89,6 +89,12 @@ try {
     await capture(width, "balance-link-invalid", "/manage/balance/not-a-real-balance-link", async page => { await page.getByRole("heading").first().waitFor(); }, { session: false });
   }
   await pay((await json(await owner.request.post(`${origin}/api/public/payments${balance.replace("/manage", "")}`, { headers, data: {} }))).checkoutUrl);
+  const qboStart=await owner.request.get(origin+'/api/app/payments/accounting/oauth/start',{maxRedirects:0});
+  assert.equal((await owner.request.get(`${origin}/api/payments/accounting/oauth/callback?${new URLSearchParams({state:new URL(qboStart.headers().location).searchParams.get('state'),code:'synthetic-dial-304',realmId:'synthetic-dial-303'})}`,{maxRedirects:0})).status(),302);
+  const income=(await json(await owner.request.get(origin+'/api/app/payments/accounting/accounts'))).accounts[0];
+  await json(await owner.request.put(origin+'/api/app/payments/accounting/mapping',{headers,data:{accountId:income.id}}));
+  await json(await owner.request.post(origin+'/api/app/payments/accounting/export',{headers,data:{}}));
+  for(const width of widths)await capture(width,'payments-exported','/app/settings',async page=>{await page.locator('[data-operator-ready="true"]').waitFor();const section=page.locator('#payment-reconciliation');await section.getByText('Exported',{exact:true}).first().waitFor();await section.scrollIntoViewIfNeeded();return section;});
   for (const width of widths) await capture(width, "balance-paid", balance, async page => { await page.getByRole("heading", { name: "Balance paid." }).waitFor(); }, { session: false });
 
   const record = "/app/bookings?query=Avery%20Deposit";
@@ -160,6 +166,20 @@ try {
   const invoiceCancellation = (await json(await owner.request.get(origin + "/__fixtures/status"))).fixture_mail.map(row => JSON.parse(row.message_json)).filter(message => message.to === "ivy.invoice@example.test" && /^Booking cancelled:/u.test(message.subject ?? ""));
   assert.equal(invoiceCancellation.length, 1);
   assert.ok(invoiceCancellation[0].text.includes("$40.00 USD") && invoiceCancellation[0].text.includes("Preparation was delivered"));
+  // PAY-006 adds reconciliation and accounting to the existing payments screen/browser.
+  const native=await json(await owner.request.get(`${origin}/api/app/bookings/${booking.id}`));
+  const reconciliationIntent=native.payment.paymentIntentId;
+  await webhook({id:'synthetic-dial-301',payment_intent:reconciliationIntent,currency:'usd',amount:2500,status:'needs_response'},'charge.dispute.created');
+  const accountingSection=async page=>{await page.locator('[data-operator-ready="true"]').waitFor();const section=page.locator('#payment-reconciliation');await section.getByText('Needs attention',{exact:true}).waitFor();await section.scrollIntoViewIfNeeded();return section;};
+  for(const width of widths)await capture(width,'payments-flagged','/app/settings',accountingSection);
+  // Tax has not been mapped to QuickBooks: refuse explicitly before creating any receipt.
+  const qbo=await owner.request.get(origin+'/api/app/payments/accounting/oauth/start',{maxRedirects:0});
+  const qboState=new URL(qbo.headers().location).searchParams.get('state');
+  assert.equal((await owner.request.get(`${origin}/api/payments/accounting/oauth/callback?${new URLSearchParams({state:qboState,code:'synthetic-dial-302',realmId:'synthetic-dial-303'})}`,{maxRedirects:0})).status(),302);
+  const accounts=(await json(await owner.request.get(origin+'/api/app/payments/accounting/accounts'))).accounts;
+  await json(await owner.request.put(origin+'/api/app/payments/accounting/mapping',{headers,data:{accountId:accounts[0].id}}));
+  await json(await owner.request.post(origin+'/api/app/payments/accounting/export',{headers,data:{}}),409);
+  for(const width of widths)await capture(width,'payments-accounting-connected','/app/settings',async page=>{const section=await accountingSection(page);await section.getByRole('button',{name:'Export to QuickBooks Online',exact:true}).click();await section.getByRole('alert').waitFor();return section;});
   // PAY-003 (D4): the host cancels a paid booking from its record; everything paid is refunded unless the operator
   // refunds less with a reason, which the invitee's cancellation email and manage page then state.
   const cancelForm = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); const form = page.getByRole("form", { name: "Cancel booking" }); await form.getByText("Refund everything paid, $90.00 USD.", { exact: false }).waitFor(); return form; };

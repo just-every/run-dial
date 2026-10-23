@@ -353,7 +353,7 @@
     "Group events, classes, waitlists, or resource capacity",
     "Additional invitee guests on a booking",
     "Optional tentative calendar display, direct mail decisions and native mobile approval (PAY-007 single and combined price/deposit-plus-fee requests use manual authorization and SetupIntent consent as applicable)",
-    "Packages, coupons, gift certificates, memberships and payment reconciliation (PAY-004 and PAY-006; native Stripe payments, deposits, refunds, consented fees, tax and invoices ship under PAY-001, PAY-003 and PAY-005)",
+    "Packages, coupons, gift certificates, memberships (PAY-004; native Stripe payments, deposits, refunds, consented fees, tax and invoices ship under PAY-001, PAY-003 and PAY-005)",
     "Recurring booking series or scheduling polls",
     "Marketplace discovery, ratings, or invitee-submitted reviews",
     "SMS, WhatsApp, phone automation, CRM, campaigns, or marketing automation",
@@ -447,6 +447,17 @@
         "operator-selected booking fields",
         "operator-selected non-private answers",
         "operator-selected UTM and source values"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "quickbooks-online",
+      "required": false,
+      "why": "Optional host-initiated anonymous sales receipt exports against the mapped income account. Synthetic HTTP-edge acceptance only; no live accounting export is claimed.",
+      "data": [
+        "USD payment amount",
+        "Stripe payment reference",
+        "mapped income account and service item"
       ],
       "adapters": []
     }
@@ -571,6 +582,18 @@
       "required": false,
       "secret": false,
       "why": "Optional Auth installation URL for the oidc-provider@1 setup dependency. Empty keeps email-link sign-in through mail.sender.v1."
+    },
+    {
+      "name": "QBO_CLIENT_ID",
+      "secret": true,
+      "required": false,
+      "why": "QuickBooks Online OAuth application ID for the optional accounting export destination."
+    },
+    {
+      "name": "QBO_CLIENT_SECRET",
+      "secret": true,
+      "required": false,
+      "why": "QuickBooks Online OAuth client secret. Stored only as deployment configuration; accounting credentials never travel in an archive."
     }
   ],
   "deploy": {
@@ -603,6 +626,7 @@
       "/api/webhooks/resend",
       "/api/webhooks/stripe",
       "/api/payments/stripe/oauth/callback",
+      "/api/payments/accounting/oauth/callback",
       "/health"
     ]
   },

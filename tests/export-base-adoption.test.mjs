@@ -7,11 +7,12 @@ import { captures, operators, request, runtime, token } from './archive/auth.mjs
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
-import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade } from './archive/payment-erasure-upgrade.mjs';
+import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade } from './archive/payment-erasure-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    await reconciliationUpgrade(source.db);
     await paymentErasureUpgrade(source.db);
     await paidApprovalUpgrade(source.db);
     await processorErasureUpgrade(source.db);
@@ -75,6 +76,9 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.ok(!archive.tables.some(table => ['payment_holds', 'payment_oauth_states'].includes(table.name)), 'PAY-001 live holds and OAuth state never travel');
     for (const table of ['event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements', 'payment_settings']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-003 ${table} survives the archive round trip`);
     assert.ok(!archive.tables.some(table => table.name === 'payment_link_tokens'), 'PAY-003 balance-link capabilities never travel');
+    for(const table of ['payment_processor_facts','accounting_exports'])assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(),source.db.prepare(`SELECT * FROM ${table}`).all(),`${table} round trips`);
+    const accounting=target.db.prepare('SELECT * FROM accounting_connections').get();
+    assert.equal(accounting.status,'unhealthy');assert.equal(accounting.access_token_ciphertext,null);assert.equal(accounting.refresh_token_ciphertext,null);
     const approvals=archive.tables.find(table=>table.name==='booking_approval_requests');
     assert.ok(approvals.rows.every(row=>row.claim_json===null && row.state!=='pending'),'approval archives are historical and contain no executable claim');
     assert.ok(!archive.tables.some(table=>table.name==='booking_approval_tokens'),'approval request capabilities never travel');

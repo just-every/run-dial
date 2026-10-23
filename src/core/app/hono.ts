@@ -35,6 +35,7 @@ import type { AppServices } from "./services";
 import { createServices } from "./services";
 import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse, type Admission, type CallbackProvider } from "../platform/public-admission";
 import { publicAbuseRoutes } from "../features/public-abuse";
+import { accountingRoutes } from "../features/payments/accounting-routes";
 import { paymentRoutes } from "../features/payments";
 import { reportRoutes } from "../features/reports";
 
@@ -98,6 +99,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", embedRoutes)
     .route("/", invitationManageRoutes)
     .route("/", paymentRoutes)
+    .route("/", accountingRoutes)
     .route("/", reportRoutes)
     .route("/", publicBookingRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))

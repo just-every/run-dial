@@ -9,7 +9,7 @@ export async function runAxe(t, journey) {
   const state = await mkdtemp(resolve(tmpdir(), "dial-booking-axe-"));
   const origin = "http://127.0.0.1:15752";
   const config = resolve("tests/booking-axe/worker.wrangler.toml");
-  const env = { ...process.env, CI: "1", DIAL_WRANGLER_CONFIG_PATH: config, DIAL_PERSIST_STATE_DIR: state, DIAL_INSPECTOR_PORT: "15753", DIAL_REVIEW_ORIGIN: origin, DIAL_APPROVAL_SCREENS:evidencePath("approval-screens") };
+  const env = { ...process.env, CI: "1", DIAL_WRANGLER_CONFIG_PATH: config, DIAL_PERSIST_STATE_DIR: state, DIAL_INSPECTOR_PORT: "15753", DIAL_REVIEW_ORIGIN: origin, DIAL_APPROVAL_SCREENS:evidencePath("approval-screens"), DIAL_MONEY_SCREENS:evidencePath("money-screens") };
   // This rig exercises the production Worker with provider adapters, not the
   // local dev identity entry. Inherited rer launch bindings would replace the
   // configured review entry in Vite and silently remove its calendar fixtures.

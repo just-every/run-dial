@@ -133,6 +133,16 @@ export class StripeApi {
     return this.request<{ id: string }>(`${apiOrigin}/v1/payment_methods/${encodeURIComponent(paymentMethodId)}/detach`, {}, { account: accountId, idempotencyKey });
   }
 
+  async payoutTransactions(accountId:string,payoutId:string) {
+    const transactions:Array<{id:string;net:number;source?:{id:string;payment_intent?:string}}>=[];
+    let after:string|undefined;
+    for(;;){const params=new URLSearchParams({payout:payoutId,limit:'100','expand[]':'data.source'});if(after)params.set('starting_after',after);
+      const page=await this.request<{data:Array<{id:string;net:number;source?:{id:string;payment_intent?:string}}>;has_more:boolean}>(`${apiOrigin}/v1/balance_transactions?${params}`,undefined,{account:accountId});
+      if(!Array.isArray(page.data)||page.data.some(row=>!row.id||!Number.isInteger(row.net)))throw new StripeApiError(502,'invalid_balance_transactions');
+      transactions.push(...page.data);if(!page.has_more)break;if(!page.data.length||after===page.data.at(-1)!.id)throw new StripeApiError(502,'invalid_pagination');after=page.data.at(-1)!.id;
+    }return transactions;
+  }
+
   private async request<T>(url: string, form?: Record<string, string>, options: { account?: string; idempotencyKey?: string } = {}): Promise<T> {
     const headers: Record<string, string> = { authorization: `Bearer ${this.secretKey}` };
     if (form) headers["content-type"] = "application/x-www-form-urlencoded";
