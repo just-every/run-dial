@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "80f17705c7539ac7eeadc9cc7f1bbe3929c81010629cf57b032d78cddc578323",
+      "sha256": "81cbafb3a11623b79fff2a12a0544a873e30566da7cfb6940be500557cb535e1",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "39873b9a8ae671d17390a44a3211df7b5236de24625b104b42ddb51c98e7632e",
+      "sha256": "f6df1acad224319ae575cbdab436fdb2d5098ace889a222d94dacfc8baf2dd94",
       "executable": false
     },
     "DEMO.md": {
@@ -4000,7 +4000,7 @@
       "executable": false
     },
     "scripts/ci-test-files.mjs": {
-      "sha256": "9cbd2eeae1c1419ffa25a78d6718e60ee8945d779a606a49b2c6189eeda3a107",
+      "sha256": "287b15e797a6ee9b4fce7f17133660cef0d0b1700240446ce583aec18f973a9c",
       "executable": false
     },
     "scripts/ci-verify.mjs": {
@@ -7588,7 +7588,7 @@
       "executable": false
     },
     "tests/booking-axe.test.mjs": {
-      "sha256": "af4f483b467553702c20de772c3cdaa7000dab322b626ef484342809058acd83",
+      "sha256": "c16761d275c7fb5d81130155010870097d11ed7cdc1f66f83724c4a179135058",
       "executable": false
     },
     "tests/booking-axe/acceptance-avatar-boundary.mjs": {
@@ -7737,6 +7737,10 @@
     },
     "tests/booking-lifecycle.test.mjs": {
       "sha256": "64dbc36769f39e005df0a721f01fb45590d595412631d8ad4167d1aa5a8f2c57",
+      "executable": false
+    },
+    "tests/booking-record.test.mjs": {
+      "sha256": "1151402581fdb5cc25b280f2e8cd2331699c7f4498e5068904725d508911557a",
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
