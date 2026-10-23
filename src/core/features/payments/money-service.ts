@@ -1,3 +1,4 @@
+import { Reconciliation, type ProcessorFact } from "./reconciliation";
 import { deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import { nowIso } from "../../shared/ids";
 import { cancellationOutcome, type CancellationOutcome } from "../../shared/payment-terms";
@@ -15,7 +16,7 @@ import { hostRefund, type HostCancellation, type HostRefundOutcome } from "./hos
 import { voidAtStripe } from "./cancellation-voids";
 
 export type MoneyRefusal = "payments_not_configured" | "stripe_not_connected" | "stripe_deauthorized";
-export type BookingMoney = { payment?: BookingPayment; snapshot?: TermsSnapshot; consent?: CardConsent; movements: Movement[]; ledger: Ledger; balanceUrl?: string };
+export type BookingMoney = { reconciliation: ProcessorFact[]; payment?: BookingPayment; snapshot?: TermsSnapshot; consent?: CardConsent; movements: Movement[]; ledger: Ledger; balanceUrl?: string };
 /** What a cancellation does to the money, and the movements that carry it out, committed with the cancellation. */
 export type CancellationPlan = { outcome: CancellationOutcome | HostRefundOutcome; refundCents: number; voids: Array<"balance" | "invoice">; statements: D1PreparedStatement[] };
 type Condition = { sql: string; params: unknown[] };
@@ -45,9 +46,10 @@ export class MoneyService {
   async bookingMoney(bookingId: string, payment?: BookingPayment): Promise<BookingMoney | undefined> {
     const [snapshot, consent, movements, salt, facts] = await Promise.all([this.money.snapshot(bookingId), this.money.consent(bookingId), this.movements.forBooking(bookingId), this.money.balanceLink(bookingId), this.facts(bookingId)]);
     if (!payment && !snapshot && !movements.length) return undefined;
-    const summary = ledger(payment, snapshot, movements, facts?.state === "cancelled");
+    const reconciliation = await new Reconciliation(this.db).facts(bookingId);
+    const summary = ledger(payment, snapshot, movements, facts?.state === "cancelled", reconciliation);
     const balanceUrl = salt && summary.balanceDueCents > 0 ? new URL(`/manage/balance/${await this.balanceToken(salt)}`, this.runtime.APP_URL).toString() : undefined;
-    return { ...(payment ? { payment } : {}), ...(snapshot ? { snapshot } : {}), ...(consent ? { consent } : {}), movements, ledger: summary, ...(balanceUrl ? { balanceUrl } : {}) };
+    return { reconciliation, ...(payment ? { payment } : {}), ...(snapshot ? { snapshot } : {}), ...(consent ? { consent } : {}), movements, ledger: summary, ...(balanceUrl ? { balanceUrl } : {}) };
   }
 
   private async cancellationFacts(bookingId: string, now: string, condition: Condition) {
@@ -62,7 +64,7 @@ export class MoneyService {
   async inviteeCancellationPlan(bookingId: string, startAt: string, now: string, condition: Condition): Promise<CancellationPlan | undefined> {
     const { payment, snapshot, consent, movements, accountId, voids, voidStatements } = await this.cancellationFacts(bookingId, now, condition);
     if (!snapshot) return voids.length ? { outcome: { kind: "none", reason: "no_policy" }, refundCents: 0, voids, statements: voidStatements } : undefined;
-    const outcome = cancellationOutcome(snapshot, startAt, now), summary = ledger(payment, snapshot, movements);
+    const outcome = cancellationOutcome(snapshot, startAt, now), summary = ledger(payment, snapshot, movements, false, await new Reconciliation(this.db).facts(bookingId));
     if (outcome.kind === "refund" && summary.refundableCents > 0 && accountId) {
       const parts = allocateRefund(summary.charges, summary.refundableCents) ?? [];
       return { outcome, refundCents: summary.refundableCents, voids, statements: [...voidStatements, ...parts.map(part => this.movements.insertStatement({ bookingId, kind: "refund", amountCents: part.amountCents, taxCents: part.taxCents, actorType: "policy", actorId: null, reason: "Cancelled inside the free cancellation window", accountId, sourceRef: part.ref, idempotencyKey: `policy-refund:${bookingId}:${part.ref}` }, now, condition))] };
@@ -78,7 +80,7 @@ export class MoneyService {
   async hostCancellationPlan(bookingId: string, now: string, by: HostCancellation, condition: Condition): Promise<CancellationPlan | { kind: "exceeds_refundable"; refundableCents: number } | undefined> {
     const { payment, snapshot, movements, accountId, voids, voidStatements } = await this.cancellationFacts(bookingId, now, condition);
     if (!payment && !snapshot && !movements.length) return undefined;
-    const refund = hostRefund(bookingId, ledger(payment, snapshot, movements), accountId, by);
+    const refund = hostRefund(bookingId, ledger(payment, snapshot, movements, false, await new Reconciliation(this.db).facts(bookingId)), accountId, by);
     if (refund.kind === "exceeds_refundable") return refund;
     return { outcome: refund.outcome, refundCents: refund.refundCents, voids, statements: [...voidStatements, ...refund.movements.map(movement => this.movements.insertStatement(movement, now, condition))] };
   }
@@ -132,7 +134,7 @@ export class MoneyService {
     if (!replayed) {
       const live = await this.live();
       if ("refusal" in live) return { kind: "refused" as const, reason: live.refusal };
-      const summary = ledger(await this.payments.bookingPayment(bookingId), await this.money.snapshot(bookingId), await this.movements.forBooking(bookingId));
+      const summary = ledger(await this.payments.bookingPayment(bookingId), await this.money.snapshot(bookingId), await this.movements.forBooking(bookingId), false, await new Reconciliation(this.db).facts(bookingId));
       const parts = input.amountCents <= summary.refundableCents ? allocateRefund(summary.charges, input.amountCents) : undefined;
       if (!parts?.length) return { kind: "exceeds_refundable" as const, refundableCents: summary.refundableCents };
       await this.movements.insert(parts.map((part, index): NewMovement => ({ bookingId, kind: "refund", amountCents: part.amountCents, taxCents: part.taxCents, actorType: "operator", actorId: operatorId, reason: input.reason, accountId: live.accountId, sourceRef: part.ref, idempotencyKey: `${input.idempotencyKey}:${index}` })));

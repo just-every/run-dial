@@ -1,3 +1,4 @@
+import { runAxe } from "./booking-axe/run-axe.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -32,6 +33,6 @@ async function wireJourney(t, journey, port, log) {
 
 test("PAY-001 a paid booking confirms only after Stripe's signed event", t => wireJourney(t, "tests/booking-wire/payment-journey.mjs", 15758, "payment-wire-worker.log"));
 
-test("PAY-003 deposits, refunds and cancellation or no-show fees move money once, only as shown", t => wireJourney(t, "tests/booking-wire/payment-terms-journey.mjs", 15760, "payment-terms-wire-worker.log"));
+test("PAY-003/PAY-006 deposits, refunds, fees and reconciled accounting exports move or record money once, only as shown", async t => { await wireJourney(t, "tests/booking-wire/payment-terms-journey.mjs", 15760, "payment-terms-wire-worker.log"); await runAxe(t, "scripts/verify-money-screens.mjs"); });
 
 test("PAY-005 Stripe Tax shows and charges tax by address, and receipts and invoices carry matching amounts", t => wireJourney(t, "tests/booking-wire/payment-tax-journey.mjs", 15764, "payment-tax-wire-worker.log"));

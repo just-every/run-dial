@@ -6,6 +6,9 @@ import { stripeAuthorization } from "./stripe-authorization";
 /** PAY-001 test-only controls: the payer finishing Stripe's page, a payment window or OAuth state reaching its
  * end, the production sweep, and a full-table scan for payer details. */
 export async function paymentFixtures(url: URL, request: Request, db: D1Database, providerDb: D1Database, services: AppServices) {
+  if (url.pathname === "/__fixtures/payments/accounting-expired") { await db.prepare("UPDATE accounting_oauth_states SET expires_at='2000-01-01T00:00:00Z'").run();return new Response(null,{status:204}); }
+  if (url.pathname === "/__fixtures/payments/accounting-token-expired") { await db.prepare("UPDATE accounting_connections SET expires_at='2000-01-01T00:00:00Z'").run();return new Response(null,{status:204}); }
+  if (url.pathname === "/__fixtures/payments/accounting-state") { return Response.json({receipts:(await providerDb.prepare("SELECT payload FROM wire_accounting_objects WHERE kind='SalesReceipt'").all<{payload:string}>()).results.map(r=>JSON.parse(r.payload)),exports:(await db.prepare("SELECT * FROM accounting_exports").all()).results}); }
   if (url.pathname === "/__fixtures/payments/gate") return stripeGateFixture(providerDb, request);
   if (url.pathname === "/__fixtures/payments/processor-state") {
     return Response.json(Object.fromEntries(await Promise.all(["wire_stripe_sessions","wire_stripe_objects","wire_calls"].map(async name => [name,(await providerDb.prepare(`SELECT * FROM ${name}`).all()).results]))));

@@ -143,6 +143,10 @@ export const applicationTables = [
   // PAY-003: balances, refunds and fees; erased with the booking while each amount, kind, actor type and Stripe
   // reference survives in the anonymized audit.
   "payment_movements",
+  "payment_processor_facts",
+  "accounting_connections",
+  "accounting_oauth_states",
+  "accounting_exports",
   "operator_erasure_subjects",
   "operator_creation_receipts",
   "operator_creation_tombstones",
