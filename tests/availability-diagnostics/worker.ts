@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { captureAuthMail, capturedMail } from "../mail-capture";
 import start from "@tanstack/react-start/server-entry";
 import { createWorker } from "../../src/core/app/worker";
@@ -44,7 +45,7 @@ function servicesFor(env: AppBindings) {
     return { ...result, intervals: [...result.intervals, ...extra.map((interval) => ({ ...interval, calendarId: input.calendarIds[0], startsAt: interval.startAt, endsAt: interval.endAt, deleted: false, transparency: "opaque" as const }))] };
   };
   const runtime = parseRuntimeEnvironment(env), documents = { fetch: (request: Request) => start.fetch(request) } as Fetcher;
-  const services = createServices(env.DB, runtime, documents, { ...providers, authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
+  const services = createServices(env.DB, runtime, documents, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...providers, authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
   return services;
 }
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }

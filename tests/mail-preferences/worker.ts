@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { captureAuthMail, capturedMail } from "../mail-capture";
 import { ensureTestOperator } from "../auth-fixture";
 import start from "@tanstack/react-start/server-entry";
@@ -12,7 +13,7 @@ import { fixtureProviders } from "../review/providers";
 import { handleFixtures } from "../review/fixture-routes";
 
 const secondEmail = "second-operator@dial.test";
-const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { ...fixtureProviders(env.DB), authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
+const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...fixtureProviders(env.DB), authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const production = createWorker(servicesFor);
 export default {
@@ -30,7 +31,7 @@ export default {
     if (url.pathname === "/__fixtures/preferences/signin" && request.method === "POST") {
       const { email } = z.object({ email: z.enum(["operator@dial.test", secondEmail]) }).strict().parse(await request.json());
       const runtime = { ...parseRuntimeEnvironment(env), ENVIRONMENT: "preview" as const };
-      const services = createServices(env.DB, runtime, { fetch: (input: Request) => start.fetch(input) } as Fetcher, { ...fixtureProviders(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
+      const services = createServices(env.DB, runtime, { fetch: (input: Request) => start.fetch(input) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...fixtureProviders(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
       return Response.json(await services.operators.requestMagicLink(request, email));
     }
     return url.pathname.startsWith("/__fixtures/") ? handleFixtures(request, env, servicesFor) : production.fetch(request, env, context);

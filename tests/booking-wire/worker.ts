@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { createApp } from "../../src/core/app/hono";
 import { createServices } from "../../src/core/app/services";
 import { BookingCoordinator as ProductionCoordinator } from "../../src/core/app/booking-coordinator";
@@ -20,7 +21,7 @@ const liveStripe = (relay?: string): typeof fetch => relay ? (input, init) => { 
 const providerDb = (env: WireBindings) => env.PROVIDER_DB ?? env.DB;
 const servicesFor = (env: WireBindings) => {
   const runtime = parseRuntimeEnvironment(env), wire = wireTransport(providerDb(env));
-  return createServices(env.DB, runtime, env.ASSETS, { files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env), paymentsTransport: env.STRIPE_EDGE === "live" ? liveStripe(env.STRIPE_EDGE_RELAY) : wire });
+  return createServices(env.DB, runtime, env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), files: env.FILES, calendar: new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env), paymentsTransport: env.STRIPE_EDGE === "live" ? liveStripe(env.STRIPE_EDGE_RELAY) : wire });
 };
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: WireBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);

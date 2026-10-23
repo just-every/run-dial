@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../src/core/platform/operator-notification-boundary";
 import { captureAuthMail, capturedMail } from "./mail-capture";
 import { createApp } from "../src/core/app/hono";
 import { BookingCoordinator as ProductionCoordinator } from "../src/core/app/booking-coordinator";
@@ -9,7 +10,7 @@ import { isolatedProviderDb } from "./review/providers";
 import { deletionProviders } from "./deletion-fixtures/providers";
 import { handleDeletionFixtures } from "./deletion-fixtures/routes";
 
-const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { ...deletionProviders(isolatedProviderDb(env)), authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
+const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...deletionProviders(isolatedProviderDb(env)), authMail: captureAuthMail(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);
 

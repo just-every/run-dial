@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import start from '@tanstack/react-start/server-entry';
 import { createWorker } from '../../src/core/app/worker';
 import { BookingCoordinator as ProductionCoordinator } from '../../src/core/app/booking-coordinator';
@@ -7,7 +8,7 @@ import { EventTypesRepository } from '../../src/core/features/event-types';
 import type { AppBindings } from '../../src/core/app/bindings';
 import { fixtureProviders } from '../review/providers';
 import { setup, status } from '../review/setup';
-const servicesFor=(env:AppBindings)=>createServices(env.DB,parseRuntimeEnvironment(env),{fetch:(r:Request)=>start.fetch(r)} as Fetcher,fixtureProviders(env.DB));
+const servicesFor=(env:AppBindings)=>createServices(env.DB,parseRuntimeEnvironment(env),{fetch:(r:Request)=>start.fetch(r)} as Fetcher,{ ...fixtureProviders(env.DB), operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR) });
 export class BookingCoordinator extends ProductionCoordinator{protected services(env:AppBindings){return servicesFor(env);}}
 const production=createWorker(servicesFor);
 export default {...production,async fetch(request:Request,env:AppBindings,context:ExecutionContext){
