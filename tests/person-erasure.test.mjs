@@ -23,7 +23,7 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
     const updatedEvent = await rt.data('/api/app/event-types/' + editableEvent.id, { ...editableEvent,
       locationType: 'invitee_phone', locationLabel: 'Host calls invitee', locationValue: '', locations: [{ id: 'phone', type: 'invitee_phone', label: 'Host calls invitee', value: '' }],
       questions: [...editableEvent.questions, { kind: 'phone', label: 'Contact phone', required: true, private: true, options: [] }],
-    }, 200, 'PUT');
+    }, 200, 'PATCH');
     await rt.data('/api/app/event-types/' + editableEvent.id + '/guests', { guestLimit: 2 }, 200, 'PUT');
     const phoneKey = updatedEvent.questions.find(question => question.kind === 'phone').key;
     const personalPhone = '+12025550101', controlPhone = '+12025550102';
@@ -189,7 +189,7 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
     assert.equal(completed.calendarCleanup, 'completed'); assert.ok(calendarMilliseconds < 300000);
     context.diagnostic(JSON.stringify({ receipt: { id: receipt.id, bookings: receipt.bookings, requests: receipt.requests, requestedAt: receipt.requestedAt, completedAt: receipt.completedAt, localComplete: receipt.localComplete, calendarCleanup: completed.calendarCleanup }, successfulResumeLocalMilliseconds: localMilliseconds, successfulResumeToCalendarMilliseconds: calendarMilliseconds, firstAttemptToCalendarMilliseconds: Date.now() - Date.parse(receipt.requestedAt), statuses: { preview: 200, staleConfirmation: 409, invalidConfirmation: 409, atomicFailure: failed.status, partialFailure: partial.status, resumedConfirmation: 200, receipt: 200, erasedManage: expired.status, replayedRequest: replay.status, erasedReview: staleReview.status } }));
     const events = (await rt.providerDb.prepare('SELECT payload FROM wire_events').all()).results.map(row => JSON.parse(row.payload));
-    assert.ok(events.filter(row => row.status !== 'cancelled').every(row => [controlId, sharedBooking.id].includes(row.extendedProperties.private['dial-booking-id'])));
+    assert.deepEqual(events.filter(row => row.status !== 'cancelled').map(row => row.extendedProperties.private['dial-booking-id']).sort(), [controlId, sharedBooking.id].sort(), 'only the two control bookings remain active at the calendar edge');
     const controlManage = await rt.api(new URL(control.manageUrl).pathname.replace('/manage/', '/api/public/manage/'));
     assert.equal(controlManage.status, 200); await controlManage.arrayBuffer();
     const afterCalendarScan = await scan(rt.db, rt.bucket, markers, knownHashes);
