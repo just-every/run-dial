@@ -20,7 +20,7 @@ export class PersonErasure {
   constructor(private readonly db: D1Database, private readonly secret: string, private readonly processors?: {prepare(email:string,receiptId:string,actorId:string):Promise<void>;retry(receiptId:string):Promise<void>}) {}
   private records(email: string) { return personScope(this.db, email); }
   private signature(email: string, records: Awaited<ReturnType<PersonErasure["records"]>>, session: SessionRecord, expiresAt: number, operatorIdentityRetained: boolean) {
-    return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,records.holds,records.client,records.emails,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
+    return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,records.holds,records.client,records.emails,records.polls,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
   }
   async preview(raw: string, session: SessionRecord) {
     await assertErasureCensus(this.db);

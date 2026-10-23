@@ -42,6 +42,7 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  poll_vote_tokens: 'Poll participant capabilities and hashes; restore never recreates voting authority',
   client_remember_links: 'Single-use saved-details capabilities and their hashes; a restore never recreates remembered-details authority',
   booking_approval_tokens: 'Live approval request capabilities; restored requests are historical and never reserve time',
   oa_auth_audit: 'Installation-local authentication audit; never restore source identity authority',

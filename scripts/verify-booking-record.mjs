@@ -1,3 +1,4 @@
+import { pollScreens } from "../tests/booking-axe/polls.mjs";
 import assert from "node:assert/strict";
 import { confirmationSettingsJourney } from "../tests/booking-axe/confirmation-settings.mjs";
 import { chromium } from "@playwright/test";
@@ -19,6 +20,7 @@ try {
   const { booking } = await seedAcceptanceRecords(owner, origin, fixture);
   await bookingRecordDeliveryJourney(browser, owner, origin, booking, scans, errors);
   await clientRecordsJourney(browser, owner, origin, fixture, scans, errors);
+  await pollScreens(browser, owner, origin, scans, errors);
   await confirmationSettingsJourney(browser, owner, origin, fixture.eventId, scans, errors);
   assert.deepEqual(errors, []);
   console.log(`OPER-004: ${scans.length} desktop/mobile axe scans; answers, annotations, both zones, history, independent queued/sent/failed emails and UI recovery passed.`);

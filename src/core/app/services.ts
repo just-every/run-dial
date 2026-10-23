@@ -1,3 +1,4 @@
+import { PollsService } from "../features/polls";
 import { ClientsRepository, RememberedDetails } from "../features/clients";
 import { InvitationManageService } from "../features/bookings/invitation-manage";
 import { BookingLinksRepository } from "../features/booking-links/repository";
@@ -66,6 +67,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    polls: new PollsService(binding,runtime.SESSION_SECRET,runtime.APP_URL,availability,bookingLinks),
     clients: new ClientsRepository(binding),
     rememberedDetails: new RememberedDetails(binding,runtime.SESSION_SECRET,runtime.APP_URL,bookings),
     invitationManage: new InvitationManageService(binding, runtime),

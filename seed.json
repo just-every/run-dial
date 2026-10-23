@@ -596,6 +596,7 @@
       "/api/auth/",
       "/book/",
       "/manage/",
+      "/poll/",
       "/embed/",
       "/api/public/",
       "/api/calendar/oauth/callback",

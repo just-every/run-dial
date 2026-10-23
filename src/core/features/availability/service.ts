@@ -97,7 +97,7 @@ export class AvailabilityService {
    * BOOK-009 separately opts a reschedule out of published windows. Neither
    * path can bypass a busy interval, internal claim, buffer, or host-day cap.
    */
-  async verifyOperatorSelection(eventTypeId: string, startAt: string, options: { overrideNoticeAndHorizon: boolean; overridePublishedAvailability?: boolean }, now = new Date(), excludedBookingId?: string, durationMinutes?: number, retainedDurationMinutes?: number) {
+  async verifyOperatorSelection(eventTypeId: string, startAt: string, options: { overrideNoticeAndHorizon: boolean; overridePublishedAvailability?: boolean }, now = new Date(), excludedBookingId?: string, durationMinutes?: number, retainedDurationMinutes?: number, excludedLinkId?: string) {
     if (!hasSupportedInstantPrecision(startAt)) return { kind: "slot_invalid" as const, exclusions: ["start_increment" as const] };
     const [profile, event] = await Promise.all([
       this.profiles.getProfile(),
@@ -108,7 +108,7 @@ export class AvailabilityService {
     if (selectedDuration === undefined) return { kind: "invalid_duration" as const };
     const effectiveEvent = { ...event, durationMinutes: selectedDuration };
     const hostDate = hostDateForInstant(startAt, profile.timezone);
-    const loaded = await this.loadInput(effectiveEvent, profile.timezone, hostDate, 1, now, "fresh", options, excludedBookingId);
+    const loaded = await this.loadInput({ ...effectiveEvent, ...(excludedLinkId ? { bookingLink: {id:excludedLinkId,kind:"single_use" as const,expiresAt:new Date(now.getTime()+1).toISOString()} } : {}) }, profile.timezone, hostDate, 1, now, "fresh", options, excludedBookingId);
     if (!loaded) return { kind: "calendar_unavailable" as const };
     const slot = listAvailableSlots(loaded.input).find((candidate) => Date.parse(candidate.startAt) === Date.parse(startAt));
     return slot ? { kind: "valid" as const, profile, event: effectiveEvent, slot, calendarRequired: loaded.calendarRequired }
