@@ -25,6 +25,7 @@ import { Route as BookHandleRouteImport } from './routes/book.$handle'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
 import { Route as ManageTokenRouteImport } from './routes/manage.$token'
+import { Route as PollIdRouteImport } from './routes/poll.$id'
 import { Route as SetupIndexRouteImport } from './routes/setup.index'
 import { Route as SetupEventTypesRouteImport } from './routes/setup.event-types'
 import { Route as SetupProfileRouteImport } from './routes/setup.profile'
@@ -128,6 +129,11 @@ const DocsSlugRoute = DocsSlugRouteImport.update({
 const ManageTokenRoute = ManageTokenRouteImport.update({
   id: '/manage/$token',
   path: '/manage/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PollIdRoute = PollIdRouteImport.update({
+  id: '/poll/$id',
+  path: '/poll/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SetupIndexRoute = SetupIndexRouteImport.update({
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/poll/$id': typeof PollIdRoute
   '/setup/event-types': typeof SetupEventTypesRoute
   '/setup/profile': typeof SetupProfileRoute
   '/setup/settings': typeof SetupSettingsRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/poll/$id': typeof PollIdRoute
   '/setup/event-types': typeof SetupEventTypesRoute
   '/setup/profile': typeof SetupProfileRoute
   '/setup/settings': typeof SetupSettingsRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/poll/$id': typeof PollIdRoute
   '/setup/event-types': typeof SetupEventTypesRoute
   '/setup/profile': typeof SetupProfileRoute
   '/setup/settings': typeof SetupSettingsRoute
@@ -396,6 +405,7 @@ export interface FileRouteTypes {
     | '/book/$handle'
     | '/docs/$slug'
     | '/manage/$token'
+    | '/poll/$id'
     | '/setup/event-types'
     | '/setup/profile'
     | '/setup/settings'
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/book/$handle'
     | '/docs/$slug'
     | '/manage/$token'
+    | '/poll/$id'
     | '/setup/event-types'
     | '/setup/profile'
     | '/setup/settings'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/book/$handle'
     | '/docs/$slug'
     | '/manage/$token'
+    | '/poll/$id'
     | '/setup/event-types'
     | '/setup/profile'
     | '/setup/settings'
@@ -515,6 +527,7 @@ export interface RootRouteChildren {
   BookHandleRoute: typeof BookHandleRoute
   DocsSlugRoute: typeof DocsSlugRoute
   ManageTokenRoute: typeof ManageTokenRoute
+  PollIdRoute: typeof PollIdRoute
   DocsIndexRoute: typeof DocsIndexRoute
   BookHandleSlugRoute: typeof BookHandleSlugRoute
   EmbedHandleSlugRoute: typeof EmbedHandleSlugRoute
@@ -642,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/manage/$token'
       fullPath: '/manage/$token'
       preLoaderRoute: typeof ManageTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poll/$id': {
+      id: '/poll/$id'
+      path: '/poll/$id'
+      fullPath: '/poll/$id'
+      preLoaderRoute: typeof PollIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/setup/': {
@@ -878,6 +898,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookHandleRoute: BookHandleRoute,
   DocsSlugRoute: DocsSlugRoute,
   ManageTokenRoute: ManageTokenRoute,
+  PollIdRoute: PollIdRoute,
   DocsIndexRoute: DocsIndexRoute,
   BookHandleSlugRoute: BookHandleSlugRoute,
   EmbedHandleSlugRoute: EmbedHandleSlugRoute,
@@ -895,12 +916,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

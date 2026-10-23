@@ -1,0 +1,6 @@
+import { useEffect, useState } from "react";
+import { workspaceFetch } from "../../../app/workspace-reads";
+import { errorMessage } from "../../../api/client";
+export function usePollRead<T>(path:string,revision=0){const [state,setState]=useState<{path:string;data?:T;error?:string}>({path});useEffect(()=>{const abort=new AbortController();void workspaceFetch(path,{signal:abort.signal}).then(async r=>{if(!r.ok)throw new Error(await errorMessage(r));const data=await r.json() as T;if(!abort.signal.aborted)setState({path,data});}).catch(e=>{if(!abort.signal.aborted)setState({path,error:e.message});});return ()=>abort.abort();},[path,revision]);return state.path===path?state:{path};}
+export async function pollMutation<T=unknown>(path:string,data?:unknown){const response=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data??{})});if(!response.ok)throw new Error(await errorMessage(response));return response.json() as Promise<T>;}
+export function pollTime(start:string,end:string,zone:string){const date=new Intl.DateTimeFormat("en",{dateStyle:"full",timeStyle:"short",timeZone:zone});return `${date.format(new Date(start))} – ${new Intl.DateTimeFormat("en",{timeStyle:"short",timeZone:zone}).format(new Date(end))}`;}

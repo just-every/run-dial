@@ -1,3 +1,4 @@
+import { pollUpgrade } from './archive/poll-upgrade.mjs';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { contract } from './contract.mjs';
@@ -17,6 +18,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await paidApprovalUpgrade(source.db);
     await processorErasureUpgrade(source.db);
     const remembered=await clientUpgrade(source.db);
+    const poll=await pollUpgrade(source.db);
     source.db.exec("UPDATE payment_movements SET stripe_customer_id='synthetic-dial-customer-1',stripe_customer_observed=1; UPDATE person_erasure_receipts SET stripe_sessions_retained=1; UPDATE anonymized_audit SET reason='Person erasure before payment confirmation'");
     source.db.exec("UPDATE event_types SET booking_horizon_mode='fixed_range', booking_start_date='2026-10-07', booking_end_date='2026-10-31', slot_increment_minutes=45");
     const names = source.db.prepare(tableQuery).all().map(row => row.name);
@@ -55,6 +57,10 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
       SELECT id||'-phone',booking_id,'synthetic-dial-907','Phone','phone',?,created_at FROM booking_answers`).run(JSON.stringify(phone));
     const archive = await createArchive(testPlatform(source.db));
     assert.equal(archive.tables.some(table=>table.name==='client_remember_links'),false);
+    assert.equal(archive.tables.some(table=>table.name==='poll_vote_tokens'),false);
+    assert.equal(JSON.stringify(archive).includes(poll.token),false);assert.equal(JSON.stringify(archive).includes(poll.hash),false);
+    assert.ok(archive.tables.find(t=>t.name==='meeting_polls').rows.every(row=>row.state==='closed'));
+    assert.equal(archive.tables.find(t=>t.name==='poll_votes').rows[0].choice,'yes');
     assert.equal(JSON.stringify(archive).includes(remembered.token),false);
     assert.equal(JSON.stringify(archive).includes(remembered.hash),false);
     for (const table of archive.tables) {

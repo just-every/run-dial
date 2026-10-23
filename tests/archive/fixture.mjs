@@ -27,6 +27,9 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  meeting_polls:{state:'open',title:'Project planning',closes_at:end,show_tally:0},
+  poll_participants:{name:'Alex Rivera',email:'invitee@example.test'},
+  poll_votes:{choice:'yes'},
   client_profiles: { email:'invitee@example.test' },
   client_aliases: { email:'invitee@example.test' },
   client_notes: { body:'Private client preparation notes',operator_id:'owner' },

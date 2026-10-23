@@ -16,11 +16,12 @@ export function privateLinks(text, { known = [], hashes = new Set(), trusted = f
       const manage = /^\/(?:embed\/|api\/public\/)?manage\/([^/]+)(?:\/|$)/.exec(url.pathname);
       const authentication = /^\/(?:api\/)?auth\/(?:confirm|verify|owner-signin)$/.test(url.pathname);
       const bookingLink = /^\/(?:book\/|api\/public\/(?:book|events)\/)/.test(url.pathname) && url.searchParams.has('link');
+      const poll = /^\/(?:api\/public\/)?polls?\//.test(url.pathname);
       const remembered = /^\/(?:embed\/)?book\//.test(url.pathname) && url.searchParams.has('remember');
       const raw = manage?.[1] ?? (bookingLink ? url.searchParams.get('link') : remembered ? url.searchParams.get('remember') : url.searchParams.get('token'));
       if (!raw) continue;
       const token = manage ? decodeURIComponent(raw) : raw;
-      if (!manage && !bookingLink && !remembered && !authentication && !url.pathname.endsWith('/confirmed')) continue;
+      if (!manage && !bookingLink && !remembered && !poll && !authentication && !url.pathname.endsWith('/confirmed')) continue;
       // A supplied token parameter on an authentication route is explicit
       // credential material. Known/persisted manage tokens have no size cutoff.
       const persisted = manage && known.some(salt => hashes.has(tokenHash(`${salt}:${token}`)));

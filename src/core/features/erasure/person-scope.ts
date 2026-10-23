@@ -8,9 +8,10 @@ export async function personScope(db: D1Database, raw: string) {
   const email = foldEmail(raw);
   const client = await db.prepare("SELECT c.id,c.revision FROM client_profiles c JOIN client_aliases a ON a.client_id=c.id WHERE a.email=?").bind(email).first<{id:string;revision:number}>();
   const emails = client ? (await db.prepare("SELECT email FROM client_aliases WHERE client_id=? ORDER BY email").bind(client.id).all<{email:string}>()).results.map(row => row.email) : [email];
+  const polls=(await db.prepare("SELECT id,revision FROM poll_participants WHERE email IN(SELECT value FROM json_each(?)) ORDER BY id").bind(JSON.stringify(emails)).all<{id:string;revision:number}>()).results;
   const records = await Promise.all(emails.map(alias => personalRecords(db,alias)));
   const union = (key: "bookings" | "requests" | "approvals" | "holds" | "addresses") => [...new Set(records.flatMap(record => record[key]))].sort();
-  return { client, emails, bookings: union("bookings"), requests: union("requests"), approvals: union("approvals"), holds: union("holds"), addresses: [...new Set([...emails,...union("addresses")])].sort() };
+  return { client, emails, polls, bookings: union("bookings"), requests: union("requests"), approvals: union("approvals"), holds: union("holds"), addresses: [...new Set([...emails,...union("addresses")])].sort() };
 }
 export type PersonScope = Awaited<ReturnType<typeof personScope>>;
 export async function scopeOperatorOverlap(db: D1Database, emails: string[]) {
@@ -33,6 +34,7 @@ export async function admitPersonScope(db: D1Database, scope: PersonScope, sessi
   const idsGuard = (table: string, column: string, ids: string[]) => db.prepare(`SELECT CASE WHEN (SELECT json_group_array(id) FROM (SELECT id FROM ${table} WHERE ${column} IN(SELECT value FROM json_each(?)) ORDER BY id))=? THEN 1 ELSE abs(-9223372036854775808) END`).bind(emails,JSON.stringify(ids));
   await db.batch([
     db.prepare(authority.sql).bind(...authority.params), clientGuard,
+    db.prepare("SELECT CASE WHEN (SELECT json_group_array(json_object('id',id,'revision',revision)) FROM (SELECT id,revision FROM poll_participants WHERE email IN(SELECT value FROM json_each(?)) ORDER BY id))=? THEN 1 ELSE abs(-9223372036854775808) END").bind(emails,JSON.stringify(scope.polls)),
     idsGuard("bookings","invitee_email_folded",scope.bookings),
     idsGuard("availability_requests",emailFoldSql("invitee_email"),scope.requests),
     idsGuard("booking_approval_requests",emailFoldSql("invitee_email"),scope.approvals),
