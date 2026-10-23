@@ -4724,7 +4724,7 @@
       "executable": false
     },
     "src/core/app/hono.ts": {
-      "sha256": "1f235ea65c7b6d9a768076bf4912a1d0856a175564892dc1bf3c371c9f5bbbb1",
+      "sha256": "0058a00253e4bd58269a845dd1a55d8253d898280e2f052669ca15fcfb900f91",
       "executable": false
     },
     "src/core/app/loaders.ts": {
