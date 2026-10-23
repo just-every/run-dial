@@ -1,4 +1,4 @@
-import { clientRoutes } from "../features/clients";
+import { clientRoutes, rememberRoutes } from "../features/clients";
 import { invitationManageRoutes } from "../features/public-booking/invitation-routes";
 import { bookingLinkRoutes } from "../features/booking-links/routes";
 import { correspondenceRoutes } from "../features/event-types/correspondence-routes";
@@ -102,6 +102,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", paymentRoutes)
     .route("/", reportRoutes)
     .route("/", publicBookingRoutes)
+    .route("/", rememberRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
     .get("/app", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
     .get("/app/*", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))

@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { auditor, trackPage } from './audit.mjs';
+import { rememberedClientJourney } from './remembered-client.mjs';
 
 export async function clientRecordsJourney(browser, owner, origin, fixture, scans, errors) {
   const headers={Origin:origin};
@@ -17,7 +19,7 @@ export async function clientRecordsJourney(browser, owner, origin, fixture, scan
     const bookings=[];
     for(const [person,count] of [[email,3],[target,1]])for(let i=0;i<count;i++){
       const available=await request('get',`/api/public/book/dial-host/intro/availability?week=${week}`);
-      const booking=await request('post','/api/app/bookings',{idempotencyKey:`synthetic-dial-client-${width}-${person}-${i}`,eventTypeId:fixture.eventId,startAt:available.slots[0].startAt,inviteeTimezone:'America/New_York',name:'Alex Rivera',email:person,answers:Object.fromEntries(event.questions.map(question=>[question.key,'Discuss the next project milestone.'])),overrideNoticeAndHorizon:false},201);
+      const booking=await request('post','/api/app/bookings',{idempotencyKey:randomUUID(),eventTypeId:fixture.eventId,startAt:available.slots[0].startAt,inviteeTimezone:'America/New_York',name:'Alex Rivera',email:person,answers:Object.fromEntries(event.questions.map(question=>[question.key,'Discuss the next project milestone.'])),overrideNoticeAndHorizon:false},201);
       if(person===email)bookings.push(booking);
     }
     const context=await browser.newContext({storageState,viewport:{width,height:900},timezoneId:'America/New_York'});
@@ -59,6 +61,7 @@ export async function clientRecordsJourney(browser, owner, origin, fixture, scan
       assert.equal(await page.locator('[data-client-booking]').count(),4,'merged client reload retains every booking');
       const iconOnly=await page.locator('button,a[href]').evaluateAll(nodes=>nodes.filter(node=>!node.textContent.trim()).map(node=>node.getAttribute('aria-label')));
       assert.deepEqual(iconOnly,[],'Clients uses visible text for every control');
+      await rememberedClientJourney({page,context,owner,origin,email,event,audit});
       console.log(`CLIENT-001 ${width}: three-booking history, viewer zone, annotations, exact record, merge, reload; icon-only controls=0`);
     } finally {await context.close();}
   }

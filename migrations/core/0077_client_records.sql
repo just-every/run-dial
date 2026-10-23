@@ -12,6 +12,18 @@ CREATE TABLE client_aliases (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX client_aliases_client ON client_aliases(client_id);
+CREATE TABLE client_remember_links (
+  id TEXT PRIMARY KEY NOT NULL,
+  event_type_id TEXT NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,
+  booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL,
+  consumed_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX client_remember_requests ON client_remember_links(email,event_type_id,created_at);
 CREATE TABLE client_notes (
   id TEXT PRIMARY KEY NOT NULL,
   client_id TEXT NOT NULL REFERENCES client_profiles(id),

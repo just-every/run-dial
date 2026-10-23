@@ -42,6 +42,7 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  client_remember_links: 'Single-use saved-details capabilities and their hashes; a restore never recreates remembered-details authority',
   booking_approval_tokens: 'Live approval request capabilities; restored requests are historical and never reserve time',
   oa_auth_audit: 'Installation-local authentication audit; never restore source identity authority',
   oa_credentials: 'Live credential authority; recreate at the destination',
