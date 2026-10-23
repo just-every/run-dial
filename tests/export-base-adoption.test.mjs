@@ -46,6 +46,10 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
       for(const name of ['event_types','bookings'])assert.ok(prior.prepare(`SELECT guest_limit FROM ${name}`).all().every(row=>row.guest_limit===0),'existing rows keep guests disabled');
       assert.equal(prior.prepare('SELECT count(*) AS n FROM booking_guests').get().n,0);
     } finally { prior.close(); }
+    // DATA-006: both current phone carriers remain personal booking custody.
+    const phone = '+12025550101';
+    source.db.prepare("UPDATE bookings SET location_type='invitee_phone',location_value=?").run(phone);
+    source.db.prepare("UPDATE booking_answers SET question_kind='phone',value_json=?").run(JSON.stringify(phone));
     const archive = await createArchive(testPlatform(source.db));
     for (const table of archive.tables) {
       if (table.name === "operator_erasure_subjects") assert.equal(table.rows.length, 0, "unfinished operator erasure cannot be archived");
@@ -69,6 +73,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM oa_step_up_challenges').get().n, 0);
     assert.deepEqual(await createArchive(destination), archive);
+    assert.ok(target.db.prepare("SELECT location_value FROM bookings WHERE location_type='invitee_phone'").all().every(row => row.location_value === phone), 'DATA-006 invitee phone locations round-trip');
+    assert.ok(target.db.prepare("SELECT value_json FROM booking_answers WHERE question_kind='phone'").all().every(row => JSON.parse(row.value_json) === phone), 'DATA-006 phone-question answers round-trip');
     assert.equal(target.db.prepare('SELECT browser_timezone FROM availability_requests').get().browser_timezone, 'America/Los_Angeles', 'AVAIL-012 request browser zone survives the public archive round trip');
     assert.equal(target.db.prepare('SELECT browser_timezone FROM booking_presentation').get().browser_timezone, 'America/New_York', 'AVAIL-012 booking preserves its independent invitee observation');
     for (const table of ['booking_guests', 'payment_connections', 'event_type_prices', 'booking_payments']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-001 ${table} survives the archive round trip`);
