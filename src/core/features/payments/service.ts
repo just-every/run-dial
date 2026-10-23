@@ -1,3 +1,5 @@
+import { Accounting } from "./accounting";
+import { Reconciliation } from "./reconciliation";
 import { deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import { nowIso } from "../../shared/ids";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
@@ -39,6 +41,8 @@ type ApprovalLifecycle = {receive(hold:PaymentHold,event:StripeEvent):Promise<We
 export type WebhookResult = { kind: "unauthorized" | "processed" | "ignored" | "rejected" } | { kind: "limited"; retryAfterSeconds: number };
 
 export class PaymentsService {
+  readonly accounting: Accounting;
+  readonly reconciliation: Reconciliation;
   readonly processorErasure: ProcessorErasure;
   readonly connection: StripeConnection;
   readonly money: MoneyService;
@@ -50,6 +54,8 @@ export class PaymentsService {
   private approvalLifecycle?: ApprovalLifecycle;
   constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, processorRequests:ProcessorRequestsRepository, private readonly transport: typeof fetch = fetch) {
     this.db = db;
+    this.reconciliation = new Reconciliation(db, stripeConfiguration(runtime) ? new StripeApi(stripeConfiguration(runtime)!.secretKey,transport) : undefined);
+    this.accounting = new Accounting(db, runtime, transport);
     this.repository = new PaymentsRepository(db);
     this.terms = new MoneyRepository(db);
     this.connection = new StripeConnection(this.repository, runtime, transport);
@@ -183,6 +189,8 @@ export class PaymentsService {
       await this.repository.markDeauthorized(event.account);
       return { kind: "processed" };
     }
+    const reconciliation = await this.reconciliation.receive(event);
+    if (reconciliation) return reconciliation;
     const object = event.data.object;
     const movementId = metadata(object, "dial_movement_id");
     if (movementId) {
@@ -293,6 +301,6 @@ function parseEvent(payload: string): StripeEvent | undefined {
   try {
     const value = JSON.parse(payload) as Partial<StripeEvent>;
     return typeof value.id === "string" && typeof value.type === "string" && value.data && typeof value.data.object === "object" && value.data.object !== null
-      ? { id: value.id, type: value.type, ...(typeof value.account === "string" ? { account: value.account } : {}), data: { object: value.data.object as Record<string, unknown> } } : undefined;
+      ? { id: value.id, type: value.type, ...(Number.isInteger(value.created) ? {created:value.created} : {}), ...(typeof value.account === "string" ? { account: value.account } : {}), data: { object: value.data.object as Record<string, unknown> } } : undefined;
   } catch { return undefined; }
 }

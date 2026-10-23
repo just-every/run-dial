@@ -1,3 +1,4 @@
+import type { ProcessorFact } from "./reconciliation";
 import { balanceTaxCents, type TermsSnapshot } from "../../shared/payment-terms";
 import type { Movement } from "./movements-repository";
 import type { BookingPayment } from "./repository";
@@ -14,18 +15,21 @@ export type Ledger = {
 /** The booking's money from its first payment and its movements: paid covers the first payment, any balance and
  * any invoice, fees the charged late-cancellation and no-show fees, refunded every refund Stripe accepted. Amounts
  * include their sales tax. A cancelled booking owes no balance. */
-export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnapshot | undefined, movements: Movement[], cancelled = false): Ledger {
+export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnapshot | undefined, movements: Movement[], cancelled = false, facts: ProcessorFact[] = []): Ledger {
   const succeeded = movements.filter(movement => movement.status === "succeeded");
   const sum = (kinds: Movement["kind"][], field: "amountCents" | "taxCents" = "amountCents") => succeeded.filter(movement => kinds.includes(movement.kind)).reduce((total, movement) => total + movement[field], 0);
-  const balancePaid = sum(["balance"]), feesCents = sum(["late_cancel_fee", "no_show_fee"]), refundedCents = sum(["refund"]);
+  const external = facts.filter(f => f.kind === "refund" && !["failed","canceled"].includes(f.status) && !movements.some(m => m.processorRef === f.processorRef));
+  const balancePaid = sum(["balance"]), feesCents = sum(["late_cancel_fee", "no_show_fee"]), refundedCents = sum(["refund"]) + external.filter(f=>f.status==="succeeded").reduce((n,f)=>n+f.amountCents,0);
   const paidCents = (payment?.amountCents ?? 0) + balancePaid + sum(["invoice"]);
+  const externalTax=(ref:string,amount:number,tax:number,succeededOnly=false)=>{const ours=movements.filter(m=>m.kind==='refund'&&m.sourceRef===ref&&(succeededOnly?m.status==='succeeded':m.status!=='failed'));const other=external.filter(f=>f.sourceRef===ref&&(!succeededOnly||f.status==='succeeded')).reduce((n,f)=>n+f.amountCents,0);return other?Math.max(0,Math.min(tax,Math.round((ours.reduce((n,m)=>n+m.amountCents,0)+other)*tax/amount))-ours.reduce((n,m)=>n+m.taxCents,0)):0;};
+  const externalRefundTax=externalTax(payment?.paymentIntentId??'',payment?.amountCents??1,payment?.taxCents??0,true)+succeeded.filter(m=>m.kind!=='refund').reduce((n,m)=>n+externalTax(m.processorRef??'',m.amountCents,m.taxCents,true),0);
   const refunds = movements.filter(movement => movement.kind === "refund" && movement.status !== "failed");
   const charge = (ref: string | null, amountCents: number, taxCents: number, at: string): Charge[] => {
     if (!ref) return [];
     const reserved = refunds.filter(refund => refund.sourceRef === ref);
     return [{ ref, amountCents, taxCents, at,
-      refundedCents: reserved.reduce((total, refund) => total + refund.amountCents, 0),
-      refundedTaxCents: reserved.reduce((total, refund) => total + refund.taxCents, 0),
+      refundedCents: reserved.reduce((total, refund) => total + refund.amountCents, 0) + external.filter(f=>f.sourceRef===ref).reduce((n,f)=>n+f.amountCents,0),
+      refundedTaxCents: reserved.reduce((total, refund) => total + refund.taxCents, 0) + externalTax(ref,amountCents,taxCents),
     }];
   };
   const charges = [
@@ -37,9 +41,9 @@ export function ledger(payment: BookingPayment | undefined, snapshot: TermsSnaps
   return {
     priceCents: snapshot?.priceCents ?? payment?.amountCents ?? (invoice ? invoice.amountCents - invoice.taxCents : 0),
     paidCents, feesCents, refundedCents, netCents: paidCents + feesCents - refundedCents,
-    taxCents: (payment?.taxCents ?? 0) + sum(["balance", "invoice"], "taxCents") - sum(["refund"], "taxCents"),
+    taxCents: (payment?.taxCents ?? 0) + sum(["balance", "invoice"], "taxCents") - sum(["refund"], "taxCents") - externalRefundTax,
     balanceDueCents: Math.max(0, balanceTotal - balancePaid),
-    refundableCents: charges.reduce((total, entry) => total + entry.amountCents - entry.refundedCents, 0),
+    refundableCents: charges.reduce((total, entry) => total + Math.max(0,entry.amountCents - entry.refundedCents), 0),
     charges,
   };
 }

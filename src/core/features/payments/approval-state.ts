@@ -9,7 +9,7 @@ export type ApprovalPayment = {
   voidState?: "declined" | "expired"; voidReason?: string; capturedCents?: number; refundId?: string; lastError?: string;
   audit: { authorize: string; capture: string; void: string; detach: string; refund: string };
 };
-export type StripeEvent = { id: string; type: string; account?: string; data: { object: Record<string, unknown> } };
+export type StripeEvent = { created?: number; id: string; type: string; account?: string; data: { object: Record<string, unknown> } };
 export function approvalPayment(json: string | null): ApprovalPayment | undefined { return json ? JSON.parse(json) as ApprovalPayment : undefined; }
 export function approvalAuditIds(): ApprovalPayment["audit"] { return { authorize: createId(), capture: createId(), void: createId(), detach: createId(), refund: createId() }; }
 export function publicApprovalPayment(payment: ApprovalPayment | undefined) {
