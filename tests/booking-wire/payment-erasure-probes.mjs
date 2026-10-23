@@ -21,7 +21,6 @@ export async function paymentErasureProbes({ data, call, state, hold, slot, day,
     assert.equal(receipt.localComplete, true);
     assert.ok(Array.isArray(receipt.externalRequests), "DATA-007 lists individual processor erasure requests");
     assert.equal(receipt.stripeCustomersRetained, 0, "a refused invoice attempt created no retained Customer");
-    assert.equal(receipt.stripeCustomersNotice, null);
     assert.ok(!receipt.externalRequests.some(item=>item.kind==="stripe_customer_anonymize"),"a refused Customer creation lists no anonymize request");
     assert.equal(receipt.stripeSessionsRetained, 0);
     assert.equal((await state()).wire_calls.filter(row => row.method === "DELETE" && new URL(row.url).pathname.startsWith("/v1/customers/")).length, 0, "no deletion is requested for a Customer that never existed");

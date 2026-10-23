@@ -16,7 +16,7 @@ export type PersonConfirmation = { email: string; confirmation: string; expiresA
 type EraseEntity = (kind: "bookings" | "availability-requests", id: string) => Promise<void>;
 
 export class PersonErasure {
-  constructor(private readonly db: D1Database, private readonly secret: string, private readonly processors?: {prepare(email:string,receiptId:string):Promise<void>;retry(receiptId:string):Promise<void>}) {}
+  constructor(private readonly db: D1Database, private readonly secret: string, private readonly processors?: {prepare(email:string,receiptId:string,actorId:string):Promise<void>;retry(receiptId:string):Promise<void>}) {}
   private records(email: string) { return personalRecords(this.db, email); }
   private signature(email: string, records: Awaited<ReturnType<PersonErasure["records"]>>, session: SessionRecord, expiresAt: number, operatorIdentityRetained: boolean) {
     return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,records.holds,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
@@ -61,7 +61,7 @@ export class PersonErasure {
     if(!pending?.receipt_id)throw new ErasureError("erasure_incomplete",503);
     const id=pending.receipt_id;
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
-    await this.processors?.prepare(email,id);
+    await this.processors?.prepare(email,id,session.id);
     await erasePendingPayments(this.db,email,session,cleanupPending);
     await erasePersonSourceCustody(this.db, email, custody.custodyOnly, custody.values, session);
     await erasePersonSharedCustody(this.db, custody.values, custody.sharedFields, custody.sharedInvitees, session);
@@ -95,6 +95,6 @@ export class PersonErasure {
     if(!row) return null;
     const targets=(await this.db.prepare("SELECT completed_at,last_error_code FROM erased_calendar_targets WHERE receipt_id=?").bind(id).all<{completed_at:string|null;last_error_code:string|null}>()).results;
     // D7: a receipt from before the count existed reads null (not counted), never zero.
-    return {...row,stripeCustomersNotice:null,externalRequests:await new ProcessorRequestsRepository(this.db).list(id),operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
+    return {...row,externalRequests:await new ProcessorRequestsRepository(this.db).list(id),operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
   }
 }

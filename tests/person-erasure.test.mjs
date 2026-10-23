@@ -116,6 +116,7 @@ contract('DATA-002', 'native email preview is inert; one confirmation erases per
     assert.equal((await rt.db.prepare('SELECT count(*) AS n FROM person_erasure_receipts').first()).n, 1, 'partial erasure resumes its original anonymous receipt');
     assert.equal(receipt.localComplete, true);
     assert.equal(receipt.calendarCleanup, 'pending');
+    assert.ok(receipt.externalRequests.some(item=>item.kind==='calendar_event_cancel'),'each known calendar cancellation is listed');
     assert.equal(receipt.bookings, 3); assert.equal(receipt.requests, 1);
     assert.equal(markers.some(marker => JSON.stringify(receipt).includes(marker)), false);
     assert.ok(receipt.completedAt);
@@ -135,6 +136,7 @@ contract('DATA-002', 'native email preview is inert; one confirmation erases per
     await rt.data('/__fixtures/deliver', {}); await rt.data('/__fixtures/deliver', {});
     const completed = await rt.data(`/api/app/privacy/receipts/${receipt.id}`);
     const calendarMilliseconds = Date.now() - started;
+    assert.ok(completed.externalRequests.filter(item=>item.kind==='calendar_event_cancel').every(item=>item.state==='completed'),'the person receipt lists each completed calendar request');
     assert.equal(completed.calendarCleanup, 'completed'); assert.ok(calendarMilliseconds < 300000);
     context.diagnostic(JSON.stringify({ receipt: { id: receipt.id, bookings: receipt.bookings, requests: receipt.requests, requestedAt: receipt.requestedAt, completedAt: receipt.completedAt, localComplete: receipt.localComplete, calendarCleanup: completed.calendarCleanup }, successfulResumeLocalMilliseconds: localMilliseconds, successfulResumeToCalendarMilliseconds: calendarMilliseconds, firstAttemptToCalendarMilliseconds: Date.now() - Date.parse(receipt.requestedAt), statuses: { preview: 200, staleConfirmation: 409, invalidConfirmation: 409, atomicFailure: failed.status, partialFailure: partial.status, resumedConfirmation: 200, receipt: 200, erasedManage: expired.status, replayedRequest: replay.status, erasedReview: staleReview.status } }));
     const events = (await rt.providerDb.prepare('SELECT payload FROM wire_events').all()).results.map(row => JSON.parse(row.payload));

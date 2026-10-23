@@ -150,8 +150,8 @@ export class PaymentsService {
     const outcomes = await erasePendingPayments(this.db, email, () => this.money.live(), (account, ref) => this.processorErasure.detach(email, account, ref));
     for (const outcome of outcomes) {
       if(outcome.customerId)await this.processorErasure.customer(email,outcome.accountId,outcome.customerId);
-      if(outcome.voidedIntentId)await this.processorErasure.fact(email,"payment_authorization_void",outcome.accountId,outcome.voidedIntentId);
-      if(outcome.refundId)await this.processorErasure.fact(email,"payment_refund",outcome.accountId,outcome.refundId);
+      if(outcome.voidedIntentId)await this.processorErasure.fact(email,"payment_authorization_void",outcome.accountId,outcome.voidedIntentId,outcome.authorizedCents??0);
+      if(outcome.refundId)await this.processorErasure.fact(email,"payment_refund",outcome.accountId,outcome.refundId,outcome.amountCents);
     }
     return outcomes;
   }

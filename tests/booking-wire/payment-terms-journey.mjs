@@ -402,12 +402,13 @@ const preview = await data("/api/app/privacy/preview", { email: "avery@dial.test
 const receipt = await data("/api/app/privacy/erase", { email: "avery@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
 snap = await state();
 assert.equal(calls(snap, `/v1/payment_methods/${consentA.stripe_payment_method_id}/detach`).length, 1, "Stripe is asked to detach the saved card");
-assert.deepEqual([receipt.savedCardsDetached, receipt.savedCardFailures, receipt.stripeCustomersRetained], [1, 0, 1], "the receipt counts the detached card and the Stripe customer left in the host's account");
-assert.equal(receipt.stripeCustomersNotice, "These Stripe customers remain in the host's Stripe account with the payer's email, name and any billing address; remove them in Stripe.");
-const rows = JSON.stringify(await data("/__fixtures/payments/all-rows"));
-for (const detail of ["avery@dial.test", "Avery Deposit", consentA.stripe_payment_method_id, consentA.stripe_customer_id]) assert.ok(!rows.includes(detail), `erased payer's ${detail.startsWith("pm_") ? "card reference" : detail.startsWith("cus_") ? "customer reference" : "detail"} is gone from every table`);
+assert.deepEqual([receipt.savedCardsDetached, receipt.savedCardFailures, receipt.stripeCustomersRetained], [1, 0, 1], "the receipt counts the detached card and observed Stripe Customer");
+assert.ok(receipt.externalRequests.some(item=>item.kind==="stripe_customer_anonymize"&&item.processorRef===consentA.stripe_customer_id&&item.state==="completed"),"the receipt reports the actual Customer anonymization");
+const retainedRows=await data("/__fixtures/payments/all-rows"),rows=JSON.stringify(retainedRows);
+for(const detail of ["avery@dial.test","Avery Deposit"])assert.ok(!rows.includes(detail),"erased payer values are gone from every table");
+for(const [table,records] of Object.entries(retainedRows))if(!["anonymized_audit","processor_erasure_requests"].includes(table))for(const ref of [consentA.stripe_payment_method_id,consentA.stripe_customer_id])assert.ok(!JSON.stringify(records).includes(ref),`${table}: processor references survive only in anonymous audit/cleanup records`);
 const audit = snap.anonymized_audit.filter(row => row.entity_kind === "payment").map(row => [row.action, row.amount_cents]).sort();
-assert.deepEqual(audit, [["balance:succeeded", 7500], ["deposit", 2500], ["refund:succeeded", 2500], ["refund:succeeded", 7500], ["saved_card_detached", null]], "amounts and Stripe references survive anonymized");
+assert.deepEqual(audit, [["balance:succeeded", 7500], ["deposit", 2500], ["refund:succeeded", 2500], ["refund:succeeded", 7500], ["saved_card_detached", 0]], "amounts and Stripe references survive anonymized");
 checks.push("erasing a payer detaches the saved card at Stripe, deletes consent, card references and movements with the booking, and keeps each amount and Stripe reference in the anonymized audit; the receipt counts the detached card");
 
 await paymentErasureProbes({ data, call, state, hold, slot, day, webhook, stripeEvent, coaching, probe, complete, deliver });

@@ -7,7 +7,7 @@ type Live = () => Promise<{api:StripeApi;accountId:string}|{refusal:MoneyRefusal
 export class ProcessorErasure {
   readonly requests: ProcessorRequestsRepository;
   constructor(private readonly db:D1Database,private readonly live:Live){this.requests=new ProcessorRequestsRepository(db);}
-  async prepare(email:string,receiptId:string){await this.requests.prepare(email,receiptId);await this.retry(receiptId);}
+  async prepare(email:string,receiptId:string,actorId:string){await this.requests.prepare(email,receiptId,actorId);await this.retry(receiptId);}
   async retry(receiptId:string){for(const request of await this.requests.list(receiptId))if(["saved_card_detach","stripe_customer_anonymize"].includes(request.kind))await this.execute(request);}
   async customer(email:string,accountId:string,processorRef:string){const receiptId=await this.requests.receiptForEmail(email);if(receiptId)await this.execute(await this.requests.ensure(receiptId,{kind:"stripe_customer_anonymize",accountId,processorRef}));}
   async detach(email:string,accountId:string,processorRef:string){
@@ -22,8 +22,8 @@ export class ProcessorErasure {
     if(!row||!await this.requests.receiptForEmail(row.email))return ordinary();
     return await this.detach(row.email,row.accountId,row.ref)?"detached" as const:"stripe_failed" as const;
   }
-  async fact(email:string,kind:"payment_authorization_void"|"payment_refund",accountId:string,processorRef:string){
-    const receiptId=await this.requests.receiptForEmail(email);if(receiptId)await this.requests.ensure(receiptId,{kind,accountId,processorRef,state:"completed",requested:true});
+  async fact(email:string,kind:"payment_authorization_void"|"payment_refund",accountId:string,processorRef:string,amountCents:number){
+    const receiptId=await this.requests.receiptForEmail(email);if(receiptId)await this.requests.ensure(receiptId,{kind,accountId,processorRef,amountCents,state:"completed",requested:true});
   }
   private async execute(item:ProcessorRequest){
     if(item.state!=="pending"||!await this.requests.claim(item.id))return;

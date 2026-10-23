@@ -1,6 +1,6 @@
 type Item = {id?:string;kind:string;processorRef:string;state:string;reason:string|null;requested:boolean};
-const labels:Record<string,string> = {calendar_event_cancel:"Calendar event cancellation",saved_card_detach:"Saved-card detach",stripe_customer_anonymize:"Stripe Customer anonymize",stripe_checkout_email:"Stripe Checkout email",payment_authorization_void:"Payment authorization void",payment_refund:"Payment refund"};
-const reasons:Record<string,string> = {checkout_customer_email_not_editable_no_erasure_api:"Stripe cannot edit or erase the email on an existing Checkout Session. No email-erasure request was sent.",awaiting_erasure_confirmation:"Waiting for your confirmation."};
+const labels:Record<string,string> = {calendar_event_cancel:"Calendar event cancellation",saved_card_detach:"Saved-card detach",stripe_customer_anonymize:"Stripe Customer anonymize",stripe_checkout_email:"Stripe Checkout email",stripe_customer_unobserved:"Unobserved Stripe Customer",payment_authorization_void:"Payment authorization void",payment_refund:"Payment refund"};
+const reasons:Record<string,string> = {checkout_customer_email_not_editable_no_erasure_api:"Stripe cannot edit or erase the email on an existing Checkout Session. No email-erasure request was sent.",customer_creation_unobserved_no_reference:"Customer creation was not observed. Dial has no Stripe Customer reference to anonymize; this is the local creation request reference.",awaiting_erasure_confirmation:"Waiting for your confirmation."};
 
 export function ProcessorRequestList({items}:{items:Item[]}){
   if(!items.length)return <p className="mt-3 text-sm text-soft">No external processor requests are known for these records.</p>;

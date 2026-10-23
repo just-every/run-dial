@@ -7,7 +7,7 @@ import { SectionHeading } from "../../../app/ui/page-header";
 type ExternalRequest = {id?:string;kind:string;processorRef:string;state:string;reason:string|null;requested:boolean};
 type Preview = { externalRequests:ExternalRequest[]; bookings: number; requests: number; payments: number; pending: boolean; operatorIdentityRetained: boolean; expiresAt: number; confirmation: string };
 type Receipt = { externalRequests:ExternalRequest[]; operatorIdentityRetained: boolean; id: string; bookings: number; requests: number; completedAt: string | null; localComplete: boolean; calendarCleanup: string; calendarFailures: (string | null)[];
-  savedCardsDetached: number; savedCardFailures: number; stripeCustomersRetained: number | null; stripeCustomersNotice: string | null; stripeSessionsRetained: number | null };
+  savedCardsDetached: number; savedCardFailures: number; stripeCustomersRetained: number | null; stripeSessionsRetained: number | null };
 
 export function PersonErasureCard() {
   const errorId = useId();
@@ -92,7 +92,7 @@ export function PersonErasureCard() {
       {receipt.operatorIdentityRetained ? <p>Associated operator identity was retained by this erasure. Account removal is separate.</p> : null}
       <p>Calendar cleanup: {receipt.calendarCleanup}.</p>
       {receipt.savedCardsDetached || receipt.savedCardFailures ? <p>Saved cards: {receipt.savedCardsDetached} detached at Stripe, {receipt.savedCardFailures} not detached.</p> : null}
-      {receipt.stripeCustomersRetained ? <p>Stripe Customers observed: {receipt.stripeCustomersRetained}. {receipt.stripeCustomersNotice}</p> : null}
+      {receipt.stripeCustomersRetained ? <p>Stripe Customers observed: {receipt.stripeCustomersRetained}.</p> : null}
       {receipt.stripeSessionsRetained ? <p>Stripe Checkout sessions kept: {receipt.stripeSessionsRetained}.</p> : null}
       <ProcessorRequestList items={receipt.externalRequests} />
       {receipt.externalRequests.some(item=>item.state==="pending"&&["saved_card_detach","stripe_customer_anonymize"].includes(item.kind))?<Button type="button" variant="secondary" className="mt-3" disabled={working} onClick={()=>void retryProcessors()}>Retry processor cleanup</Button>:null}
