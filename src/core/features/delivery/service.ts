@@ -9,7 +9,7 @@ import { toMailMessage } from "./email-content";
 import { DeliveryRepository, type DeliveryOutboxRecord } from "./repository";
 import type { AdmitCallback } from "../../platform/public-admission";
 import { discardRequestBody, providerCallbackMaxBytes, readLimitedBody } from "../../shared/http";
-import { operatorNotificationCommand } from "../../platform/operator-notification-boundary";
+import type { OperatorNotificationCommand } from "../../platform/operator-notification-boundary";
 import { isOperatorNotification } from "./operator-mail";
 import { bookingCancellationMail, type BookingCancellationTemplate } from "./booking-mails";
 import { formatUsd } from "../../shared/event-price";
@@ -32,6 +32,7 @@ export class ProviderDeliveryService {
     private readonly sessionSecret: string,
     private readonly runtime: import("../../shared/runtime-env").RuntimeEnvironment,
     private readonly notices: import("../workspace-notices").NoticeDelivery,
+    private readonly operatorNotification?: OperatorNotificationCommand,
   ) {}
 
   async processDue(limit = 25, now = new Date()) {
@@ -238,7 +239,8 @@ export class ProviderDeliveryService {
     if (isOperatorBookingMail(record, payload) && await this.repository.bookingMailMuted(message.to)) return undefined;
     if (!frozen) await this.repository.freezeMail(record, message, payload.recipientRole === "invitee" && typeof payload.manageUrl === "string" ? payload.manageUrl : undefined);
     if (isOperatorNotification(record, payload)) {
-      return operatorNotificationCommand<string | null>("send", { outboxId: record.id, attempt: record.attempts });
+      if (!this.operatorNotification) throw new ProviderFailure("operator_notification_coordination_missing", false);
+      return this.operatorNotification<string | null>("send", { outboxId: record.id, attempt: record.attempts });
     }
     return (await this.mail.send(message)).providerMessageId;
   }

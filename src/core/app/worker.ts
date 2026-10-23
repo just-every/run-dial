@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../platform/operator-notification-boundary";
 import { withPrivateRequest, privateRequestServices, nativeRequestSession, privateReadTasks, deferPrivateRead } from "./private-request.server";
 // Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
 import { withDemo } from "../../../modules/demo/index.mjs";
@@ -30,7 +31,7 @@ import { connectionWatchObservers } from "./connection-watch";
 const claimed = claimedWhen("SELECT 1 FROM operator_setup_identity WHERE singleton_key='default' AND onboarding_completed_at IS NOT NULL LIMIT 1");
 
 export function createWorker(servicesFactory?: (env: AppBindings) => AppServices) {
-const newServicesFor = servicesFactory ?? ((env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { files: env.FILES, calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) }));
+const newServicesFor = servicesFactory ?? ((env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), files: env.FILES, calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env) }));
 const servicesFor = (env: AppBindings) => privateRequestServices(env) ?? newServicesFor(env);
 const app = createApp({ fetch: async (request) => start.fetch(request) }, servicesFor);
 

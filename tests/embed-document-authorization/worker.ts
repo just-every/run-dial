@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import production, { BookingCoordinator } from "../ux-simplification/worker";
 import { readPublicDocument } from "../../src/core/app/documents.server";
 import { createServices } from "../../src/core/app/services";
@@ -18,12 +19,12 @@ export default {
     if (request.method === "POST" && url.pathname === "/__fixtures/embed-rotate") {
       const booking = await env.DB.prepare("SELECT id FROM bookings LIMIT 1").first<{ id: string }>();
       if (!booking) return new Response(null, { status: 404 });
-      const services = createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS);
+      const services = createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR) });
       return Response.json(await services.bookings.rotateManageTokenForOperator(booking.id));
     }
     if (request.method === "POST" && url.pathname === "/__fixtures/embed-state") {
       const { status, allowedOrigins, requestOnly } = await request.json<{ status?: "draft" | "disabled" | "published"; allowedOrigins?: string[]; requestOnly?: boolean }>();
-      const services = createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS);
+      const services = createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR) });
       if (allowedOrigins) await services.embeds.replaceAllowedOrigins(allowedOrigins);
       const events = new EventTypesRepository(env.DB);
       const event = await events.getBySlug("intro");

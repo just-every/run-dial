@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { captureMail } from "../mail-capture";
 import { issuedDevelopmentLink } from "../development-auth";
 import { ensureTestOperator, registerTestSetup } from "../auth-fixture";
@@ -19,7 +20,7 @@ type RemovalBindings = AppBindings & { PROVIDER_DB?: D1Database };
 function providerDb(env: RemovalBindings) { if (!env.PROVIDER_DB) throw Error("Missing test network-edge database"); return env.PROVIDER_DB; }
 function servicesFor(env: RemovalBindings) {
   const providers = fixtureProviders(providerDb(env));
-  return createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, {
+  return createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR),
     ...providers, calendarChanges: coordinatedCalendarChanges(env),
     mail: { ...providers.mail, async send(message) {
       await providerDb(env).prepare("INSERT INTO removal_mail_calls (key, message_json) VALUES (?, ?)").bind(message.idempotencyKey, JSON.stringify(message)).run();
@@ -57,7 +58,7 @@ export default {
     }
     if (url.pathname === "/__removal/signin") {
       const { email } = await request.json<{ email: string }>();
-      const development = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, { fetch: (input: Request) => start.fetch(input) } as Fetcher, { mail: captureMail(env.DB) });
+      const development = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, { fetch: (input: Request) => start.fetch(input) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), mail: captureMail(env.DB) });
       const entry = await env.DB.prepare("SELECT status FROM oa_operators WHERE email=?").bind(email).first<{ status: string }>();
       const link = await issuedDevelopmentLink(env.DB, email, () => entry?.status === "invited"
         ? development.operatorManagement.invite(request, email)

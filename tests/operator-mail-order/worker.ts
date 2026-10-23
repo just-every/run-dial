@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { captureMail } from "../mail-capture";
 import { issuedDevelopmentLink } from "../development-auth";
 import { ensureTestOperator, registerTestSetup } from "../auth-fixture";
@@ -12,7 +13,7 @@ import { fixtureProviders, isolatedProviderDb } from "../review/providers";
 import { setup } from "../review/setup";
 import { DeliveryRepository } from "../../src/core/features/delivery";
 
-const servicesFor = (env: AppBindings, stage = "worker") => createServices(delayedBinding(env.DB, isolatedProviderDb(env), stage), parseRuntimeEnvironment(env), env.ASSETS, { ...fixtureProviders(isolatedProviderDb(env)), mail: mailSink(env) });
+const servicesFor = (env: AppBindings, stage = "worker") => createServices(delayedBinding(env.DB, isolatedProviderDb(env), stage), parseRuntimeEnvironment(env), env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...fixtureProviders(isolatedProviderDb(env)), mail: mailSink(env) });
 export class BookingCoordinator extends ProductionCoordinator {
   constructor(ctx: DurableObjectState, env: AppBindings) { super(ctx, { ...env, DB: delayedBinding(env.DB, isolatedProviderDb(env), "gate") }); }
   protected services(env: AppBindings) { return servicesFor(env, "gate"); }
@@ -34,7 +35,7 @@ export default {
       await registerTestSetup(env.DB, owner.id);
       const other = await ensureTestOperator(env.DB, "colleague@example.test");
       await setup(env, services);
-      const signin = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, env.ASSETS, { mail: captureMail(env.DB) });
+      const signin = createServices(env.DB, { ...parseRuntimeEnvironment(env), ENVIRONMENT: "development", MAIL_PROVIDER: "development", APP_URL: url.origin, MAIL_FROM: "noreply@dial.test" }, env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), mail: captureMail(env.DB) });
       const link = await issuedDevelopmentLink(env.DB, owner.email, () => signin.operators.requestMagicLink(request, owner.email));
       return Response.json({ owner, other, link });
     }

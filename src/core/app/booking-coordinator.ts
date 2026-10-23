@@ -8,7 +8,7 @@ import { parseRuntimeEnvironment } from "../shared/runtime-env";
 import { deliveryJobSchema } from "../features/delivery";
 import { calendarChangeSchema } from "../features/calendar-connection";
 import { z } from "zod";
-import { operatorNotificationBoundary } from "../platform/operator-notification-boundary";
+import { operatorNotificationBoundary, operatorNotificationCommand } from "../platform/operator-notification-boundary";
 import { invokeOperatorMail } from "../features/delivery/operator-invocation";
 import { ProviderFailure } from "../platform/calendar";
 import { ConnectionWatchSchedule, connectionWatchBoundary, connectionWatchObservers, connectionWatchPaths } from "./connection-watch";
@@ -19,7 +19,7 @@ const notificationSchema = z.object({ outboxId: z.string().min(1).max(256), atte
 
 /** One booking's lifecycle and provider commands share one serialized execution boundary. */
 export class BookingCoordinator extends DurableObject<AppBindings> {
-  protected services(env: AppBindings) { return createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { files: env.FILES, connectionWatch: connectionWatchObservers(env) }); }
+  protected services(env: AppBindings) { return createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), files: env.FILES, connectionWatch: connectionWatchObservers(env) }); }
 
   private coordinatedServices(env: AppBindings) {
     const services = this.services(env);
