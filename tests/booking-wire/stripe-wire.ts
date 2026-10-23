@@ -96,6 +96,12 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
     const found = await object(db, intent[2]);
     return found && found.type === intent[1] ? Response.json(found.payload) : stripeError(404, "resource_missing");
   }
+  if(url.pathname==='/v1/balance_transactions'&&method==='GET'){
+    const rows=(await db.prepare("SELECT payload FROM wire_stripe_objects WHERE type='balance_transactions'").all<{payload:string}>()).results.map(r=>JSON.parse(r.payload)).filter(r=>r.payout===url.searchParams.get('payout'));
+    return Response.json({data:rows,has_more:false});
+  }
+  const transaction=/^\/v1\/balance_transactions\/([^/]+)$/.exec(url.pathname);
+  if(transaction&&method==='GET'){const row=await object(db,transaction[1]);return row?Response.json(row.payload):stripeError(404,'resource_missing');}
   if (url.pathname === "/v1/payment_intents" && method === "POST") {
     // An off-session charge of a saved card: it needs the customer the card is attached to and is confirmed at once.
     const card = await object(db, form.get("payment_method") ?? "");

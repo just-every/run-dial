@@ -22,13 +22,18 @@ export async function reconciliationProbes({call,data,state,hold,slot,day,comple
     console.log('PAY-006: PASS dashboard refund, invalid signature/stale/foreign refusal, duplicate once, refundable cap and no money-moving call');
   });
   await probe('PAY-006 dispute flags and closes without reopening on old events',async()=>{
+    const transaction=await data('/__fixtures/payments/payout',{intentId:intent,payoutId:'synthetic-dial-209'});
+    await webhook(stripeEvent('charge.succeeded',{id:'synthetic-dial-202',payment_intent:intent,currency:'usd',amount:2500,balance_transaction:transaction.id}));
+    await webhook(stripeEvent('payout.paid',{id:'synthetic-dial-209'}));await webhook(stripeEvent('payout.paid',{id:'synthetic-dial-209'}));
+    const facts=(await data(`/api/app/bookings/${id}/money`)).money.reconciliation;
+    assert.equal(facts.find(f=>f.kind==='fee').amountCents,100);assert.equal(facts.filter(f=>f.kind==='payout').length,1);assert.equal(facts.find(f=>f.kind==='payout').processorRef,'synthetic-dial-209');
     const dispute={id:'synthetic-dial-204',payment_intent:intent,currency:'usd',amount:2500,status:'needs_response'};
     const created=stripeEvent('charge.dispute.created',dispute);await webhook(created);await webhook(created);
     assert.equal((await data('/api/app/payments/reconciliation')).rows.find(r=>r.processorRef===dispute.id).disagreement,1);
     await webhook(stripeEvent('charge.dispute.closed',{...dispute,status:'won'}));await webhook(created);
     const closed=(await data('/api/app/payments/reconciliation')).rows.find(r=>r.processorRef===dispute.id);assert.equal(closed.status,'won');assert.equal(closed.disagreement,0);
     const csv=await(await call('/api/app/payments/export.csv')).text();assert.ok(csv.includes(refund.id)&&csv.includes(dispute.id)&&csv.includes('synthetic-dial-200'));assert.ok(!csv.includes('/manage/')&&!csv.includes('synthetic-dial-100'));
-    console.log('PAY-006: PASS dispute flag, close, stale replay and credential-free CSV');
+    console.log('PAY-006: PASS charge and processor fee lookup, payout allocation/dedupe, dispute flag/close/stale replay and credential-free CSV');
   });
   await probe('PAY-006 QuickBooks OAuth refusals store no credential and valid state is single-use',async()=>{
     const start=async()=>new URL((await call('/api/app/payments/accounting/oauth/start',undefined,302)).headers.get('location'));
