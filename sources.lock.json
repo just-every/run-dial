@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "61e6886a49903a5817b0a2925f9fee28ddfceec3ea4298a08fe4fce0b95ad497",
+      "sha256": "020499ffc30b8ab9193458a575696d488854b60185ba1637a4e0cdaffcf15afc",
       "executable": false
     },
     "DEMO.md": {
@@ -5248,7 +5248,7 @@
       "executable": false
     },
     "src/core/features/clients/routes.ts": {
-      "sha256": "294ff50575a565c3b111534574edb481bac010b9ad3b4599885031170b262105",
+      "sha256": "37bcfdddfe0e5a302380524352a5d77b0d1f9e1971faf89792eecffbabb2489f",
       "executable": false
     },
     "src/core/features/delivery/booking-mail-times.ts": {
@@ -8688,7 +8688,7 @@
       "executable": false
     },
     "tests/person-erasure.test.mjs": {
-      "sha256": "36a040fc1a7e295d2ddadcd88a597c34cbf9a9ada413fedc4def3816fa9bba4b",
+      "sha256": "ae316ae4e2de1ef2185c19191ec2993912e209732d551dfee440e6cd5e735cfa",
       "executable": false
     },
     "tests/portability-status.test.mjs": {
