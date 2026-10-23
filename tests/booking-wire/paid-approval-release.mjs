@@ -18,7 +18,7 @@ export async function approvalReleaseCases(h,priced,linked){
 export async function approvalErasureCases(h,priced,setup){
   const {data,call,state}=h;
   for(const eventType of [priced,setup]){
-    const held=await h.authorize(await h.hold(eventType));const preview=await data('/api/app/privacy/preview',{email:held.payload.email});await data('/api/app/privacy/erase',{email:held.payload.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});
+    const held=await h.authorize(await h.hold(eventType));const preview=await data('/api/app/privacy/preview',{email:held.payload.email});assert.ok(preview.externalRequests.some(row=>row.processorRef===(held.intent.object==='setup_intent'?held.intent.payment_method:held.intent.id)),'preview lists known pending approval cleanup references');await data('/api/app/privacy/erase',{email:held.payload.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});
     const snap=await state();assert.ok(!snap.booking_approval_requests.some(row=>row.id===held.request.id));noBooking(snap,held.request);
     if(held.intent.object==='payment_intent')assert.equal(providerObject(snap,held.intent.id).status,'canceled','erasure voids pending authorization');else assert.equal(providerObject(snap,held.intent.payment_method).customer,null,'erasure detaches SetupIntent card');
     const late=h.event(held.intent.object==='payment_intent'?'payment_intent.succeeded':'checkout.session.completed',held.intent.object==='payment_intent'?{...held.intent,status:'succeeded',amount_received:held.intent.amount,amount_capturable:0}:held.session);
