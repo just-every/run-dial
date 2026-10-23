@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {createHmac,randomUUID} from 'node:crypto';
 /** PAY-006 through the native operator, signed webhook and accounting doors. */
-export async function reconciliationProbes({call,data,state,hold,slot,day,complete,webhook,stripeEvent,probe}){
+export async function reconciliationProbes({call,data,state,hold,slot,day,complete,webhook,stripeEvent,signature,probe}){
   const person=await complete(await hold('coaching',await slot('coaching',day(35)),'synthetic-dial-200@example.test','synthetic-dial-200',true));
   const id=person.booking.id,intent=person.paid.payment_intent;
   const refund={id:'synthetic-dial-201',amount:500,currency:'usd',status:'succeeded',payment_intent:intent};
@@ -9,7 +9,7 @@ export async function reconciliationProbes({call,data,state,hold,slot,day,comple
   await probe('PAY-006 signed dashboard refund reconciles once without moving money',async()=>{
     const before=await state(),event=stripeEvent('charge.refunded',charge),timestamp=Math.floor(Date.now()/1000)-600;
     await call('/api/webhooks/stripe',event,401,'POST',{'stripe-signature':'t=1,v1=forged',anonymous:'1'});
-    await call('/api/webhooks/stripe',event,401,'POST',{'stripe-signature':`t=${timestamp},v1=${createHmac('sha256','whsec_wiretest').update(`${timestamp}.${event}`).digest('hex')}`,anonymous:'1'});
+    await call('/api/webhooks/stripe',event,401,'POST',{'stripe-signature':signature(event,timestamp),anonymous:'1'});
     await webhook(stripeEvent('charge.refunded',charge,'synthetic-dial-foreign'),401);
     assert.deepEqual((await state()).payment_processor_facts,before.payment_processor_facts);
     await webhook(event);await webhook(event);
