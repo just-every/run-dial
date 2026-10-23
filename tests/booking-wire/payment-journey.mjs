@@ -212,7 +212,7 @@ checks.push("a foreign account's deauthorization is 401; the host's marks Stripe
 
 // Erasure removes every payer value; DATA-007 keeps only anonymous processor cleanup lookup references.
 const before = JSON.stringify(await data("/__fixtures/payments/all-rows"));
-for (const detail of ["4242", "Card Holder Name", "payer-card-holder@dial.test", "customer_details", "dial-never-stores"]) assert.ok(!before.includes(detail), `${detail} never reaches a product table`);
+for (const detail of ["4242", "Card Holder Name", "payer-card-holder@dial.test", "customer_details", "dial-never-stores"]) assert.ok(!before.includes(detail), `${detail} never reaches a product table; matching columns: ${JSON.stringify(Object.entries(JSON.parse(before)).flatMap(([table,rows])=>rows.flatMap(row=>Object.entries(row).filter(([,value])=>String(value).includes(detail)).map(([column])=>`${table}.${column}`))))}`);
 const preview = await data("/api/app/privacy/preview", { email: "payer@dial.test" });
 await data("/api/app/privacy/erase", { email: "payer@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
 const retained = await data("/__fixtures/payments/all-rows"), {anonymized_audit:audit,processor_erasure_requests:cleanup,...tables}=retained;
