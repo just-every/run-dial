@@ -210,17 +210,17 @@ const freeSlot = (await data(`/api/public/book/dial-host/intro/availability?week
 await call("/api/public/book/dial-host/intro/selection", { startAt: freeSlot, inviteeTimezone: "UTC" }, 201);
 checks.push("a foreign account's deauthorization is 401; the host's marks Stripe deauthorized and new paid selections fail closed with payments_unavailable/stripe_deauthorized while free events still book");
 
-// Erasure: no card or payer detail is ever stored, and an erased payer leaves nothing in any product table.
+// Erasure removes every payer value; DATA-007 keeps only anonymous processor cleanup lookup references.
 const before = JSON.stringify(await data("/__fixtures/payments/all-rows"));
 for (const detail of ["4242", "Card Holder Name", "payer-card-holder@dial.test", "customer_details", "dial-never-stores"]) assert.ok(!before.includes(detail), `${detail} never reaches a product table`);
 const preview = await data("/api/app/privacy/preview", { email: "payer@dial.test" });
 await data("/api/app/privacy/erase", { email: "payer@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
-const { anonymized_audit: audit, ...tables } = await data("/__fixtures/payments/all-rows");
-const after = JSON.stringify(tables);
-for (const detail of ["payer@dial.test", "Avery Payer", session.id, paidSession.payment_intent]) assert.ok(!after.includes(detail), `erased payer's ${detail.includes("@") ? "address" : "detail"} is gone from every product table`);
-assert.ok(!JSON.stringify(audit).includes("payer@dial.test") && !JSON.stringify(audit).includes("Avery Payer"), "the anonymized audit keeps no payer detail");
-assert.deepEqual(audit.filter(row => row.entity_kind === "payment").map(row => [row.action, row.amount_cents, row.processor_ref]), [["payment", 9000, paidSession.payment_intent]], "the payment's amount and Stripe reference survive only in the anonymized audit (PAY-003 custody)");
-checks.push("no card number, payer name or Stripe customer detail is ever stored; erasing the payer removes the booking, its payment record and every trace of the address, keeping only the payment's amount and Stripe reference in the anonymized audit");
+const retained = await data("/__fixtures/payments/all-rows"), {anonymized_audit:audit,processor_erasure_requests:cleanup,...tables}=retained;
+for(const detail of ["payer@dial.test","Avery Payer"])assert.ok(!JSON.stringify(retained).includes(detail),"erased payer values are gone from every table, including anonymous audit and cleanup records");
+for(const [table,records] of Object.entries(tables))for(const ref of [session.id,paidSession.payment_intent])assert.ok(!JSON.stringify(records).includes(ref),`${table}: processor references survive only in anonymous audit or cleanup records`);
+assert.deepEqual(cleanup.filter(row=>row.processor_ref===session.id).map(row=>[row.kind,row.state,row.reason,row.requested]),[["stripe_checkout_email","pending","checkout_customer_email_not_editable_no_erasure_api",0]],"the immutable Checkout lookup is explicit and no unmade erasure call is claimed");
+assert.deepEqual(audit.filter(row=>row.entity_kind==="payment").map(row=>[row.action,row.amount_cents,row.processor_ref]),[["payment",9000,paidSession.payment_intent]],"the payment amount and reference survive in the anonymized audit");
+checks.push("erasure removes every payer value from every table; only anonymous audit and processor cleanup lookup references survive, with immutable Checkout email explicitly pending and no invented request");
 
 await writeFile(evidencePath("payment-wire.json"), JSON.stringify({ title: "PAY-001 a paid booking confirms only after Stripe's signed event", checks, scope: "Native local D1 and production services with Stripe API, Connect OAuth and signed webhooks synthetic at the HTTP edge" }, null, 2));
 console.log("PAY-001 paid booking journey passed.");
