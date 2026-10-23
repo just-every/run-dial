@@ -53,7 +53,7 @@ async function preservedUpgrade(source, file, check) {
 
 export async function reconciliationUpgrade(source) {
   const prior = new DatabaseSync(":memory:"), migrations = await migrationFiles();
-  const upgrade = migrations.find(row=>row.file==="core/0077_payment_reconciliation.sql");
+  const upgrade = migrations.find(row=>row.file==="core/0079_payment_reconciliation.sql");
   try {
     for(const migration of migrations.filter(row=>row!==upgrade))prior.exec(migration.sql);
     prior.exec("PRAGMA foreign_keys=OFF");
@@ -66,4 +66,4 @@ export async function reconciliationUpgrade(source) {
   }finally{prior.close();}
 }
 
-export async function noticeUpgrade(source){return preservedUpgrade(source,"core/0078_workspace_notices.sql",prior=>{assert.ok(prior.prepare("SELECT count(*) AS n FROM bookings").get().n>0,"upgrade preserves a populated booking");for(const table of ["workspace_notice_destinations","workspace_notice_deliveries","notice_oauth_states","notice_erasure_requests"])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,"new notice record kinds start empty");});}
+export async function noticeUpgrade(source){return preservedUpgrade(source,"core/0080_workspace_notices.sql",prior=>{assert.ok(prior.prepare("SELECT count(*) AS n FROM bookings").get().n>0,"upgrade preserves a populated booking");for(const table of ["workspace_notice_destinations","workspace_notice_deliveries","notice_oauth_states","notice_erasure_requests"])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,"new notice record kinds start empty");});}

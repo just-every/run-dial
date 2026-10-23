@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { createApp } from "../../src/core/app/hono";
 import { BookingCoordinator as ProductionCoordinator } from "../../src/core/app/booking-coordinator";
 import { createServices } from "../../src/core/app/services";
@@ -7,7 +8,7 @@ import type { AppBindings } from "../../src/core/app/bindings";
 import { fixtureProviders } from "./providers";
 import { handleFixtures } from "./fixture-routes";
 type FixtureBindings = AppBindings & { PROVIDER_DB: D1Database };
-const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { ...fixtureProviders((env as FixtureBindings).PROVIDER_DB), files: env.FILES, calendarChanges: coordinatedCalendarChanges(env) });
+const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...fixtureProviders((env as FixtureBindings).PROVIDER_DB), files: env.FILES, calendarChanges: coordinatedCalendarChanges(env) });
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);
 export default {

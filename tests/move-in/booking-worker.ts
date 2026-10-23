@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { headerFixture } from '../erasure/header-fixture';
 import worker from '../booking-wire/worker';
 export { BookingCoordinator } from '../booking-wire/worker';
@@ -40,7 +41,7 @@ export default {
         return result;
       };
       // Simulate an interrupted coordinator's still-live request only at the paid edge.
-      const services = createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, {
+      const services = createServices(env.DB, parseRuntimeEnvironment(env), env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR),
         calendar: new GoogleCalendarAdapter({ clientId: 'wire-client', clientSecret: 'wire-secret' }, transport),
       });
       held.delivery = services.delivery.processUnknown({ outboxId });

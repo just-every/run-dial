@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { headerFixture } from '../erasure/header-fixture';
 import { readD1ImportOriginals } from '../../modules/import-kit/src/d1/index.ts';
 import { stored } from '../../modules/import-kit/src/d1/jobs.ts';
@@ -8,7 +9,7 @@ import { parseRuntimeEnvironment } from '../../src/core/shared/runtime-env';
 let queueCalls=0;
 export default {
  async fetch(request:Request,env:Parameters<ReturnType<typeof createApp>['fetch']>[1],ctx:ExecutionContext){
-  const services=createServices(env.DB,parseRuntimeEnvironment(env),env.ASSETS);
+  const services=createServices(env.DB,parseRuntimeEnvironment(env),env.ASSETS, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR) });
   const url=new URL(request.url);
   if(url.pathname==='/__fixtures/import-header'&&request.method==='POST'){const session=await services.operators.authenticate(request);if(!session)return new Response(null,{status:401});const {email}=await request.json<{email:string}>();return Response.json(await headerFixture(env.DB,email));}
   if(url.pathname.startsWith('/__fixtures/import-custody/')){const session=await services.operators.authenticate(request);if(!session)return new Response(null,{status:401});const id=url.pathname.split('/').at(-1)!;const context=importContext(env.DB,session);const originals=await readD1ImportOriginals(id,context);return Response.json({originals,...await stored(id,context)});}

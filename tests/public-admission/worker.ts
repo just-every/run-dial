@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import start from "@tanstack/react-start/server-entry";
 import { z } from "zod";
 import { createWorker } from "../../src/core/app/worker";
@@ -10,7 +11,7 @@ import type { AppBindings } from "../../src/core/app/bindings";
 import { fixtureProviders } from "../review/providers";
 import { handleFixtures } from "../review/fixture-routes";
 
-const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { ...fixtureProviders(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
+const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...fixtureProviders(env.DB), calendarChanges: coordinatedCalendarChanges(env) });
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const production = createWorker(servicesFor);
 const inputSchema = z.object({

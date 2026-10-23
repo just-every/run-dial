@@ -1,3 +1,4 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import start from "@tanstack/react-start/server-entry";
 import { z } from "zod";
 import { createWorker } from "../../src/core/app/worker";
@@ -25,7 +26,7 @@ function servicesFor(env: AppBindings) {
     }
     return ordinaryBusy(...args);
   };
-  return createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { ...providers, calendarChanges: coordinatedCalendarChanges(env) });
+  return createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...providers, calendarChanges: coordinatedCalendarChanges(env) });
 }
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const production = createWorker(servicesFor);

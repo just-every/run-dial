@@ -1,9 +1,10 @@
+import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { createApp } from '../../src/core/app/hono';
 import { createServices } from '../../src/core/app/services';
 import { parseRuntimeEnvironment } from '../../src/core/shared/runtime-env';
 import type { AppBindings } from '../../src/core/app/bindings';
 import { captureAuthMail, captureMail } from '../mail-capture';
-const servicesFor=(env:AppBindings)=>createServices(env.DB,parseRuntimeEnvironment(env),env.ASSETS,{files:env.FILES,authMail:captureAuthMail(env.DB),mail:captureMail(env.DB)});
+const servicesFor=(env:AppBindings)=>createServices(env.DB,parseRuntimeEnvironment(env),env.ASSETS,{ operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR),files:env.FILES,authMail:captureAuthMail(env.DB),mail:captureMail(env.DB)});
 const app=createApp(undefined,servicesFor);
 export default {
  async fetch(request:Request,env:AppBindings,context:ExecutionContext) {
