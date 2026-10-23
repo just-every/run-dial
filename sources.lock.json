@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e0f1fae5a43c272506c01c8a2b1c3443b9515518d9314fe9499900910edb6523",
+      "sha256": "a414526d5ca75fb912a99a408f1daa52bf3158cc9b33bd3d0943b3d8178b2d78",
       "executable": false
     },
     "DEMO.md": {
@@ -5436,7 +5436,7 @@
       "executable": false
     },
     "src/core/features/erasure/processor-requests.ts": {
-      "sha256": "2ce77bea59c99efb704e173fd2709cae35ae32de1317200f4e46c28bbf21ea80",
+      "sha256": "f98ea499c17f6fe6cc6d438fa73694a631af67963364c6a0ff5fd0f0124efea7",
       "executable": false
     },
     "src/core/features/erasure/repository.ts": {
@@ -7572,7 +7572,7 @@
       "executable": false
     },
     "tests/booking-wire/paid-approval-release.mjs": {
-      "sha256": "f46dbec6c5c209177a5d5de703616ce3099bb4bdc6c7aebfff93ee8fdf30a2bc",
+      "sha256": "e2fb64133e7b2acda52c331ae4623cd7fd7bb0cd4a70835015095b2280ab146f",
       "executable": false
     },
     "tests/booking-wire/paid-approval-screen-support.mjs": {
