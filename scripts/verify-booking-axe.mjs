@@ -66,7 +66,7 @@ try {
     const erasureOwner=await browser.newContext({storageState});
     try{await runPaymentErasureScreens({browser,owner:erasureOwner,origin,folder:evidencePath("processor-erasure-screens")});}
     finally{await erasureOwner.close();}
-    if(!process.env.DIAL_KEYBOARD_ONLY){const result=await runPaidApprovalScreens({browser,origin,folder:evidencePath("paid-approval-screens"),storageState,initialize:false});console.log(`PAY-007 approval screens: PASS ${result.shots.length} screens at 1440 and 390, no overflow or serious axe finding; all controls visibly labeled.`);}
+    if(!process.env.DIAL_KEYBOARD_ONLY){console.log("Waiting one native public-admission minute before paid approval screens.");await delay(60_000);const result=await runPaidApprovalScreens({browser,origin,folder:evidencePath("paid-approval-screens"),storageState,initialize:false});console.log(`PAY-007 approval screens: PASS ${result.shots.length} screens at 1440 and 390, no overflow or serious axe finding; all controls visibly labeled.`);}
     assert.deepEqual(keyboardChecks.filter(check => check.passed === false), [], "Every keyboard outcome passes");
   }
   assert.deepEqual(errors, []);

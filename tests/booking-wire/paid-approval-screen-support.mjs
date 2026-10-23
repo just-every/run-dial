@@ -6,7 +6,7 @@ import {paidApprovalSupport} from './paid-approval-support.mjs';
 export async function paidApprovalScreensSupport({browser,origin,folder,storageState,initialize=true}){
   await mkdir(folder,{recursive:true});const owner=await browser.newContext(storageState?{storageState}:{}),publicContext=await browser.newContext(),shots=[];
   async function call(path,body,expected=200,method=body===undefined?'GET':'POST'){
-    const response=await owner.request.fetch(origin+path,{method,headers:{Origin:origin},...(body===undefined?{}:{data:body}),maxRedirects:0});assert.ok((Array.isArray(expected)?expected:[expected]).includes(response.status()),`${method} ${path.replace(/\/manage\/[^/?]+/g,'/manage/[redacted]')}: ${response.status()}`);return {status:response.status(),json:()=>response.json(),headers:new Headers(response.headers())};
+    const response=await owner.request.fetch(origin+path,{method,headers:{Origin:origin},...(body===undefined?{}:{data:body}),maxRedirects:0});assert.ok((Array.isArray(expected)?expected:[expected]).includes(response.status()),`${method} ${path.replace(/\/manage\/[^/?]+/g,'/manage/[redacted]').replace(/\/api\/public\/payments\/[^/?]+/g,'/api/public/payments/[redacted]')}: ${response.status()}`);return {status:response.status(),json:()=>response.json(),headers:new Headers(response.headers())};
   }
   const data=async(...args)=>(await call(...args)).json();
   if(initialize){await call('/auth/bootstrap',{token:'dial-test-only-setup-token-at-least-32',displayName:'Morgan Bell',returnTo:'/setup'},303);await completeEmptyWorkspace(owner,origin);}
