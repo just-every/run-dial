@@ -1,3 +1,4 @@
+import { clientRoutes } from "../features/clients";
 import { invitationManageRoutes } from "../features/public-booking/invitation-routes";
 import { bookingLinkRoutes } from "../features/booking-links/routes";
 import { correspondenceRoutes } from "../features/event-types/correspondence-routes";
@@ -80,6 +81,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", operatorManagementRoutes)
     .route("/", publicAbuseRoutes)
     .route("/", bookingOperatorRoutes)
+    .route("/", clientRoutes)
     .route("/", hostProfileRoutes)
     .route("/", avatarRoutes)
     .route("/", eventTypeRoutes)
