@@ -299,6 +299,7 @@
       "clauses": [
         "API-001",
         "API-002",
+        "API-003",
         "INTEG-001",
         "INTEG-002",
         "INTEG-003",
