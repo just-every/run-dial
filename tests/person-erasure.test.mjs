@@ -15,12 +15,11 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
   const markers = [email, unicodeAlias, name, text];
   try {
     const imported = await personalSource(rt, { email, name, text });
-    await rt.data('/__fixtures/setup', {});
+    const fixture = await rt.data('/__fixtures/setup', {});
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=', 'base64');
     const avatarResponse = await rt.api('/api/app/profile/avatar', { method: 'PUT', headers: { 'content-type': 'image/png' }, body: png });
     assert.equal(avatarResponse.status, 200); const avatar = await avatarResponse.json();
-    const initialEvent = await rt.data('/api/public/events/dial-host/intro');
-    const editableEvent = await rt.data('/api/app/event-types/' + initialEvent.eventType.id);
+    const editableEvent = await rt.data('/api/app/event-types/' + fixture.eventId);
     const updatedEvent = await rt.data('/api/app/event-types/' + editableEvent.id, { ...editableEvent,
       locationType: 'invitee_phone', locationLabel: 'Host calls invitee', locationValue: '', locations: [{ id: 'phone', type: 'invitee_phone', label: 'Host calls invitee', value: '' }],
       questions: [...editableEvent.questions, { kind: 'phone', label: 'Contact phone', required: true, private: true, options: [] }],
