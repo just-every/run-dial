@@ -13,11 +13,14 @@ export async function testPartitions() {
     installer: ["tests/local-setup-journey.test.mjs"],
     cron: ["tests/lifecycle-journey.test.mjs"],
   };
-  // Keep the two longest ordinary browser files on their own runners. Discover
-  // every remaining file, including new tests, rather than maintain an allowlist.
+  // Keep the longest public and host browser journeys on their own runners.
+  // The independent booking-record journey used to run after the public journey
+  // in shard 0; give it the non-browser shard 6 instead of serialising both.
+  // Discover every remaining file, including new tests, rather than maintain an allowlist.
   const shards = Array.from({ length: shardCount }, () => []);
   shards[0].push("tests/booking-axe.test.mjs");
   shards[1].push("tests/host-setup-journey.test.mjs");
+  shards[6].push("tests/booking-record.test.mjs");
   const dedicated = [...Object.values(journeys).flat(), ...shards.flat()];
   for (const file of dedicated) if (!files.includes(file)) throw new Error(`Missing CI test file: ${file}`);
   files.filter(file => !dedicated.includes(file)).forEach((file, index) => {
