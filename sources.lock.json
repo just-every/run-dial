@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f6df1acad224319ae575cbdab436fdb2d5098ace889a222d94dacfc8baf2dd94",
+      "sha256": "8271d0e9e4510bb73461e2d62d01b4a7b50128eb0bbe99bc131d9a10d4706cf4",
       "executable": false
     },
     "DEMO.md": {
@@ -8836,7 +8836,7 @@
       "executable": false
     },
     "tests/operator-access-migration.test.mjs": {
-      "sha256": "4c28ae8bb6f582d5fb8fb048b4d974713d3ac6cb16cf4caa3b25651356667fb1",
+      "sha256": "a2e3d0a6ab26998ae84788210269e7f73e9ca39c595669065934808c7a956b00",
       "executable": false
     },
     "tests/operator-auth-boundary.test.mjs": {
