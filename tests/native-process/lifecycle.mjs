@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import { liveGroupMembers, signalOwnedGroup } from "./group.mjs";
 
-export function spawnOwned(command, args, options, { label = "native subprocess", onOutput = () => {}, onPhase = () => {} } = {}) {
+export function spawnOwned(command, args, options, { label = "native subprocess", onOutput = () => {}, onPhase = () => {}, supervised = false } = {}) {
   const child = spawn(command, args, { ...options, detached: true, stdio: "pipe" });
   const state = { spawned: false, error: null, exited: false, closed: false, code: null, signal: null };
   let resolveExit, resolveClose, stopping;
@@ -54,7 +54,10 @@ export function spawnOwned(command, args, options, { label = "native subprocess"
       }
     }
     try {
-      signal("SIGTERM");
+      // A supervisor closes its native dependencies in order. Other commands
+      // still receive the signal as a group, including their descendants.
+      if (supervised) child.kill("SIGTERM");
+      else signal("SIGTERM");
       if (await settle(graceMs) && errors.length === 0) { phase("stopped"); return; }
       phase("kill");
       signal("SIGKILL");

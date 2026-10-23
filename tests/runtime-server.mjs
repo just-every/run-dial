@@ -2,6 +2,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import { fixtureVite } from "./native-process/vite.mjs";
 import { spawn } from "node:child_process";
 import { basename, resolve } from "node:path";
+import { projectViteBinary } from "@runeditrun/rer/internal/onboarding/project-vite.mjs";
+
+let activeChild;
+for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => activeChild?.kill(signal));
 
 const port = process.env.DIAL_PORT ?? "8787";
 const requestedConfig = process.env.DIAL_WRANGLER_CONFIG_PATH ?? "wrangler.toml";
@@ -26,8 +30,8 @@ if (process.env.DIAL_PERSIST_STATE_DIR) migrationArguments.push("--persist-to", 
 migrationArguments.push("--config", requestedConfig);
 await run("pnpm", migrationArguments);
 
-const vite = spawn("pnpm", [...fixtureVite, "--host", "127.0.0.1", "--port", port, "--strictPort"], { stdio: "inherit", env: childEnvironment });
-for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => vite.kill(signal));
+const vite = spawn(process.execPath, [projectViteBinary(process.cwd()), ...fixtureVite.slice(2), "--host", "127.0.0.1", "--port", port, "--strictPort"], { stdio: "inherit", env: childEnvironment });
+activeChild = vite;
 await waitForWorker(vite);
 console.log("Local D1 is migrated and ready.");
 const result = await new Promise((resolve) => vite.once("exit", (code) => resolve(code ?? 1)));
@@ -36,6 +40,7 @@ process.exitCode = result;
 function run(command, args, env = childEnvironment) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: "inherit", env });
+    activeChild = child;
     child.once("error", reject);
     child.once("exit", (code) => (code === 0 ? resolve() : reject(new Error(`${command} ${args.join(" ")} exited with ${code}`))));
   });

@@ -40,7 +40,7 @@ export async function startWorker(context) {
     // bind. runtime-server's health message alone could come from an occupant.
     output.text = "";
     worker = spawnOwned(process.execPath, ["tests/runtime-server.mjs"], { cwd, env }, {
-      label: "request runtime", onOutput: (chunk) => { output.text += chunk; }, onPhase,
+      label: "request runtime", supervised: true, onOutput: (chunk) => { output.text += chunk; }, onPhase,
     });
     processes.push(worker);
     for (let attempt = 0; attempt < 480; attempt += 1) {
