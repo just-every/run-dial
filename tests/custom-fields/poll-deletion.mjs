@@ -21,6 +21,19 @@ export async function assertPollDeletion(f) {
  assert.ok(link);
  const saved=await data(`/api/public/polls/${created.id}/votes`,{token:link.token,votes:poll.candidates.map(c=>({candidateId:c.id,choice:'yes'}))});
  assert.equal((await data(`/api/app/polls/${created.id}`)).participants[0].votes.length,poll.candidates.length);
+ const delivered=await f.json('/__fields/deliver');assert.ok(delivered.results.includes('succeeded'));
+ const deliveryId=link.row.idempotency_key,now=new Date().toISOString();
+ // Received synthetic provider facts exercise ownership links outside the FK graph.
+ await f.db.batch([
+  f.db.prepare("INSERT INTO base_mail_dispatch(delivery_id,payload_hash,state,updated_at) VALUES(?,'synthetic-dial-1033','accepted',?)").bind(deliveryId,now),
+  f.db.prepare("INSERT INTO provider_webhook_events(id,provider,provider_event_id,received_at,state,payload_hash,delivery_id) VALUES('synthetic-dial-1034','sendgrid','synthetic-dial-1035',?,'processed','synthetic-dial-1036',?)").bind(now,deliveryId),
+ ]);
+ const mailStores=[['rer_mail_development_outbox',"json_extract(message,'$.deliveryId')"],['base_mail_dispatch','delivery_id'],['provider_webhook_events','delivery_id']];
+ const ownedMailCounts=async()=>Promise.all(mailStores.map(async([table,column])=>(await f.db.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ${column}=?`).bind(deliveryId).first()).n));
+ const otherMail=async()=>Promise.all(mailStores.map(async([table,column])=>(await f.db.prepare(`SELECT * FROM ${table} WHERE ${column} IS NOT ? ORDER BY rowid`).bind(deliveryId).all()).results));
+ assert.deepEqual(await ownedMailCounts(),[1,1,1],'sent invitation capture and received-provider facts exist');
+ const unrelated=await otherMail();
+ assert.ok((await f.db.prepare('SELECT COUNT(*) AS n FROM delivery_attempts WHERE outbox_id=?').bind(link.row.id).first()).n>0);
  const held=await data(availability(control));
  for(const candidate of poll.candidates)assert.ok(!held.slots.some(s=>s.startAt===candidate.startAt),'poll hold blocks another event type');
  const deletion=await f.request(`/api/app/event-types/${event.id}`,{method:'DELETE'});
@@ -30,6 +43,9 @@ export async function assertPollDeletion(f) {
  for(const table of ['meeting_polls','poll_candidates','poll_participants','poll_votes','poll_vote_tokens'])assert.equal((await f.db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n,0,`${table} removed`);
  assert.equal(await f.db.prepare('SELECT id FROM booking_links WHERE id=?').bind(poll.holdLinkId).first(),null);
  assert.equal(await f.db.prepare('SELECT id FROM delivery_outbox WHERE id=?').bind(link.row.id).first(),null,'invitation capability and its command removed');
+ assert.deepEqual(await ownedMailCounts(),[0,0,0],'sent poll invitation copies and receipts go with their event');
+ assert.equal(JSON.stringify(await otherMail())===JSON.stringify(unrelated),true,'unrelated mail custody stays intact');
+ assert.equal((await f.db.prepare('SELECT COUNT(*) AS n FROM delivery_attempts WHERE outbox_id=?').bind(link.row.id).first()).n,0);
  assert.deepEqual((await f.db.prepare('PRAGMA foreign_key_check').all()).results,[]);
  const destination=await schemaModel();
  try {
