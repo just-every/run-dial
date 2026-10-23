@@ -29,6 +29,7 @@ export const applicationTables = [
   "booking_payments",
   "booking_search_casefold",
   "bookings",
+  "meeting_polls", "poll_candidates", "poll_participants", "poll_votes", "poll_vote_tokens",
   "client_profiles", "client_aliases", "client_notes", "client_fields", "client_remember_links",
   "booking_guests",
   "booking_approval_requests",

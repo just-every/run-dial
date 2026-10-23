@@ -11,7 +11,7 @@ export function useBookingWorkspace() {
     const page = readBookingPage(search);
     const erasedId = new URLSearchParams(search).get("cleanup") ?? undefined;
     const requestedView = new URLSearchParams(search).get("view");
-    const view = requestedView === "report" ? "report" as const : requestedView === "clients" ? "clients" as const : "list" as const;
+    const view = requestedView === "polls" ? "polls" as const : requestedView === "report" ? "report" as const : requestedView === "clients" ? "clients" as const : "list" as const;
     const navigate = (nextFilters: BookingFilters, nextPage: number, replace = false, cleanup = erasedId) => {
       const params = new URLSearchParams(writeBookingFilters(search, nextFilters, nextPage));
       if (cleanup) params.set("cleanup", cleanup);

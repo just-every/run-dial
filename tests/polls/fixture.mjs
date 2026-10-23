@@ -1,0 +1,6 @@
+export async function pollEvent(data,slug='synthetic-dial-1012'){
+ const event=await data('/api/app/event-types',{slug,title:'Planning together',description:'Plan the next milestone together.',durationMinutes:30,color:'#176b5a',locationType:'fixed_link',locationLabel:'Meeting room',locationValue:'https://meet.example.test/planning',listed:true,alternativeRequestsEnabled:false,slotIncrementMinutes:30,minimumNoticeMinutes:0,bookingHorizonDays:90,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,questions:[],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:600,endMinute:1200}))},201);
+ await data(`/api/app/event-types/${event.id}/publish`,{});return event;
+}
+export function pollInput(event,slots,participants,hold=false){return {eventTypeId:event.id,title:'Project planning',participants,starts:slots.slice(0,2).map(s=>s.startAt),closesAt:new Date(Date.now()+86400000).toISOString(),hold,showTally:false};}
+export function pollLinks(rows,id){return rows.filter(r=>{const p=JSON.parse(r.payload_json);return p.pollParticipantId&&p.text.includes(`/poll/${id}?`);}).map(row=>{const payload=JSON.parse(row.payload_json),url=new URL(payload.text.match(/https?:\/\/\S+/)[0]);return {email:payload.to,token:url.searchParams.get('token'),row};});}
