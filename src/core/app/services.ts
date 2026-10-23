@@ -1,4 +1,4 @@
-import { ClientsRepository } from "../features/clients";
+import { ClientsRepository, RememberedDetails } from "../features/clients";
 import { InvitationManageService } from "../features/bookings/invitation-manage";
 import { BookingLinksRepository } from "../features/booking-links/repository";
 import { BookingLinksService } from "../features/booking-links/service";
@@ -67,6 +67,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
     clients: new ClientsRepository(binding),
+    rememberedDetails: new RememberedDetails(binding,runtime.SESSION_SECRET,runtime.APP_URL,bookings),
     invitationManage: new InvitationManageService(binding, runtime),
     correspondence: new EventCorrespondenceRepository(binding),
     bookingPolicies: new EventBookingPolicyRepository(binding),

@@ -37,6 +37,8 @@ export function prefilledAnswers(questions: PublicEvent["questions"], context: L
 
 /** Carry only bounded native link fields; never copy arbitrary query parameters. */
 export function appendLinkContext(target: URLSearchParams, search: string) {
+  const remembered = new URLSearchParams(search).get("remember");
+  if (remembered && /^[A-Za-z0-9_-]{43}$/.test(remembered)) target.set("remember",remembered);
   const context = readLinkContext(search);
   for (const key of ["name", "email"] as const) if (context[key] !== undefined && !target.has(key)) target.set(key, context[key]);
   for (const [key, value] of Object.entries(context.attribution)) if (!target.has(key)) target.set(key, value);

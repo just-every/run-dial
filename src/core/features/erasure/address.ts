@@ -40,6 +40,7 @@ export async function recordAddressStatements(db: D1Database, fence: Portability
 
 export async function addressRemainders(db: D1Database, fence: PortabilityFence, email: string, secret: string, aliases: string[] = [email]) {
   const statements = await knownRateStatements(db,fence,secret,aliases);
+  statements.push(...await deleteRows(db,fence,"client_remember_links","email=?",[foldEmail(email)]));
   // Remove the external attendee using the same managed event; the dispatch reads remaining guests after deletion.
   statements.push({sql:`INSERT INTO delivery_outbox(id,kind,idempotency_key,booking_id,occurrence_id,payload_json,state,attempts,next_attempt_at,created_at,updated_at)
     SELECT lower(hex(randomblob(16))),'calendar_upsert','guest-erasure:'||lower(hex(randomblob(16))),b.id,o.id,
