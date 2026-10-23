@@ -71,6 +71,7 @@ export function BookingsFilterBar({
         Through date ({hostTimezone ?? "host time zone"})
         <Input type="date" value={filters.to ?? ""} min={filters.from} onChange={(event) => onChange({ to: event.currentTarget.value || undefined })} />
       </label>
+      <div className={fieldLabel}><label htmlFor="booking-attendance">Attendance</label><Select id="booking-attendance" value={filters.attendance??"all"} onChange={e=>onChange({attendance:e.target.value==="all"?undefined:e.target.value as BookingFilters["attendance"]})}><option value="all">Any attendance</option><option value="attended">Attended</option><option value="no_show">No-show</option><option value="unmarked">Not marked</option></Select></div>
       <div className="flex items-end">
         <Button type="button" variant="quiet" onClick={onClear} disabled={!hasBookingFilters(filters)}>Clear filters</Button>
       </div>

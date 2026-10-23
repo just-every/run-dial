@@ -1,3 +1,4 @@
+import { CalendarWorkspace } from "./calendar-workspace";
 import { PollsWorkspace } from "../../polls/client";
 import { ApprovalRequests } from "./approval-requests";
 import { ErasureRecovery } from "./delivery-actions";
@@ -8,7 +9,7 @@ import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader } from "../../../app/ui/page-header";
 import { Card, buttonClassName, noticeClassName } from "../../../app/ui/primitives";
 import { BookingDetail, BookingBadge } from "./booking-detail";
-import { bookingPageSize, hasBookingFilters, type BookingFilters } from "./booking-filters";
+import { bookingPageSize, hasBookingFilters, writeBookingFilters, type BookingFilters } from "./booking-filters";
 import { BookingsFilterBar } from "./bookings-filter-bar";
 
 import { useBookingWorkspace } from "./use-booking-workspace";
@@ -22,7 +23,7 @@ import { ClientsWorkspace } from "../../clients/client";
 /** The bookings list, or the scheduling report (REPORT-001) that drills into it. */
 export function BookingsPage(): React.JSX.Element {
   const { view } = useBookingWorkspace();
-  return view === "polls" ? <PollsWorkspace /> : view === "clients" ? <ClientsWorkspace /> : view === "report" ? <ReportWorkspace /> : <BookingList />;
+  return view === "calendar" ? <CalendarWorkspace /> : view === "polls" ? <PollsWorkspace /> : view === "clients" ? <ClientsWorkspace /> : view === "report" ? <ReportWorkspace /> : <BookingList />;
 }
 
 function ReportWorkspace(): React.JSX.Element {
@@ -78,7 +79,7 @@ function BookingList(): React.JSX.Element {
   const lastVisible = Math.min(page * bookingPageSize, totalCount);
 
   return <div className="grid gap-7">
-    <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review bookings, delivery state, and attendance." actions={<><Link to="/app/bookings" search={() => ({ view: "polls" })} className={buttonClassName("secondary")}>Meeting polls</Link><Link to="/app/bookings" search={() => ({ view: "clients" })} className={buttonClassName("secondary")}>Clients</Link><Link to="/app/bookings" search={() => ({ view: "report" })} className={buttonClassName("secondary")}>Scheduling report</Link><Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link></>} />
+    <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review bookings, delivery state, and attendance." actions={<><Link to="/app/bookings" search={() => ({ ...Object.fromEntries(new URLSearchParams(writeBookingFilters("", filters))), view: "calendar" })} className={buttonClassName("secondary")}>Calendar</Link><Link to="/app/bookings" search={() => ({ view: "polls" })} className={buttonClassName("secondary")}>Meeting polls</Link><Link to="/app/bookings" search={() => ({ view: "clients" })} className={buttonClassName("secondary")}>Clients</Link><Link to="/app/bookings" search={() => ({ view: "report" })} className={buttonClassName("secondary")}>Scheduling report</Link><Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link></>} />
     {notice ? <p ref={noticeElement} tabIndex={-1} role="status" aria-label="Booking update" className={noticeClassName("success", "font-semibold")}>{notice}</p> : null}
     {listError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{listError}</p> : null}
     {eventTypesError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{eventTypesError}</p> : null}

@@ -1,3 +1,4 @@
+import { calendarScreens } from "../tests/booking-axe/calendar.mjs";
 import { pollScreens } from "../tests/booking-axe/polls.mjs";
 import { noticeSettingsJourney } from '../tests/booking-axe/notice-settings.mjs';
 import assert from "node:assert/strict";
@@ -24,6 +25,7 @@ try {
   await pollScreens(browser, owner, origin, scans, errors);
   await confirmationSettingsJourney(browser, owner, origin, fixture.eventId, scans, errors);
   await noticeSettingsJourney(browser,owner,origin);
+  await calendarScreens(browser, owner, origin, fixture, booking, scans, errors);
   assert.deepEqual(errors, []);
   console.log(`OPER-004: ${scans.length} desktop/mobile axe scans; answers, annotations, both zones, history, independent queued/sent/failed emails and UI recovery passed.`);
 } finally { await owner.close(); await browser.close(); }
