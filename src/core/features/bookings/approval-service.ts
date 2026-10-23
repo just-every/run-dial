@@ -8,7 +8,7 @@ import type { HostProfileService, ProfileRecord } from "../host-profile";
 import type { EventTypesService, EventTypeRecord } from "../event-types";
 import type { PaymentsService } from "../payments";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
-import { deriveOpaqueToken } from "../../platform/auth/tokens";
+import { deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import { nowIso } from "../../shared/ids";
 import type { BookingClaim, BookingConfirmation, BookingEmail, BookingRecord, ValidatedInvitee } from "./types";
 type ConfirmationInput = {
@@ -103,7 +103,7 @@ export class ApprovalService {
         kind: "found";
         booking: BookingConfirmation;
     } | {
-        kind: "not_found";
+        kind: "not_found" | "expired";
     }> {
         const profile = await this.deps.profiles.getProfile();
         if (!profile)
@@ -111,10 +111,12 @@ export class ApprovalService {
         if (request.state === "approved" && request.claimJson) {
             const claim = JSON.parse(request.claimJson) as BookingClaim;
             const url = claim.emails.find(email => email.recipientRole === "invitee" && !email.guest)?.manageUrl;
-            const booking = await this.deps.repository.getById(request.bookingId);
-            if (booking && url) {
+            if (url) {
+                // BOOK-006: an approved request reads its booking only while the booking's manage token is live, so rotation and expiry close it too.
                 const manage = new URL(url).pathname.split("/").at(-1)!;
-                return { kind: "found", booking: await this.deps.toConfirmation(booking, profile, manage) };
+                const access = await this.deps.repository.findManageToken(await hashToken(manage, this.deps.runtime.SESSION_SECRET), nowIso());
+                if (access?.booking.id === request.bookingId)
+                    return access.status === "active" ? { kind: "found", booking: await this.deps.toConfirmation(access.booking, profile, manage) } : { kind: "expired" };
             }
         }
         const payment=publicApprovalPayment(approvalPayment(request.paymentJson));

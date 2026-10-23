@@ -45,6 +45,11 @@ export default {
       await env.DB.prepare("UPDATE booking_occurrences SET start_at=? WHERE id=(SELECT current_occurrence_id FROM bookings WHERE id=?)").bind(startAt,id).run();
       return new Response(null,{status:204});
     }
+    if (url.pathname === "/__fixtures/manage-expiry") {
+      const { id } = await request.json<{ id: string }>();
+      await env.DB.prepare("UPDATE booking_manage_tokens SET expires_at='2000-01-01T00:00:00.000Z' WHERE booking_id=?").bind(id).run();
+      return new Response(null, { status: 204 });
+    }
     if (url.pathname === "/__fixtures/expire-link") {
       const {id}=await request.json<{id:string}>();
       await env.DB.prepare("UPDATE booking_links SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(id).run();
