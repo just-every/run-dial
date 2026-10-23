@@ -352,7 +352,7 @@
     "Team round-robin or collective scheduling",
     "Group events, classes, waitlists, or resource capacity",
     "Additional invitee guests on a booking",
-    "Optional tentative calendar display, direct mail decisions, native mobile approval and combined priced/deposit-plus-saved-card-fee approval (the supported PAY-007 cases use manual authorization or SetupIntent consent)",
+    "Optional tentative calendar display, direct mail decisions and native mobile approval (PAY-007 single and combined price/deposit-plus-fee requests use manual authorization and SetupIntent consent as applicable)",
     "Packages, coupons, gift certificates, memberships and payment reconciliation (PAY-004 and PAY-006; native Stripe payments, deposits, refunds, consented fees, tax and invoices ship under PAY-001, PAY-003 and PAY-005)",
     "Recurring booking series or scheduling polls",
     "Marketplace discovery, ratings, or invitee-submitted reviews",
