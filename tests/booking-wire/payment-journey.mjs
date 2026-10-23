@@ -211,8 +211,51 @@ await call("/api/public/book/dial-host/intro/selection", { startAt: freeSlot, in
 checks.push("a foreign account's deauthorization is 401; the host's marks Stripe deauthorized and new paid selections fail closed with payments_unavailable/stripe_deauthorized while free events still book");
 
 // Erasure removes every payer value; DATA-007 keeps only anonymous processor cleanup lookup references.
-const before = JSON.stringify(await data("/__fixtures/payments/all-rows"));
-for (const detail of ["4242", "Card Holder Name", "payer-card-holder@dial.test", "customer_details", "dial-never-stores"]) assert.ok(!before.includes(detail), `${detail} never reaches a product table`);
+// A legitimate non-card value must not turn random-reference collisions into card leaks.
+await call("/api/app/profile", { ...await data("/api/app/profile"), biography: "Suite 4242" }, 200, "PATCH");
+const rows = await data("/__fixtures/payments/all-rows"), before = JSON.stringify(rows);
+assert.equal(rows.host_profiles[0].biography, "Suite 4242", "the public profile door stores the benign reference");
+// These are application payment snapshots, receipt/invoice payloads and processor references, not raw cards.
+const cardCarriers = new Set([
+  "payment_connections.account_id", "payment_holds.account_id", "payment_holds.checkout_url",
+  "payment_holds.claim_json", "booking_approval_requests.claim_json", "booking_approval_requests.payment_json", "delivery_outbox.payload_json",
+  "booking_payments.tax_summary", "booking_payment_terms.tax_summary", "payment_movements.tax_summary",
+  "booking_payments.account_id", "booking_card_consents.account_id", "payment_movements.account_id",
+  "booking_card_consents.stripe_payment_method_id", "booking_card_consents.stripe_customer_id",
+  "booking_payments.checkout_session_id", "booking_payments.payment_intent_id", "payment_holds.checkout_session_id",
+  "payment_movements.source_ref", "payment_movements.processor_ref", "payment_movements.checkout_session_id", "payment_movements.invoice_id",
+  "payment_movements.checkout_url", "payment_movements.invoice_url", "payment_movements.stripe_customer_id",
+  "processor_erasure_requests.account_id", "processor_erasure_requests.processor_ref", "processor_erasure_requests.lookup_key", "anonymized_audit.processor_ref",
+]);
+// Stripe's card/detail keys cannot occur in an opaque reference. A method type "card" and invoice number are allowed.
+const cardFields = new Set(["last4", "dynamic_last4", "payment_method_details", "exp_month", "exp_year", "cvc", "cvv", "cvc_check", "card_number", "address_line1_check", "address_postal_code_check"]);
+const cardShape = new RegExp(String.raw`"(?:${[...cardFields].join("|")})"\s*:|"card"\s*:\s*\{`, "iu");
+// These schema-defined epoch clocks are numeric timestamps, not payment data.
+const numericClocks = new Set(["oa_bootstrap.claimed_at", "oa_operators.created_at", "oa_sessions.created_at", "oa_sessions.expires_at", "public_rate_events.admitted_at", "public_rate_events.expires_at", "dial_portability_admission.expires_at"]);
+function checkCardStorage(value, column) {
+  if (value && typeof value === "object") {
+    for (const [key, field] of Object.entries(value)) {
+      assert.ok(!cardFields.has(key.toLowerCase()) && !(key.toLowerCase() === "card" && field && typeof field === "object"), `${column}: card field ${key} never reaches a product table`);
+      checkCardStorage(field, column);
+    }
+    return;
+  }
+  if (cardCarriers.has(column)) assert.notEqual(value, "4242", `${column}: card digits never reach a payment carrier`);
+  if (typeof value === "number" && !numericClocks.has(column)) value = String(value);
+  if (typeof value !== "string") return;
+  let decoded;
+  assert.ok(!cardShape.test(value), `${column}: card-shaped text never reaches a product table`);
+  try { decoded = JSON.parse(value); } catch (error) { if (!(error instanceof SyntaxError)) throw error; }
+  if ((decoded && typeof decoded === "object") || (typeof decoded === "string" && decoded !== value)) return checkCardStorage(decoded, column);
+  // Token boundaries keep UUID, hex, ULID and base64url references whole; ISO dates have no such digit run.
+  const numbers = value.match(/(?<![\w-])\d{12,19}(?![\w-])/gu) ?? [];
+  assert.ok(!numbers.some(number => [...number].reverse().reduce((sum, digit, index) => {
+    const doubled = Number(digit) * (index % 2 ? 2 : 1);
+    return sum + (doubled > 9 ? doubled - 9 : doubled);
+  }, 0) % 10 === 0), `${column}: a Luhn-valid card number never reaches a product table`);
+}
+for (const [table, records] of Object.entries(rows)) for (const row of records) for (const [column, value] of Object.entries(row)) checkCardStorage({ [column]: value }, `${table}.${column}`);
+for (const detail of ["Card Holder Name", "payer-card-holder@dial.test", "customer_details", "dial-never-stores"]) assert.ok(!before.includes(detail), `${detail} never reaches a product table`);
 const preview = await data("/api/app/privacy/preview", { email: "payer@dial.test" });
 await data("/api/app/privacy/erase", { email: "payer@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
 const retained = await data("/__fixtures/payments/all-rows"), {anonymized_audit:audit,processor_erasure_requests:cleanup,...tables}=retained;
