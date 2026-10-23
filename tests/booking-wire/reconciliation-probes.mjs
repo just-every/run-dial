@@ -62,6 +62,10 @@ export async function reconciliationProbes({call,data,state,hold,slot,day,comple
     assert.equal(new Set(snapshot.exports.map(row=>row.payment_ref)).size,snapshot.receipts.length);
     assert.ok(snapshot.exports.every(row=>row.state==='exported'&&row.receipt_id));
     for(const receipt of snapshot.receipts){assert.ok(!JSON.stringify(receipt).includes('@'));assert.ok(!JSON.stringify(receipt).includes('/manage/'));assert.ok(!receipt.CustomerRef);assert.equal(receipt.Line[0].SalesItemLineDetail.ItemRef.value,(await state()).accounting_connections[0].item_id);}
+    const refundRow=(await data('/api/app/payments/reconciliation')).rows.find(r=>r.processorRef==='synthetic-dial-201');
+    await data(`/api/app/bookings/${id}/reconciliation/acknowledge`,{processorRef:refundRow.processorRef});
+    await webhook(stripeEvent('charge.refunded',charge));
+    assert.equal((await data('/api/app/payments/reconciliation')).rows.find(r=>r.processorRef===refundRow.processorRef).disagreement,0,'explicit acknowledgement survives duplicate events');
     const count=snapshot.receipts.length;
     await data('/wire/control',{name:'accounting-revoked',value:1});await call('/api/app/payments/accounting/export',{},409);
     assert.equal((await data('/api/app/payments/accounting')).state,'unhealthy');await call('/api/app/payments/accounting/export',{},409);
