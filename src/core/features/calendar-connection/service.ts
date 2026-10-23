@@ -1,5 +1,7 @@
+import { receiveMicrosoftWebhook } from "./microsoft-webhook";
+import { connectedAdapter, providerAdapter, providerConfigured, type OAuthCalendarProvider } from "./provider-adapter";
 import { seal, unseal } from "../../platform/crypto/sealed";
-import { GoogleCalendarAdapter, ProviderFailure, type CalendarAdapter, type CalendarCredentials, type ManagedCalendarEvent } from "../../platform/calendar";
+import { ProviderFailure, type CalendarAdapter, type CalendarCredentials, type ManagedCalendarEvent } from "../../platform/calendar";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 import { googleCalendarConfiguration } from "../../shared/runtime-env";
 import { createOpaqueToken } from "../../platform/auth/tokens";
@@ -33,10 +35,9 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
   constructor(
     private readonly repository: CalendarConnectionRepository,
     private readonly runtime: RuntimeEnvironment,
-    calendar?: CalendarAdapter,
+    private readonly adapterOverride?: CalendarAdapter,
   ) {
-    const configuration = googleCalendarConfiguration(runtime);
-    this.calendar = calendar ?? new GoogleCalendarAdapter(configuration && { clientId: configuration.clientId, clientSecret: configuration.clientSecret });
+    this.calendar = connectedAdapter(repository, runtime, adapterOverride);
     this.busyReader = new CalendarBusyReader(
       repository,
       this.calendar,
@@ -50,16 +51,16 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     );
   }
 
-  setupGuide() { return { redirectUri: callbackUrl(this.runtime), configured: Boolean(googleCalendarConfiguration(this.runtime)?.webhookSecret) }; }
+  setupGuide() { return { redirectUri: callbackUrl(this.runtime), configured: Boolean(googleCalendarConfiguration(this.runtime)?.webhookSecret), microsoft: { configured: providerConfigured(this.runtime, "microsoft") && Boolean(this.runtime.CALENDAR_WEBHOOK_SECRET), missing: [!this.runtime.MICROSOFT_OAUTH_CLIENT_ID ? "MICROSOFT_OAUTH_CLIENT_ID" : null, !this.runtime.MICROSOFT_OAUTH_CLIENT_SECRET ? "MICROSOFT_OAUTH_CLIENT_SECRET" : null, !this.runtime.CALENDAR_WEBHOOK_SECRET ? "CALENDAR_WEBHOOK_SECRET" : null].filter(Boolean) } }; }
 
-  async beginAuthorization(session: SessionRecord) {
-    if (!googleCalendarConfiguration(this.runtime)) return undefined;
+  async beginAuthorization(session: SessionRecord, provider: OAuthCalendarProvider = "google") {
+    if (!providerConfigured(this.runtime, provider)) return undefined;
     const stateId = createOpaqueToken();
     const issuedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + oauthStateLifetimeMs).toISOString();
-    const state = await signOAuthState({ id: stateId, sessionId: session.sessionId, operatorId: session.id, issuedAt }, this.runtime.SESSION_SECRET);
+    const state = await signOAuthState({ id: stateId, sessionId: session.sessionId, operatorId: session.id, issuedAt, provider }, this.runtime.SESSION_SECRET);
     await this.repository.createOAuthState({ id: stateId, sessionId: session.sessionId, operatorId: session.id, expiresAt });
-    return this.calendar.authorizationUrl(callbackUrl(this.runtime), state);
+    return providerAdapter(this.runtime, provider, this.adapterOverride).authorizationUrl(callbackUrl(this.runtime), state);
   }
 
   async completeAuthorization(input: { state: string | undefined; code: string | undefined; session: SessionRecord | undefined }) {
@@ -70,8 +71,10 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     const consumed = await this.repository.consumeOAuthState({ id: state.id, sessionId: state.sessionId, operatorId: state.operatorId, now: new Date().toISOString() });
     if (!consumed || !input.code) return { kind: "invalid_state" as const };
     try {
-      const credentials = await this.calendar.exchangeAuthorizationCode(input.code, callbackUrl(this.runtime));
+      const provider = state.provider ?? "google";
+      const credentials = await providerAdapter(this.runtime, provider, this.adapterOverride).exchangeAuthorizationCode(input.code, callbackUrl(this.runtime));
       await this.repository.saveCredentials({
+        provider,
         operatorId: input.session.id,
         accessTokenCiphertext: await seal(credentials.accessToken, this.runtime.SESSION_SECRET),
         refreshTokenCiphertext: await seal(credentials.refreshToken, this.runtime.SESSION_SECRET),
@@ -140,7 +143,7 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
       await this.repository.recordConferenceCapability(destination.calendarId, descriptor.conferenceCapable);
       await this.repository.markHealthy(new Date().toISOString());
       if (this.watch) await this.tellWatch("checkedHealthy");
-      return { kind: "healthy" as const, conferenceCapable: descriptor.conferenceCapable };
+      return { kind: "healthy" as const, provider: connection.provider, conferenceCapable: descriptor.conferenceCapable };
     } catch (error) {
       await this.markFailure(error);
       return { kind: "unavailable" as const, code: failureCode(error) };
@@ -187,6 +190,7 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
       const connection = await this.repository.get();
       const destination = connection?.selection.find((entry) => entry.purpose === "destination");
       if (!destination) throw new ProviderFailure("missing_configuration", false);
+      if (event.requestGoogleMeet && connection?.provider !== "google") throw new ProviderFailure("forbidden", false);
       const credentials = await this.credentials(connection);
       return await this.calendar.upsertManagedEvent(credentials.accessToken, destination.calendarId, event);
     } catch (error) {
@@ -260,6 +264,8 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     }
   }
 
+  receiveMicrosoftWebhook(body: unknown, admit: AdmitCallback) { return receiveMicrosoftWebhook(this.repository, this.runtime, body, admit); }
+
   async receiveGoogleWebhook(headers: Headers, admit: AdmitCallback) {
     const secret = googleCalendarConfiguration(this.runtime)?.webhookSecret;
     const channelId = headers.get("x-goog-channel-id");
@@ -306,9 +312,11 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
   }
 
   private async ensurePushChannels(credentials: CalendarCredentials, calendarIds: string[]) {
-    const configuration = googleCalendarConfiguration(this.runtime);
-    if (!configuration?.webhookSecret) throw new ProviderFailure("missing_configuration", false);
-    const uniqueCalendarIds = [...new Set(calendarIds)];
+    const configuration = { webhookSecret: this.runtime.CALENDAR_WEBHOOK_SECRET };
+    if (!configuration.webhookSecret) throw new ProviderFailure("missing_configuration", false);
+    const microsoft = (await this.repository.get())?.provider === "microsoft";
+    // Graph watches the mailbox event collection, including every selected calendar.
+    const uniqueCalendarIds = microsoft ? calendarIds.slice(0, 1) : [...new Set(calendarIds)];
     const existing = await this.repository.listPushChannels();
     const renewalDeadline = Date.now() + 24 * 60 * 60 * 1_000;
     const current = existing.length === uniqueCalendarIds.length
@@ -324,7 +332,7 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     let channels;
     try { channels = await this.calendar.watchCalendars(credentials.accessToken, {
       calendarIds: uniqueCalendarIds,
-      callbackUrl: new URL("/api/webhooks/google-calendar", this.runtime.APP_URL).toString(),
+      callbackUrl: new URL((await this.repository.get())?.provider === "microsoft" ? "/api/webhooks/google-calendar?provider=microsoft" : "/api/webhooks/google-calendar", this.runtime.APP_URL).toString(),
       channelToken: configuration.webhookSecret,
     }); } catch (error) {
       await this.repository.clearSyncCursor();

@@ -2,7 +2,7 @@ import { ProviderFailure } from "../../platform/calendar";
 import type { CalendarConnectionRecord } from "./repository";
 
 export type ProviderHealth = {
-  provider: "google_calendar";
+  provider: "google_calendar" | "microsoft_calendar" | "caldav";
   state: "healthy" | "unhealthy" | "disconnected";
   checkedAt: string | null;
   reason: string | null;
@@ -17,7 +17,7 @@ export function connectionHealth(connection: CalendarConnectionRecord | undefine
   const selection = connection?.selection ?? [];
   const destination = selection.find((entry) => entry.purpose === "destination");
   return {
-    provider: "google_calendar",
+    provider: connection?.provider === "microsoft" ? "microsoft_calendar" : connection?.provider === "caldav" ? "caldav" : "google_calendar",
     state: connection?.status ?? "disconnected",
     checkedAt: connection?.lastCheckedAt ?? null,
     reason: connection?.unhealthyCode ?? (connection ? null : "disconnected"),

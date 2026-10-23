@@ -1,3 +1,4 @@
+import { calendarConnectionScreens } from "../tests/calendar-microsoft/screens.mjs";
 import { evidencePath as outputPath } from "./evidence-path.mjs";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -140,7 +141,8 @@ try {
   await probe("conference_capability", false);
   const final = await snapshot(); assert.equal(final.fixture_mail.length, 0); assert.equal(final.fixture_events.length, 0);
   mark("in-flight native readiness probes cannot publish stale empty windows, a newly conference-dependent event, or a concurrently disabled/deleted event; no real or synthetic provider sends occur");
-  await writeFile(evidencePath, JSON.stringify({ status: "verified", verifiedAt: new Date().toISOString(), origin, checks, proofs: { stalePublicationRaces: ["windows cleared", "fixed link changed to Google Meet", "disabled", "deleted"], existingBookingId: booking.id, providerSendEffects: 0 }, limits: ["Native Hono/Start/D1/DO with task-owned synthetic providers and fresh temporary state only.", "Host authoring browser controls, reload state and client error retention remain unverified under the explicit browser launch hold.", "Readiness reads may update derived calendar health/busy cache; no-write assertions cover the product tables included by the retained diagnostic snapshot."] }, null, 2) + "\n");
+  const calendarScreens = await calendarConnectionScreens({ origin, email: fixture.operatorEmail, call });
+  await writeFile(evidencePath, JSON.stringify({ status: "verified", verifiedAt: new Date().toISOString(), origin, checks, proofs: { calendarScreens, stalePublicationRaces: ["windows cleared", "fixed link changed to Google Meet", "disabled", "deleted"], existingBookingId: booking.id, providerSendEffects: 0 }, limits: ["Native Hono/Start/D1/DO with task-owned synthetic providers and fresh temporary state only.", "Calendar connection controls are proven at 1440 and 390; other authoring browser controls remain unverified.", "Readiness reads may update derived calendar health/busy cache; no-write assertions cover the product tables included by the retained diagnostic snapshot."] }, null, 2) + "\n");
 } catch (error) {
   await writeFile(evidencePath, JSON.stringify({ status: "failed", observedAt: new Date().toISOString(), origin, checks, failure: error.message, stack: error.stack }, null, 2) + "\n"); throw error;
 }

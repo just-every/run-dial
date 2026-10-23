@@ -16,8 +16,10 @@ export const calendarConnectionRoutes = new Hono<AppEnvironment>()
   .get("/api/app/calendar/setup", (context) => context.json(context.get("services").calendar.setupGuide()))
   .get("/api/app/calendar/connection", async (context) => context.json({ ...await context.get("services").calendar.connectionHealth(), recentChanges: await context.get("services").calendar.recentHealthChanges() }))
   .get("/api/app/calendar/oauth/start", async (context) => {
-    const redirect = await context.get("services").calendar.beginAuthorization(context.get("session"));
-    return redirect ? context.redirect(redirect, 302) : apiError(context, 503, "calendar_not_configured", "Google Calendar is not configured for this deployment.");
+    const provider = context.req.query("provider") ?? "google";
+    if (provider !== "google" && provider !== "microsoft") return apiError(context, 400, "invalid_calendar_provider", "Choose a supported calendar provider.");
+    const redirect = await context.get("services").calendar.beginAuthorization(context.get("session"), provider);
+    return redirect ? context.redirect(redirect, 302) : apiError(context, 503, "calendar_not_configured", "Calendar OAuth is not configured for this provider. Microsoft requires MICROSOFT_OAUTH_CLIENT_ID and MICROSOFT_OAUTH_CLIENT_SECRET.");
   })
   .get("/api/calendar/oauth/callback", validate("query", callbackSchema), async (context) => {
     const query = context.req.valid("query");
@@ -27,7 +29,7 @@ export const calendarConnectionRoutes = new Hono<AppEnvironment>()
       session: await context.get("services").operators.authenticate(context.req.raw),
     });
     if (result.kind === "invalid_state") return apiError(context, 400, "invalid_calendar_oauth_state", "The calendar connection could not be verified.");
-    if (result.kind === "provider_failure") return apiError(context, 503, "calendar_oauth_failed", "Google Calendar did not accept this connection.");
+    if (result.kind === "provider_failure") return apiError(context, 503, "calendar_oauth_failed", "The calendar provider did not accept this connection.");
     return context.redirect(await context.get("services").hostSetup.completion() ? "/app/settings?calendar=connected" : "/setup/settings?calendar=connected", 302);
   })
   .get("/api/app/calendar/calendars", async (context) => {
@@ -49,7 +51,13 @@ export const calendarConnectionRoutes = new Hono<AppEnvironment>()
     return context.body(null, 204);
   })
   .post("/api/webhooks/google-calendar", async (context) => {
-    const result = await context.get("services").calendar.receiveGoogleWebhook(context.req.raw.headers, () => context.get("admitProvider")("google_calendar"));
+    const microsoft = context.req.query("provider") === "microsoft";
+    const validation = context.req.query("validationToken");
+    if (microsoft && validation && validation.length <= 4096) return context.text(validation, 200, { "Cache-Control": "no-store" });
+    let body: unknown;
+    if (microsoft) { try { body = await context.req.json(); } catch { return apiError(context, 400, "invalid_provider_callback", "Expected Graph notifications."); } }
+    const admit = () => context.get("admitProvider")("google_calendar");
+    const result = microsoft ? await context.get("services").calendar.receiveMicrosoftWebhook(body, admit) : await context.get("services").calendar.receiveGoogleWebhook(context.req.raw.headers, admit);
     if (result.kind === "rate_limited") return admissionResponse({ kind: "limited", retryAfterSeconds: result.retryAfterSeconds })!;
     return result.kind === "unauthorized" ? apiError(context, 401, "invalid_provider_callback", "Provider callback authentication failed.") : context.body(null, 204);
   });

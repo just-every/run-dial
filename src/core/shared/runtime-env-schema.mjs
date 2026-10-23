@@ -18,6 +18,8 @@ export const runtimeEnvironmentSchema = z.object({
   MAIL_FROM: z.string().email().optional(),
   MAIL_RELAY_URL: z.string().refine(value => value === "" || z.string().url().safeParse(value).success, "Invalid mail relay URL").optional(),
   MAIL_WEBHOOK_KEY: z.string().min(1).optional(),
+  MICROSOFT_OAUTH_CLIENT_ID: z.string().min(1).optional(),
+  MICROSOFT_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
   GOOGLE_OAUTH_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
   CALENDAR_WEBHOOK_SECRET: z.string().min(32).optional(),

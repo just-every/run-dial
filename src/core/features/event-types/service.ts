@@ -10,14 +10,14 @@ export type HostTimezoneReader = { getHostTimezone(): Promise<string | undefined
 export type EventPublicationReadiness = {
   calendar: {
     checkConnection(): Promise<
-      | { kind: "healthy"; conferenceCapable: boolean }
+      | { kind: "healthy"; provider?: "google" | "microsoft" | "caldav"; conferenceCapable: boolean }
       | { kind: "unavailable"; code: string }
     >;
   };
   mail: { checkConnection(): Promise<{ checkedAt: string }> };
   /** Health the scheduled pass and explicit checks record; reading it contacts no provider. */
   recorded: {
-    calendar(): Promise<{ state: "healthy" | "unhealthy" | "disconnected"; checkedAt: string | null; reason: string | null; destinationSelected: boolean; conflictCalendarCount: number; conferenceCapable: boolean }>;
+    calendar(): Promise<{ provider?: "google_calendar" | "microsoft_calendar" | "caldav"; state: "healthy" | "unhealthy" | "disconnected"; checkedAt: string | null; reason: string | null; destinationSelected: boolean; conflictCalendarCount: number; conferenceCapable: boolean }>;
     mail(): Promise<{ state: "healthy" | "unhealthy" | "unchecked"; checkedAt: string | null }>;
   };
 };
@@ -148,7 +148,7 @@ export class EventTypesService {
     const calendarHealthy = calendar.state === "healthy" && calendar.destinationSelected && calendar.conflictCalendarCount > 0;
     const providers = {
       calendar: calendarHealthy
-        ? { kind: "healthy" as const, conferenceCapable: calendar.conferenceCapable }
+        ? { kind: "healthy" as const, provider: calendar.provider === "microsoft_calendar" ? "microsoft" as const : calendar.provider === "caldav" ? "caldav" as const : "google" as const, conferenceCapable: calendar.conferenceCapable }
         : { kind: "unavailable" as const, code: calendar.state === "disconnected" ? "not_connected" : calendar.reason ?? "calendar_unavailable" },
       mail: mail.state === "healthy" ? { kind: "healthy" as const } : { kind: "unavailable" as const },
     };

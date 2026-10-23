@@ -14,7 +14,7 @@ export function publicationRequirements(eventType: EventTypeRecord, profile: Pro
   const { calendar, mail } = providers;
   if (calendar.kind !== "healthy" && calendar.code !== "not_connected") missing.push("destination_calendar");
   if (mail.kind !== "healthy") missing.push("transactional_mail");
-  if (offeredLocations(eventType).some(location => location.type === "google_meet") && (calendar.kind !== "healthy" || !calendar.conferenceCapable)) missing.push("google_meet_capability");
+  if (offeredLocations(eventType).some(location => location.type === "google_meet") && (calendar.kind !== "healthy" || !calendar.conferenceCapable || calendar.provider === "microsoft" || calendar.provider === "caldav")) missing.push("google_meet_capability");
   return { ready: missing.length === 0, missing };
 }
 

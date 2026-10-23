@@ -25,6 +25,8 @@ export type AppBindings = {
   MAIL_FROM?: string;
   MAIL_RELAY_URL?: string;
   MAIL_WEBHOOK_KEY?: string;
+  MICROSOFT_OAUTH_CLIENT_ID?: string;
+  MICROSOFT_OAUTH_CLIENT_SECRET?: string;
   GOOGLE_OAUTH_CLIENT_ID?: string;
   GOOGLE_OAUTH_CLIENT_SECRET?: string;
   CALENDAR_WEBHOOK_SECRET?: string;

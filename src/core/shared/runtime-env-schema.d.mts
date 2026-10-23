@@ -18,6 +18,8 @@ export const runtimeEnvironmentSchema: z.ZodObject<{
   MAIL_FROM: z.ZodOptional<z.ZodString>;
   MAIL_RELAY_URL: z.ZodOptional<z.ZodString>;
   MAIL_WEBHOOK_KEY: z.ZodOptional<z.ZodString>;
+  MICROSOFT_OAUTH_CLIENT_ID: z.ZodOptional<z.ZodString>;
+  MICROSOFT_OAUTH_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
   GOOGLE_OAUTH_CLIENT_ID: z.ZodOptional<z.ZodString>;
   GOOGLE_OAUTH_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
   CALENDAR_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;

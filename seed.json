@@ -450,6 +450,20 @@
         "operator-selected UTM and source values"
       ],
       "adapters": []
+    },
+    {
+      "id": "microsoft-graph",
+      "required": false,
+      "why": "CAL-010: optional Microsoft 365 or Outlook singleton calendar connection. Delegated OAuth, selected-calendar busy reads, managed events, mailbox change subscriptions and delta sync; live provider behavior is unobserved. Organization-wide consent management and simultaneous providers are not implemented.",
+      "data": [
+        "sealed host OAuth credentials",
+        "selected calendar identifiers",
+        "booking invitation title and description",
+        "invitee email and chosen meeting location"
+      ],
+      "adapters": [
+        "calendar.provider.v2"
+      ]
     }
   ],
   "env": [
@@ -524,6 +538,18 @@
       "secret": false,
       "required": false,
       "why": "Verified no-reply sender used by the mail.sender.v1 adapter for magic links and transactional messages."
+    },
+    {
+      "name": "MICROSOFT_OAUTH_CLIENT_ID",
+      "secret": false,
+      "required": false,
+      "why": "calendar.provider.v2 CAL-010: optional Microsoft Entra application identifier. Missing Microsoft OAuth configuration names the missing bindings; Google and explicit calendar-free scheduling remain available."
+    },
+    {
+      "name": "MICROSOFT_OAUTH_CLIENT_SECRET",
+      "secret": true,
+      "required": false,
+      "why": "calendar.provider.v2 CAL-010: optional Microsoft Entra application credential used for sealed OAuth exchange and refresh. Reauthorization is required after a revoked refresh grant or archive restore."
     },
     {
       "name": "GOOGLE_OAUTH_CLIENT_ID",

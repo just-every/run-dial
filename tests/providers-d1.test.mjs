@@ -1,3 +1,4 @@
+import { microsoftProof } from "./calendar-microsoft/native.mjs";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -11,28 +12,31 @@ function assertExactKeys(value, expected, label) {
   assert.deepEqual(Object.keys(value).sort(), [...expected].sort(), `${label} has its complete field set`);
 }
 
-contract("AUTH-004", "the Worker persists a session-bound OAuth state once, consumes it once, and seals provider credentials", async (context) => {
+contract(["AUTH-004", "CAL-010"], "the Worker persists a session-bound OAuth state once, consumes it once, and seals provider credentials", async (context) => {
   const worker = await startWorker(context);
   const result = await readJson(await fetch(`${worker.origin}/oauth`));
   assert.equal(result.connected, "connected");
   assert.equal(result.replay, "invalid_state", "a consumed state cannot exchange a second provider code");
   assert.equal(result.status, "unhealthy", "credentials alone never make public scheduling healthy");
   assert.equal(result.storesPlainToken, false, "provider tokens are stored sealed in D1");
+  await microsoftProof(context, "oauth");
 });
 
-contract("AVAIL-004", "the Worker uses a bounded cache, forces a range read after unhealthy recovery, and invalidates after an authenticated callback", async (context) => {
+contract(["AVAIL-004", "CAL-010"], "the Worker uses a bounded cache, forces a range read after unhealthy recovery, and invalidates after an authenticated callback", async (context) => {
   const worker = await startWorker(context);
   const result = await readJson(await fetch(`${worker.origin}/cache`));
   assert.deepEqual(result, { freshReads: 1, cachedReads: 0, recoveryReads: 2, webhook: "accepted", callbackFreshReads: 1 });
+  await microsoftProof(context, "busy");
 });
 
-contract("CAL-007", "the Worker renews only expiring selected destination and conflict watches and stops superseded channels", async (context) => {
+contract(["CAL-007", "CAL-010"], "the Worker renews only expiring selected destination and conflict watches and stops superseded channels", async (context) => {
   const worker = await startWorker(context);
   const result = await readJson(await fetch(`${worker.origin}/channels`));
   assert.deepEqual(result, { current: "current", renewed: "renewed", watchesAdded: 1, stopped: 2 });
+  await microsoftProof(context, "channels");
 });
 
-contract("CAL-003", "a durable calendar command persists Meet readiness and the link-ready delivery before sending it", async (context) => {
+contract(["CAL-003", "CAL-010"], "a durable calendar command persists Meet readiness and the link-ready delivery before sending it", async (context) => {
   const worker = await startWorker(context);
   await readJson(await fetch(`${worker.origin}/cache`));
   const result = await readJson(await fetch(`${worker.origin}/delivery`));
@@ -78,6 +82,7 @@ contract("CAL-003", "a durable calendar command persists Meet readiness and the 
   assert.equal(result.selectedCapabilityActive, true, "the selected current-occurrence manage URL remains an active booking capability");
   assert.equal(result.managedEventIcalUid, "dial-provider-booking@dial", "Google and ICS retain the same stable UID");
   assert.equal(result.sent, 1, "the queued link-ready notification is processed on the next durable delivery pass");
+  await microsoftProof(context, "events");
 });
 
 contract("CAL-003", "a stale in-flight calendar completion succeeds once without changing the replacement occurrence", async (context) => {

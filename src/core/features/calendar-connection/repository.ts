@@ -15,6 +15,7 @@ import { createId, nowIso } from "../../shared/ids";
 export type CalendarConnectionStatus = "disconnected" | "healthy" | "unhealthy";
 export type CalendarSelection = { calendarId: string; purpose: "destination" | "conflict"; conferenceCapable: boolean };
 export type CalendarConnectionRecord = {
+  provider: "google" | "microsoft" | "caldav";
   status: CalendarConnectionStatus;
   authorisedByOperatorId: string | null;
   accountEmail: string | null;
@@ -40,6 +41,7 @@ export class CalendarConnectionRepository {
     if (!connection) return undefined;
     const selected = await this.db.select().from(calendarConnectionCalendars).orderBy(asc(calendarConnectionCalendars.purpose), asc(calendarConnectionCalendars.calendarId));
     return {
+      provider: connection.calendarProvider,
       status: connection.status,
       authorisedByOperatorId: connection.authorisedByOperatorId,
       accountEmail: connection.accountEmail,
@@ -79,6 +81,7 @@ export class CalendarConnectionRepository {
 
   async saveCredentials(input: {
     operatorId: string;
+    provider?: "google" | "microsoft";
     accessTokenCiphertext: string;
     refreshTokenCiphertext: string;
     accessTokenExpiresAt: string;
@@ -89,6 +92,7 @@ export class CalendarConnectionRepository {
       .values({
         singletonKey: "default",
         provider: "google",
+        calendarProvider: input.provider ?? "google",
         status: "unhealthy",
         authorisedByOperatorId: input.operatorId,
         accountEmail: null,
@@ -109,6 +113,7 @@ export class CalendarConnectionRepository {
         target: calendarConnections.singletonKey,
         set: {
           provider: "google",
+          calendarProvider: input.provider ?? "google",
           status: "unhealthy",
           authorisedByOperatorId: input.operatorId,
           accessTokenCiphertext: input.accessTokenCiphertext,
@@ -127,6 +132,9 @@ export class CalendarConnectionRepository {
     await this.binding.batch([
       healthChangeStatement(this.binding, "unhealthy", "selection_required", timestamp),
       this.binding.prepare(write.sql).bind(...write.params),
+      this.binding.prepare("DELETE FROM calendar_push_channels"),
+      this.binding.prepare("DELETE FROM calendar_busy_intervals"),
+      this.binding.prepare("DELETE FROM calendar_busy_read_windows"),
     ]);
   }
 

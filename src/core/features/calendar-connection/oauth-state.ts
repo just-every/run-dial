@@ -1,4 +1,4 @@
-export type OAuthState = { id: string; sessionId: string; operatorId: string; issuedAt: string };
+export type OAuthState = { id: string; sessionId: string; operatorId: string; issuedAt: string; provider?: "google" | "microsoft" };
 
 export async function signOAuthState(value: OAuthState, secret: string) {
   const body = toBase64Url(new TextEncoder().encode(JSON.stringify(value)));
@@ -15,8 +15,9 @@ export async function verifyOAuthState(value: string, secret: string): Promise<O
     const decoded: unknown = JSON.parse(new TextDecoder().decode(fromBase64Url(body)));
     if (!decoded || typeof decoded !== "object") return undefined;
     const entry = decoded as Record<string, unknown>;
+    if (entry.provider !== undefined && entry.provider !== "google" && entry.provider !== "microsoft") return undefined;
     return typeof entry.id === "string" && typeof entry.sessionId === "string" && typeof entry.operatorId === "string" && typeof entry.issuedAt === "string"
-      ? { id: entry.id, sessionId: entry.sessionId, operatorId: entry.operatorId, issuedAt: entry.issuedAt }
+      ? { id: entry.id, sessionId: entry.sessionId, operatorId: entry.operatorId, issuedAt: entry.issuedAt, ...(entry.provider === "microsoft" ? { provider: "microsoft" as const } : {}) }
       : undefined;
   } catch {
     return undefined;

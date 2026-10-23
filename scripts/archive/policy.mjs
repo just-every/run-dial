@@ -52,6 +52,7 @@ export function canonicalRow(name, source, secrets = []) {
     row.invitee_email_folded = foldBookingSearch(row.invitee_email);
   }
   if (name === 'calendar_connections') {
+    if (row.calendar_provider === 'microsoft' || row.calendar_provider === 'caldav') row.sync_cursor = null;
     for (const key of ['access_token_ciphertext', 'refresh_token_ciphertext', 'access_token_expires_at', 'channel_id', 'channel_resource_id', 'channel_expires_at']) row[key] = null;
     if (row.status !== 'disconnected') { row.status = 'unhealthy'; row.unhealthy_code = 'reauthorization_required'; }
   }
