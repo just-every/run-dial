@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a6f770b3ce4000bd01c2500d7b08afc258987b32e5f6d12eb50f8b718a91c7af",
+      "sha256": "86493b3418e3e2d72f83729fed6f47d337d4e15a64e9680e3096b08b9101b96e",
       "executable": false
     },
     "DEMO.md": {
@@ -1648,7 +1648,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "6499a0a995bfa65a93f6b5e7312da17278a1b625fac718d80e996aa221c38640",
+      "sha256": "e219f0980d1d6eb7c773ec97ce1314572a6df58894be3187fecf04784de7aab5",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -6864,7 +6864,7 @@
       "executable": false
     },
     "src/core/platform/calendar/types.ts": {
-      "sha256": "0dcf2b75d941e9c5524457a22a5ebd20261afcf75e356742de703828d812629d",
+      "sha256": "7414e2ac605cd567293aeb897a98e03a8a2955f8450e596a35c21de0ee6d1a5e",
       "executable": false
     },
     "src/core/platform/crypto/sealed.ts": {
