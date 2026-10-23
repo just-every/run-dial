@@ -5636,7 +5636,7 @@
       "executable": false
     },
     "src/core/features/event-types/repository.ts": {
-      "sha256": "b992ea33d2e31e0e9ff399fd23d7c1ae42e02700fc892106f44602ef4236af34",
+      "sha256": "925d2cf7ec9eb6d1454f7d190cc719cd572500c3dd1a3d619d180327da76f69d",
       "executable": false
     },
     "src/core/features/event-types/routes.ts": {
@@ -7988,11 +7988,15 @@
       "executable": false
     },
     "tests/custom-fields.test.mjs": {
-      "sha256": "f86701bbefd1c9752fdfb758442e0e08b1991f493a9144ff263990e2deda5cf2",
+      "sha256": "e802fe0fa4a064c4cf352e6a7c81bd8f6455638ad0535c57d7a186fefe41ed96",
       "executable": false
     },
     "tests/custom-fields/fixture.mjs": {
       "sha256": "57370285127bf2f0e6edf51a55f9b0dacd86a97496ca0522c59a7bc51aa25a6f",
+      "executable": false
+    },
+    "tests/custom-fields/poll-deletion.mjs": {
+      "sha256": "29625e417ecc830f306b7e6899165ed16e6e3545fd61065a38cc69d9aab4a9e7",
       "executable": false
     },
     "tests/custom-fields/runtime.mjs": {
