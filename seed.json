@@ -430,7 +430,7 @@
     {
       "id": "stripe",
       "required": false,
-      "why": "PAY-001: paid event types take payment through Stripe Checkout on the host's own Stripe account, connected by Connect Standard OAuth; bookings confirm only on Stripe's signed webhook. Free event types never call Stripe. Card and payer details stay at Stripe; Dial stores the connected account ID, amounts and Stripe references.",
+      "why": "PAY-001: paid event types take payment through Stripe Checkout on the host's own Stripe account, connected by Connect Standard OAuth; bookings confirm only on Stripe's signed webhook. Free event types without saved-card fees make no booking-time Stripe call. DATA-007 asks Stripe to detach saved cards and anonymize known Customers at person erasure, and reports immutable Checkout email as pending with no invented request. Card and payer details stay at Stripe; Dial stores the connected account ID, amounts and Stripe references.",
       "data": [
         "connected Stripe account ID",
         "event title, duration and USD amount",
