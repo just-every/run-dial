@@ -39,7 +39,7 @@ export async function pollScreens(browser,owner,origin,scans,errors){
     await participant.getByRole('button',{name:'Save votes',exact:true}).click();await participant.getByRole('status').filter({hasText:'Your votes are saved'}).waitFor();
     assert.notEqual(new URL(participant.url()).searchParams.get('token'),link.token);
     const replay=await context.request.get(`${origin}/api/public/polls/${id}?token=${link.token}`);assert.equal(replay.status(),404);
-    if(index===0){await participant.getByLabel('Availability',{exact:true}).first().selectOption('no');const changed=participant.waitForResponse(r=>r.url().endsWith(`/polls/${id}/votes`)&&r.status()===200);await participant.getByRole('button',{name:'Save votes',exact:true}).click();await changed;}
+    if(index===0){await participant.getByLabel('Availability',{exact:true}).first().selectOption('no');const [changed]=await Promise.all([participant.waitForResponse(r=>r.url().endsWith(`/polls/${id}/votes`)),participant.getByRole('button',{name:'Save votes',exact:true}).click()]);assert.equal(changed.status(),200,await changed.text());}
    }
    const [toggled]=await Promise.all([page.waitForResponse(r=>r.url().endsWith(`/polls/${id}/tally`)),page.getByLabel('Show counts to participants',{exact:true}).check()]);assert.equal(toggled.status(),200);
    const publicPage=participants[0].pages()[0];await publicPage.reload();await publicPage.locator('[data-poll-participant-ready="true"]').waitFor();
