@@ -133,7 +133,7 @@ export class StripeApi {
     return this.request<{ id: string }>(`${apiOrigin}/v1/payment_methods/${encodeURIComponent(paymentMethodId)}/detach`, {}, { account: accountId, idempotencyKey });
   }
 
-  balanceTransaction(accountId:string,id:string) { return this.request<{id:string;fee:number}>(`${apiOrigin}/v1/balance_transactions/${encodeURIComponent(id)}`,undefined,{account:accountId}); }
+  balanceTransaction(accountId:string,id:string) { return this.request<{id:string;fee:number;currency:string}>(`${apiOrigin}/v1/balance_transactions/${encodeURIComponent(id)}`,undefined,{account:accountId}); }
   async chargeRefunds(accountId:string,chargeId:string){
     const refunds:Array<Record<string,unknown>>=[];let after:string|undefined;
     for(;;){const params=new URLSearchParams({charge:chargeId,limit:'100'});if(after)params.set('starting_after',after);
@@ -143,11 +143,11 @@ export class StripeApi {
     }return refunds;
   }
   async payoutTransactions(accountId:string,payoutId:string) {
-    const transactions:Array<{id:string;net:number;source?:{id:string;payment_intent?:string}}>=[];
+    const transactions:Array<{id:string;net:number;currency:string;source?:{id:string;payment_intent?:string}}>=[];
     let after:string|undefined;
     for(;;){const params=new URLSearchParams({payout:payoutId,limit:'100','expand[]':'data.source'});if(after)params.set('starting_after',after);
-      const page=await this.request<{data:Array<{id:string;net:number;source?:{id:string;payment_intent?:string}}>;has_more:boolean}>(`${apiOrigin}/v1/balance_transactions?${params}`,undefined,{account:accountId});
-      if(!Array.isArray(page.data)||page.data.some(row=>!row.id||!Number.isInteger(row.net)))throw new StripeApiError(502,'invalid_balance_transactions');
+      const page=await this.request<{data:Array<{id:string;net:number;currency:string;source?:{id:string;payment_intent?:string}}>;has_more:boolean}>(`${apiOrigin}/v1/balance_transactions?${params}`,undefined,{account:accountId});
+      if(!Array.isArray(page.data)||page.data.some(row=>!row.id||!Number.isInteger(row.net)||!/^[a-z]{3}$/.test(row.currency)))throw new StripeApiError(502,'invalid_balance_transactions');
       transactions.push(...page.data);if(!page.has_more)break;if(!page.data.length||after===page.data.at(-1)!.id)throw new StripeApiError(502,'invalid_pagination');after=page.data.at(-1)!.id;
     }return transactions;
   }
