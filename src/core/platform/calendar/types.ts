@@ -5,6 +5,7 @@ export type ProviderFailureCode =
   | "operator_removed"
   | "operator_mail_outcome_unknown"
   | "operator_notification_coordination_failed"
+  | "operator_notification_coordination_missing"
   | "missing_configuration"
   | "reauthorization_required"
   | "permanent_delivery_failure"
