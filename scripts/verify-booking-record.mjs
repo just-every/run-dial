@@ -3,6 +3,7 @@ import { confirmationSettingsJourney } from "../tests/booking-axe/confirmation-s
 import { chromium } from "@playwright/test";
 import { completeEmptyWorkspace } from "../tests/booking-axe/first-run-fixture.mjs";
 import { seedAcceptanceRecords, bookingRecordDeliveryJourney } from "../tests/booking-axe/acceptance-records.mjs";
+import { clientRecordsJourney } from "../tests/booking-axe/client-records.mjs";
 
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752";
 const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
@@ -17,6 +18,7 @@ try {
   const fixture = await response.json();
   const { booking } = await seedAcceptanceRecords(owner, origin, fixture);
   await bookingRecordDeliveryJourney(browser, owner, origin, booking, scans, errors);
+  await clientRecordsJourney(browser, owner, origin, fixture, scans, errors);
   await confirmationSettingsJourney(browser, owner, origin, fixture.eventId, scans, errors);
   assert.deepEqual(errors, []);
   console.log(`OPER-004: ${scans.length} desktop/mobile axe scans; answers, annotations, both zones, history, independent queued/sent/failed emails and UI recovery passed.`);
