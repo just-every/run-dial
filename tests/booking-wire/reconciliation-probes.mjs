@@ -70,6 +70,12 @@ export async function reconciliationProbes({call,data,state,hold,slot,day,comple
     await data('/wire/control',{name:'accounting-revoked',value:1});await call('/api/app/payments/accounting/export',{},409);
     assert.equal((await data('/api/app/payments/accounting')).state,'unhealthy');await call('/api/app/payments/accounting/export',{},409);
     await data('/wire/control',{name:'accounting-revoked',value:0});assert.equal((await data('/__fixtures/payments/accounting-state')).receipts.length,count);
+    const reconnect=new URL((await call('/api/app/payments/accounting/oauth/start',undefined,302)).headers.get('location')).searchParams.get('state');
+    await call('/api/payments/accounting/oauth/callback?'+new URLSearchParams({state:reconnect,code:'synthetic-dial-210',realmId:'synthetic-dial-206'}),undefined,302);
+    await call('/__fixtures/payments/accounting-token-expired',{},204);await data('/wire/control',{name:'accounting-token-refused',value:1});
+    await call('/api/app/payments/accounting/accounts',undefined,409);assert.equal((await data('/api/app/payments/accounting')).state,'unhealthy');
+    await data('/wire/control',{name:'accounting-token-refused',value:0});
+    assert.equal((await data('/__fixtures/payments/accounting-state')).receipts.length,count,'a refused refresh sends no receipt');
     console.log('PAY-006: PASS mapped income account, one anonymous sales receipt/payment, lost response recovery, repeated/concurrent retry and revoked token stops sends');
   });
   await probe('PAY-006 erasure keeps reconciliation and export references only in anonymous audit',async()=>{
