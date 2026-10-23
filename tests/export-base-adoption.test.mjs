@@ -8,12 +8,13 @@ import { captures, operators, request, runtime, token } from './archive/auth.mjs
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
-import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade } from './archive/payment-erasure-upgrade.mjs';
+import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade, noticeUpgrade } from './archive/payment-erasure-upgrade.mjs';
 import { clientUpgrade } from './archive/client-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    await noticeUpgrade(source.db);
     await reconciliationUpgrade(source.db);
     await paymentErasureUpgrade(source.db);
     await paidApprovalUpgrade(source.db);
@@ -98,6 +99,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     for (const table of ['event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements', 'payment_settings']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-003 ${table} survives the archive round trip`);
     assert.ok(!archive.tables.some(table => table.name === 'payment_link_tokens'), 'PAY-003 balance-link capabilities never travel');
     for(const table of ['payment_processor_facts','accounting_exports'])assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(),source.db.prepare(`SELECT * FROM ${table}`).all(),`${table} round trips`);
+    const notices=target.db.prepare("SELECT * FROM workspace_notice_destinations").get();assert.equal(notices.status,"needs_reconnect");assert.equal(notices.credential_ciphertext,null);assert.ok(target.db.prepare("SELECT state FROM workspace_notice_deliveries").all().every(r=>r.state==="failed"));assert.ok(target.db.prepare("SELECT archive_historical FROM notice_erasure_requests").all().every(r=>r.archive_historical===1));assert.ok(!archive.tables.some(t=>t.name==="notice_oauth_states"));
     const accounting=target.db.prepare('SELECT * FROM accounting_connections').get();
     assert.equal(accounting.status,'unhealthy');assert.equal(accounting.access_token_ciphertext,null);assert.equal(accounting.refresh_token_ciphertext,null);
     const approvals=archive.tables.find(table=>table.name==='booking_approval_requests');

@@ -1,3 +1,4 @@
+import { isNoticeHost,noticeWire } from './notice-wire';
 import { accountingHosts, accountingWire } from "./accounting-wire";
 /** Contract-shaped Stripe API and Connect OAuth at the HTTP edge (PAY-001, PAY-003, PAY-005). Production's StripeApi
  * talks to these exactly as to api.stripe.com and connect.stripe.com; no Stripe secret exists in CI. */
@@ -243,7 +244,7 @@ export async function initializeStripeWire(db: D1Database) {
 
 /** The same Stripe edge for the browser review rig. */
 export function stripeTransport(db: D1Database): typeof fetch {
-  return async (input, init = {}) => { await initializeStripeWire(db); const url=new URL(String(input)); return accountingHosts.includes(url.hostname)?accountingWire(db,url,init.method??"GET",init):stripeWire(db, url, init.method ?? "GET", init); };
+  return async (input, init = {}) => { await initializeStripeWire(db); const url=new URL(String(input)); return isNoticeHost(url.hostname)?noticeWire(db,url,init):accountingHosts.includes(url.hostname)?accountingWire(db,url,init.method??"GET",init):stripeWire(db, url, init.method ?? "GET", init); };
 }
 
 async function object(db: D1Database, id: string): Promise<Stored | undefined> {

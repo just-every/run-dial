@@ -22,6 +22,8 @@ export const runtimeEnvironmentSchema = z.object({
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
   CALENDAR_WEBHOOK_SECRET: z.string().min(32).optional(),
   // PAY-001: the operator-held Stripe platform key, Connect client ID and webhook signing secret.
+  SLACK_CLIENT_ID: z.string().min(1).optional(),
+  SLACK_CLIENT_SECRET: z.string().min(1).optional(),
   QBO_CLIENT_ID: z.string().min(1).optional(),
   QBO_CLIENT_SECRET: z.string().min(1).optional(),
   STRIPE_SECRET_KEY: z.string().regex(/^(sk|rk)_(test|live)_[A-Za-z0-9]+$/).optional(),

@@ -102,6 +102,9 @@ const overrides = {
   payment_processor_facts: {kind:'dispute',account_id:'synthetic-dial-1',processor_ref:'synthetic-dial-2',source_ref:'synthetic-dial-3',amount_cents:5000,status:'needs_response',disagreement:1,event_created:1},
   accounting_connections: {id:'quickbooks',realm_id:'synthetic-dial-4',status:'connected',access_token_ciphertext:secret+'_ACCOUNTING_ACCESS',refresh_token_ciphertext:secret+'_ACCOUNTING_REFRESH'},
   accounting_exports: {connection_id:'quickbooks',payment_ref:'synthetic-dial-3',amount_cents:5000,request_id:'synthetic-dial-5',document_ref:'synthetic-dial-5',payload_json:'{}',receipt_id:'synthetic-dial-6',state:'exported'},
+  workspace_notice_destinations:{id:'slack',status:'connected',target:'synthetic-dial-700',external_key:'synthetic-dial-701',masked_tail:'••••-700',credential_ciphertext:secret+'_NOTICE'},
+  workspace_notice_deliveries:{destination_id:'slack',account_id:'synthetic-dial-701',channel_id:'synthetic-dial-700',event_kind:'created',state:'pending'},
+  notice_erasure_requests:{provider:'slack',source_delivery_id:'synthetic-dial-702',account_id:'synthetic-dial-701',channel_id:'synthetic-dial-700',state:'pending'},
   payment_settings: { singleton_key: 'default', tax_enabled: 1, business_name: 'Morgan Bell Coaching' },
   payment_movements: { kind: 'refund', tax_cents: 99, tax_summary: 'NY Sales Tax 8.875%', amount_cents: 1200, status: 'succeeded', actor_type: 'operator', actor_id: 'owner', reason: 'Partial refund for a late start', account_id: 'acct_fixture', source_ref: 'pi_test_fixture', processor_ref: 're_test_fixture', checkout_session_id: null, idempotency_key: 'fixture-refund:0' },
 };
