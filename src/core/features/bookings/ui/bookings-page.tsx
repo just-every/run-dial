@@ -16,7 +16,7 @@ import { useEventTypes } from "./use-event-types";
 import { SchedulingReportView } from "./scheduling-report";
 import { ReportDrillNotice } from "./report-drill-notice";
 import { startTime } from "./operator-time";
-import { ClientsWorkspace } from "../../clients";
+import { ClientsWorkspace } from "../../clients/client";
 
 /** The bookings list, or the scheduling report (REPORT-001) that drills into it. */
 export function BookingsPage(): React.JSX.Element {

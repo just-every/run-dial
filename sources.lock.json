@@ -3972,7 +3972,7 @@
       "executable": false
     },
     "scripts/check-boundaries.mjs": {
-      "sha256": "aa100d6ce2c6ebce3402ae2c688d6275d2dac3811514ef9eda56155022a99c39",
+      "sha256": "feb6284978bbce82004d121545331b381d873616bb1890d0d2508234329744c1",
       "executable": false
     },
     "scripts/check-migrations.mjs": {
@@ -5012,7 +5012,7 @@
       "executable": false
     },
     "src/core/features/bookings/index.ts": {
-      "sha256": "4d0288b00e67975b526282f21ee9604f3bbcacc863630124507d4f8ec011e6eb",
+      "sha256": "266c29a8958c637d51abe8c479e05c22fd32b63cb26897d89a15562c93b1fc2f",
       "executable": false
     },
     "src/core/features/bookings/invitation-capability.ts": {
@@ -5132,7 +5132,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/bookings-page.tsx": {
-      "sha256": "ece91d750a40a290d830559580975ad92e8c6848180422c631cb84ba59b41ac8",
+      "sha256": "067b4aaf7009104f8e0e47675afa23235465f024cca6b9152acc67d4f19293f7",
       "executable": false
     },
     "src/core/features/bookings/ui/cancel-booking-form.tsx": {
@@ -5244,7 +5244,7 @@
       "executable": false
     },
     "src/core/features/clients/index.ts": {
-      "sha256": "12b9414bb61939139f1d9427cfcdabcac27e321f8041262a2e4213f6669ce876",
+      "sha256": "8c28c17dfcda0e7b211d0f1b67a80d6744ab4f90859c982b561e8e7c7ece0599",
       "executable": false
     },
     "src/core/features/clients/queries.ts": {
@@ -5280,15 +5280,15 @@
       "executable": false
     },
     "src/core/features/clients/ui/client-booking-record.tsx": {
-      "sha256": "8011dedae97c43e0ebb909f3c7659546352bcdd454bc77e867170f5cf585da32",
+      "sha256": "8c3660f79f6b3bd0c06a7cb7c8de539676c1fc3ab8c0f62c9cd15182a6af248a",
       "executable": false
     },
     "src/core/features/clients/ui/client-history.tsx": {
-      "sha256": "4854fdb7a68df02e5e907d981e08ecd2774eda0011a2f4358d7d80a9dec16f5f",
+      "sha256": "d1a7ef64445d341dc60722f55f547d18e7c9f71c3a89f4232dea5b0ba01d4fc9",
       "executable": false
     },
     "src/core/features/clients/ui/clients-workspace.tsx": {
-      "sha256": "21a54b18635b0e6cd57c9ccc0bffb833eced84afbb3a69b61b70cfbef78456dd",
+      "sha256": "201848ffc0e9447125c20c4ead62f0630ee85a519f391d236007a4a341a61f45",
       "executable": false
     },
     "src/core/features/clients/ui/remember-details.tsx": {
@@ -6216,7 +6216,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/booking-details-page.tsx": {
-      "sha256": "98243a008f21387e6d172b35599d1b6e7dcc7d9db46a1213b496a2861e664179",
+      "sha256": "b6835b219373b47e72c1eb8dbb76f2b873cc09b499267f5c7b7c68ae4a935930",
       "executable": false
     },
     "src/core/features/public-booking/ui/booking-location.tsx": {
