@@ -6168,7 +6168,7 @@
       "executable": false
     },
     "src/core/features/polls/ui/composer.tsx": {
-      "sha256": "83e95b47e78f9bb5f2a6fd5accdf1a0afc687912d79cf69ade228f2184cde55a",
+      "sha256": "6f8749845bd9ec58b6cbfe54fdae15666b97328dce3f600b2ee276472472b624",
       "executable": false
     },
     "src/core/features/polls/ui/host.tsx": {
