@@ -91,14 +91,18 @@
         "RESEND_API_KEY",
         "RESEND_WEBHOOK_SECRET",
         "QBO_CLIENT_ID",
-        "QBO_CLIENT_SECRET"
+        "QBO_CLIENT_SECRET",
+        "SLACK_CLIENT_ID",
+        "SLACK_CLIENT_SECRET"
       ],
       "providerEffects": [
         "outbound-mail",
         "outbound-google-calendar",
         "outbound-google-meet",
         "outbound-oauth",
-        "outbound-quickbooks-accounting"
+        "outbound-quickbooks-accounting",
+        "outbound-slack-notices",
+        "outbound-teams-workflows"
       ],
       "surfaces": {
         "app": {

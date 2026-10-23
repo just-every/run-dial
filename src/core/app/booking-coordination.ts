@@ -41,7 +41,7 @@ export async function bookingMutationTarget(request: Request, env: AppBindings) 
 
 export async function processCoordinatedDelivery(job: unknown, env: AppBindings, unlinked: () => Promise<unknown>) {
   const parsed = deliveryJobSchema.parse(job);
-  const record = await env.DB.prepare("SELECT booking_id AS bookingId, request_id AS requestId FROM delivery_outbox WHERE id = ?").bind(parsed.outboxId).first<{ bookingId: string | null; requestId: string | null }>();
+  const record = await env.DB.prepare(parsed.channel==="notice"?"SELECT booking_id AS bookingId,NULL AS requestId FROM workspace_notice_deliveries WHERE id=?":"SELECT booking_id AS bookingId, request_id AS requestId FROM delivery_outbox WHERE id = ?").bind(parsed.outboxId).first<{ bookingId: string | null; requestId: string | null }>();
   const target = record?.bookingId ?? (record?.requestId ? `request:${record.requestId}` : undefined);
   if (!target) return unlinked();
   return forwardBookingRequest(env, target, new Request("http://coordinator.internal/__delivery", { method: "POST", body: JSON.stringify(parsed) }));

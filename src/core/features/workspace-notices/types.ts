@@ -1,0 +1,4 @@
+export type Destination = {id:'slack'|'teams';generation:number;status:string;credential_ciphertext:string|null;target:string;external_key:string;masked_tail:string;reason:string|null;cooldown_until:string|null;active_delivery_id:string|null};
+export class NoticeFailure extends Error {constructor(readonly code:string,readonly status=503){super(code);}}
+export type NoticeRecord = {id:string;destination_id:'slack'|'teams';generation:number;booking_id:string;occurrence_id:string;event_kind:string;attempts:number;first_attempt_at:string};
+export type NoticeCleanup = {id:string;receipt_id:string;provider:'slack'|'teams';source_delivery_id:string;account_id:string;channel_id:string;processor_ref:string|null;state:'pending'|'completed'|'failed';reason:string|null;requested:number;archive_historical:number};

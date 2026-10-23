@@ -53,6 +53,16 @@
       "binding": "QBO_CLIENT_SECRET",
       "environment": "QBO_CLIENT_SECRET",
       "optional": true
+    },
+    {
+      "binding": "SLACK_CLIENT_ID",
+      "environment": "SLACK_CLIENT_ID",
+      "optional": true
+    },
+    {
+      "binding": "SLACK_CLIENT_SECRET",
+      "environment": "SLACK_CLIENT_SECRET",
+      "optional": true
     }
   ],
   "queues": [
