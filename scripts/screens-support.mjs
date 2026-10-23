@@ -18,6 +18,7 @@ export function screenRecorder({ browser, origin, folder, storageState, timezone
     const context = await browser.newContext({ ...(session ? { storageState } : {}), viewport: { width, height: width === 1440 ? 1024 : 844 }, timezoneId });
     try {
       const page = await context.newPage();
+      const errors=[];page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(message.type()==='error'&&/hydrat/iu.test(message.text()))errors.push(message.text());});
       if (setup) await setup(page);
       await page.goto(origin + path);
       const target = await ready(page);
@@ -27,6 +28,7 @@ export function screenRecorder({ browser, origin, folder, storageState, timezone
       const overflow = await page.evaluate(() => ({ viewport: globalThis.document.documentElement.clientWidth, document: globalThis.document.documentElement.scrollWidth }));
       assert.ok(overflow.document <= overflow.viewport + 1, `${name} at ${width} has no horizontal overflow: ${JSON.stringify(overflow)}`);
       await (target ?? page).screenshot({ path: `${folder}/${name}-${width}.png`, ...(target ? {} : { fullPage: true }), caret: "initial" });
+      assert.deepEqual(errors,[],`${name} at ${width} has no page error or hydration mismatch`);
       shots.push(`${name}-${width}.png`);
     } finally { await context.close(); }
   }

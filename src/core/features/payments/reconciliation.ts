@@ -34,9 +34,11 @@ export class Reconciliation {
     if (object.currency !== "usd") return {kind:"rejected" as const};
     const entries: Array<{kind:string;ref:string;amount:number;status:string;flag:number}> = [];
     if (event.type === "charge.refunded") {
-      const refunds = object.refunds as {data?:Array<Record<string,unknown>>;has_more?:boolean}|undefined;
-      if (!refunds?.data || refunds.has_more || !Number.isInteger(object.amount_refunded) || refunds.data.reduce((n,r)=>n+Number(r.amount),0)!==object.amount_refunded) return {kind:"rejected" as const};
-      for (const refund of refunds.data) {
+      const embedded = object.refunds as {data?:Array<Record<string,unknown>>;has_more?:boolean}|undefined;
+      if(!Number.isInteger(object.amount_refunded)||Number(object.amount_refunded)<0)return {kind:"rejected" as const};
+      const refunds=embedded?.data&&!embedded.has_more?embedded.data:this.stripe&&ref(object.id)?await this.stripe.chargeRefunds(event.account,String(object.id)):undefined;
+      if(!refunds)return {kind:"rejected" as const};
+      for (const refund of refunds) {
         if (!ref(refund.id) || !Number.isInteger(refund.amount) || Number(refund.amount)<0 || !["succeeded","pending","failed","canceled"].includes(String(refund.status))) return {kind:"rejected" as const};
         if (refund.currency!=="usd" || ref(refund.payment_intent)!==intent) return {kind:"rejected" as const};
         const local = await this.db.prepare("SELECT id FROM payment_movements WHERE processor_ref=? AND kind='refund'").bind(refund.id).first();
@@ -47,8 +49,8 @@ export class Reconciliation {
       entries.push({kind:"dispute",ref:String(object.id),amount:Number(object.amount),status:object.status,flag:event.type.endsWith("created")?1:0});
     } else if (event.type === "charge.succeeded") {
       if (!ref(object.id) || !Number.isInteger(object.amount)) return {kind:"rejected" as const};
-      entries.push({kind:"charge",ref:String(object.id),amount:Number(object.amount),status:"succeeded",flag:0});
-      const balance=object.balance_transaction as Record<string,unknown>|undefined;
+      entries.push({kind:"charge",ref:String(object.id),amount:Number(object.amount),status:"succeeded",flag:Number(object.amount)!==booking.amountCents?1:0});
+      const balance=typeof object.balance_transaction==="string"&&this.stripe?await this.stripe.balanceTransaction(event.account,object.balance_transaction):object.balance_transaction as Record<string,unknown>|undefined;
       if (balance && typeof balance==="object" && ref(balance.id) && Number.isInteger(balance.fee)) entries.push({kind:"fee",ref:String(balance.id),amount:Number(balance.fee),status:"succeeded",flag:0});
     }
     if (!entries.length) return {kind:"ignored" as const};
@@ -56,7 +58,7 @@ export class Reconciliation {
     await this.db.batch(entries.map(entry=>this.db.prepare(`INSERT INTO payment_processor_facts(id,booking_id,account_id,kind,processor_ref,source_ref,amount_cents,status,disagreement,event_created,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,kind,processor_ref,booking_id) DO UPDATE SET status=excluded.status,disagreement=CASE WHEN payment_processor_facts.resolved_at IS NOT NULL THEN 0 ELSE excluded.disagreement END,amount_cents=excluded.amount_cents,event_created=excluded.event_created,updated_at=excluded.updated_at WHERE excluded.event_created>payment_processor_facts.event_created OR (excluded.event_created=payment_processor_facts.event_created AND payment_processor_facts.status NOT IN ('won','lost','succeeded','failed','canceled'))`).bind(createId(),booking.id,event.account,entry.kind,entry.ref,intent,entry.amount,entry.status,entry.flag,event.created ?? 0,now,now)));
     return {kind:"processed" as const};
   }
-  private booking(intent:string,account:string){return this.db.prepare(`SELECT booking_id AS id FROM booking_payments WHERE payment_intent_id=? AND account_id=? UNION SELECT booking_id AS id FROM payment_movements WHERE processor_ref=? AND account_id=? LIMIT 1`).bind(intent,account,intent,account).first<{id:string}>();}
+  private booking(intent:string,account:string){return this.db.prepare(`SELECT booking_id AS id,amount_cents AS amountCents FROM booking_payments WHERE payment_intent_id=? AND account_id=? UNION SELECT booking_id AS id,amount_cents AS amountCents FROM payment_movements WHERE processor_ref=? AND account_id=? LIMIT 1`).bind(intent,account,intent,account).first<{id:string;amountCents:number}>();}
   async resolve(bookingId:string,processorRef:string,operatorId:string){return (await this.db.prepare("UPDATE payment_processor_facts SET disagreement=0,resolved_at=?,resolved_by=? WHERE booking_id=? AND processor_ref=? AND disagreement=1 AND kind='refund'").bind(nowIso(),operatorId,bookingId,processorRef).run()).meta.changes===1;}
   async rows() {
     const rows = (await this.db.prepare(`SELECT b.id AS bookingId,b.event_title AS eventTitle,b.invitee_name AS inviteeName,p.payment_intent_id AS processorRef,p.amount_cents AS amountCents,p.paid_at AS paidAt,'charge' AS kind,'succeeded' AS status,0 AS disagreement FROM booking_payments p JOIN bookings b ON b.id=p.booking_id
