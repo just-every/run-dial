@@ -30,7 +30,7 @@ contract(['DATA-002', 'CLIENT-001'], 'native email preview is inert; one confirm
     const first = await book(unicodeAlias, name, text);
     const earlyPreview = await rt.data('/api/app/privacy/preview', { email });
     const clientBefore = await rt.data('/api/app/clients/history?' + new URLSearchParams({ email }));
-    assert.equal(clientBefore.totalCount, 1, 'CLIENT-001 normalized email resolves the Unicode alias');
+    assert.equal(clientBefore.totalCount, 2, 'CLIENT-001 normalized email joins the imported booking and Unicode-alias booking');
     await book(email.toUpperCase(), name, text);
     const control = await book('control-person-78321@example.test', 'Control person', 'Control private answer');
     const composition = { inviteeName: name, inviteeEmail: email, inviteeTimezone: 'UTC', note: text, windows: [{ date: week, startMinute: 600, endMinute: 630 }] };
