@@ -1,7 +1,7 @@
 CREATE TABLE payment_processor_facts (
  id TEXT PRIMARY KEY, booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
  account_id TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('charge','refund','fee','dispute','payout')),
- processor_ref TEXT NOT NULL, source_ref TEXT NOT NULL, amount_cents INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'usd',
+ processor_ref TEXT NOT NULL, source_ref TEXT NOT NULL, amount_cents INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'usd' CHECK(currency GLOB '[a-z][a-z][a-z]'),
  status TEXT NOT NULL, disagreement INTEGER NOT NULL DEFAULT 0, resolved_at TEXT, resolved_by TEXT, event_created INTEGER NOT NULL,
  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
  UNIQUE(account_id,kind,processor_ref,booking_id)
