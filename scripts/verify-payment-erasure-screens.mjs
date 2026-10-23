@@ -54,6 +54,27 @@ try {
       const timestamp = Math.floor(Date.now() / 1000), signature = createHmac("sha256", "whsec_wiretest").update(`${timestamp}.${body}`).digest("hex");
       assert.equal((await owner.request.post(origin + "/api/webhooks/stripe", { headers: { "stripe-signature": `t=${timestamp},v1=${signature}`, "content-type": "application/json" }, data: body })).status(), 200);
       assert.equal((await json(await owner.request.get(origin + "/api/app/bookings"))).some(row => row.inviteeEmail === email), false);
+      const knownEmail=`synthetic-dial-known-${width}@example.test`;
+      const nextAt=(await json(await owner.request.get(`${origin}${base}/availability?week=${week}&durationMinutes=60`))).slots[0].startAt;
+      const nextSelection=await post(base+"/selection",{startAt:nextAt,inviteeTimezone:"UTC",durationMinutes:60},201);
+      const next=await post(base+"/confirm",{nonce:nextSelection.nonce,startAt:nextAt,inviteeTimezone:"UTC",durationMinutes:60,name:"Maya Consultation",email:knownEmail,answers:{},cardConsent:{accepted:true,version:shown.consent.version}},202);
+      const knownPaid=await post("/__fixtures/payments/pay",{sessionId:new URL(next.payment.checkoutUrl).pathname.split("/").at(-1)});
+      const knownBody=JSON.stringify({id:`synthetic-dial-${randomUUID()}`,type:"checkout.session.completed",account:"acct_wirehost",data:{object:knownPaid}});
+      const knownTimestamp=Math.floor(Date.now()/1000),knownSignature=createHmac("sha256","whsec_wiretest").update(`${knownTimestamp}.${knownBody}`).digest("hex");
+      assert.equal((await owner.request.post(origin+"/api/webhooks/stripe",{headers:{"stripe-signature":`t=${knownTimestamp},v1=${knownSignature}`,"content-type":"application/json"},data:knownBody})).status(),200);
+      await post("/__fixtures/deliver",{});await post("/__fixtures/deliver",{});
+      await card.getByLabel("Person’s email").fill(knownEmail);
+      await card.getByRole("button",{name:"Preview erasure",exact:true}).click();
+      await expect(card.getByText("Stripe Customer anonymize: pending.",{exact:true})).toBeVisible();
+      await expect(card.getByText("Saved-card detach: pending.",{exact:true})).toBeVisible();
+      await expect(card.getByText("Calendar event cancellation: pending.",{exact:true})).toBeVisible();
+      await shot(page,card,width,"processor-known-preview",folder);
+      await card.getByRole("button",{name:"Confirm permanent erasure",exact:true}).click();
+      await expect(card.getByText("Stripe Customer anonymize: completed.",{exact:true})).toBeVisible();
+      await post("/__fixtures/deliver",{});await post("/__fixtures/deliver",{});
+      await card.getByRole("button",{name:"Refresh cleanup status",exact:true}).click();
+      await expect(card.getByText("Calendar event cancellation: completed.",{exact:true})).toBeVisible();
+      await shot(page,card,width,"processor-known-complete",folder);
     } catch (error) { console.log("Settings diagnostics", JSON.stringify({ errors, alerts: await page.getByRole("alert").allTextContents() })); await page.screenshot({ path: `${folder}/failed-${width}.png`, fullPage: true }); throw error; }
     finally { await page.close(); }
   }
@@ -63,6 +84,8 @@ try {
 }
 
 async function shot(page, card, width, name, folder) {
+  const size=await card.boundingBox();
+  if(size&&size.height>page.viewportSize().height-80)await page.setViewportSize({width,height:Math.ceil(size.height)+100});
   await card.scrollIntoViewIfNeeded(); await page.evaluate(() => globalThis.document.fonts.ready);
   assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.document.documentElement.clientWidth + 1));
   const axe=await new AxeBuilder({page}).analyze();
