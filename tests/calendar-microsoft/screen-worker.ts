@@ -1,3 +1,4 @@
+import { followUpFixtures } from "../follow-ups/fixture-routes";
 import start from "@tanstack/react-start/server-entry";
 import { createWorker } from "../../src/core/app/worker";
 import { BookingCoordinator as ProductionCoordinator } from "../../src/core/app/booking-coordinator";
@@ -16,4 +17,5 @@ function servicesFor(env: AppBindings) {
   });
 }
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
-export default createWorker(servicesFor);
+const production = createWorker(servicesFor);
+export default { ...production, async fetch(request: Request, env: AppBindings, context: ExecutionContext) { return await followUpFixtures(request, env, servicesFor(env)) ?? production.fetch(request, env, context); } };

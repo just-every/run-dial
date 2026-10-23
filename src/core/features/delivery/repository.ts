@@ -1,3 +1,4 @@
+import { FollowUpsRepository } from "../follow-ups";
 import { ConfirmationDeliveryRepository } from "./confirmation-repository";
 import { BookingCorrespondenceRepository } from "./correspondence-repository";
 import { and, asc, eq, isNull, lte, sql } from "drizzle-orm";
@@ -196,6 +197,7 @@ export class DeliveryRepository {
   }
 
   async currentBookingMail(record: DeliveryOutboxRecord, cancelled: boolean, directContact = false) {
+    if (JSON.parse(record.payloadJson).messageKind === "follow_up") return new FollowUpsRepository(this.binding).admit(record.id);
     if (!record.bookingId) return true;
     if (directContact && record.occurrenceId === null) return Boolean(await this.binding.prepare("SELECT 1 FROM bookings WHERE id=?").bind(record.bookingId).first());
     return Boolean(await this.binding.prepare("SELECT 1 FROM bookings WHERE id = ? AND current_occurrence_id = ? AND ((? = 1 AND state = 'cancelled') OR (? = 0 AND state IN ('confirmed', 'rescheduled')))").bind(record.bookingId, record.occurrenceId, cancelled ? 1 : 0, cancelled ? 1 : 0).first());

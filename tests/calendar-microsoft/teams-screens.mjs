@@ -1,3 +1,4 @@
+import { followUpScreens } from "../follow-ups/screens.mjs";
 import assert from "node:assert/strict";
 import { expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -7,7 +8,7 @@ import { completeEmptyWorkspace } from "../booking-axe/first-run-fixture.mjs";
 
 export async function microsoftScreens({ browser, origin }) {
   const folder = evidencePath("calendar-provider-screens"); await mkdir(folder, { recursive: true });
-  const owner = await browser.newContext(), shots = [], headers = { Origin: origin };
+  const owner = await browser.newContext(), shots = [], followUps = [], headers = { Origin: origin };
   const json = async (response, status = 200) => { assert.equal(response.status(), status, await response.text()); return response.json(); };
   try {
     assert.equal((await owner.request.post(origin + "/auth/bootstrap", { headers, data: { token: "synthetic-dial-1617-at-least-thirty-two-characters", displayName: "Synthetic Dial 1640", returnTo: "/setup" }, maxRedirects: 0 })).status(), 303);
@@ -20,13 +21,14 @@ export async function microsoftScreens({ browser, origin }) {
     await json(await owner.request.put(origin + "/api/app/calendar/selection", { headers, data: { destinationCalendarId: "synthetic-dial-1602", conflictCalendarIds: ["synthetic-dial-1604"] } }));
     await json(await owner.request.post(origin + "/api/app/calendar/check", { headers, data: {} }));
     await json(await owner.request.post(`${origin}/api/app/event-types/${event.id}/publish`, { headers, data: {} }));
-    for (const width of [1440, 390]) {
+    for (const [index, width] of [1440, 390].entries()) {
       const page = await owner.newPage(), errors = []; page.on("pageerror", error => errors.push(error.message)); await page.setViewportSize({ width, height: 900 });
       await page.goto(origin + "/app/settings"); await expect(page.locator("[data-operator-ready=true]")).toBeVisible(); const card = page.locator("#calendar-connection"); await expect(card.getByRole("heading", { name: "Microsoft 365 and Outlook" })).toBeVisible(); await expect(card.getByRole("button", { name: "Reconnect account" })).toBeEnabled(); await capture(page, width, "microsoft-connected");
       await page.goto(`${origin}/app/event-types/${event.id}`); await expect(page.locator("[data-operator-ready=true]")).toBeVisible(); const kind = page.getByRole("combobox", { name: "Location kind", exact: true }).first(); await expect(kind).toBeEnabled(); await expect(kind.locator('option[value="microsoft_teams"]')).toBeEnabled(); assert.equal(await kind.inputValue(), "microsoft_teams"); await capture(page, width, "teams-location");
+      followUps.push(await followUpScreens({ page, owner, origin, eventId: event.id, locationId: "synthetic-dial-1643", width, index }));
       assert.deepEqual(errors, [], "native calendar and location screens hydrate cleanly"); await page.close();
     }
-    return { shots, widths: [1440, 390], tooltipAudit: "Calendar and location actions are visibly labeled; no icon-only controls." };
+    return { shots, followUps, widths: [1440, 390], tooltipAudit: "Calendar and location actions are visibly labeled; no icon-only controls." };
   } finally { await owner.close(); }
   async function capture(page, width, name) {
     await page.evaluate(() => globalThis.document.fonts.ready); const axe = await new AxeBuilder({ page }).analyze(); assert.deepEqual(axe.violations.filter(item => ["serious", "critical"].includes(item.impact)).map(item => item.id), []);

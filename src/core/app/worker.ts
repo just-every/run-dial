@@ -54,6 +54,7 @@ const worker = {
     await consumeJobs(batch, env, servicesFor(env));
   },
   async scheduled(_controller: ScheduledController, env: AppBindings) {
+    await servicesFor(env).followUps.tick();
     await runScheduledWork(env, servicesFor(env));
   },
 } satisfies ExportedHandler<AppBindings>;

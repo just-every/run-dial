@@ -1,0 +1,26 @@
+name = "dial-follow-ups-test"
+main = "worker.ts"
+compatibility_date = "2026-09-08"
+[vars]
+ENVIRONMENT = "development"
+APP_URL = "http://127.0.0.1:15917"
+OWNER_EMAIL = "synthetic-dial-1702@example.test"
+SESSION_SECRET = "synthetic-dial-1703-at-least-thirty-two-characters"
+SETUP_TOKEN = "synthetic-dial-1704-at-least-thirty-two-characters"
+MAIL_PROVIDER = "resend"
+MAIL_API_KEY = "synthetic-dial-1700"
+MAIL_FROM = "synthetic-dial-1701@example.test"
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-follow-ups-test"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../../migrations/core"
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dial-follow-ups-test"
+[[queues.producers]]
+binding = "JOBS"
+queue = "dial-follow-ups-test"
+[[queues.consumers]]
+queue = "dial-follow-ups-test"
+max_retries = 1

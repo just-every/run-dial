@@ -27,6 +27,7 @@ export const exported = [
   'event_type_payment_terms', 'booking_payment_terms', 'booking_card_consents', 'payment_movements',
   // PAY-005: Stripe Tax on or off and the business name on receipts and invoices.
   'payment_settings',
+  'event_follow_up_settings', 'follow_up_runs',
 ].sort();
 export { excluded } from "../../src/core/shared/archive-exclusions.mjs";
 import { excluded } from "../../src/core/shared/archive-exclusions.mjs";
@@ -47,6 +48,7 @@ export function assertCoverage(names) {
 }
 export function canonicalRow(name, source, secrets = []) {
   const row = Object.fromEntries(Object.entries(source).map(([key, value]) => [key, scrub(value, secrets, name === 'delivery_outbox' && key === 'payload_json')]));
+  if (name === 'follow_up_runs') { row.archive_historical = 1; if (['pending','waiting'].includes(row.state)) { row.state = 'skipped'; row.reason ??= 'restored_historical_job'; } }
   if (name === 'bookings') {
     row.invitee_name_folded = foldBookingSearch(row.invitee_name);
     row.invitee_email_folded = foldBookingSearch(row.invitee_email);

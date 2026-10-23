@@ -1,3 +1,4 @@
+import { followUpUpgrade, assertFollowUpArchive } from "./follow-ups/archive.mjs";
 import { calendarProviderUpgrade } from "./calendar-microsoft/archive.mjs";
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
@@ -13,6 +14,7 @@ import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade } f
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    await followUpUpgrade(source.db);
     await calendarProviderUpgrade(source.db);
     await paymentErasureUpgrade(source.db);
     await paidApprovalUpgrade(source.db);
@@ -67,6 +69,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
     await restoreArchive(destination, archive);
+    assertFollowUpArchive(source.db, target.db);
     assert.equal(target.db.prepare('SELECT calendar_provider FROM calendar_connections').get().calendar_provider, 'microsoft', 'provider metadata survives the full archive round trip without credentials');
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_invitation_cancellations').all(), ledger);
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());

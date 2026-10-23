@@ -83,6 +83,8 @@ Every table is listed below. Native B/Q/O children are explicitly discovered and
 | `event_schedule_bindings` | Host-authored event schedule assignment: H; retained. | E | `migrations/core/0055_availability_controls.sql` |
 | `event_type_payment_terms` | Host-authored configuration: H; deposit, balance due time, cancellation window and fee amounts, retained, not invitee-owned. | E | `migrations/core/0069_deposits_refunds_fees.sql` |
 | `event_type_prices` | Host-authored configuration: H; USD prices per event and duration, retained, not invitee-owned. | E | `migrations/core/0068_stripe_payments.sql` |
+| `event_follow_up_settings` | Host-authored follow-up kind, message, offset, attendance rule and public rebooking target: H; no recipient list or private capability. | E | `migrations/core/0082_post_meeting_follow_ups.sql` |
+| `follow_up_runs` | Booking/occurrence references, due time and outcome only: B explicitly fences and deletes these rows with the booking; no copied invitee content. Restored runs are historical and never send. | E | `migrations/core/0082_post_meeting_follow_ups.sql` |
 | `event_types` | Host-authored configuration, schedule or calendar data: H; retained, not invitee-owned. No invitee attachment ownership. | E | `migrations/core/0001_configuration_spine.sql` |
 | `ext_custom_field_definitions` | Host-authored labels/options: H; no per-invitee values. Retained. | E | `migrations/core/0034_extension_custom_fields.sql` |
 | `ext_custom_field_values` | Yes: B/Q explicitly delete subject annotations. Event-type and control-person values remain. | E | `migrations/core/0034_extension_custom_fields.sql` |

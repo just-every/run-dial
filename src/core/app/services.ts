@@ -1,3 +1,4 @@
+import { FollowUpsRepository, FollowUpsService } from "../features/follow-ups";
 import { InvitationManageService } from "../features/bookings/invitation-manage";
 import { BookingLinksRepository } from "../features/booking-links/repository";
 import { BookingLinksService } from "../features/booking-links/service";
@@ -65,6 +66,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    followUps: new FollowUpsService(new FollowUpsRepository(binding), runtime),
     invitationManage: new InvitationManageService(binding, runtime),
     correspondence: new EventCorrespondenceRepository(binding),
     bookingPolicies: new EventBookingPolicyRepository(binding),

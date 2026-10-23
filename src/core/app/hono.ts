@@ -1,3 +1,4 @@
+import { followUpRoutes } from "../features/follow-ups";
 import { invitationManageRoutes } from "../features/public-booking/invitation-routes";
 import { bookingLinkRoutes } from "../features/booking-links/routes";
 import { correspondenceRoutes } from "../features/event-types/correspondence-routes";
@@ -98,6 +99,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", embedRoutes)
     .route("/", invitationManageRoutes)
     .route("/", paymentRoutes)
+    .route("/", followUpRoutes)
     .route("/", reportRoutes)
     .route("/", publicBookingRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))

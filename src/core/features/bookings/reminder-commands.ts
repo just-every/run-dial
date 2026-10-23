@@ -1,10 +1,11 @@
+import { followUpStatements } from "../follow-ups";
 import { operatorRecipientAdmission } from "../delivery/mail";
 import { createId } from "../../shared/ids";
 import type { BookingEmail } from "./types";
 
 /** Offsets already elapsed at claim time are never scheduled. Commands hold no answer copy. */
 export function reminderStatements(binding: D1Database, bookingId: string, occurrenceId: string, emails: BookingEmail[], now: string) {
-  return emails.filter(email => !email.guest).flatMap((email) => {
+  return [...followUpStatements(binding, bookingId, occurrenceId, now), ...emails.filter(email => !email.guest).flatMap((email) => {
     const admission = operatorRecipientAdmission(email);
     return [1440, 60].map((offsetMinutes) => binding.prepare(`
     INSERT INTO delivery_outbox (id, kind, idempotency_key, booking_id, occurrence_id, request_id, payload_json, state, attempts, next_attempt_at, created_at, updated_at)
@@ -16,5 +17,5 @@ export function reminderStatements(binding: D1Database, bookingId: string, occur
   `).bind(createId(), `booking:${bookingId}:occurrence:${occurrenceId}:reminder:${offsetMinutes}:${email.recipientRole}:${email.to.toLowerCase()}`,
     JSON.stringify({ to: email.to, recipientRole: email.recipientRole, ...(email.operatorAccess ? { operatorAccess: email.operatorAccess } : {}), ...(email.recipientRole === "invitee" && email.manageUrl ? { manageUrl: email.manageUrl } : {}) }),
     `-${offsetMinutes} minutes`, now, now, bookingId, occurrenceId, `-${offsetMinutes} minutes`, now, ...admission.params));
-  });
+  })];
 }

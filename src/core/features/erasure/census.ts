@@ -50,6 +50,8 @@ export const applicationTables = [
   "event_questions",
   "event_schedule_bindings",
   "event_types",
+  "event_follow_up_settings",
+  "follow_up_runs",
   "event_type_prices",
   "ext_custom_field_definitions",
   "ext_custom_field_values",

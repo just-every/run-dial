@@ -1,3 +1,4 @@
+import { followUpProof } from "./follow-ups/native.mjs";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -5,7 +6,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { contract } from "./contract.mjs";
 
-contract("BOOK-002", "one of fifty real Worker/D1 callers claims an overlap and records its calendar command atomically", async (context) => {
+contract(["BOOK-002", "FLOW-003"], "one of fifty real Worker/D1 callers claims an overlap and records its calendar command atomically", async (context) => {
   const persist = await mkdtemp(resolve(tmpdir(), "dial-booking-d1-"));
   const port = String(15715);
   const origin = `http://127.0.0.1:${port}`;
@@ -43,6 +44,7 @@ contract("BOOK-002", "one of fifty real Worker/D1 callers claims an overlap and 
   }).then((response) => readWorkerJson(response, "host-day cap claim", workerOutput))));
   assert.equal(distinctClaims.filter((claim) => claim.result === "claimed").length, 3, "distinct non-overlapping concurrent claims still enforce the host-day cap atomically");
   assert.equal(distinctClaims.filter((claim) => claim.result === "slot_taken").length, 17);
+  await followUpProof(context);
 
 });
 
