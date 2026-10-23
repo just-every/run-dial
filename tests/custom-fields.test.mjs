@@ -3,6 +3,7 @@ import { before, after } from 'node:test';
 import { contract } from './contract.mjs';
 import { nativeFixture, targets } from './custom-fields/fixture.mjs';
 import { fieldRuntime } from './custom-fields/runtime.mjs';
+import { assertPollDeletion } from './custom-fields/poll-deletion.mjs';
 import { testPlatform } from './archive/fixture.mjs';
 import { createArchive, restoreArchive } from './archive/artifact.mjs';
 import { schemaModel, quote, validateRows } from '../scripts/archive/schema.mjs';
@@ -66,6 +67,9 @@ contract('CUSTOM-002','native session protects annotations; export restore prese
  assert.equal((await f.request('/api/app/bookings/01ARZ3NDEKTSV4RRFFQ69G5FAB',{method:'DELETE'})).status,202);
  assert.equal((await f.db.prepare('SELECT COUNT(*) AS n FROM ext_custom_field_values WHERE booking_id=?').bind(targets.booking).first()).n,0);
  assert.ok((await f.db.prepare('SELECT COUNT(*) AS n FROM ext_custom_field_values WHERE event_type_id=?').bind(targets.eventType).first()).n>0);
- await f.request('/api/app/event-types/01ARZ3NDEKTSV4RRFFQ69G5FAA',{method:'DELETE'});
+ const deletion=await f.request('/api/app/event-types/01ARZ3NDEKTSV4RRFFQ69G5FAA',{method:'DELETE'});
+ assert.equal(deletion.status,204,await deletion.text());
  assert.equal((await f.db.prepare('SELECT COUNT(*) AS n FROM ext_custom_field_values').first()).n,0);
+ for(const table of ['meeting_polls','poll_candidates','poll_participants','poll_votes','poll_vote_tokens'])assert.equal((await f.db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n,0,`${table} cascades with the event type`);
+ await assertPollDeletion(f);
 });
