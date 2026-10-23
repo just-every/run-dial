@@ -860,7 +860,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "92463953d411ab1f7e1dd7634e6c7456bbf2399b7ac577b748387590e63995a6",
+      "sha256": "5728e941f2ef71e53b3de0851ea8fe887603fd9984a647b72379b7dbdf9134e1",
       "executable": false
     },
     ".gitignore": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "17032a6d887aa076aacc17d44b239902b2469b85c90992ae0e2573e1f465d93f",
+      "sha256": "c2444a0e0396f7f4381f0de3d4fd75b84935dd0419cd407910194e7605754471",
       "executable": false
     },
     "DEMO.md": {
@@ -3972,7 +3972,7 @@
       "executable": false
     },
     "scripts/ci-apt-bootstrap.mjs": {
-      "sha256": "a21bd741777bc4d43999b9087216946a9cfbc9515f1efd156ca367a8f7778f29",
+      "sha256": "406ca38763975704c6911224bdeba27f4b6269e2b2b82e76db5ccb1b2d1e46c6",
       "executable": false
     },
     "scripts/ci-runtime-ports.mjs": {
@@ -4504,7 +4504,7 @@
       "executable": false
     },
     "scripts/verify-operator-temporal.mjs": {
-      "sha256": "dd7d592a0f4b84a0e089db6afd976d26a747d5169ecbecfc0c1c8447c598d075",
+      "sha256": "12936acae19fb14716c35946f8c9e0307ae4dc8a924b41acb0a21636a7564edf",
       "executable": false
     },
     "scripts/verify-payment-erasure-screens.mjs": {
@@ -7484,11 +7484,11 @@
       "executable": false
     },
     "tests/booking-wire/booking-policy-journey.mjs": {
-      "sha256": "d252f6f64e2c8be1a3d487fdef9019c996562811cda4b8b97ab01e305d369c92",
+      "sha256": "fcef3144ed132591b3a9ce50e021d44e4c36564e3bc9f5014378c145e6dc2173",
       "executable": false
     },
     "tests/booking-wire/correspondence-journey.mjs": {
-      "sha256": "f5faddecc4eabc208f0c4bad872af8a59e0486573645e041d5bdb06344f73462",
+      "sha256": "4b1011f1f8247c2f416910d9674a4cf591970a214f78b99b41f2b8d7ae76caa1",
       "executable": false
     },
     "tests/booking-wire/deletion-journey.mjs": {
@@ -7528,7 +7528,7 @@
       "executable": false
     },
     "tests/booking-wire/mail-contracts.mjs": {
-      "sha256": "bdbf862d1ae3b7890a1ef69c460cf60e07a2117b40fbe21ca856a6bdc49f9b69",
+      "sha256": "08d6a3b064fcb6d83229bac6be5a16519fe1ee8b7ff4f5202f8100d31d90becf",
       "executable": false
     },
     "tests/booking-wire/manage-rotation-journey.mjs": {
@@ -7560,7 +7560,7 @@
       "executable": false
     },
     "tests/booking-wire/paid-approval-screen-support.mjs": {
-      "sha256": "cd2ad8b0ef1b9a772c74d9fe7623966f8a41eee102467e2b50dd5fa829b61529",
+      "sha256": "276e5d633f6aec9c1737a8baaa2ebe5ba278c374f50830d912264411ebe8dd3d",
       "executable": false
     },
     "tests/booking-wire/paid-approval-screens.mjs": {
@@ -7576,7 +7576,7 @@
       "executable": false
     },
     "tests/booking-wire/paid-approval-support.mjs": {
-      "sha256": "fa60def6f6b23699349c2f32827b726fd598fdb73918e67ef64ce5fe955894bb",
+      "sha256": "373e74a6bad39767b6f0d77fb0f6e954253c1b56242a796d2f36843e4b186b52",
       "executable": false
     },
     "tests/booking-wire/payment-cancellation-probes.mjs": {
