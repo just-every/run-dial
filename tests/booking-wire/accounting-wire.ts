@@ -17,7 +17,7 @@ export async function accountingWire(db:D1Database,url:URL,method:string,init:Re
   // Captured API bodies deliberately omit credentials.
   await db.prepare('INSERT INTO wire_calls(url,method,body,headers) VALUES(?,?,?,?)').bind(url.toString(),method,body?JSON.stringify(body):null,'{}').run();
   const path=url.pathname.split('/').at(-1);
-  if(path==='preferences')return Response.json({Preferences:{SalesFormsPrefs:{CustomTxnNumbers:true}}});
+  if(path==='preferences')return Response.json({Preferences:{SalesFormsPrefs:{CustomTxnNumbers:true},CurrencyPrefs:{HomeCurrency:{value:'USD'}}}});
   if(path==='query'){
     const query=url.searchParams.get('query')??'';
     if(query.startsWith('select * from Account'))return Response.json({QueryResponse:{Account:[{Id:'synthetic-dial-102',Name:'Coaching income'}]}});
