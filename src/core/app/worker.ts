@@ -48,7 +48,7 @@ const worker = {
     if (url.pathname.startsWith("/_serverFn/")) return start.fetch(request);
     if (url.pathname === "/media" || url.pathname.startsWith("/media/")) return request.method === "GET" ? app.fetch(request, env, context) : new Response("Not found", { status: 404 });
     if (isThemeFile(request)) return env.ASSETS.fetch(request);
-    if (url.pathname.startsWith("/auth/") || url.pathname === "/api" || url.pathname.startsWith("/api/") || url.pathname === "/health" || url.pathname === "/" || /^\/(app|setup|book|manage|embed)(\/|$)/.test(url.pathname) || ["/signin", "/privacy"].includes(url.pathname)) return app.fetch(request, env, context);
+    if (url.pathname.startsWith("/auth/") || url.pathname === "/api" || url.pathname.startsWith("/api/") || url.pathname === "/health" || url.pathname === "/" || /^\/(app|setup|book|manage|embed|poll)(\/|$)/.test(url.pathname) || ["/signin", "/privacy"].includes(url.pathname)) return app.fetch(request, env, context);
     return request.method === "GET" ? start.fetch(request) : new Response("Not found", { status: 404 });
   },
   async queue(batch: MessageBatch<unknown>, env: AppBindings) {
