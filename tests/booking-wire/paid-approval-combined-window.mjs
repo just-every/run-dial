@@ -22,4 +22,12 @@ export async function combinedConsentWindow(h,eventType,terms,due,label){
     }
     await data('/__fixtures/payments/control',{name,value:0});await deliver();await deliver();snap=await state();noBooking(snap,request.request);assert.ok((await h.slots(eventType)).some(row=>row.startAt===request.payload.startAt));assert.equal(wireMail(snap).filter(mail=>recipient(mail).includes(request.payload.email)&&/^Booking request expired/.test(mail.subject)).length,1,'partial completion tells invitee once');
   }
+  await data('/__fixtures/payments/control',{name:'stripe-setup-response-lost',value:1});
+  const incomplete=await h.authorize(await h.hold(eventType));assert.equal(JSON.parse(incomplete.request.payment_json).state,'setup_pending');
+  const preview=await data('/api/app/privacy/preview',{email:incomplete.payload.email});
+  const erased=await data('/api/app/privacy/erase',{email:incomplete.payload.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});
+  await data('/__fixtures/payments/control',{name:'stripe-setup-response-lost',value:0});
+  const after=await state();noBooking(after,incomplete.request);assert.ok(!after.booking_approval_requests.some(row=>row.id===incomplete.request.id));assert.equal(providerObject(after,incomplete.intent.id).status,'canceled');assert.equal(providerObject(after,incomplete.intent.payment_method).customer,null);
+  for(const [kind,ref] of [['payment_authorization_void',incomplete.intent.id],['saved_card_detach',incomplete.intent.payment_method],['stripe_customer_anonymize',incomplete.intent.customer]])assert.ok(erased.externalRequests.some(row=>row.kind===kind&&row.processorRef===ref&&row.state==='completed'&&row.requested),'erasure resolves partial combined consent and lists each completed operation');
+
 }
