@@ -8736,7 +8736,7 @@
       "executable": false
     },
     "tests/person-erasure.test.mjs": {
-      "sha256": "e6ff27abee0cc8c2af03d4ec465d1b1b946009c09ee673e46c14c50f927ba175",
+      "sha256": "9257c60bf7ad235fe8faace5d53cadbf81e6942466c176da20762a838c323601",
       "executable": false
     },
     "tests/portability-status.test.mjs": {
