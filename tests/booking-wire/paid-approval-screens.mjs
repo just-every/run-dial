@@ -8,6 +8,7 @@ import {capturedRefundScreens} from './paid-approval-refund-screens.mjs';
 export async function runPaidApprovalScreens(options){
   const h=await paidApprovalScreensSupport(options),{data,call,state,capture,manage}=h;
   try{
+    if(options.combinedOnly){await combinedApprovalScreens(h);await h.finish();return {shots:h.shots};}
     const priced=await h.makeEvent('synthetic-pay007-screen-priced',{price:6400}),setup=await h.makeEvent('synthetic-pay007-screen-setup',{terms:feeTerms});
     await capture('approval-settings',`/app/event-types/${priced.id}`,async page=>{const form=page.getByRole('form',{name:'Host approval'});await form.getByRole('button',{name:'Save approval settings'}).waitFor();await form.getByLabel('Require host approval').waitFor();return form;},{session:true});
     const selection=await h.selection(priced);

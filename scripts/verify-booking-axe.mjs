@@ -19,7 +19,7 @@ const scans = [], errors = [], keyboardChecks = [];
 let storageState;
 try {
   if(process.env.DIAL_PAID_APPROVAL_ONLY){
-    const result=await runPaidApprovalScreens({browser,origin,folder:evidencePath("paid-approval-screens")});
+    const result=await runPaidApprovalScreens({browser,origin,folder:evidencePath("paid-approval-screens"),combinedOnly:Boolean(process.env.DIAL_COMBINED_APPROVAL_ONLY)});
     console.log(`PAY-007 approval screens: PASS ${result.shots.length} screens at 1440 and 390, no overflow or serious axe finding; all controls visibly labeled.`);
   }else if(process.env.DIAL_ERASURE_ONLY){
     const owner=await browser.newContext();
