@@ -4692,7 +4692,7 @@
       "executable": false
     },
     "src/core/app/bindings.ts": {
-      "sha256": "16629dadfc15a6117aae73e28f88921900d45f923e96ce1b87e3265c060c2c4e",
+      "sha256": "d04980471bccd1a957f89397f988dc1b9b03e38a980912fe4ff306cd5435533c",
       "executable": false
     },
     "src/core/app/booking-coordination.ts": {
@@ -4764,7 +4764,7 @@
       "executable": false
     },
     "src/core/app/signin-options.server.ts": {
-      "sha256": "cbfdcc6d5a29a750fbe959223381096784d355eba92dce3e904985773ac97ac5",
+      "sha256": "4e9fc404cf74b3a6eb630e9b6440669a845792dc11fd75b65aee38bcd2860c92",
       "executable": false
     },
     "src/core/app/start.server.tsx": {
@@ -4808,7 +4808,7 @@
       "executable": false
     },
     "src/core/app/worker.ts": {
-      "sha256": "22e61864de1f0c22552140843448991d234f1894df100c1e20f40c85e350655a",
+      "sha256": "fe12f0f4ee2840bf8b946b2f5ebb8519998b8d6e33d3bece34b327abd9fd033a",
       "executable": false
     },
     "src/core/app/workspace-reads.server.ts": {
@@ -7055,6 +7055,10 @@
       "sha256": "b149e9ad5fd63395d2d6dfce75a680ab948bba436e8ea5621d42ee07fe9e0a57",
       "executable": false
     },
+    "src/core/shared/local-runtime-bindings.ts": {
+      "sha256": "1890d072452c3f8d8700c91f294ce6701f31e1506c25893cbb48ad3b8c088141",
+      "executable": false
+    },
     "src/core/shared/operator-format.ts": {
       "sha256": "7f2d9bd3a61d70ee775788a6f3400cb11b8a257c722ce019bb42a9967c8d712d",
       "executable": false
@@ -7080,7 +7084,7 @@
       "executable": false
     },
     "src/core/shared/runtime-env.ts": {
-      "sha256": "8037105bf7f3cf2a7a644e2347f2ad8d2a6b8274abd48f85ee7fbb056b980d04",
+      "sha256": "e94c2de204b9efbf7450047ceb6b6f3e472c6a0229a76a72df8d6aba49cf2e52",
       "executable": false
     },
     "src/core/shared/scheduling.ts": {
@@ -8804,7 +8808,7 @@
       "executable": false
     },
     "tests/native-process/lifecycle.mjs": {
-      "sha256": "51b1559cdb518c6adb1735f19d4cdf26810cc4d79aeb849ce65b35428d172243",
+      "sha256": "21c050292b1193f08e30751f6aaec7718dc9866a1bd63546dfe2852fffbc471b",
       "executable": false
     },
     "tests/native-process/vite.mjs": {
@@ -9036,7 +9040,7 @@
       "executable": false
     },
     "tests/requests/runtime.mjs": {
-      "sha256": "d89dc8c1bd635f9374a29af9483edf9e98f1d7a6b5176814803c4911c187dacf",
+      "sha256": "af3d9e947fc5143addb54169bcbf8907e92a1f5bfad9168ea91a65adb00d0dc8",
       "executable": false
     },
     "tests/rer-command.mjs": {
@@ -9076,7 +9080,7 @@
       "executable": false
     },
     "tests/runtime-server.mjs": {
-      "sha256": "aacf3c8d638be44b24f4d1a214cf29ce5dc0cc22c17345fe73e6f698c4c90fec",
+      "sha256": "1170f1c7417b3ec22686772765d2a0143042d5a1df9da8950f2441a39aeb07c4",
       "executable": false
     },
     "tests/runtime-vars.mjs": {
@@ -9128,7 +9132,7 @@
       "executable": false
     },
     "vite.config.ts": {
-      "sha256": "996d88839b5731bf3ec7ef8e24102797b13d5c40ec7006e0936da722dc53a0c5",
+      "sha256": "fff7e0b461ef168e11c6088a957246e4a386133ce7c7775f6d07b18070bf7575",
       "executable": false
     },
     "vite.site.config.ts": {
