@@ -3,6 +3,9 @@ import { createId, nowIso } from "../../shared/ids";
 export type ProcessorRequestKind = "calendar_event_cancel" | "saved_card_detach" | "stripe_customer_anonymize" | "stripe_checkout_email" | "stripe_customer_unobserved" | "payment_authorization_void" | "payment_refund";
 export type ProcessorRequest = { id: string; kind: ProcessorRequestKind; accountId: string; processorRef: string; lookupKey: string | null; actorId:string|null; amountCents:number; state: "pending" | "completed" | "failed"; reason: string | null; requested: boolean };
 const columns = "id,kind,account_id AS accountId,processor_ref AS processorRef,lookup_key AS lookupKey,actor_id AS actorId,amount_cents AS amountCents,state,reason,requested";
+export function processorReceiptItems(items:Array<Pick<ProcessorRequest,"kind"|"accountId"|"processorRef"|"state"|"reason"|"requested"> & {id?:string}>){
+  return items.map(item=>({...(item.id?{id:item.id}:{}),kind:item.kind,accountId:item.accountId,processorRef:item.processorRef,state:item.state,reason:item.reason,requested:item.requested}));
+}
 export const checkoutRetentionReason = "checkout_customer_email_not_editable_no_erasure_api";
 
 /** This is an anonymous command history, not an identity index. Only provider lookup keys survive. */
