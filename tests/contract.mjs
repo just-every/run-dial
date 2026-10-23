@@ -2,7 +2,7 @@ import test from "node:test";
 
 /** The title format `pnpm verify` scans to map a test onto a contract clause. */
 export function contractTitle(id, name) {
-  return `[${id}] ${name}`;
+  return `${(Array.isArray(id)?id:[id]).map(value=>`[${value}]`).join(" ")} ${name}`;
 }
 
 /** Tag a behavioural test with the contract clause it proves. */

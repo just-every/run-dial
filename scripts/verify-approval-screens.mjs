@@ -1,3 +1,5 @@
+import {runPaidApprovalScreens} from "../tests/booking-wire/paid-approval-screens.mjs";
+import {setTimeout as delay} from "node:timers/promises";
 import assert from 'node:assert/strict';
 import {chromium,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
@@ -28,6 +30,9 @@ try{
       const expired=await make(`synthetic-dial-expiry-${width}@example.test`),pending=await json(await owner.request.get(origin+'/api/app/booking-approvals'));const expiry=pending.find(row=>row.inviteeEmail===`synthetic-dial-expiry-${width}@example.test`);assert.ok(expiry);await owner.request.post(origin+'/__fixtures/approval-expiry',{headers,data:{id:expiry.id}});await page.goto(expired.approval.url);await page.getByRole('heading',{name:'This request has expired.',exact:true}).waitFor();await shot(page,width,'approval-expired');assert.deepEqual(errors,[]);
     }finally{await context.close();await host.close();}
   }
-  await writeFile(`${folder}/results.json`,JSON.stringify({clause:'EVENT-008',status:'partial',widths:[1440,390],shots,assertions:['owner sets approval window','invitee requests without confirmation','pending status','owner approves from Bookings','confirmed manage page after approval','decline and expiry release status','no serious axe findings or overflow','no page errors'],gaps:['paid/card-saving approval denied','no optional tentative destination calendar','no direct mail or native mobile decision']},null,2));console.log(`EVENT-008 browser proof passed: ${shots.length} screenshots at 1440 and 390.`);
+  console.log("Waiting one native public-admission minute before paid approval screens.");await delay(60_000);
+  const paid=await runPaidApprovalScreens({browser,origin,folder:`${folder}/paid`,storageState:await owner.storageState(),initialize:false});
+  console.log(`PAY-007 approval screens: PASS ${paid.shots.length} screens at 1440 and 390, no overflow or serious axe finding; all controls visibly labeled.`);
+  await writeFile(`${folder}/results.json`,JSON.stringify({clause:'EVENT-008',status:'partial',widths:[1440,390],shots,assertions:['owner sets approval window','invitee requests without confirmation','pending status','owner approves from Bookings','confirmed manage page after approval','decline and expiry release status','no serious axe findings or overflow','no page errors'],gaps:['no optional tentative destination calendar','no direct mail or native mobile decision']},null,2));console.log(`EVENT-008 browser proof passed: ${shots.length} screenshots at 1440 and 390.`);
 }finally{await owner.close();await browser.close();}
 async function shot(page,width,name,target){await (target??page.locator('main')).scrollIntoViewIfNeeded();await page.evaluate(()=>globalThis.document.fonts.ready);const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(item=>['serious','critical'].includes(item.impact)).map(item=>item.id),[]);assert.ok(await page.evaluate(()=>globalThis.document.documentElement.scrollWidth<=globalThis.document.documentElement.clientWidth+1));await (target??page).screenshot({path:`${folder}/${name}-${width}.png`,...(!target?{fullPage:true}:{})});shots.push(`${name}-${width}.png`);}

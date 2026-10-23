@@ -96,7 +96,10 @@ function assertUnique(values, label) {
 async function contractTags() {
   const tests = await files(resolve(root, "tests"));
   const contents = await Promise.all(tests.map((path) => readFile(path, "utf8")));
-  return new Set(contents.flatMap((text) => matches(text, /contract\(\s*["']([A-Z][A-Z-]*-\d{3})["']/g)));
+  return new Set(contents.flatMap(text=>[
+    ...matches(text,/contract\(\s*["']([A-Z][A-Z-]*-\d{3})["']/g),
+    ...[...text.matchAll(/contract\(\s*\[([^\]]+)\]/g)].flatMap(match=>matches(match[1],/["']([A-Z][A-Z-]*-\d{3})["']/g)),
+  ]));
 }
 
 async function files(directory) {
