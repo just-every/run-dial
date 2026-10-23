@@ -7656,7 +7656,7 @@
       "executable": false
     },
     "tests/booking-axe/notice-settings.mjs": {
-      "sha256": "57f075d28c96a66feed6131bc7e25674924d0b445ace98c984ceff4b2964f6ce",
+      "sha256": "491d00984ff71796ecd8b429ee3868d697e435845a128da44826662c849457a7",
       "executable": false
     },
     "tests/booking-axe/operator.mjs": {
