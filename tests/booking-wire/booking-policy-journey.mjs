@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { bookingMail, textBody, wireMail } from './mail-contracts.mjs';
+import { bookingMail, textBody, utcOffset, wireMail } from './mail-contracts.mjs';
 
 export async function bookingPolicyJourney({ data, call, state, deliver, checks }) {
   const event = await data('/api/app/event-types', {
@@ -36,13 +36,13 @@ export async function bookingPolicyJourney({ data, call, state, deliver, checks 
   const booking = snap.bookings.find(row => row.invitee_email === 'locked-visit@dial.test');
   assert.deepEqual(snap.booking_presentation.find(row => row.booking_id === booking.id), { booking_id: booking.id, locked_timezone: policy.lockedTimezone, browser_timezone: 'America/Los_Angeles', created_at: booking.created_at, updated_at: booking.created_at });
   const confirmation = bookingMail(snap, booking.id).find(mail => mail.subject.startsWith('Confirmed:'));
-  assert.ok(textBody(confirmation).includes('America/New_York')); assert.match(textBody(confirmation), /UTC-04:00/);
+  assert.ok(textBody(confirmation).includes('America/New_York')); assert.ok(textBody(confirmation).includes(utcOffset(next[0].startAt, "America/New_York")));
   assert.ok(textBody(confirmation).includes('America/Los_Angeles'));
   const reminder = snap.delivery_outbox.find(row => row.booking_id === booking.id && row.kind === 'reminder' && JSON.parse(row.payload_json).recipientRole === 'invitee');
   assert.ok(reminder);
   await call('/__fixtures/due', { id: reminder.id }, 204); await deliver();
   const reminderMail = wireMail(await state()).find(mail => mail.subject === `Reminder: ${event.title}`);
-  assert.ok(reminderMail); assert.ok(textBody(reminderMail).includes('America/New_York')); assert.match(textBody(reminderMail), /UTC-04:00/);
+  assert.ok(reminderMail); assert.ok(textBody(reminderMail).includes('America/New_York')); assert.ok(textBody(reminderMail).includes(utcOffset(next[0].startAt, "America/New_York")));
   const ics = await (await call(new URL(receipt.icsUrl).pathname)).text();
   assert.ok(ics.includes('TZID:America/New_York')); assert.ok(ics.includes('DTSTART;TZID=America/New_York:'));
   assert.ok(ics.includes('TZOFFSETTO:-0400')); assert.ok(ics.includes('TZOFFSETTO:-0500'));

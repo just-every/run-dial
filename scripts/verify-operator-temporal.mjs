@@ -167,7 +167,8 @@ try {
     assert.equal(receipt.event.durationMinutes, 30); assert.equal(minutes(receipt.occurrence), 30);
   }
   mark("changing event duration alone preserves each existing thirty-minute occurrence and receipt");
-  const oldThirtyMinuteTail = slots.find((slot) => localTime(slot.startAt, "Australia/Brisbane").endsWith("T23:30") && localTime(slot.endAt, "Australia/Brisbane").endsWith("T00:00"));
+  const occupied = (await snapshot()).booking_occurrences;
+  const oldThirtyMinuteTail = slots.find((slot) => !occupied.some(row => Date.parse(row.start_at) < Date.parse(slot.startAt) + 60 * 60000 && Date.parse(row.end_at) > Date.parse(slot.startAt)) && localTime(slot.startAt, "Australia/Brisbane").endsWith("T23:30") && localTime(slot.endAt, "Australia/Brisbane").endsWith("T00:00"));
   assert.ok(oldThirtyMinuteTail, "original availability offers a thirty-minute host-day tail");
   assert.equal(minutes(oldThirtyMinuteTail), 30);
   assert.equal(localTime(oldThirtyMinuteTail.startAt, "Australia/Brisbane"), `${oldThirtyMinuteTail.hostDate}T23:30`);

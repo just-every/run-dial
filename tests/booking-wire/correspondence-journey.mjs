@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { invitationManageJourney } from './invitation-manage-journey.mjs';
-import { bookingMail, textBody, recipient } from './mail-contracts.mjs';
+import { bookingMail, textBody, utcOffset, recipient } from './mail-contracts.mjs';
 
 export async function correspondenceJourney({ data, call, state, deliver, future, checks }) {
   const event = await data('/api/app/event-types', { slug: 'commission-planning', title: 'Commission planning', description: 'Plan a piece for your space.', durationMinutes: 30, color: '#176b5a', locationType: 'fixed_link', locationLabel: 'Video call', locationValue: 'https://meet.example.test/commission', listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [{ kind: 'text', label: 'Project goals', required: true, private: false, options: [] }, { kind: 'text', label: 'Private budget', required: false, private: true, options: [] }], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 780, endMinute: 1020 })) }, 201);
@@ -31,7 +31,7 @@ export async function correspondenceJourney({ data, call, state, deliver, future
   assert.ok(snap.booking_correspondence.some(row => row.booking_id === booking.id));
   const confirmations = bookingMail(snap, booking.id).filter(mail => recipient(mail).includes('templates@dial.test'));
   assert.equal(confirmations.length, 1); assert.equal(confirmations[0].subject, 'Your studio session, Taylor');
-  assert.ok(textBody(confirmations[0]).startsWith('Hello Taylor,')); assert.ok(textBody(confirmations[0]).includes('America/New_York')); assert.match(textBody(confirmations[0]), /UTC-04:00/); assert.ok(textBody(confirmations[0]).includes('Private budget 4200')); assert.ok(!textBody(confirmations[0]).includes('Invitee time:'));
+  assert.ok(textBody(confirmations[0]).startsWith('Hello Taylor,')); assert.ok(textBody(confirmations[0]).includes('America/New_York')); assert.ok(textBody(confirmations[0]).includes(utcOffset(slot.startAt, "America/New_York"))); assert.ok(textBody(confirmations[0]).includes('Private budget 4200')); assert.ok(!textBody(confirmations[0]).includes('Invitee time:'));
   const calendarWrite = snap.wire_calls.find(row => row.method === 'POST' && new URL(row.url).pathname.includes('/events') && JSON.parse(row.body).extendedProperties?.private?.['dial-booking-id'] === booking.id);
   assert.ok(calendarWrite); const calendar = JSON.parse(calendarWrite.body);
   assert.equal(calendar.summary, `Taylor Morgan & ${receipt.host.name}`); assert.equal(calendar.start.timeZone, 'America/New_York'); assert.ok(calendar.description.includes('A sculpture for our library')); assert.ok(calendar.description.includes('https://meet.example.test/commission')); assert.ok(!calendar.description.includes('Private budget 4200')); assert.ok(calendar.description.includes('/manage/invite/'));

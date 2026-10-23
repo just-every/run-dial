@@ -16,6 +16,10 @@ export const htmlBody = mail => {
   return part.value;
 };
 export const instant = value => new Date(value).toISOString().slice(0, 19).replaceAll("-", "").replaceAll(":", "") + "Z";
+export function utcOffset(value, zone) {
+  return new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" }).formatToParts(new Date(value))
+    .find(part => part.type === "timeZoneName").value.replace("GMT", "UTC");
+}
 export function timeRange(startAt, endAt, zone) {
   const format = new Intl.DateTimeFormat("en-US", { timeZone: zone, year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "shortOffset" });
   return `${format.format(new Date(startAt))}–${format.format(new Date(endAt))} (${zone})`;
