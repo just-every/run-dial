@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a12c808071e6de00f930bd42b06c8c8ce33acc307f1dcb8daa08791361be3388",
+      "sha256": "5a430978805f5393c62103450f40bf3cc62b59150c164b9851372cfd236bba85",
       "executable": false
     },
     "DEMO.md": {
@@ -4568,7 +4568,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "3dfb06ffb7ac6769a848e3ea708511c850848f9011afa81eb1baf0d796903ef2",
+      "sha256": "bf5bc47f904d2bc212dbee7d79fe3d4c25ef5aab7381ad92ed86d8b9be15f738",
       "executable": false
     },
     "src/base/contract-filter.ts": {

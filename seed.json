@@ -610,7 +610,8 @@
   "customFields": [
     "eventType",
     "booking",
-    "availabilityRequest"
+    "availabilityRequest",
+    "client"
   ],
   "extensionPoints": {
     "contributions": [
