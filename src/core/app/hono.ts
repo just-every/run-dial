@@ -110,7 +110,11 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .get("/app/*", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
     .get("/setup", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
     .get("/setup/*", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
-    .get("/poll/*", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
+    .get("/poll/*", async context => {
+      const response=await (documents ?? context.env.ASSETS).fetch(context.req.raw);
+      const headers=new Headers(response.headers);headers.set("Cache-Control","private, no-store");headers.set("Referrer-Policy","no-referrer");
+      return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+    })
     .get("/signin", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw));
 
   app.onError(appError);
