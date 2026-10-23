@@ -19,6 +19,7 @@ export async function paymentErasureProbes({ data, call, state, hold, slot, day,
     assert.equal(objects(await state()).filter(object => object.object === "customer").length, before, "Stripe refused before creating a Customer");
     const receipt = await erase(email);
     assert.equal(receipt.localComplete, true);
+    assert.ok(Array.isArray(receipt.externalRequests), "DATA-007 lists individual processor erasure requests");
     assert.equal(receipt.stripeCustomersRetained, 0, "a refused invoice attempt created no retained Customer");
     assert.equal(receipt.stripeCustomersNotice, null);
     assert.equal(receipt.stripeSessionsRetained, 0);
