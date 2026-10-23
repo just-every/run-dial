@@ -456,7 +456,7 @@
       "required": false,
       "why": "CAL-010: optional Microsoft 365 or Outlook singleton calendar connection. Delegated OAuth, selected-calendar busy reads, managed events, mailbox change subscriptions and delta sync; live provider behavior is unobserved. Organization-wide consent management and simultaneous providers are not implemented.",
       "data": [
-        "sealed host OAuth credentials",
+        "host OAuth authorization and token exchange",
         "selected calendar identifiers",
         "booking invitation title and description",
         "invitee email and chosen meeting location"
