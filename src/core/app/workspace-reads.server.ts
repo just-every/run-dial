@@ -17,6 +17,8 @@ import { operatorManagementRoutes } from "../features/operators/management-route
 import { embedRoutes } from "../features/embeds/routes";
 import { publicAbuseRoutes } from "../features/public-abuse/routes";
 import { moveInRoutes } from "../features/move-in/routes";
+import { clientRoutes } from "../features/clients/routes";
+import { clientPage, clientListPath, clientHistoryPath } from "../features/clients/queries";
 import { extensionRoutes } from "./mount.server";
 import { checkPlatformBindings } from "../platform/health";
 import { archiveStatus } from "../features/portability/admission";
@@ -35,7 +37,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     .route("/", hostProfileRoutes).route("/", hostSetupRoutes).route("/", eventTypeRoutes)
     .route("/", bookingOperatorRoutes).route("/", availabilityRequestRoutes).route("/", deliveryRoutes)
     .route("/", calendarConnectionRoutes).route("/", operatorManagementRoutes).route("/", embedRoutes)
-    .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", extensionRoutes);
+    .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", clientRoutes).route("/", extensionRoutes);
   app.onError(appError);
   // Work a handler leaves for after its response (a due provider health refresh) follows this request's deferred reads.
   const execution = { waitUntil: (task: Promise<unknown>) => { deferPrivateRead(task); }, passThroughOnException() {}, props: {} } as ExecutionContext;
@@ -64,7 +66,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
   }
   if (name === "/app/requests") routes.push("/api/app/availability-requests?state=submitted");
   let bookingList: string | undefined;
-  if (name === "/app/bookings") {
+  if (name === "/app/bookings" && url.searchParams.get("view") !== "clients") {
     bookingList = "/api/app/bookings?" + new URLSearchParams(bookingListQuery(readBookingFilters(url.search), readBookingPage(url.search)));
     routes.push(bookingList);
   }
@@ -79,6 +81,17 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
   }
   if (name === "/app/settings") routes.push(...["session", "calendar/connection", "calendar/setup", "mail/connection", "mail/preferences", "operators", "embed-settings", "blocked-addresses", "custom-fields", "move-in/jobs", "move-in/switch-over"].map(p => "/api/app/" + p));
   const work = routes.map(read);
+  if (name === "/app/bookings" && url.searchParams.get("view") === "clients") {
+    const list = clientListPath(clientPage(url.searchParams.get("clientPage")));
+    work.push(read(list).then(async () => {
+      const response = await reads[readKey(list)];
+      if (response.status !== 200) return;
+      const selected = url.searchParams.get("client") ?? (JSON.parse(response.body).clients[0] as { email: string } | undefined)?.email;
+      if (selected) await read(clientHistoryPath(selected, clientPage(url.searchParams.get("historyPage"))));
+    }));
+    const record = url.searchParams.get("record");
+    if (record) work.push(read(`/api/app/bookings/${encodeURIComponent(record)}`));
+  }
   if (name === "/app/settings" && canInspectArchive) work.push(archiveStatus(bound.DB).then(status => { reads["/api/portability/status"] = { status: 200, body: JSON.stringify(status), headers: { "cache-control": "no-store", "content-type": "application/json" } }; }));
   if (bookingList) work.push(read(bookingList).then(async () => {
     const response = await reads[readKey(bookingList!)];

@@ -27,6 +27,10 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  client_profiles: { email:'invitee@example.test' },
+  client_aliases: { email:'invitee@example.test' },
+  client_notes: { body:'Private client preparation notes',operator_id:'owner' },
+  client_fields: { label:'Client reference',value:'synthetic-dial-1002' },
   processor_erasure_requests: {receipt_id:'person_erasure_receipts-1',kind:'stripe_customer_anonymize',actor_id:'owner',amount_cents:0,purpose:'Person erasure',account_id:'synthetic-dial-account-1',processor_ref:'synthetic-dial-customer-1',lookup_key:null,state:'completed',reason:null,requested:1,attempt_started_at:null,archive_historical:1},
   booking_approval_requests: {nonce_id:'synthetic-dial-approval-nonce',booking_id:'bookings-1',event_type_id:'event_types-1',state:'pending',invitee_email:'synthetic-dial-approval@example.test',invitee_name:'Synthetic Dial Approval',event_title:'Synthetic approval',start_at:instant,end_at:end,occupied_start_at:instant,occupied_end_at:end,host_date:'2026-10-07',claim_json:JSON.stringify({emails:[],invitee:{guests:[]}}),payment_json:JSON.stringify({holdId:'synthetic-dial-hold-1',mode:'payment',amountCents:21775,accountId:'synthetic-dial-account-1',paymentIntentId:'synthetic-dial-intent-1',setupIntentId:'synthetic-dial-setup-1',customerId:'synthetic-dial-customer-1',paymentMethodId:'synthetic-dial-card-1',saveCard:true,consentVersion:'synthetic-dial-consent-1',setupExpiresAt:instant,state:'capture_pending',authorizedAt:instant,audit:{authorize:'synthetic-dial-auth-1',capture:'synthetic-dial-capture-1',void:'synthetic-dial-void-1',detach:'synthetic-dial-detach-1',refund:'synthetic-dial-refund-1'}})},
   booking_guests: { booking_id:'bookings-1',email:'synthetic-dial-guest@example.test' },
