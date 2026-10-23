@@ -468,6 +468,12 @@
       "name": "0076_processor_erasure_requests.sql",
       "sha256": "af41e5398f2fcd8fae5486d0c329ad329f25a26fc9bcb52afeb75e62512f0b3b",
       "sql": "-- Anonymous lookup keys and outcomes outlive local person deletion; no payer values or credentials.\nCREATE TABLE processor_erasure_requests (\n  id TEXT PRIMARY KEY NOT NULL,\n  receipt_id TEXT NOT NULL REFERENCES person_erasure_receipts(id),\n  kind TEXT NOT NULL CHECK(kind IN ('calendar_event_cancel','saved_card_detach','stripe_customer_anonymize','stripe_checkout_email','stripe_customer_unobserved','payment_authorization_void','payment_refund')),\n  account_id TEXT NOT NULL,\n  processor_ref TEXT NOT NULL,\n  lookup_key TEXT,\n  actor_id TEXT,\n  amount_cents INTEGER NOT NULL DEFAULT 0,\n  purpose TEXT NOT NULL DEFAULT 'Person erasure',\n  state TEXT NOT NULL CHECK(state IN ('pending','completed','failed')),\n  reason TEXT,\n  requested INTEGER NOT NULL DEFAULT 0 CHECK(requested IN (0,1)),\n  attempt_started_at TEXT,\n  archive_historical INTEGER NOT NULL DEFAULT 0 CHECK(archive_historical IN (0,1)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  UNIQUE(receipt_id,kind,account_id,processor_ref)\n);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0077_payment_reconciliation.sql",
+      "sha256": "6401168d267c2b62caa7b30abb8c61fa0a5985c47342ea71716f34957944f68a",
+      "sql": "CREATE TABLE payment_processor_facts (\n id TEXT PRIMARY KEY, booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n account_id TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('charge','refund','fee','dispute','payout')),\n processor_ref TEXT NOT NULL, source_ref TEXT NOT NULL, amount_cents INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'usd' CHECK(currency GLOB '[a-z][a-z][a-z]'),\n status TEXT NOT NULL, disagreement INTEGER NOT NULL DEFAULT 0, resolved_at TEXT, resolved_by TEXT, event_created INTEGER NOT NULL,\n created_at TEXT NOT NULL, updated_at TEXT NOT NULL,\n UNIQUE(account_id,kind,processor_ref,booking_id)\n);\nCREATE INDEX payment_processor_facts_booking ON payment_processor_facts(booking_id);\nCREATE TABLE accounting_connections (\n id TEXT PRIMARY KEY, realm_id TEXT NOT NULL, status TEXT NOT NULL,\n access_token_ciphertext TEXT, refresh_token_ciphertext TEXT, expires_at TEXT,\n income_account_id TEXT, item_id TEXT, reason TEXT, refresh_started_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL\n);\nCREATE TABLE accounting_oauth_states (\n id TEXT PRIMARY KEY, session_id TEXT NOT NULL, operator_id TEXT NOT NULL,\n expires_at TEXT NOT NULL, consumed_at TEXT, created_at TEXT NOT NULL\n);\nCREATE TABLE accounting_exports (\n id TEXT PRIMARY KEY, booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n connection_id TEXT NOT NULL, payment_ref TEXT NOT NULL, amount_cents INTEGER NOT NULL,\n request_id TEXT NOT NULL UNIQUE, document_ref TEXT NOT NULL, payload_json TEXT NOT NULL, receipt_id TEXT, state TEXT NOT NULL,\n created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(connection_id,payment_ref)\n);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
@@ -506,7 +512,9 @@
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
     "RESEND_API_KEY",
-    "RESEND_WEBHOOK_SECRET"
+    "RESEND_WEBHOOK_SECRET",
+    "QBO_CLIENT_ID",
+    "QBO_CLIENT_SECRET"
   ],
   "schedules": [
     "* * * * *"
@@ -526,7 +534,8 @@
     "outbound-mail",
     "outbound-google-calendar",
     "outbound-google-meet",
-    "outbound-oauth"
+    "outbound-oauth",
+    "outbound-quickbooks-accounting"
   ],
   "surfaces": {
     "app": {
