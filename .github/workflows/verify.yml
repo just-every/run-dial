@@ -115,11 +115,14 @@ jobs:
           for attempt in 1 2 3; do
             mirror=${mirrors[attempt - 1]}
             printf 'Chromium apt: attempt %s/3 (60s deadline; mirror %s)\n' "$attempt" "$mirror"
-            if timeout --kill-after=5s 60s bash -ec '
-              sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS "$(command -v node)" scripts/ci-apt-bootstrap.mjs "$1"
-              sudo dpkg --configure -a
-              pnpm exec playwright install --with-deps chromium
-            ' bash "$mirror"; then
+            # Elevate before timeout: otherwise sudo's child can outlive the
+            # deadline and retain dpkg's lock into the next mirror attempt.
+            if sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS timeout --kill-after=5s 60s bash -ec '
+              export PLAYWRIGHT_BROWSERS_PATH="$4"
+              "$1" scripts/ci-apt-bootstrap.mjs "$3"
+              dpkg --configure -a
+              "$1" "$2" install --with-deps chromium
+            ' bash "$(command -v node)" "$(node -p "require.resolve('@playwright/test/package.json').replace(/package.json$/, 'cli.js')")" "$mirror" "$HOME/.cache/ms-playwright"; then
               exit 0
             else
               status=$?
