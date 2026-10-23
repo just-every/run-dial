@@ -215,6 +215,7 @@ export function bookingCancellationMail(input: BookingMailDetails & {
   inviteeName: string;
   inviteeEmail: string;
 }) {
+  if (input.locationType === "microsoft_teams") input = { ...input, meetingUrl: null };
   const reasonLine = `Reason: ${input.reason?.trim() || "No reason provided"}.`;
   const timeFacts = bookingTimeFacts(input, "Previous");
   const location = locationText(input);
@@ -255,7 +256,7 @@ export function bookingCancellationMail(input: BookingMailDetails & {
 }
 
 export function bookingJoinUrl(input: Pick<BookingMailDetails, "locationType" | "locationValue" | "meetingUrl">) {
-  return input.locationType === "google_meet" ? input.meetingUrl ?? undefined
+  return (input.locationType === "google_meet" || input.locationType === "microsoft_teams") ? input.meetingUrl ?? undefined
     : input.locationType === "fixed_link" ? input.locationValue : undefined;
 }
 
@@ -268,6 +269,6 @@ export function bookingLocationLabel(input: Pick<BookingMailDetails, "locationLa
 }
 
 function locationText(input: BookingMailDetails) {
-  if (input.locationType === "google_meet") return input.meetingUrl ?? (input.meetingState === "failed" || input.calendarState === "failed" ? "Meeting link unavailable — contact the host." : "Google Meet link pending");
+  if ((input.locationType === "google_meet" || input.locationType === "microsoft_teams")) return input.meetingUrl ?? (input.meetingState === "failed" || input.calendarState === "failed" ? "Meeting link unavailable — contact the host." : `${input.locationLabel} link pending`);
   return input.locationValue;
 }

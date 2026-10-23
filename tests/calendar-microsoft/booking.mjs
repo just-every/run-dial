@@ -1,7 +1,8 @@
+import { teamsLifecycle } from "./teams.mjs";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 
-export async function microsoftBookingLifecycle({ data }) {
+export async function microsoftBookingLifecycle({ data, call }) {
   await data("/api/app/profile", { handle: "synthetic-dial-1627", name: "Synthetic Dial 1627", title: "Host", biography: "Synthetic provider proof", timezone: "Australia/Brisbane", focusAreas: [], socialProof: [] }, 200, "PATCH");
   await data("/api/app/mail/check", {});
   const event = await data("/api/app/event-types", { slug: "synthetic-dial-1628", title: "Synthetic Dial 1628", description: "Synthetic booking with a selected calendar", durationMinutes: 30, color: "#176b5a", locationType: "fixed_link", locationLabel: "Synthetic room", locationValue: "https://meeting.example.test/synthetic-dial-1629", listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 })) }, 201);
@@ -28,5 +29,6 @@ export async function microsoftBookingLifecycle({ data }) {
   const external = await create(new Date(moved.valueOf() + 86400000), 1631); await data("/__fixtures/delivery", {});
   await data("/__fixtures/control", { deleteEvents: true }, 204); assert.equal((await data("/__fixtures/sync", {})).kind, "synced"); assert.equal((await data("/__fixtures/sync", {})).kind, "synced");
   const cancelled = await data(`/api/app/bookings/${external.id}`); assert.equal(cancelled.state, "cancelled");
+  await teamsLifecycle({ data, event, startAt, call });
   const history = await data(`/__fixtures/cancellations?id=${external.id}`); assert.equal(history.count, 1, "repeated delta tombstones cancel and notify through one native lifecycle transition");
 }

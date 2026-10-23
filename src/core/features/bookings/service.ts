@@ -644,7 +644,7 @@ export class BookingsService {
   private async toConfirmation(booking: BookingRecord, profile: ProfileRecord, manageToken: string): Promise<BookingConfirmation> {
     const money = this.payments ? await this.payments.money.bookingMoney(booking.id, booking.payment) : undefined;
     const payment = paymentSummary(money, booking.occurrence.startAt, booking.state !== "cancelled", nowIso(), money && this.payments ? (await this.payments.settings()).effectiveBusinessName : "");
-    const locationValue = booking.locationType === "google_meet" ? booking.meetingUrl ?? undefined : booking.locationValue;
+    const locationValue = booking.locationType === "microsoft_teams" && booking.state === "cancelled" ? undefined : (booking.locationType === "google_meet" || booking.locationType === "microsoft_teams") ? booking.meetingUrl ?? undefined : booking.locationValue;
     const locationState = locationValue ? "ready" as const : "pending" as const;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     return {
@@ -670,7 +670,7 @@ export class BookingsService {
   private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]>; guests?: string[] }; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean; payment?: PaymentMailFacts }): Promise<BookingEmail[]> {
     const { profile, event, invitee, startAt, endAt, inviteeTimezone, manageToken, bookingId } = input;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
-    const location = event.locationType === "google_meet" ? "Google Meet link pending" : event.locationValue;
+    const location = (event.locationType === "google_meet" || event.locationType === "microsoft_teams") ? `${event.locationLabel} link pending` : event.locationValue;
     const answerDetails = event.questions.flatMap((question) => {
       const answer = question.key ? invitee.answers[question.key] : undefined;
       return answer === undefined ? [] : [{ label: question.label, value: Array.isArray(answer) ? answer.join(", ") : answer }];
@@ -689,7 +689,7 @@ export class BookingsService {
     };
     return [
       { to: invitee.email, recipientRole: "invitee", messageKind: "confirmation", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), ...calendarFile },
-      ...(invitee.guests ?? []).map(to => guestNotice({ eventTitle: event.title, startAt, endAt, location: event.locationType === "google_meet" ? undefined : event.locationValue }, to, "confirmation")),
+      ...(invitee.guests ?? []).map(to => guestNotice({ eventTitle: event.title, startAt, endAt, location: (event.locationType === "google_meet" || event.locationType === "microsoft_teams") ? undefined : event.locationValue }, to, "confirmation")),
       ...operators.map(({ email: to, id, generation }) => ({ to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `New booking: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "operator" }) })),
     ];
   }

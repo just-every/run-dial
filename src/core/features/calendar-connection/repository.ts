@@ -161,6 +161,18 @@ export class CalendarConnectionRepository {
     await this.db.update(calendarConnections).set({ ...input, updatedAt: nowIso() }).where(eq(calendarConnections.singletonKey, "default"));
   }
 
+  async hasManagedCalendarWork() {
+    return Boolean(await this.binding.prepare("SELECT 1 FROM bookings WHERE calendar_required=1 AND state IN ('confirmed','rescheduled') UNION ALL SELECT 1 FROM delivery_outbox WHERE kind IN ('calendar_upsert','calendar_cancel') AND state IN ('pending','processing') UNION ALL SELECT 1 FROM erased_calendar_targets WHERE completed_at IS NULL AND archive_historical=0 LIMIT 1").first());
+  }
+
+  async clearCancelledTeamsConference(bookingId: string) {
+    await this.binding.prepare("UPDATE bookings SET meeting_url=NULL,meeting_state='not_required' WHERE id=? AND state='cancelled' AND location_type='microsoft_teams'").bind(bookingId).run();
+  }
+
+  async managedEventLocation(bookingId: string, occurrenceId: string) {
+    return (await this.binding.prepare("SELECT location_type AS type FROM bookings WHERE id=? AND current_occurrence_id=? AND state IN ('confirmed','rescheduled')").bind(bookingId, occurrenceId).first<{ type: string }>())?.type;
+  }
+
   async updateSyncCursor(syncCursor: string) {
     await this.db.update(calendarConnections).set({ syncCursor, updatedAt: nowIso() }).where(eq(calendarConnections.singletonKey, "default"));
   }

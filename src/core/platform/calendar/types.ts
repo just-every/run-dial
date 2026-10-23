@@ -17,6 +17,7 @@ export type ProviderFailureCode =
   | "provider_unavailable"
   | "invalid_sync_cursor"
   | "invalid_provider_response"
+  | "calendar_provider_switch_blocked"
   | "invalid_delivery_payload"
   | "internal_error";
 

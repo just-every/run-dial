@@ -1,3 +1,4 @@
+import { microsoftScreenRuntime } from "./screen-runtime.mjs";
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -12,6 +13,7 @@ export async function calendarConnectionScreens({ origin, email, call }) {
   const { developmentLink } = await localMagicLink(origin);
   const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
   const owner = await browser.newContext(), shots = [];
+  let microsoftScreens;
   try {
     const signedIn = await owner.request.post(origin + "/auth/confirm", { headers: { Origin: origin }, form: { token: new URL(developmentLink).searchParams.get("token") }, maxRedirects: 0 }); assert.equal(signedIn.status(), 303);
     for (const width of [1440, 390]) {
@@ -31,6 +33,7 @@ export async function calendarConnectionScreens({ origin, email, call }) {
       assert.deepEqual(errors, [], "calendar settings hydrate without browser errors");
       await page.close();
     }
+    microsoftScreens = await microsoftScreenRuntime(browser);
   } finally { await owner.close(); await browser.close(); }
-  return { shots, widths: [1440, 390], tooltipAudit: "No icon-only controls in the calendar connection card or its shell; every action is visibly labeled." };
+  return { shots, microsoftScreens, widths: [1440, 390], tooltipAudit: "No icon-only controls in the calendar connection card or its shell; every action is visibly labeled." };
 }

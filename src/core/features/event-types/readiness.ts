@@ -4,6 +4,7 @@ export const readinessFixes = {
   open_availability: { label: "Add at least one open availability window.", href: "availability" },
   transactional_mail: { label: "Verify the transactional mail sender.", href: "/app/settings#mail-connection" },
   destination_calendar: { label: "Connect and check a destination calendar.", href: "/app/settings#calendar-connection" },
+  microsoft_teams_capability: { label: "Connect and check a Microsoft calendar with Teams capability.", href: "/app/settings#calendar-connection" },
   google_meet_capability: { label: "Choose a destination calendar with Google Meet capability.", href: "/app/settings#calendar-connection" },
   alternative_requests_enabled: { label: "Enable alternative requests for this event.", href: "event" },
   event_already_published: { label: "This event is public. Manage its current publication settings.", href: "event" },

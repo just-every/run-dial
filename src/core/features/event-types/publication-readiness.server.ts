@@ -10,8 +10,9 @@ export function publicationRequirements(eventType: EventTypeRecord, profile: Pro
     ...(eventType.availability.length === 0 ? ["open_availability"] : []),
     ...(offeredLocations(eventType).some(location => locationIssue(location)) ? ["private_location"] : []),
   ];
-  if (!providers) return { ready: false, missing: [...missing, "transactional_mail", "destination_calendar", ...(offeredLocations(eventType).some(location => location.type === "google_meet") ? ["google_meet_capability"] : [])] };
+  if (!providers) return { ready: false, missing: [...missing, "transactional_mail", "destination_calendar", ...(offeredLocations(eventType).some(location => location.type === "microsoft_teams") ? ["microsoft_teams_capability"] : []), ...(offeredLocations(eventType).some(location => location.type === "google_meet") ? ["google_meet_capability"] : [])] };
   const { calendar, mail } = providers;
+  if (offeredLocations(eventType).some(location => location.type === "microsoft_teams") && (calendar.kind !== "healthy" || calendar.provider !== "microsoft" || !calendar.conferenceCapable)) missing.push("microsoft_teams_capability");
   if (calendar.kind !== "healthy" && calendar.code !== "not_connected") missing.push("destination_calendar");
   if (mail.kind !== "healthy") missing.push("transactional_mail");
   if (offeredLocations(eventType).some(location => location.type === "google_meet") && (calendar.kind !== "healthy" || !calendar.conferenceCapable || calendar.provider === "microsoft" || calendar.provider === "caldav")) missing.push("google_meet_capability");

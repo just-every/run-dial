@@ -49,7 +49,7 @@ export class BookingCorrespondenceRepository {
       "host name": row.hostName, "event name": row.eventTitle,
       "date and time": formatTimeRange(row.startAt, row.endAt, zone, Boolean(row.lockedTimezone)),
       duration: `${(Date.parse(row.endAt) - Date.parse(row.startAt)) / 60_000} minutes`,
-      location: row.locationType === "google_meet" ? row.meetingUrl ?? "Meeting link pending" : `${row.locationLabel}: ${row.locationValue}`,
+      location: (row.locationType === "google_meet" || row.locationType === "microsoft_teams") ? row.meetingUrl ?? "Meeting link pending" : `${row.locationLabel}: ${row.locationValue}`,
       "manage link": "", message: "", answers: answerValues,
     } };
   }

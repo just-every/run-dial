@@ -53,7 +53,7 @@ export async function reconcileCalendarChange(dependencies: Dependencies, change
     return;
   }
 
-  const canonicalLocation = booking.locationType === "google_meet" ? (booking.locationValue || "Google Meet") : booking.locationValue;
+  const canonicalLocation = (booking.locationType === "google_meet" || booking.locationType === "microsoft_teams") ? (booking.locationValue || "Google Meet") : booking.locationValue;
   const changed = (change.startAt !== undefined && change.startAt !== booking.occurrence.startAt)
     || (change.endAt !== undefined && change.endAt !== booking.occurrence.endAt)
     || (change.location !== undefined && change.location !== canonicalLocation);

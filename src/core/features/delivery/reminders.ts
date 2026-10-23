@@ -9,7 +9,7 @@ export function reminderMessage(booking: ReminderBooking, payload: Record<string
   if (invitee && typeof payload.manageUrl !== "string") throw new Error("Missing reminder manage capability");
   const zone = booking.lockedTimezone ?? (invitee ? booking.inviteeTimezone : booking.hostTimezone);
   const format = (instant: string) => new Intl.DateTimeFormat("en-GB", { timeZone: zone, dateStyle: "full", timeStyle: "long" }).format(new Date(instant));
-  const location = booking.locationType === "google_meet" ? booking.meetingUrl ?? (booking.meetingState === "failed" || booking.calendarState === "failed" ? "Meeting link unavailable — contact the host." : "Meeting link pending — contact the host if it is not ready.") : booking.locationValue;
+  const location = (booking.locationType === "google_meet" || booking.locationType === "microsoft_teams") ? booking.meetingUrl ?? (booking.meetingState === "failed" || booking.calendarState === "failed" ? "Meeting link unavailable — contact the host." : "Meeting link pending — contact the host if it is not ready.") : booking.locationValue;
   const timeRange = booking.lockedTimezone ? formatTimeRange(booking.startAt, booking.endAt, zone, true) : `${format(booking.startAt)} – ${format(booking.endAt)} (${zone})`;
   const manageUrl = invitee && typeof payload.manageUrl === "string" ? payload.manageUrl : undefined;
   if (invitee && !manageUrl) return undefined;

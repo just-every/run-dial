@@ -18,5 +18,6 @@ export async function calendarProviderUpgrade(source) {
     assert.equal(microsoft.calendar_provider, "microsoft"); assert.equal(microsoft.status, "unhealthy"); assert.equal(microsoft.unhealthy_code, "reauthorization_required");
     for (const column of ["access_token_ciphertext", "refresh_token_ciphertext", "access_token_expires_at", "sync_cursor"]) assert.equal(microsoft[column], null, `${column}: restore grants no provider authority`);
     source.prepare("UPDATE calendar_connections SET calendar_provider='microsoft'").run();
+    source.prepare("UPDATE event_types SET location_type='microsoft_teams',location_label='Microsoft Teams',location_value='',locations_json=?").run(JSON.stringify([{ id: "synthetic-dial-1638", type: "microsoft_teams", label: "Microsoft Teams", value: "" }]));
   } finally { prior.close(); }
 }

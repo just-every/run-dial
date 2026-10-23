@@ -29,6 +29,7 @@ export const calendarConnectionRoutes = new Hono<AppEnvironment>()
       session: await context.get("services").operators.authenticate(context.req.raw),
     });
     if (result.kind === "invalid_state") return apiError(context, 400, "invalid_calendar_oauth_state", "The calendar connection could not be verified.");
+    if (result.kind === "provider_failure" && result.code === "calendar_provider_switch_blocked") return apiError(context, 409, result.code, "Cancel existing managed bookings and complete their calendar work before changing calendar providers.");
     if (result.kind === "provider_failure") return apiError(context, 503, "calendar_oauth_failed", "The calendar provider did not accept this connection.");
     return context.redirect(await context.get("services").hostSetup.completion() ? "/app/settings?calendar=connected" : "/setup/settings?calendar=connected", 302);
   })

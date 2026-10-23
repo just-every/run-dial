@@ -36,7 +36,7 @@ contract(["CAL-007", "CAL-010"], "the Worker renews only expiring selected desti
   await microsoftProof(context, "channels");
 });
 
-contract(["CAL-003", "CAL-010"], "a durable calendar command persists Meet readiness and the link-ready delivery before sending it", async (context) => {
+contract(["CAL-003", "CAL-010", "MEET-002"], "a durable calendar command persists Meet readiness and the link-ready delivery before sending it", async (context) => {
   const worker = await startWorker(context);
   await readJson(await fetch(`${worker.origin}/cache`));
   const result = await readJson(await fetch(`${worker.origin}/delivery`));

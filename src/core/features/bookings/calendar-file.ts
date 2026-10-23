@@ -10,7 +10,7 @@ export function bookingIcs(booking: BookingRecord) {
     updatedAt: booking.updatedAt, startAt: booking.occurrence.startAt, endAt: booking.occurrence.endAt,
     lockedTimezone: booking.lockedTimezone,
     title: booking.eventTitle,
-    location: booking.locationType === "google_meet" ? booking.meetingUrl ?? booking.locationLabel : booking.locationValue,
+    location: cancelled && booking.locationType === "microsoft_teams" ? booking.locationLabel : (booking.locationType === "google_meet" || booking.locationType === "microsoft_teams") ? booking.meetingUrl ?? booking.locationLabel : booking.locationValue,
   });
 }
 

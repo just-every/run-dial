@@ -89,6 +89,6 @@ export async function microsoftProof(t, kind) {
     await data("/__fixtures/event", { phone: true }); facts = await data("/__fixtures/facts"); const phone = facts.events.find(event => event.location.displayName === "+12025550160"); assert.equal(phone.onlineMeeting, undefined);
     await data("/__fixtures/event", { cancel: true }); facts = await data("/__fixtures/facts"); assert.equal(facts.events.some(event => event.id === first.providerEventId), false);
     const sync = await data("/__fixtures/sync", {}); assert.equal(sync.kind, "synced");
-    await microsoftBookingLifecycle({ data });
+    await microsoftBookingLifecycle({ data, call });
   }
 }

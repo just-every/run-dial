@@ -5,7 +5,7 @@ import type { ManagedCalendarEvent } from "../../src/core/platform/calendar";
 import type { AppBindings } from "../../src/core/app/bindings";
 import { parseRuntimeEnvironment } from "../../src/core/shared/runtime-env";
 import { SyntheticGraph } from "./graph";
-const graph = new SyntheticGraph();
+export const graph = new SyntheticGraph();
 const assets = { fetch: async () => new Response("Synthetic document") } as Fetcher;
 const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), assets, { calendar: new MicrosoftCalendarAdapter({ clientId: "synthetic-dial-1607", clientSecret: "synthetic-dial-1608" }, graph.request) });
 const app = createApp(undefined, servicesFor);
@@ -18,7 +18,7 @@ export default {
     if (path === "/__fixtures/facts") {
       const credentials = await env.DB.prepare("SELECT calendar_provider,access_token_ciphertext,refresh_token_ciphertext FROM calendar_connections").first<{ calendar_provider: string; access_token_ciphertext: string; refresh_token_ciphertext: string }>();
       const busy = await env.DB.prepare("SELECT * FROM calendar_busy_intervals").all();
-      return Response.json({ provider: credentials?.calendar_provider, sealed: Boolean(credentials?.access_token_ciphertext && !credentials.access_token_ciphertext.includes("synthetic-dial-1600") && !credentials.refresh_token_ciphertext.includes("synthetic-dial-1601")), calls: graph.calls, events: [...graph.events.values()], subscriptions: [...graph.subscriptions], busy: busy.results });
+      return Response.json({ provider: credentials?.calendar_provider, sealed: Boolean(credentials?.access_token_ciphertext && !credentials.access_token_ciphertext.includes("synthetic-dial-1600") && !credentials.refresh_token_ciphertext.includes("synthetic-dial-1601")), calls: graph.calls, events: [...graph.events.values()], subscriptions: [...graph.subscriptions], busy: busy.results, mail: (await env.DB.prepare("SELECT booking_id AS bookingId,payload_json AS payload FROM delivery_outbox WHERE kind='mail_send'").all<{ bookingId: string; payload: string }>()).results.map(row => ({ bookingId: row.bookingId, payload: JSON.parse(row.payload) })) });
     }
     if (path === "/__fixtures/control") {
       const input = await request.json<{ refusedRefresh?: boolean; unreadable?: boolean; expire?: boolean; loseCreateResponse?: boolean; expireChannels?: boolean; deleteEvents?: boolean }>();

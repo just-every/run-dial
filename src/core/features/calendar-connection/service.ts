@@ -72,6 +72,8 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     if (!consumed || !input.code) return { kind: "invalid_state" as const };
     try {
       const provider = state.provider ?? "google";
+      const previous = await this.repository.get();
+      if (previous && previous.provider !== provider && await this.repository.hasManagedCalendarWork()) throw new ProviderFailure("calendar_provider_switch_blocked", false);
       const credentials = await providerAdapter(this.runtime, provider, this.adapterOverride).exchangeAuthorizationCode(input.code, callbackUrl(this.runtime));
       await this.repository.saveCredentials({
         provider,
@@ -192,7 +194,10 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
       if (!destination) throw new ProviderFailure("missing_configuration", false);
       if (event.requestGoogleMeet && connection?.provider !== "google") throw new ProviderFailure("forbidden", false);
       const credentials = await this.credentials(connection);
-      return await this.calendar.upsertManagedEvent(credentials.accessToken, destination.calendarId, event);
+      const chosenLocation = await this.repository.managedEventLocation(event.bookingId, event.occurrenceId);
+      const requestMicrosoftTeams = chosenLocation ? chosenLocation === "microsoft_teams" : event.requestMicrosoftTeams === true;
+      if (requestMicrosoftTeams && connection?.provider !== "microsoft") throw new ProviderFailure("forbidden", false);
+      return await this.calendar.upsertManagedEvent(credentials.accessToken, destination.calendarId, { ...event, requestMicrosoftTeams });
     } catch (error) {
       await this.markFailure(error);
       throw error;
@@ -215,6 +220,7 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
       if (!destination) throw new ProviderFailure("missing_configuration", false);
       const credentials = await this.credentials(connection);
       await this.calendar.cancelManagedEvent(credentials.accessToken, destination.calendarId, bookingId);
+      await this.repository.clearCancelledTeamsConference(bookingId);
     } catch (error) {
       await this.markFailure(error);
       throw error;

@@ -1,7 +1,7 @@
 import { normalizePhoneNumber } from "../../shared/phone";
 import type { EventTypeRecord } from "./repository";
 
-export const locationTypes = ["google_meet", "fixed_link", "phone", "invitee_phone", "in_person", "ask_invitee", "custom"] as const;
+export const locationTypes = ["google_meet", "microsoft_teams", "fixed_link", "phone", "invitee_phone", "in_person", "ask_invitee", "custom"] as const;
 export type EventLocationType = typeof locationTypes[number];
 export type EventLocationOption = { id: string; type: EventLocationType; label: string; value: string; prompt?: string };
 export type PublicLocationOption = { key: string; label: string; input?: "phone" | "place"; prompt?: string };
@@ -19,7 +19,7 @@ export function publicLocations(event: LocationSource): PublicLocationOption[] {
 }
 export function locationIssue(location: EventLocationOption): string | undefined {
   if (!location.label.trim()) return "Give this location a public label.";
-  if (location.type === "google_meet" || location.type === "invitee_phone") return undefined;
+  if (location.type === "google_meet" || location.type === "microsoft_teams" || location.type === "invitee_phone") return undefined;
   if (location.type === "ask_invitee") return location.prompt?.trim() ? undefined : "Write the question invitees must answer for this location.";
   // Receipts, mail and calendars link only safe web URLs; any other fixed value is delivered as text.
   if (!location.value.trim()) return "This location needs its private value.";
@@ -29,7 +29,7 @@ export function resolveBookingLocation(event: EventTypeRecord, input: { location
   const options = offeredLocations(event);
   const selected = input.locationId ? options.find(location => location.id === input.locationId) : options.length === 1 ? options[0] : undefined;
   if (!selected || locationIssue(selected)) return undefined;
-  let value = selected.value.trim();
+  let value = selected.type === "microsoft_teams" ? "Microsoft Teams" : selected.value.trim();
   if (selected.type === "invitee_phone") {
     const phone = normalizePhoneNumber(input.locationInput ?? "");
     if (!phone) return undefined;

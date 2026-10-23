@@ -1,0 +1,40 @@
+name = "dial-microsoft-screens"
+main = "screen-worker.ts"
+compatibility_date = "2026-09-04"
+compatibility_flags = ["nodejs_compat"]
+[assets]
+directory = "../../public"
+binding = "ASSETS"
+run_worker_first = true
+[vars]
+ENVIRONMENT = "development"
+OWNER_EMAIL = "synthetic-dial-1621@example.test"
+APP_URL = "http://127.0.0.1:15916"
+SESSION_SECRET = "synthetic-dial-1616-at-least-thirty-two-characters"
+SETUP_TOKEN = "synthetic-dial-1617-at-least-thirty-two-characters"
+MICROSOFT_OAUTH_CLIENT_ID = "synthetic-dial-1607"
+MICROSOFT_OAUTH_CLIENT_SECRET = "synthetic-dial-1608"
+CALENDAR_WEBHOOK_SECRET = "synthetic-dial-1618-at-least-thirty-two-characters"
+MAIL_PROVIDER = "development"
+MAIL_FROM = "synthetic-dial-1619@example.test"
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-microsoft-screens"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../../migrations/core"
+[[queues.producers]]
+binding = "JOBS"
+queue = "dial-microsoft-screens"
+[[queues.consumers]]
+queue = "dial-microsoft-screens"
+max_retries = 1
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dial-microsoft-screens"
+[[durable_objects.bindings]]
+name = "BOOKING_COORDINATOR"
+class_name = "BookingCoordinator"
+[[migrations]]
+tag = "v1-booking-coordinator"
+new_sqlite_classes = ["BookingCoordinator"]

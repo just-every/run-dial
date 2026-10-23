@@ -1,4 +1,4 @@
-const types = new Set(['google_meet', 'fixed_link', 'phone', 'invitee_phone', 'in_person', 'ask_invitee', 'custom']);
+const types = new Set(['google_meet', 'microsoft_teams', 'fixed_link', 'phone', 'invitee_phone', 'in_person', 'ask_invitee', 'custom']);
 export function validateLocations(name, row) {
   if (name !== 'event_types' || row.locations_json === null) return;
   let options;
