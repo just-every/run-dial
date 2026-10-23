@@ -37,9 +37,12 @@ export async function clientRecordsJourney(browser, owner, origin, fixture, scan
       await page.getByLabel('New client note',{exact:true}).fill(`Prepare the proposal together at ${width}.`);
       await page.getByRole('button',{name:'Add note',exact:true}).click();
       await page.getByText(`Prepare the proposal together at ${width}.`,{exact:true}).waitFor();
+      await page.locator('[data-client-annotations-ready="true"]').waitFor();
       await page.getByLabel('Custom field name',{exact:true}).fill('Relationship reference');
       await page.getByLabel('Custom field value',{exact:true}).fill(`CLIENT-${width}`);
+      const savedField=page.waitForResponse(response=>response.url().endsWith('/api/app/clients/fields')&&response.request().method()==='POST');
       await page.getByRole('button',{name:'Add client field',exact:true}).click();
+      assert.equal((await savedField).status(),201);
       await page.getByText(`CLIENT-${width}`,{exact:true}).waitFor();
       await audit('clients-history');
       await page.locator(`[data-client-booking="${bookings[0].id}"]`).getByRole('link',{name:'Open booking record',exact:true}).click();
