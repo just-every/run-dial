@@ -2,6 +2,8 @@ import { privateLinks, scrubPrivateLinks } from './private-links.mjs';
 import { parseJsonText } from './json-values.mjs';
 // SQLite capabilities are identified by their actual schema, not column substrings.
 const credentialColumns = {
+  accounting_connections: ['access_token_ciphertext','refresh_token_ciphertext'],
+  accounting_oauth_states: ['id'],
   magic_link_tokens: ['token_hash'], operator_sessions: ['token_hash'],
   calendar_connections: ['access_token_ciphertext', 'refresh_token_ciphertext', 'channel_id', 'channel_resource_id'],
   calendar_push_channels: ['provider_channel_id', 'provider_resource_id'],

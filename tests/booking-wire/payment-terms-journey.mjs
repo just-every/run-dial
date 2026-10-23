@@ -3,6 +3,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { evidencePath } from "../../scripts/evidence-path.mjs";
 import { bookingMail, textBody } from "./mail-contracts.mjs";
+import { reconciliationProbes } from "./reconciliation-probes.mjs";
 import { cancellationProbes } from "./payment-cancellation-probes.mjs";
 import { paymentErasureProbes } from "./payment-erasure-probes.mjs";
 
@@ -412,6 +413,7 @@ assert.deepEqual(audit, [["balance:succeeded", 7500], ["deposit", 2500], ["refun
 checks.push("erasing a payer detaches the saved card at Stripe, deletes consent, card references and movements with the booking, and keeps each amount and Stripe reference in the anonymized audit; the receipt counts the detached card");
 
 await paymentErasureProbes({ data, call, state, hold, slot, day, webhook, stripeEvent, coaching, probe, complete, deliver });
+await reconciliationProbes({call,data,state,hold,slot,day,complete,webhook,stripeEvent,probe});
 assert.deepEqual(probeFailures, [], "all money source-review probes pass");
 
 // Fail closed: with the connection deauthorized, refunds and fees are refused and an automatic refund is recorded failed, never done.

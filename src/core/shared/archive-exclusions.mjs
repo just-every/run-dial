@@ -63,6 +63,7 @@ export const excluded = {
   magic_link_tokens: 'Retired authentication capabilities', operator_sessions: 'Retired session capabilities',
   rer_mail_development_outbox: 'Captured mail contains raw sign-in and invitation capabilities', calendar_push_channels: 'Live callback authority; recreate on reconnect',
   calendar_oauth_states: 'Session-bound OAuth capabilities', booking_nonces: 'Single-use booking capabilities',
+  accounting_oauth_states: 'Session-bound accounting OAuth authority',
   payment_oauth_states: 'Session-bound Stripe Connect OAuth capabilities',
   payment_holds: 'Live payment holds, pending payer details and payment-return capabilities; a restore never resumes a pending checkout',
   payment_link_tokens: 'Balance-link capabilities (salt and lookup hash); old links must cease to work after a restore',

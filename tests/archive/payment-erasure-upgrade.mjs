@@ -50,3 +50,18 @@ async function preservedUpgrade(source, file, check) {
     check(prior);
   } finally { prior.close(); }
 }
+
+export async function reconciliationUpgrade(source) {
+  const prior = new DatabaseSync(":memory:"), migrations = await migrationFiles();
+  const upgrade = migrations.find(row=>row.file==="core/0077_payment_reconciliation.sql");
+  try {
+    for(const migration of migrations.filter(row=>row!==upgrade))prior.exec(migration.sql);
+    prior.exec("PRAGMA foreign_keys=OFF");
+    const columns=prior.prepare("PRAGMA table_info(booking_payments)").all().map(row=>row.name);
+    const rows=source.prepare("SELECT * FROM booking_payments").all();
+    for(const row of rows)prior.prepare(`INSERT INTO booking_payments (${columns.join(',')}) VALUES(${columns.map(()=>'?').join(',')})`).run(...columns.map(c=>row[c]));
+    assert.ok(rows.length,"prior schema has a captured payment");prior.exec(upgrade.sql);
+    assert.deepEqual(prior.prepare("SELECT * FROM booking_payments").all(),rows,"PAY-006 additive migration preserves a populated payment");
+    for(const table of ["payment_processor_facts","accounting_connections","accounting_oauth_states","accounting_exports"])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,"new record kinds start empty");
+  }finally{prior.close();}
+}
