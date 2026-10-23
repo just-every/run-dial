@@ -10,8 +10,9 @@ export async function paidApprovalJourney(context){
   const start=new URL((await call('/api/app/payments/stripe/oauth/start',undefined,302)).headers.get('location'));
   await call('/api/payments/stripe/oauth/callback?'+new URLSearchParams({state:start.searchParams.get('state'),code:'wire-stripe-consent'}),undefined,302);
   const priced=await h.makeEvent('synthetic-pay007-priced',{price:6400}),setup=await h.makeEvent('synthetic-pay007-setup',{terms:feeTerms});
-  for(const [path,body] of [[`/api/app/event-types/${priced.id}/payment-terms`,feeTerms],[`/api/app/event-types/${setup.id}/price`,{amountCents:6400,durationPrices:[]}]])assert.equal((await(await call(path,body,409,'PUT')).json()).error.code,'approval_price_and_saved_card_conflict');
-  pass(1,'priced and free saved-card-fee approvals supported; combining both refuses in either settings direction');
+  const combined=await h.makeEvent('synthetic-pay007-combined',{price:6400,terms:feeTerms});
+  assert.equal((await data(`/api/app/event-types/${combined.id}/approval`)).required,true,'combined price and fee approval is admitted');
+  pass(1,'priced, saved-card and combined approvals are supported');
   const selected=await h.selection(priced);assert.deepEqual(selected.approval.allowedPaymentMethods,['card','link']);assert.equal(selected.approval.paymentMethodReason,'approval_requires_card_or_link');
   const first=await h.hold(priced,{selection:selected});
   for(const paymentMethod of ['us_bank_account','klarna']){
