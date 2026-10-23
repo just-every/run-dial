@@ -590,7 +590,7 @@ export class BookingsService {
     if (!nonce) return { kind: "invalid_nonce" as const };
     if (nonce.purpose !== "reschedule" || nonce.bookingId !== access.booking.id || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" as const };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" as const };
-    const payloadHash = await hashPayload({ ...(input.shownPriceCents===undefined?{}:{shownPriceCents:input.shownPriceCents}), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: "", email: "", answers: { reason: input.reason?.trim() ?? "" }, ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }) });
+    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: "", email: "", answers: { reason: input.reason?.trim() ?? "" }, ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }) });
     const profile = await this.profiles.getProfile();
     if (!profile) return { kind: "not_found" as const };
     if (nonce.consumedAt) {
