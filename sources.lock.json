@@ -4964,7 +4964,7 @@
       "executable": false
     },
     "src/core/features/bookings/approval-service.ts": {
-      "sha256": "fe90a48873a5aa5a50fb7f49d6c3bf88a817917a327d57f465f06c251211839b",
+      "sha256": "fc0e617d1bec08aa714742b11e97e1f4e7c701eeea8b5e1dd8859c053b8d194b",
       "executable": false
     },
     "src/core/features/bookings/approvals.ts": {
@@ -5388,15 +5388,15 @@
       "executable": false
     },
     "src/core/features/delivery/routes.ts": {
-      "sha256": "9f97688e277e7ccf949bb957261ff38c7b0a621e77d477119d09987eb3de1920",
+      "sha256": "2ebe413adb961afdaf74a08b20ae3108bc476f448fa640f59405e46f68ab5b14",
       "executable": false
     },
     "src/core/features/delivery/sendgrid-webhook.ts": {
-      "sha256": "1cbf0ef1590a4696041e7fb9475b777dbbe56076b1692a54f50bc84e58b20146",
+      "sha256": "4be608f5871b7973186cf0e4e86f6f633068233a65bebdd19364cd4b8602e07b",
       "executable": false
     },
     "src/core/features/delivery/service.ts": {
-      "sha256": "5e4ddc522399bab559d10ac125095fd4d7cd6c26c5f1e51919e251e57b62751a",
+      "sha256": "466712247fa20555b1a60ed10bb6c729a41f8b0fe6b2701c9b7eeaffbe596ff9",
       "executable": false
     },
     "src/core/features/delivery/ui/mail-preferences.tsx": {
@@ -6100,7 +6100,7 @@
       "executable": false
     },
     "src/core/features/payments/routes.ts": {
-      "sha256": "48e1cc7b4e6f8760aace9c00983d84bcd64aef434ddaacb23df25feb76116d58",
+      "sha256": "dcf2bec2523bd5007ae27f4974164c22cf2723a1b272737cce2db32c6794a5c3",
       "executable": false
     },
     "src/core/features/payments/service.ts": {
@@ -6848,7 +6848,7 @@
       "executable": false
     },
     "src/core/platform/mail/resend.ts": {
-      "sha256": "554610450ab072bd101df780ca74d47f468db65096d99897038c6a90655ee9e1",
+      "sha256": "a57b008b130c059daaf8e99e99b7c92e7fe66f6c2de3338bfada571a5895e82b",
       "executable": false
     },
     "src/core/platform/mail/sendgrid-domain-lookup.ts": {
@@ -6952,7 +6952,7 @@
       "executable": false
     },
     "src/core/shared/http.ts": {
-      "sha256": "55570f9ccfd7f3ec5928dbaacedda332f1e25b3d11d91256d9a78043846ea0c1",
+      "sha256": "dc4d13a17bb131249b6fde188d7ff90abc07ee8df78f1c9ae6bd1aa0cd1d77c7",
       "executable": false
     },
     "src/core/shared/ids.ts": {
@@ -7636,7 +7636,11 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "f27c06323382563cd8b94360974ba8c48838aa39b1a7747e8c8ff82e559fe7df",
+      "sha256": "2ce6e55006a33f6b4103edaff8ce5a534c86f2f3e8a2cf6ed5eca2b6255c2f75",
+      "executable": false
+    },
+    "tests/booking-wire/approval-access-journey.mjs": {
+      "sha256": "bdd7cc4f8ae23c05a248d683112f8679b66da9352dc3f457cbe0e919b910b71d",
       "executable": false
     },
     "tests/booking-wire/approval-journey.mjs": {
@@ -7664,7 +7668,7 @@
       "executable": false
     },
     "tests/booking-wire/feature-journey.mjs": {
-      "sha256": "d9cf48eac400ced5535d32e9ab869cc1feeb4af94a5c0bf6b97cc7e7971b4176",
+      "sha256": "14290dec8ca9d2e4dcf762a17819552d3a1f0827d5aaaca26551fdfaa83be93d",
       "executable": false
     },
     "tests/booking-wire/guest-journey.mjs": {
@@ -7779,6 +7783,10 @@
       "sha256": "e79869490dc1e1f0648cea3382736661a8bb5ca8e324d90cf21e463cd17378ef",
       "executable": false
     },
+    "tests/booking-wire/poll-journey.mjs": {
+      "sha256": "e4629a13fb75a426d7c09798b1f871b1e4b3f7d8582d8d8fd3ee0f44e2a3f8f6",
+      "executable": false
+    },
     "tests/booking-wire/recovery-journey.mjs": {
       "sha256": "10c58c133520fa944cee6d9dab1f4b992b6dfdf4240f34052221ee4c78f61aff",
       "executable": false
@@ -7816,7 +7824,7 @@
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "14f87c96470428b78506dc3f395c0395aa50efb1f81f4461d5cea8bdf998de2b",
+      "sha256": "388a240945e18cf5af6a049bd50f40544c6c166f04f6f47291e1758c41fe9433",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {
@@ -8188,7 +8196,7 @@
       "executable": false
     },
     "tests/mail-connection.test.mjs": {
-      "sha256": "e64799ed62b648dc731e49d8f2610b2c5227e22ffc0ca6b74f9823a77456f8ad",
+      "sha256": "8431073af4589734ac5c042c31f538a4959a0b1cb7d5c113ca9fddfc85ae4bc0",
       "executable": false
     },
     "tests/mail-connection/booking-journey.mjs": {

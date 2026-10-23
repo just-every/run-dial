@@ -1,3 +1,4 @@
+import { pollJourney } from "./poll-journey.mjs";
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { evidencePath } from "../../scripts/evidence-path.mjs";
@@ -24,5 +25,6 @@ await data("/__fixtures/setup", {});
 await data("/wire/control", { name: "google-conference", value: "success" });
 const future = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
 await journeys[feature]({ data, call, state, deliver, future, checks });
+if(feature==="guests")await pollJourney({data,call,state,deliver,future,checks});
 await writeFile(evidencePath(`${feature}-wire.json`), JSON.stringify({ checks, scope: "Production routes and services on native local D1; calendar and mail synthetic at the HTTP edge" }, null, 2));
 console.log(`${feature} public-door journey passed.`);
