@@ -18,6 +18,7 @@ export async function calendarScreens(browser,owner,origin,fixture,booking,scans
     const expected=await data('/api/app/bookings?'+new URLSearchParams({fromDate:'2026-03-02',throughDate:'2026-03-08',...filters}));assert.deepEqual(visible,expected.map(b=>b.id).sort(),'calendar uses the list filtered identity set');
     await page.getByRole('link',{name:'Filtered list',exact:true}).click();await page.getByRole('heading',{name:'Bookings',exact:true}).waitFor();await page.getByRole('status').filter({hasText:'Showing'}).waitFor();
     for(const record of expected)assert.ok(await page.getByRole('button').filter({hasText:record.inviteeName}).count()>0,'same booking is present in the filtered list');
+    if(filters.state==='confirmed')await audit('calendar-filtered-list');
    }
    await open('week','2026-03-08');assert.ok((await cell('2026-03-08').innerText()).includes('Gus'));assert.ok((await cell('2026-03-08').innerText()).includes('Fay'));await audit('calendar-week');
    await page.getByRole('combobox',{name:'Attendance',exact:true}).selectOption('no_show');await page.waitForURL(/attendance=no_show/);await page.locator('[data-calendar-ready="true"]').waitFor();const noShows=await data('/api/app/bookings?fromDate=2026-03-02&throughDate=2026-03-08&attendance=no_show');assert.deepEqual(await page.locator('[data-calendar-booking]').evaluateAll(nodes=>nodes.map(n=>n.dataset.calendarBooking).sort()),noShows.map(b=>b.id).sort());await audit('calendar-attendance');await open('week','2026-03-08');
