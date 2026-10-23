@@ -65,3 +65,5 @@ export async function reconciliationUpgrade(source) {
     for(const table of ["payment_processor_facts","accounting_connections","accounting_oauth_states","accounting_exports"])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,"new record kinds start empty");
   }finally{prior.close();}
 }
+
+export async function noticeUpgrade(source){return preservedUpgrade(source,"core/0078_workspace_notices.sql",prior=>{assert.ok(prior.prepare("SELECT count(*) AS n FROM bookings").get().n>0,"upgrade preserves a populated booking");for(const table of ["workspace_notice_destinations","workspace_notice_deliveries","notice_oauth_states","notice_erasure_requests"])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,"new notice record kinds start empty");});}

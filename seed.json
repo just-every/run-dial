@@ -461,6 +461,29 @@
         "mapped income account and service item"
       ],
       "adapters": []
+    },
+    {
+      "id": "slack",
+      "required": false,
+      "why": "FLOW-005 optional workspace booking notices and targeted erasure requests; synthetic HTTP-edge acceptance only.",
+      "data": [
+        "invitee name",
+        "event title, host time and duration",
+        "operator Bookings link",
+        "channel and message cleanup references"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "teams-workflows",
+      "required": false,
+      "why": "FLOW-005 optional Teams Workflows webhook; URL-only authorization cannot delete posted messages, so erasure reports pending manual cleanup.",
+      "data": [
+        "invitee name",
+        "event title, host time and duration",
+        "operator Bookings link"
+      ],
+      "adapters": []
     }
   ],
   "env": [
@@ -595,6 +618,18 @@
       "secret": true,
       "required": false,
       "why": "PAY-006 (external quickbooks-online): QuickBooks Online OAuth client secret. Stored only as deployment configuration; accounting credentials never travel in an archive."
+    },
+    {
+      "name": "SLACK_CLIENT_ID",
+      "secret": true,
+      "required": false,
+      "why": "FLOW-005 (external slack): optional operator-held Slack OAuth application ID."
+    },
+    {
+      "name": "SLACK_CLIENT_SECRET",
+      "secret": true,
+      "required": false,
+      "why": "FLOW-005 (external slack): optional operator-held Slack OAuth application secret. Bot credentials are sealed and excluded from archives."
     }
   ],
   "deploy": {
@@ -629,7 +664,8 @@
       "/api/webhooks/stripe",
       "/api/payments/stripe/oauth/callback",
       "/api/payments/accounting/oauth/callback",
-      "/health"
+      "/health",
+      "/api/notices/slack/oauth/callback"
     ]
   },
   "customFields": [

@@ -21,6 +21,8 @@ export const runtimeEnvironmentSchema: z.ZodObject<{
   GOOGLE_OAUTH_CLIENT_ID: z.ZodOptional<z.ZodString>;
   GOOGLE_OAUTH_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
   CALENDAR_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;
+  SLACK_CLIENT_ID: z.ZodOptional<z.ZodString>;
+  SLACK_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
   QBO_CLIENT_ID: z.ZodOptional<z.ZodString>;
   QBO_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
   STRIPE_SECRET_KEY: z.ZodOptional<z.ZodString>;

@@ -1,5 +1,6 @@
 import { PollsService } from "../features/polls";
 import { ClientsRepository, RememberedDetails } from "../features/clients";
+import { NoticeDestinations, NoticeDelivery, NoticeErasure } from '../features/workspace-notices';
 import { InvitationManageService } from "../features/bookings/invitation-manage";
 import { BookingLinksRepository } from "../features/booking-links/repository";
 import { BookingLinksService } from "../features/booking-links/service";
@@ -44,6 +45,8 @@ import { BaseMailSender, mailConfiguration } from "../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 
 export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsTransport?: typeof fetch } = {}) {
+  const noticeTransport=adapters.paymentsTransport??fetch;
+  const notices={destinations:new NoticeDestinations(binding,runtime,noticeTransport),delivery:new NoticeDelivery(binding,runtime,noticeTransport),erasure:new NoticeErasure(binding,runtime,noticeTransport)};
   const hostProfile = new HostProfileService(new HostProfileRepository(binding));
   const calendar = new CalendarConnectionService(new CalendarConnectionRepository(binding), runtime, adapters.calendar);
   const mailConfig = mailConfiguration(runtime);
@@ -70,6 +73,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     polls: new PollsService(binding,runtime.SESSION_SECRET,runtime.APP_URL,availability,bookingLinks),
     clients: new ClientsRepository(binding),
     rememberedDetails: new RememberedDetails(binding,runtime.SESSION_SECRET,runtime.APP_URL,bookings),
+    notices,
     invitationManage: new InvitationManageService(binding, runtime),
     correspondence: new EventCorrespondenceRepository(binding),
     bookingPolicies: new EventBookingPolicyRepository(binding),
@@ -80,7 +84,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     switchOver: new SwitchOverService(binding, eventTypes, hostProfile, installPublicOrigin(runtime.APP_URL)),
     eraseImportedBooking: (id: string, session: SessionRecord) => eraseImportedBooking(binding, id, session, runtime.SESSION_SECRET),
     erasure: new ErasureRepository(binding, runtime.SESSION_SECRET, id => payments.processorErasure.detachBooking(id, () => payments.money.detachSavedCard(id))),
-    personErasure: new PersonErasure(binding, runtime.SESSION_SECRET, payments.processorErasure),
+    personErasure: new PersonErasure(binding, runtime.SESSION_SECRET, {prepare:async(email,id,actor)=>{await payments.processorErasure.prepare(email,id,actor);await notices.erasure.prepare(email,id);},retry:async id=>{await payments.processorErasure.retry(id);await notices.erasure.retry(id);}}),
     deliveryRecovery: new DeliveryRecovery(binding),
     deliveryPreferences: new DeliveryPreferencesRepository(binding),
     operatorManagement: new OperatorManagementRepository(binding, operators, runtime.SESSION_SECRET),
@@ -94,7 +98,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     calendar,
     mail,
     sendgridWebhook: new SendGridWebhookReceiver(binding, runtime.MAIL_WEBHOOK_KEY),
-    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime),
+    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime, notices.delivery),
     availability,
     bookings,
     payments,

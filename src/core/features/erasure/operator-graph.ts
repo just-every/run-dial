@@ -8,7 +8,7 @@ export function operatorGraph(retainNative: boolean) {
   const email = retainNative ? "(SELECT email FROM oa_operators WHERE id=?)" : "?";
   const recipient = retainNative ? "id" : "email";
   const edges: Edge[] = [
-    ...["oa_sessions", "oa_tokens", "oa_credentials", "oa_owner_signins", "oa_step_up_challenges", "oa_external_identities", "oa_invitation_cancellations", "calendar_oauth_states", "accounting_oauth_states", "oc_owner_claims", "operator_sessions", "magic_link_tokens", "operator_delivery_preferences", "operator_creation_receipts", "operator_creation_tombstones"].map(table => ({ table, from: root, on: { operator_id: "id" } })),
+    ...["oa_sessions", "oa_tokens", "oa_credentials", "oa_owner_signins", "oa_step_up_challenges", "oa_external_identities", "oa_invitation_cancellations", "calendar_oauth_states", "accounting_oauth_states", "notice_oauth_states", "oc_owner_claims", "operator_sessions", "magic_link_tokens", "operator_delivery_preferences", "operator_creation_receipts", "operator_creation_tombstones"].map(table => ({ table, from: root, on: { operator_id: "id" } })),
     { table: "oa_tokens", from: root, on: { issuer_id: "id" } },
     { table: "oa_auth_audit", from: root, on: { actor_id: "id" } },
     { table: "oa_setup_links", from: root, on: { owner_id: "id" } },

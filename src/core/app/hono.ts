@@ -1,5 +1,6 @@
 import { pollRoutes } from "../features/polls";
 import { clientRoutes, rememberRoutes } from "../features/clients";
+import { noticeRoutes } from '../features/workspace-notices';
 import { invitationManageRoutes } from "../features/public-booking/invitation-routes";
 import { bookingLinkRoutes } from "../features/booking-links/routes";
 import { correspondenceRoutes } from "../features/event-types/correspondence-routes";
@@ -104,6 +105,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", invitationManageRoutes)
     .route("/", paymentRoutes)
     .route("/", accountingRoutes)
+    .route("/", noticeRoutes)
     .route("/", reportRoutes)
     .route("/", publicBookingRoutes)
     .route("/", rememberRoutes)
