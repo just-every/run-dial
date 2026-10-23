@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a414526d5ca75fb912a99a408f1daa52bf3158cc9b33bd3d0943b3d8178b2d78",
+      "sha256": "04e66a3887c9f284166969a7b14a6206b357be8480e969d08095b3fe19a3bdcc",
       "executable": false
     },
     "DEMO.md": {
@@ -7608,7 +7608,7 @@
       "executable": false
     },
     "tests/booking-wire/payment-journey.mjs": {
-      "sha256": "fce89472e859282e6ff81b87e1937ec63dc690fee473c5ca326d4aa837ae7f92",
+      "sha256": "19942abf11743780aac548d9c76d8d6a378c665be5082f73f03f13526dca5415",
       "executable": false
     },
     "tests/booking-wire/payment-tax-journey.mjs": {
