@@ -1,4 +1,4 @@
-import { PollsWorkspace } from "../../polls";
+import { PollsWorkspace } from "../../polls/client";
 import { ApprovalRequests } from "./approval-requests";
 import { ErasureRecovery } from "./delivery-actions";
 import { Link } from "@tanstack/react-router";

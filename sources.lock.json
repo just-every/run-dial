@@ -3976,7 +3976,7 @@
       "executable": false
     },
     "scripts/check-boundaries.mjs": {
-      "sha256": "feb6284978bbce82004d121545331b381d873616bb1890d0d2508234329744c1",
+      "sha256": "a3161b8f5833a3d95d65b7eb60cf32e80386e2fc619150c0a4206b66f5559fc6",
       "executable": false
     },
     "scripts/check-migrations.mjs": {
@@ -5140,7 +5140,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/bookings-page.tsx": {
-      "sha256": "a8875e03ee5ed11c6a28111c87bbdb6da6521a81bdd21705d0a118fe4aafee89",
+      "sha256": "24d0bafed87297ba9e2c71e40d62ea43c9e4ee70ed853e040351e33676e383f2",
       "executable": false
     },
     "src/core/features/bookings/ui/cancel-booking-form.tsx": {
@@ -6143,8 +6143,12 @@
       "sha256": "b0c9f75a16bb359501ce6fc24704dd04481f5d33dd1d3661f2192d494aaf6dd7",
       "executable": false
     },
+    "src/core/features/polls/client.ts": {
+      "sha256": "85af68cb5dc8fd75cea6ef6167c7a7f0b2e97a211729c59f4e34889ea269dced",
+      "executable": false
+    },
     "src/core/features/polls/index.ts": {
-      "sha256": "992bb3516faa4f2c1d2d7e57caf234ab02f80aea92fd4cd1f6c4fda5d927dc61",
+      "sha256": "7c2c24d31a41a6452ab7a1e006c870d73efc8b5fcf99ebd8fed8b79e920344bd",
       "executable": false
     },
     "src/core/features/polls/repository.ts": {
@@ -7284,7 +7288,7 @@
       "executable": false
     },
     "src/routes/poll.$id.tsx": {
-      "sha256": "4e213b979fe2bad109d2f28a71107ca4c4f5c73d37b9f13a249ecfd5d94e2cec",
+      "sha256": "7afe04677483f0fc0628da90498c75619264c57ef6f7d941ce3c7239e4e74d67",
       "executable": false
     },
     "src/routes/privacy.tsx": {
