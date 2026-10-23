@@ -5460,7 +5460,7 @@
       "executable": false
     },
     "src/core/features/erasure/graphs.ts": {
-      "sha256": "e176ef9617bced96c87ec58460ad3a67d0682dfbbd91edee5bbbf325f9af4aaa",
+      "sha256": "dc170c416530cad777e821acfa42d1449d108a3a48e925a3bbbbfee7c8719f68",
       "executable": false
     },
     "src/core/features/erasure/identity.ts": {
@@ -7924,7 +7924,7 @@
       "executable": false
     },
     "tests/erasure/remembered-details.mjs": {
-      "sha256": "1522557dad76c3205e50541eee41cdda1200e107d97a12593c6a52201545b074",
+      "sha256": "65caef4987f65a126b25294ae51b91e5fded9f669d0cecef38ebed404c325e46",
       "executable": false
     },
     "tests/erasure/scan.mjs": {
