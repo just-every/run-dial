@@ -11,7 +11,7 @@ export async function approvalMoneyMovements(h,priced,setup){
 
 async function approvedSavedCardFee(h,setup){
   const {data,call,state}=h;
-  const request=await h.authorize(await h.hold(setup,{name:'Leah Patel',email:`synthetic-pay007-fee-ledger-${setup.id}@example.test`}));
+  const request=await h.authorize(await h.hold(setup,{name:'Leah Patel',email:`synthetic-pay007-fee-ledger-${setup.id.toLowerCase()}@example.test`}));
   const shownFee=request.selected.payment.consent.noShowFeeCents;
   if(request.intent.object==='payment_intent')await h.capture(request);
   const approved=request.intent.object==='payment_intent'?{kind:'approved'}:await data(`/api/app/booking-approvals/${request.request.id}/decision`,{decision:'approve',reason:'Approved the consented consultation'});
@@ -50,7 +50,7 @@ async function approvedSavedCardFee(h,setup){
 
 async function cancelledCapturedApproval(h,priced){
   const {data,call,state}=h;
-  const request=await h.authorize(await h.hold(priced,{name:'Jordan Miller',email:`synthetic-pay007-captured-cancel-${priced.id}@example.test`}));
+  const request=await h.authorize(await h.hold(priced,{name:'Jordan Miller',email:`synthetic-pay007-captured-cancel-${priced.id.toLowerCase()}@example.test`}));
   const shownAmount=request.selected.payment.amountCents;
   const token=new URL((await data(`/api/public/payments/${request.returnToken}`)).approvalUrl).pathname.split("/").at(-1);
   assert.equal((await data(`/api/app/booking-approvals/${request.request.id}/decision`,{decision:'approve',reason:'Approved the requested time'})).kind,'capture_pending');

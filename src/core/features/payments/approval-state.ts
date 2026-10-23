@@ -3,7 +3,7 @@ import { createId, nowIso } from "../../shared/ids";
 export type ApprovalPayment = {
   holdId: string; mode: "payment" | "setup"; amountCents: number; accountId: string;
   paymentIntentId: string | null; setupIntentId: string | null; customerId: string | null; paymentMethodId: string | null;
-  saveCard?: boolean; consentVersion?: string; setupRefused?: boolean;
+  saveCard?: boolean; consentVersion?: string; setupRefused?: boolean; setupExpiresAt?: string;
   state: "setup_pending" | "authorized" | "capture_pending" | "void_pending" | "captured" | "voided" | "refund_pending" | "refunded";
   authorizedAt: string; actorId?: string | null; captureActorId?: string | null;
   voidState?: "declined" | "expired"; voidReason?: string; capturedCents?: number; refundId?: string; lastError?: string;

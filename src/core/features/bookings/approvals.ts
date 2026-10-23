@@ -65,7 +65,7 @@ export class ApprovalsRepository {
         const existing = await this.forNonce(claim.nonceId);
         if (existing) return existing;
         const approval = claim.money!.approval!, id = createId(), now = nowIso();
-        const expiresAt = new Date(Math.min(Date.parse(claim.selection.startAt), Date.parse(payment.authorizedAt) + approval.windowHours * 3600000)).toISOString();
+        const expiresAt = payment.state==="setup_pending" ? payment.setupExpiresAt! : new Date(Math.min(Date.parse(claim.selection.startAt), Date.parse(payment.authorizedAt) + approval.windowHours * 3600000)).toISOString();
         await this.db.batch([
             ...[claim.invitee.email, ...claim.invitee.guests ?? []].map(email => this.db.prepare("SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=?) THEN 1 ELSE abs(-9223372036854775808) END").bind(foldBookingSearch(email))),
             this.db.prepare("INSERT INTO booking_approval_requests(id,nonce_id,link_id,booking_id,event_type_id,state,invitee_email,invitee_name,event_title,start_at,end_at,occupied_start_at,occupied_end_at,host_date,expires_at,claim_json,payment_json,created_at,updated_at) SELECT ?,?,(SELECT link_id FROM booking_nonces WHERE id=?),?,?,'pending',?,?,?,?,?,?,?,?,?,?,?, ?,? WHERE EXISTS(SELECT 1 FROM payment_holds WHERE id=? AND state IN ('held','processing') AND claim_json IS NOT NULL) ON CONFLICT(nonce_id) DO NOTHING")

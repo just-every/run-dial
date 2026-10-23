@@ -65,7 +65,7 @@ export class PaymentApprovals {
       if (typeof id!=="string") return {kind:"rejected"};
       const intent = await api.getPaymentIntent(hold.accountId,id);
       if (intent.id!==id || intent.status!=="requires_capture" || intent.capture_method!=="manual" || intent.amount!==hold.amountCents || intent.amount_capturable!==hold.amountCents || intent.amount_received!==0 || intent.currency!=="usd") return {kind:"rejected"};
-      payment={holdId:hold.id,mode:"payment",amountCents:hold.amountCents,accountId:hold.accountId,paymentIntentId:id,setupIntentId:null,customerId:intent.customer,paymentMethodId:intent.payment_method,state:claim.money.consent?"setup_pending":"authorized",saveCard:Boolean(claim.money.consent),consentVersion:claim.money.consent?.version,authorizedAt:nowIso(),audit:approvalAuditIds()};
+      payment={holdId:hold.id,mode:"payment",amountCents:hold.amountCents,accountId:hold.accountId,paymentIntentId:id,setupIntentId:null,customerId:intent.customer,paymentMethodId:intent.payment_method,state:claim.money.consent?"setup_pending":"authorized",saveCard:Boolean(claim.money.consent),setupExpiresAt:hold.expiresAt,consentVersion:claim.money.consent?.version,authorizedAt:nowIso(),audit:approvalAuditIds()};
     }
     const late = hold.expiresAt<=nowIso();
     const expires = new Date(Math.min(Date.parse(claim.selection.startAt),Date.now()+claim.money.approval.windowHours*3600000)).toISOString();
