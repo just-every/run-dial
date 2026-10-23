@@ -71,6 +71,7 @@ export type ManagedCalendarEvent = {
   inviteeEmail: string;
   guestEmails?: string[];
   requestGoogleMeet: boolean;
+  requestMicrosoftTeams?: boolean;
 };
 
 export type ManagedCalendarEventResult = {
