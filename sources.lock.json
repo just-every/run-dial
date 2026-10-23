@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "5be7643fda7eac35b37e4d505914243572c9898c1843532795eba1ce76f1b4ef",
+      "sha256": "dce9a7d2632809cab11e954bad5fb5da3c7fd4b96656437cbe872f838b10315c",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "13762e5d303483e13e3e470297df243cae2db3e4f5cdc56e1e4d95639d9e4ba9",
+      "sha256": "0c05c192c58239ef63bed588f76746ff4ca7369c3dcd4876a17d1a2cab01f111",
       "executable": false
     },
     "DEMO.md": {
@@ -1648,7 +1648,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "5fab4739fc011002ffa5e0abd821a2018f60eb980649e71fc446d109c7585e4c",
+      "sha256": "9122d688c954f4261343bb62e63dddc7bb4ccecf2ac04479c1dbc9d3164d74d7",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -4991,6 +4991,10 @@
       "sha256": "30eded115cb7f5733c4cecfd1fcdcb1772dd7d90d0e70ce5bec0c453515b840b",
       "executable": false
     },
+    "src/core/features/bookings/client.ts": {
+      "sha256": "92e9d1b0472763d057ba9b86138bfd08730b97e8169105295a4b981643ffd096",
+      "executable": false
+    },
     "src/core/features/bookings/contact-host.ts": {
       "sha256": "e0a2199f2291904c51d7cafe0aa275aa7cdad77842ed1508ac9ab7ec40d8fa64",
       "executable": false
@@ -5241,6 +5245,10 @@
     },
     "src/core/features/calendar-connection/service.ts": {
       "sha256": "3aa81b09f80fa8b06f931a7878788eef96d106c8f5244c226b61d3042bb21a6d",
+      "executable": false
+    },
+    "src/core/features/clients/client.ts": {
+      "sha256": "3f518b51cf83f1961812c94910cdef1a28b655b353845205fb1251fc1a436c6a",
       "executable": false
     },
     "src/core/features/clients/index.ts": {
