@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e9fca4b905b97217d4fdb41667917e1ab41320bf555a5f2d00db23ada15c8b12",
+      "sha256": "9835ef76cc16808a3c6b65ad6845c3f2244a4e1a7c8538de59866585ca33da14",
       "executable": false
     },
     "DEMO.md": {
@@ -7524,7 +7524,7 @@
       "executable": false
     },
     "tests/booking-axe/notice-settings.mjs": {
-      "sha256": "57f075d28c96a66feed6131bc7e25674924d0b445ace98c984ceff4b2964f6ce",
+      "sha256": "491d00984ff71796ecd8b429ee3868d697e435845a128da44826662c849457a7",
       "executable": false
     },
     "tests/booking-axe/operator.mjs": {
