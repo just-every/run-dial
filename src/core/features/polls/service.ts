@@ -11,7 +11,7 @@ export class PollsService {
   if(input.closesAt<=new Date().toISOString()||new Set(input.starts).size!==input.starts.length||new Set(input.participants.map(p=>foldEmail(p.email))).size!==input.participants.length)return null;
   const slots=[];
   for(const start of input.starts){const check=await this.availability.verifyOperatorSelection(input.eventTypeId,start,{overrideNoticeAndHorizon:false});if(check.kind!=="valid"||check.event.status!=="published")return null;
-   const paid=await this.db.prepare("SELECT 1 FROM event_type_prices WHERE event_type_id=? UNION SELECT 1 FROM event_type_payment_terms WHERE event_type_id=? LIMIT 1").bind(input.eventTypeId,input.eventTypeId).first();
+   const paid=await this.db.prepare("SELECT 1 FROM event_type_prices WHERE event_type_id=? UNION SELECT 1 FROM event_type_payment_terms WHERE event_type_id=? AND (deposit_kind<>'none' OR late_cancel_fee_cents>0 OR no_show_fee_cents>0) LIMIT 1").bind(input.eventTypeId,input.eventTypeId).first();
    if(paid||(await this.db.prepare("SELECT 1 FROM event_types WHERE id=? AND approval_required=1").bind(input.eventTypeId).first()))return null;
    slots.push({startAt:start,endAt:check.slot.endAt,occupiedStartAt:new Date(Date.parse(start)-check.event.beforeBufferMinutes*60000).toISOString(),occupiedEndAt:new Date(Date.parse(check.slot.endAt)+check.event.afterBufferMinutes*60000).toISOString()});
   }
