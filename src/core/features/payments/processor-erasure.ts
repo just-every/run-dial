@@ -1,12 +1,11 @@
-import { ProcessorRequestsRepository, type ProcessorRequest } from "../erasure";
+import type { ProcessorRequestsRepository, ProcessorRequest } from "../erasure";
 import type { MoneyRefusal } from "./money-service";
 import { StripeApi, StripeApiError } from "./stripe-api";
 
 type Live = () => Promise<{api:StripeApi;accountId:string}|{refusal:MoneyRefusal}>;
 /** The retained request contains only the references required to retry after local erasure. */
 export class ProcessorErasure {
-  readonly requests: ProcessorRequestsRepository;
-  constructor(private readonly db:D1Database,private readonly live:Live){this.requests=new ProcessorRequestsRepository(db);}
+  constructor(private readonly db:D1Database,private readonly live:Live,readonly requests:ProcessorRequestsRepository){}
   async prepare(email:string,receiptId:string,actorId:string){await this.requests.prepare(email,receiptId,actorId);await this.retry(receiptId);}
   async retry(receiptId:string){for(const request of await this.requests.list(receiptId))if(["saved_card_detach","stripe_customer_anonymize"].includes(request.kind))await this.execute(request);}
   async customer(email:string,accountId:string,processorRef:string){const receiptId=await this.requests.receiptForEmail(email);if(receiptId)await this.execute(await this.requests.ensure(receiptId,{kind:"stripe_customer_anonymize",accountId,processorRef}));}

@@ -20,6 +20,7 @@ import { receiptOperators, receiptStatements } from "./receipts";
 import type { PaymentSettings } from "./money-repository";
 import { verifyStripeSignature } from "./webhook-signature";
 import type { Admission } from "../../platform/public-admission";
+import type { ProcessorRequestsRepository } from "../erasure";
 import { ProcessorErasure } from "./processor-erasure";
 import { erasePendingPayments } from "./erasure";
 import type { ApprovalPayment, StripeEvent } from "./approval-state";
@@ -47,14 +48,14 @@ export class PaymentsService {
   private readonly db: D1Database;
   private convert?: PaidConversion;
   private approvalLifecycle?: ApprovalLifecycle;
-  constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, private readonly transport: typeof fetch = fetch) {
+  constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, processorRequests:ProcessorRequestsRepository, private readonly transport: typeof fetch = fetch) {
     this.db = db;
     this.repository = new PaymentsRepository(db);
     this.terms = new MoneyRepository(db);
     this.connection = new StripeConnection(this.repository, runtime, transport);
     const movements = new MovementsRepository(db);
     this.money = new MoneyService(db, this.repository, this.terms, movements, runtime, transport);
-    this.processorErasure = new ProcessorErasure(db, () => this.money.live());
+    this.processorErasure = new ProcessorErasure(db, () => this.money.live(),processorRequests);
     this.invoices = new InvoiceService(db, this.repository, this.terms, movements, this.money);
   }
 

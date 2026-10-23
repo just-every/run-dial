@@ -3,6 +3,7 @@ import { BookingLinksRepository } from "../features/booking-links/repository";
 import { BookingLinksService } from "../features/booking-links/service";
 import { EventCorrespondenceRepository } from "../features/event-types/correspondence-repository";
 import { EventBookingPolicyRepository } from "../features/event-types/booking-policy-repository";
+import { ProcessorRequestsRepository } from "../features/erasure";
 import { PersonErasure } from "../features/erasure/person";
 import { NamedSchedules } from "../features/availability/named-schedules";
 import { BookingLimits } from "../features/availability/booking-limits";
@@ -51,7 +52,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
   const bookingsRepository = new BookingsRepository(binding);
-  const payments = new PaymentsService(binding, runtime, adapters.paymentsTransport);
+  const payments = new PaymentsService(binding, runtime, new ProcessorRequestsRepository(binding), adapters.paymentsTransport);
   payments.setConversion((claim, payment, approval) => bookingsRepository.claim(claim, payment, approval));
   const bookings = new BookingsService(bookingsRepository, availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
