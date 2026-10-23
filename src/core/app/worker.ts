@@ -13,6 +13,7 @@ import { createApp } from "./hono";
 import type { AppBindings } from "./bindings";
 import { createServices, type AppServices } from "./services";
 import { parseRuntimeEnvironment } from "../shared/runtime-env";
+import { localRuntimeBindings } from "../shared/local-runtime-bindings";
 import { fetchBuildAsset } from "../platform/build-assets";
 import { isThemeFile } from "../platform/theme-files";
 import { isPrivateLocalPath } from "../platform/private-local-path";
@@ -60,6 +61,7 @@ const worker = {
 return {
  ...worker,
  fetch(request: Request, env: AppBindings, context: ExecutionContext) {
+  env = localRuntimeBindings(env);
   const run = () => applicationRequest(env.DB, context, async (admit, tracked) => {
    const url = new URL(request.url);
    if (isPrivateLocalPath(url.pathname)) return new Response("Not found", { status: 404 });

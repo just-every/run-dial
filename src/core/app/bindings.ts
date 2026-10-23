@@ -13,6 +13,7 @@ export type AppBindings = {
   /** Local runtimes only: the checkout's key gate and the dev identity switch. Deploy refuses both. */
   RER_DEV_KEY?: string;
   RER_DEV_IDENTITY?: string;
+  RER_DEV_ORIGIN?: string;
   RER_MANAGEMENT_ORIGIN?: string;
   RER_INSTALLATION_ID?: string;
   RER_OWNER_CLAIM_ISSUER?: string;

@@ -1,6 +1,7 @@
 import { isLoopbackHost } from "../../../modules/operator-auth/index.mjs";
 import type { z } from "zod";
 import { runtimeEnvironmentSchema } from "./runtime-env-schema.mjs";
+import { localRuntimeBindings } from "./local-runtime-bindings";
 
 export type RuntimeEnvironment = z.infer<typeof runtimeEnvironmentSchema>;
 
@@ -11,6 +12,7 @@ export class RuntimeConfigurationError extends Error {
 }
 
 export function parseRuntimeEnvironment(env: Record<string, unknown>): RuntimeEnvironment {
+  env = localRuntimeBindings(env);
   const missing = ["ENVIRONMENT", "APP_URL", "SESSION_SECRET"].filter(
     (name) => typeof env[name] !== "string" || env[name].trim() === "",
   );
