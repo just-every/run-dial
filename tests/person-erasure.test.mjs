@@ -8,7 +8,7 @@ import { hashToken } from '../modules/operator-auth/crypto.mjs';
 import { dialPolicy, guardedBucket } from '../scripts/local/archive-policy.mjs';
 import { createPortability } from '@runeditrun/rer/modules/portability';
 
-contract(['DATA-002', 'CLIENT-001'], 'native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person', async (context) => {
+contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person', async (context) => {
   const rt = await bookingRuntime({ developmentMail: true });
   const email = 'erase-person-78321@example.test', name = 'PERSON_NAME_78321', text = 'PERSON_TEXT_78321';
   const unicodeAlias = 'eraſe-person-78321@example.test';
@@ -19,13 +19,23 @@ contract(['DATA-002', 'CLIENT-001'], 'native email preview is inert; one confirm
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=', 'base64');
     const avatarResponse = await rt.api('/api/app/profile/avatar', { method: 'PUT', headers: { 'content-type': 'image/png' }, body: png });
     assert.equal(avatarResponse.status, 200); const avatar = await avatarResponse.json();
+    const initialEvent = await rt.data('/api/public/events/dial-host/intro');
+    const editableEvent = await rt.data('/api/app/event-types/' + initialEvent.eventType.id);
+    const updatedEvent = await rt.data('/api/app/event-types/' + editableEvent.id, { ...editableEvent,
+      locationType: 'invitee_phone', locationLabel: 'Host calls invitee', locationValue: '', locations: [{ id: 'phone', type: 'invitee_phone', label: 'Host calls invitee', value: '' }],
+      questions: [...editableEvent.questions, { kind: 'phone', label: 'Contact phone', required: true, private: true, options: [] }],
+    }, 200, 'PUT');
+    await rt.data('/api/app/event-types/' + editableEvent.id + '/guests', { guestLimit: 2 }, 200, 'PUT');
+    const phoneKey = updatedEvent.questions.find(question => question.kind === 'phone').key;
+    const personalPhone = '+12025550101', controlPhone = '+12025550102';
+    markers.push(personalPhone);
     const event = await rt.data('/api/public/events/dial-host/intro');
     const week = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-    async function book(personEmail, personName, answer) {
+    async function book(personEmail, personName, answer, guests = []) {
       const available = await rt.data(`/api/public/book/dial-host/intro/availability?week=${week}`);
       const startAt = available.slots[0].startAt;
       const selection = await rt.data('/api/public/book/dial-host/intro/selection', { startAt, inviteeTimezone: 'UTC' }, 201);
-      return rt.data('/api/public/book/dial-host/intro/confirm', { nonce: selection.nonce, startAt, inviteeTimezone: 'UTC', name: personName, email: personEmail, answers: { [event.eventType.questions[0].key]: answer } }, 201);
+      return rt.data('/api/public/book/dial-host/intro/confirm', { nonce: selection.nonce, startAt, inviteeTimezone: 'UTC', name: personName, email: personEmail, guests, locationId: 'phone', locationInput: personName === name ? personalPhone : controlPhone, answers: { [event.eventType.questions[0].key]: answer, [phoneKey]: personName === name ? personalPhone : controlPhone } }, 201);
     }
     const first = await book(unicodeAlias, name, text);
     const earlyPreview = await rt.data('/api/app/privacy/preview', { email });
@@ -33,6 +43,14 @@ contract(['DATA-002', 'CLIENT-001'], 'native email preview is inert; one confirm
     assert.equal(clientBefore.totalCount, 2, 'CLIENT-001 normalized email joins the imported booking and Unicode-alias booking');
     await book(email.toUpperCase(), name, text);
     const control = await book('control-person-78321@example.test', 'Control person', 'Control private answer');
+    await book('synthetic-dial-900@example.test', 'Synthetic Dial Shared Host', 'Shared booking answer', [email, 'control-person-78321@example.test']);
+    const sharedBooking = await rt.db.prepare("SELECT id FROM bookings WHERE invitee_email='synthetic-dial-900@example.test'").first();
+    const controlGuestBefore = await rt.db.prepare("SELECT * FROM booking_guests WHERE booking_id=? AND email='control-person-78321@example.test'").bind(sharedBooking.id).first();
+    assert.ok(controlGuestBefore);
+    assert.ok(await rt.db.prepare('SELECT 1 FROM booking_guests WHERE booking_id=? AND email=?').bind(sharedBooking.id, email).first(), 'target has a guest row outside their own booking graph');
+    const phoneRows = (await rt.db.prepare('SELECT b.location_value, a.value_json FROM bookings b JOIN booking_answers a ON a.booking_id=b.id WHERE b.invitee_email_folded=? AND a.question_key=?').bind(email, phoneKey).all()).results;
+    assert.equal(phoneRows.length, 2);
+    assert.ok(phoneRows.every(row => row.location_value === personalPhone && JSON.parse(row.value_json) === personalPhone), 'phone lives in both booking location and phone-question answers');
     const composition = { inviteeName: name, inviteeEmail: email, inviteeTimezone: 'UTC', note: text, windows: [{ date: week, startMinute: 600, endMinute: 630 }] };
     const review = await rt.data('/api/public/events/dial-host/intro/request/review', composition, 201);
     await rt.data(`/api/public/events/dial-host/intro/request?nonce=${review.nonce}`, composition, 201);
@@ -150,6 +168,10 @@ contract(['DATA-002', 'CLIENT-001'], 'native email preview is inert; one confirm
     assert.deepEqual((await clientHistory()).bookings, [], 'person erasure removes the entire derived client history');
     assert.equal((await rt.data('/api/app/clients')).clients.some(row => row.email === email), false);
     assert.deepEqual(await rt.data(controlClientPath), controlClientBefore, 'control client history stays byte-identical');
+    assert.equal(await rt.db.prepare('SELECT 1 FROM booking_guests WHERE email=?').bind(email).first(), null, 'DATA-006 removes the target guest row');
+    assert.deepEqual(await rt.db.prepare("SELECT * FROM booking_guests WHERE booking_id=? AND email='control-person-78321@example.test'").bind(sharedBooking.id).first(), controlGuestBefore, 'control guest row stays byte-identical');
+    assert.equal(await rt.db.prepare('SELECT 1 FROM bookings WHERE location_value=?').bind(personalPhone).first(), null);
+    assert.equal(await rt.db.prepare('SELECT 1 FROM booking_answers WHERE instr(value_json,?)>0').bind(personalPhone).first(), null);
     assert.deepEqual(await rt.data(`/api/app/bookings/${controlId}`), controlBefore);
     assert.deepEqual(await rt.data('/api/app/profile'), profileBefore);
     assert.deepEqual(Buffer.from(await (await rt.bucket.get(avatar.avatarKey)).arrayBuffer()), png);
@@ -168,7 +190,7 @@ contract(['DATA-002', 'CLIENT-001'], 'native email preview is inert; one confirm
     assert.equal(completed.calendarCleanup, 'completed'); assert.ok(calendarMilliseconds < 300000);
     context.diagnostic(JSON.stringify({ receipt: { id: receipt.id, bookings: receipt.bookings, requests: receipt.requests, requestedAt: receipt.requestedAt, completedAt: receipt.completedAt, localComplete: receipt.localComplete, calendarCleanup: completed.calendarCleanup }, successfulResumeLocalMilliseconds: localMilliseconds, successfulResumeToCalendarMilliseconds: calendarMilliseconds, firstAttemptToCalendarMilliseconds: Date.now() - Date.parse(receipt.requestedAt), statuses: { preview: 200, staleConfirmation: 409, invalidConfirmation: 409, atomicFailure: failed.status, partialFailure: partial.status, resumedConfirmation: 200, receipt: 200, erasedManage: expired.status, replayedRequest: replay.status, erasedReview: staleReview.status } }));
     const events = (await rt.providerDb.prepare('SELECT payload FROM wire_events').all()).results.map(row => JSON.parse(row.payload));
-    assert.ok(events.filter(row => row.status !== 'cancelled').every(row => row.extendedProperties.private['dial-booking-id'] === controlId));
+    assert.ok(events.filter(row => row.status !== 'cancelled').every(row => [controlId, sharedBooking.id].includes(row.extendedProperties.private['dial-booking-id'])));
     const controlManage = await rt.api(new URL(control.manageUrl).pathname.replace('/manage/', '/api/public/manage/'));
     assert.equal(controlManage.status, 200); await controlManage.arrayBuffer();
     const afterCalendarScan = await scan(rt.db, rt.bucket, markers, knownHashes);
