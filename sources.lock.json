@@ -7636,7 +7636,7 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "f27c06323382563cd8b94360974ba8c48838aa39b1a7747e8c8ff82e559fe7df",
+      "sha256": "4107dee99923d12c48c73ba25c36a1502432ba3d40c1060a6e0d4a596b81bd15",
       "executable": false
     },
     "tests/booking-wire/approval-journey.mjs": {
@@ -7664,7 +7664,7 @@
       "executable": false
     },
     "tests/booking-wire/feature-journey.mjs": {
-      "sha256": "d9cf48eac400ced5535d32e9ab869cc1feeb4af94a5c0bf6b97cc7e7971b4176",
+      "sha256": "3500571608becc1a872c3e99d63d223531e6fe8a66d344d2429b0225e7d8b0ea",
       "executable": false
     },
     "tests/booking-wire/guest-journey.mjs": {
@@ -7816,7 +7816,7 @@
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "14f87c96470428b78506dc3f395c0395aa50efb1f81f4461d5cea8bdf998de2b",
+      "sha256": "9c6c13b006b910e9d587604343587199fdb619b812d5251d8493387489b665bd",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {
