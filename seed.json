@@ -588,13 +588,13 @@
       "name": "QBO_CLIENT_ID",
       "secret": true,
       "required": false,
-      "why": "QuickBooks Online OAuth application ID for the optional accounting export destination."
+      "why": "PAY-006 (external quickbooks-online): QuickBooks Online OAuth application ID for the optional accounting export destination."
     },
     {
       "name": "QBO_CLIENT_SECRET",
       "secret": true,
       "required": false,
-      "why": "QuickBooks Online OAuth client secret. Stored only as deployment configuration; accounting credentials never travel in an archive."
+      "why": "PAY-006 (external quickbooks-online): QuickBooks Online OAuth client secret. Stored only as deployment configuration; accounting credentials never travel in an archive."
     }
   ],
   "deploy": {
