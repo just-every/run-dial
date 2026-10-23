@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Card, buttonClassName } from "../../../app/ui/primitives";
-import { BookingBadge, timeRange } from "../../bookings";
+import { BookingBadge, timeRange } from "../../bookings/client";
 import type { ClientHistory } from "../types";
 
 export function ClientHistoryView({ history, timezone }: { history: ClientHistory; timezone: string }) {

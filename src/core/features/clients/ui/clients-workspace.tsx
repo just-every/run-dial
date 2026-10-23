@@ -3,7 +3,7 @@ import { useState } from "react";
 import { PageHeader } from "../../../app/ui/page-header";
 import { Card, buttonClassName, noticeClassName } from "../../../app/ui/primitives";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
-import { bookingWorkspaceSearch } from "../../bookings";
+import { bookingWorkspaceSearch } from "../../bookings/client";
 import type { ClientHistory, ClientList } from "../types";
 import { useClientRead } from "./use-client-read";
 import { ClientHistoryView } from "./client-history";

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { noticeClassName } from "../../../app/ui/primitives";
-import { BookingDetail } from "../../bookings";
-import type { BookingRecord } from "../../bookings";
+import { BookingDetail } from "../../bookings/client";
+import type { BookingRecord } from "../../bookings/client";
 import { useClientRead } from "./use-client-read";
 
 /** The ordinary OPER-004 record and actions, selected by its exact ID. */

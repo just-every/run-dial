@@ -1,5 +1,5 @@
 import { GuestFields, guestEmails } from "./guest-fields";
-import { RememberDetails } from "../../clients";
+import { RememberDetails } from "../../clients/client";
 import { PayStepNotice } from "./pay-step";
 import { BillingTax, useTaxQuote } from "./billing-tax";
 import { formatUsd } from "../../../shared/event-price";
