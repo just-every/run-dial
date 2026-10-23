@@ -6796,7 +6796,7 @@
       "executable": false
     },
     "src/core/features/workspace-notices/erasure.ts": {
-      "sha256": "ad4bb19d799ec0874acfbcda4674481d2c0f60a47f13af51ceca0309c6aa4ebd",
+      "sha256": "11e3a58f1617a54c8cc5f7b4fc828a3fc5eeb711c2e6233d1408e671d2f97d9d",
       "executable": false
     },
     "src/core/features/workspace-notices/index.ts": {
