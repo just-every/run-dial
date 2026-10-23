@@ -20,6 +20,7 @@ import { receiptOperators, receiptStatements } from "./receipts";
 import type { PaymentSettings } from "./money-repository";
 import { verifyStripeSignature } from "./webhook-signature";
 import type { Admission } from "../../platform/public-admission";
+import { ProcessorErasure } from "./processor-erasure";
 import { erasePendingPayments } from "./erasure";
 import type { ApprovalPayment, StripeEvent } from "./approval-state";
 
@@ -37,6 +38,7 @@ type ApprovalLifecycle = {receive(hold:PaymentHold,event:StripeEvent):Promise<We
 export type WebhookResult = { kind: "unauthorized" | "processed" | "ignored" | "rejected" } | { kind: "limited"; retryAfterSeconds: number };
 
 export class PaymentsService {
+  readonly processorErasure: ProcessorErasure;
   readonly connection: StripeConnection;
   readonly money: MoneyService;
   readonly invoices: InvoiceService;
@@ -52,6 +54,7 @@ export class PaymentsService {
     this.connection = new StripeConnection(this.repository, runtime, transport);
     const movements = new MovementsRepository(db);
     this.money = new MoneyService(db, this.repository, this.terms, movements, runtime, transport);
+    this.processorErasure = new ProcessorErasure(db, () => this.money.live());
     this.invoices = new InvoiceService(db, this.repository, this.terms, movements, this.money);
   }
 
@@ -143,7 +146,15 @@ export class PaymentsService {
 
   async bookingPayment(bookingId: string) { return this.repository.bookingPayment(bookingId); }
 
-  erasePendingHolds(email: string) { return erasePendingPayments(this.db, email, () => this.money.live()); }
+  async erasePendingHolds(email: string) {
+    const outcomes = await erasePendingPayments(this.db, email, () => this.money.live(), (account, ref) => this.processorErasure.detach(email, account, ref));
+    for (const outcome of outcomes) {
+      if(outcome.customerId)await this.processorErasure.customer(email,outcome.accountId,outcome.customerId);
+      if(outcome.voidedIntentId)await this.processorErasure.fact(email,"payment_authorization_void",outcome.accountId,outcome.voidedIntentId);
+      if(outcome.refundId)await this.processorErasure.fact(email,"payment_refund",outcome.accountId,outcome.refundId);
+    }
+    return outcomes;
+  }
 
   /** The return page reads state only. Neither its query nor Stripe's session ID can confirm a booking. */
   async returnStatus(token: string) {

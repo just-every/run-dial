@@ -7,7 +7,7 @@ export { scrub, collectSecrets } from './redaction.mjs';
 // operator_setup_identity retains its durable first-run timestamp, including NULL.
 export const exported = [
   ...importExported,
-  'rer_erasure_operations', 'person_erasure_receipts', 'operator_erasure_subjects',
+  'rer_erasure_operations', 'person_erasure_receipts', 'processor_erasure_requests', 'operator_erasure_subjects',
   'ext_custom_field_definitions', 'ext_custom_field_values',
   'avatar_object_deletions', 'operators', 'host_profiles', 'host_link_copy_reports', 'profile_focus_areas', 'social_proof_entries', 'event_types',
   'event_questions', 'recurring_availability_windows', 'availability_date_overrides',
@@ -66,6 +66,6 @@ export function canonicalRow(name, source, secrets = []) {
     row.payload_json = JSON.stringify({ ...payload, archiveHistorical: true });
     if (['pending', 'processing'].includes(row.state)) { row.state = 'failed'; row.last_error_code = 'restored_historical_command'; }
   }
-  if (name === 'calendar_deletion_probes' || name === 'erased_calendar_targets' || name === 'booking_reschedule_requests') row.archive_historical = 1;
+  if (name === 'processor_erasure_requests' || name === 'calendar_deletion_probes' || name === 'erased_calendar_targets' || name === 'booking_reschedule_requests') row.archive_historical = 1;
   return row;
 }

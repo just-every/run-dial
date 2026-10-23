@@ -81,7 +81,8 @@ contract('DATA-002', 'native email preview is inert; one confirmation erases per
     const failed = await rt.api('/api/app/privacy/erase', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     assert.ok(failed.status >= 500); await failed.arrayBuffer();
     const afterFailure = await snapshot(rt.db);
-    for (const table of Object.keys(before).filter(table => !['person_erasure_locks','person_erasure_receipts'].includes(table))) assert.equal(JSON.stringify(afterFailure[table]) === JSON.stringify(before[table]), true, `${table}: failed native batch must roll back`);
+    assert.ok(afterFailure.processor_erasure_requests.every(row=>!JSON.stringify(row).includes(email)&&!JSON.stringify(row).includes(name)),"retained processor commands carry no personal value even after failed local deletion");
+    for (const table of Object.keys(before).filter(table => !['person_erasure_locks','person_erasure_receipts','processor_erasure_requests'].includes(table))) assert.equal(JSON.stringify(afterFailure[table]) === JSON.stringify(before[table]), true, `${table}: failed native batch must roll back`);
     const pending = await rt.data('/api/app/privacy/preview', { email });
     assert.equal(pending.pending, true); assert.equal(pending.bookings, 3);
     // A pending real person operation closes identity and invitee admission;

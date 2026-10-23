@@ -4,7 +4,7 @@ import { pendingRefundKey, pendingRefundParams } from "./pending-refund";
 type ApprovalAudit = Partial<Record<"authorize" | "capture" | "void" | "detach" | "refund", string>>;
 
 export type PendingPaymentCleanup = {
-  holdId: string; customerId: string | null; savedCard: "detached" | "not_saved";
+  holdId: string; accountId: string; customerId: string | null; savedCard: "detached" | "not_saved" | "failed";
   paymentIntentId: string | null; paymentMethodId: string | null; amountCents: number; refundId: string | null;
   approval?: boolean; audit?: ApprovalAudit; voidedIntentId?: string; authorizedCents?: number;
 };
@@ -12,7 +12,7 @@ type PendingHold = { id: string; accountId: string; sessionId: string | null; cl
 
 /** Erasure closes Checkout before dropping the claim. A paid Checkout is refunded without ever converting it
  * into a booking. An unresolved processor outcome preserves the hold and erasure lock for an explicit retry. */
-export async function erasePendingPayments(db: D1Database, email: string, live: () => Promise<{ api: StripeApi; accountId: string } | { refusal: string }>): Promise<PendingPaymentCleanup[]> {
+export async function erasePendingPayments(db: D1Database, email: string, live: () => Promise<{ api: StripeApi; accountId: string } | { refusal: string }>, detach?: (accountId:string,card:string)=>Promise<boolean>): Promise<PendingPaymentCleanup[]> {
   const holds = (await db.prepare("SELECT id,account_id AS accountId,checkout_session_id AS sessionId,claim_json AS claimJson FROM payment_holds WHERE invitee_email_folded=? AND state IN ('held','processing') ORDER BY id").bind(email).all<PendingHold>()).results;
   if (!holds.length) return [];
   const connection = await live();
@@ -20,7 +20,7 @@ export async function erasePendingPayments(db: D1Database, email: string, live: 
   const outcomes: PendingPaymentCleanup[] = [];
   for (const hold of holds) {
     if (hold.accountId !== connection.accountId) throw new Error("payment_erasure_account_changed");
-    const outcome: PendingPaymentCleanup = { holdId: hold.id, customerId: null, savedCard: "not_saved", paymentIntentId: null, paymentMethodId: null, amountCents: 0, refundId: null };
+    const outcome: PendingPaymentCleanup = { holdId: hold.id, accountId: hold.accountId, customerId: null, savedCard: "not_saved", paymentIntentId: null, paymentMethodId: null, amountCents: 0, refundId: null };
     const claim = JSON.parse(hold.claimJson) as { bookingId: string; money?: { approval?: unknown } };
     if (claim.money?.approval) {
       outcome.approval = true;
@@ -64,9 +64,12 @@ export async function erasePendingPayments(db: D1Database, email: string, live: 
         if (intent.customer) card = intent.payment_method;
       } else throw new Error("payment_erasure_payment_processing");
       if (card) {
-        try { await connection.api.detachPaymentMethod(hold.accountId, card); }
-        catch (error) { if (!(error instanceof StripeApiError) || error.status !== 400 || !["resource_missing", "payment_method_unexpected_state"].includes(error.code)) throw error; }
-        outcome.savedCard = "detached";
+        if(detach)outcome.savedCard=await detach(hold.accountId,card)?"detached":"failed";
+        else {
+          try { await connection.api.detachPaymentMethod(hold.accountId, card); }
+          catch (error) { if (!(error instanceof StripeApiError) || error.status !== 400 || !["resource_missing", "payment_method_unexpected_state"].includes(error.code)) throw error; }
+          outcome.savedCard = "detached";
+        }
         outcome.paymentMethodId = card;
       }
     }

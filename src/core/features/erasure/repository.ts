@@ -85,7 +85,7 @@ function savedCardOutcome(bookingId: string, email: string, operatorId: string, 
   if (outcome === "not_saved") return [];
   const now = nowIso();
   return [
-    { sql: "INSERT INTO anonymized_audit (id, entity_kind, action, actor_type, actor_id, happened_at, erased_at) SELECT ?, 'payment', ?, 'operator', ?, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)", params: [createId(), `saved_card_${outcome}`, operatorId, now, now, bookingId] },
+    { sql: "INSERT INTO anonymized_audit (id, entity_kind, action, actor_type, actor_id, happened_at, erased_at,amount_cents,processor_ref,reason) SELECT ?, 'payment', ?, 'operator', ?, ?, ?,0,stripe_payment_method_id,'Person erasure saved-card cleanup' FROM booking_card_consents WHERE booking_id=?", params: [createId(), `saved_card_${outcome}`, operatorId, now, now, bookingId] },
     { sql: "UPDATE person_erasure_receipts SET saved_cards_detached = COALESCE(saved_cards_detached, 0) + ?, saved_card_failures = COALESCE(saved_card_failures, 0) + ? WHERE id = (SELECT receipt_id FROM person_erasure_locks WHERE email = ?) AND EXISTS (SELECT 1 FROM bookings WHERE id = ?)", params: [outcome === "detached" ? 1 : 0, outcome === "detached" ? 0 : 1, email, bookingId] },
   ];
 }

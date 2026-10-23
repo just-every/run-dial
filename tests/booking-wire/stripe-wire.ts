@@ -1,6 +1,7 @@
 /** Contract-shaped Stripe API and Connect OAuth at the HTTP edge (PAY-001, PAY-003, PAY-005). Production's StripeApi
  * talks to these exactly as to api.stripe.com and connect.stripe.com; no Stripe secret exists in CI. */
 export const stripeHosts = ["api.stripe.com", "connect.stripe.com"];
+import { stripeCustomerErasure } from "./stripe-erasure";
 import { stripeGate } from "./stripe-gates";
 import { stripeAuthorization } from "./stripe-authorization";
 
@@ -27,6 +28,7 @@ export async function stripeWire(db: D1Database, url: URL, method: string, init:
     if (prior) return new Response(prior.body, { status: prior.status, headers: { "content-type": "application/json" } });
     // Transport faults happen outside Stripe's idempotent execution: a retry sees the original result.
     if (url.pathname === "/v1/refunds" && await control(db, "stripe-refund-unavailable")) return stripeError(503, "unavailable");
+    if (/\/customers\/[^/]+$/.test(url.pathname) && await control(db, "stripe-anonymize-unavailable")) return stripeError(503, "unavailable");
     const operation = /\/payment_intents\/[^/]+\/(capture|cancel)$/.exec(url.pathname)?.[1];
     if (operation && await control(db, `stripe-${operation}-unavailable`)) return stripeError(503, "unavailable");
     const response = await stripeObjects(db, url, method, form);
@@ -79,6 +81,8 @@ async function checkoutSessions(db: D1Database, url: URL, method: string, form: 
 
 /** PaymentIntents, SetupIntents, refunds and saved payment methods (PAY-003). */
 async function stripeObjects(db: D1Database, url: URL, method: string, form: URLSearchParams) {
+  const erasure = await stripeCustomerErasure(db,url,method,form);
+  if(erasure)return erasure;
   const authorization = await stripeAuthorization(db, url, method, form);
   if (authorization) return authorization;
   const intent = /^\/v1\/(payment_intents|setup_intents)\/([^/]+)$/.exec(url.pathname);
@@ -152,6 +156,7 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
   }
   const detach = /^\/v1\/payment_methods\/([^/]+)\/detach$/.exec(url.pathname);
   if (detach && method === "POST") {
+    if(await control(db,"stripe-detach-refused"))return stripeError(403,"payment_method_detach_refused");
     const card = await object(db, detach[1]);
     if (!card) return stripeError(404, "resource_missing");
     if (!card.payload.customer) return stripeError(400, "payment_method_unexpected_state");

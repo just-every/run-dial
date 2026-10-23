@@ -161,6 +161,8 @@ export const applicationTables = [
   "rer_erasure_guard",
   "rer_erasure_scope",
   "rer_erasure_rates",
+  // DATA-007: anonymous processor lookup references/outcomes; retained for cleanup, no payer values.
+  "processor_erasure_requests",
   "person_erasure_receipts",
   "person_erasure_locks",
 ] as const;

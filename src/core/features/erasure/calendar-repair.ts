@@ -10,5 +10,6 @@ export function calendarErasureRepair(id: string, source: string, newerThan?: st
       WHERE booking_id = ? AND archive_historical = 0 ${newerThan === undefined ? "" : "AND (completed_at IS NULL OR completed_at < ?)"}
       ON CONFLICT(idempotency_key) DO NOTHING`, params: [jobId, `erasure:${id}:${source}`, now, now, now, id, ...(newerThan === undefined ? [] : [newerThan])] },
     { sql: "UPDATE erased_calendar_targets SET completed_at = NULL, last_error_code = NULL WHERE booking_id = ? AND archive_historical = 0 AND EXISTS (SELECT 1 FROM delivery_outbox WHERE id = ?)", params: [id, jobId] },
+    {sql:"UPDATE processor_erasure_requests SET state='pending',reason='late_calendar_effect',updated_at=? WHERE kind='calendar_event_cancel' AND lookup_key=? AND archive_historical=0 AND EXISTS(SELECT 1 FROM delivery_outbox WHERE id=?)",params:[now,id,jobId]},
   ];
 }

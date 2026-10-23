@@ -1,19 +1,20 @@
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import AxeBuilder from "@axe-core/playwright";
 import { chromium, expect } from "@playwright/test";
 import { completeEmptyWorkspace } from "../tests/booking-axe/first-run-fixture.mjs";
 import { cancellationMailScreens } from "./payment-cancellation-mail-screens.mjs";
 
-const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752";
-const folder = process.env.DIAL_ERASURE_SCREENS; assert.ok(folder); await mkdir(folder, { recursive: true });
-const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
-const owner = await browser.newContext(), headers = { Origin: origin };
+export async function runPaymentErasureScreens({browser,owner,origin,folder,initialize=false}) {
+await mkdir(folder, { recursive: true });
+const headers = { Origin: origin };
 const json = async (response, status = 200) => { assert.equal(response.status(), status, `native HTTP ${response.status()}`); return response.json(); };
 const post = async (path, data, status = 200) => json(await owner.request.post(origin + path, { headers, data }), status);
 try {
-  assert.equal((await owner.request.post(origin + "/auth/bootstrap", { headers, data: { token: "dial-test-only-setup-token-at-least-32", displayName: "Morgan Bell", returnTo: "/setup" }, maxRedirects: 0 })).status(), 303);
-  await completeEmptyWorkspace(owner, origin); await post("/__fixtures/setup", {});
+  if(initialize){assert.equal((await owner.request.post(origin + "/auth/bootstrap", { headers, data: { token: "dial-test-only-setup-token-at-least-32", displayName: "Morgan Bell", returnTo: "/setup" }, maxRedirects: 0 })).status(), 303);
+  await completeEmptyWorkspace(owner, origin); await post("/__fixtures/setup", {});}
   await owner.request.post(origin + "/__fixtures/payments/connect", { headers, data: { accountId: "acct_wirehost" } });
   const event = await post("/api/app/event-types", { slug: "synthetic-dial-erasure", title: "Strategy consultation", description: "A focused hour to work through your plan.", durationMinutes: 60, color: "#176b5a", locationType: "fixed_link", locationLabel: "Video room", locationValue: "https://meet.example.test/consultation", listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 60, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 })) }, 201);
   await json(await owner.request.put(`${origin}/api/app/event-types/${event.id}/price`, { headers, data: { amountCents: 21775, durationPrices: [] } }));
@@ -38,11 +39,16 @@ try {
       assert.equal((await previewed).status(), 200);
       await expect(card.getByRole("button", { name: "Confirm permanent erasure", exact: true })).toBeVisible();
       await expect(card.getByText(/1 pending Checkout payment will be closed/)).toBeVisible();
-      await shot(page, card, width, "payment-erasure-preview");
+      await expect(card.getByRole("list",{name:"Processor erasure requests"})).toBeVisible();
+      await expect(card.getByText("Stripe Checkout email: pending.",{exact:true})).toBeVisible();
+      await shot(page, card, width, "payment-erasure-preview", folder);
       await card.getByRole("button", { name: "Confirm permanent erasure", exact: true }).click();
       await expect(card.getByText("Stripe Checkout sessions kept: 1.", { exact: true })).toBeVisible();
       await expect(card.getByText(/Saved cards: 1 detached at Stripe, 0 not detached/)).toBeVisible();
-      await shot(page, card, width, "payment-erasure-complete");
+      await expect(card.getByText("Saved-card detach: completed.",{exact:true})).toBeVisible();
+      await expect(card.getByText("Stripe Customer anonymize: completed.",{exact:true})).toBeVisible();
+      await expect(card.getByText(/No email-erasure request was sent/)).toBeVisible();
+      await shot(page, card, width, "payment-erasure-complete", folder);
       // A late signed event never brings back the erased booking.
       const body = JSON.stringify({ id: `synthetic-dial-${randomUUID()}`, type: "checkout.session.completed", account: "acct_wirehost", data: { object: paid } });
       const timestamp = Math.floor(Date.now() / 1000), signature = createHmac("sha256", "whsec_wiretest").update(`${timestamp}.${body}`).digest("hex");
@@ -51,12 +57,25 @@ try {
     } catch (error) { console.log("Settings diagnostics", JSON.stringify({ errors, alerts: await page.getByRole("alert").allTextContents() })); await page.screenshot({ path: `${folder}/failed-${width}.png`, fullPage: true }); throw error; }
     finally { await page.close(); }
   }
-  await cancellationMailScreens({ browser, owner, origin, folder, event });
+  if(initialize)await cancellationMailScreens({ browser, owner, origin, folder, event });
   console.log("Payment erasure preview, completed receipt and cancellation email passed at 1440 and 390.");
-} finally { await owner.close(); await browser.close(); }
+} finally { /* The caller owns its browser and native session. */ }
+}
 
-async function shot(page, card, width, name) {
+async function shot(page, card, width, name, folder) {
   await card.scrollIntoViewIfNeeded(); await page.evaluate(() => globalThis.document.fonts.ready);
   assert.ok(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.document.documentElement.clientWidth + 1));
+  const axe=await new AxeBuilder({page}).analyze();
+  assert.deepEqual(axe.violations.filter(item=>["serious","critical"].includes(item.impact)).map(item=>item.id),[]);
+  const iconOnly=await page.locator("button,a").evaluateAll(nodes=>nodes.filter(node=>!node.textContent.trim()&&node.querySelector("svg")).map(node=>({name:node.getAttribute("aria-label"),tooltip:node.getAttribute("aria-describedby")})));
+  assert.deepEqual(iconOnly,[],"erasure Settings screen has no icon-only controls requiring tooltips");
   await card.screenshot({ path: `${folder}/${name}-${width}.png` });
+}
+
+if(process.argv[1]===fileURLToPath(import.meta.url)){
+  const origin=process.env.DIAL_REVIEW_ORIGIN??"http://127.0.0.1:15752",folder=process.env.DIAL_ERASURE_SCREENS;
+  assert.ok(folder);
+  const browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]}),owner=await browser.newContext();
+  try{await runPaymentErasureScreens({browser,owner,origin,folder,initialize:true});}
+  finally{await owner.close();await browser.close();}
 }

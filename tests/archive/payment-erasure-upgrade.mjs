@@ -19,6 +19,12 @@ export async function paidApprovalUpgrade(source) {
   });
 }
 
+export async function processorErasureUpgrade(source) {
+  return preservedUpgrade(source,"core/0076_processor_erasure_requests.sql",prior=>{
+    assert.equal(prior.prepare("SELECT count(*) AS n FROM processor_erasure_requests").get().n,0,"historical receipts gain no invented external request");
+  });
+}
+
 async function preservedUpgrade(source, file, check) {
   const prior = new DatabaseSync(":memory:"), migrations = await migrationFiles();
   const upgrade = migrations.find(row => row.file === file);

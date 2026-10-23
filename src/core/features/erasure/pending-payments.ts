@@ -7,7 +7,7 @@ import { erasurePortability } from "./portability";
 import type { ErasureStatement } from "./booking-statements";
 
 export type PendingPaymentCleanup = {
-  holdId: string; customerId: string | null; savedCard: "detached" | "not_saved";
+  holdId: string; customerId: string | null; savedCard: "detached" | "not_saved" | "failed";
   paymentIntentId: string | null; paymentMethodId: string | null; amountCents: number; refundId: string | null;
   approval?: boolean; audit?: Partial<Record<"authorize" | "capture" | "void" | "detach" | "refund", string>>;
   voidedIntentId?: string; authorizedCents?: number;
@@ -27,9 +27,9 @@ export async function erasePendingPayments(db: D1Database, email: string, sessio
     sql: `SELECT CASE WHEN (SELECT json_group_array(id) FROM (SELECT id FROM payment_holds WHERE invitee_email_folded=? ORDER BY id))=? THEN 1 ELSE abs(-9223372036854775808) END`,
     params: [email, JSON.stringify(holds.map(hold => hold.id))],
   }, {
-    sql: `UPDATE person_erasure_receipts SET stripe_customers_retained=COALESCE(stripe_customers_retained,0)+?, stripe_sessions_retained=COALESCE(stripe_sessions_retained,0)+?, saved_cards_detached=COALESCE(saved_cards_detached,0)+?
+    sql: `UPDATE person_erasure_receipts SET stripe_customers_retained=COALESCE(stripe_customers_retained,0)+?, stripe_sessions_retained=COALESCE(stripe_sessions_retained,0)+?, saved_cards_detached=COALESCE(saved_cards_detached,0)+?, saved_card_failures=COALESCE(saved_card_failures,0)+?
       WHERE id=(SELECT receipt_id FROM person_erasure_locks WHERE email=?)`,
-    params: [new Set(outcomes.map(outcome => outcome.customerId).filter(Boolean)).size, holds.filter(hold => hold.checkout_session_id).length, outcomes.filter(outcome => outcome.savedCard === "detached").length, email],
+    params: [new Set(outcomes.map(outcome => outcome.customerId).filter(Boolean)).size, holds.filter(hold => hold.checkout_session_id).length, outcomes.filter(outcome => outcome.savedCard === "detached").length, outcomes.filter(outcome => outcome.savedCard === "failed").length, email],
   }];
   const now = nowIso();
   for (const outcome of outcomes) {

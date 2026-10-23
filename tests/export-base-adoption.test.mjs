@@ -7,13 +7,14 @@ import { captures, operators, request, runtime, token } from './archive/auth.mjs
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
-import { paymentErasureUpgrade, paidApprovalUpgrade } from './archive/payment-erasure-upgrade.mjs';
+import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade } from './archive/payment-erasure-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
     await paymentErasureUpgrade(source.db);
     await paidApprovalUpgrade(source.db);
+    await processorErasureUpgrade(source.db);
     source.db.exec("UPDATE payment_movements SET stripe_customer_id='synthetic-dial-customer-1',stripe_customer_observed=1; UPDATE person_erasure_receipts SET stripe_sessions_retained=1; UPDATE anonymized_audit SET reason='Person erasure before payment confirmation'");
     source.db.exec("UPDATE event_types SET booking_horizon_mode='fixed_range', booking_start_date='2026-10-07', booking_end_date='2026-10-31', slot_increment_minutes=45");
     const names = source.db.prepare(tableQuery).all().map(row => row.name);

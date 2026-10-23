@@ -7,17 +7,16 @@ import { createId, nowIso } from "../../shared/ids";
 import type { SessionRecord } from "../operators";
 import { assertErasureCensus, erasurePortability } from "./portability";
 import { addressRemainders, deleteRows } from "./address";
+import { ProcessorRequestsRepository } from "./processor-requests";
 import { erasePendingPayments, type CleanupPendingPayments } from "./pending-payments";
 // @ts-expect-error Maintained native authentication HMAC and constant comparison.
 import { hashToken, constantEqual } from "../../../../modules/operator-auth/crypto.mjs";
 
 export type PersonConfirmation = { email: string; confirmation: string; expiresAt: number };
-/** D7: what the receipt tells the host about the payer's Stripe customers Dial did not ask Stripe to delete. */
-const stripeCustomersNotice = "These Stripe customers remain in the host's Stripe account with the payer's email, name and any billing address; remove them in Stripe.";
 type EraseEntity = (kind: "bookings" | "availability-requests", id: string) => Promise<void>;
 
 export class PersonErasure {
-  constructor(private readonly db: D1Database, private readonly secret: string) {}
+  constructor(private readonly db: D1Database, private readonly secret: string, private readonly processors?: {prepare(email:string,receiptId:string):Promise<void>;retry(receiptId:string):Promise<void>}) {}
   private records(email: string) { return personalRecords(this.db, email); }
   private signature(email: string, records: Awaited<ReturnType<PersonErasure["records"]>>, session: SessionRecord, expiresAt: number, operatorIdentityRetained: boolean) {
     return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,records.holds,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
@@ -29,7 +28,7 @@ export class PersonErasure {
     const pending=Boolean(await this.db.prepare("SELECT 1 FROM person_erasure_locks WHERE email=?").bind(email).first());
     const operatorIdentityRetained=await operatorOverlap(this.db,email);
     return { bookings: records.bookings.length, requests: records.requests.length+records.approvals.length, payments: records.holds.length, pending, operatorIdentityRetained, expiresAt,
-      confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
+      externalRequests: await new ProcessorRequestsRepository(this.db).preview(email), confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
   }
   async erase(input: PersonConfirmation, session: SessionRecord, eraseEntity: EraseEntity, cleanupPending?: CleanupPendingPayments) {
     await assertErasureCensus(this.db);
@@ -62,6 +61,7 @@ export class PersonErasure {
     if(!pending?.receipt_id)throw new ErasureError("erasure_incomplete",503);
     const id=pending.receipt_id;
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
+    await this.processors?.prepare(email,id);
     await erasePendingPayments(this.db,email,session,cleanupPending);
     await erasePersonSourceCustody(this.db, email, custody.custodyOnly, custody.values, session);
     await erasePersonSharedCustody(this.db, custody.values, custody.sharedFields, custody.sharedInvitees, session);
@@ -84,11 +84,17 @@ export class PersonErasure {
     await finishPersonCustody(this.db, email, custody.values, statements, session);
     return this.receipt(id);
   }
+  async retryProcessors(id:string,session:SessionRecord){
+    await requireErasureSession(this.db,session);
+    if(!await this.receipt(id))return null;
+    await this.processors?.retry(id);
+    return this.receipt(id);
+  }
   async receipt(id: string) {
     const row=await this.db.prepare("SELECT id,bookings,requests,requested_at AS requestedAt,completed_at AS completedAt,operator_identity_retained AS operatorIdentityRetained,COALESCE(saved_cards_detached,0) AS savedCardsDetached,COALESCE(saved_card_failures,0) AS savedCardFailures,stripe_customers_retained AS stripeCustomersRetained,stripe_sessions_retained AS stripeSessionsRetained FROM person_erasure_receipts WHERE id=?").bind(id).first<{id:string;bookings:number;requests:number;requestedAt:string;completedAt:string|null;operatorIdentityRetained:number;savedCardsDetached:number;savedCardFailures:number;stripeCustomersRetained:number|null;stripeSessionsRetained:number|null}>();
     if(!row) return null;
     const targets=(await this.db.prepare("SELECT completed_at,last_error_code FROM erased_calendar_targets WHERE receipt_id=?").bind(id).all<{completed_at:string|null;last_error_code:string|null}>()).results;
     // D7: a receipt from before the count existed reads null (not counted), never zero.
-    return {...row,stripeCustomersNotice:row.stripeCustomersRetained?stripeCustomersNotice:null,operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
+    return {...row,stripeCustomersNotice:null,externalRequests:await new ProcessorRequestsRepository(this.db).list(id),operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
   }
 }

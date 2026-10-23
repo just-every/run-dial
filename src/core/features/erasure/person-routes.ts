@@ -26,6 +26,11 @@ export const personErasureRoutes=new Hono<AppEnvironment>()
     },email=>c.get("services").payments.erasePendingHolds(email));
     return c.json(receipt);
   })
+  .post("/api/app/privacy/receipts/:id/retry",validate("param",z.object({id:z.string().length(26)})),async c=>{
+    await c.get("services").operators.requireMutation(c.req.raw);
+    const result=await c.get("services").personErasure.retryProcessors(c.req.valid("param").id,c.get("session"));
+    return result?c.json(result):apiError(c,404,"erasure_not_found","The erasure receipt does not exist.");
+  })
   .get("/api/app/privacy/receipts/:id",validate("param",z.object({id:z.string().length(26)})),async c=>{
     c.header("Cache-Control","no-store");
     const result=await c.get("services").personErasure.receipt(c.req.valid("param").id);

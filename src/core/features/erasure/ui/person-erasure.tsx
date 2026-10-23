@@ -1,10 +1,12 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { Button, Card, Input, noticeClassName } from "../../../app/ui/primitives";
+import { ProcessorRequestList } from "./processor-request-list";
 import { SectionHeading } from "../../../app/ui/page-header";
 
-type Preview = { bookings: number; requests: number; payments: number; pending: boolean; operatorIdentityRetained: boolean; expiresAt: number; confirmation: string };
-type Receipt = { operatorIdentityRetained: boolean; id: string; bookings: number; requests: number; completedAt: string | null; localComplete: boolean; calendarCleanup: string; calendarFailures: (string | null)[];
+type ExternalRequest = {id?:string;kind:string;processorRef:string;state:string;reason:string|null;requested:boolean};
+type Preview = { externalRequests:ExternalRequest[]; bookings: number; requests: number; payments: number; pending: boolean; operatorIdentityRetained: boolean; expiresAt: number; confirmation: string };
+type Receipt = { externalRequests:ExternalRequest[]; operatorIdentityRetained: boolean; id: string; bookings: number; requests: number; completedAt: string | null; localComplete: boolean; calendarCleanup: string; calendarFailures: (string | null)[];
   savedCardsDetached: number; savedCardFailures: number; stripeCustomersRetained: number | null; stripeCustomersNotice: string | null; stripeSessionsRetained: number | null };
 
 export function PersonErasureCard() {
@@ -50,6 +52,16 @@ export function PersonErasureCard() {
     } catch (e) { setError(e instanceof Error ? e.message : "Cleanup status unavailable."); }
     finally { setWorking(false); }
   }
+  async function retryProcessors() {
+    if(!receipt)return;
+    setWorking(true);setError("");
+    try {
+      const response=await api.api.app.privacy.receipts[":id"].retry.$post({param:{id:receipt.id}});
+      if(!response.ok)throw Error(await errorMessage(response));
+      setReceipt(await response.json() as Receipt);
+    }catch(e){setError(e instanceof Error?e.message:"Processor retry unavailable.");}
+    finally{setWorking(false);}
+  }
   function cancel() { setPreview(undefined); previewButton.current?.focus(); }
 
   return <Card className="p-5 sm:p-6 xl:col-span-2">
@@ -67,6 +79,7 @@ export function PersonErasureCard() {
       <p role="status">{preview.bookings} bookings and {preview.requests} requests match this email.</p>
       {preview.payments ? <p className="mt-2">{preview.payments} pending Checkout {preview.payments === 1 ? "payment" : "payments"} will be closed before erasure. Any captured payment is refunded first.</p> : null}
       {preview.operatorIdentityRetained ? <p className="mt-2">The associated operator identity and sign-in access will be retained. This erases their matching invitee records. Remove an operator separately in Operator access; self-removal and protected-owner holds still apply.</p> : null}
+      <ProcessorRequestList items={preview.externalRequests} />
       <p className="mt-2 text-sm">This action is permanent. Downloaded copies cannot be recalled. Use a current archive for future restores.</p>
       <div className="mt-3 flex flex-wrap gap-3">
         <Button type="button" variant="danger" disabled={working} onClick={() => void erase()}>Confirm permanent erasure</Button>
@@ -79,8 +92,10 @@ export function PersonErasureCard() {
       {receipt.operatorIdentityRetained ? <p>Associated operator identity was retained by this erasure. Account removal is separate.</p> : null}
       <p>Calendar cleanup: {receipt.calendarCleanup}.</p>
       {receipt.savedCardsDetached || receipt.savedCardFailures ? <p>Saved cards: {receipt.savedCardsDetached} detached at Stripe, {receipt.savedCardFailures} not detached.</p> : null}
-      {receipt.stripeCustomersRetained ? <p>Stripe customers kept: {receipt.stripeCustomersRetained}. {receipt.stripeCustomersNotice}</p> : null}
+      {receipt.stripeCustomersRetained ? <p>Stripe Customers observed: {receipt.stripeCustomersRetained}. {receipt.stripeCustomersNotice}</p> : null}
       {receipt.stripeSessionsRetained ? <p>Stripe Checkout sessions kept: {receipt.stripeSessionsRetained}.</p> : null}
+      <ProcessorRequestList items={receipt.externalRequests} />
+      {receipt.externalRequests.some(item=>item.state==="pending"&&["saved_card_detach","stripe_customer_anonymize"].includes(item.kind))?<Button type="button" variant="secondary" className="mt-3" disabled={working} onClick={()=>void retryProcessors()}>Retry processor cleanup</Button>:null}
       {receipt.calendarFailures.length ? <p>Calendar cleanup needs attention: {receipt.calendarFailures.join(", ")}</p> : null}
       {receipt.calendarCleanup !== "completed" ? <Button type="button" variant="secondary" className="mt-3" disabled={working} onClick={() => void refresh()}>Refresh cleanup status</Button> : null}
     </div> : null}

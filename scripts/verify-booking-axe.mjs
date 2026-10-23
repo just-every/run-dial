@@ -10,6 +10,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "@playwright/test";
 import { operatorJourney } from "../tests/booking-axe/operator.mjs";
 import { publicSiteAudits, publicSiteJourney } from "../tests/booking-axe/public-site.mjs";
+import { runPaymentErasureScreens } from "./verify-payment-erasure-screens.mjs";
 import { evidencePath } from "./evidence-path.mjs";
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752";
 const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
@@ -53,6 +54,9 @@ try {
     if (!process.env.DIAL_KEYBOARD_ONLY) console.log("Waiting one native admission minute before the independent keyboard journey.");
     if (!process.env.DIAL_KEYBOARD_ONLY) await delay(60_000);
     await keyboardJourney(browser, origin, errors, storageState, keyboardChecks);
+    const erasureOwner=await browser.newContext({storageState});
+    try{await runPaymentErasureScreens({browser,owner:erasureOwner,origin,folder:evidencePath("processor-erasure-screens")});}
+    finally{await erasureOwner.close();}
     assert.deepEqual(keyboardChecks.filter(check => check.passed === false), [], "Every keyboard outcome passes");
   }
   assert.deepEqual(errors, []);

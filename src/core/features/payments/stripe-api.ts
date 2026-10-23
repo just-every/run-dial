@@ -100,6 +100,11 @@ export class StripeApi {
     return this.request<{ id: string }>(`${apiOrigin}/v1/customers`, params, { account: accountId, idempotencyKey });
   }
 
+  /** DATA-007: unset the personal fields Dial sends, and clear every metadata key. */
+  anonymizeCustomer(accountId: string, customerId: string, idempotencyKey: string) {
+    return this.request<{ id: string }>(`${apiOrigin}/v1/customers/${encodeURIComponent(customerId)}`, { email: "", name: "", phone: "", address: "", shipping: "", description: "", metadata: "" }, { account: accountId, idempotencyKey });
+  }
+
   createInvoice(accountId: string, params: Record<string, string>, idempotencyKey: string) {
     return this.request<Invoice>(`${apiOrigin}/v1/invoices`, params, { account: accountId, idempotencyKey });
   }
@@ -117,8 +122,8 @@ export class StripeApi {
     return this.request<Invoice>(`${apiOrigin}/v1/invoices/${encodeURIComponent(invoiceId)}/void`, {}, { account: accountId, idempotencyKey });
   }
 
-  detachPaymentMethod(accountId: string, paymentMethodId: string) {
-    return this.request<{ id: string }>(`${apiOrigin}/v1/payment_methods/${encodeURIComponent(paymentMethodId)}/detach`, {}, { account: accountId });
+  detachPaymentMethod(accountId: string, paymentMethodId: string, idempotencyKey?: string) {
+    return this.request<{ id: string }>(`${apiOrigin}/v1/payment_methods/${encodeURIComponent(paymentMethodId)}/detach`, {}, { account: accountId, idempotencyKey });
   }
 
   private async request<T>(url: string, form?: Record<string, string>, options: { account?: string; idempotencyKey?: string } = {}): Promise<T> {
