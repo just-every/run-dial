@@ -93,6 +93,7 @@ try {
   assert.equal((await owner.request.get(`${origin}/api/payments/accounting/oauth/callback?${new URLSearchParams({state:new URL(qboStart.headers().location).searchParams.get('state'),code:'synthetic-dial-304',realmId:'synthetic-dial-303'})}`,{maxRedirects:0})).status(),302);
   const income=(await json(await owner.request.get(origin+'/api/app/payments/accounting/accounts'))).accounts[0];
   await json(await owner.request.put(origin+'/api/app/payments/accounting/mapping',{headers,data:{accountId:income.id}}));
+  for(const width of widths)await capture(width,'payments-income-mapping','/app/settings',async page=>{await page.locator('[data-operator-ready="true"]').waitFor();const section=page.locator('#payment-reconciliation');await section.getByRole('button',{name:'Choose income account',exact:true}).click();const form=section.getByRole('form',{name:'Accounting income account'});await form.getByLabel('Income account',{exact:true}).selectOption(income.id);await form.scrollIntoViewIfNeeded();return section;});
   await json(await owner.request.post(origin+'/api/app/payments/accounting/export',{headers,data:{}}));
   for(const width of widths)await capture(width,'payments-exported','/app/settings',async page=>{await page.locator('[data-operator-ready="true"]').waitFor();const section=page.locator('#payment-reconciliation');await section.getByText('Exported',{exact:true}).first().waitFor();await section.scrollIntoViewIfNeeded();return section;});
   for (const width of widths) await capture(width, "balance-paid", balance, async page => { await page.getByRole("heading", { name: "Balance paid." }).waitFor(); }, { session: false });
@@ -171,7 +172,10 @@ try {
   const reconciliationIntent=native.payment.paymentIntentId;
   await webhook({id:'synthetic-dial-301',payment_intent:reconciliationIntent,currency:'usd',amount:2500,status:'needs_response'},'charge.dispute.created');
   const accountingSection=async page=>{await page.locator('[data-operator-ready="true"]').waitFor();const section=page.locator('#payment-reconciliation');await section.getByText('Needs attention',{exact:true}).waitFor();await section.scrollIntoViewIfNeeded();return section;};
-  for(const width of widths)await capture(width,'payments-flagged','/app/settings',accountingSection);
+  for(const width of widths){
+    await capture(width,'payments-flagged','/app/settings',accountingSection);
+    await capture(width,'booking-reconciliation-flagged',record,async page=>{const section=await payments(page);await section.getByRole('list',{name:'Processor reconciliation'}).getByText('Needs attention',{exact:true}).waitFor();await section.scrollIntoViewIfNeeded();return section;});
+  }
   // Tax has not been mapped to QuickBooks: refuse explicitly before creating any receipt.
   const qbo=await owner.request.get(origin+'/api/app/payments/accounting/oauth/start',{maxRedirects:0});
   const qboState=new URL(qbo.headers().location).searchParams.get('state');
