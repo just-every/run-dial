@@ -7792,7 +7792,7 @@
       "executable": false
     },
     "tests/booking-wire/notice-journey.mjs": {
-      "sha256": "a324cb41be9f2a6839422f78d32f6309e5141fd9d9275aefe5001bd2efbf9eb7",
+      "sha256": "13a8e1c6ce32e2a7d4abe5ff734a0da422675208d0e44814e0f6a7429a89e4d0",
       "executable": false
     },
     "tests/booking-wire/notice-wire.ts": {
