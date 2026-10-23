@@ -29,7 +29,7 @@ export const applicationTables = [
   "booking_payments",
   "booking_search_casefold",
   "bookings",
-  "client_profiles", "client_aliases", "client_notes", "client_fields",
+  "client_profiles", "client_aliases", "client_notes", "client_fields", "client_remember_links",
   "booking_guests",
   "booking_approval_requests",
   "booking_approval_tokens",

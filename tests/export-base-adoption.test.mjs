@@ -16,7 +16,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await paymentErasureUpgrade(source.db);
     await paidApprovalUpgrade(source.db);
     await processorErasureUpgrade(source.db);
-    await clientUpgrade(source.db);
+    const remembered=await clientUpgrade(source.db);
     source.db.exec("UPDATE payment_movements SET stripe_customer_id='synthetic-dial-customer-1',stripe_customer_observed=1; UPDATE person_erasure_receipts SET stripe_sessions_retained=1; UPDATE anonymized_audit SET reason='Person erasure before payment confirmation'");
     source.db.exec("UPDATE event_types SET booking_horizon_mode='fixed_range', booking_start_date='2026-10-07', booking_end_date='2026-10-31', slot_increment_minutes=45");
     const names = source.db.prepare(tableQuery).all().map(row => row.name);
@@ -54,6 +54,9 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.prepare(`INSERT INTO booking_answers(id,booking_id,question_key,question_label,question_kind,value_json,created_at)
       SELECT id||'-phone',booking_id,'synthetic-dial-907','Phone','phone',?,created_at FROM booking_answers`).run(JSON.stringify(phone));
     const archive = await createArchive(testPlatform(source.db));
+    assert.equal(archive.tables.some(table=>table.name==='client_remember_links'),false);
+    assert.equal(JSON.stringify(archive).includes(remembered.token),false);
+    assert.equal(JSON.stringify(archive).includes(remembered.hash),false);
     for (const table of archive.tables) {
       if (table.name === "operator_erasure_subjects") assert.equal(table.rows.length, 0, "unfinished operator erasure cannot be archived");
       else assert.ok(table.rows.length > 0, `${table.name} is populated`);
@@ -72,6 +75,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
     await restoreArchive(destination, archive);
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM client_remember_links').get().n,0,'restoring never recreates saved-details authority');
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_invitation_cancellations').all(), ledger);
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM oa_step_up_challenges').get().n, 0);
