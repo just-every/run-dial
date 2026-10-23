@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "dce9a7d2632809cab11e954bad5fb5da3c7fd4b96656437cbe872f838b10315c",
+      "sha256": "468cd06b5777d6d3874bae8a1544d765c60422e09e21c07e4eea2176be4b4485",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "0c05c192c58239ef63bed588f76746ff4ca7369c3dcd4876a17d1a2cab01f111",
+      "sha256": "7e8522ab93ce1c291cd92a2d51bd26ca8bfddd169448af1994432e6c18fba588",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "f2272f3902f68f444544ad7798ed460fe8fbd72f2cf6ba1fe702ae40e9f67bc4",
+      "sha256": "f9e4dbbc39cd93ac0966d35fbd26fd2228da5bd58766539143ed724c4e135a44",
       "executable": false
     },
     "docs/importing.md": {
@@ -976,7 +976,7 @@
       "executable": false
     },
     "ERASURE.md": {
-      "sha256": "b6fd502cb64fdd0eb49591fe9225c0224f947293615da74d8267bbb8f0a43797",
+      "sha256": "356b22e6c0e73f3fc64963108907f0013186740d8220a1863c7197679b5f8f8c",
       "executable": false
     },
     "eslint.config.mjs": {
@@ -4800,7 +4800,7 @@
       "executable": false
     },
     "src/core/app/worker.ts": {
-      "sha256": "5a5abb971a3cbe8c282f0584801486ad13e44b9f06fa46133243b37c30ff46f0",
+      "sha256": "979192b2c00b8f3256d595d5c0b209f029c4b2c9091d99b8bf89a17a8fb92938",
       "executable": false
     },
     "src/core/app/workspace-reads.server.ts": {
@@ -6168,15 +6168,15 @@
       "executable": false
     },
     "src/core/features/polls/ui/composer.tsx": {
-      "sha256": "6f8749845bd9ec58b6cbfe54fdae15666b97328dce3f600b2ee276472472b624",
+      "sha256": "895056b91dfe11a13852394e93f50864f7e601a5220d5236249fc049344fb945",
       "executable": false
     },
     "src/core/features/polls/ui/host.tsx": {
-      "sha256": "ab1a74ad2ad314bfbaca1f503afc7ca2034047318581c1550ae8106e334f7814",
+      "sha256": "2b46d8aa80aa572ac27b4b83f692e619661a70dbb064ae1cf0d6a8da2f83fad2",
       "executable": false
     },
     "src/core/features/polls/ui/participant.tsx": {
-      "sha256": "873bd93af3288e455f9b01a6f63f5c70583429b445974c2d7a2f68cd48b72985",
+      "sha256": "0c778ba703c0ede0622def773e25fb65e9cfb59f72d6c45ee4dbe7758969a640",
       "executable": false
     },
     "src/core/features/polls/ui/read.ts": {
@@ -7596,7 +7596,7 @@
       "executable": false
     },
     "tests/booking-axe/polls.mjs": {
-      "sha256": "e2439109b93908835b0c1b69dd3f39b19ed3277c493b297446eb3acaebab6852",
+      "sha256": "1fd5fe260e764bd9f16edb17bd53eecdc40ab7010ad9fee6d5e8feaf500842f7",
       "executable": false
     },
     "tests/booking-axe/public-site.mjs": {
