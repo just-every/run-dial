@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4adda12729dd55f9561496e0a20d4e37dd6993216867d098d2036c65e6d60fa4",
+      "sha256": "e9fca4b905b97217d4fdb41667917e1ab41320bf555a5f2d00db23ada15c8b12",
       "executable": false
     },
     "DEMO.md": {
@@ -7648,7 +7648,7 @@
       "executable": false
     },
     "tests/booking-wire/notice-journey.mjs": {
-      "sha256": "a324cb41be9f2a6839422f78d32f6309e5141fd9d9275aefe5001bd2efbf9eb7",
+      "sha256": "13a8e1c6ce32e2a7d4abe5ff734a0da422675208d0e44814e0f6a7429a89e4d0",
       "executable": false
     },
     "tests/booking-wire/notice-wire.ts": {
