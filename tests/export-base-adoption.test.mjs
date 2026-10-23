@@ -49,7 +49,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     // DATA-006: both current phone carriers remain personal booking custody.
     const phone = '+12025550101';
     source.db.prepare("UPDATE bookings SET location_type='invitee_phone',location_value=?").run(phone);
-    source.db.prepare("UPDATE booking_answers SET question_kind='phone',value_json=?").run(JSON.stringify(phone));
+    source.db.prepare(`INSERT INTO booking_answers(id,booking_id,question_key,question_label,question_kind,value_json,created_at)
+      SELECT id||'-phone',booking_id,'synthetic-dial-907','Phone','phone',?,created_at FROM booking_answers`).run(JSON.stringify(phone));
     const archive = await createArchive(testPlatform(source.db));
     for (const table of archive.tables) {
       if (table.name === "operator_erasure_subjects") assert.equal(table.rows.length, 0, "unfinished operator erasure cannot be archived");
@@ -74,7 +75,9 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM oa_step_up_challenges').get().n, 0);
     assert.deepEqual(await createArchive(destination), archive);
     assert.ok(target.db.prepare("SELECT location_value FROM bookings WHERE location_type='invitee_phone'").all().every(row => row.location_value === phone), 'DATA-006 invitee phone locations round-trip');
-    assert.ok(target.db.prepare("SELECT value_json FROM booking_answers WHERE question_kind='phone'").all().every(row => JSON.parse(row.value_json) === phone), 'DATA-006 phone-question answers round-trip');
+    const restoredPhones = target.db.prepare("SELECT value_json FROM booking_answers WHERE question_kind='phone'").all();
+    assert.ok(restoredPhones.length > 0 && restoredPhones.every(row => JSON.parse(row.value_json) === phone), 'DATA-006 phone-question answers round-trip');
+    assert.ok(target.db.prepare('SELECT value_json FROM booking_answers').all().some(row => row.value_json.includes('Preserve this answer')), 'the original structured-answer redaction fixture is preserved alongside phone answers');
     assert.equal(target.db.prepare('SELECT browser_timezone FROM availability_requests').get().browser_timezone, 'America/Los_Angeles', 'AVAIL-012 request browser zone survives the public archive round trip');
     assert.equal(target.db.prepare('SELECT browser_timezone FROM booking_presentation').get().browser_timezone, 'America/New_York', 'AVAIL-012 booking preserves its independent invitee observation');
     for (const table of ['booking_guests', 'payment_connections', 'event_type_prices', 'booking_payments']) assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(), source.db.prepare(`SELECT * FROM ${table}`).all(), `PAY-001 ${table} survives the archive round trip`);
