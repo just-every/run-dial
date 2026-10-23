@@ -24,8 +24,8 @@ export async function rememberedDetails(rt,{email,name,phone,phoneKey,eventId}) 
     assert.deepEqual({links:await links(),mail:(await mail()).results},before,'invalid, foreign, expired and replayed capabilities write no client or mail state');
   };
   await refused(base+'/redeem',(token[0]==='a'?'b':'a')+token.slice(1));
-  const foreign=(await rt.data('/api/app/event-types')).find(event=>event.id!==eventId&&event.status==='published');
-  assert.ok(foreign,'the foreign capability probe uses a different existing event');
+  const foreign=await rt.data(`/api/app/event-types/${eventId}/duplicate`,{},201);
+  await rt.data(`/api/app/event-types/${foreign.id}/publish`,{});
   await refused(`/api/public/book/dial-host/${foreign.slug}/remember/redeem`,token);
   const expiry=(await links())[0].expires_at;
   await rt.db.prepare("UPDATE client_remember_links SET expires_at='2000-01-01T00:00:00.000Z'").run();
