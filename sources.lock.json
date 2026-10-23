@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6453d4098137bb36d8e832363dc08f0ac5cc407adbae8483221b6fd77f3b08c0",
+      "sha256": "e0f1fae5a43c272506c01c8a2b1c3443b9515518d9314fe9499900910edb6523",
       "executable": false
     },
     "DEMO.md": {
@@ -976,7 +976,7 @@
       "executable": false
     },
     "ERASURE.md": {
-      "sha256": "3668a8dbd03f116fa4eba619e2b789601b6a9acfbbdd64d0b6dbda89ec92fa75",
+      "sha256": "f696f5dadff82fb896191839ca4bb8cb3a91d09b9a036c5c35bcb48973c83e2c",
       "executable": false
     },
     "eslint.config.mjs": {
@@ -1648,7 +1648,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "24a23786672228d75d10544a0b949598b96ea2fbfe253ae70f3ccfad3c5aede8",
+      "sha256": "5fab4739fc011002ffa5e0abd821a2018f60eb980649e71fc446d109c7585e4c",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -4744,7 +4744,7 @@
       "executable": false
     },
     "src/core/app/services.ts": {
-      "sha256": "d9d710e3949f5fb202729892d2ed31c5c924b31218c925491e458a99e6acf284",
+      "sha256": "01a79ada6e3990e658d71cfde0177f9fae3e7799cc52f4789bfec9f2ce4d35e5",
       "executable": false
     },
     "src/core/app/signin-options.server.ts": {
@@ -5428,7 +5428,7 @@
       "executable": false
     },
     "src/core/features/erasure/person.ts": {
-      "sha256": "6823d43954c8154e1523dc582d04fb3893c308174c8aeb7462392a97f2e9db3a",
+      "sha256": "22ead58c278edd01ad7809539164f4d527879addb614e68c00087948f967f3bc",
       "executable": false
     },
     "src/core/features/erasure/portability.ts": {
@@ -5436,7 +5436,7 @@
       "executable": false
     },
     "src/core/features/erasure/processor-requests.ts": {
-      "sha256": "cae350eea1cd096bf6fac0ba3f8198408635eeb1ae06380a1cb5f147bd85cf03",
+      "sha256": "2ce77bea59c99efb704e173fd2709cae35ae32de1317200f4e46c28bbf21ea80",
       "executable": false
     },
     "src/core/features/erasure/repository.ts": {
@@ -6008,7 +6008,7 @@
       "executable": false
     },
     "src/core/features/payments/processor-erasure.ts": {
-      "sha256": "aa30d9670400b45694efb8d7fbeef042c96bb256b097d4c28550d8d913274454",
+      "sha256": "11b322b2523156bcc48f58cb1e58bee2118ee567247b0ca779bae3ef14b62c9c",
       "executable": false
     },
     "src/core/features/payments/receipts.ts": {
@@ -6024,7 +6024,7 @@
       "executable": false
     },
     "src/core/features/payments/service.ts": {
-      "sha256": "78df95df3116031a3ee7cc3adf575ea62faf6b77faa18e8ca9fba0fe2bd1cd27",
+      "sha256": "025deb5f01c97cfe7d95b5eb7fb70734ecfba9695358f2a39ea043ee32d39bbb",
       "executable": false
     },
     "src/core/features/payments/stripe-api.ts": {
@@ -7472,7 +7472,7 @@
       "executable": false
     },
     "tests/booking-http-worker.ts": {
-      "sha256": "6d823fed59c28131d4f5afe53f6ad990366125da0483ae6f48c1fb0334135e03",
+      "sha256": "8c69195daf3f7b6466653a6b16bf2e8186dba290d22455c398ad126e906d041d",
       "executable": false
     },
     "tests/booking-http-worker.wrangler.toml": {

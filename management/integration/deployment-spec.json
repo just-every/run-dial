@@ -462,6 +462,12 @@
       "name": "0075_paid_approval.sql",
       "sha256": "977b47297276741b7889a12cd9bfc110a063bca151fa7ddbb23723a72f074a8b",
       "sql": "-- PAY-007: frozen authorization references and durable capture/void decisions extend the existing request.\n-- The live claim and payment hold remain mandatory authority; archived payment history cannot execute commands.\nALTER TABLE booking_approval_requests ADD COLUMN payment_json TEXT CHECK(payment_json IS NULL OR json_valid(payment_json));\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0076_processor_erasure_requests.sql",
+      "sha256": "af41e5398f2fcd8fae5486d0c329ad329f25a26fc9bcb52afeb75e62512f0b3b",
+      "sql": "-- Anonymous lookup keys and outcomes outlive local person deletion; no payer values or credentials.\nCREATE TABLE processor_erasure_requests (\n  id TEXT PRIMARY KEY NOT NULL,\n  receipt_id TEXT NOT NULL REFERENCES person_erasure_receipts(id),\n  kind TEXT NOT NULL CHECK(kind IN ('calendar_event_cancel','saved_card_detach','stripe_customer_anonymize','stripe_checkout_email','stripe_customer_unobserved','payment_authorization_void','payment_refund')),\n  account_id TEXT NOT NULL,\n  processor_ref TEXT NOT NULL,\n  lookup_key TEXT,\n  actor_id TEXT,\n  amount_cents INTEGER NOT NULL DEFAULT 0,\n  purpose TEXT NOT NULL DEFAULT 'Person erasure',\n  state TEXT NOT NULL CHECK(state IN ('pending','completed','failed')),\n  reason TEXT,\n  requested INTEGER NOT NULL DEFAULT 0 CHECK(requested IN (0,1)),\n  attempt_started_at TEXT,\n  archive_historical INTEGER NOT NULL DEFAULT 0 CHECK(archive_historical IN (0,1)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  UNIQUE(receipt_id,kind,account_id,processor_ref)\n);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
