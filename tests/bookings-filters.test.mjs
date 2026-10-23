@@ -3,7 +3,7 @@ import { ulid } from "ulid";
 import { contract } from "./contract.mjs";
 import { bookingRuntime } from "./move-in/booking-runtime.mjs";
 
-contract("OPER-003", "the operator booking route combines every filter and searches literal case-insensitive name and email substrings", async () => {
+contract(["OPER-003","REPORT-002"], "the operator booking route combines every filter and searches literal case-insensitive name and email substrings", async () => {
   const runtime = await bookingRuntime();
   try {
     const setup = await runtime.data("/__fixtures/setup", {});
@@ -53,7 +53,7 @@ contract("OPER-003", "the operator booking route combines every filter and searc
     const earlier = await insertBooking({ name: "Needle%_*?[]Series earlier", email: "earlier+Needle+Mail@example.test", startAt: "2030-05-15T09:00:00.000Z" });
     const later = await insertBooking({ name: "Needle%_*?[]Series later", email: "later+Needle+Mail@example.test", startAt: "2030-05-15T12:00:00.000Z" });
     await insertBooking({ state: "cancelled" });
-    await insertBooking({ startAt: "2020-05-15T12:00:00.000Z" });
+    const ended = await insertBooking({ startAt: "2020-05-15T12:00:00.000Z" });
     await insertBooking({ eventTypeId: secondEvent.id });
     await insertBooking({ startAt: "2030-05-14T12:00:00.000Z" });
     await insertBooking({ startAt: "2030-06-15T12:00:00.000Z" });
@@ -168,6 +168,16 @@ contract("OPER-003", "the operator booking route combines every filter and searc
       assert.ok(records[0].deliveries.length > 0);
     }
     assert.equal(operator.inviteeName, "Operator Σςσ");
+    const unmarked = await runtime.data('/api/app/bookings?attendance=attended');
+    assert.deepEqual(unmarked, [], 'an attendance filter does not invent marks');
+    await runtime.data(`/api/app/bookings/${ended.id}/attendance`, {status:'attended',note:'Completed consultation'});
+    const marked = await runtime.api('/api/app/bookings?attendance=attended&time=past&state=confirmed&limit=1');
+    assert.equal(Number(marked.headers.get('X-Total-Count')),1);
+    assert.deepEqual((await marked.json()).map(row=>row.id),[ended.id]);
+    const remaining = await runtime.data('/api/app/bookings?attendance=unmarked');
+    assert.ok(remaining.length>0 && remaining.every(row=>row.id!==ended.id));
+    assert.equal((await runtime.api('/api/app/bookings?attendance=unknown')).status,400);
+
   } finally {
     await runtime.close();
   }

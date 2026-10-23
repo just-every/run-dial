@@ -38,6 +38,7 @@ type NonceRecord = {
 
 type ManageTokenLookup = { booking: BookingRecord; status: "active" | "expired" | "rotated" | "invalidated" };
 type OperatorBookingFilters = {
+  attendance?: "attended" | "no_show" | "unmarked";
   state?: BookingRecord["state"];
   rescheduleRequest?: "open" | "picked" | "expired" | "cancelled";
   time?: "future" | "past";
@@ -56,6 +57,8 @@ type OperatorBookingFilters = {
 function operatorBookingWhere(filters: OperatorBookingFilters, now: string) {
   const clauses = ["b.current_occurrence_id = o.id"];
   const values: unknown[] = [];
+  if (filters.attendance === "unmarked") clauses.push("NOT EXISTS(SELECT 1 FROM booking_attendance a WHERE a.booking_id=b.id)");
+  else if (filters.attendance) { clauses.push("EXISTS(SELECT 1 FROM booking_attendance a WHERE a.booking_id=b.id AND a.status=?)"); values.push(filters.attendance); }
   if (filters.rescheduleRequest) { clauses.push("EXISTS(SELECT 1 FROM booking_reschedule_requests rr WHERE rr.booking_id=b.id AND rr.state=?)"); values.push(filters.rescheduleRequest); }
   if (filters.state) { clauses.push("b.state = ?"); values.push(filters.state); }
   if (filters.time === "future") { clauses.push("o.start_at >= ?"); values.push(now); }

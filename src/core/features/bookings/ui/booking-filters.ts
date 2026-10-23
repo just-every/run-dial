@@ -2,6 +2,7 @@ import type { BookingRecord } from "../types";
 import { reportTileKeys, type ReportTileKey } from "../../reports/client";
 
 export type BookingFilters = {
+  attendance?: "attended" | "no_show" | "unmarked";
   state?: BookingRecord["state"];
   time?: "future" | "past";
   eventTypeId?: string;
@@ -17,7 +18,7 @@ export type BookingFilters = {
   periodThrough?: string;
 };
 
-const filterKeys = ["state", "time", "eventTypeId", "from", "to", "deliveryFailed", "rescheduleRequest", "query", "report", "bucket", "periodFrom", "periodThrough"] as const;
+const filterKeys = ["attendance", "state", "time", "eventTypeId", "from", "to", "deliveryFailed", "rescheduleRequest", "query", "report", "bucket", "periodFrom", "periodThrough"] as const;
 const bookingStates = ["confirmed", "rescheduled", "cancelled"] as const;
 export const bookingPageSize = 100;
 
@@ -40,6 +41,7 @@ export function readBookingPage(search: string) {
 export function readBookingFilters(search: string): BookingFilters {
   const params = new URLSearchParams(search);
   const state = params.get("state");
+  const attendance = params.get("attendance");
   const time = params.get("time");
   const eventTypeId = params.get("eventTypeId");
   const from = dateValue(params.get("from"));
@@ -53,6 +55,7 @@ export function readBookingFilters(search: string): BookingFilters {
 
   return {
     ...(report && periodFrom && periodThrough ? { report, periodFrom, periodThrough, ...(bucket ? { bucket } : {}) } : {}),
+    ...(["attended","no_show","unmarked"].includes(attendance??"") ? {attendance:attendance as BookingFilters["attendance"]} : {}),
     ...(bookingStates.includes(state as BookingRecord["state"]) ? { state: state as BookingRecord["state"] } : {}),
     ...(time === "future" || time === "past" ? { time } : {}),
     ...(eventTypeId && eventTypeId.length === 26 ? { eventTypeId } : {}),
@@ -67,6 +70,7 @@ export function readBookingFilters(search: string): BookingFilters {
 export function bookingListQuery(filters: BookingFilters, page = 1) {
   return {
     ...(filters.state ? { state: filters.state } : {}),
+    ...(filters.attendance ? {attendance:filters.attendance} : {}),
     ...(filters.time ? { time: filters.time } : {}),
     ...(filters.eventTypeId ? { eventTypeId: filters.eventTypeId } : {}),
     ...(filters.from ? { fromDate: filters.from } : {}),
