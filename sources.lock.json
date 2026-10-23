@@ -1648,7 +1648,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "9122d688c954f4261343bb62e63dddc7bb4ccecf2ac04479c1dbc9d3164d74d7",
+      "sha256": "6499a0a995bfa65a93f6b5e7312da17278a1b625fac718d80e996aa221c38640",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -7332,7 +7332,7 @@
       "executable": false
     },
     "src/routeTree.gen.ts": {
-      "sha256": "0b237fce6e0a2fca48627fab5930fdd03ab8505d0367c6f59f91fc2a9a2a001d",
+      "sha256": "81869dd20e16a31a3dd817df5eacb597112ce0105f5ba407fee1a8357b609bfb",
       "executable": false
     },
     "src/server.dev.ts": {
@@ -7596,7 +7596,7 @@
       "executable": false
     },
     "tests/booking-axe/polls.mjs": {
-      "sha256": "ba8937ebcf40446fb55c747910822b61704f340b7a747c5db0f72216c62df737",
+      "sha256": "e2439109b93908835b0c1b69dd3f39b19ed3277c493b297446eb3acaebab6852",
       "executable": false
     },
     "tests/booking-axe/public-site.mjs": {
