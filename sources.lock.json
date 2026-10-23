@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "586e85aac0cc1b74114bf4902915cda252d9d3784426773c156b7a1af853f9bd",
+      "sha256": "5be7643fda7eac35b37e4d505914243572c9898c1843532795eba1ce76f1b4ef",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9817e92320b72535cb0e756c1768d778961530a0239ff32e79568a0dd0e08beb",
+      "sha256": "a12c808071e6de00f930bd42b06c8c8ce33acc307f1dcb8daa08791361be3388",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "0a4bae2f41f9090f2804b7fcb29205db1360263ec706ac02e4791654635cf4f1",
+      "sha256": "f2272f3902f68f444544ad7798ed460fe8fbd72f2cf6ba1fe702ae40e9f67bc4",
       "executable": false
     },
     "docs/importing.md": {
@@ -976,7 +976,7 @@
       "executable": false
     },
     "ERASURE.md": {
-      "sha256": "2fbecb9c4c4a63e56b6094e0c9531511a3486fecce30c0761746e439d6e3b9a5",
+      "sha256": "b6fd502cb64fdd0eb49591fe9225c0224f947293615da74d8267bbb8f0a43797",
       "executable": false
     },
     "eslint.config.mjs": {
@@ -5276,7 +5276,7 @@
       "executable": false
     },
     "src/core/features/clients/ui/client-annotations.tsx": {
-      "sha256": "e7593b5615f08bc560164cffcb0576eee0791343b2977c7d01b89d18cc2823ba",
+      "sha256": "3afe7d9f9b48738d8ca8733f603f8d0611301bd8f4bbef936b2f54d79e519d31",
       "executable": false
     },
     "src/core/features/clients/ui/client-booking-record.tsx": {
@@ -5296,7 +5296,7 @@
       "executable": false
     },
     "src/core/features/clients/ui/use-client-read.ts": {
-      "sha256": "2d26420db0ff1e831cc74c313f1b4e606c73f722f002179f4471c962fd0eb374",
+      "sha256": "1b14cf60e65b07462d318c3988e91dd57194e0c8019b9088444e032e77bab2f2",
       "executable": false
     },
     "src/core/features/delivery/booking-mail-times.ts": {
@@ -7468,7 +7468,7 @@
       "executable": false
     },
     "tests/booking-axe/client-records.mjs": {
-      "sha256": "b48a52ca3e0bdec44a0d921ac873711b8aaf0ef7a5fe3f65f9f40cd9f9560569",
+      "sha256": "7847240e3529432c0b261108bad5920332bffa702e359f1821d7bbcd32252938",
       "executable": false
     },
     "tests/booking-axe/confirmation-settings.mjs": {

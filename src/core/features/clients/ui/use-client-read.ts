@@ -22,5 +22,8 @@ export function useClientRead<T>(path: string | undefined, revision = 0) {
     return () => controller.abort();
   }, [path, revision]);
   const current = result.path === path && result.revision === revision;
-  return { data: current ? result.data : initial, error: current ? result.error : undefined, loading: Boolean(path) && !(current ? result.data || result.error : initial) };
+  // Revalidation of this record keeps its controls mounted. A different URL
+  // never inherits the previous client's data or draft input.
+  const data = result.path === path ? result.data : initial;
+  return { data, error: current ? result.error : undefined, loading: Boolean(path) && !(data || current && result.error) };
 }
