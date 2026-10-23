@@ -218,7 +218,16 @@ export class EventTypesRepository {
 
   async delete(id: string): Promise<boolean> {
     if (!(await this.get(id))) return false;
-    await this.db.delete(eventTypes).where(eq(eventTypes.id, id)).run();
+    // Poll invitations carry participant capabilities outside the FK graph.
+    // Remove them before participants cascade, in the same transaction as the
+    // event and its booking links (whose deletion releases held candidates).
+    await this.binding.batch([
+      this.binding.prepare(`DELETE FROM delivery_outbox WHERE json_extract(payload_json,'$.pollParticipantId') IN (
+        SELECT p.id FROM poll_participants p JOIN meeting_polls m ON m.id=p.poll_id WHERE m.event_type_id=?
+      )`).bind(id),
+      this.binding.prepare("DELETE FROM meeting_polls WHERE event_type_id=?").bind(id),
+      this.binding.prepare("DELETE FROM event_types WHERE id=?").bind(id),
+    ]);
     return !(await this.get(id));
   }
 
