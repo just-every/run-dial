@@ -8,7 +8,7 @@ import { hashToken } from '../modules/operator-auth/crypto.mjs';
 import { dialPolicy, guardedBucket } from '../scripts/local/archive-policy.mjs';
 import { createPortability } from '@runeditrun/rer/modules/portability';
 
-contract('DATA-002', 'native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person', async (context) => {
+contract(['DATA-002', 'CLIENT-001'], 'native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person', async (context) => {
   const rt = await bookingRuntime({ developmentMail: true });
   const email = 'erase-person-78321@example.test', name = 'PERSON_NAME_78321', text = 'PERSON_TEXT_78321';
   const unicodeAlias = 'eraſe-person-78321@example.test';
@@ -29,6 +29,8 @@ contract('DATA-002', 'native email preview is inert; one confirmation erases per
     }
     const first = await book(unicodeAlias, name, text);
     const earlyPreview = await rt.data('/api/app/privacy/preview', { email });
+    const clientBefore = await rt.data('/api/app/clients/history?' + new URLSearchParams({ email }));
+    assert.equal(clientBefore.totalCount, 1, 'CLIENT-001 normalized email resolves the Unicode alias');
     await book(email.toUpperCase(), name, text);
     const control = await book('control-person-78321@example.test', 'Control person', 'Control private answer');
     const composition = { inviteeName: name, inviteeEmail: email, inviteeTimezone: 'UTC', note: text, windows: [{ date: week, startMinute: 600, endMinute: 630 }] };
@@ -58,6 +60,29 @@ contract('DATA-002', 'native email preview is inert; one confirmation erases per
     await rt.data('/api/app/bookings?' + new URLSearchParams({ query: name }));
     assert.ok((await rt.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox WHERE instr(message,?)>0').bind(email).first()).n > 0, 'native development mailbox contains an actual sent personal message');
     const controlId = rows.find(row => row.inviteeEmail === 'control-person-78321@example.test').id;
+    const clientHistory = () => rt.data('/api/app/clients/history?' + new URLSearchParams({ email: email.toUpperCase() }));
+    const clientRows = await clientHistory();
+    assert.equal(clientRows.totalCount, 3, 'three bookings by equivalent email spellings form one client history');
+    assert.deepEqual(clientRows.bookings.map(row => row.id).sort(), rows.filter(row => row.inviteeName === name).map(row => row.id).sort());
+    assert.ok(clientRows.bookings.every(row => row.answers.some(answer => answer.value === text)));
+    assert.ok(clientRows.bookings.some(row => row.attendance?.note === text));
+    assert.ok(clientRows.bookings.some(row => JSON.stringify(row.customFields).includes(text)));
+    assert.equal(JSON.stringify(clientRows).includes('/manage/'), false, 'client projection contains no manage authority');
+    const clients = await rt.data('/api/app/clients');
+    assert.ok(clients.clients.some(row => row.email === email && row.bookingCount === 3));
+    const controlClientPath = '/api/app/clients/history?' + new URLSearchParams({ email: 'control-person-78321@example.test' });
+    const controlClientBefore = await rt.data(controlClientPath);
+    assert.equal(controlClientBefore.totalCount, 1);
+    for (const other of ['synthetic-dial-999@example.test', email.replace('@', '+other@')]) {
+      assert.deepEqual((await rt.data('/api/app/clients/history?' + new URLSearchParams({ email: other }))).bookings, [], 'distinct and unknown email addresses never join another client');
+    }
+    const deniedClient = await rt.api('/api/app/clients/history?' + new URLSearchParams({ email }), { headers: { cookie: '' } });
+    assert.equal(deniedClient.status, 401); await deniedClient.arrayBuffer();
+    await rt.data('/api/app/clients?limit=0', undefined, 400);
+    const pageOne = await rt.data('/api/app/clients?limit=1');
+    const pageTwo = await rt.data('/api/app/clients?limit=1&offset=1');
+    assert.notEqual(pageOne.clients[0].email, pageTwo.clients[0].email);
+    assert.equal(pageOne.totalCount, clients.totalCount);
     const controlBefore = await rt.data(`/api/app/bookings/${controlId}`);
     const profileBefore = await rt.data('/api/app/profile');
     const archive = await dialPolicy(rt.db, { SESSION_SECRET: 'synthetic-dial-booking-wire-synthetic-local-session-secret' });
@@ -122,6 +147,9 @@ contract('DATA-002', 'native email preview is inert; one confirmation erases per
     assert.ok(receipt.completedAt);
     await assert.rejects(() => transfers.exports.download(frozenExport), /job_not_found/, "a pre-erasure snapshot cannot be downloaded after success");
     const localScan = await scan(rt.db, rt.bucket, markers, knownHashes);
+    assert.deepEqual((await clientHistory()).bookings, [], 'person erasure removes the entire derived client history');
+    assert.equal((await rt.data('/api/app/clients')).clients.some(row => row.email === email), false);
+    assert.deepEqual(await rt.data(controlClientPath), controlClientBefore, 'control client history stays byte-identical');
     assert.deepEqual(await rt.data(`/api/app/bookings/${controlId}`), controlBefore);
     assert.deepEqual(await rt.data('/api/app/profile'), profileBefore);
     assert.deepEqual(Buffer.from(await (await rt.bucket.get(avatar.avatarKey)).arrayBuffer()), png);
