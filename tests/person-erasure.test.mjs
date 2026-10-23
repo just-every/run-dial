@@ -38,7 +38,10 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
     }
     const first = await book(unicodeAlias, name, text);
     const earlyPreview = await rt.data('/api/app/privacy/preview', { email });
-    const clientBefore = await rt.data('/api/app/clients/history?' + new URLSearchParams({ email }));
+    const clientBeforeResponse = await rt.api('/api/app/clients/history?' + new URLSearchParams({ email }));
+    assert.equal(clientBeforeResponse.status, 200);
+    assert.ok(clientBeforeResponse.headers.get('cache-control').includes('no-store'), 'personal client history cannot enter a browser or shared response cache');
+    const clientBefore = await clientBeforeResponse.json();
     assert.equal(clientBefore.totalCount, 2, 'CLIENT-001 normalized email joins the imported booking and Unicode-alias booking');
     await book(email.toUpperCase(), name, text);
     const control = await book('control-person-78321@example.test', 'Control person', 'Control private answer');

@@ -10,10 +10,12 @@ const pagination = z.object({ limit: z.coerce.number().int().min(1).max(100).def
  */
 export const clientRoutes = new Hono<AppEnvironment>()
   .get("/api/app/clients", validate("query", pagination), async context => {
+    context.header("Cache-Control", "private, no-store");
     const { limit, offset } = context.req.valid("query");
     return context.json(await context.get("services").clients.list(limit, offset));
   })
   .get("/api/app/clients/history", validate("query", pagination.extend({ email: z.string().trim().email().max(320) })), async context => {
+    context.header("Cache-Control", "private, no-store");
     const { email, limit, offset } = context.req.valid("query");
     const services = context.get("services");
     const history = await services.clients.history(email, limit, offset);
