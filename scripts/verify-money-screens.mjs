@@ -96,6 +96,7 @@ try {
   for(const width of widths)await capture(width,'payments-income-mapping','/app/settings',async page=>{await page.locator('[data-operator-ready="true"]').waitFor();const section=page.locator('#payment-reconciliation');await section.getByRole('button',{name:'Choose income account',exact:true}).click();const form=section.getByRole('form',{name:'Accounting income account'});await form.getByLabel('Income account',{exact:true}).selectOption(income.id);await form.scrollIntoViewIfNeeded();return section;});
   await json(await owner.request.post(origin+'/api/app/payments/accounting/export',{headers,data:{}}));
   for(const width of widths)await capture(width,'payments-exported','/app/settings',async page=>{await page.locator('[data-operator-ready="true"]').waitFor();const section=page.locator('#payment-reconciliation');await section.getByText('Exported',{exact:true}).first().waitFor();await section.scrollIntoViewIfNeeded();return section;});
+  for(const width of widths)await capture(width,'payments-open-booking','/app/settings',async page=>{await page.locator('[data-operator-ready="true"]').waitFor();await page.locator('#payment-reconciliation').getByRole('link',{name:/Avery Deposit/u}).first().click();await page.getByRole('heading',{name:'Avery Deposit',exact:true}).waitFor();});
   for (const width of widths) await capture(width, "balance-paid", balance, async page => { await page.getByRole("heading", { name: "Balance paid." }).waitFor(); }, { session: false });
 
   const record = "/app/bookings?query=Avery%20Deposit";
