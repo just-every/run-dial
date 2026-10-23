@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ebd9ff642cdb2cce560d78a5ce3ccbbb459d72257d002ffe5c878a281b2236d2",
+      "sha256": "3eae420c57b968850d5675fd84fdb318aad23a012dffc4f9ecb8a738d063e89b",
       "executable": false
     },
     "DEMO.md": {
@@ -4492,7 +4492,7 @@
       "executable": false
     },
     "scripts/verify-money-screens.mjs": {
-      "sha256": "a2dade97a1ae7495489c3b0b9c5b19c8223721a3f7d1c2099e2e211f29f80796",
+      "sha256": "2b7aef8c81f2b8cb10a325b0cb8e47ff46ed99f7bd1bf2fe25ec03850d8afda2",
       "executable": false
     },
     "scripts/verify-move-in-browser.mjs": {
@@ -6068,7 +6068,7 @@
       "executable": false
     },
     "src/core/features/payments/ui/accounting-card.tsx": {
-      "sha256": "f282f587a86ace21277547eeb7fd2a97284650211ed07f39de8b557345ef6e1c",
+      "sha256": "1e5be7e9d31e0f2bffc593f8462398e6c2afc95c6083e5bffed7fd26eb8da366",
       "executable": false
     },
     "src/core/features/payments/ui/event-payment-settings.tsx": {
