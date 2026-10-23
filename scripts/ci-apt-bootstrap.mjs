@@ -13,7 +13,9 @@ const originalMirrors = [
 const invalid = () => { throw Error('Unexpected hosted Ubuntu APT sources'); };
 
 // Accept active deb822 fields only; comments cannot establish a source mapping.
-export function validateSources(sources, mirrors) {
+const fallbackMirrors = ['http://mirrors.edge.kernel.org/ubuntu/', 'http://us-east-1.ec2.archive.ubuntu.com/ubuntu/'];
+export function validateSources(sources, mirrors, selectedMirror = archiveMirror) {
+  if (![archiveMirror, ...fallbackMirrors, 'runner-default'].includes(selectedMirror)) invalid();
   const active = sources.split(/\r?\n/).filter(line => !line.trimStart().startsWith('#')).join('\n').trim();
   if (!active) invalid();
   const suites = [];
@@ -35,9 +37,9 @@ export function validateSources(sources, mirrors) {
   const entries = mirrors.split(/\r?\n/).map(line => line.trim())
     .filter(line => line && !line.startsWith('#')).map(line => line.replace(/\s+/g, ' '));
   const original = entries.length === 3 && originalMirrors.every(entry => entries.includes(entry));
-  const selected = entries.length === 1 && entries[0] === archiveMirror;
+  const selected = entries.length === 1 && [archiveMirror, ...fallbackMirrors].includes(entries[0]);
   if (!original && !selected) invalid();
-  return `${archiveMirror}\n`;
+  return selectedMirror === 'runner-default' ? mirrors : `${selectedMirror}\n`;
 }
 
 const settings = [
@@ -91,7 +93,7 @@ function writeFile(fd, value) {
 }
 
 // The drop-in is read by Playwright's sudo APT child, independently of its env.
-export function prepareApt(aptDirectory, inspect = () => execFileSync('apt-config', ['shell', ...keys], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']})) {
+export function prepareApt(aptDirectory, inspect = () => execFileSync('apt-config', ['shell', ...keys], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}), selectedMirror = archiveMirror) {
   const handles = [];
   let failed = false;
   try {
@@ -111,7 +113,7 @@ export function prepareApt(aptDirectory, inspect = () => execFileSync('apt-confi
     const mirror = openFile(mirrorFile, fs.constants.O_RDWR, handles);
     const configStat = fs.lstatSync(configFile, {throwIfNoEntry: false});
     let config = configStat ? openFile(configFile, fs.constants.O_RDWR, handles, configStat) : undefined;
-    const selected = validateSources(fs.readFileSync(source, 'utf8'), fs.readFileSync(mirror, 'utf8'));
+    const selected = validateSources(fs.readFileSync(source, 'utf8'), fs.readFileSync(mirror, 'utf8'), selectedMirror);
     if (config !== undefined && fs.readFileSync(config, 'utf8') !== transportConfig) failure();
     // All identities, parents, file types and input bytes are validated before
     // creating or changing either output. Held non-following descriptors also
@@ -141,7 +143,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     }
     // Ubuntu's standard /etc/os-release symlink is intentionally supported.
     validateUbuntuIdentity(fs.readFileSync('/etc/os-release', 'utf8'));
-    prepareApt('/etc/apt');
+    prepareApt('/etc/apt', undefined, process.argv[2] ?? archiveMirror);
     console.log('Hosted Ubuntu APT HTTPS mirror and finite transport bounds prepared');
   } catch {
     console.error('Hosted Ubuntu APT bootstrap preparation failed');
