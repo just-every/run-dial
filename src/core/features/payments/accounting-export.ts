@@ -5,6 +5,7 @@ export async function exportAccounting(db:D1Database,row:AccountingConnection,re
   if(!row.item_id||!row.income_account_id)throw new AccountingFailure('income_account_required',409);
     const preferences=await request('preferences');
     if(!(preferences.Preferences as {SalesFormsPrefs?:{CustomTxnNumbers?:boolean}})?.SalesFormsPrefs?.CustomTxnNumbers)throw new AccountingFailure('accounting_custom_transaction_numbers_required',409);
+    if((preferences.Preferences as {CurrencyPrefs?:{HomeCurrency?:{value?:string}}})?.CurrencyPrefs?.HomeCurrency?.value!=='USD')throw new AccountingFailure('accounting_usd_company_required',409);
     const payments=(await db.prepare(`SELECT booking_id, payment_intent_id AS ref,amount_cents,tax_cents FROM booking_payments WHERE payment_intent_id IS NOT NULL UNION ALL SELECT booking_id,processor_ref,amount_cents,tax_cents FROM payment_movements WHERE status='succeeded' AND kind IN ('balance','invoice','late_cancel_fee','no_show_fee') AND processor_ref IS NOT NULL`).all<{booking_id:string;ref:string;amount_cents:number;tax_cents:number}>()).results;
     if(payments.some(p=>p.tax_cents>0))throw new AccountingFailure('accounting_tax_mapping_required',409);
     for(const payment of payments){const now=nowIso();const requestId=createId(),documentRef=requestId.slice(-21),connectionId=`quickbooks:${row.realm_id}`;
