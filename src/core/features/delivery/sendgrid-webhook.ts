@@ -1,14 +1,16 @@
 // @ts-expect-error Base's portable ESM distribution has no TypeScript declaration.
 import { verifyWebhook } from "../../../../modules/mail/index.mjs";
 import type { AdmitCallback } from "../../platform/public-admission";
+import { discardRequestBody, providerCallbackMaxBytes, readLimitedBody } from "../../shared/http";
 import { createId, nowIso } from "../../shared/ids";
 
 /** Authenticated provider facts only; no inbound-mail application workflow. */
 export class SendGridWebhookReceiver {
   constructor(private readonly db: D1Database, private readonly key?: string) {}
   async receive(request: Request, admit: AdmitCallback) {
-    if (!this.key) return { kind: "unauthorized" as const };
-    const rawBody = new Uint8Array(await request.arrayBuffer());
+    if (!this.key || !["x-twilio-email-event-webhook-signature", "x-twilio-email-event-webhook-timestamp"].every(name => request.headers.has(name))) { await discardRequestBody(request); return { kind: "unauthorized" as const }; }
+    const rawBody = await readLimitedBody(request, providerCallbackMaxBytes);
+    if (!rawBody) return { kind: "too_large" as const };
     if (!await verifyWebhook({ provider: "sendgrid", rawBody, headers: request.headers, key: this.key, now: Date.now() })) return { kind: "unauthorized" as const };
     const admission = await admit();
     if (admission.kind === "limited") return { kind: "rate_limited" as const, retryAfterSeconds: admission.retryAfterSeconds };

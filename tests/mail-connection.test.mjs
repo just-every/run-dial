@@ -49,6 +49,24 @@ test('fresh mail health stays unchecked until the public sender check records ac
   }
 });
 
+test('provider webhooks refuse unsigned or oversized bodies before verifying them', async t => {
+  const f = await fixture(t, { MAIL_WEBHOOK_KEY: 'synthetic-dial-1', RESEND_WEBHOOK_SECRET: 'synthetic-dial-2' });
+  const before = await f.snapshot();
+  const oversized = 'x'.repeat(1024 * 1024 + 1), timestamp = String(Math.floor(Date.now() / 1000));
+  const signatures = {
+    '/api/webhooks/resend': { 'svix-id': 'synthetic-dial-3', 'svix-timestamp': timestamp, 'svix-signature': 'v1,c3ludGhldGlj' },
+    '/api/webhooks/sendgrid': { 'x-twilio-email-event-webhook-timestamp': timestamp, 'x-twilio-email-event-webhook-signature': 'c3ludGhldGlj' },
+    '/api/webhooks/stripe': { 'stripe-signature': `t=${timestamp},v1=${'0'.repeat(64)}` },
+  };
+  for (const [path, headers] of Object.entries(signatures)) {
+    const refused = await f.request(path, oversized, headers);
+    assert.equal(refused.status, 413, `${path} refuses a body over 1 MiB`);
+    assert.equal((await refused.json()).error.code, 'provider_callback_too_large');
+    assert.equal((await f.request(path, oversized)).status, 401, `${path} refuses a body without its signature headers`);
+  }
+  assert.deepEqual(await f.snapshot(), before, 'refused callbacks write nothing');
+});
+
 test('SendGrid callbacks stay closed without a key or valid signature and signed bounce receipts remain idempotent', async t => {
   const pair = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
   const key = pair.publicKey.export({ type: 'spki', format: 'der' }).toString('base64');

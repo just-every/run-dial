@@ -4,7 +4,7 @@ import { validate } from "../../shared/validation";
 import { Hono } from "hono";
 import { admissionResponse } from "../../platform/public-admission";
 import type { AppEnvironment } from "../../app/context";
-import { apiError } from "../../shared/http";
+import { apiError, providerCallbackTooLarge } from "../../shared/http";
 
 const booking = z.object({ id: z.string().length(26) });
 const retry = booking.extend({ deliveryId: z.string().length(26) });
@@ -35,10 +35,12 @@ export const deliveryRoutes = new Hono<AppEnvironment>()
   .post("/api/webhooks/sendgrid", async (context) => {
     const result = await context.get("services").sendgridWebhook.receive(context.req.raw, () => context.get("admitProvider")("sendgrid"));
     if (result.kind === "rate_limited") return admissionResponse({ kind: "limited", retryAfterSeconds: result.retryAfterSeconds })!;
+    if (result.kind === "too_large") return providerCallbackTooLarge(context);
     return result.kind === "unauthorized" ? apiError(context, 401, "invalid_provider_callback", "Provider callback authentication failed.") : context.body(null, 204);
   })
   .post("/api/webhooks/resend", async (context) => {
     const result = await context.get("services").delivery.receiveResendWebhook(context.req.raw, () => context.get("admitProvider")("resend"));
     if (result.kind === "rate_limited") return admissionResponse({ kind: "limited", retryAfterSeconds: result.retryAfterSeconds })!;
+    if (result.kind === "too_large") return providerCallbackTooLarge(context);
     return result.kind === "unauthorized" ? apiError(context, 401, "invalid_provider_callback", "Provider callback authentication failed.") : context.body(null, 204);
   });

@@ -35,7 +35,7 @@ function boundedFetch(request: typeof fetch, timeoutMs: number, state: { timedOu
     } finally { clearTimeout(timer); }
   };
 }
-export async function verifyResendWebhook(payload: string, headers: Headers, webhookSecret: string | undefined, now = Date.now()) {
+export async function verifyResendWebhook(rawBody: Uint8Array, headers: Headers, webhookSecret: string | undefined, now = Date.now()) {
   if (!webhookSecret) return false;
-  return verifyWebhook({ provider: "resend", rawBody: new TextEncoder().encode(payload), headers, key: webhookSecret, now }) as Promise<boolean>;
+  return verifyWebhook({ provider: "resend", rawBody, headers, key: webhookSecret, now }) as Promise<boolean>;
 }

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
 import { admissionResponse } from "../../platform/public-admission";
-import { apiError } from "../../shared/http";
+import { apiError, discardRequestBody, providerCallbackMaxBytes, providerCallbackTooLarge, readLimitedBody } from "../../shared/http";
 import { validate } from "../../shared/validation";
 import { stripeCallbackPath, stripeWebhookPath } from "./config";
 import { eventPriceInputSchema } from "./pricing";
@@ -102,7 +102,11 @@ export const paymentRoutes = new Hono<AppEnvironment>()
     return context.redirect(await context.get("services").hostSetup.completion() ? "/app/settings?stripe=connected" : "/setup/settings?stripe=connected", 302);
   })
   .post(stripeWebhookPath, async context => {
-    const result = await context.get("services").payments.receiveWebhook(await context.req.text(), context.req.header("stripe-signature") ?? null, () => context.get("admitProvider")("stripe"));
+    const signature = context.req.header("stripe-signature");
+    if (!signature) { await discardRequestBody(context.req.raw); return apiError(context, 401, "invalid_provider_callback", "Provider callback authentication failed."); }
+    const body = await readLimitedBody(context.req.raw, providerCallbackMaxBytes);
+    if (!body) return providerCallbackTooLarge(context);
+    const result = await context.get("services").payments.receiveWebhook(new TextDecoder().decode(body), signature, () => context.get("admitProvider")("stripe"));
     if (result.kind === "limited") return admissionResponse(result)!;
     if (result.kind === "unauthorized") return apiError(context, 401, "invalid_provider_callback", "Provider callback authentication failed.");
     if (result.kind === "rejected") return apiError(context, 400, "invalid_provider_event", "The provider event does not match this payment.");

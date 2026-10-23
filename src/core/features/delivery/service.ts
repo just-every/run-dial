@@ -8,6 +8,7 @@ import { z } from "zod";
 import { toMailMessage } from "./email-content";
 import { DeliveryRepository, type DeliveryOutboxRecord } from "./repository";
 import type { AdmitCallback } from "../../platform/public-admission";
+import { discardRequestBody, providerCallbackMaxBytes, readLimitedBody } from "../../shared/http";
 import { operatorNotificationCommand } from "../../platform/operator-notification-boundary";
 import { isOperatorNotification } from "./operator-mail";
 import { bookingCancellationMail, type BookingCancellationTemplate } from "./booking-mails";
@@ -118,12 +119,14 @@ export class ProviderDeliveryService {
   }
 
   async receiveResendWebhook(request: Request, admit: AdmitCallback) {
-    const payload = await request.text();
-    const verified = await verifyResendWebhook(payload, request.headers, this.resendWebhookSecret);
+    if (!this.resendWebhookSecret || !["svix-id", "svix-timestamp", "svix-signature"].every(name => request.headers.has(name))) { await discardRequestBody(request); return { kind: "unauthorized" as const }; }
+    const body = await readLimitedBody(request, providerCallbackMaxBytes);
+    if (!body) return { kind: "too_large" as const };
+    const verified = await verifyResendWebhook(body, request.headers, this.resendWebhookSecret);
     if (!verified) return { kind: "unauthorized" as const };
     const admission = await admit();
     if (admission.kind === "limited") return { kind: "rate_limited" as const, retryAfterSeconds: admission.retryAfterSeconds };
-    const event = parseResendEvent(payload);
+    const event = parseResendEvent(new TextDecoder().decode(body));
     if (!event) return { kind: "ignored" as const };
     const providerEventId = request.headers.get("svix-id")!;
     const recorded = await this.repository.recordWebhook({ providerEventId, occurredAt: event.createdAt, providerMessageId: event.providerMessageId });
