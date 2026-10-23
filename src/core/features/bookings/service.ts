@@ -151,7 +151,7 @@ export class BookingsService {
     };
   }
 
-  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number; shownPaymentCents?:number }): Promise<BookingConfirmationResult> {
+  async confirmPublic(input: { handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number; shownPriceCents?:number; shownPaymentCents?:number }): Promise<BookingConfirmationResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
@@ -159,7 +159,7 @@ export class BookingsService {
     if (!nonce) return { kind: "invalid_nonce" };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
     const attribution = cleanAttribution(input.attribution);
-    const payloadHash = await hashPayload({ ...(input.shownPaymentCents===undefined?{}:{shownPaymentCents:input.shownPaymentCents}), ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
+    const payloadHash = await hashPayload({ ...(input.shownPriceCents===undefined?{}:{shownPriceCents:input.shownPriceCents}), ...(input.shownPaymentCents===undefined?{}:{shownPaymentCents:input.shownPaymentCents}), ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
     const profile = await this.profiles.getPublicProfile(input.handle);
     if (!profile) return { kind: "invalid_nonce" };
     const offer = this.bookingLinks ? await this.bookingLinks.resolve(input.slug, input.link) : undefined;
@@ -223,7 +223,7 @@ export class BookingsService {
     if (quote && this.payments) {
       const priced = quote.taxRequired ? await this.taxedQuote(quote, input.billingAddress, input.shownTaxCents, `event:${event.id}`) : { kind: "ready" as const, quote };
       if (priced.kind !== "ready") return paymentApproval.required && quote.mode==="payment" && priced.kind==="tax_changed" ? {kind:"payment_terms_changed"} : priced;
-      if (paymentApproval.required && quote.mode==="payment" && input.shownPaymentCents!==priced.quote.amountCents)return {kind:"payment_terms_changed"};
+      if (paymentApproval.required && quote.mode==="payment" && (input.shownPaymentCents!==priced.quote.amountCents || input.shownPriceCents!==priced.quote.snapshot.priceCents))return {kind:"payment_terms_changed"};
       const approvalToken=paymentApproval.required ? await this.approvals.token(input.nonce) : undefined;
       const paid = await beginPaidConfirmation({ repository: this.repository, payments: this.payments, runtime: this.runtime, confirmationEmails: (manageToken, payment) => this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired, payment }) },
         { claim: claimBase, nonce: input.nonce, handle: input.handle, slug: input.slug, quote: priced.quote, durationMinutes: selectedDuration, consent: quote.saveCard ? { version: cardConsentVersion(quote.snapshot) } : undefined,...(approvalToken?{approval:{windowHours:paymentApproval.windowHours,tokenHash:await hashToken(approvalToken,this.runtime.SESSION_SECRET),url:new URL(`/manage/${approvalToken}`,this.runtime.APP_URL).toString()}}:{}) });
@@ -590,7 +590,7 @@ export class BookingsService {
     if (!nonce) return { kind: "invalid_nonce" as const };
     if (nonce.purpose !== "reschedule" || nonce.bookingId !== access.booking.id || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" as const };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" as const };
-    const payloadHash = await hashPayload({ startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: "", email: "", answers: { reason: input.reason?.trim() ?? "" }, ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }) });
+    const payloadHash = await hashPayload({ ...(input.shownPriceCents===undefined?{}:{shownPriceCents:input.shownPriceCents}), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: "", email: "", answers: { reason: input.reason?.trim() ?? "" }, ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }) });
     const profile = await this.profiles.getProfile();
     if (!profile) return { kind: "not_found" as const };
     if (nonce.consumedAt) {

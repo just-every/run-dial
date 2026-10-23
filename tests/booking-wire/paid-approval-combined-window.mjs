@@ -4,7 +4,7 @@ import {wireMail,recipient} from './mail-contracts.mjs';
 export async function combinedConsentWindow(h,eventType,terms,due,label){
   const {data,call,state,deliver}=h,stale=await h.selection(eventType);
   await data(`/api/app/event-types/${eventType.id}/payment-terms`,{...terms,noShowFeeCents:terms.noShowFeeCents+100},200,'PUT');
-  const before=await state(),refused=await(await call(h.base(eventType)+'/confirm',{nonce:stale.nonce,startAt:stale.selection.startAt,inviteeTimezone:'UTC',name:'Leah Patel',email:`synthetic-pay007-${label}-consent@example.test`,answers:{},shownPaymentCents:due,cardConsent:{accepted:true,version:stale.payment.consent.version}},400)).json();assert.equal(refused.error.code,'card_consent_required');assert.equal((await state()).wire_stripe_sessions.length,before.wire_stripe_sessions.length);
+  const before=await state(),refused=await(await call(h.base(eventType)+'/confirm',{nonce:stale.nonce,startAt:stale.selection.startAt,inviteeTimezone:'UTC',name:'Leah Patel',email:`synthetic-pay007-${label}-consent@example.test`,answers:{},shownPriceCents:stale.payment.priceCents,shownPaymentCents:due,cardConsent:{accepted:true,version:stale.payment.consent.version}},400)).json();assert.equal(refused.error.code,'card_consent_required');assert.equal((await state()).wire_stripe_sessions.length,before.wire_stripe_sessions.length);
   await data(`/api/app/event-types/${eventType.id}/payment-terms`,terms,200,'PUT');
   for(const mode of ['requires-action','response-lost','unavailable']){
     const name=`stripe-setup-${mode}`;await data('/__fixtures/payments/control',{name,value:1});

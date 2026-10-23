@@ -28,7 +28,7 @@ export async function paidApprovalSupport(context){
   let sequence=0;
   async function hold(event,options={}){
     const selected=options.selection??await selection(event),email=options.email??`synthetic-pay007-${++sequence}@example.test`;
-    const payload={nonce:selected.nonce,startAt:selected.selection.startAt,inviteeTimezone:'UTC',name:options.name??'Maya Chen',email,answers:{},...(selected.payment.mode==='payment'?{shownPaymentCents:selected.payment.amountCents}:{}),...(selected.payment.consent?{cardConsent:{accepted:true,version:selected.payment.consent.version}}:{}),...options.payload};
+    const payload={nonce:selected.nonce,startAt:selected.selection.startAt,inviteeTimezone:'UTC',name:options.name??'Maya Chen',email,answers:{},...(selected.payment.mode==='payment'?{shownPriceCents:selected.payment.priceCents,shownPaymentCents:selected.payment.amountCents}:{}),...(selected.payment.consent?{cardConsent:{accepted:true,version:selected.payment.consent.version}}:{}),...options.payload};
     const step=await data(base(event)+'/confirm',payload,202),snap=await state(),session=JSON.parse(snap.wire_stripe_sessions.find(row=>JSON.parse(row.payload).url===step.payment.checkoutUrl).payload);
     return {event,selected,payload,step,session,returnToken:new URL(step.payment.returnUrl).searchParams.get('return')};
   }

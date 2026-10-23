@@ -26,7 +26,7 @@ const confirmationSchema = selectionSchema.extend({ guests: z.array(z.string().m
   // PAY-003: the invitee's explicit agreement to a saved card for the stated fees, with the wording version shown.
   cardConsent: z.object({ accepted: z.boolean(), version: z.string().max(40) }).strict().optional(),
   // PAY-005: the billing address Stripe Tax prices, and the tax the booking step showed for it.
-  shownPaymentCents:z.number().int().min(0).max(99_999_999).optional(), billingAddress: billingAddressSchema.optional(), shownTaxCents: z.number().int().min(0).max(99_999_999).optional() });
+  shownPriceCents:z.number().int().min(0).max(99_999_999).optional(), shownPaymentCents:z.number().int().min(0).max(99_999_999).optional(), billingAddress: billingAddressSchema.optional(), shownTaxCents: z.number().int().min(0).max(99_999_999).optional() });
 const taxQuoteSchema = z.object({ link: z.string().max(200).optional(), nonce: z.string().min(1).max(200), startAt: z.string().max(40), inviteeTimezone: z.string().max(80), billingAddress: billingAddressSchema }).strict();
 const manageRescheduleSchema = selectionSchema.extend({ nonce: z.string().max(200).optional(), reason: z.string().trim().max(500).optional() });
 const cancelSchema = z.object({ reason: z.string().trim().max(500).optional() });
