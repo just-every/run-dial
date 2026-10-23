@@ -1,7 +1,8 @@
-/** Processor reconciliation and approval commands share the booking coordinator with host money mutations.
- * Signature and account admission still happen inside it. */
+/** Reconciliation and approval commands share the booking coordinator with host money mutations.
+ * Ordinary balance/invoice callbacks retain atomic settlement outside it: they can arrive while a cancellation
+ * is awaiting the processor. Signature and account admission still happen inside the receiving service. */
 export async function paymentApprovalTarget(request: Request, db: D1Database): Promise<string | undefined> {
-  const event = await request.clone().json().catch(() => null) as { data?: { object?: Record<string, unknown> } } | null;
+  const event = await request.clone().json().catch(() => null) as { type?: string; data?: { object?: Record<string, unknown> } } | null;
   const object = event?.data?.object;
   if (!object || typeof object.id !== "string") return undefined;
   const metadata = object.metadata as Record<string, unknown> | undefined;
@@ -15,6 +16,7 @@ export async function paymentApprovalTarget(request: Request, db: D1Database): P
     AND (json_extract(payment_json,'$.paymentIntentId')=? OR json_extract(payment_json,'$.setupIntentId')=?
       OR json_extract(payment_json,'$.refundId')=?) LIMIT 1`).bind(intent, object.id, object.id).first<{ id: string }>())?.id;
   if(approval)return approval;
+  if(!["charge.refunded","charge.succeeded","charge.dispute.created","charge.dispute.closed"].includes(event?.type??""))return undefined;
   return (await db.prepare(`SELECT booking_id AS id FROM booking_payments WHERE payment_intent_id=?
     UNION SELECT booking_id AS id FROM payment_movements WHERE processor_ref=? LIMIT 1`).bind(intent,intent).first<{id:string}>())?.id;
 }
