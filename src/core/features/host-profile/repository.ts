@@ -1,5 +1,4 @@
 import { ulid } from "ulid";
-import { publicLookFrom, publicLookStatement, type PublicLook } from "../site-look";
 import { upsertProfile } from "./profile-writes";
 
 export type FocusAreaInput = { label: string };
@@ -14,8 +13,7 @@ export type ProfileInput = {
   socialProof: SocialProofInput[];
 };
 
-/** `look` is the booking pages' look (BRAND-001), read in the same batch so pages need no extra request. */
-export type ProfileRecord = ProfileInput & { id: string; createdAt: string; updatedAt: string; avatarKey?: string | null; avatarContentType?: string | null; look?: PublicLook };
+export type ProfileRecord = ProfileInput & { id: string; createdAt: string; updatedAt: string; avatarKey?: string | null; avatarContentType?: string | null };
 
 export class HostProfileRepository {
   private readonly binding: D1Database;
@@ -25,19 +23,17 @@ export class HostProfileRepository {
   }
 
   async get(): Promise<ProfileRecord | undefined> {
-    const [parent, areas, proof, look] = await this.binding.batch([
+    const [parent, areas, proof] = await this.binding.batch([
       this.binding.prepare("SELECT id, handle, name, title, biography, timezone, created_at AS createdAt, updated_at AS updatedAt, avatar_key AS avatarKey, avatar_content_type AS avatarContentType FROM host_profiles WHERE singleton_key = 'default'"),
       this.binding.prepare("SELECT label FROM profile_focus_areas WHERE profile_id = (SELECT id FROM host_profiles WHERE singleton_key = 'default') ORDER BY position"),
       this.binding.prepare("SELECT quote, attribution FROM social_proof_entries WHERE profile_id = (SELECT id FROM host_profiles WHERE singleton_key = 'default') ORDER BY position"),
-      publicLookStatement(this.binding),
     ]);
-    const profile = parent.results[0] as Omit<ProfileRecord, "focusAreas" | "socialProof" | "look"> | undefined;
+    const profile = parent.results[0] as Omit<ProfileRecord, "focusAreas" | "socialProof"> | undefined;
     if (!profile) return undefined;
     return {
       ...profile,
       focusAreas: areas.results as FocusAreaInput[],
       socialProof: proof.results as SocialProofInput[],
-      look: publicLookFrom(look),
     };
   }
 

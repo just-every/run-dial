@@ -18,16 +18,13 @@ contract("AUTH-002", "the public Hono flow binds a nonce to its selected event a
   const selectionQuery = new URLSearchParams({ nonce: selection.nonce, startAt: slot.startAt, inviteeTimezone: "UTC" });
   const selectionReload = await fetch(`${server.origin}/api/public/book/dial-host/intro/selection?${selectionQuery}`);
   assert.equal(selectionReload.status, 200, "a details reload reads the still-valid capability");
-  const reload = await readJson(selectionReload, "selection reload");
-  assert.deepEqual(reload, {
+  assert.deepEqual(await readJson(selectionReload, "selection reload"), {
     nonce: selection.nonce,
     expiresAt: selection.expiresAt,
     guestLimit: 0,
     selection: { startAt: selection.selection.startAt, endAt: selection.selection.endAt, hostTimezone: "UTC", inviteeTimezone: "UTC" },
     event: event.eventType,
-    // BRAND-001: the booking pages' look travels with the public host; with no website read it is the plain look.
-    host: { avatarKey: null, handle: "dial-host", name: "Dial Host", title: "Host", biography: "Booking tests", timezone: "UTC", focusAreas: [], socialProof: [],
-      look: { kind: "plain", site: null, name: null, mark: null, colours: reload.host.look?.colours, face: null } },
+    host: { avatarKey: null, handle: "dial-host", name: "Dial Host", title: "Host", biography: "Booking tests", timezone: "UTC", focusAreas: [], socialProof: [] },
   }, "the reload API returns only the public selection DTO");
   assert.equal((await fetch(`${server.origin}/book/dial-host/intro/details?${selectionQuery}`)).status, 200, "a valid details page capability renders the public surface");
   assert.equal((await fetch(`${server.origin}/book/dial-host/intro/details`)).status, 404, "a details route with no query is a recovery 404, never a validation 400");
