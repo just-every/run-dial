@@ -11,6 +11,8 @@ import { ArchiveMaintenance, maintenanceResponse } from "../features/portability
 import { ErasureError } from "../../modules/erasure/index.mjs";
 import { extensionRoutes } from "./mount.server";
 import { avatarRoutes } from "../features/host-profile/avatar-routes";
+import { brandFileRoutes } from "../features/site-look/brand-file-routes";
+import { siteLookRoutes } from "../features/site-look/routes";
 import { editorConfigResponse, editorDocument } from "../features/editor/editor.server";
 import { moveInRoutes } from "../features/move-in/routes";
 import { hostSetupRoutes } from "../features/host-setup/routes";
@@ -87,6 +89,9 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", pollRoutes)
     .route("/", clientRoutes)
     .route("/", hostProfileRoutes)
+    .route("/", siteLookRoutes)
+    // /media/brand/ before the avatar's /media/*.
+    .route("/", brandFileRoutes)
     .route("/", avatarRoutes)
     .route("/", eventTypeRoutes)
     .route("/", bookingLinkRoutes)
