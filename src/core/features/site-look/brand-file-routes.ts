@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 import type { AppEnvironment } from "../../app/context";
+import { faceTypes } from "./public-look";
 
-/** PROFILE-003 (ct C3): the read mark and face are public files beside the avatar, under the same delivery rules:
- * their declared type, inline, nosniff. A mark may be SVG, so the file itself is sandboxed: opened on its own it
- * runs nothing. Mount before the avatar's /media/* route. */
+/** BRAND-002 (ct C3): the brand files beside the avatar, under PROFILE-003's delivery rules: the type fixed from the
+ * file's signature, inline, nosniff. A mark may be SVG, so every file is sandboxed: opened on its own it runs nothing.
+ * A face carries the CORS header a booking page needs to load it from another origin (an embed's host or a mapped
+ * hostname). Mount before the avatar's /media/* route. */
 export const brandFileRoutes = new Hono<AppEnvironment>()
   .get("/media/brand/:file", async (context) => {
     const name = context.req.param("file");
@@ -16,5 +18,6 @@ export const brandFileRoutes = new Hono<AppEnvironment>()
       "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
       // The name is the content's own hash, so the bytes behind it never change.
       "Cache-Control": "public, max-age=31536000, immutable",
+      ...(faceTypes.includes(file.contentType) ? { "Access-Control-Allow-Origin": "*" } : {}),
     } });
   });

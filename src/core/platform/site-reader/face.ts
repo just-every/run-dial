@@ -1,52 +1,79 @@
 import { splitTopLevel, unquote, type CssSheet } from "./css.ts";
-import { guardedFetch, type GuardedFetchContext } from "./fetch.ts";
-import { fontContentType, fontFormat, fontNames } from "./font-names.ts";
+import { FileTooLarge, guardedFetch, type GuardedFetchContext } from "./fetch.ts";
+import { fontFacts, fontFormat, type FaceKind } from "./font-names.ts";
 import { openLicence } from "./licence.ts";
 import type { PageStyle } from "./page-style.ts";
 import { isGoogleFontsHost } from "./styles.ts";
-import type { SiteFace } from "./types.ts";
+import type { FaceUnread, SiteFace } from "./types.ts";
 
-const GENERIC = new Set(["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui", "ui-serif", "ui-sans-serif", "ui-monospace", "ui-rounded", "emoji", "math", "fangsong", "-apple-system", "blinkmacsystemfont", "inherit", "initial", "unset", "revert", "revert-layer"]);
+// CSS generic families and keywords: never a face the site serves. A generic names the kind of face its stack falls back to.
+const GENERIC = new Map<string, FaceKind | null>([
+  ["serif", "serif"], ["ui-serif", "serif"],
+  ["sans-serif", "sans"], ["ui-sans-serif", "sans"], ["system-ui", "sans"], ["-apple-system", "sans"], ["blinkmacsystemfont", "sans"], ["ui-rounded", "sans"],
+  ["monospace", "mono"], ["ui-monospace", "mono"],
+  ["cursive", "script"], ["fantasy", "display"],
+  ["emoji", null], ["math", null], ["fangsong", null], ["inherit", null], ["initial", null], ["unset", null], ["revert", null], ["revert-layer", null],
+]);
 
 interface Declared { family: string; descriptors: Map<string, string>; sheet: CssSheet }
 
 /** The site's text face: the first family in the body's font stack (then html's, then the first heading's) that the
- * site serves itself with @font-face. Its regular, upright, Latin file is read, with the licence the file names.
- * A family the page only names, such as a system font, is not a face the site serves, so the result is null. */
+ * site serves itself with @font-face. Its regular, upright, Latin file is read for what it says about itself (its
+ * family, kind and licence), and none of it is kept. A family the page only names, such as a system font, is not a
+ * face the site serves, so the result is null. */
 export async function siteFace(sheets: CssSheet[], page: PageStyle, context: GuardedFetchContext, maxFontBytes: number): Promise<SiteFace | null> {
   const declared: Declared[] = sheets.flatMap((sheet) => sheet.fontFaces.map((descriptors) => ({ family: unquote(descriptors.get("font-family") ?? ""), descriptors, sheet })));
   for (const stack of page.fontStacks) {
-    for (const family of stack) {
+    for (const [index, family] of stack.entries()) {
       if (GENERIC.has(family.toLowerCase())) continue;
       const faces = declared.filter((face) => face.family.toLowerCase() === family.toLowerCase());
-      if (faces.length) return readFace(family, faces, context, maxFontBytes);
+      if (faces.length) return readFace(family, fallbackKind(stack.slice(index + 1)), faces, context, maxFontBytes);
     }
   }
   return null;
 }
 
-async function readFace(family: string, faces: Declared[], context: GuardedFetchContext, maxFontBytes: number): Promise<SiteFace> {
+/** The kind the stack falls back to after the face: its first generic family that names one. */
+const fallbackKind = (rest: string[]) => rest.map((family) => GENERIC.get(family.toLowerCase())).find((kind) => kind) ?? null;
+
+/** The kind a family's own name spells, for a file that does not classify itself and a stack with no generic. */
+function nameKind(family: string): FaceKind | null {
+  if (/\bmono(space(d)?)?\b|\bcode\b/i.test(family)) return "mono";
+  if (/\bsans\b|grotesk|grotesque/i.test(family)) return "sans";
+  if (/\bserif\b|\bslab\b/i.test(family)) return "serif";
+  return null;
+}
+
+async function readFace(family: string, stackKind: FaceKind | null, faces: Declared[], context: GuardedFetchContext, maxFontBytes: number): Promise<SiteFace> {
   const face = faces.toSorted((a, b) => score(a.descriptors) - score(b.descriptors))[0];
   const source = sourceUrl(face);
   const google = isGoogleFontsHost(new URL(face.sheet.url)) || (source !== null && isGoogleFontsHost(source));
-  let bytes: Uint8Array | null = null, url: string | null = null;
-  try {
-    if (source?.protocol === "data:") bytes = dataBytes(source.href, maxFontBytes);
-    else if (source) {
+  let bytes: Uint8Array | null = null, url: string | null = null, unread: FaceUnread | null = null;
+  if (!source) unread = "no-file";
+  else if (source.protocol === "data:") {
+    const inline = dataBytes(source.href, maxFontBytes);
+    if (inline === "too-large") unread = "too-large";
+    else bytes = inline;
+  } else {
+    url = source.href;
+    try {
       const fetched = await guardedFetch(source, "font/woff2,font/woff,font/ttf,font/otf,*/*;q=0.1", maxFontBytes, false, context);
       bytes = fetched.bytes;
       url = fetched.url.href;
+    } catch (cause) {
+      if (context.signal.aborted) throw cause;
+      unread = cause instanceof FileTooLarge ? "too-large" : "unreachable";
     }
-  } catch (cause) {
-    if (context.signal.aborted) throw cause;
   }
-  const format = bytes ? fontFormat(bytes) : null;
-  const names = bytes && format ? fontNames(bytes) : null;
+  const facts = bytes && fontFormat(bytes) ? fontFacts(bytes) : null;
+  if (!unread && !facts) unread = "not-a-font";
   return {
-    family: names?.family ?? family,
+    family: facts?.family ?? family,
     source: google ? "google-fonts" : "site",
-    file: bytes && format ? { url, contentType: fontContentType[format], bytes } : null,
-    licence: { open: openLicence(names?.licence ?? null, names?.licenceUrl ?? null), text: names?.licence ?? names?.licenceUrl ?? null },
+    kind: facts?.kind ?? stackKind ?? nameKind(facts?.family ?? family),
+    url,
+    unread,
+    licence: facts ? { open: openLicence(facts.licence, facts.licenceUrl), text: facts.licence ?? facts.licenceUrl } : null,
   };
 }
 
@@ -79,8 +106,10 @@ function sourceUrl(face: Declared): URL | null {
   return sources.sort((a, b) => a.rank - b.rank)[0]?.url ?? null;
 }
 
-function dataBytes(href: string, maxBytes: number): Uint8Array | null {
+/** A face inlined in the CSS: its bytes, "too-large" over the limit, or null when it is not base64 data. */
+function dataBytes(href: string, maxBytes: number): Uint8Array | "too-large" | null {
   const comma = href.indexOf(",");
-  if (comma < 0 || !/;base64$/i.test(href.slice(0, comma)) || (href.length - comma) * 0.75 > maxBytes) return null;
-  return Uint8Array.from(atob(href.slice(comma + 1)), (character) => character.charCodeAt(0));
+  if (comma < 0 || !/;base64$/i.test(href.slice(0, comma))) return null;
+  if ((href.length - comma) * 0.75 > maxBytes) return "too-large";
+  try { return Uint8Array.from(atob(href.slice(comma + 1)), (character) => character.charCodeAt(0)); } catch { return null; }
 }

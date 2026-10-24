@@ -1,10 +1,15 @@
-// Copied from just-every/run-lamp 195e73ac src/core/platform/site-reader/fetch.ts (gr G1), with Dial's user agent; the round that adopts Base's shared reader deletes this copy.
+// Copied from just-every/run-lamp 195e73ac src/core/platform/site-reader/fetch.ts (gr G1), with Dial's user agent and a file over its limit told apart (FileTooLarge); the round that adopts Base's shared reader deletes this copy.
 import { isIpLiteral, isPublicAddress } from "./address.ts";
 import type { SiteReadFailure } from "./types.ts";
 
 export class SiteReadError extends Error {
   readonly reason: SiteReadFailure;
   constructor(reason: SiteReadFailure, message: string) { super(message); this.reason = reason; }
+}
+
+/** A file over its size limit: the read goes on without it, and says why it is missing. */
+export class FileTooLarge extends SiteReadError {
+  constructor() { super("unreachable", "That file is too large."); }
 }
 
 export interface GuardedFetchContext {
@@ -64,7 +69,7 @@ export async function guardedFetch(start: URL, accept: string, maxBytes: number,
     const declared = Number(response.headers.get("Content-Length"));
     if (!truncate && declared > maxBytes) {
       await response.body?.cancel();
-      throw new SiteReadError("unreachable", "That file is too large.");
+      throw new FileTooLarge();
     }
     return { url, contentType: response.headers.get("Content-Type") ?? "", bytes: await readCapped(response, maxBytes, truncate, context.signal) };
   }
@@ -81,7 +86,7 @@ async function readCapped(response: Response, maxBytes: number, truncate: boolea
       if (done) break;
       if (total + value.byteLength > maxBytes) {
         await reader.cancel();
-        if (!truncate) throw new SiteReadError("unreachable", "That file is too large.");
+        if (!truncate) throw new FileTooLarge();
         chunks.push(value.subarray(0, maxBytes - total));
         total = maxBytes;
         break;

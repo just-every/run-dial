@@ -1,10 +1,12 @@
 import { RuntimeConfigurationError } from "../../shared/runtime-env";
-import { brandExtensions } from "./public-look";
+import { brandFontBytes, brandMarkBytes } from "./brand-limits";
+import { brandExtensions, faceTypes } from "./public-look";
 
 /** An unreferenced brand file younger than this may belong to a read that is still storing its look. */
 const sweepAfterMs = 10 * 60_000;
 
-/** The read mark and face in R2 under brand/<sha256>.<ext>: the same bytes always land at the same key. */
+/** Brand files in R2 under brand/<sha256>.<ext>: the same bytes always land at the same key. Only BRAND-002's types
+ * and sizes are stored. */
 export class BrandFiles {
   constructor(private readonly files?: R2Bucket) {}
 
@@ -16,6 +18,7 @@ export class BrandFiles {
   async put(bytes: Uint8Array, contentType: string) {
     const extension = brandExtensions[contentType];
     if (!extension) throw new Error(`No brand file type for ${contentType}`);
+    if (bytes.byteLength > (faceTypes.includes(contentType) ? brandFontBytes : brandMarkBytes)) throw new Error(`A ${contentType} brand file is over its size limit`);
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new Uint8Array(bytes)));
     const key = `brand/${Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("")}.${extension}`;
     await this.bucket().put(key, bytes, { httpMetadata: { contentType } });
