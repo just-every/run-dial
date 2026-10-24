@@ -8,7 +8,7 @@ export async function paymentErasureProbes({ data, call, state, hold, slot, day,
     return data("/api/app/privacy/erase", { email, confirmation: preview.confirmation, expiresAt: preview.expiresAt });
   };
   await probe("erasure does not count a refused invoice Customer", async () => {
-    const email = "synthetic-dial-erasure-invoice@example.test", name = "Synthetic erasure invoice";
+    const email = "synthetic-dial-person+erasure-invoice@example.test", name = "synthetic-dial-person+Synthetic erasure invoice";
     const booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(24)), inviteeTimezone: "UTC", name, email, answers: {} }, 201);
     const before = objects(await state()).filter(object => object.object === "customer").length;
     await data("/wire/control", { name: "stripe-customer-refused", value: 1 });
@@ -31,7 +31,7 @@ export async function paymentErasureProbes({ data, call, state, hold, slot, day,
     assert.equal(JSON.stringify(rows).includes(name), false);
   });
   await probe("erasure counts a Customer created before invoice refusal", async () => {
-    const email = "synthetic-dial-erasure-draft@example.test", name = "Synthetic erasure draft";
+    const email = "synthetic-dial-person+erasure-draft@example.test", name = "synthetic-dial-person+Synthetic erasure draft";
     const booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(26)), inviteeTimezone: "UTC", name, email, answers: {} }, 201);
     const before = objects(await state()).filter(object => object.object === "customer").length;
     await data("/wire/control", { name: "stripe-invoice-refused", value: 1 });
@@ -50,7 +50,7 @@ export async function paymentErasureProbes({ data, call, state, hold, slot, day,
     assert.equal(rows.includes(name), false);
   });
   await probe("erasure reconciles Checkout paid before its webhook without confirming", async () => {
-    const email = "synthetic-dial-erasure-checkout@example.test", name = "Synthetic erasure Checkout";
+    const email = "synthetic-dial-person+erasure-checkout@example.test", name = "synthetic-dial-person+Synthetic erasure Checkout";
     const pending = await hold("coaching", await slot("coaching", day(25)), email, name, true);
     const paid = await data("/__fixtures/payments/pay", { sessionId: pending.sessionId });
     assert.equal(paid.payment_status, "paid");
@@ -110,11 +110,11 @@ export async function paymentErasureProbes({ data, call, state, hold, slot, day,
     assert.equal(card?.customer, null, "the pending payer's saved card was detached");
   });
   await probe("DATA-007 processor requests match Stripe and calendar outcomes without retaining personal data", async()=>{
-    const control=await complete(await hold("coaching",await slot("coaching",day(27)),"synthetic-dial-control-processor@example.test","Control consultation",true));
+    const control=await complete(await hold("coaching",await slot("coaching",day(27)),"synthetic-dial-person+control-processor@example.test","synthetic-dial-person+Control consultation",true));
     await deliver();
     const controlCustomer=structuredClone(objects(await state()).find(item=>item.id===control.paid.customer));
     for(const [index,expected] of ["completed","failed","pending"].entries()){
-      const email=`synthetic-dial-processor-${index}@example.test`,name=`Synthetic processor person ${index}`;
+      const email=`synthetic-dial-person+processor-${index}@example.test`,name=`synthetic-dial-person+Synthetic processor person ${index}`;
       const person=await complete(await hold("coaching",await slot("coaching",day(28+index)),email,name,true));
       await deliver();
       const before=await state(),booking=before.bookings.find(row=>row.id===person.booking.id);

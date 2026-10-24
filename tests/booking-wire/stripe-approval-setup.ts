@@ -6,7 +6,7 @@ export async function stripeApprovalSetup(db:D1Database,url:URL,method:string,fo
     const card=await db.prepare("SELECT payload FROM wire_stripe_objects WHERE id=?").bind(form.get("payment_method")).first<{payload:string}>();
     if(!card || JSON.parse(card.payload).customer!==form.get("customer"))return failure("payment_method_unexpected_state");
     const control=await db.prepare("SELECT value FROM wire_controls WHERE name='stripe-setup-requires-action'").first<{value:number}>();
-    const setup={id:`synthetic-dial-setup-${crypto.randomUUID()}`,object:"setup_intent",status:control?.value?"requires_action":"succeeded",customer:form.get("customer"),payment_method:form.get("payment_method"),usage:"off_session",metadata:Object.fromEntries([...form].filter(([key])=>key.startsWith("metadata[")).map(([key,value])=>[key.slice(9,-1),value]))};
+    const setup={id:`stripe-setup~${crypto.randomUUID()}`,object:"setup_intent",status:control?.value?"requires_action":"succeeded",customer:form.get("customer"),payment_method:form.get("payment_method"),usage:"off_session",metadata:Object.fromEntries([...form].filter(([key])=>key.startsWith("metadata[")).map(([key,value])=>[key.slice(9,-1),value]))};
     await db.prepare("INSERT INTO wire_stripe_objects(id,type,payload) VALUES(?,'setup_intents',?)").bind(setup.id,JSON.stringify(setup)).run();
     return Response.json(setup);
   }

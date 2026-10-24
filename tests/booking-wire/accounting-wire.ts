@@ -31,7 +31,8 @@ export async function accountingWire(db:D1Database,url:URL,method:string,init:Re
     if(cached){if(cached.body!==JSON.stringify(body))return Response.json({Fault:{type:'ValidationFault'}},{status:400});return Response.json(JSON.parse(cached.response));}
     const kind=path==='item'?'Item':'SalesReceipt';
     if(kind==='SalesReceipt'&&(String(body.DocNumber).length>21||!Array.isArray(body.Line)||body.CustomerRef))throw Error('invalid anonymous sales receipt');
-    const id=`synthetic-dial-${crypto.randomUUID()}`,payload={Id:id,...body},response={[kind]:payload};
+    // Provider references cannot contain a synthetic-dial-person+ marker.
+    const id=`qbo~${crypto.randomUUID()}`,payload={Id:id,...body},response={[kind]:payload};
     const inserted=await db.prepare('INSERT OR IGNORE INTO wire_accounting_requests(id,body,response) VALUES(?,?,?)').bind(requestId,JSON.stringify(body),JSON.stringify(response)).run();
     if(!inserted.meta.changes){const duplicate=await db.prepare('SELECT response FROM wire_accounting_requests WHERE id=?').bind(requestId).first<{response:string}>();return Response.json(JSON.parse(duplicate!.response));}
     await db.prepare('INSERT INTO wire_accounting_objects(id,kind,payload) VALUES(?,?,?)').bind(id,kind,JSON.stringify(payload)).run();

@@ -5,15 +5,15 @@ import { bookingMail, textBody, recipient } from "./mail-contracts.mjs";
 export async function cancellationProbes({ data, call, state, hold, complete, slot, day, webhook, stripeEvent, sessionOf, deliver, coaching }) {
   const failures = [];
   for (const kind of ["checkout", "balance", "invoice"]) for (const order of ["event-first", "cancel-first", "during-cancel"]) {
-    const name = `${kind}-${order}`, email = `synthetic-dial-${name}@example.test`;
+    const name = `${kind}-${order}`, email = `synthetic-dial-person+${name}@example.test`;
     let booking, paid, initial, event;
     if (kind === "invoice") {
-      booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(26)), inviteeTimezone: "UTC", name: `synthetic-dial-${name}`, email, answers: {} }, 201);
+      booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(26)), inviteeTimezone: "UTC", name: `synthetic-dial-person+${name}`, email, answers: {} }, 201);
       const invoice = (await data(`/api/app/bookings/${booking.id}/invoice`, {})).invoice;
       paid = await data("/__fixtures/payments/pay-invoice", { invoiceId: invoice.id });
       event = stripeEvent("invoice.paid", paid);
     } else {
-      const held = await hold("coaching", await slot("coaching", day(25)), email, `synthetic-dial-${name}`, true);
+      const held = await hold("coaching", await slot("coaching", day(25)), email, `synthetic-dial-person+${name}`, true);
       ({ booking, paid: initial } = await complete(held));
       paid = initial;
       if (kind === "balance") {

@@ -88,15 +88,15 @@ assert.equal(shownA.balanceDueAt, new Date(Date.parse(startA) - 24 * 3600000).to
 assert.equal(shownA.freeWindowEndsAt, new Date(Date.parse(startA) - 48 * 3600000).toISOString());
 assert.ok(shownA.policy.length >= 3 && shownA.consent.version, "the policy and the consent are stated before booking");
 assert.deepEqual([shownA.consent.lateCancelFeeCents, shownA.consent.noShowFeeCents], [4000, 6000]);
-const refusedA = await (await call("/api/public/book/dial-host/coaching/confirm", { nonce: selectionA.nonce, startAt: startA, durationMinutes: 60, inviteeTimezone: "UTC", name: "Avery Deposit", email: "avery@dial.test", answers: {} }, 400)).json();
+const refusedA = await (await call("/api/public/book/dial-host/coaching/confirm", { nonce: selectionA.nonce, startAt: startA, durationMinutes: 60, inviteeTimezone: "UTC", name: "synthetic-dial-person+Avery Deposit", email: "synthetic-dial-person+avery@example.test", answers: {} }, 400)).json();
 assert.equal(refusedA.error.code, "card_consent_required");
 assert.equal((await state()).payment_holds.length, 0, "nothing is held without the consent");
-const stepA = await data("/api/public/book/dial-host/coaching/confirm", { nonce: selectionA.nonce, startAt: startA, durationMinutes: 60, inviteeTimezone: "UTC", name: "Avery Deposit", email: "avery@dial.test", answers: {}, cardConsent: { accepted: true, version: shownA.consent.version } }, 202);
+const stepA = await data("/api/public/book/dial-host/coaching/confirm", { nonce: selectionA.nonce, startAt: startA, durationMinutes: 60, inviteeTimezone: "UTC", name: "synthetic-dial-person+Avery Deposit", email: "synthetic-dial-person+avery@example.test", answers: {}, cardConsent: { accepted: true, version: shownA.consent.version } }, 202);
 assert.equal(stepA.payment.amountCents, 2500);
 let snap = await state();
 const formA = JSON.parse(calls(snap, "/v1/checkout/sessions").at(-1).body);
 assert.deepEqual([formA["line_items[0][price_data][unit_amount]"], formA["payment_intent_data[setup_future_usage]"], formA.customer_creation, formA["excluded_payment_method_types[0]"]], ["2500", "off_session", "always", "us_bank_account"], "Checkout charges the $25 deposit and keeps the consented card");
-const heldA = { payload: { email: "avery@dial.test" }, returnToken: new URL(stepA.payment.returnUrl).searchParams.get("return"), sessionId: sessionOf(stepA.payment.checkoutUrl) };
+const heldA = { payload: { email: "synthetic-dial-person+avery@example.test" }, returnToken: new URL(stepA.payment.returnUrl).searchParams.get("return"), sessionId: sessionOf(stepA.payment.checkoutUrl) };
 const { manage: manageA, booking: bookingA } = await complete(heldA);
 snap = await state();
 assert.deepEqual(snap.booking_payments.filter(row => row.booking_id === bookingA.id).map(row => [row.kind, row.amount_cents]), [["deposit", 2500]]);
@@ -147,11 +147,11 @@ assert.deepEqual(refundsA.map(row => [row.status, row.amount_cents, row.actor_ty
 assert.equal(calls(snap, "/v1/refunds").length, 2, "one Stripe refund per captured payment, never repeated");
 assert.ok(refundsA.every(row => row.processor_ref.startsWith("re_") && row.reason && JSON.parse(calls(snap, "/v1/refunds").find(call => JSON.parse(call.body)["metadata[dial_movement_id]"] === row.id).headers).idempotency === `dial-movement-${row.id}`), "each refund records its reason and Stripe reference and carries its idempotency key");
 await deliver();
-assert.ok(textBody(bookingMail(await state(), bookingA.id).find(mail => /^Booking cancelled:/.test(mail.subject) && mail.personalizations[0].to[0].email === "avery@dial.test")).includes("$100.00 USD"), "the cancellation mail states the refund");
+assert.ok(textBody(bookingMail(await state(), bookingA.id).find(mail => /^Booking cancelled:/.test(mail.subject) && mail.personalizations[0].to[0].email === "synthetic-dial-person+avery@example.test")).includes("$100.00 USD"), "the cancellation mail states the refund");
 checks.push("an invitee cancellation ten days out refunds the $25 deposit and $75 balance automatically through two Stripe refunds; a repeated cancel and replayed signed events refund nothing more");
 
 // A late cancellation charges the stated $40 fee once to the saved card and keeps the deposit.
-const heldB = await hold("coaching", await slot("coaching", day(0), 3600000), "blake@dial.test", "Blake Late", true);
+const heldB = await hold("coaching", await slot("coaching", day(0), 3600000), "synthetic-dial-person+blake@example.test", "synthetic-dial-person+Blake Late", true);
 const { manage: manageB, booking: bookingB } = await complete(heldB);
 assert.deepEqual((await data(`/api/public/manage/${manageB}`)).payment.cancellation, { outcome: "late_fee", amountCents: 4000 });
 await call(`/api/public/manage/${manageB}/cancel`, {});
@@ -165,7 +165,7 @@ assert.deepEqual(snap.payment_movements.filter(row => row.booking_id === booking
 checks.push("a cancellation an hour before the start charges the shown $40 late fee once, off-session to the saved card, refunds nothing and a repeated cancel charges nothing more");
 
 // A declined off-session charge is recorded as failed and never retried.
-const heldC = await hold("coaching", await slot("coaching", day(0), 3600000), "casey@dial.test", "Casey Declined", true);
+const heldC = await hold("coaching", await slot("coaching", day(0), 3600000), "synthetic-dial-person+casey@example.test", "synthetic-dial-person+Casey Declined", true);
 const { manage: manageC, booking: bookingC } = await complete(heldC);
 await data("/wire/control", { name: "stripe-card-decline", value: 1 });
 await call(`/api/public/manage/${manageC}/cancel`, {});
@@ -177,7 +177,7 @@ assert.equal(calls(snap, "/v1/payment_intents").length, 2, "one attempt for the 
 checks.push("a declined late-fee charge is recorded failed with Stripe's code after one attempt and is never retried");
 
 // A free event with a stated no-show fee saves the card through a SetupIntent; a no-show mark lets the host charge it once.
-const heldD = await hold("consult", await slot("consult", day(3)), "dana@dial.test", "Dana Noshow", true);
+const heldD = await hold("consult", await slot("consult", day(3)), "synthetic-dial-person+dana@example.test", "synthetic-dial-person+Dana Noshow", true);
 assert.deepEqual([heldD.shown.amountCents, heldD.shown.mode, heldD.step.payment.mode], [0, "setup", "setup"]);
 const formD = JSON.parse(calls(await state(), "/v1/checkout/sessions").at(-1).body);
 assert.deepEqual([formD.mode, formD.customer_creation, formD["line_items[0][price_data][unit_amount]"]], ["setup", "always", undefined], "nothing is charged at booking: Checkout only sets up the card");
@@ -213,8 +213,8 @@ const money = Object.fromEntries(report.revenue.figures.map(figure => [figure.ke
 // refunds A $100 and D $10.
 assert.deepEqual(money, { revenue: 15000, fees: 7000, refunds: 11000, net: 11000 });
 const drill = async bucket => (await data(`/api/app/bookings?${new URLSearchParams({ report: "revenue", bucket, periodFrom: period.fromDate, periodThrough: period.throughDate })}`)).map(row => row.inviteeName).sort();
-assert.deepEqual(await drill("money:refunds"), ["Avery Deposit", "Dana Noshow"]);
-assert.deepEqual(await drill("money:fees"), ["Blake Late", "Dana Noshow"]);
+assert.deepEqual(await drill("money:refunds"), ["synthetic-dial-person+Avery Deposit", "synthetic-dial-person+Dana Noshow"]);
+assert.deepEqual(await drill("money:fees"), ["synthetic-dial-person+Blake Late", "synthetic-dial-person+Dana Noshow"]);
 checks.push("a $10 partial refund needs a reason, never exceeds what was paid, refunds once on replay, and updates the booking record (fees $30, refunded $10, net $20) and the report's revenue, fees, refunds and net with drill-through to the bookings counted");
 
 // Host-side cancellation (D4): an operator's, the host calendar's and an expired host request's cancellation each refund
@@ -222,7 +222,7 @@ checks.push("a $10 partial refund needs a reason, never exceeds what was paid, r
 const movementsOf = (snapshot, id) => snapshot.payment_movements.filter(row => row.booking_id === id).map(row => [row.kind, row.status, row.amount_cents, row.actor_type, row.failure_code]).sort();
 const cancelMail = async (id, email) => { await deliver(); return textBody(bookingMail(await state(), id).find(mail => /^Booking cancelled:/.test(mail.subject) && mail.personalizations[0].to[0].email === email)); };
 const invoiceRefusal = async id => (await (await call(`/api/app/bookings/${id}/invoice`, {}, 409)).json()).error.details[0];
-const heldF = await hold("coaching", await slot("coaching", day(14)), "frank@dial.test", "Frank Hostcancel", true);
+const heldF = await hold("coaching", await slot("coaching", day(14)), "synthetic-dial-person+frank@example.test", "synthetic-dial-person+Frank Hostcancel", true);
 const { manage: manageF, booking: bookingF } = await complete(heldF);
 assert.equal(await invoiceRefusal(bookingF.id), "paid_upfront", "an upfront-paid booking cannot be invoiced");
 const balanceF = new URL((await data(`/api/public/manage/${manageF}`)).payment.balanceUrl).pathname.split("/").at(-1);
@@ -240,13 +240,13 @@ assert.equal(calls(snap, `/v1/checkout/sessions/${openBalanceF}/expire`).length,
 assert.equal((await data(`/api/public/payments/balance/${balanceF}`)).state, "cancelled");
 assert.equal((await (await call(`/api/public/payments/balance/${balanceF}`, {}, 410)).json()).error.code, "balance_link_closed", "the balance link opens no new Checkout");
 assert.equal(await invoiceRefusal(bookingF.id), "booking_cancelled", "a cancelled booking cannot be invoiced");
-const mailF = await cancelMail(bookingF.id, "frank@dial.test");
+const mailF = await cancelMail(bookingF.id, "synthetic-dial-person+frank@example.test");
 assert.ok(mailF.includes("refunds everything paid, $25.00 USD") && mailF.includes("No fee is charged") && mailF.includes("The balance is no longer due"), "the cancellation mail states the full refund, no fee and the void");
 // Captures racing cancellation are exercised below while the Session is still open at Stripe.
 checks.push("an operator cancelling a paid deposit booking refunds the $25 deposit in full once with no fee, expires the open balance Checkout and refuses the balance link and an invoice; the mail states the refund, no fee and the void");
 
 // The operator may refund less, or nothing, only with a reason, which the invitee's mail states.
-const heldG = await hold("coaching", await slot("coaching", day(15)), "gina@dial.test", "Gina Partial", true);
+const heldG = await hold("coaching", await slot("coaching", day(15)), "synthetic-dial-person+gina@example.test", "synthetic-dial-person+Gina Partial", true);
 const { booking: bookingG } = await complete(heldG);
 assert.equal((await (await call(`/api/app/bookings/${bookingG.id}/cancel`, { refund: { amountCents: 1000, reason: "" } }, 400)).json()).error.code, "invalid_request", "a smaller refund needs a reason");
 assert.equal((await (await call(`/api/app/bookings/${bookingG.id}/cancel`, { refund: { amountCents: 2501, reason: "Too much" } }, 400)).json()).error.code, "refund_exceeds_paid");
@@ -256,19 +256,19 @@ await call(`/api/app/bookings/${bookingG.id}/cancel`, { reason: "Calendar change
 snap = await state();
 assert.deepEqual(movementsOf(snap, bookingG.id), [["refund", "succeeded", 1000, "operator", null]]);
 assert.equal(snap.payment_movements.find(row => row.booking_id === bookingG.id).reason, "Preparation was already done");
-const mailG = await cancelMail(bookingG.id, "gina@dial.test");
+const mailG = await cancelMail(bookingG.id, "synthetic-dial-person+gina@example.test");
 assert.ok(mailG.includes("refunds $10.00 USD of the $25.00 USD paid") && mailG.includes("Reason: Preparation was already done"), "the mail states the amount refunded and the reason");
-const heldH = await hold("coaching", await slot("coaching", day(15)), "hana@dial.test", "Hana Norefund", true);
+const heldH = await hold("coaching", await slot("coaching", day(15)), "synthetic-dial-person+hana@example.test", "synthetic-dial-person+Hana Norefund", true);
 const { booking: bookingH } = await complete(heldH);
 const refundsBeforeH = calls(await state(), "/v1/refunds").length;
 await call(`/api/app/bookings/${bookingH.id}/cancel`, { refund: { amountCents: 0, reason: "Invitee asked to keep it as credit" } });
 snap = await state();
 assert.deepEqual([movementsOf(snap, bookingH.id), calls(snap, "/v1/refunds").length], [[], refundsBeforeH], "no refund reaches Stripe");
-assert.ok((await cancelMail(bookingH.id, "hana@dial.test")).includes("refunds nothing of the $25.00 USD paid. Reason: Invitee asked to keep it as credit"));
+assert.ok((await cancelMail(bookingH.id, "synthetic-dial-person+hana@example.test")).includes("refunds nothing of the $25.00 USD paid. Reason: Invitee asked to keep it as credit"));
 checks.push("an operator refunding less ($10 of $25) or nothing must give a reason, cannot exceed what was paid, refunds once on a repeated cancel, and the invitee's mail states the amount and the reason");
 
 // The host's calendar deletion and an expired host reschedule request refund in full, once, by Dial's policy.
-const heldI = await hold("coaching", await slot("coaching", day(16)), "iris@dial.test", "Iris Calendar", true);
+const heldI = await hold("coaching", await slot("coaching", day(16)), "synthetic-dial-person+iris@example.test", "synthetic-dial-person+Iris Calendar", true);
 const { booking: bookingI } = await complete(heldI);
 await deliver();
 const eventI = (await state()).bookings.find(row => row.id === bookingI.id).calendar_provider_event_id;
@@ -276,8 +276,8 @@ await data("/wire/delete", { id: eventI }); await data("/wire/delete", { id: eve
 snap = await state();
 assert.equal(snap.bookings.find(row => row.id === bookingI.id).state, "cancelled");
 assert.deepEqual(movementsOf(snap, bookingI.id), [["refund", "succeeded", 2500, "policy", null]], "a calendar deletion refunds the deposit once");
-assert.ok((await cancelMail(bookingI.id, "iris@dial.test")).includes("refunds everything paid, $25.00 USD"));
-const heldJ = await hold("coaching", await slot("coaching", day(17)), "jules@dial.test", "Jules Expiry", true);
+assert.ok((await cancelMail(bookingI.id, "synthetic-dial-person+iris@example.test")).includes("refunds everything paid, $25.00 USD"));
+const heldJ = await hold("coaching", await slot("coaching", day(17)), "synthetic-dial-person+jules@example.test", "synthetic-dial-person+Jules Expiry", true);
 const { booking: bookingJ } = await complete(heldJ);
 await deliver();
 const requestJ = await data(`/api/app/bookings/${bookingJ.id}/reschedule-request`, { message: "Please pick another time.", releaseTime: true, expiresInDays: 1, reminderHours: null });
@@ -293,14 +293,14 @@ const invoiced = async (name, email, offset) => {
   const booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(offset)), inviteeTimezone: "UTC", name, email, answers: {} }, 201);
   return { booking, invoice: (await data(`/api/app/bookings/${booking.id}/invoice`, {})).invoice };
 };
-const voided = await invoiced("Kim Invoice", "kim@dial.test", 18);
+const voided = await invoiced("synthetic-dial-person+Kim Invoice", "synthetic-dial-person+kim@example.test", 18);
 await call(`/api/app/bookings/${voided.booking.id}/cancel`, {});
 snap = await state();
 assert.equal(JSON.parse(snap.wire_stripe_objects.find(row => row.id === voided.invoice.id).payload).status, "void", "the open invoice is voided at Stripe");
 assert.deepEqual(movementsOf(snap, voided.booking.id), [["invoice", "failed", 10000, "operator", "voided"]]);
 await call("/__fixtures/payments/pay-invoice", { invoiceId: voided.invoice.id }, 404);
-assert.ok((await cancelMail(voided.booking.id, "kim@dial.test")).includes("The open invoice is void and can no longer be paid"));
-const raced = await invoiced("Lou Invoice", "lou@dial.test", 19);
+assert.ok((await cancelMail(voided.booking.id, "synthetic-dial-person+kim@example.test")).includes("The open invoice is void and can no longer be paid"));
+const raced = await invoiced("synthetic-dial-person+Lou Invoice", "synthetic-dial-person+lou@example.test", 19);
 const racedPaid = await data("/__fixtures/payments/pay-invoice", { invoiceId: raced.invoice.id });
 await call(`/api/app/bookings/${raced.booking.id}/cancel`, {});
 const racedEvent = stripeEvent("invoice.paid", racedPaid);
@@ -322,7 +322,7 @@ await probe("stale fee consent", async () => {
   const shown = (await data(`/api/public/book/dial-host/coaching/selection?${new URLSearchParams({ nonce: selection.nonce, startAt, inviteeTimezone: "UTC" })}`)).payment;
   assert.equal(shown.consent.lateCancelFeeCents, 4000);
   await data(`/api/app/event-types/${coaching.id}/payment-terms`, { ...terms, lateCancelFeeCents: 9000 }, 200, "PUT");
-  const response = await call("/api/public/book/dial-host/coaching/confirm", { nonce: selection.nonce, startAt, durationMinutes: 60, inviteeTimezone: "UTC", name: "synthetic-dial-1", email: "synthetic-dial-1@example.test", answers: {}, cardConsent: { accepted: true, version: shown.consent.version } }, [400, 202]);
+  const response = await call("/api/public/book/dial-host/coaching/confirm", { nonce: selection.nonce, startAt, durationMinutes: 60, inviteeTimezone: "UTC", name: "synthetic-dial-person+1", email: "synthetic-dial-person+1@example.test", answers: {}, cardConsent: { accepted: true, version: shown.consent.version } }, [400, 202]);
   // Refuse before any Checkout can collect money; the refreshed step must show the new fee.
   assert.equal(response.status, 400, "the original $40 consent must not accept the host's new $90 fee");
   assert.equal((await response.json()).error.code, "card_consent_required");
@@ -332,7 +332,7 @@ await probe("stale fee consent", async () => {
 });
 await data(`/api/app/event-types/${coaching.id}/payment-terms`, terms, 200, "PUT");
 await probe("pending refund and later failure", async () => {
-  const held = await hold("coaching", await slot("coaching", day(21)), "synthetic-dial-2@example.test", "synthetic-dial-2", true);
+  const held = await hold("coaching", await slot("coaching", day(21)), "synthetic-dial-person+2@example.test", "synthetic-dial-person+2", true);
   const { booking, manage } = await complete(held);
   await data("/wire/control", { name: "stripe-refund-pending", value: 1 });
   await call(`/api/app/bookings/${booking.id}/cancel`, {});
@@ -353,7 +353,7 @@ await probe("pending refund and later failure", async () => {
 });
 await data("/wire/control", { name: "stripe-refund-pending", value: 0 });
 await probe("transient refund response recovers once", async () => {
-  const held = await hold("coaching", await slot("coaching", day(22)), "synthetic-dial-3@example.test", "synthetic-dial-3", true);
+  const held = await hold("coaching", await slot("coaching", day(22)), "synthetic-dial-person+3@example.test", "synthetic-dial-person+3", true);
   const { booking } = await complete(held);
   await data("/wire/control", { name: "stripe-refund-unavailable", value: 1 });
   await call(`/api/app/bookings/${booking.id}/cancel`, {});
@@ -371,14 +371,14 @@ await probe("transient refund response recovers once", async () => {
 });
 await data("/wire/control", { name: "stripe-refund-unavailable", value: 0 });
 await probe("lost invoice finalization response", async () => {
-  const booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(23)), inviteeTimezone: "UTC", name: "synthetic-dial-4", email: "synthetic-dial-4@example.test", answers: {} }, 201);
+  const booking = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(23)), inviteeTimezone: "UTC", name: "synthetic-dial-person+4", email: "synthetic-dial-person+4@example.test", answers: {} }, 201);
   await data("/wire/control", { name: "stripe-finalize-response-lost", value: 1 });
   await call(`/api/app/bookings/${booking.id}/invoice`, {}, [409, 502, 503]);
   await data("/wire/control", { name: "stripe-finalize-response-lost", value: 0 });
   const current = await state(), provider = current.wire_stripe_objects.map(row => JSON.parse(row.payload)).find(row => row.object === "invoice" && row.metadata?.dial_booking_id === booking.id);
   assert.equal(provider.status, "open", "finalization succeeded at Stripe despite the lost response");
   // The same fault with no payment yet must void the provider invoice, not merely its local movement.
-  const unpaid = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(24)), inviteeTimezone: "UTC", name: "synthetic-dial-5", email: "synthetic-dial-5@example.test", answers: {} }, 201);
+  const unpaid = await data("/api/app/bookings", { eventTypeId: coaching.id, startAt: await slot("coaching", day(24)), inviteeTimezone: "UTC", name: "synthetic-dial-person+5", email: "synthetic-dial-person+5@example.test", answers: {} }, 201);
   await data("/wire/control", { name: "stripe-finalize-response-lost", value: 1 });
   await call(`/api/app/bookings/${unpaid.id}/invoice`, {}, 503);
   await data("/wire/control", { name: "stripe-finalize-response-lost", value: 0 });
@@ -399,14 +399,14 @@ await data("/wire/control", { name: "stripe-finalize-response-lost", value: 0 })
 await cancellationProbes({ data, call, state, hold, complete, slot, day, webhook, stripeEvent, sessionOf, deliver, coaching });
 
 // Erasing a payer asks Stripe to detach the saved card, removes references and consent, and keeps amounts in the anonymized audit.
-const preview = await data("/api/app/privacy/preview", { email: "avery@dial.test" });
-const receipt = await data("/api/app/privacy/erase", { email: "avery@dial.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
+const preview = await data("/api/app/privacy/preview", { email: "synthetic-dial-person+avery@example.test" });
+const receipt = await data("/api/app/privacy/erase", { email: "synthetic-dial-person+avery@example.test", confirmation: preview.confirmation, expiresAt: preview.expiresAt });
 snap = await state();
 assert.equal(calls(snap, `/v1/payment_methods/${consentA.stripe_payment_method_id}/detach`).length, 1, "Stripe is asked to detach the saved card");
 assert.deepEqual([receipt.savedCardsDetached, receipt.savedCardFailures, receipt.stripeCustomersRetained], [1, 0, 1], "the receipt counts the detached card and observed Stripe Customer");
 assert.ok(receipt.externalRequests.some(item=>item.kind==="stripe_customer_anonymize"&&item.processorRef===consentA.stripe_customer_id&&item.state==="completed"),"the receipt reports the actual Customer anonymization");
 const retainedRows=await data("/__fixtures/payments/all-rows"),rows=JSON.stringify(retainedRows);
-for(const detail of ["avery@dial.test","Avery Deposit"])assert.ok(!rows.includes(detail),"erased payer values are gone from every table");
+for(const detail of ["synthetic-dial-person+avery@example.test","synthetic-dial-person+Avery Deposit"])assert.ok(!rows.includes(detail),"erased payer values are gone from every table");
 for(const [table,records] of Object.entries(retainedRows))if(!["anonymized_audit","processor_erasure_requests"].includes(table))for(const ref of [consentA.stripe_payment_method_id,consentA.stripe_customer_id])assert.ok(!JSON.stringify(records).includes(ref),`${table}: processor references survive only in anonymous audit/cleanup records`);
 const audit = snap.anonymized_audit.filter(row => row.entity_kind === "payment").map(row => [row.action, row.amount_cents]).sort();
 assert.deepEqual(audit, [["balance:succeeded", 7500], ["deposit", 2500], ["refund:succeeded", 2500], ["refund:succeeded", 7500], ["saved_card_detached", 0]], "amounts and Stripe references survive anonymized");
@@ -417,7 +417,7 @@ await reconciliationProbes({call,data,state,hold,slot,day,complete,webhook,strip
 assert.deepEqual(probeFailures, [], "all money source-review probes pass");
 
 // Fail closed: with the connection deauthorized, refunds and fees are refused and an automatic refund is recorded failed, never done.
-const heldE = await hold("coaching", await slot("coaching", day(12)), "erin@dial.test", "Erin Closed", true);
+const heldE = await hold("coaching", await slot("coaching", day(12)), "synthetic-dial-person+erin@example.test", "synthetic-dial-person+Erin Closed", true);
 const { manage: manageE, booking: bookingE } = await complete(heldE);
 await webhook(stripeEvent("account.application.deauthorized", { id: "ca_wire", object: "application" }));
 const refusedRefund = await (await call(`/api/app/bookings/${bookingB.id}/refunds`, { amountCents: 500, reason: "Courtesy", idempotencyKey: randomUUID() }, 409)).json();
