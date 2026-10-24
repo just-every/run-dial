@@ -69,6 +69,10 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
   assert.doesNotMatch(cookie ?? "", /; Secure/, "development cookies deliberately omit Secure for loopback HTTP");
   const sessionCookie = cookie?.split(";")[0] ?? "";
 
+  const signin = await fetch(`${origin}/signin?login_hint=operator%40dial.test`, { headers: { cookie: sessionCookie }, redirect: "manual" });
+  assert.equal(signin.status, 307, "a signed-in owner forwards from mail sign-in links");
+  assert.equal(signin.headers.get("location"), "/app");
+
   const replay = await confirmAuthLink(developmentLink);
   assert.equal(replay.status, 400, "magic links are single-use");
 
@@ -82,6 +86,9 @@ test("operator authentication is non-enumerating, local-only, replay-safe, and r
   assert.match(signedOut.headers.get("set-cookie") ?? "", /Max-Age=0/);
   const afterSignOut = await fetch(`${origin}/api/app/profile`, { headers: { cookie: sessionCookie } });
   assert.equal(afterSignOut.status, 401, "sign-out revokes the persisted session");
+  const anonymousSignin = await fetch(`${origin}/signin?login_hint=operator%40dial.test`, { headers: { cookie: sessionCookie }, redirect: "manual" });
+  assert.equal(anonymousSignin.status, 200, "a revoked session sees sign-in");
+  assert.match(await anonymousSignin.text(), /Sign in/);
   // A second genuine provider message establishes a new native session.
   await requestMagicLink("operator@dial.test");
   const { developmentLink: secondDevelopmentLink } = await localMagicLink(origin);
