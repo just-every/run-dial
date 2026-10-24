@@ -4,9 +4,8 @@ Dial runs as one Cloudflare Worker with a D1 database, an R2 bucket, queues, a D
 
 ## What you need
 
-- **Node 22 or later, npm, and Git.** `rer` needs Node 22 or later to install
-  and run. It selects the exact Node and pnpm versions pinned by Dial when
-  needed.
+- **Git.** Git is required; rer brings Node and pnpm. It selects the exact
+  Node and pnpm versions pinned by Dial when needed.
 - **A Cloudflare account on the Workers Paid plan,** with a workers.dev subdomain and an API token for that account. [Deploy to Cloudflare](#deploy-to-cloudflare) lists the permissions.
 - **Working mail before self-hosted deployment:** the SendGrid path below needs an API key, any sender address on a verified domain, and an owner mailbox you can read. Hosted sign-in requires an emailed link. See [Calendar and email](calendar-and-email.md#send-mail-with-sendgrid).
 - **A Google Cloud project** is optional, for Google Calendar integration and Google Meet. See [Calendar and email](calendar-and-email.md#connect-google-calendar).
@@ -17,18 +16,18 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
 
 ## Run it on your computer
 
-1. Use Node 22 or later and Git (without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-dial` brings its own). One line installs the latest `rer`, clones the source and starts Dial. In a Dial checkout, `rer` runs the exact version Dial pins in `package.json`:
+1. One line installs the latest `rer`, clones the source into `run-dial` and starts Dial. In a Dial checkout, `rer` runs the exact version Dial pins in `package.json`:
 
    ```bash
-   npx -y @runeditrun/rer dev just-every/run-dial
+   curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-dial
    ```
 
-   To start it again later, run `cd run-dial && rer dev`. The default clone follows
+   Git is required; rer brings Node and pnpm. Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-dial` does the same. If the installer prints a line that puts `rer` on your PATH, run that line too. To start it again later, run the same line from the same folder, or `cd run-dial && rer dev`. The default clone follows
    `main`. For the tagged **v0.5.0** release instead, clone it yourself:
 
    ```bash
-   git clone --branch v0.5.0 https://github.com/just-every/run-dial.git dial
-   cd dial
+   git clone --branch v0.5.0 https://github.com/just-every/run-dial.git run-dial
+   cd run-dial
    ```
 
    A tag retains its own dependency pins. This guide describes current `main`,
@@ -114,7 +113,9 @@ The review demo is an optional package script that needs pnpm 10.12.4 on your
 
 ## Deploy to Cloudflare
 
-One command, `rer deploy`, builds your committed source, creates what Dial needs in your own Cloudflare account, applies the migrations in order, uploads the Worker and checks its health. Prepare these first:
+**Or let Run Edit Run host it.** [Run Edit Run](https://app.runeditrun.com/?product=dial&plan=assisted) can set Dial up on your own Cloudflare account and keep it updated; sign-ups are by request for now.
+
+To do it yourself: one command, `rer deploy`, builds your committed source, creates what Dial needs in your own Cloudflare account, applies the migrations in order, uploads the Worker and checks its health. Prepare these first:
 
 1. **A workers.dev subdomain.** In the Cloudflare dashboard, open Workers & Pages and choose your account's workers.dev subdomain. Without one, deploy stops with `workers-subdomain-missing` before it creates anything.
 2. **An API token.** Create an account API token for that one account with these account permissions: Workers Scripts Edit, D1 Edit, Workers R2 Storage Edit and Queues Edit. If one is missing, deploy names it, for example `token-scope-missing-d1`.

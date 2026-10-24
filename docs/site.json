@@ -2,6 +2,7 @@
   "sections": [
     { "title": "Start here", "pages": [
       { "slug": "", "source": "docs/overview.md", "label": "Overview" },
+      { "slug": "getting-started", "source": "docs/getting-started.md", "label": "Getting started" },
       { "slug": "install", "source": "docs/install.md", "label": "Install" },
       { "slug": "booking-page", "source": "docs/booking-page.md", "label": "Your booking page" }
     ]},
