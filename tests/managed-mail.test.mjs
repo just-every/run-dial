@@ -140,7 +140,7 @@ test('NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirec
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     assert.equal(url.origin, origin);
-    const response = await f.fetch(url.pathname + url.search, { method: request.method(), headers: { ...request.headers(), 'cf-connecting-ip': browserIp }, body: request.postDataBuffer() ?? undefined });
+    const response = await f.fetch(url.pathname + url.search, { method: request.method(), headers: { ...request.headers(), cookie: request.headers().cookie ?? '', 'cf-connecting-ip': browserIp }, body: request.postDataBuffer() ?? undefined });
     const headers = Object.fromEntries(response.headers);
     for (const name of ['content-encoding', 'content-length', 'transfer-encoding']) delete headers[name];
     await route.fulfill({ status: response.status, headers, body: Buffer.from(await response.arrayBuffer()) });
@@ -161,6 +161,7 @@ test('NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirec
   for (const width of [1440, 390]) {
     // Desktop and phone are separate connecting clients with their real budgets.
     browserIp = width === 1440 ? '198.18.0.3' : '198.18.0.4';
+    await context.clearCookies(); // Each sign-in form starts with an anonymous browser.
     await page.setViewportSize({ width, height: 900 });
     const before = calls.length;
     assert.equal((await page.goto(ownerEntry.href)).status(), 200);
@@ -179,6 +180,12 @@ test('NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirec
     await page.getByRole('status').waitFor();
     assert.ok(calls.length > before, 'the owner explicitly submits sign-in');
     await screenshot(`login-hint-sent-${width}.png`);
+    // Consume the email link through native authentication before private Settings.
+    const mailedLink = new URL(calls.findLast(body => body.to === 'owner@example.test' && body.text.includes('/auth/confirm')).text.split('\n\n').at(-1));
+    const signedIn = await f.fetch('/auth/confirm', { method: 'POST', headers: { cookie: '', 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token: mailedLink.searchParams.get('token') }) });
+    assert.equal(signedIn.status, 303);
+    const session = signedIn.headers.get('set-cookie').split(';')[0];
+    await context.addCookies([{ name: session.slice(0, session.indexOf('=')), value: session.slice(session.indexOf('=') + 1), url: origin, secure: true, httpOnly: true, sameSite: 'Lax' }]);
     status = 401;
     await page.goto(origin + '/setup/settings');
     await page.getByRole('button', { name: 'Check sender' }).click();

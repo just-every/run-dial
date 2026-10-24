@@ -8412,7 +8412,7 @@
       "executable": false
     },
     "tests/managed-mail.test.mjs": {
-      "sha256": "3837bcf2cb7851b230f9cbe0d1863ad9fae0e028b28ffa744f6fd8642a3bb557",
+      "sha256": "5e03cce1439dadc41221cd12ee005d891d98935908b83b8d9ba098adfa704c54",
       "executable": false
     },
     "tests/move-in-booking-actions.test.mjs": {
