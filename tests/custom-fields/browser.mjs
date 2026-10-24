@@ -9,7 +9,8 @@ const origin = "http://127.0.0.1:15790";
 
 /**
  * A record's page through the product's own Vite build of the review Worker, on its own port so it never races another
- * rig, driven by autosave-journey.mjs: a private value saves as typed, survives leaving, and a failed save keeps it for Retry.
+ * rig, driven by autosave-journey.mjs: a private value saves as typed, survives leaving, and a failed save keeps it for Retry;
+ * a slow or refused save never holds up Bookings' Search.
  */
 export async function savesAsTyped(t) {
   const state = await mkdtemp(resolve(tmpdir(), "dial-custom-fields-browser-"));

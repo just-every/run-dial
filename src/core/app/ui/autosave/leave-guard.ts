@@ -59,11 +59,15 @@ export function carriedFor(key: string): Carried | undefined {
   } catch { return undefined; }
 }
 
-/** While a form is on screen, each router navigation waits for its saves, and one that fails keeps the page. */
+/**
+ * While a form is on screen, a navigation that leaves the page (its path changes, as when a sheet closes) waits for its
+ * saves, and one that fails keeps the page. One that stays on the page (search, filters, paging, views) goes at once while
+ * the saves go on: a form it takes off screen is held, and sent again when it is shown again.
+ */
 export function useLeaveGuard() {
   const { history } = useRouter();
   useEffect(() => {
-    if (!screens++) unblock = history.block({ blockerFn: async () => !(await saveBeforeLeaving()), enableBeforeUnload: false });
+    if (!screens++) unblock = history.block({ blockerFn: ({ currentLocation, nextLocation }) => currentLocation.pathname !== nextLocation.pathname && saveBeforeLeaving().then((saved) => !saved), enableBeforeUnload: false });
     return () => {
       if (--screens) return;
       unblock?.();

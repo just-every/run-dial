@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
 import { completeEmptyWorkspace } from "../booking-axe/first-run-fixture.mjs";
+import { searchWhileSaving } from "./search-while-saving.mjs";
 
 // CUSTOM-001's page door: an event's private field saves as it is typed, with no button. A value typed and left at once
-// by the menu is there after a reload; a save that fails keeps the value in the field, and Retry saves it.
+// by the menu is there after a reload; a save that fails keeps the value in the field, and Retry saves it. On Bookings, a
+// booking's field saving slowly or refused never holds up Search.
 const origin = process.env.DIAL_REVIEW_ORIGIN;
 const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 const owner = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -49,6 +51,8 @@ try {
   input = await open();
   assert.equal(await input.inputValue(), "Bring the roadmap and last quarter's numbers");
   console.log("CUSTOM-001 page: typed values save with no button, survive leaving at once, and a failed save keeps its value until Retry saves it.");
+  await searchWhileSaving(owner, origin, fixture);
+  console.log("CUSTOM-001 page: a slow or refused save never holds up Search on Bookings, and the refused value is sent again when its booking is shown again.");
 } finally {
   await owner.close();
   await browser.close();

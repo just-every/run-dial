@@ -4804,7 +4804,7 @@
       "executable": false
     },
     "src/core/app/ui/autosave/leave-guard.ts": {
-      "sha256": "c39b15ae2422e2f46105fdebc58e210472b966f9b6b2df5f97a58029c9efa91c",
+      "sha256": "93bf3ad85ae0161e6e6ab6f63c463f4bcf5e515d508e673bd340de3ffa944db8",
       "executable": false
     },
     "src/core/app/ui/autosave/saved-state.tsx": {
@@ -8176,11 +8176,11 @@
       "executable": false
     },
     "tests/custom-fields/autosave-journey.mjs": {
-      "sha256": "33cc721f989b2adbf2a7f0fa4e641740a3fe443964e6cf3b91ab15d5adbb4939",
+      "sha256": "09de10faa96a7539a51990bd110690ab01f63ca1957f483da82a8d86d10d20d9",
       "executable": false
     },
     "tests/custom-fields/browser.mjs": {
-      "sha256": "08c6817b2d8ba446e19de53e4d8fdc8a379110a29d4d71b6f4e61a9bf81f1597",
+      "sha256": "b45317df15b097c754625dcaaefa1830568b49dadb9dcb76cae1552a276cf089",
       "executable": false
     },
     "tests/custom-fields/browser.wrangler.toml": {
@@ -8197,6 +8197,10 @@
     },
     "tests/custom-fields/runtime.mjs": {
       "sha256": "f0fabecba431bbbf5ad7c30fa91d52a92eae755b461c34377b881b772f8fd6c6",
+      "executable": false
+    },
+    "tests/custom-fields/search-while-saving.mjs": {
+      "sha256": "001a8d5edb28ede2f141f1095f75f869fabbb24331c1f76b673890ba98aafa86",
       "executable": false
     },
     "tests/custom-fields/worker.ts": {
