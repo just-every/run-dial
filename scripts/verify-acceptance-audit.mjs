@@ -89,7 +89,8 @@ async function scanPages(pages, storageState) {
         if (name === "booking-record") {
           await page.getByRole("button").filter({ hasText: "Acceptance record invitee" }).click();
           await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).waitFor();
-          await page.getByText("Saved value: DISCOVERY-42", { exact: true }).waitFor();
+          await page.getByRole("textbox", { name: "Internal reference", exact: true }).waitFor();
+          assert.equal(await page.getByRole("textbox", { name: "Internal reference", exact: true }).inputValue(), "DISCOVERY-42");
         }
         if (name === "settings") {
           await page.getByRole("heading", { name: "Custom fields", exact: true }).waitFor();
@@ -103,7 +104,8 @@ async function scanPages(pages, storageState) {
           await page.getByRole("textbox", { name: "Operator context", exact: true }).fill("Keyboard context preview");
           await page.getByRole("combobox", { name: "Follow-up priority" }).selectOption("Normal");
           await page.getByRole("checkbox", { name: "Review complete", exact: true }).uncheck();
-          const controls = [["Internal reference", page.getByRole("textbox", { name: "Internal reference", exact: true })], ["Operator context", page.getByRole("textbox", { name: "Operator context", exact: true })], ["Follow-up priority", page.getByRole("combobox", { name: "Follow-up priority" })], ["Review complete", page.getByRole("checkbox", { name: "Review complete", exact: true })]].flatMap(([label, control]) => [[label, control], [`Save ${label}`, page.getByRole("button", { name: `Save ${label}`, exact: true })], [`Clear ${label}`, page.getByRole("button", { name: `Clear ${label}`, exact: true })]]);
+          // Each annotation saves as it changes: the fields are its only controls.
+          const controls = [["Internal reference", page.getByRole("textbox", { name: "Internal reference", exact: true })], ["Operator context", page.getByRole("textbox", { name: "Operator context", exact: true })], ["Follow-up priority", page.getByRole("combobox", { name: "Follow-up priority" })], ["Review complete", page.getByRole("checkbox", { name: "Review complete", exact: true })]];
           await keyboardControls(page, controls, `custom-field-${name}`, width, checks);
           await page.getByRole("textbox", { name: "Internal reference", exact: true }).fill("DISCOVERY-42");
           await page.getByRole("textbox", { name: "Operator context", exact: true }).fill("A private note for follow-up.\nReview the proposed scope before our next conversation.");

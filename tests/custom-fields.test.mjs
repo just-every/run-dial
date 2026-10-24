@@ -4,13 +4,14 @@ import { contract } from './contract.mjs';
 import { nativeFixture, targets } from './custom-fields/fixture.mjs';
 import { fieldRuntime } from './custom-fields/runtime.mjs';
 import { assertPollDeletion } from './custom-fields/poll-deletion.mjs';
+import { savesAsTyped } from './custom-fields/browser.mjs';
 import { testPlatform } from './archive/fixture.mjs';
 import { createArchive, restoreArchive } from './archive/artifact.mjs';
 import { schemaModel, quote, validateRows } from '../scripts/archive/schema.mjs';
 let f; const definitions=[]; const privateText='FIELD_PRIVATE_ANNOTATION_73742';
 before(async()=>{f=await fieldRuntime();});
 after(async()=>{await f?.close();});
-contract('CUSTOM-001','private routes define all field types, validate values and expose all three records including booking answers',async()=>{
+contract('CUSTOM-001','private routes define all field types, validate values and expose all three records including booking answers; a record page saves values as typed',async(t)=>{
  for(const [entity,id] of Object.entries(targets)) {
   for(const [kind,value,options] of [['text',privateText,[]],['long_text',`${privateText}\nsecond line`,[]],['single_choice','Follow up',['Follow up','Complete']],['checkbox',false,[]]]) {
    const field=await f.json('/api/app/custom-fields',{method:'POST',body:{entity,label:`${entity} ${kind}`,kind,options}},201);definitions.push(field);
@@ -37,6 +38,7 @@ contract('CUSTOM-001','private routes define all field types, validate values an
  const raced=await Promise.all(Array.from({length:6},(_,index)=>f.request('/api/app/custom-fields',{method:'POST',body:{entity:'eventType',label:`Concurrent ${index}`,kind:'text',options:[]}})));
  assert.equal(raced.filter(response=>response.status===201).length,2);assert.equal(raced.filter(response=>response.status===409).length,4);
  assert.equal((await f.json('/api/app/custom-fields')).filter(field=>field.entity==='eventType').length,seed.limits.maxCustomFieldsPerEntity);
+ await savesAsTyped(t);
 });
 contract('CUSTOM-002','native session protects annotations; export restore preserves values and erasure cascades without leaking public data',async()=>{
  const field=definitions.find(entry=>entry.entity==='booking');
