@@ -1,15 +1,13 @@
-import { plainLook } from "../site-look";
 import type { ProfileRecord } from "./repository";
 
 export type PublicProfileRecord = Pick<
   ProfileRecord,
-  "handle" | "name" | "title" | "biography" | "timezone" | "focusAreas" | "socialProof" | "avatarKey" | "look"
+  "handle" | "name" | "title" | "biography" | "timezone" | "focusAreas" | "socialProof" | "avatarKey"
 >;
 
 export function toPublicProfile(profile: ProfileRecord): PublicProfileRecord {
   return {
     avatarKey: profile.avatarKey,
-    look: profile.look ?? plainLook,
     handle: profile.handle,
     name: profile.name,
     title: profile.title,

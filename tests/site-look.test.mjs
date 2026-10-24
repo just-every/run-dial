@@ -47,9 +47,9 @@ contract(['BRAND-001', 'PROFILE-003'], 'a website read stores its mark, colours 
       assert.deepEqual(Buffer.from(await response.arrayBuffer()), bytes);
     }
     assert.equal((await f.send(`/media/brand/${'0'.repeat(64)}.svg`, { anonymous: true })).status, 404, 'only the stored look\'s files are public');
-    // The stored look is what Settings reads, and booking pages get it with the public profile they already read.
+    // The stored look is what Settings reads; `shown` is the public look booking pages will wear.
     assert.deepEqual(await json(await f.send('/api/app/site-look')), read);
-    assert.deepEqual((await json(await f.send('/api/public/profiles/site-host', { anonymous: true }))).profile.look, read.shown);
+    assert.deepEqual([read.shown.kind, read.shown.mark, read.shown.face.file], ['site', read.read.mark, read.read.face.file]);
   } finally { await f.close(); await site.close(); }
 });
 
@@ -62,8 +62,7 @@ contract('BRAND-001', 'a site that refuses or gives nothing leaves the plain loo
     assert.ok(refused.lastRead.message);
     assert.deepEqual(await json(await f.send('/api/app/site-look')), refused);
     const empty = await json(await f.send('/api/app/site-look/read', { body: { url: 'blank.example' } }));
-    assert.deepEqual([empty.look, empty.because, empty.lastRead.ok], ['plain', 'nothing_found', false]);
-    assert.equal((await json(await f.send('/api/public/profiles/site-host', { anonymous: true }))).profile.look.kind, 'plain');
+    assert.deepEqual([empty.look, empty.because, empty.lastRead.ok, empty.shown.kind], ['plain', 'nothing_found', false, 'plain']);
 
     const read = await json(await f.send('/api/app/site-look/read', { body: { url: 'acme.example' } }));
     assert.equal(read.look, 'site');

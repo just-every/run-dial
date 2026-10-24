@@ -52,6 +52,7 @@ export function publicLook(stored: StoredLook | null): PublicLook {
   return stored?.look === "site" ? siteLook(stored) ?? plainLook : plainLook;
 }
 
-/** The read the public profile's own batch adds, so pages get their look with the profile and no extra request. */
+/** For the booking pages' loaders (BB10): add this read to the batch that reads the public profile, so a page gets its
+ * look in the same request. */
 export const publicLookStatement = (binding: D1Database) => binding.prepare(selectStoredLook);
 export const publicLookFrom = (result: D1Result) => publicLook(storedLook(result.results[0] as Record<string, unknown> | undefined));

@@ -17,6 +17,8 @@ export const rowUpgrades = {
   'core/0078_meeting_polls.sql': (_table,row) => row,
   'core/0077_client_records.sql': (_table,row) => row,
   'core/0080_workspace_notices.sql': (_table,row) => row,
+  // BRAND-001: the site look's table starts empty; an older backup has no website read.
+  'core/0082_site_look.sql': (_table,row) => row,
   'core/0079_payment_reconciliation.sql': (_table,row) => row,
   'core/0076_processor_erasure_requests.sql': (_table,row) => row,
   'core/0075_paid_approval.sql': (table,row) => table==='booking_approval_requests'?{...row,payment_json:null}:row,
