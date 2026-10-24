@@ -5,6 +5,7 @@ import { deviceTimezone } from "../../../shared/timezone-choices";
 import { dayLabel, dateInZone } from "./day-picker-model";
 import { RequestDates, nextTenDates } from "./request-dates";
 import { useHydrated } from "../../../app/use-hydrated";
+import { Tooltip } from "../../../app/ui/tooltip";
 import { useDocumentData, useDocumentInstant } from "../../../app/document-data";
 import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -162,7 +163,7 @@ function RequestReview({ review, message, onBack, onSubmit, submitting, lockedTi
 
 function RequestRanges({ ranges, onChange }: { ranges: TimeRange[]; onChange: (ranges: TimeRange[]) => void }) {
   const update = (index: number, patch: Partial<TimeRange>) => onChange(ranges.map((range, position) => position === index ? { ...range, ...patch } : range));
-  return <fieldset className="pb-request-step"><legend>2. Add time windows</legend><p>These windows apply to each selected date in your chosen timezone.</p>{ranges.map((range, index) => <div className="pb-range-row" key={index}><label>Start<input type="time" value={range.start} onChange={(event) => update(index, { start: event.target.value })} required /></label><span aria-hidden="true">–</span><label>End<input type="time" value={range.end} onChange={(event) => update(index, { end: event.target.value })} required /></label><button className="pb-icon-button" type="button" aria-label={`Remove time range ${index + 1}`} disabled={ranges.length === 1} onClick={() => onChange(ranges.filter((_, position) => position !== index))}>×</button></div>)}<button className="pb-add-range" type="button" disabled={ranges.length >= 20} onClick={() => onChange([...ranges, { start: "", end: "" }])}>Add another time range</button></fieldset>;
+  return <fieldset className="pb-request-step"><legend>2. Add time windows</legend><p>These windows apply to each selected date in your chosen timezone.</p>{ranges.map((range, index) => <div className="pb-range-row" key={index}><label>Start<input type="time" value={range.start} onChange={(event) => update(index, { start: event.target.value })} required /></label><span aria-hidden="true">–</span><label>End<input type="time" value={range.end} onChange={(event) => update(index, { end: event.target.value })} required /></label><Tooltip label={`Remove time range ${index + 1}`}><button className="pb-icon-button" type="button" disabled={ranges.length === 1} onClick={() => onChange(ranges.filter((_, position) => position !== index))}>×</button></Tooltip></div>)}<button className="pb-add-range" type="button" disabled={ranges.length >= 20} onClick={() => onChange([...ranges, { start: "", end: "" }])}>Add another time range</button></fieldset>;
 }
 
 

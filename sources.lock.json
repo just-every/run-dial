@@ -4776,7 +4776,7 @@
       "executable": false
     },
     "src/core/app/styles.css": {
-      "sha256": "67bf67f24ca208d0e199f06aed8fdaedff54d1ccb31241ffc52d225c60349bc0",
+      "sha256": "3951e281732b4a9822268d6208c7407b15298b17c9ed0b3c85bc49998d0c72dd",
       "executable": false
     },
     "src/core/app/ui/app-shell.tsx": {
@@ -4805,6 +4805,14 @@
     },
     "src/core/app/ui/route-load-error.tsx": {
       "sha256": "4b2a7c3b28e8b467605bed21070d251a60158cecf8ed8d783fb30bf03fc94224",
+      "executable": false
+    },
+    "src/core/app/ui/tooltip.css": {
+      "sha256": "d39911502c4fd5a2fcd76a526b9e445fa602ba6bbac365161ae908928fd0382c",
+      "executable": false
+    },
+    "src/core/app/ui/tooltip.tsx": {
+      "sha256": "842bb542ad35317067203b61ba948d1e623d36b62ae577de0f1ce47fb4f55a04",
       "executable": false
     },
     "src/core/app/use-hydrated.ts": {
@@ -6444,11 +6452,11 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/public-booking.css": {
-      "sha256": "30465b9b6ebb0a85fe781540fe31a1136187d3d4629f7026e046c048401e2c7b",
+      "sha256": "c4fe66a9e3fc8b932585fa31baf2ad2878c8c6d954e9bf6d61d38b598aac6d71",
       "executable": false
     },
     "src/core/features/public-booking/ui/public-forms.css": {
-      "sha256": "07b556435fe7782fc6b1f399981ba9595ec5dea112948e16e032ac9f913181b9",
+      "sha256": "533d8b5e36634508a7e82d0985dbd5f25a76d2db63c31d219f5e0159d8834698",
       "executable": false
     },
     "src/core/features/public-booking/ui/public-question.tsx": {
@@ -6476,7 +6484,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/request-page.tsx": {
-      "sha256": "a761e7c589688f45b1197a79adb795614723ca40593a7b91c7e58a0eba9a0a9a",
+      "sha256": "5c5508beba1689b60f21781ef7a3170637bee33ea05ca99672f1e45072cc8a4a",
       "executable": false
     },
     "src/core/features/public-booking/ui/selection-storage.ts": {

@@ -1,0 +1,18 @@
+/* The shared tooltip (tooltip.tsx): a small ink pill in Figtree, like Dial's primary buttons, shown in the top layer so no card,
+   menu or dialog clips or covers it. tooltip.tsx places it; it takes no pointer, so a tap or a click reaches what is under it. */
+.dial-tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 11px;
+  background: var(--ink);
+  box-shadow: var(--shadow-sm);
+  color: #fff;
+  font: 650 13px/1.25 var(--font);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: visible;
+  pointer-events: none;
+}

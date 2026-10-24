@@ -54,6 +54,10 @@
   --shadow-sm: 0 1px 2px rgba(64, 50, 18, 0.05), 0 8px 22px rgba(64, 50, 18, 0.07);
   --font: Figtree, 'Figtree Fallback', 'Avenir Next', 'Segoe UI', sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  /* Text is never under 13 px (H11): Tailwind's smallest step, text-xs, is raised at its token on the same 16 px line. Set
+     here, outside Tailwind's theme layer, so it holds over Tailwind's own default wherever the stylesheet is compiled. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: calc(1 / 0.8125);
   color-scheme: light;
 }
 
@@ -80,6 +84,10 @@
     outline: 3px solid var(--ink);
     outline-offset: 3px;
   }
+
+  /* A field's label never stretches its field: beside a taller field in the same form row, the label keeps its rows at their
+     own height, so a select or an input stays its natural height and lines up at the top. */
+  label { align-content: start; }
 }
 
 /* Every single-choice select draws its chevron 14 px in from the right border with room under it for the text. Two gradient
