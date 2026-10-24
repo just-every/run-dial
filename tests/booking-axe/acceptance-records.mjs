@@ -48,8 +48,11 @@ export async function bookingRecordDeliveryJourney(browser, owner, origin, booki
       const page = await context.newPage(); trackPage(page, errors);
       await page.goto(origin + "/app/bookings?query=Acceptance%20record");
       await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).waitFor();
-      await page.getByText("Saved value: DISCOVERY-42", { exact: true }).waitFor();
-      for (const value of ["Saved value: High", "Saved value: Yes", "Saved value: A private note for follow-up.\nReview the proposed scope before our next conversation."]) assert.ok(await page.getByText(value, { exact: true }).isVisible(), "OPER-004 shows every stored custom-field value");
+      // Each annotation shows its stored value in its own field, where it is edited as typed.
+      const annotations = page.getByRole("region", { name: "Custom fields" });
+      await annotations.getByRole("textbox", { name: "Internal reference", exact: true }).waitFor();
+      for (const [control, value] of [[annotations.getByRole("textbox", { name: "Internal reference", exact: true }), "DISCOVERY-42"], [annotations.getByRole("textbox", { name: "Operator context", exact: true }), "A private note for follow-up.\nReview the proposed scope before our next conversation."], [annotations.getByRole("combobox", { name: "Follow-up priority" }), "High"]]) assert.equal(await control.inputValue(), value, "OPER-004 shows every stored custom-field value");
+      assert.ok(await annotations.getByRole("checkbox", { name: "Review complete", exact: true }).isChecked(), "OPER-004 shows every stored custom-field value");
       assert.ok(await page.getByRole("heading", { name: booking.inviteeName, exact: true }).locator("..").getByText(booking.eventTitle, { exact: true }).isVisible());
       assert.ok(await page.locator("dl > div").filter({ has: page.getByText("Location", { exact: true }) }).locator("dd").getByText(booking.locationLabel, { exact: true }).isVisible());
       const audit = async state => {
