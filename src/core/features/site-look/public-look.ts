@@ -1,7 +1,9 @@
+import manifest from "../../../../seed.json";
 import { plainPalette } from "./contrast";
+import { nearestFace, type ShownFace } from "./faces";
 import { selectStoredLook, storedLook, type Palette, type StoredLook } from "./stored";
 
-/** A public brand file: the read mark or the read face. */
+/** A public brand file under /media/brand/. */
 export interface BrandFile { url: string; contentType: string }
 
 /** What booking pages wear: the site's look as stored, or the plain built-in look. Only public facts are here. */
@@ -12,16 +14,20 @@ export interface PublicLook {
   name: string | null;
   mark: BrandFile | null;
   colours: Palette;
-  face: { family: string; file: BrandFile } | null;
+  /** The face booking pages set their text in: the open face Dial bundles nearest the site's own; null is the plain stack. */
+  face: ShownFace | null;
 }
 
 export const plainLook: PublicLook = { kind: "plain", site: null, name: null, mark: null, colours: plainPalette, face: null };
 
-const brandTypes: Record<string, string> = {
-  svg: "image/svg+xml", png: "image/png", jpg: "image/jpeg", gif: "image/gif", webp: "image/webp", ico: "image/x-icon",
-  woff2: "font/woff2", woff: "font/woff", ttf: "font/ttf", otf: "font/otf",
-};
-export const brandExtensions: Record<string, string> = Object.fromEntries(Object.entries(brandTypes).map(([extension, type]) => [type, extension]));
+const extension = (type: string) => ({ "image/jpeg": "jpg", "image/svg+xml": "svg" } as Record<string, string>)[type] ?? type.slice(type.indexOf("/") + 1);
+
+/** BRAND-002: what /media/brand/ stores and serves: a mark in a raster image type seed.json allows for uploads or an SVG
+ * (always served sandboxed), and a woff2 face. A WOFF 1.0, TrueType or OpenType file is never one of them. */
+export const markTypes: readonly string[] = [...manifest.limits.allowedUploadTypes, "image/svg+xml"];
+export const faceTypes: readonly string[] = ["font/woff2"];
+const brandTypes: Record<string, string> = Object.fromEntries([...markTypes, ...faceTypes].map((type) => [extension(type), type]));
+export const brandExtensions: Record<string, string> = Object.fromEntries(Object.entries(brandTypes).map(([ext, type]) => [type, ext]));
 
 /** brand/<sha256>.<ext> → its public file, or null for any other key. */
 export function brandFile(key: string | null): BrandFile | null {
@@ -36,14 +42,13 @@ export const siteHost = (url: string) => new URL(url).hostname.replace(/^www\./,
 export function siteLook(stored: StoredLook | null): PublicLook | null {
   if (!stored?.readAt || !stored.websiteUrl || !stored.colours) return null;
   const { overrides } = stored;
-  const face = overrides.face === "plain" ? null : brandFile(stored.fontAsset);
   return {
     kind: "site",
     site: { url: stored.websiteUrl, host: siteHost(stored.websiteUrl) },
     name: overrides.name ?? stored.name,
     mark: overrides.mark === "none" ? null : brandFile(stored.markAsset),
     colours: stored.colours.used,
-    face: face && stored.fontFamily ? { family: stored.fontFamily, file: face } : null,
+    face: overrides.face === "plain" || !stored.fontFamily ? null : nearestFace(stored.fontFamily, stored.fontKind),
   };
 }
 

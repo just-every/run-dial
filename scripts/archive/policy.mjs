@@ -30,7 +30,7 @@ export const exported = [
   // PAY-005: Stripe Tax on or off and the business name on receipts and invoices.
   'workspace_notice_destinations','workspace_notice_deliveries','notice_erasure_requests',
   'payment_settings', 'payment_processor_facts', 'accounting_connections', 'accounting_exports',
-  // BRAND-001: the workspace's look read from its website; its read mark and face travel as R2 brand/ files.
+  // BRAND-001: the workspace's look read from its website; its read mark travels as an R2 brand/ file.
   'site_looks',
 ].sort();
 export { excluded } from "../../src/core/shared/archive-exclusions.mjs";

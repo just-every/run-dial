@@ -488,7 +488,7 @@
     {
       "id": "owner-website-reader",
       "required": false,
-      "why": "BRAND-001, only when the owner asks (Read website): read the supplied public website, its declared manifest and icon, up to eight of its linked stylesheets and the file of the face its text is set in, for the booking pages' look; a Google Fonts family is read from Google Fonts. Public DNS-over-HTTPS at cloudflare-dns.com validates every destination and redirect, and private addresses are refused. No key is used.",
+      "why": "BRAND-001, only when the owner asks (Read website): read the supplied public website, its declared manifest and icon, up to eight of its linked stylesheets and the font file of the face its text is set in, for the booking pages' look; the font file is read only for its family, kind and licence and is never kept, and a Google Fonts family is read from Google Fonts. Public DNS-over-HTTPS at cloudflare-dns.com validates every destination and redirect, and private addresses are refused. No key is used.",
       "data": [
         "Owner-supplied website URL and the public resource URLs it links",
         "Destination hostnames for public DNS resolution"
@@ -767,6 +767,8 @@
       "image/webp",
       "image/avif"
     ],
+    "maxBrandMarkBytes": 300000,
+    "maxBrandFontBytes": 1000000,
     "maxCustomFieldsPerEntity": 20
   },
   "accessibility": {

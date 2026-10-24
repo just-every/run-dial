@@ -1,15 +1,16 @@
-// Copied from just-every/run-lamp 195e73ac src/core/platform/site-reader/index.ts (gr G1), reading Dial's palette and face from the site's stylesheets instead of components and a status page; the round that adopts Base's shared reader deletes this copy.
+// Copied from just-every/run-lamp 195e73ac src/core/platform/site-reader/index.ts (gr G1), reading Dial's palette and face from the site's stylesheets instead of components and a status page, and keeping only the icon types the caller takes; the round that adopts Base's shared reader deletes this copy.
 import { svgColours } from "./colour.ts";
 import { iconCandidates, siteColours, siteDescription, siteName, type Manifest } from "./extract.ts";
 import { siteFace } from "./face.ts";
-import { checkedUrl, dohResolver, guardedFetch, SiteReadError, type GuardedFetchContext } from "./fetch.ts";
+import { checkedUrl, dohResolver, FileTooLarge, guardedFetch, SiteReadError, type GuardedFetchContext } from "./fetch.ts";
 import { scanHtml } from "./html.ts";
 import { pageStyle } from "./page-style.ts";
 import { sitePalette } from "./palette.ts";
 import { siteStyles } from "./styles.ts";
-import type { SiteIcon, SiteReadOptions, SiteReadResult } from "./types.ts";
+import type { SiteIcon, SiteRead, SiteReadOptions, SiteReadResult } from "./types.ts";
 
-export type { SiteFace, SiteIcon, SitePalette, SiteRead, SiteReadFailure, SiteReadOptions, SiteReadResult } from "./types.ts";
+export type { FaceUnread, IconRefusal, SiteFace, SiteIcon, SitePalette, SiteRead, SiteReadFailure, SiteReadOptions, SiteReadResult } from "./types.ts";
+export type { FaceKind } from "./font-names.ts";
 export type { OpenLicence } from "./licence.ts";
 export { isPublicAddress } from "./address.ts";
 
@@ -20,7 +21,7 @@ export function normaliseWebsite(input: string): URL {
 }
 
 /** Read one public website: its page, its web manifest if it declares one, one icon, its stylesheets and the file of
- * the face its text is set in. */
+ * the face its text is set in (read for what it says about itself; none of it is kept). */
 export async function readSite(input: string, options: SiteReadOptions = {}): Promise<SiteReadResult> {
   // Called unbound: Workers refuse a global fetch invoked as a method of another object.
   const transport = options.fetch ?? fetch;
@@ -46,14 +47,17 @@ export async function readSite(input: string, options: SiteReadOptions = {}): Pr
       siteStyles(scan, page.url, context, { maxSheets: options.maxStylesheets ?? 8, maxSheetBytes: options.maxStylesheetBytes ?? 512_000 }),
     ]);
     const { manifest, manifestUrl } = manifestRead;
-    let icon: SiteIcon | null = null;
+    let icon: SiteIcon | null = null, iconRefused: SiteRead["iconRefused"] = null;
     for (const candidate of iconCandidates(scan, page.url, manifest, manifestUrl).slice(0, 3)) {
       try {
         const fetched = await guardedFetch(new URL(candidate.url), "image/svg+xml,image/png,image/*;q=0.8", options.maxIconBytes ?? 300_000, false, context);
-        icon = iconFrom(fetched.url.href, fetched.bytes);
-        if (icon) break;
+        const found = iconFrom(fetched.url.href, fetched.bytes);
+        if (found && (!options.iconTypes || options.iconTypes.includes(found.contentType))) { icon = found; break; }
+        iconRefused ??= { url: fetched.url.href, reason: found ? "type" : "not-an-image" };
       } catch (cause) {
         if (context.signal.aborted) throw cause;
+        const reason = cause instanceof FileTooLarge ? "too-large" : "unreachable";
+        if (reason === "too-large" || !candidate.guessed) iconRefused ??= { url: candidate.url, reason };
       }
     }
     const { colours, accent } = siteColours(scan, icon?.contentType === "image/svg+xml" ? svgColours(new TextDecoder().decode(icon.bytes)) : [], manifest);
@@ -67,6 +71,7 @@ export async function readSite(input: string, options: SiteReadOptions = {}): Pr
         title: scan.title,
         description: siteDescription(scan, manifest),
         icon,
+        iconRefused: icon ? null : iconRefused,
         colours,
         accent,
         palette: sitePalette(scan, style, accent),
@@ -100,6 +105,7 @@ function sniff(bytes: Uint8Array): string | null {
   if (String.fromCharCode(...head(4)) === "GIF8") return "image/gif";
   if (String.fromCharCode(...head(4)) === "RIFF" && String.fromCharCode(...bytes.subarray(8, 12)) === "WEBP") return "image/webp";
   if (head(4).join() === "0,0,1,0") return "image/x-icon";
+  if (String.fromCharCode(...bytes.subarray(4, 8)) === "ftyp" && /avi[fs]/.test(String.fromCharCode(...bytes.subarray(8, 32)))) return "image/avif";
   const text = new TextDecoder().decode(bytes.subarray(0, 2048)).trimStart();
   if (/^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*(<!doctype svg[^>]*>\s*)?<svg[\s>]/i.test(text)) return "image/svg+xml";
   return null;

@@ -1,4 +1,4 @@
-// Copied from just-every/run-lamp 195e73ac src/core/platform/site-reader/extract.ts (gr G1), without the components, status page and font list Dial does not read; the round that adopts Base's shared reader deletes this copy.
+// Copied from just-every/run-lamp 195e73ac src/core/platform/site-reader/extract.ts (gr G1), without the components, status page and font list Dial does not read, and marking /favicon.ico as a guess; the round that adopts Base's shared reader deletes this copy.
 import { siteDomain } from "./domain.ts";
 import { cleanText, type HtmlScan, type HtmlTag } from "./html.ts";
 import { cssBrandColours, isBrandColour, toHex } from "./colour.ts";
@@ -29,7 +29,8 @@ export function siteDescription(scan: HtmlScan, manifest: Manifest | null) {
   return text.length <= 280 ? text : `${text.slice(0, 277).replace(/\s+\S*$/, "")}…`;
 }
 
-export interface IconCandidate { url: string; rank: number }
+/** `guessed` is /favicon.ico when the site declares no icon: missing, it only means the site has none. */
+export interface IconCandidate { url: string; rank: number; guessed?: true }
 
 /** Declared icons, best first: SVG, then the largest raster, then /favicon.ico when nothing is declared. */
 export function iconCandidates(scan: HtmlScan, base: URL, manifest: Manifest | null, manifestUrl: URL | null): IconCandidate[] {
@@ -46,7 +47,7 @@ export function iconCandidates(scan: HtmlScan, base: URL, manifest: Manifest | n
     else if (kinds.includes("apple-touch-icon") || kinds.includes("apple-touch-icon-precomposed")) add(tag.attributes.href, base, size(tag.attributes.sizes) || 180);
   }
   for (const icon of manifest?.icons ?? []) add(icon.src, manifestUrl ?? base, icon.type === "image/svg+xml" ? 9_000 : size(icon.sizes));
-  if (!candidates.length) add("/favicon.ico", base, 1);
+  if (!candidates.length) return [{ url: new URL("/favicon.ico", base).href, rank: 1, guessed: true }];
   const seen = new Set<string>();
   return candidates.sort((a, b) => b.rank - a.rank).filter((candidate) => !seen.has(candidate.url) && seen.add(candidate.url));
 }
