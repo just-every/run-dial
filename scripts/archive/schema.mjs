@@ -1,6 +1,6 @@
 import { validateLocations } from "./locations.mjs";
 import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
-import { validateAvailabilityConfig, validateAvailabilityReferences } from './availability-config.mjs';
+import { validateAvailabilityConfig, validateAvailabilityReferences, validateYourHours } from './availability-config.mjs';
 import { validateBookingPolicy } from './booking-policy.mjs';
 import { validateCorrespondence } from './correspondence.mjs';
 import { redirectConfigIssue, redirectUrlIssue } from '../../src/core/features/event-types/redirect-policy.mjs';
@@ -81,6 +81,7 @@ export function validateRows(archive, model) {
       }
     }
   }
+  validateYourHours(archive.tables);
   const triggers = model.db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' ORDER BY name").all();
   model.db.exec('PRAGMA foreign_keys=ON; BEGIN;');
   try {

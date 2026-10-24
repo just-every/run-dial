@@ -10,6 +10,7 @@ import { EventBookingPolicyRepository } from "../features/event-types/booking-po
 import { ProcessorRequestsRepository } from "../features/erasure";
 import { PersonErasure } from "../features/erasure/person";
 import { NamedSchedules } from "../features/availability/named-schedules";
+import { YourHours } from "../features/availability/your-hours";
 import { BookingLimits } from "../features/availability/booking-limits";
 import { createCustomFields } from "./mount.server";
 import { MoveInService, eraseImportedBooking } from "../features/move-in";
@@ -79,6 +80,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     correspondence: new EventCorrespondenceRepository(binding),
     bookingPolicies: new EventBookingPolicyRepository(binding),
     namedSchedules: new NamedSchedules(binding),
+    yourHours: new YourHours(binding),
     bookingLimits: new BookingLimits(binding),
     customFields: createCustomFields(binding),
     moveIn: new MoveInService(binding, runtime.SESSION_SECRET),

@@ -6,6 +6,7 @@ const empty = { dayCount: null, weekCount: null, monthCount: null, dayMinutes: n
 const plus = (day, offset) => new Date(Date.parse(day + 'T00:00:00Z') + offset * 86400000).toISOString().slice(0, 10);
 const at = (day, hour) => `${day}T${String(hour).padStart(2, '0')}:00:00.000Z`;
 const config = event => Object.fromEntries(Object.entries(event).filter(([key]) => !['id', 'status', 'requestOnly', 'createdAt', 'updatedAt'].includes(key)));
+const uses = (hours, id) => hours.events.find(event => event.id === id).uses;
 
 /** Extend the existing native scheduling journey through operator and public HTTP doors. */
 export async function verifyAvailabilityControls(eventId) {
@@ -14,7 +15,7 @@ export async function verifyAvailabilityControls(eventId) {
   const second = await data('/api/app/event-types', { ...config(first), slug: 'follow-up-controls', title: 'Follow-up consultation' }, 201, true);
   const windows = Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 600, endMinute: 840 }));
   let schedule = await data('/api/app/availability-schedules', { name: 'Working hours', windows, blockUsHolidays: false, reopenedHolidays: [], timeOff: [] }, 201, true);
-  for (const event of [first, second]) await data(`/api/app/event-types/${event.id}/schedule`, { scheduleId: schedule.id }, 200, true, 'PUT');
+  for (const event of [first, second]) await data(`/api/app/event-types/${event.id}/hours`, { uses: schedule.id }, 200, true, 'PUT');
   await data(`/api/app/event-types/${second.id}/publish`, {}, 200, true);
   const edited = windows.map(window => ({ ...window, startMinute: 660 }));
   schedule = await data(`/api/app/availability-schedules/${schedule.id}`, { ...scheduleInput(schedule), windows: edited }, 200, true, 'PUT');
@@ -24,7 +25,7 @@ export async function verifyAvailabilityControls(eventId) {
   await data(`/api/app/event-types/${first.id}/availability`, { windows: edited }, 200, true, 'PUT');
   first = await data(`/api/app/event-types/${eventId}`, undefined, 200, true);
   await data(`/api/app/event-types/${first.id}`, { ...config(first), title: 'Shared strategy consultation' }, 200, true, 'PATCH');
-  assert.equal((await data(`/api/app/event-types/${first.id}/schedule`, undefined, 200, true)).schedule.id, schedule.id);
+  assert.equal(uses(await data('/api/app/hours', undefined, 200, true), first.id), schedule.id);
   const sample = plus(new Date().toISOString().slice(0, 10), 40);
   for (const event of [first, second]) {
     const offers = await data(`/api/public/book/dial-host/${event.slug}/availability?week=${sample}`);
@@ -34,27 +35,35 @@ export async function verifyAvailabilityControls(eventId) {
   const year = Number(sample.slice(0, 4)), november = `${year}-11-01`;
   const thanksgiving = plus(november, (4 - new Date(november + 'T12:00:00Z').getUTCDay() + 7) % 7 + 21);
   const veterans = `${year}-11-11`;
-  schedule = await data(`/api/app/availability-schedules/${schedule.id}`, { ...scheduleInput(schedule), blockUsHolidays: true }, 200, true, 'PUT');
+  // Holidays and time off live with your hours and close dates on every event, these two on Working hours included.
+  // A new event with no hours of its own makes your hours here; Working hours refuses them.
+  const onYours = await data('/api/app/event-types', { ...config(first), availability: undefined, slug: 'your-hours-controls', title: 'Your hours consultation' }, 201, true);
+  let hours = await data('/api/app/hours', undefined, 200, true);
+  assert.equal(uses(hours, onYours.id), 'yours');
+  let yours = { ...scheduleInput(hours.yours), name: 'Your hours' };
+  assert.deepEqual((await (await call(`/api/app/availability-schedules/${schedule.id}`, { ...scheduleInput(schedule), blockUsHolidays: true }, 400, true, 'PUT')).json()).error.details, ['blockUsHolidays']);
+  yours = scheduleInput(await data(`/api/app/availability-schedules/${hours.yours.id}`, { ...yours, blockUsHolidays: true }, 200, true, 'PUT'));
   const diagnosis = async (id, day, hour = 11) => data(`/api/app/event-types/${id}/availability-diagnostics?${new URLSearchParams({ startAt: at(day, hour), overrideNoticeAndHorizon: 'true' })}`, undefined, 200, true);
   for (const event of [first, second]) {
     assert.deepEqual((await diagnosis(event.id, thanksgiving)).exclusions, ['date_override']);
     assert.deepEqual((await diagnosis(event.id, veterans)).exclusions, ['date_override']);
   }
-  schedule = await data(`/api/app/availability-schedules/${schedule.id}`, { ...scheduleInput(schedule), reopenedHolidays: [veterans], timeOff: [{ startDate: `${year}-12-23`, endDate: `${year}-12-27` }] }, 200, true, 'PUT');
+  yours = scheduleInput(await data(`/api/app/availability-schedules/${hours.yours.id}`, { ...yours, reopenedHolidays: [veterans], timeOff: [{ startDate: `${year}-12-23`, endDate: `${year}-12-27` }] }, 200, true, 'PUT'));
   assert.equal((await diagnosis(first.id, veterans)).valid, true);
   for (let day = 22; day <= 28; day++) assert.equal((await diagnosis(second.id, `${year}-12-${day}`)).valid, day === 22 || day === 28);
   const copied = await data(`/api/app/event-types/${first.id}/duplicate`, {}, 201, true);
-  assert.equal((await data(`/api/app/event-types/${copied.id}/schedule`, undefined, 200, true)).schedule.id, schedule.id);
+  hours = await data('/api/app/hours', undefined, 200, true);
+  assert.equal(uses(hours, copied.id), schedule.id);
   await call(`/api/app/event-types/${copied.id}`, undefined, 204, true, 'DELETE');
   const beforeInvalid = await snapshot();
-  await call(`/api/app/availability-schedules/${schedule.id}`, { ...scheduleInput(schedule), timeOff: [{ startDate: `${year}-12-27`, endDate: `${year}-12-23` }] }, 400, true, 'PUT');
+  await call(`/api/app/availability-schedules/${hours.yours.id}`, { ...yours, timeOff: [{ startDate: `${year}-12-27`, endDate: `${year}-12-23` }] }, 400, true, 'PUT');
   assert.deepEqual((await snapshot()).availability_schedules, beforeInvalid.availability_schedules);
 
   // Separate future week avoids the prior diagnostics journey's bookings and holiday dates.
   const month = sample.slice(0, 7), day = `${month}-07`;
   let monday = day;
   while (new Date(monday + 'T12:00:00Z').getUTCDay() !== 1) monday = plus(monday, 1);
-  schedule = await data(`/api/app/availability-schedules/${schedule.id}`, { ...scheduleInput(schedule), blockUsHolidays: false, timeOff: [] }, 200, true, 'PUT');
+  yours = scheduleInput(await data(`/api/app/availability-schedules/${hours.yours.id}`, { ...yours, blockUsHolidays: false, timeOff: [] }, 200, true, 'PUT'));
   await data('/api/app/booking-limits/host', { ...empty, weekMinutes: 240, monthCount: 10 }, 200, true, 'PUT');
   const book = (event, date, hour, email = `limits-${randomUUID()}@dial.test`, expected = 201) => data('/api/app/bookings', { idempotencyKey: randomUUID(), eventTypeId: event.id, startAt: at(date, hour), inviteeTimezone: 'UTC', name: 'Jordan Rivera', email, answers: {}, overrideNoticeAndHorizon: true }, expected, true);
   const booked = [];
@@ -114,7 +123,7 @@ export async function verifyAvailabilityControls(eventId) {
   await book(boundary, `${year}-12-01`, 5);
   const boundaryDenied = await book(boundary, `${year}-12-01`, 6, undefined, 409);
   assert.ok(boundaryDenied.error.details.includes('event_month_count'));
-  console.log('PASS AVAIL-011 shared hours, holidays, individual reopen, inclusive time off, duplicate binding and invalid-input nonmutation; AVAIL-010 cross-event weekly minutes/monthly counts, scoped caps, own-duration reschedule, normalized invitee gap through the operator booking, public confirm and manage reschedule offer, and concurrent last-place admission');
+  console.log('PASS AVAIL-011 shared hours, your hours made by an event without its own, holidays and inclusive time off from your hours on events of another schedule, individual reopen, closures refused on another schedule, duplicate binding and invalid-input nonmutation; AVAIL-010 cross-event weekly minutes/monthly counts, scoped caps, own-duration reschedule, normalized invitee gap through the operator booking, public confirm and manage reschedule offer, and concurrent last-place admission');
 }
 
 function scheduleInput(schedule) { return Object.fromEntries(['name', 'windows', 'blockUsHolidays', 'reopenedHolidays', 'timeOff'].map(key => [key, schedule[key]])); }

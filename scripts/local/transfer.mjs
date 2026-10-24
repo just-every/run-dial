@@ -8,6 +8,7 @@ import { readSettings } from '@runeditrun/rer/adapter-settings';
 import { snapshotInput } from './archive-input.mjs';
 import { dialPolicy, guardedBucket } from './archive-policy.mjs';
 import { restoreMigrations } from './migration-replay.mjs';
+import { electYourHours, yourHoursMigration } from '../archive/your-hours.mjs';
 async function* records(path) {
  const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
  try { yield* readArchive(Readable.toWeb(file.createReadStream({ autoClose: false }))); }
@@ -49,6 +50,7 @@ async function moveArchive(direction, path, journal) {
    let laterJournal;
    if (journal) for await (const record of records(journal)) if (record.kind === 'manifest') laterJournal = { sourceIdentity: record.sourceIdentity, epoch: record.epoch, journal: record.journal };
    await service.imports.finalize(id, { contentHash: closing.contentHash, archiveHash: closing.archiveHash, ...(laterJournal ? { laterJournal } : {}) }); complete = true;
+   if (!manifest.migrations?.includes(yourHoursMigration)) await electYourHours(proxy.env.DB);
   }
   return { contentHash: closing.contentHash, tables: manifest.tables.map(({ name, count }) => ({ name, count })), objects: manifest.objects.length, exclusions: manifest.excludedTables, requiredConfiguration: manifest.requiredConfiguration };
  } finally {

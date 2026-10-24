@@ -7,9 +7,11 @@ export type { AvailabilityResult, CalendarBusyRead, CalendarBusyReader } from ".
 export { datePlus, firstInstantOfHostDate, wallClockInstants, zonedParts, zonedOffsetLabel } from "./timezone";
 export type { RecommendationContext } from "./recommendations";
 export { unavailableTimeMessage } from "./diagnostics";
-export { NamedSchedules } from "./named-schedules";
+export { NamedSchedules, bindEvent } from "./named-schedules";
+export { YourHours, startingHours, yoursId } from "./your-hours";
+export type { HoursChoice, HoursRead } from "./your-hours";
 export { BookingLimits, bookingLimitsSchema, emptyBookingLimits } from "./booking-limits";
 export type { BookingLimitsConfig, BookingLimitExclusion } from "./booking-limits";
-export { scheduleInputSchema } from "./schedule-input";
+export { closureFields, scheduleInputSchema } from "./schedule-input";
 export type { NamedSchedule, ScheduleInput } from "./schedule-input";
 export { usFederalHolidays } from "./us-holidays";

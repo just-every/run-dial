@@ -7,7 +7,7 @@ export function validateAvailabilityConfig(name, row) {
   }
   if (name === 'availability_schedules') {
     const windows = JSON.parse(row.windows_json), reopened = JSON.parse(row.reopened_holidays_json), off = JSON.parse(row.time_off_json);
-    if (typeof row.name !== 'string' || !row.name.trim() || row.name.length > 120 || ![0, 1].includes(row.block_us_holidays) || !Array.isArray(windows) || windows.length > 1000 || windows.some(w => !w || !Number.isInteger(w.weekday) || w.weekday < 0 || w.weekday > 6 || !Number.isInteger(w.startMinute) || !Number.isInteger(w.endMinute) || w.startMinute < 0 || w.endMinute > 1440 || w.startMinute >= w.endMinute)) throw new Error('archive-invalid-availability-schedule');
+    if (typeof row.name !== 'string' || !row.name.trim() || row.name.length > 120 || ![0, 1].includes(row.block_us_holidays) || ![0, 1].includes(row.is_default) || !Array.isArray(windows) || windows.length > 1000 || windows.some(w => !w || !Number.isInteger(w.weekday) || w.weekday < 0 || w.weekday > 6 || !Number.isInteger(w.startMinute) || !Number.isInteger(w.endMinute) || w.startMinute < 0 || w.endMinute > 1440 || w.startMinute >= w.endMinute)) throw new Error('archive-invalid-availability-schedule');
     for (let day = 0; day < 7; day++) {
       const ordered = windows.filter(w => w.weekday === day).sort((a, b) => a.startMinute - b.startMinute);
       if (ordered.some((w, i) => i > 0 && ordered[i - 1].endMinute > w.startMinute)) throw new Error('archive-overlapping-schedule');
@@ -18,6 +18,11 @@ export function validateAvailabilityConfig(name, row) {
     const limits = JSON.parse(row.limits_json), keys = ['dayCount', 'weekCount', 'monthCount', 'dayMinutes', 'weekMinutes', 'monthMinutes', 'inviteeGapMinutes'];
     if (!limits || typeof limits !== 'object' || JSON.stringify(Object.keys(limits).sort()) !== JSON.stringify([...keys].sort()) || keys.some(key => !(key !== 'inviteeGapMinutes' && limits[key] === null) && (!Number.isSafeInteger(limits[key]) || limits[key] < 0)) || !(row.scope === 'host' || typeof row.scope === 'string' && row.scope.length === 26)) throw new Error('archive-invalid-booking-limits');
   }
+}
+
+// One schedule is yours (is_default), so an archive with two is refused before anything is written.
+export function validateYourHours(tables) {
+  if ((tables.find(table => table.name === 'availability_schedules')?.rows ?? []).filter(row => row.is_default === 1).length > 1) throw new Error('archive-multiple-your-hours');
 }
 
 export function validateAvailabilityReferences(db) {

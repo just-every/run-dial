@@ -1,4 +1,5 @@
 export { EventTypesService } from "./service";
+export type { NewEventHours, NewEventType } from "./service";
 export { EventTypesRepository } from "./repository";
 export { toPublicEventType } from "./public";
 export { readinessFix } from "./readiness";

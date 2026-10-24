@@ -1,7 +1,7 @@
 import type { EventBookingPolicy } from "../../shared/booking-policy";
 import { duplicateEvent } from "./duplicate";
 import { eventScheduleBindings } from "../../platform/db/availability-schema";
-import { NamedSchedules } from "../availability";
+import { NamedSchedules, bindEvent, yoursId } from "../availability";
 import { hydrateEventTypes, readEventType } from "./hydration/repository";
 import { afterPersistedTimestampSql, nextEventTimestampSql } from "../../shared/event-revision";
 import { replaceDateOverride, deleteDateOverride } from "./override-writes";
@@ -132,7 +132,7 @@ export class EventTypesRepository {
   }
 
   async effectiveDateOverrides(eventTypeId: string, firstDate: string, days: number) {
-    return new NamedSchedules(this.binding).applyClosures(eventTypeId, await this.listDateAvailabilityOverrides(eventTypeId), firstDate, days);
+    return new NamedSchedules(this.binding).applyClosures(await this.listDateAvailabilityOverrides(eventTypeId), firstDate, days);
   }
 
   async replaceDateAvailabilityOverride(eventTypeId: string, input: DateAvailabilityOverrideInput): Promise<DateAvailabilityOverrideRecord> {
@@ -154,13 +154,16 @@ export class EventTypesRepository {
     return record ? toPublicEventType(await this.hydrate(record)) : undefined;
   }
 
-  async create(input: EventTypeInput): Promise<EventTypeRecord> {
+  /** On your hours, the event is bound to them and takes their windows in the same batch (made first when the install has none). */
+  async create(input: EventTypeInput, hours: "own" | "yours" = "own"): Promise<EventTypeRecord> {
     const id = createId();
     const timestamp = nowIso();
-    await this.db.batch([
+    const scheduleId = hours === "yours" ? await yoursId(this.binding) : undefined;
+    const writes = [
       this.db.insert(eventTypes).values({ id, status: "draft", ...eventColumns(input), createdAt: timestamp, updatedAt: timestamp }),
-      ...childWrites(this.db, id, input, timestamp),
-    ]);
+      ...childWrites(this.db, id, scheduleId ? { ...input, availability: [] } : input, timestamp),
+    ].map(write => write.toSQL()).map(({ sql: text, params }) => this.binding.prepare(text).bind(...params));
+    await this.binding.batch([...writes, ...scheduleId ? bindEvent(this.binding, id, scheduleId, timestamp) : []]);
     const result = await this.get(id);
     if (!result) throw new Error("Event type was not persisted");
     return result;

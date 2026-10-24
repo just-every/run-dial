@@ -68,11 +68,13 @@ contract('DATA-001', 'a backup made by the listed release restores through rer i
         const expected = items.filter(item => item.kind === 'row' && item.table === table.name).map(item => sorted(confirmed(table.name, item.row))).sort();
         const actual = (await DB.prepare(`SELECT ${archived.map(quote).join(',')} FROM ${quote(table.name)}`).all()).results.map(sorted).sort();
         assert.deepEqual(actual, expected, `${label}: every archived value: ${table.name}`);
-        // Columns added after the backup (0062) hold their default for restored rows.
+        // Columns added after the backup (0062) hold their default for restored rows. The update to
+        // your hours (0081) then runs over the restore: the published event's schedule becomes yours.
         for (const column of columns.filter(name => !archived.includes(name))) {
           const defaultValue = ['event_types', 'bookings'].includes(table.name) && column === 'guest_limit' ? 0
             : table.name === 'event_types' && column === 'approval_required' ? 0
-              : table.name === 'event_types' && column === 'approval_window_hours' ? 24 : null;
+              : table.name === 'event_types' && column === 'approval_window_hours' ? 24
+                : table.name === 'availability_schedules' && column === 'is_default' ? 1 : null;
           assert.equal((await DB.prepare(`SELECT count(*) AS n FROM ${quote(table.name)} WHERE ${quote(column)} IS NOT ?`).bind(defaultValue).first()).n, 0, `${label}: ${table.name}.${column} has its additive default`);
         }
         rows += expected.length;

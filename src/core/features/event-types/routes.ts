@@ -72,7 +72,11 @@ const eventTypeInputSchema = z
   .superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
 
 const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
-const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions) }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
+// A new event uses your hours unless `hours` (or the weekly `availability` the API has always taken) gives its own.
+const newEventHoursSchema = z.union([z.object({ uses: z.literal("yours") }).strict(), z.object({ uses: z.literal("own"), windows: recurringAvailabilitySchema }).strict()]);
+const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions), availability: recurringAvailabilitySchema.optional(), hours: newEventHoursSchema.optional() })
+  .superRefine(requirePrivateLocation).superRefine(validateEventRedirect)
+  .superRefine((input, context) => { if (input.hours && input.availability?.length) context.addIssue({ code: "custom", path: ["hours"], message: "Give the event's hours once, as hours or as availability." }); });
 
 function requirePrivateLocation(input: { durationMinutes: number; durationOptionsMinutes?: number[]; locationType: typeof locationTypes[number]; locationLabel: string; locationValue: string; locations?: EventLocationOption[]; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {
   if (input.durationOptionsMinutes && (new Set(input.durationOptionsMinutes).size !== input.durationOptionsMinutes.length || !input.durationOptionsMinutes.includes(input.durationMinutes))) context.addIssue({ code: "custom", path: ["durationOptionsMinutes"], message: "Choose distinct durations and include the default duration." });

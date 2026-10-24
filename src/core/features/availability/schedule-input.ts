@@ -12,4 +12,9 @@ export const scheduleInputSchema = z.object({
   timeOff: z.array(z.object({ startDate: hostDateSchema, endDate: hostDateSchema }).refine(range => range.endDate >= range.startDate, "Time off must end on or after its first date.")).max(100),
 }).strict();
 export type ScheduleInput = z.infer<typeof scheduleInputSchema>;
-export type NamedSchedule = ScheduleInput & { id: string; createdAt: string; updatedAt: string; eventCount: number };
+export type NamedSchedule = ScheduleInput & { id: string; isDefault: boolean; createdAt: string; updatedAt: string; eventCount: number };
+
+/** Holidays and time off live with your hours and apply to every event; any other schedule keeps them off. */
+export function closureFields(input: Pick<ScheduleInput, "blockUsHolidays" | "reopenedHolidays" | "timeOff">) {
+  return [...input.blockUsHolidays ? ["blockUsHolidays"] : [], ...input.reopenedHolidays.length ? ["reopenedHolidays"] : [], ...input.timeOff.length ? ["timeOff"] : []];
+}

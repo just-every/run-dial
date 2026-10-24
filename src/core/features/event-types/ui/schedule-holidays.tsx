@@ -38,7 +38,7 @@ export function ScheduleHolidays({ value, onChange }: { value: Closures; onChang
     </div>
     <div>
       <h3 className="font-bold">Time off</h3>
-      <p className="mt-1 text-sm leading-6 text-muted">Close every day in a range, including both dates, in the host timezone. Add or remove ranges, then save the schedule.</p>
+      <p className="mt-1 text-sm leading-6 text-muted">Close every day in a range, including both dates, in the host timezone, on every event.</p>
       <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
         <label className="grid min-w-0 gap-2 text-sm font-semibold">First date<Input type="date" className="min-w-0" value={startDate} onChange={event => setStartDate(event.target.value)} /></label>
         <label className="grid min-w-0 gap-2 text-sm font-semibold">Last date (optional)<Input type="date" className="min-w-0" min={startDate || undefined} value={endDate} onChange={event => setEndDate(event.target.value)} /></label>

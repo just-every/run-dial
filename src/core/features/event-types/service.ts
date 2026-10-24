@@ -4,6 +4,9 @@ import type { ProfileRecord } from "../host-profile";
 import { toPublicEventType } from "./public";
 import { dateAvailabilityOverrideInputSchema, hostDateToday, isCanonicalIanaTimeZone } from "../../shared/scheduling";
 import type { AvailabilityWindowInput, EventDetailsInput, DateAvailabilityOverrideInput, EventTypeInput, EventTypeRecord } from "./repository";
+/** A new event's hours: yours, or its own weekly windows. */
+export type NewEventHours = { uses: "yours" } | { uses: "own"; windows: AvailabilityWindowInput[] };
+export type NewEventType = Omit<EventTypeInput, "availability"> & { availability?: AvailabilityWindowInput[]; hours?: NewEventHours };
 import { EventTypesRepository } from "./repository";
 
 export type HostTimezoneReader = { getHostTimezone(): Promise<string | undefined>; getProfile(): Promise<ProfileRecord | undefined> };
@@ -60,8 +63,10 @@ export class EventTypesService {
     return this.repository.listPublishedListed();
   }
 
-  createEventType(input: EventTypeInput) {
-    return this.repository.create(input);
+  /** A new event uses your hours unless it gives its own: `hours`, or the weekly `availability` the API has always taken. */
+  createEventType({ hours, availability, ...input }: NewEventType) {
+    const own = hours?.uses === "own" ? hours.windows : hours ? undefined : availability;
+    return own ? this.repository.create({ ...input, availability: own }) : this.repository.create({ ...input, availability: [] }, "yours");
   }
 
   async duplicateEventType(id: string) {
