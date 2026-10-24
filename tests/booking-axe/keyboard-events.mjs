@@ -13,6 +13,11 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   const created = await mutation(page, "/api/app/event-types", () => keys.activate(button(page, "Save changes"), "Save new event"), 201);
   const event = await created.json();
   await button(page, "Save recurring availability").waitFor();
+  // A new event starts on your hours; this one keeps its own, cleared, so its edits leave the other events' hours alone.
+  await keys.select(field(page, "Schedule"), "", "Keep independent hours");
+  await mutation(page, `/api/app/event-types/${event.id}/hours`, () => keys.activate(button(page, "Use independent hours"), "Use independent hours"));
+  const starting = page.getByRole("button", { name: /^Remove \w+ window \d+$/ });
+  for (let left = event.availability.length; left && await starting.count(); left--) await keys.activate(starting.first(), "Remove a starting window");
   const sunday = page.locator("div.rounded-2xl").filter({ has: page.getByRole("heading", { name: "Sunday", exact: true }) });
   await keys.activate(button(sunday, "Add window"), "Add Sunday availability");
   await keys.focus(field(page, "Sunday window 1 start time"), "Sunday start time");

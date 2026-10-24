@@ -96,8 +96,13 @@ export async function hostJourneys(origin, scenario) {
         await expect(more.getByRole("combobox", { name: "Start increment", exact: true })).toBeEnabled(); await more.locator("summary").click(); await scan("event-form");
         await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/availability$/);
         await expect(page.getByRole("button", { name: "Save recurring availability", exact: true })).toBeVisible();
-        if (!requestsOnly) { for (const button of await page.getByRole("button", { name: "Add window", exact: true }).all()) await button.click(); await page.getByRole("button", { name: "Save recurring availability", exact: true }).click(); }
-        else await page.getByRole("link", { name: "Back to event", exact: true }).click();
+        // The first event starts on your hours, whose holidays and time off are set on this page.
+        const hours = await (await page.request.get(origin + "/api/app/hours")).json();
+        assert.equal(hours.events.find(event => event.id === new URL(page.url()).pathname.split("/").at(-2)).uses, "yours"); assert.ok(hours.yours);
+        await expect(page.getByRole("checkbox", { name: "Block US federal holidays and observed dates", exact: true })).toBeVisible(); await expect(page.getByRole("button", { name: "Add time off", exact: true })).toBeVisible();
+        if (!requestsOnly) { const closed = page.locator("div.rounded-2xl").filter({ has: page.getByText("Unavailable", { exact: true }) }); for (let day = 0; day < 7 && await closed.count(); day++) await closed.first().getByRole("button", { name: "Add window", exact: true }).click(); }
+        else { const remove = page.getByRole("button", { name: /^Remove \w+ window \d+$/ }); for (let left = 20; left && await remove.count(); left--) await remove.first().click(); }
+        await page.getByRole("button", { name: "Save recurring availability", exact: true }).click();
         await page.waitForURL(/\/setup\/event-types\/[A-Z0-9]{26}$/);
         const eventId = new URL(page.url()).pathname.split("/").at(-1);
         const publish = page.getByRole("button", { name: "Publish event type", exact: true });

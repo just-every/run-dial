@@ -28,7 +28,7 @@ export async function completeEmptyWorkspace(owner, origin) {
     slug: "first-run", title: "First conversation", description: "Request a future conversation.", durationMinutes: 30,
     color: "#176b5a", locationType: "phone", locationLabel: "Phone", locationValue: "+1 202 555 0100",
     listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 30, minimumNoticeMinutes: 0,
-    bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: [],
+    bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], hours: { uses: "own", windows: [] },
   }, 201);
   const published = await post(`/api/app/event-types/${event.id}/open-requests`, {});
   assert.equal(published.status, "published");

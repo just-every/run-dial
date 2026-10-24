@@ -3,7 +3,7 @@ import { api, errorMessage } from "../../../api/client";
 import { SectionHeading } from "../../../app/ui/page-header";
 import { Button, Card, Input, Select, noticeClassName } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
-import { scheduleInputSchema, type HoursRead, type NamedSchedule, type ScheduleInput } from "../../availability";
+import { scheduleInputSchema, type Closures, type HoursRead, type NamedSchedule, type ScheduleInput } from "../../availability";
 import type { AvailabilityWindowInput, EventTypeRecord } from "../repository";
 import { ScheduleHolidays } from "./schedule-holidays";
 
@@ -14,6 +14,7 @@ type Props = {
   onCopyWindows?(windows: AvailabilityWindowInput[]): void;
 };
 const emptyDraft = (): ScheduleInput => ({ name: "", windows: [], blockUsHolidays: false, reopenedHolidays: [], timeOff: [] });
+const closuresOf = ({ blockUsHolidays, reopenedHolidays, timeOff }: Closures): Closures => ({ blockUsHolidays, reopenedHolidays, timeOff });
 
 /** Render beside the weekly-hours form, never inside it. */
 export function ScheduleControls({ eventId, windows, onApplied, onCopyWindows }: Props) {
@@ -21,7 +22,7 @@ export function ScheduleControls({ eventId, windows, onApplied, onCopyWindows }:
   const inFlight = useRef(false);
   const epoch = useRef(0);
   const [schedules, setSchedules] = useState<NamedSchedule[]>();
-  const [yours, setYours] = useState<HoursRead["yours"]>(null);
+  const [closures, setClosures] = useState<Closures>(() => closuresOf(emptyDraft()));
   const [events, setEvents] = useState<EventTypeRecord[]>([]);
   const [boundId, setBoundId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState("");
@@ -47,7 +48,7 @@ export function ScheduleControls({ eventId, windows, onApplied, onCopyWindows }:
       if (token !== epoch.current) return;
       const uses = hours.events.find(event => event.id === eventId)?.uses ?? "own";
       const bound = list.find(schedule => schedule.id === (uses === "yours" ? hours.yours?.id : uses));
-      setSchedules(list); setEvents(eventList); setYours(hours.yours); setBoundId(bound?.id ?? null);
+      setSchedules(list); setEvents(eventList); setClosures(closuresOf(hours.yours ?? emptyDraft())); setBoundId(bound?.id ?? null);
       setSelectedId(bound?.id ?? ""); setDraftId(bound?.id ?? null);
       setDraft(bound ? toInput(bound) : emptyDraft());
     } catch (cause) { if (token === epoch.current) setError(cause instanceof Error ? cause.message : "Schedules could not be loaded. Reload to try again."); }
@@ -60,9 +61,11 @@ export function ScheduleControls({ eventId, windows, onApplied, onCopyWindows }:
   const editing = schedules?.find(schedule => schedule.id === draftId);
 
   function changeDraft(next: Partial<ScheduleInput>) { setDraft(current => ({ ...current, ...next })); setStatus(""); }
-  function storeSchedule(schedule: NamedSchedule) {
+  function keepSchedule(schedule: NamedSchedule) {
     setSchedules(current => [...(current ?? []).filter(entry => entry.id !== schedule.id), schedule].sort((left, right) => left.name.localeCompare(right.name)));
-    setDraftId(schedule.id); setDraft(toInput(schedule));
+  }
+  function storeSchedule(schedule: NamedSchedule) {
+    keepSchedule(schedule); setDraftId(schedule.id); setDraft(toInput(schedule));
   }
   async function bind(scheduleId: string | null) {
     const response = await api.api.app["event-types"][":id"].hours.$put({ param: { id: eventId }, json: scheduleId ? { uses: scheduleId } : { uses: "own" } });
@@ -97,17 +100,17 @@ export function ScheduleControls({ eventId, windows, onApplied, onCopyWindows }:
     } catch (cause) { setError(cause instanceof Error ? cause.message : "The event’s hours could not be loaded. Try copying again."); }
     finally { inFlight.current = false; setSaving(false); }
   }
-  async function saveClosures(next: Partial<Pick<ScheduleInput, "blockUsHolidays" | "reopenedHolidays" | "timeOff">>) {
-    const current = schedules?.find(schedule => schedule.id === yours?.id);
-    if (!yours || !current || inFlight.current) return;
-    const closures = { blockUsHolidays: yours.blockUsHolidays, reopenedHolidays: yours.reopenedHolidays, timeOff: yours.timeOff, ...next };
-    inFlight.current = true; setSaving(true); setError(""); setStatus(""); setYours({ ...yours, ...closures });
+  /** Saved to your hours as they change; an install without them gets "Your hours" on the first change, and this event stays on its hours. */
+  async function saveClosures(next: Partial<Closures>) {
+    if (inFlight.current) return;
+    const changed = { ...closures, ...next };
+    inFlight.current = true; setSaving(true); setError(""); setStatus(""); setClosures(changed);
     try {
-      const response = await api.api.app["availability-schedules"][":id"].$put({ param: { id: yours.id }, json: { ...toInput(current), ...closures } });
+      const response = await api.api.app.hours.closures.$put({ json: changed });
       if (!response.ok) throw new Error(await errorMessage(response));
       const stored = await response.json();
-      setSchedules(list => list?.map(schedule => schedule.id === stored.id ? stored : schedule));
-      if (draftId === stored.id) setDraft(input => ({ ...input, ...closures }));
+      keepSchedule(stored);
+      if (draftId === stored.id) setDraft(input => ({ ...input, ...changed }));
       setStatus("Saved. Holidays and time off apply to every event.");
     } catch (cause) { setError(cause instanceof Error ? `${cause.message} Your change is kept here; change it again to retry.` : "The change could not be saved. Change it again to retry."); }
     finally { inFlight.current = false; setSaving(false); }
@@ -144,7 +147,7 @@ export function ScheduleControls({ eventId, windows, onApplied, onCopyWindows }:
           <label className="grid min-w-0 gap-2 text-sm font-semibold">Schedule<Select value={selectedId} onChange={event => { setSelectedId(event.target.value); setStatus(""); }}><option value="">Keep independent hours</option>{schedules.map(schedule => <option key={schedule.id} value={schedule.id}>{schedule.name} ({schedule.eventCount} event types)</option>)}</Select></label>
           <Button type="button" variant="secondary" onClick={() => void apply()} disabled={selectedId === (boundId ?? "")}>{saving ? "Applying…" : selectedId ? "Apply schedule" : "Use independent hours"}</Button>
         </div>
-        {selected && selectedId !== boundId ? <p className="text-sm leading-6 text-muted">Applying “{selected.name}” replaces this event’s weekly hours and closures. It is currently used by {selected.eventCount} event type{selected.eventCount === 1 ? "" : "s"}.</p> : null}
+        {selected && selectedId !== boundId ? <p className="text-sm leading-6 text-muted">Applying “{selected.name}” replaces this event’s weekly hours. It is currently used by {selected.eventCount} event type{selected.eventCount === 1 ? "" : "s"}.</p> : null}
         {onCopyWindows ? <div className="grid gap-3 border-t border-line-soft pt-4">
           <p className="text-sm leading-6 text-muted">Copy weekly windows into the editor above, then save recurring availability or a named schedule to apply them. Holidays and time off are not copied.</p>
           {selected ? <Button type="button" variant="secondary" className="w-fit" onClick={() => { onCopyWindows(selected.windows.map(window => ({ ...window }))); setStatus(`Weekly windows copied from “${selected.name}”. Save to apply your edited hours.`); }}>Copy selected schedule’s hours</Button> : null}
@@ -159,7 +162,7 @@ export function ScheduleControls({ eventId, windows, onApplied, onCopyWindows }:
           <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-bold">{draftId ? "Edit shared schedule" : "Create a named schedule"}</h3>{draftId ? <Button type="button" variant="quiet" onClick={() => { setDraftId(null); setDraft(emptyDraft()); setStatus(""); }}>Create a new schedule instead</Button> : bound ? <Button type="button" variant="quiet" onClick={() => { setDraftId(bound.id); setDraft(toInput(bound)); setStatus(""); }}>Edit current schedule</Button> : null}</div>
           <label className="grid min-w-0 gap-2 text-sm font-semibold">Schedule name<Input required maxLength={120} value={draft.name} onChange={event => changeDraft({ name: event.target.value })} /></label>
           <p className="rounded-2xl bg-row px-4 py-3 text-sm leading-6 text-soft">{editing ? `Saving updates all ${editing.eventCount} event type${editing.eventCount === 1 ? "" : "s"} using “${editing.name}” and applies it to this event. ` : "Saving creates a schedule and applies it to this event. "}The {windows.length} weekly window{windows.length === 1 ? "" : "s"} currently shown in the editor above will be saved.</p>
-          {yours ? <ScheduleHolidays key={`${eventId}-${yours.id}`} value={yours} onChange={next => void saveClosures(next)} /> : null}
+          <ScheduleHolidays value={closures} onChange={next => void saveClosures(next)} />
           <Button type="submit" className="w-fit">{saving ? "Saving…" : draftId ? "Save shared schedule" : "Create and apply schedule"}</Button>
         </fieldset>
       </form>

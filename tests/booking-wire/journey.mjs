@@ -29,7 +29,7 @@ const boot = await call("/auth/bootstrap", { token: "dial-test-only-setup-token-
 cookie = boot.headers.get("set-cookie").split(";")[0];
 assert.deepEqual(await data("/api/app/calendar/setup"), { redirectUri: origin + "/api/calendar/oauth/callback", configured: true });
 await call("/api/app/profile", { handle: "requests-host", name: "Request Host", title: "Advisor", biography: "Request a discussion.", timezone: "UTC", focusAreas: [], socialProof: [] }, 200, "PATCH");
-const requestEvent = await data("/api/app/event-types", { slug: "request-only", title: "A conversation", description: "Suggest another time.", durationMinutes: 30, color: "#176b5a", locationType: "google_meet", locationLabel: "Google Meet", locationValue: "", listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: [] }, 201);
+const requestEvent = await data("/api/app/event-types", { slug: "request-only", title: "A conversation", description: "Suggest another time.", durationMinutes: 30, color: "#176b5a", locationType: "google_meet", locationLabel: "Google Meet", locationValue: "", listed: true, alternativeRequestsEnabled: true, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], hours: { uses: "own", windows: [] } }, 201);
 const publish = await call(`/api/app/event-types/${requestEvent.id}/publish`, {}, 409);
 const publishError = (await publish.json()).error;
 assert.equal(publishError.code, "event_not_ready");

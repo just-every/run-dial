@@ -1,9 +1,11 @@
 import { createId, nowIso } from "../../shared/ids";
 import { nextEventTimestampSql } from "../../shared/event-revision";
 import { bookingLimitsSchema, emptyBookingLimits, type BookingLimitsConfig } from "./booking-limits";
-import { bindEvent, replaceEventWindows, scheduleWindowsSql } from "./named-schedules";
+import { NamedSchedules, bindEvent, replaceEventWindows, scheduleWindowsSql } from "./named-schedules";
 import type { AvailabilityWindow } from "./engine";
 import type { ScheduleInput } from "./schedule-input";
+
+export type Closures = Pick<ScheduleInput, "blockUsHolidays" | "reopenedHolidays" | "timeOff">;
 
 /** The hours an install starts with: Monday to Friday, 09:00 to 17:00 wall clock in the host's zone. */
 export const startingHours: AvailabilityWindow[] = [1, 2, 3, 4, 5].map(weekday => ({ weekday, startMinute: 540, endMinute: 1020 }));
@@ -11,7 +13,7 @@ export const startingHours: AvailabilityWindow[] = [1, 2, 3, 4, 5].map(weekday =
 /** `yours`, another schedule's id, or the event's own hours (optionally started from yours or another event's). */
 export type HoursChoice = { uses: string; startFrom?: string };
 export type HoursRead = {
-  yours: ({ id: string; windows: AvailabilityWindow[] } & Pick<ScheduleInput, "blockUsHolidays" | "reopenedHolidays" | "timeOff">) | null;
+  yours: ({ id: string; windows: AvailabilityWindow[] } & Closures) | null;
   others: { id: string; name: string; windows: AvailabilityWindow[]; eventIds: string[] }[];
   limits: BookingLimitsConfig;
   events: { id: string; title: string; uses: string }[];
@@ -67,6 +69,14 @@ export class YourHours {
     else if (!await this.exists("event_types", choice.startFrom)) return "start_not_found";
     else await this.binding.batch([...own, ...replaceEventWindows(this.binding, eventId, "SELECT weekday,start_minute,end_minute FROM recurring_availability_windows WHERE event_type_id=?", [choice.startFrom], now)]);
     return "saved";
+  }
+
+  /** Your holidays and time off. An install without yours first makes "Your hours"; no event is bound or given other windows. */
+  async saveClosures(closures: Closures) {
+    const id = await yoursId(this.binding);
+    await this.binding.prepare("UPDATE availability_schedules SET block_us_holidays=?,reopened_holidays_json=?,time_off_json=?,updated_at=? WHERE id=?")
+      .bind(Number(closures.blockUsHolidays), JSON.stringify(closures.reopenedHolidays), JSON.stringify(closures.timeOff), nowIso(), id).run();
+    return (await new NamedSchedules(this.binding).get(id))!;
   }
 
   private async exists(table: "event_types" | "availability_schedules", id: string) {

@@ -14,9 +14,11 @@ const hoursChoice = z.union([
   z.object({ uses: z.union([z.literal("yours"), z.string().length(26)]) }).strict(),
 ]);
 const closuresRefused = (context: Context, fields: string[]) => apiError(context, 400, "invalid_request", "Holidays and time off belong to your hours, which every event uses.", fields);
+const closuresInput = scheduleInputSchema.pick({ blockUsHolidays: true, reopenedHolidays: true, timeOff: true }).strict();
 
 export const availabilityControlRoutes = new Hono<AppEnvironment>()
   .get("/api/app/hours", async context => context.json(await context.get("services").yourHours.read()))
+  .put("/api/app/hours/closures", validate("json", closuresInput), async context => context.json(await context.get("services").yourHours.saveClosures(context.req.valid("json"))))
   .get("/api/app/availability-schedules", async context => context.json(await context.get("services").namedSchedules.list()))
   .post("/api/app/availability-schedules", validate("json", scheduleInputSchema), async context => {
     const input = context.req.valid("json"), closures = closureFields(input);

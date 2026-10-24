@@ -9,7 +9,7 @@ export type { RecommendationContext } from "./recommendations";
 export { unavailableTimeMessage } from "./diagnostics";
 export { NamedSchedules, bindEvent } from "./named-schedules";
 export { YourHours, startingHours, yoursId } from "./your-hours";
-export type { HoursChoice, HoursRead } from "./your-hours";
+export type { Closures, HoursChoice, HoursRead } from "./your-hours";
 export { BookingLimits, bookingLimitsSchema, emptyBookingLimits } from "./booking-limits";
 export type { BookingLimitsConfig, BookingLimitExclusion } from "./booking-limits";
 export { closureFields, scheduleInputSchema } from "./schedule-input";

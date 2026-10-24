@@ -57,7 +57,11 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   await page.getByLabel("Private link, number, or address", { exact: true }).fill("+1 202 555 0100");
   onPhase("first-run event save");
   await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/availability$/);
-  await page.getByRole("link", { name: "Back to event", exact: true }).click();
+  // The event starts on your hours; a request-only host clears them, and saving returns to the event.
+  await page.getByRole("button", { name: "Save recurring availability", exact: true }).waitFor();
+  const remove = page.getByRole("button", { name: /^Remove \w+ window \d+$/ });
+  for (let left = 20; left && await remove.count(); left--) await remove.first().click();
+  await page.getByRole("button", { name: "Save recurring availability", exact: true }).click();
   onPhase("first-run request publication");
   await page.getByRole("button", { name: "Open requests", exact: true }).click();
   await expect(page.getByRole("button", { name: "Copy booking link", exact: true })).toBeVisible();
