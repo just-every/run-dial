@@ -492,6 +492,12 @@
       "name": "0080_workspace_notices.sql",
       "sha256": "9f274144e98ef61120e9942ff2b7af20451f58b08065356e4c1e99bf965751f7",
       "sql": "CREATE TABLE workspace_notice_destinations (\n id TEXT PRIMARY KEY CHECK(id IN ('slack','teams')), generation INTEGER NOT NULL DEFAULT 1,\n status TEXT NOT NULL CHECK(status IN ('connected','failed','disconnected','needs_reconnect')),\n credential_ciphertext TEXT, target TEXT NOT NULL, external_key TEXT NOT NULL,\n masked_tail TEXT NOT NULL, reason TEXT, cooldown_until TEXT, active_delivery_id TEXT,\n alerted INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL\n);\nCREATE TABLE notice_oauth_states (\n id TEXT PRIMARY KEY, session_id TEXT NOT NULL, operator_id TEXT NOT NULL,\n mode TEXT NOT NULL CHECK(mode IN ('channel','dm')), target TEXT NOT NULL,\n expires_at TEXT NOT NULL, consumed_at TEXT, created_at TEXT NOT NULL\n);\nCREATE TABLE workspace_notice_deliveries (\n id TEXT PRIMARY KEY, destination_id TEXT NOT NULL REFERENCES workspace_notice_destinations(id),\n generation INTEGER NOT NULL, account_id TEXT NOT NULL, channel_id TEXT NOT NULL, booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n occurrence_id TEXT NOT NULL REFERENCES booking_occurrences(id) ON DELETE CASCADE,\n event_kind TEXT NOT NULL CHECK(event_kind IN ('created','rescheduled','cancelled')),\n idempotency_key TEXT NOT NULL UNIQUE, state TEXT NOT NULL CHECK(state IN ('pending','invoking','succeeded','failed','outcome_unknown')),\n attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at TEXT NOT NULL, first_attempt_at TEXT,\n provider_ref TEXT, reason TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL\n);\nCREATE INDEX workspace_notice_due ON workspace_notice_deliveries(state,next_attempt_at);\nCREATE TABLE notice_erasure_requests (\n id TEXT PRIMARY KEY, receipt_id TEXT NOT NULL REFERENCES person_erasure_receipts(id),\n provider TEXT NOT NULL CHECK(provider IN ('slack','teams')), source_delivery_id TEXT NOT NULL,\n account_id TEXT NOT NULL, channel_id TEXT NOT NULL, processor_ref TEXT,\n state TEXT NOT NULL CHECK(state IN ('pending','completed','failed')), reason TEXT,\n requested INTEGER NOT NULL DEFAULT 0, archive_historical INTEGER NOT NULL DEFAULT 0,\n created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(receipt_id,source_delivery_id)\n);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0082_site_look.sql",
+      "sha256": "d64c5054365b187126032bb3d22792c6ba3272750db84f86e92454da50aba356",
+      "sql": "-- BRAND-001 and PROFILE-003 (ct C2, C3): the workspace's look, read from its website only on request.\n-- One row for the workspace. The read keeps what the site gave (name, line, mark, colours and face, with the face's\n-- own licence) and when; overrides_json holds the owner's changes, value by value; look is site or plain.\n-- mark_asset and font_asset are R2 keys (brand/<sha256>.<ext>) served publicly under /media/brand/.\n-- colours_json records the read colours, the colours booking pages use and each one adjusted for contrast.\n-- read_error records the last failed read; a failed read leaves the previous look as it was.\nCREATE TABLE site_looks (\n  id TEXT PRIMARY KEY,\n  singleton_key TEXT NOT NULL UNIQUE DEFAULT 'default' CHECK (singleton_key = 'default'),\n  website_url TEXT,\n  read_at TEXT,\n  read_error TEXT,\n  name TEXT,\n  line TEXT,\n  mark_asset TEXT,\n  font_asset TEXT,\n  font_family TEXT,\n  font_licence TEXT,\n  colours_json TEXT NOT NULL DEFAULT '{}',\n  overrides_json TEXT NOT NULL DEFAULT '{}',\n  look TEXT NOT NULL DEFAULT 'plain' CHECK (look IN ('site', 'plain')),\n  revision INTEGER NOT NULL DEFAULT 1,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
@@ -557,7 +563,8 @@
     "outbound-oauth",
     "outbound-quickbooks-accounting",
     "outbound-slack-notices",
-    "outbound-teams-workflows"
+    "outbound-teams-workflows",
+    "outbound-website-read"
   ],
   "surfaces": {
     "app": {

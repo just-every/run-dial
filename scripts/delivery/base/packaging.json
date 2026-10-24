@@ -102,7 +102,8 @@
         "outbound-oauth",
         "outbound-quickbooks-accounting",
         "outbound-slack-notices",
-        "outbound-teams-workflows"
+        "outbound-teams-workflows",
+        "outbound-website-read"
       ],
       "surfaces": {
         "app": {

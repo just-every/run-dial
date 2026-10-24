@@ -484,6 +484,16 @@
         "operator Bookings link"
       ],
       "adapters": []
+    },
+    {
+      "id": "owner-website-reader",
+      "required": false,
+      "why": "BRAND-001, only when the owner asks (Read website): read the supplied public website, its declared manifest and icon, up to eight of its linked stylesheets and the file of the face its text is set in, for the booking pages' look; a Google Fonts family is read from Google Fonts. Public DNS-over-HTTPS at cloudflare-dns.com validates every destination and redirect, and private addresses are refused. No key is used.",
+      "data": [
+        "Owner-supplied website URL and the public resource URLs it links",
+        "Destination hostnames for public DNS resolution"
+      ],
+      "adapters": []
     }
   ],
   "env": [

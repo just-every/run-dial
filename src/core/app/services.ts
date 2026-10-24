@@ -34,6 +34,9 @@ import { EventTypesRepository, EventTypesService } from "../features/event-types
 import { HostProfileRepository } from "../features/host-profile/repository";
 import { HostProfileService } from "../features/host-profile/service";
 import { AvatarStorage } from "../features/host-profile/avatar-storage";
+import { BrandFiles } from "../features/site-look/brand-files";
+import { SiteLookRepository } from "../features/site-look/repository";
+import { SiteLookService } from "../features/site-look/service";
 import { OperatorsService } from "../features/operators";
 import { PaymentsService } from "../features/payments";
 import { ReportFactsRepository, ReportsService } from "../features/reports";
@@ -92,6 +95,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     operators,
     publicAbuse: new PublicAbuseRepository(binding),
     avatarStorage: new AvatarStorage(new HostProfileRepository(binding), adapters.files),
+    siteLook: new SiteLookService(new SiteLookRepository(binding), new BrandFiles(adapters.files)),
     hostProfile,
     hostSetup: new HostSetupService(new HostSetupRepository(binding), hostProfile, eventTypes, installPublicOrigin(runtime.APP_URL)),
     eventTypes,

@@ -166,6 +166,8 @@ export const applicationTables = [
   "recurring_availability_windows",
   "rer_mail_development_outbox",
   "social_proof_entries",
+  // BRAND-001: the workspace's look read from its website (host configuration, no personal data); its brand/ R2 files are public brand assets.
+  "site_looks",
   "rer_erasure_operations",
   "rer_erasure_blobs",
   "rer_erasure_guard",
