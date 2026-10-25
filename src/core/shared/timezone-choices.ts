@@ -15,6 +15,7 @@ const timezoneAliases: Record<string, string[]> = {
   "Asia/Katmandu": ["Asia/Kathmandu"],
   "Asia/Rangoon": ["Asia/Yangon"],
   "Asia/Saigon": ["Asia/Ho_Chi_Minh"],
+  "Atlantic/Faeroe": ["Atlantic/Faroe"],
   "Europe/Kiev": ["Europe/Kyiv"],
   "Pacific/Enderbury": ["Pacific/Kanton"],
   "Pacific/Ponape": ["Pacific/Pohnpei"],
