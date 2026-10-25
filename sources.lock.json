@@ -4812,7 +4812,7 @@
       "executable": false
     },
     "src/core/app/ui/autosave/use-autosave.ts": {
-      "sha256": "8c90516f36f31b4eb446a9bb52a2e692acd25d451a00d7c900bdaf6e183ba680",
+      "sha256": "d114ed1ea70de3230ea89888f0218e34cc9e8f131ef6f051cb78e3b00eb2475a",
       "executable": false
     },
     "src/core/app/ui/empty-state.tsx": {
@@ -8176,7 +8176,7 @@
       "executable": false
     },
     "tests/custom-fields/autosave-journey.mjs": {
-      "sha256": "09de10faa96a7539a51990bd110690ab01f63ca1957f483da82a8d86d10d20d9",
+      "sha256": "78d1f7fda7f66e0e45c17461c5abb82db6d4159b3bf568995a8f59049aef0070",
       "executable": false
     },
     "tests/custom-fields/browser.mjs": {
@@ -8200,7 +8200,7 @@
       "executable": false
     },
     "tests/custom-fields/search-while-saving.mjs": {
-      "sha256": "001a8d5edb28ede2f141f1095f75f869fabbb24331c1f76b673890ba98aafa86",
+      "sha256": "9f416a0904edbe7e0eee28654a28285f8bb9e63f6edac6d40092375e7575459e",
       "executable": false
     },
     "tests/custom-fields/worker.ts": {

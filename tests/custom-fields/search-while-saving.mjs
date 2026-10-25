@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 
 // Leaving the page waits for a private field's save; staying on it never does. On Bookings, Search is a navigation within
 // the page: a booking's value saving slowly, or refused, never holds up typing there, and a refused value is held and sent
-// again when its booking is shown again.
+// again when its booking is shown again. A save that lands while Search has its booking off screen is what the booking
+// shows when it is back.
 export async function searchWhileSaving(owner, origin, fixture) {
   const headers = { Origin: origin };
   const created = await owner.request.post(origin + "/api/app/custom-fields", { headers, data: { entity: "booking", label: "Follow-up", kind: "text", options: [] } });
@@ -70,5 +71,25 @@ export async function searchWhileSaving(owner, origin, fixture) {
   await aikoShown();
   assert.equal(await note.inputValue(), "Send the plan by Friday", "the refused value was held");
   assert.equal(await landed("Send the plan by Friday"), "Send the plan by Friday", "the held value is sent again when its booking is shown again");
+
+  // Search for the booking's own name while its note saves: the save lands while the list reload has its panel off screen,
+  // and the panel comes back from a read the navigation took before that. It shows the typed note, and the next word saves
+  // on top of it.
+  await page.route("**/api/app/custom-fields/**", async (route) => {
+    if (route.request().method() === "PUT") await new Promise((done) => setTimeout(done, 550));
+    await route.continue();
+  });
+  await note.press("ControlOrMeta+a");
+  await note.pressSequentially("Call Aiko back on Tuesday", { delay: 15 });
+  assert.equal(await searchFor("Aiko"), "Aiko");
+  await page.waitForURL((url) => url.searchParams.get("query") === "Aiko");
+  assert.equal(await landed("Call Aiko back on Tuesday"), "Call Aiko back on Tuesday");
+  await page.unroute("**/api/app/custom-fields/**");
+  await aikoShown();
+  assert.equal(await note.inputValue(), "Call Aiko back on Tuesday", "a save that lands off screen is shown when its booking is back");
+  await note.click();
+  await note.evaluate((element) => element.setSelectionRange(element.value.length, element.value.length));
+  await note.pressSequentially(" and the agenda", { delay: 15 });
+  assert.equal(await landed("Call Aiko back on Tuesday and the agenda"), "Call Aiko back on Tuesday and the agenda", "the next word saves on top of the typed note");
   await page.close();
 }

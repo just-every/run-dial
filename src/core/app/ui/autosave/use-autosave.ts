@@ -16,7 +16,10 @@ type Snapshot<T> = { values: T; saved: T; justSaved: ReadonlySet<keyof T>; faile
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const without = <K>(set: ReadonlySet<K>, ...items: K[]) => new Set([...set].filter((item) => !items.includes(item)));
-/** Forms with something unsaved outlive their screen, so a form shown again (or a page that goes) still has its values. */
+/**
+ * Forms outlive their screen while they hold something unsaved or a save no read has shown yet, so a form shown again (or a
+ * page that goes) still has its values.
+ */
 const forms = new Map<string, unknown>();
 
 class Form<T extends Values> {
@@ -24,6 +27,8 @@ class Form<T extends Values> {
   private snapshot: Snapshot<T>;
   private readonly listeners = new Set<() => void>();
   private readonly confirmed = new Set<keyof T>();
+  /** Per field, the values this form's saves replaced, until a read shows the field past them. */
+  private readonly replaced = new Map<keyof T, unknown[]>();
   private timer?: ReturnType<typeof setTimeout>;
   private busy = false;
   private again = false;
@@ -93,17 +98,26 @@ class Form<T extends Values> {
     return { values, base: this.snapshot.saved };
   }
 
-  /** Shown again: fields with nothing unsaved take the fresh values, and unsaved ones keep what was typed. */
+  /**
+   * Shown again, from a fresh read. A field keeps what was typed while it is unsaved, and keeps what its save stored while the
+   * read still holds a value that save replaced: the read was taken before the save landed. Every other field takes the read,
+   * which has this form's saves or newer data, and starts afresh.
+   */
   refresh(initial: T) {
-    const values = { ...initial }, saved = { ...initial };
-    for (const field of this.unsaved()) {
-      values[field] = this.snapshot.values[field];
-      saved[field] = this.snapshot.saved[field];
+    const values = { ...initial }, saved = { ...initial }, unsaved = this.unsaved();
+    let { justSaved } = this.snapshot;
+    for (const field of Object.keys(this.snapshot.values) as Array<keyof T>) {
+      const behind = !same(initial[field], this.snapshot.saved[field]) && !!this.replaced.get(field)?.some((value) => same(value, initial[field]));
+      if (!behind) this.replaced.delete(field);
+      if (behind || unsaved.includes(field)) {
+        values[field] = this.snapshot.values[field];
+        saved[field] = this.snapshot.saved[field];
+      } else justSaved = without(justSaved, field);
     }
-    this.snapshot = { ...this.snapshot, values, saved };
+    this.snapshot = { ...this.snapshot, values, saved, justSaved };
   }
 
-  /** On screen. Taken off, it saves what it holds and stays held until that lands. */
+  /** On screen. Taken off, it saves what it holds and stays held until that lands and a read has shown it. */
   attach() {
     this.mounted++;
     forms.set(this.key, this);
@@ -185,10 +199,13 @@ class Form<T extends Values> {
       this.again = false;
       const fields = this.unsaved().filter((field) => !this.waiting(field));
       if (!fields.length) continue;
-      const next = this.payload();
+      const next = this.payload(), before = this.snapshot.saved;
       try {
         await this.write(next, {});
-        for (const field of fields) this.confirmed.delete(field);
+        for (const field of fields) {
+          this.confirmed.delete(field);
+          this.replaced.set(field, [...(this.replaced.get(field) ?? []), before[field]]);
+        }
         this.update({ saved: next, justSaved: new Set(fields), failed: without(this.snapshot.failed, ...fields) });
         landed = true;
       } catch (error) {
@@ -202,12 +219,16 @@ class Form<T extends Values> {
     return landed;
   }
 
-  /** Off screen with nothing left to save: it leaves the store, and a form shown again starts from fresh values. */
+  /**
+   * Off screen with nothing left to save, it no longer holds a leave up. It stays in the store until a read has shown its
+   * saves, so a read taken before a save landed never replaces what it stored; then it leaves, and a form shown again starts
+   * from fresh values.
+   */
   private retire() {
     if (this.mounted || this.busy || this.unsaved().length) return;
-    if (forms.get(this.key) === this) forms.delete(this.key);
     this.release?.();
     this.release = undefined;
+    if (!this.replaced.size && forms.get(this.key) === this) forms.delete(this.key);
   }
 }
 

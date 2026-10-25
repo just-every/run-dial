@@ -5,7 +5,8 @@ import { searchWhileSaving } from "./search-while-saving.mjs";
 
 // CUSTOM-001's page door: an event's private field saves as it is typed, with no button. A value typed and left at once
 // by the menu is there after a reload; a save that fails keeps the value in the field, and Retry saves it. On Bookings, a
-// booking's field saving slowly or refused never holds up Search.
+// booking's field saving slowly or refused never holds up Search, and a save that lands while Search has the booking off
+// screen is what it shows when it is back.
 const origin = process.env.DIAL_REVIEW_ORIGIN;
 const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 const owner = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -52,7 +53,7 @@ try {
   assert.equal(await input.inputValue(), "Bring the roadmap and last quarter's numbers");
   console.log("CUSTOM-001 page: typed values save with no button, survive leaving at once, and a failed save keeps its value until Retry saves it.");
   await searchWhileSaving(owner, origin, fixture);
-  console.log("CUSTOM-001 page: a slow or refused save never holds up Search on Bookings, and the refused value is sent again when its booking is shown again.");
+  console.log("CUSTOM-001 page: a slow or refused save never holds up Search on Bookings, the refused value is sent again when its booking is shown again, and a save that lands off screen is what the booking shows when it is back.");
 } finally {
   await owner.close();
   await browser.close();
