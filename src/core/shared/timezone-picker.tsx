@@ -64,7 +64,7 @@ export function TimezonePicker({ label, accessibleLabel, value, onChange, device
           }
         }} />
       {open ? <div className="dial-timezone-picker__menu">
-        <ul ref={list} id={`${id}-options`} role="listbox" aria-label="Matching timezones">
+        <ul ref={list} id={`${id}-options`} role="listbox" tabIndex={-1} aria-label="Matching timezones">
           {options.map((zone, index) => <li key={zone} id={`${id}-option-${index}`} role="option" tabIndex={-1} aria-selected={index === active}
             onPointerDown={event => event.preventDefault()} onClick={() => commit(zone)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); commit(zone); } }}>{zone}</li>)}
         </ul>
