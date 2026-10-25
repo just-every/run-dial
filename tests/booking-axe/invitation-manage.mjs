@@ -52,7 +52,7 @@ export async function invitationBrowserJourney(browser, owner, origin, booking, 
     await page.screenshot({ caret: "initial", path: evidencePath(`NOTIFY-009-old-link-${width}.png`), fullPage: true });
     await page.goto(replacementUrl);
     const cancel = page.getByRole('button', { name: 'Cancel booking', exact: true }); await expect(cancel).toBeEnabled();
-    page.once('dialog', dialog => dialog.accept()); await cancel.click();
+    await cancel.click(); await page.getByRole('button', { name: 'Confirm cancellation', exact: true }).click();
     await expect(page.getByRole('status')).toContainText('cancelled');
     expectedResponses.set(invitationUrl, 410);
     assert.equal((await page.goto(invitationUrl)).status(), 410);

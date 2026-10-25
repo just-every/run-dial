@@ -7,6 +7,7 @@ import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
 import { Button, Card, Input, Textarea, noticeClassName } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
+import { TimezonePicker } from "../../../shared/timezone-picker";
 import type { ProfileInput, ProfileRecord } from "../repository";
 
 export function ProfilePage() {
@@ -69,7 +70,7 @@ export function ProfilePage() {
               <Field label="Name"><Input maxLength={120} value={profile.name} onChange={(event) => update("name", event.target.value)} required /></Field>
               <Field label="Title"><Input maxLength={180} value={profile.title} onChange={(event) => update("title", event.target.value)} required /></Field>
               <Field label="Public handle"><Input maxLength={80} value={profile.handle} onChange={(event) => update("handle", event.target.value.toLowerCase())} required /></Field>
-              <Field label="Host timezone"><Input value={profile.timezone} aria-describedby="host-timezone-help" onChange={(event) => update("timezone", event.target.value)} required /><span id="host-timezone-help" className="text-[13px] font-normal text-muted">Use a canonical IANA zone, for example Australia/Brisbane.</span></Field>
+              <TimezonePicker label="Host timezone" value={profile.timezone} onChange={(zone) => update("timezone", zone)} required />
               <Field label="Biography" className="sm:col-span-2"><Textarea maxLength={2000} value={profile.biography} onChange={(event) => update("biography", event.target.value)} required /></Field>
             </div>
           </Card>

@@ -38,6 +38,7 @@ export async function keyboardJourney(browser, origin, errors, storageState, che
       await keyboardActivate(page.getByRole("button", { name: "Reschedule booking", exact: true })); await page.locator(".pb-slot-button").first().waitFor();
       await keyboardActivate(page.getByRole("button", { name: "Next week", exact: true })); await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
       await keyboardActivate(page.locator(".pb-slot-button").nth(1)); await page.getByRole("button", { name: "Confirm reschedule", exact: true }).waitFor();
+      await typeField(page.getByLabel("Reason for rescheduling (optional)", { exact: true }), "Project review moved");
       await keyboardActivate(page.getByRole("button", { name: "Confirm reschedule", exact: true })); await page.getByText("Your booking has been rescheduled.", { exact: true }).waitFor();
       const rescheduledStatus = page.getByRole("status").filter({ hasText: "Your booking has been rescheduled." });
       const rescheduleFocused = await rescheduledStatus.evaluate(el => el === globalThis.document.activeElement);
@@ -48,15 +49,18 @@ export async function keyboardJourney(browser, origin, errors, storageState, che
       if (owner) { const saved = await readback(); assert.equal(saved.state, "rescheduled"); assert.ok(saved.history.some(row => row.action === "created")); }
       const cancel = button(page, "Cancel booking");
       const before = owner ? await readback() : undefined;
-      await keys.native(cancel, "Cancel public cancellation confirmation", "confirm", false);
+      await keyboardActivate(cancel);
+      await keyboardActivate(button(page, "Keep booking"));
       await keys.restored(cancel, "Public cancellation dismissed");
       if (owner) assert.deepEqual(await readback(), before);
-      await keys.native(cancel, "Confirm public cancellation", "confirm", true);
+      await keyboardActivate(cancel);
+      await typeField(page.getByLabel("Reason (optional)", { exact: true }), "More preparation needed");
+      await keyboardActivate(button(page, "Confirm cancellation"));
       await page.getByRole("status").filter({ hasText: "This booking has been cancelled." }).waitFor();
       if (owner) assert.equal((await readback()).state, "cancelled");
       checks.push({ width, check: "Public cancellation focuses its result after controls disappear", passed: await page.getByRole("status").filter({ hasText: "This booking has been cancelled." }).evaluate(el => el === globalThis.document.activeElement) });
       await keys.screenshot("public-cancelled");
-      checks.push({ width, flow: "Public validation, booking, reschedule, native cancellation dismiss/confirm and API readback", passed: true });
+      checks.push({ width, flow: "Public validation, booking, reschedule, in-page cancellation keep/confirm and API readback", passed: true });
     } finally { await context.close(); }
   }
   } finally { await owner?.close(); }

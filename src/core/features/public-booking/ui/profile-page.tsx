@@ -41,5 +41,5 @@ function PublicProfileContent({ handle }: { handle: string }) {
 }
 
 function EventCard({ eventType, handle }: { eventType: PublicEvent; handle: string }) {
-  return <article className="pb-event-card"><div className="pb-event-art"><span>A focused working session</span><MiniDial /></div><div className="pb-event-card-body"><h3>{eventType.title}</h3><p>{eventType.description}</p><div className="pb-event-meta"><span>{eventType.durationMinutes} minutes</span><span>{eventType.locationLabel}</span></div><Link className="pb-primary-link" to="/book/$handle/$slug" params={{ handle, slug: eventType.slug }}>View session <span aria-hidden="true">→</span></Link></div></article>;
+  return <article className="pb-event-card"><div className="pb-event-art" style={{ justifyContent: "flex-end" }}><MiniDial /></div><div className="pb-event-card-body"><h3>{eventType.title}</h3><p>{eventType.description}</p><div className="pb-event-meta"><span>{eventType.durationMinutes} minutes</span><span>{eventType.locationLabel}</span></div><Link className="pb-primary-link" to="/book/$handle/$slug" params={{ handle, slug: eventType.slug }}>View session <span aria-hidden="true">→</span></Link></div></article>;
 }

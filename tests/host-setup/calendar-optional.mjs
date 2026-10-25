@@ -74,8 +74,8 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     await guest.getByRole("button", { name: "Confirm reschedule", exact: true }).click();
     await expect(guest.getByText("Your booking has been rescheduled.", { exact: true })).toBeVisible();
     assert.equal((await (await visitor.request.get(origin + `/api/public/manage/${token}`)).json()).calendarState, "not_required");
-    guest.once("dialog", dialog => dialog.accept());
     await guest.getByRole("button", { name: "Cancel booking", exact: true }).click();
+    await guest.getByRole("button", { name: "Confirm cancellation", exact: true }).click();
     await expect(guest.getByText("This booking has been cancelled.", { exact: true })).toBeVisible();
     const afterCancel = await (await owner.request.get(origin + "/__fixtures/status")).json();
     assert.equal(afterCancel.delivery_outbox.filter(job => job.kind.startsWith("calendar_")).length, 0, "schedule-only lifecycle never queues an impossible provider command");
