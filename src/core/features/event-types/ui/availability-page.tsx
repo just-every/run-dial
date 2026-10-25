@@ -1,3 +1,4 @@
+import { RecordNotFound } from "../../bookings/client";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
@@ -24,6 +25,7 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
   const [eventType, setEventType] = useState<EventTypeRecord>();
   const [timezone, setTimezone] = useState<string | null>();
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -32,6 +34,7 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
     try {
       const [eventResponse, profileResponse] = await Promise.all([api.api.app["event-types"][":id"].$get({ param: { id: eventId } }), api.api.app.profile.$get()]);
       if (epoch !== loadEpoch.current) return;
+      if (eventResponse.status === 404) { setNotFound(true); return; }
       if (!eventResponse.ok || !profileResponse.ok) { const message = await errorMessage(!eventResponse.ok ? eventResponse : profileResponse); if (epoch === loadEpoch.current) setError(message); return; }
       const [record, profile] = await Promise.all([eventResponse.json(), profileResponse.json()]);
       if (epoch !== loadEpoch.current) return;
@@ -40,6 +43,7 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
   }, [eventId]);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; }; }, [load]);
 
+  if (notFound || eventId.length !== 26) return <RecordNotFound kind="event type" back="/app/event-types" />;
   if (timezone === null) return error ? <EmptyState tone="error" title="Availability unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload availability</Button>} /> : <EmptyState title="Configure the host profile" description="Set the host timezone before editing availability." action={<Link to={`${workspace}/profile`} className={buttonClassName()}>Set up host profile</Link>} />;
 
   if (!eventType) return error ? <EmptyState tone="error" title="Availability unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload availability</Button>} /> : <p role="status" className="text-sm text-muted">Loading availability…</p>;

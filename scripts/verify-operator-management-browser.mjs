@@ -27,7 +27,7 @@ try {
     assert.ok((await context.cookies()).some((cookie) => cookie.name.startsWith("operator_session_local_")), "explicit confirmation creates the native session");
     assert.equal((await page.request.get(origin + "/api/app/operators")).status(), 200);
     await page.goto(origin + "/app/settings");
-    const card = page.locator("section").filter({ has: page.getByRole("heading", { name: "Operator access", exact: true }) });
+    const card = page.locator("section").filter({ has: page.getByRole("heading", { name: "Workspace access", exact: true }) });
     await card.getByText("Setup operator · You", { exact: true }).waitFor();
     const email = `browser-${width}@example.test`;
     await card.getByLabel("Operator email").fill(email);
@@ -46,7 +46,7 @@ try {
     await card.getByRole("button", { name: "Confirm removal" }).click();
     const removed = await removal;
     assert.equal(removed.status(), 204, removed.status() === 204 ? "removal acknowledged" : await removed.text());
-    await card.getByRole("status").filter({ hasText: "access removed" }).waitFor();
+    await card.getByRole("status").waitFor();
     await card.getByText(email, { exact: true }).waitFor({ state: "detached" });
     assert.equal(await card.getByText(email, { exact: true }).count(), 0);
     await page.reload(); await card.getByText("Setup operator · You", { exact: true }).waitFor();

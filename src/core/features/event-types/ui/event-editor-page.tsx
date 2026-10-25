@@ -1,3 +1,4 @@
+import { RecordNotFound } from "../../bookings/client";
 import type { ReactNode } from "react";
 import { CorrespondenceEditor } from "./correspondence-editor";
 import { BookingPolicyEditor } from "./booking-policy-editor";
@@ -45,6 +46,7 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
 
   const checkReadiness = useCallback(async () => {
     if (!eventId) return;
@@ -64,12 +66,14 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
     try {
       const response = await api.api.app["event-types"][":id"].$get({ param: { id: eventId } });
       if (epoch !== loadEpoch.current) return;
+      if (response.status === 404) { setNotFound(true); return; }
       if (!response.ok) { const message = await errorMessage(response); if (epoch === loadEpoch.current) setError(message); return; }
       const current = await response.json();
       if (epoch === loadEpoch.current) { setEventType(current); await checkReadiness(); }
     } catch { if (epoch === loadEpoch.current) setError("The event could not be loaded. Reload to try again."); }
   }, [eventId, checkReadiness]);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; readinessEpoch.current += 1; }; }, [load]);
+  if (eventId && (notFound || eventId.length !== 26)) return <RecordNotFound kind="event type" back="/app/event-types" />;
   if (!eventType) return error ? <EmptyState tone="error" title="Event unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload event</Button>} /> : <p role="status" className="text-sm text-muted">Loading event type…</p>;
   const currentEvent = eventType;
   const effectiveId = "id" in currentEvent ? currentEvent.id : eventId;

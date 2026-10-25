@@ -80,7 +80,7 @@ export const availabilityRequestRoutes = new Hono<AppEnvironment>()
   .get("/api/app/availability-requests", validate("query", requestListQuerySchema), async (context) => {
     return context.json(await context.get("services").availabilityRequests.listForOperator(context.req.valid("query").state));
   })
-  .get("/api/app/availability-requests/:id", validate("param", requestIdSchema), async (context) => {
+  .get("/api/app/availability-requests/:id", validate("param", z.object({ id: z.string().min(1).max(200) })), async (context) => {
     const request = await context.get("services").availabilityRequests.getForOperator(context.req.valid("param").id);
     return request ? context.json(request) : apiError(context, 404, "availability_request_not_found", "The alternative-time request does not exist.");
   })

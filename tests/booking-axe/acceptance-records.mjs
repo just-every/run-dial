@@ -59,9 +59,11 @@ export async function bookingRecordDeliveryJourney(browser, owner, origin, booki
       assert.ok(await page.getByText("A detailed discussion of a useful next step.", { exact: false }).first().isVisible());
       for (const [label, zone] of [["Host time", booking.hostTimezone], ["Invitee time", booking.inviteeTimezone]]) {
         const value = page.locator("dl > div").filter({ has: page.getByText(label, { exact: true }) }).locator("dd");
-        const formatter = new Intl.DateTimeFormat("en-US", { timeZone: zone, dateStyle: "medium", timeStyle: "short" });
+        const formatter = new Intl.DateTimeFormat("en-US", { timeZone: zone, weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true });
+        const tokens = [booking.occurrence.startAt, booking.occurrence.endAt].flatMap(instant => formatter.formatToParts(new Date(instant)).filter(part => part.type !== "literal" && !(part.type === "minute" && part.value === "00")).map(part => part.value));
         const text = await value.innerText();
-        assert.ok(text.includes(formatter.format(new Date(booking.occurrence.startAt))) && text.includes(formatter.format(new Date(booking.occurrence.endAt))) && text.includes(zone), `OPER-004 ${label} shows both endpoints and the IANA zone`);
+        assert.ok(tokens.every(token => text.includes(token)), `OPER-004 ${label} shows both local endpoints: ${JSON.stringify({ text, tokens })}`);
+        assert.ok(zone === booking.hostTimezone ? await page.getByText(`Times in ${zone}`, { exact: true }).isVisible() : text.includes(zone), `OPER-004 ${label} has an IANA zone context`);
       }
       assert.ok(await page.getByRole("region", { name: "Booking history" }).getByText(/Created/).isVisible());
       const target = mails[index];
@@ -75,6 +77,7 @@ export async function bookingRecordDeliveryJourney(browser, owner, origin, booki
       assert.equal((await owner.request.post(origin + "/__fixtures/control", { data: { kind: "mail", failure: true } })).status(), 204);
       try { assert.equal((await owner.request.post(origin + "/__fixtures/deliver", { data: { id: target.id } })).status(), 200); }
       finally { await owner.request.post(origin + "/__fixtures/control", { data: { kind: "mail", failure: false } }); }
+      if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click();
       await page.getByRole("button", { name: "Refresh deliveries", exact: true }).click();
       await row(target.id).getByText("Failed", { exact: true }).waitFor();
       assert.ok(await row(target.id).getByText("Last failure: provider unavailable", { exact: true }).isVisible(), "OPER-004 names the recorded failure");
@@ -88,6 +91,7 @@ export async function bookingRecordDeliveryJourney(browser, owner, origin, booki
       await row(target.id).getByText("Retry: queued", { exact: true }).waitFor();
       assert.equal(await row(target.id).getByRole("button", { name: "Retry delivery", exact: true }).count(), 0);
       assert.equal((await owner.request.post(origin + "/__fixtures/deliver", { data: { id: retry.id } })).status(), 200);
+      if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click();
       await page.getByRole("button", { name: "Refresh deliveries", exact: true }).click();
       await row(retry.id).getByText("Sent", { exact: true }).waitFor();
       await row(target.id).getByText("Retry: sent", { exact: true }).waitFor();

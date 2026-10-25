@@ -83,7 +83,7 @@ try {
     await page.getByRole("heading", { name: booking.invitee_name, exact: true }).waitFor();
   }
   await selectBooking();
-  await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
+  if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
   await page.getByRole("heading", { name: "Calendar conflicts", exact: true }).waitFor();
   assert.ok(await page.getByText("External edited room", { exact: false }).count());
   assert.ok(await page.getByText(/Australia\/Brisbane/).count()); assert.ok(await page.getByText(/America\/New_York/).count());
@@ -158,7 +158,7 @@ try {
 
   await externalConflict({ ...moved, startAt: occurrence.start_at, endAt: occurrence.end_at });
   await selectBooking();
-  await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
+  if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
   await page.getByRole("heading", { name: "Calendar conflicts", exact: true }).waitFor();
   const currentConflict = (await snapshot()).booking_calendar_conflicts.find((row) => row.booking_id === booking.id && row.occurrence_id === moved.current_occurrence_id && row.state === "open");
   assert.ok(currentConflict);
@@ -197,7 +197,7 @@ try {
   await page.getByRole("button").filter({ hasText: booking.invitee_name }).click();
   await page.getByRole("heading", { name: booking.invitee_name, exact: true }).waitFor();
   assert.equal(await calendarDelivery.innerText(), "Update pending");
-  await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
+  if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
   await page.getByRole("dialog", { name: "Calendar conflicts", exact: true }).waitFor();
   assert.equal(await page.getByRole("button", { name: "Restore booking time", exact: true }).count(), 0, "a restored conflict cannot be restored again from the hydrated UI");
   await page.keyboard.press("Escape");
@@ -220,7 +220,7 @@ try {
   await page.reload();
   await page.getByRole("button").filter({ hasText: blocked.invitee_name }).click();
   await page.getByRole("heading", { name: blocked.invitee_name, exact: true }).waitFor();
-  await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
+  if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
   await page.getByRole("heading", { name: "Calendar conflicts", exact: true }).waitFor();
   let cancellationRequests = 0;
   page.on("request", (request) => { if (request.url() === `${origin}/api/app/bookings/${blocked.id}/cancel`) cancellationRequests++; });

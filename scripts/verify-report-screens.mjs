@@ -22,7 +22,7 @@ try {
   const { capture, shots } = screenRecorder({ browser, origin, folder, storageState: await owner.storageState() });
   const march = "from=2026-03-01&to=2026-03-31";
   for (const width of widths) {
-    await capture(width, "report-populated", `/app/bookings?view=report&${march}`, async page => { await page.getByRole("heading", { name: "Bookings created" }).waitFor(); await page.locator('[data-tile-count="created"]').getByText("19").waitFor(); await page.getByRole("region", { name: "Figures not available yet" }).waitFor(); });
+    await capture(width, "report-populated", `/app/bookings?view=report&${march}`, async page => { await page.getByRole("heading", { name: "Bookings created" }).waitFor(); await page.locator('[data-tile-count="created"]').getByText("19").waitFor(); await page.getByRole("heading", { name: "How these are counted" }).waitFor(); });
     await capture(width, "report-one-event-type", `/app/bookings?view=report&${march}&eventTypeId=${deep.id}`, async page => { await page.locator('[data-tile-count="created"]').getByText("3", { exact: true }).waitFor(); });
     await capture(width, "report-empty", "/app/bookings?view=report&from=2025-01-01&to=2025-01-31", async page => { await page.getByText("No bookings in this period").waitFor(); });
     await capture(width, "report-failed", `/app/bookings?view=report&${march}`, async page => { await page.getByRole("alert").getByText("could not", { exact: false }).waitFor(); }, { setup: page => page.route("**/api/app/reports/scheduling**", route => route.abort()) });

@@ -26,7 +26,7 @@ export function SignInPage({ options }: { options: SigninOptions }) {
   return <main data-signin-ready={enhancedReady || undefined} className="grid min-h-screen place-items-center bg-paper px-4 py-10">
     <Card className="w-full max-w-[440px] p-6 sm:rounded-[24px]! sm:p-8">
       <div className="flex items-start justify-between gap-4"><Link to="/" reloadDocument className="inline-flex items-center gap-2 text-[26px] font-extrabold leading-none tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></Link><MiniDial size={56} className="mini-dial -mt-2" /></div>
-      <p className="mt-7 text-xs font-bold uppercase tracking-[.12em] text-muted">Operator access</p>
+      <p className="mt-7 text-xs font-bold uppercase tracking-[.12em] text-muted">Workspace access</p>
       <h1 className="mt-2 text-[34px] font-extrabold leading-[1.05] tracking-[-.02em]">Sign in with a magic link.</h1>
       <p className="mt-3 text-[15px] leading-6 text-soft">Enter an allow-listed operator email. Password sign-in is not available.</p>
       {!options.local && !options.setup ? <p className="mt-3 text-sm leading-6 text-soft">Deploy claims the owner automatically. Sign in with the owner email chosen for deployment or an invited operator email. Hosted sign-in needs a working mail provider and access to that inbox.</p> : null}

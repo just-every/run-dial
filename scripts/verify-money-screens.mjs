@@ -150,7 +150,7 @@ try {
     await capture(width, "paid-invoice-cancel-refund-choice", invoiceRecord, async page => {
       await invoiceSection(page);
       // The invoice is paid through the general ledger and has no booking_payments row.
-      await page.getByRole("button", { name: "Cancel booking", exact: true }).click();
+      if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click();
       const form = page.getByRole("form", { name: "Cancel booking" });
       await form.waitFor({ timeout: 5000 });
       await form.getByText("Refund everything paid, $108.88 USD.", { exact: false }).waitFor();
@@ -187,7 +187,7 @@ try {
   for(const width of widths)await capture(width,'payments-accounting-connected','/app/settings',async page=>{const section=await accountingSection(page);await section.getByRole('button',{name:'Export to QuickBooks Online',exact:true}).click();await section.getByRole('alert').waitFor();return section;});
   // PAY-003 (D4): the host cancels a paid booking from its record; everything paid is refunded unless the operator
   // refunds less with a reason, which the invitee's cancellation email and manage page then state.
-  const cancelForm = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); const form = page.getByRole("form", { name: "Cancel booking" }); await form.getByText("Refund everything paid, $90.00 USD.", { exact: false }).waitFor(); return form; };
+  const cancelForm = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); const form = page.getByRole("form", { name: "Cancel booking" }); await form.getByText("Refund everything paid, $90.00 USD.", { exact: false }).waitFor(); return form; };
   for (const width of widths) {
     await capture(width, "booking-record-cancel-form", record, async page => { const form = await cancelForm(page); await form.scrollIntoViewIfNeeded(); return form; });
     await capture(width, "booking-record-cancel-less-refused", record, async page => {

@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { Button, Card, Input, Select, Textarea, noticeClassName } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
-import { correspondenceTemplateKeys, defaultCorrespondenceConfig, editableCorrespondenceTemplates, invalidTemplateVariables, type CorrespondenceConfig, type CorrespondenceTemplateKey } from "../../../shared/correspondence";
+import { correspondenceTemplateKeys, correspondenceVariables, defaultCorrespondenceConfig, editableCorrespondenceTemplates, invalidTemplateVariables, type CorrespondenceConfig, type CorrespondenceTemplateKey } from "../../../shared/correspondence";
 import { CorrespondencePreview } from "./correspondence-preview";
 import { RequestRoutingFields } from "./request-routing-fields";
 
@@ -17,6 +17,22 @@ const kinds = [
   { name: "Reminder email", keys: ["reminderSubject", "reminderBody"] },
 ] as const;
 const variables = ["invitee full name", "invitee first name", "host name", "event name", "date and time", "duration", "location"];
+
+function questionVariableNames(questions: readonly { key: string; label: string }[]) {
+  const used = new Set<string>([...correspondenceVariables, ...questions.map(question => `answer.${question.key}`)]);
+  return new Map(questions.map((question, index) => {
+    const label = question.label.replace(/[{}]/gu, "").trim() || `Question ${index + 1}`;
+    let name = label, number = 1;
+    while (used.has(name)) name = `${label} (question ${number++})`;
+    used.add(name);
+    return [`answer.${question.key}`, name];
+  }));
+}
+
+/** Translate whole variables once, preserving literal text and unknown variables for validation. */
+function replaceTemplateVariables(text: string, names: ReadonlyMap<string, string>) {
+  return text.replace(/\{([^{}]*)\}/gu, (token, name: string) => names.has(name) ? `{${names.get(name)}}` : token);
+}
 
 export function CorrespondenceEditor(props: Props) {
   return <CorrespondenceForm key={props.eventId} {...props} />;
@@ -43,6 +59,9 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
   }, [eventId, loadAttempt]);
 
   const stableQuestions = questions.filter((question): question is { key: string; label: string; private?: boolean } => typeof question.key === "string" && question.key.length > 0);
+  const questionNames = questionVariableNames(stableQuestions);
+  const storedNames = new Map([...questionNames].map(([stored, label]) => [label, stored]));
+  const displayText = (text: string) => replaceTemplateVariables(text, questionNames);
   const templates = editableCorrespondenceTemplates(value, stableQuestions);
   const calendar = kindIndex === 0, selected = kinds[kindIndex];
   const availableQuestions = stableQuestions.filter(question => !calendar || !question.private);
@@ -52,7 +71,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
     const allowedQuestions = stableQuestions.filter(question => !isCalendar || !question.private).map(question => question.key);
     const unknown = invalidTemplateVariables(text, allowedQuestions);
     if (isCalendar) for (const token of ["manage link", "message"]) if (text.includes(`{${token}}`)) unknown.push(token);
-    const errors = [...new Set(unknown)].map(name => `Unknown or unavailable variable: {${name}}.`);
+    const errors = [...new Set(unknown)].map(name => `Unknown or unavailable variable: ${displayText(`{${name}}`)}.`);
     if (!text.trim()) errors.push("Enter template text or restore the default.");
     const singleLine = key === "calendarTitle" || key.endsWith("Subject");
     if (text.length > (singleLine ? 500 : 10_000)) errors.push("This template exceeds its length limit.");
@@ -62,7 +81,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
   const invalid = correspondenceTemplateKeys.filter(key => issues[key].length);
   const disabled = !hydrated || !loaded || saving;
   function update(key: CorrespondenceTemplateKey, text: string | null) {
-    setValue(current => ({ ...current, templates: { ...current.templates, [key]: text } }));
+    setValue(current => ({ ...current, templates: { ...current.templates, [key]: text === null ? null : replaceTemplateVariables(text, storedNames) } }));
     setStatus(""); setError("");
   }
   async function save(event: React.FormEvent) {
@@ -98,7 +117,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
         </label>
         {selected.keys.map((key, index) => {
           const label = calendar ? index === 0 ? "Title" : "Description" : index === 0 ? "Subject" : "Body";
-          const control = { id: `${id}-${key}`, value: templates[key], disabled, required: true, "aria-invalid": loaded && issues[key].length > 0, "aria-describedby": issues[key].length ? `${id}-${key}-errors` : undefined, onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => update(key, event.target.value) };
+          const control = { id: `${id}-${key}`, value: displayText(templates[key]), disabled, required: true, "aria-invalid": loaded && issues[key].length > 0, "aria-describedby": issues[key].length ? `${id}-${key}-errors` : undefined, onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => update(key, event.target.value) };
           return <div key={key} className="grid min-w-0 gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2"><label htmlFor={control.id} className="text-sm font-semibold">{label} <span className="font-normal text-muted">· {value.templates[key] == null ? "Default" : "Custom"}</span></label><Button type="button" variant="quiet" disabled={disabled || value.templates[key] == null} onClick={() => update(key, null)}>Restore default</Button></div>
             {index === 0 ? <Input {...control} maxLength={500} /> : <Textarea {...control} maxLength={10_000} rows={9} />}
@@ -108,7 +127,7 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions }: Props)
         <details className="min-w-0 text-sm leading-6 text-soft"><summary className="cursor-pointer font-semibold text-ink">Available variables</summary>
           <p className="mt-2">Use the braces exactly as shown.</p>
           <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">{[...variables, ...(calendar ? [] : ["manage link", "message"])].map(variable => <li key={variable}><code className="break-all">{`{${variable}}`}</code></li>)}</ul>
-          {availableQuestions.length ? <ul className="mt-3 grid gap-1">{availableQuestions.map(question => <li key={question.key} className="break-words [overflow-wrap:anywhere]">{question.label}: <code>{`{answer.${question.key}}`}</code>{question.private ? " (private answer; email only)" : ""}</li>)}</ul> : null}
+          {availableQuestions.length ? <ul className="mt-3 grid gap-1">{availableQuestions.map(question => <li key={question.key} className="break-words [overflow-wrap:anywhere]">{question.label}: <code>{displayText(`{answer.${question.key}}`)}</code>{question.private ? " (private answer; email only)" : ""}</li>)}</ul> : null}
           {calendar ? <p className="mt-3">Calendar invitations are shared with guests and delegates. Use private answers and manage booking links in emails.</p> : <p className="mt-3">The message variable contains the sender’s message when one is available.</p>}
         </details>
         {loaded ? <CorrespondencePreview templates={templates} keys={selected.keys} questionKeys={questionKeys} hostName={hostName} eventTitle={eventTitle} questions={availableQuestions} calendar={calendar} invitationManageLinkEnabled={value.invitationManageLinkEnabled} invalid={selected.keys.some(key => issues[key].length > 0)} /> : null}

@@ -49,7 +49,7 @@ export function OperatorAccessCard() {
     finally { setWorking(false); }
   }
   return <Card className="p-5 sm:p-6 xl:col-span-2">
-    <SectionHeading icon="people" title="Operator access" />
+    <SectionHeading icon="people" title="Workspace access" />
     <p className="mt-3 text-sm leading-6 text-soft">Every operator has equal access. Removal erases their identity, sessions, private links and local mail. Authored records remain anonymous and the shared calendar stays connected. Erase matching invitee bookings and requests from their detail pages before removing an operator.</p>
     {error ? <p role="alert" className={noticeClassName("error", "mt-3")}>{error}</p> : null}
     {notice ? <p role="status" className={noticeClassName("success", "mt-3")}>{notice}</p> : null}

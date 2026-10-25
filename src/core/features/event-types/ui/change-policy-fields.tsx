@@ -35,12 +35,12 @@ function CutoffField({ action, value, onChange }: { action: "rescheduling" | "ca
   return <div className="grid content-start gap-2">
     <div className="grid grid-cols-[minmax(0,1fr)_7rem] items-end gap-2">
       <label className="grid min-w-0 gap-2 text-sm font-[650]">Block invitee {action} within
-        <Input type="number" min="0" step="any" value={value === null ? "" : value / minutesPerUnit[unit]} placeholder="Deployment default" aria-describedby={helpId} onChange={event => onChange(event.target.value === "" ? null : Math.round(Number(event.target.value) * minutesPerUnit[unit]))} />
+        <Input type="number" min="0" step="any" value={value === null ? "" : value / minutesPerUnit[unit]} placeholder="Workspace default" aria-describedby={helpId} onChange={event => onChange(event.target.value === "" ? null : Math.round(Number(event.target.value) * minutesPerUnit[unit]))} />
       </label>
       <label className="grid gap-2 text-sm font-[650]"><span className="sr-only">Invitee {action} cut-off unit</span>
         <Select value={unit} onChange={event => setUnit(event.target.value as CutoffUnit)}><option value="hours">Hours</option><option value="days">Days</option></Select>
       </label>
     </div>
-    <p id={helpId} className="text-sm leading-6 text-soft">Before the start. Leave blank to inherit the deployment’s {action} policy. Zero allows changes until the start. Hours or days are stored to the nearest minute.</p>
+    <p id={helpId} className="text-sm leading-6 text-soft">Before the start. Leave blank to use the workspace’s {action} settings. Zero allows changes until the start. Hours or days are stored to the nearest minute.</p>
   </div>;
 }
