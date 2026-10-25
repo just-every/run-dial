@@ -1,7 +1,7 @@
 import { PublicFooter, PublicHeader, PublicTheme } from "./public-shell";
 
 export function PublicPrivacyPage() {
-  return <PublicTheme><PublicHeader /><main className="mx-auto w-[calc(100%-40px)] max-w-3xl min-h-[calc(100vh-80px)] py-9"><section className="grid gap-5 rounded-[24px] bg-card p-5 leading-7 shadow-[var(--shadow)] sm:p-10"><p className="pb-eyebrow">Privacy notice</p><h1 className="text-[clamp(32px,5vw,47px)] leading-none">Your booking information</h1>
+  return <PublicTheme><PublicHeader /><main className="mx-auto w-[calc(100%-40px)] max-w-3xl min-h-[calc(100vh-80px)] py-9"><section className="grid gap-5 rounded-[24px] bg-card p-5 leading-[1.6] [&>p]:text-muted shadow-[var(--shadow)] sm:p-10"><p className="pb-eyebrow">Privacy notice</p><h1 className="text-[clamp(32px,5vw,47px)] leading-none">Your booking information</h1>
     <p>Dial keeps the details you submit to arrange your meeting. Your host and their connected calendar and email services receive the details needed for your booking.</p>
     <p>Booking links can suggest your name, email and answers. You can change them before confirming; they do not verify your identity. Campaign and link source information is saved with your booking and shown to the host.</p>
     <p>A host’s thank-you page may receive contact details, answers and source information they chose to share. Dial never adds private answers, payment details or private booking links.</p>

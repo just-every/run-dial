@@ -98,7 +98,7 @@ export async function verifyEmptyWorkspace(origin) {
 
 async function emptyProfile(page) {
   await expect(page.getByLabel("Name", { exact: true })).toHaveValue("");
-  await expect(page.getByRole("textbox", { name: /^Host timezone/ })).toHaveValue("");
+  await expect(page.getByRole("combobox", { name: "Host timezone", exact: true })).toHaveValue("");
   await expect(page.getByRole("button", { name: "Save profile", exact: true })).toBeEnabled();
   await expect(page.getByRole("heading", { name: "Profile unavailable", exact: true })).toHaveCount(0);
   await expect(page.getByText("Loading profile…", { exact: true })).toHaveCount(0);

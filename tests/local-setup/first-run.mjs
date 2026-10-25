@@ -16,7 +16,8 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   await page.getByLabel("Name", { exact: true }).fill("Local owner");
   await page.getByLabel("Title", { exact: true }).fill("Preserved local work");
   await page.getByLabel("Public handle", { exact: true }).fill("preserved-host");
-  await page.getByRole("textbox", { name: /^Host timezone/ }).fill("Australia/Brisbane");
+  await page.getByRole("combobox", { name: "Host timezone", exact: true }).fill("Australia/Brisbane");
+  await page.getByRole("option", { name: "Australia/Brisbane", exact: true }).click();
   await page.getByLabel("Biography", { exact: true }).fill("Owner data survives restore.");
   onPhase("first-run profile save");
   const saved = page.waitForResponse(response => new URL(response.url()).pathname === "/api/app/profile" && response.request().method() === "PATCH");
