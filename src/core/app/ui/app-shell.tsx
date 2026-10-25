@@ -12,6 +12,7 @@ import { readProfile } from "../../features/host-profile/read-profile";
 import { Button, buttonClassName } from "./primitives";
 import { Icon, type IconName } from "../../shared/drawing/icons";
 import { BrandMark } from "../../features/public-booking";
+import { RouteLoadPending, WorkspaceBootstrapRecovery } from "./route-load-error";
 
 const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
   ["Overview", "/app", "home"],
@@ -27,7 +28,7 @@ type ProfileSummary = { name: string; title: string; handle: string };
 
 export function AppShell() {
   const initial = useLoaderData({ from: "/app" });
-  return <Suspense fallback={null}><WorkspaceShell reads={initial.reads} /></Suspense>;
+  return <Suspense fallback={<RouteLoadPending />}><WorkspaceShell reads={initial.reads} /></Suspense>;
 }
 
 function WorkspaceShell({ reads: pending }: { reads: WorkspaceReads | Promise<WorkspaceReads> }) {
@@ -70,6 +71,7 @@ function AppShellContent() {
   }
 
   return (
+    <>
     <div data-operator-ready={hydrated} inert={!hydrated} className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
       {initial.editorConfigured ? <OwnerEditorShell /> : null}
       <div className="hidden border-r border-line bg-sidebar lg:block">
@@ -86,6 +88,8 @@ function AppShellContent() {
       </header>
       <main className="mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10"><Outlet /></main>
     </div>
+    {!hydrated ? <WorkspaceBootstrapRecovery /> : null}
+    </>
   );
 }
 

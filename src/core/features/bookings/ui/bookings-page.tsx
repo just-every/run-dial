@@ -1,3 +1,4 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { CalendarWorkspace } from "./calendar-workspace";
 import { PollsWorkspace } from "../../polls/client";
 import { ApprovalRequests } from "./approval-requests";
@@ -81,15 +82,16 @@ function BookingList(): React.JSX.Element {
   return <div className="grid gap-7">
     <PageHeader eyebrow="Booking workspace" title="Bookings" description="Review bookings, delivery state, and attendance." actions={<><Link to="/app/bookings" search={() => ({ ...Object.fromEntries(new URLSearchParams(writeBookingFilters("", filters))), view: "calendar" })} className={buttonClassName("secondary")}>Calendar</Link><Link to="/app/bookings" search={() => ({ view: "polls" })} className={buttonClassName("secondary")}>Meeting polls</Link><Link to="/app/bookings" search={() => ({ view: "clients" })} className={buttonClassName("secondary")}>Clients</Link><Link to="/app/bookings" search={() => ({ view: "report" })} className={buttonClassName("secondary")}>Scheduling report</Link><Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link></>} />
     {notice ? <p ref={noticeElement} tabIndex={-1} role="status" aria-label="Booking update" className={noticeClassName("success", "font-semibold")}>{notice}</p> : null}
-    {listError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{listError}</p> : null}
+    {listError ? <WorkspaceLoadState error={listError} onRetry={() => load()} /> : null}
     {eventTypesError ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{eventTypesError}</p> : null}
     {erasedId ? <ErasureRecovery bookingId={erasedId} /> : null}
     {filters.report ? <ReportDrillNotice filters={filters} /> : null}
     <ApprovalRequests onChanged={load} />
     <BookingsFilterBar filters={filters} eventTypes={eventTypes} hostTimezone={hostTimezone} onChange={changeFilters} onClear={clearFilters} />
     <p className="text-sm font-semibold text-soft" role="status" aria-live="polite">
-      {loading ? "Loading bookings…" : bookings === undefined ? "Bookings unavailable" : `Showing ${firstVisible.toLocaleString()}–${lastVisible.toLocaleString()} of ${totalCount.toLocaleString()} matching booking${totalCount === 1 ? "" : "s"}`}
+      {loading ? null : bookings === undefined ? null : `Showing ${firstVisible.toLocaleString()}–${lastVisible.toLocaleString()} of ${totalCount.toLocaleString()} matching booking${totalCount === 1 ? "" : "s"}`}
     </p>
+    {loading && !listError ? <WorkspaceLoadState label="Loading bookings…" onRetry={() => load()} /> : null}
     {!loading && bookings && pageCount > 1 ? <nav className="flex flex-wrap items-center gap-3" aria-label="Booking result pages">
       <button type="button" className={buttonClassName("secondary")} onClick={() => void navigate(filters, Math.max(1, page - 1))} disabled={page <= 1}>Previous page</button>
       <span className="text-sm text-muted">Page {page.toLocaleString()} of {pageCount.toLocaleString()}</span>

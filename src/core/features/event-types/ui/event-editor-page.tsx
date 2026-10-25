@@ -1,3 +1,4 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import type { ReactNode } from "react";
 import { CorrespondenceEditor } from "./correspondence-editor";
 import { BookingPolicyEditor } from "./booking-policy-editor";
@@ -45,6 +46,7 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [missing, setMissing] = useState(false);
 
   const checkReadiness = useCallback(async () => {
     if (!eventId) return;
@@ -60,17 +62,17 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
   }, [eventId]);
   const load = useCallback(async () => {
     if (!eventId) return;
-    const epoch = ++loadEpoch.current; setError("");
+    const epoch = ++loadEpoch.current; setError(""); setMissing(false);
     try {
       const response = await api.api.app["event-types"][":id"].$get({ param: { id: eventId } });
       if (epoch !== loadEpoch.current) return;
-      if (!response.ok) { const message = await errorMessage(response); if (epoch === loadEpoch.current) setError(message); return; }
+      if (!response.ok) { const message = await errorMessage(response); if (epoch === loadEpoch.current) { setMissing(response.status === 404 || response.status === 400); setError(message); } return; }
       const current = await response.json();
       if (epoch === loadEpoch.current) { setEventType(current); await checkReadiness(); }
     } catch { if (epoch === loadEpoch.current) setError("The event could not be loaded. Reload to try again."); }
   }, [eventId, checkReadiness]);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; readinessEpoch.current += 1; }; }, [load]);
-  if (!eventType) return error ? <EmptyState tone="error" title="Event unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload event</Button>} /> : <p role="status" className="text-sm text-muted">Loading event type…</p>;
+  if (!eventType) return missing ? <EmptyState title="Event unavailable" description="This event could not be found." action={<Link to={`${workspace}/event-types`} className={buttonClassName("secondary")}>Event types</Link>} /> : <WorkspaceLoadState error={error} label="Loading event type…" onRetry={() => load()} />;
   const currentEvent = eventType;
   const effectiveId = "id" in currentEvent ? currentEvent.id : eventId;
 

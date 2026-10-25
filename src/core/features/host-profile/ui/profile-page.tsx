@@ -1,9 +1,9 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { HostAvatar } from "./host-avatar";
 import { AvatarEditor } from "./avatar-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
-import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
 import { Button, Card, Input, Textarea, noticeClassName } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
@@ -34,7 +34,7 @@ export function ProfilePage() {
   }, []);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; }; }, [load]);
 
-  if (!profile) return error ? <EmptyState tone="error" title="Profile unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload profile</Button>} /> : <p role="status" className="text-sm text-muted">Loading profile…</p>;
+  if (!profile) return <WorkspaceLoadState error={error} label="Loading profile…" onRetry={() => load()} />;
 
   function update<K extends keyof ProfileInput>(key: K, value: ProfileInput[K]) {
     setSaved(false);

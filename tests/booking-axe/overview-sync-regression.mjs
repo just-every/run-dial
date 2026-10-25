@@ -50,10 +50,10 @@ export async function overviewSynchronizationRegression(browser, origin, storage
     await page.locator('[data-operator-ready="true"]').waitFor();
     await page.route("**/_serverFn/**", route => route.abort("failed"));
     await page.getByRole("link", { name: "Overview", exact: true }).click();
-    await page.getByRole("heading", { name: "This page could not finish loading", exact: true }).waitFor();
+    await page.getByRole("alert").waitFor();
     assert.equal(await page.getByText("0 bookings", { exact: true }).count(), 0, "a refused transport never becomes a false empty workspace");
     await page.unrouteAll({ behavior: "wait" });
-    await page.getByRole("button", { name: "Reload page", exact: true }).click();
+    await page.getByRole("button", { name: "Retry", exact: true }).click();
     await overviewCards(page).bookingCard.getByText("2 bookings", { exact: true }).waitFor();
     await overviewCards(page).requestCard.getByText("2 requests", { exact: true }).waitFor();
   } finally { await context.close(); }
