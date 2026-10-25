@@ -76,7 +76,7 @@ function BookingList(): React.JSX.Element {
 
   async function refreshBooking() {
     await load(false);
-    if (selected && !bookings?.some(booking => booking.id === selected)) {
+    if (selected) {
       const response = await api.api.app.bookings[":id"].$get({ param: { id: selected } });
       if (response.ok) setSelectedRecord(await response.json());
       else setNotice(await errorMessage(response));
@@ -124,17 +124,17 @@ function BookingList(): React.JSX.Element {
       <span className="text-sm text-muted">Page {page.toLocaleString()} of {pageCount.toLocaleString()}</span>
       <button type="button" className={buttonClassName("secondary")} onClick={() => void navigate(filters, Math.min(pageCount, page + 1))} disabled={page >= pageCount}>Next page</button>
     </nav> : null}
-    {loading || bookings === undefined ? null : bookings.length === 0
+    {loading || bookings === undefined ? null : bookings.length === 0 && !active
       ? filtered
         ? <EmptyState title="No bookings match these filters" description="Change a filter or clear them to see more bookings." action={<button type="button" className={buttonClassName()} onClick={clearFilters}>Clear filters</button>} />
         : <EmptyState title="No bookings yet" description="Create an operator booking or turn an agreed alternative request into one." action={<Link to="/app/requests" className={buttonClassName()}>Open requests</Link>} />
       : <div className="grid items-start gap-5 xl:grid-cols-[minmax(260px,.8fr)_minmax(0,1.4fr)]">
-        <Card className="divide-y divide-line-soft overflow-hidden">
+        {bookings.length ? <Card className="divide-y divide-line-soft overflow-hidden">
           {bookings.map((booking) => <button type="button" className={`dial-list-row w-full px-5 py-4 text-left transition-colors ${active?.id === booking.id ? "bg-gold-wash" : "hover:bg-row"}`} onClick={() => void routeNavigate({ to: "/app/bookings/$id", params: { id: booking.id }, search: previous => previous, resetScroll: false })} key={booking.id}>
             <div className="flex items-start justify-between gap-3"><strong className="min-w-0 text-base font-bold leading-[1.3]">{booking.inviteeName}</strong>{booking.state === "confirmed" && booking.attendance?.status === "no_show" ? <Badge>No-show</Badge> : <BookingBadge state={booking.state} />}</div>
             <p className="mt-1 truncate text-sm text-muted">{timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.hostTimezone)} · {booking.eventTitle}{booking.imported ? " · Imported" : ""}</p>
           </button>)}
-        </Card>
+        </Card> : <EmptyState title="No bookings match these filters" description="Change a filter or clear them to see more bookings." action={<button type="button" className={buttonClassName()} onClick={clearFilters}>Clear filters</button>} />}
         {active ? <BookingDetail key={active.id} showTimezone={false} booking={active} onChanged={async (message) => { setNotice(message ?? ""); await refreshBooking(); }} onCancel={cancel} onAttendance={attendance} onErased={(message, id) => { setNotice(message); void navigate(filters, page, true, id).then(() => load()); }} /> : null}
       </div>}
   </div>;

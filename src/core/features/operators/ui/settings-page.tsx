@@ -1,3 +1,4 @@
+import { useDocumentInstant } from "../../../app/document-data";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { readProfile } from "../../host-profile";
 import { mailConnectionMessage } from "../../../platform/mail/connection-message";
@@ -97,6 +98,6 @@ function CalendarConnection({ timezone, health, calendars, destination, conflict
 }
 
 function HealthBadge({ state }: { state?: "healthy" | "unhealthy" | "disconnected" | "unchecked" }) { return <Badge tone={state === "healthy" ? "success" : "warning"}>{state === "healthy" ? "Healthy" : state === "unhealthy" ? "Needs attention" : state === "unchecked" ? "Not yet checked" : "Not connected"}</Badge>; }
-function ConnectionFacts({ checkedAt, reason, timezone }: { timezone: string | null; checkedAt?: string | null; reason?: string | null }) { return <div className="mt-4 text-sm leading-6 text-ink">{reason ? <p>Status: {reason.replaceAll("_", " ")}.</p> : null}<p>{checkedAt ? `Last checked ${operatorTimestamp(checkedAt, timezone ?? "UTC")}.` : "Not yet checked."}</p></div>; }
+function ConnectionFacts({ checkedAt, reason, timezone }: { timezone: string | null; checkedAt?: string | null; reason?: string | null }) { const referenceInstant = useDocumentInstant(); return <div className="mt-4 text-sm leading-6 text-ink">{reason ? <p>Status: {reason.replaceAll("_", " ")}.</p> : null}<p>{checkedAt ? `Last checked ${operatorTimestamp(checkedAt, timezone ?? "UTC", referenceInstant)}.` : "Not yet checked."}</p></div>; }
 
 function calendarLabel(calendar: Calendar) { return calendar.primary ? `${calendar.id} (primary)` : calendar.id; }

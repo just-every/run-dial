@@ -73,9 +73,11 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   await page.goto(origin + "/setup/event-types");
   const eventCard = page.locator(".dial-event-card").first();
   const moreActions = eventCard.getByRole("button", { name: "More actions", exact: true });
+  await expect(eventCard).toBeVisible();
+  const cardCopy = eventCard.getByRole("button", { name: "Copy booking link", exact: true });
   if (await moreActions.isVisible()) await moreActions.click();
   else await eventCard.hover();
-  await page.getByRole("main").getByRole("button", { name: "Copy booking link", exact: true }).click();
+  await cardCopy.click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText("Booking link copied.");
   assert.equal(await page.evaluate(() => globalThis.navigator.clipboard.readText()), expected);
   await page.goto(origin + "/setup");
