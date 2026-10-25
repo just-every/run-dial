@@ -38,7 +38,10 @@ function boundRouteReads(route: AnyRoute) {
 
 // React's lazy boundary reports a missing private chunk before any document reload.
 // TanStack's generated lazy component reloads automatically on its first import failure.
-const privateChunks = import.meta.glob<{ component: ComponentType }>("./routes/app*.tsx", { query: "?tsr-split=component" });
+const privateChunks = import.meta.glob<{ component: ComponentType }>([
+  "./routes/app.event-types_.$id_.availability.tsx",
+  "./routes/app.event-types_.$id_.preview.tsx",
+], { query: "?tsr-split=component" });
 function recoverPrivateChunks(routes: AnyRoute[]) {
   if (typeof document === "undefined") return;
   for (const route of routes) {
