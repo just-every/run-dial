@@ -26,7 +26,7 @@ export function PublicHeader({ profilePath, embedded = false, step }: { profileP
     return () => document.removeEventListener("keydown", close);
   }, [menuOpen]);
   return <header className={`pb-header ${step ? "" : "pb-header-simple"}`}>
-    <Link className="pb-brand" to="/" reloadDocument aria-label="Dial home"><BrandMark /><span data-rer-name>Dial</span></Link>
+    <Link className="pb-brand min-h-11" to="/" reloadDocument aria-label="Dial home"><BrandMark /><span data-rer-name>Dial</span></Link>
     {step ? <nav className="pb-progress" aria-label="Booking progress">{["Choose time", "Your details", "Confirmed"].map((label, index) => <span key={label} aria-current={step === index + 1 ? "step" : undefined}><b>{index + 1}</b>{label}</span>)}</nav> : null}
     <div className="pb-header-links"><a href={clientMount.deploymentConfig.privacyNoticeUrl} target={embedded ? "_blank" : undefined} rel={embedded ? "noreferrer" : undefined}>Privacy notice</a>{profilePath ? <a href={profilePath}>View event types</a> : null}</div>
     <button ref={menuButton} type="button" className="pb-menu-button" aria-expanded={menuOpen} aria-controls="public-navigation" onClick={() => setMenuOpen((open) => !open)}><span aria-hidden="true">☰</span> Menu</button>
