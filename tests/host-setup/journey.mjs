@@ -108,7 +108,7 @@ export async function hostJourneys(origin, scenario) {
         const publish = page.getByRole("button", { name: "Publish event type", exact: true });
         if (requestsOnly) { await expect(publish).toBeDisabled(); await expect(page.getByRole("link", { name: "Add at least one open availability window.", exact: true })).toBeVisible(); }
         await page.getByRole("button", { name: requestsOnly ? "Open requests" : "Publish event type", exact: true }).click();
-        await expect(page.getByRole("button", { name: "Copy embed code (inline)", exact: true })).toBeVisible();
+        await expect(page.getByRole("link", { name: "Embed on your website", exact: true })).toBeVisible();
         step = "security probes"; await securityJourney(page, origin, eventId);
         step = "deleted event recovery"; await deletedEventRecovery(browser, context, origin, eventId, requestsOnly);
         step = "clipboard and embeds"; await clipboardJourney({ browser, page, context, origin, eventId, requestsOnly, scan });

@@ -1,3 +1,4 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { useWorkspaceRead, useWorkspaceHeader } from "../../../app/workspace-reads";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
@@ -102,8 +103,8 @@ function ActivityCard<T>({
 
   return <Card className="min-w-0 p-5 sm:p-6">
     <SectionHeading icon={icon} title={title} description={description} action={<Link to={href} className={`${textLinkClassName} text-[15px]`}>{action}</Link>} />
-    {state.status === "loading" ? <p className="mt-5 text-sm leading-6 text-muted">{loadingText}</p> : null}
-    {state.status === "error" ? <p role="alert" className="mt-5 text-sm leading-6 text-danger">{errorText}</p> : null}
+    {state.status === "loading" ? <WorkspaceLoadState label={loadingText} /> : null}
+    {state.status === "error" ? <WorkspaceLoadState error={errorText} /> : null}
     {state.status === "loaded" && state.total === 0 ? <p className="mt-5 text-sm leading-6 text-soft">{emptyText}</p> : null}
     {state.status === "loaded" && state.items.length > 0 ? <ul aria-label={listLabel} className="mt-4 divide-y divide-line-soft">{state.items.slice(0, 3).map(renderItem)}</ul> : null}
   </Card>;

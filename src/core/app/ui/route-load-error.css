@@ -1,0 +1,57 @@
+.workspace-load-state {
+  position: relative;
+  min-height: 3rem;
+}
+
+.workspace-load-failure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.workspace-load-failed .workspace-load-pending {
+  display: none;
+}
+
+/* SSR keeps recovery usable even when the document's entry module never hydrates. */
+.workspace-load-waiting .workspace-load-pending {
+  animation: workspace-loading-expired 0s 10s forwards;
+}
+
+.workspace-load-waiting .workspace-load-failure {
+  position: absolute;
+  inset: 0 auto auto 0;
+  visibility: hidden;
+  animation: workspace-loading-failed 0s 10s forwards;
+}
+
+[inert] .workspace-load-failure {
+  display: none;
+}
+
+.workspace-bootstrap-recovery {
+  position: fixed;
+  inset: auto 1rem 1rem;
+  z-index: 50;
+  max-width: 28rem;
+  margin-inline: auto;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: var(--card, #fcfaf5);
+  box-shadow: 0 4px 24px #0002;
+  visibility: hidden;
+  animation: workspace-loading-failed 0s 10s forwards;
+}
+
+.workspace-bootstrap-recovery .workspace-load-pending {
+  display: none;
+}
+
+@keyframes workspace-loading-expired {
+  to { visibility: hidden; }
+}
+
+@keyframes workspace-loading-failed {
+  to { visibility: visible; }
+}

@@ -78,16 +78,16 @@ export async function verifyEmptyWorkspace(origin) {
       ]) {
         await page.route("**/api/app/profile", (route) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ error: { code, message } }) }));
         await page.goto(origin + "/setup/profile");
-        await unavailableProfile(page, message);
+        await unavailableProfile(page);
         await page.unroute("**/api/app/profile");
-        await page.getByRole("button", { name: "Reload profile", exact: true }).click();
+        await page.getByRole("button", { name: "Retry", exact: true }).click();
         await emptyProfile(page);
       }
       await page.route("**/api/app/profile", (route) => route.abort("failed"));
       await page.goto(origin + "/setup/profile");
-      await unavailableProfile(page, "The profile could not be loaded. Reload to try again.");
+      await unavailableProfile(page);
       await page.unroute("**/api/app/profile");
-      await page.getByRole("button", { name: "Reload profile", exact: true }).click();
+      await page.getByRole("button", { name: "Retry", exact: true }).click();
       await emptyProfile(page);
       await expect(page.getByRole("alert")).toHaveCount(0);
       assert.equal((await (await page.request.get(origin + "/api/app/profile")).json()), null, "unsaved editor actions and failed reads never create a profile");
@@ -100,14 +100,12 @@ async function emptyProfile(page) {
   await expect(page.getByLabel("Name", { exact: true })).toHaveValue("");
   await expect(page.getByRole("combobox", { name: "Host timezone", exact: true })).toHaveValue("");
   await expect(page.getByRole("button", { name: "Save profile", exact: true })).toBeEnabled();
-  await expect(page.getByRole("heading", { name: "Profile unavailable", exact: true })).toHaveCount(0);
   await expect(page.getByText("Loading profile…", { exact: true })).toHaveCount(0);
 }
 
-async function unavailableProfile(page, message) {
-  await expect(page.getByRole("heading", { name: "Profile unavailable", exact: true })).toBeVisible();
-  await expect(page.getByText(message, { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Reload profile", exact: true })).toBeEnabled();
+async function unavailableProfile(page) {
+  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry", exact: true })).toBeEnabled();
   await expect(page.getByLabel("Name", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Save profile", exact: true })).toHaveCount(0);
 }

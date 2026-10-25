@@ -1,3 +1,4 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
@@ -24,15 +25,16 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
   const [eventType, setEventType] = useState<EventTypeRecord>();
   const [timezone, setTimezone] = useState<string | null>();
   const [error, setError] = useState("");
+  const [missing, setMissing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     const epoch = ++loadEpoch.current;
-    setError("");
+    setError(""); setMissing(false);
     try {
       const [eventResponse, profileResponse] = await Promise.all([api.api.app["event-types"][":id"].$get({ param: { id: eventId } }), api.api.app.profile.$get()]);
       if (epoch !== loadEpoch.current) return;
-      if (!eventResponse.ok || !profileResponse.ok) { const message = await errorMessage(!eventResponse.ok ? eventResponse : profileResponse); if (epoch === loadEpoch.current) setError(message); return; }
+      if (!eventResponse.ok || !profileResponse.ok) { setMissing(eventResponse.status === 404 || eventResponse.status === 400); const message = await errorMessage(!eventResponse.ok ? eventResponse : profileResponse); if (epoch === loadEpoch.current) setError(message); return; }
       const [record, profile] = await Promise.all([eventResponse.json(), profileResponse.json()]);
       if (epoch !== loadEpoch.current) return;
       setEventType((current) => current ?? record); setTimezone(profile?.timezone ?? null);
@@ -42,7 +44,7 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
 
   if (timezone === null) return error ? <EmptyState tone="error" title="Availability unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload availability</Button>} /> : <EmptyState title="Configure the host profile" description="Set the host timezone before editing availability." action={<Link to={`${workspace}/profile`} className={buttonClassName()}>Set up host profile</Link>} />;
 
-  if (!eventType) return error ? <EmptyState tone="error" title="Availability unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload availability</Button>} /> : <p role="status" className="text-sm text-muted">Loading availability…</p>;
+  if (!eventType) return missing ? <EmptyState title="Event unavailable" description="This event could not be found." action={<Link to={`${workspace}/event-types`} className={buttonClassName("secondary")}>Event types</Link>} /> : <WorkspaceLoadState error={error} label="Loading availability…" onRetry={() => load()} />;
 
   const currentEventType = eventType;
   const update = (availability: AvailabilityWindowInput[]) => setEventType({ ...currentEventType, availability });

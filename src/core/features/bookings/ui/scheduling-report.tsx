@@ -1,9 +1,10 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { api, errorMessage } from "../../../api/client";
 import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader } from "../../../app/ui/page-header";
-import { Button, Card, Input, Select, buttonClassName, noticeClassName } from "../../../app/ui/primitives";
+import { Button, Card, Input, Select, buttonClassName } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
 import type { EventTypeRecord } from "../../event-types";
 import type { SchedulingReport } from "../../reports/client";
@@ -36,8 +37,8 @@ export function SchedulingReportView({ filters, eventTypes, onChange }: { filter
       <label className={fieldLabel}>Event type<Select value={eventTypeId ?? "all"} onChange={event => onChange({ eventTypeId: event.currentTarget.value === "all" ? undefined : event.currentTarget.value })}><option value="all">All event types</option>{eventTypes.map(eventType => <option value={eventType.id} key={eventType.id}>{eventType.title}</option>)}</Select></label>
       <div className="flex items-end"><Button type="button" variant="quiet" onClick={() => onChange({ from: undefined, to: undefined, eventTypeId: undefined })} disabled={!from && !to && !eventTypeId}>Last 30 days, all event types</Button></div>
     </fieldset></Card>
-    {error ? <div role="alert" className={noticeClassName("error", "font-semibold")}>{error} <Button type="button" variant="quiet" onClick={() => void load()}>Try again</Button></div> : null}
-    <p className="text-sm font-semibold text-soft" role="status" aria-live="polite">{loading ? "Loading the report…" : report ? `Period ${report.period.fromDate} to ${report.period.throughDate} in ${report.period.timezone}` : "Report unavailable"}</p>
+    {error || loading ? <WorkspaceLoadState error={error} label="Loading the report…" onRetry={() => { setError(""); return load(); }} /> : null}
+    {!loading && report ? <p className="text-sm font-semibold text-soft" role="status" aria-live="polite">{`Period ${report.period.fromDate} to ${report.period.throughDate} in ${report.period.timezone}`}</p> : null}
     {!loading && empty ? <EmptyState title="No bookings in this period" description="Choose a longer period or another event type. Figures appear as bookings are created, moved, canceled and paid." /> : null}
     {!loading && report && !empty ? <div className="grid items-start gap-5 xl:grid-cols-2">{report.tiles.map(tile => <ReportTileCard key={tile.key} tile={tile} report={report} />)}</div> : null}
     <Card className="p-5 sm:p-6"><section aria-label="Figures not available yet"><h2 className="text-[19px] font-[750] leading-[1.25] text-ink">Not available on this install yet</h2>
