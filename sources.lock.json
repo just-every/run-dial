@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "c6e428217d08ef761058274cf939b1747804ab1a81bfb183111e34ee9f41b797",
+      "sha256": "7a435e7c4b4c1c4d66891a38083368f88fed258f91721e4e249a9757606adab8",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "06c9fda64eaa51b6143bbd62d772393a742b54788999577fa1b1d9a349bfea69",
+      "sha256": "efc8e2e37437c8aae161ee282a0b234fabc031570a8ebf8f6e57a9bf26b34e2f",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "1afa39d7b1e1a7f303d437106886b6a597fdbe35cc583e7976856e8e034815ca",
+      "sha256": "6b833277361fabc5a7224946ba90e5f721c10a97dd7b5ff2fd071b4710102868",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -1641,6 +1641,10 @@
     },
     "evidence/contract/2026-10-21/PAY-001/stripe-test-mode.json": {
       "sha256": "f45a9041f72cb777f3c07a16355f9b4c4faf06ab6e13eba0e8abbb712df0107c",
+      "executable": false
+    },
+    "evidence/contract/2026-10-26/PAY-006/qbo-sandbox.json": {
+      "sha256": "98ed4a167216d614cad1dd32055dfe17b62bd0fc2536761e38cdc044fdaa3f0e",
       "executable": false
     },
     "HANDOVER.md": {
@@ -4461,6 +4465,10 @@
     },
     "scripts/verify-acceptance-capacity.mjs": {
       "sha256": "97edc6837c2e68eafb6ceeba4c4d656d4c1e9fe5fc49f302a55054abe4b9b470",
+      "executable": false
+    },
+    "scripts/verify-accounting-qbo-sandbox.mjs": {
+      "sha256": "eb5206e241450d152a0de2f1442452835f5313a60aeb173df8fb5eb0a95a8335",
       "executable": false
     },
     "scripts/verify-approval-screens.mjs": {
@@ -8064,7 +8072,7 @@
       "executable": false
     },
     "tests/booking-wire/payment-fixtures.ts": {
-      "sha256": "40ef9a22620c85f77ac574d4f93efc6371b071e845fda213a686b3d67c1a40a8",
+      "sha256": "72cffeefb5f5dbc5ffbb5b0b69892fc3df1396d3e37f1047893443a87e25f5f2",
       "executable": false
     },
     "tests/booking-wire/payment-journey.mjs": {

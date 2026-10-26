@@ -1,0 +1,267 @@
+{
+  "startedAt": "2026-10-26T14:21:49.718Z",
+  "sourceHead": "537bf535d2440e061ac565a74258943ebc0affd4",
+  "identity": "QuickBooks Online sandbox company, Intuit development keys; Stripe test mode",
+  "realmLast4": "8911",
+  "grantEntry": "held fleet grant exchanged once by the harness and seeded by fixture; Dial's refresh path and the OAuth consent door were not exercised",
+  "grantEntryExecuted": true,
+  "rotationRule": "When you get a new refresh token, the previous refresh token value automatically expires.",
+  "steps": [
+    {
+      "at": "2026-10-26T14:21:51.372Z",
+      "name": "held grant exchanged once and store-back verified",
+      "http": 200,
+      "rotated": "no",
+      "storeBackVerificationExit": 0,
+      "providerRequests": {
+        "dial": {},
+        "direct": {
+          "oauth.platform.intuit.com POST": 1
+        }
+      }
+    },
+    {
+      "at": "2026-10-26T14:22:31.019Z",
+      "name": "public booking paid on Stripe's hosted test page",
+      "http": 202,
+      "paymentIntentLast4": "y2Lu",
+      "chargeLast4": "ElGu",
+      "providerRequests": {
+        "dial": {
+          "api.stripe.com POST": 1
+        },
+        "direct": {
+          "oauth.platform.intuit.com POST": 1,
+          "api.stripe.com GET": 4,
+          "api.stripe.com POST": 1
+        }
+      }
+    },
+    {
+      "at": "2026-10-26T14:22:31.033Z",
+      "name": "Dial accounting door",
+      "route": "GET /api/app/payments/accounting",
+      "http": 200,
+      "state": "connected",
+      "receiptCardinality": 0,
+      "providerRequests": {
+        "dial": {
+          "api.stripe.com POST": 1
+        },
+        "direct": {
+          "oauth.platform.intuit.com POST": 1,
+          "api.stripe.com GET": 4,
+          "api.stripe.com POST": 1
+        }
+      }
+    },
+    {
+      "at": "2026-10-26T14:22:32.696Z",
+      "name": "Dial accounting door",
+      "route": "GET /api/app/payments/accounting/accounts",
+      "http": 200,
+      "state": "connected",
+      "receiptCardinality": 0,
+      "providerRequests": {
+        "dial": {
+          "api.stripe.com POST": 1,
+          "sandbox-quickbooks.api.intuit.com GET": 1
+        },
+        "direct": {
+          "oauth.platform.intuit.com POST": 1,
+          "api.stripe.com GET": 4,
+          "api.stripe.com POST": 1
+        }
+      }
+    },
+    {
+      "at": "2026-10-26T14:22:34.026Z",
+      "name": "Dial accounting door",
+      "route": "PUT /api/app/payments/accounting/mapping",
+      "http": 200,
+      "state": "connected",
+      "receiptCardinality": 0,
+      "providerRequests": {
+        "dial": {
+          "api.stripe.com POST": 1,
+          "sandbox-quickbooks.api.intuit.com GET": 3,
+          "sandbox-quickbooks.api.intuit.com POST": 1
+        },
+        "direct": {
+          "oauth.platform.intuit.com POST": 1,
+          "api.stripe.com GET": 4,
+          "api.stripe.com POST": 1
+        }
+      }
+    },
+    {
+      "at": "2026-10-26T14:22:34.763Z",
+      "name": "Dial accounting door",
+      "route": "POST /api/app/payments/accounting/export",
+      "http": 409,
+      "state": "accounting_custom_transaction_numbers_required",
+      "receiptCardinality": 0,
+      "providerRequests": {
+        "dial": {
+          "api.stripe.com POST": 1,
+          "sandbox-quickbooks.api.intuit.com GET": 4,
+          "sandbox-quickbooks.api.intuit.com POST": 1
+        },
+        "direct": {
+          "oauth.platform.intuit.com POST": 1,
+          "api.stripe.com GET": 4,
+          "api.stripe.com POST": 1
+        }
+      }
+    }
+  ],
+  "calls": {
+    "dial": {
+      "api.stripe.com POST": 1,
+      "sandbox-quickbooks.api.intuit.com GET": 4,
+      "sandbox-quickbooks.api.intuit.com POST": 1
+    },
+    "direct": {
+      "oauth.platform.intuit.com POST": 1,
+      "api.stripe.com GET": 9,
+      "api.stripe.com POST": 3,
+      "sandbox-quickbooks.api.intuit.com GET": 2,
+      "sandbox-quickbooks.api.intuit.com POST": 1,
+      "api.stripe.com DELETE": 1
+    }
+  },
+  "relayRefusals": 0,
+  "cleanup": {
+    "item": {
+      "last4": "30",
+      "updateHttp": 200,
+      "active": false
+    },
+    "refund": {
+      "last4": "fhyj",
+      "status": "succeeded",
+      "amountCents": 2500
+    },
+    "session": {
+      "last4": "aqQ2",
+      "state": "complete"
+    },
+    "catalogue": [],
+    "stripePayment": "FAILED",
+    "webhook": {
+      "last4": "ohVR",
+      "readbackHttp": 404
+    }
+  },
+  "pids": [
+    {
+      "kind": "pnpm",
+      "pid": 5205
+    },
+    {
+      "kind": "booking-wire runtime",
+      "pid": 8366
+    },
+    {
+      "kind": "browser",
+      "pid": 8796
+    }
+  ],
+  "notProven": [
+    "Intuit consent with a real login",
+    "Dial's refresh path against Intuit",
+    "Xero",
+    "Pantry",
+    "tax-bearing receipts",
+    "deployed webhook delivery",
+    "production and deployed proofs"
+  ],
+  "exchange": {
+    "at": "2026-10-26T14:21:51.015Z",
+    "http": 200,
+    "expiresInSeconds": 3600,
+    "refreshLifeWholeDays": 100
+  },
+  "rotation": {
+    "rotated": "no",
+    "storeBackVerificationExit": 0
+  },
+  "anonymousPayloads": true,
+  "browserRevision": "1248",
+  "envelopeAccountAddedByHarness": true,
+  "payment": {
+    "kind": "real Stripe test-mode hosted payment through Dial's public booking door",
+    "intentLast4": "y2Lu",
+    "chargeLast4": "ElGu",
+    "amountCents": 2500,
+    "taxCents": 0,
+    "localWebhookDelivery": true
+  },
+  "classification": "QuickBooks Online sandbox Income accounts accepted by Dial; export preferences read refused CustomTxnNumbers; HomeCurrency check not reached",
+  "mapping": {
+    "accountLast4": "85",
+    "itemLast4": "30",
+    "itemCreated": true
+  },
+  "result": "FAILED cleanup",
+  "failure": "BLOCKED sandbox-preference CustomTxnNumbers",
+  "scratchRemoved": true,
+  "finishedAt": "2026-10-26T14:22:39.131Z",
+  "supplementalCleanup": {
+    "startedAt": "2026-10-26T14:25:51.420Z",
+    "priorAttempts": [
+      {
+        "calls": {
+          "api.stripe.com GET": 4
+        },
+        "result": "ownership title includes the duration; stopped before mutation"
+      },
+      {
+        "calls": {
+          "api.stripe.com GET": 4,
+          "api.stripe.com POST": 1
+        },
+        "result": "run-owned product archive refused HTTP 400 invalid_request_error"
+      }
+    ],
+    "calls": {
+      "api.stripe.com GET": 4
+    },
+    "steps": [
+      {
+        "priceLast4": "JFbH",
+        "priceActive": false,
+        "productLast4": "zwNo",
+        "productActive": false,
+        "priceCleanup": "inline price cannot be updated, reused or deleted through API",
+        "productCleanup": "archive refused HTTP 400; read-back state recorded"
+      }
+    ],
+    "customersCreated": 0,
+    "result": "read-back complete",
+    "finishedAt": "2026-10-26T14:25:53.463Z"
+  },
+  "finalResult": "BLOCKED sandbox-preference CustomTxnNumbers",
+  "cleanupResolved": true,
+  "notRunAfterRefusal": [
+    "export retry",
+    "independent SalesReceipt read-back",
+    "connected Settings captures at 1440 and 390",
+    "local accounting disconnect status sequence"
+  ],
+  "totalCalls": {
+    "dial": {
+      "api.stripe.com POST": 1,
+      "sandbox-quickbooks.api.intuit.com GET": 4,
+      "sandbox-quickbooks.api.intuit.com POST": 1
+    },
+    "direct": {
+      "oauth.platform.intuit.com POST": 1,
+      "api.stripe.com GET": 21,
+      "api.stripe.com POST": 4,
+      "sandbox-quickbooks.api.intuit.com GET": 2,
+      "sandbox-quickbooks.api.intuit.com POST": 1,
+      "api.stripe.com DELETE": 1
+    }
+  }
+}
