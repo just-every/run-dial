@@ -30,6 +30,7 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
   const form = useRef<HTMLFormElement>(null);
   const inFlight = useRef(false);
   const loadEpoch = useRef(0);
+  const edited = useRef(false);
   const slugEdited = useRef(false);
   const readinessEpoch = useRef(0);
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
       if (epoch !== loadEpoch.current) return;
       if (!response.ok) { const message = await errorMessage(response); if (epoch === loadEpoch.current) { setMissing(response.status === 404 || response.status === 400); setError(message); } return; }
       const current = await response.json();
-      if (epoch === loadEpoch.current) { setEventType(current); await checkReadiness(); }
+      if (epoch === loadEpoch.current && !edited.current) { setEventType(current); await checkReadiness(); }
     } catch { if (epoch === loadEpoch.current) setError("The event could not be loaded. Reload to try again."); }
   }, [eventId, checkReadiness]);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; readinessEpoch.current += 1; }; }, [load]);
@@ -77,6 +78,7 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
   const effectiveId = "id" in currentEvent ? currentEvent.id : eventId;
 
   function update<K extends keyof EventTypeInput>(key: K, value: EventTypeInput[K]) {
+    edited.current = true;
     setEventType((current) => current ? { ...current, [key]: value, ...(key === "title" && !effectiveId && !slugEdited.current ? { slug: String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) } : {}) } : current);
     if (key === "slug") slugEdited.current = true;
     readinessEpoch.current += 1; setChecking(false); setReadiness(undefined); setHasChanges(true);
