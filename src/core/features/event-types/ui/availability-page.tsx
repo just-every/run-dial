@@ -21,6 +21,7 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
   const hydrated = useHydrated();
   const inFlight = useRef(false);
   const loadEpoch = useRef(0);
+  const edited = useRef(false);
   const navigate = useNavigate();
   const [eventType, setEventType] = useState<EventTypeRecord>();
   const [timezone, setTimezone] = useState<string | null>();
@@ -36,7 +37,7 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
       if (epoch !== loadEpoch.current) return;
       if (!eventResponse.ok || !profileResponse.ok) { setMissing(eventResponse.status === 404 || eventResponse.status === 400); const message = await errorMessage(!eventResponse.ok ? eventResponse : profileResponse); if (epoch === loadEpoch.current) setError(message); return; }
       const [record, profile] = await Promise.all([eventResponse.json(), profileResponse.json()]);
-      if (epoch !== loadEpoch.current) return;
+      if (epoch !== loadEpoch.current || edited.current) return;
       setEventType((current) => current ?? record); setTimezone(profile?.timezone ?? null);
     } catch { if (epoch === loadEpoch.current) setError("Availability could not be loaded. Reload to try again."); }
   }, [eventId]);
@@ -47,7 +48,10 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
   if (!eventType) return missing ? <EmptyState title="Event unavailable" description="This event could not be found." action={<Link to={`${workspace}/event-types`} className={buttonClassName("secondary")}>Event types</Link>} /> : <WorkspaceLoadState error={error} label="Loading availability…" onRetry={() => load()} />;
 
   const currentEventType = eventType;
-  const update = (availability: AvailabilityWindowInput[]) => setEventType({ ...currentEventType, availability });
+  const update = (availability: AvailabilityWindowInput[]) => {
+    edited.current = true;
+    setEventType({ ...currentEventType, availability });
+  };
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (inFlight.current || !hydrated || !timezone) return;
