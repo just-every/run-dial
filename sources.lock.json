@@ -844,7 +844,7 @@
       "executable": false
     },
     ".github/workflows/nightly-journeys.yml": {
-      "sha256": "27be2a6f09cc1b5f90497e3450b80c51d57bfaefd3e493c964f852395f399007",
+      "sha256": "be27cdb6947b33f2e840b9846cf11635a45c2aaede0940fcaa023c4cc1b73fe4",
       "executable": false
     },
     ".github/workflows/rer-managed.yml": {
@@ -860,7 +860,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "d70b782dff111ac5fa8b6782bc1e3e4425e34fc5767b42b977e9ffd2a89c7f9b",
+      "sha256": "cda4090545e66665dc8e7224dfd8e76c7519fdd01007b69e9e917d9b0ec5e7d8",
       "executable": false
     },
     ".gitignore": {
@@ -4011,6 +4011,10 @@
       "sha256": "7e2ad0bd14f7d4447dc9c345785061229873e8023c3752b631bc827cfca3a09a",
       "executable": false
     },
+    "scripts/chromium-probe.mjs": {
+      "sha256": "740ce6fd15d364e133d921fc468a899d171a89c7072329ad4ed5ea17bbbf8fdd",
+      "executable": false
+    },
     "scripts/ci-apt-bootstrap.mjs": {
       "sha256": "406ca38763975704c6911224bdeba27f4b6269e2b2b82e76db5ccb1b2d1e46c6",
       "executable": false
@@ -4025,6 +4029,14 @@
     },
     "scripts/ci-verify.mjs": {
       "sha256": "c10f74ffc53536da8f42ccff177f5ca7f4efa3b7dbfe6494682de1d4e0b15296",
+      "executable": false
+    },
+    "scripts/ci/browser-needed.mjs": {
+      "sha256": "e2ffe725db39d1d4ab983d356f2b4478d2d3d9ef34f3dbdb429588e1de03f982",
+      "executable": false
+    },
+    "scripts/ci/verify-plan.sh": {
+      "sha256": "a97119952fd7df95fce2db434147de1915b79f39da5b5b57bdc168c3027fa956",
       "executable": false
     },
     "scripts/client-chunks.ts": {
@@ -4229,6 +4241,10 @@
     },
     "scripts/evidence-path.mjs": {
       "sha256": "dde02a49b35ceaa916cd2d26743cf6ad36210a9413951d4c43f70044aecd9276",
+      "executable": false
+    },
+    "scripts/install-chromium-deps.py": {
+      "sha256": "2a440497b38ae9e33eb44a21b02b5bdbd158ced46662987dc2fa0b903659df17",
       "executable": false
     },
     "scripts/installer/local.mjs": {

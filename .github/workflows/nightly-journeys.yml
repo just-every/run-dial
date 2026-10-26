@@ -5,7 +5,7 @@ on:
     tags:
       - "v*"
   schedule:
-    - cron: "17 16 * * *"
+    - cron: "17 3 * * 1,4"
   workflow_dispatch:
     inputs:
       ref:
@@ -34,21 +34,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ inputs.ref || github.ref }}
-      - name: Reclaim disposable hosted-runner SDKs for native CLI proof
-        if: ${{ runner.environment == 'github-hosted' && runner.os == 'Linux' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ "$GITHUB_ACTIONS" == "true" && "$RUNNER_ENVIRONMENT" == "github-hosted" && "$RUNNER_OS" == "Linux" ]]
-          available_bytes() {
-            df -B1 --output=avail "$1" | tail -n 1 | tr -d ' '
-          }
-          printf 'Before checkout available bytes: %s\n' "$(available_bytes "$GITHUB_WORKSPACE")"
-          printf 'Before temporary available bytes: %s\n' "$(available_bytes "$RUNNER_TEMP")"
-          # Dial uses none of these preinstalled SDKs. Keep the native CLI's real disk guard.
-          sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
-          printf 'After checkout available bytes: %s\n' "$(available_bytes "$GITHUB_WORKSPACE")"
-          printf 'After temporary available bytes: %s\n' "$(available_bytes "$RUNNER_TEMP")"
       - uses: pnpm/action-setup@v4
         with:
           version: 10.12.4
@@ -61,11 +46,19 @@ jobs:
           sudo sysctl -w "net.ipv4.ip_local_reserved_ports=$ports"
           node scripts/ci-runtime-ports.mjs --check
       - run: pnpm install --frozen-lockfile
-      - name: Install Chromium and native dependencies
+      - name: Identify browser journey
+        id: browser
+        run: node scripts/ci/browser-needed.mjs journeys ${{ matrix.journey }} >> "$GITHUB_OUTPUT"
+      - name: Install Chromium
+        if: steps.browser.outputs.browser == 'true'
         timeout-minutes: 5
         run: |
-          sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS "$(command -v node)" scripts/ci-apt-bootstrap.mjs
-          pnpm exec playwright install --with-deps chromium
+          set -euo pipefail
+          pnpm exec playwright install chromium
+          if ! pnpm exec node scripts/chromium-probe.mjs; then
+            sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS env "PATH=$PATH" "APT_ARCHIVES=$RUNNER_TEMP/rer-apt/archives" python3 scripts/install-chromium-deps.py
+            pnpm exec node scripts/chromium-probe.mjs
+          fi
       - name: Run complete slow journey
         env:
           DIAL_TEST_DIAGNOSTICS_DIR: ${{ runner.temp }}/dial-test-diagnostics
