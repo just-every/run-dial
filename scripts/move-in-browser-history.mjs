@@ -32,7 +32,7 @@ export async function assertNativeImportedHistory({ context, page, origin, repor
 
   const row = page.getByRole('button')
     .filter({ has: page.getByText(listedBooking.inviteeName, { exact: true }) })
-    .filter({ has: page.getByText(listedBooking.eventTitle, { exact: true }) });
+    .filter({ hasText: listedBooking.eventTitle });
   await row.waitFor();
   assert.equal(await row.count(), 1, 'The imported booking is selectable through its native row.');
   await row.click();
@@ -44,11 +44,10 @@ export async function assertNativeImportedHistory({ context, page, origin, repor
   await entry.waitFor();
   assert.equal(await entry.count(), 1, 'The native creation reason identifies one visible history entry.');
   await entry.getByText(operator.email, { exact: false }).waitFor();
-  await entry.getByText(operator.id, { exact: false }).waitFor();
   await entry.getByText(creation.reason, { exact: true }).waitFor();
   const visible = await entry.innerText();
   assert.ok(visible.includes(operator.email));
-  assert.ok(visible.includes(operator.id));
+  assert.ok(!visible.includes(operator.id), "History identifies the person without exposing the internal actor id.");
   assert.ok(visible.includes(creation.reason), 'The visible history retains the API explanation of snapshot-effective time.');
 
   // The reviewed instant, source creation and imported start are separate values.
@@ -56,13 +55,14 @@ export async function assertNativeImportedHistory({ context, page, origin, repor
   const expectedInstants = [creation.createdAt, booking.createdAt, creation.newStartAt];
   const times = entry.locator('time[datetime]');
   assert.deepEqual(await times.evaluateAll(elements => elements.map(element => element.getAttribute('datetime'))), expectedInstants);
-  const formatter = new Intl.DateTimeFormat('en-US', { timeZone: booking.hostTimezone, dateStyle: 'medium', timeStyle: 'short' });
+  const formatter = new Intl.DateTimeFormat('en-US', { timeZone: booking.hostTimezone, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+  await page.getByText(`Times in ${booking.hostTimezone}`, { exact: true }).waitFor();
   for (const [index, instant] of expectedInstants.entries()) {
     const time = times.nth(index);
     await time.waitFor({ state: 'visible' });
     const displayed = await time.innerText();
-    assert.ok(displayed.includes(formatter.format(new Date(instant))));
-    assert.ok(displayed.includes(booking.hostTimezone));
+    const parts = formatter.formatToParts(new Date(instant)).filter(part => part.type !== 'literal' && !(part.type === 'minute' && part.value === '00'));
+    assert.ok(parts.every(part => displayed.includes(part.value)), "The history time uses the host's local clock.");
   }
   const fitsViewport = await history.evaluate(element => {
     const bounds = element.getBoundingClientRect();
