@@ -1,0 +1,14 @@
+.dial-event-card { min-width: 0; }
+.dial-list-row { display: block; width: 100%; text-align: left; }
+.dial-more > summary { display: list-item; width: fit-content; min-height: 44px; padding: 10px 14px; cursor: pointer; font-size: 14px; font-weight: 650; border-radius: 12px; }
+.dial-more > summary:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+.dial-event-controls { min-width: 0; }
+.dial-event-more { display: inline-flex; align-items: center; justify-content: center; }
+.dial-event-actions { display: none; }
+.dial-event-actions[data-open="true"] { display: flex; }
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+  .dial-event-more { display: none; }
+  .dial-event-actions { display: flex; opacity: 0; pointer-events: none; }
+  .dial-event-card:hover .dial-event-actions,
+  .dial-event-card:focus-within .dial-event-actions { opacity: 1; pointer-events: auto; }
+}

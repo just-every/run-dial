@@ -1,4 +1,5 @@
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
+import { RecordNotFound } from "../../bookings/client";
 import type { ReactNode } from "react";
 import { CorrespondenceEditor } from "./correspondence-editor";
 import { BookingPolicyEditor } from "./booking-policy-editor";
@@ -73,7 +74,8 @@ function EventEditorForm({ eventId, workspace = "/app", priceEditor }: { eventId
     } catch { if (epoch === loadEpoch.current) setError("The event could not be loaded. Reload to try again."); }
   }, [eventId, checkReadiness]);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; readinessEpoch.current += 1; }; }, [load]);
-  if (!eventType) return missing ? <EmptyState title="Event unavailable" description="This event could not be found." action={<Link to={`${workspace}/event-types`} className={buttonClassName("secondary")}>Event types</Link>} /> : <WorkspaceLoadState error={error} label="Loading event type…" onRetry={() => load()} />;
+  if (eventId && (missing || eventId.length !== 26)) return <RecordNotFound kind="event type" back="/app/event-types" />;
+  if (!eventType) return <WorkspaceLoadState error={error} label="Loading event type…" onRetry={() => load()} />;
   const currentEvent = eventType;
   const effectiveId = "id" in currentEvent ? currentEvent.id : eventId;
 

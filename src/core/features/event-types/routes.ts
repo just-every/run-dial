@@ -128,7 +128,7 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       const event = await context.get("services").eventTypes.duplicateEventType(context.req.valid("param").id);
       return event ? context.json(event, 201) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })
-    .get("/api/app/event-types/:id", validate("param", idSchema), async (context) => {
+    .get("/api/app/event-types/:id", validate("param", z.object({ id: z.string().min(1).max(200) })), async (context) => {
       const eventType = await context.get("services").eventTypes.getEventType(context.req.valid("param").id);
       return eventType ? context.json(eventType) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })

@@ -63,7 +63,7 @@ try {
   await page.screenshot({ path: evidencePath("booking-operator-desktop.png"), fullPage: true });
   await page.request.post(origin + "/__fixtures/control", { data: { kind: "cancel", failure: true } });
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Erase invitee data", exact: true }).click();
+  if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Erase invitee data", exact: true }).click();
   await page.getByRole("heading", { name: "Erasure cleanup", exact: true }).waitFor();
   await page.request.post(origin + "/__fixtures/deliver", { data: {} });
   await page.getByRole("button", { name: "Refresh cleanup status", exact: true }).click();

@@ -1,4 +1,5 @@
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
+import { RecordNotFound } from "../../bookings/client";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
@@ -43,9 +44,10 @@ function AvailabilityForm({ eventId, workspace = "/app" }: { eventId: string; wo
   }, [eventId]);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; }; }, [load]);
 
+  if (missing || eventId.length !== 26) return <RecordNotFound kind="event type" back="/app/event-types" />;
   if (timezone === null) return error ? <EmptyState tone="error" title="Availability unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload availability</Button>} /> : <EmptyState title="Configure the host profile" description="Set the host timezone before editing availability." action={<Link to={`${workspace}/profile`} className={buttonClassName()}>Set up host profile</Link>} />;
 
-  if (!eventType) return missing ? <EmptyState title="Event unavailable" description="This event could not be found." action={<Link to={`${workspace}/event-types`} className={buttonClassName("secondary")}>Event types</Link>} /> : <WorkspaceLoadState error={error} label="Loading availability…" onRetry={() => load()} />;
+  if (!eventType) return <WorkspaceLoadState error={error} label="Loading availability…" onRetry={() => load()} />;
 
   const currentEventType = eventType;
   const update = (availability: AvailabilityWindowInput[]) => {

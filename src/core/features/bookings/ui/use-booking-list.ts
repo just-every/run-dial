@@ -7,7 +7,7 @@ import { bookingListQuery, bookingPageSize, type BookingFilters } from "./bookin
 export function useBookingList(filters: BookingFilters, page: number, moveToPage: (page: number) => Promise<void>) {
   const initialPath = "/api/app/bookings?" + new URLSearchParams(bookingListQuery(filters, page));
   const initialBookings = useWorkspaceRead<BookingRecord[]>(initialPath);
-  const hasInitialBookings = initialBookings !== undefined;
+  const [hasInitialBookings] = useState(initialBookings !== undefined);
   const initialTotal = useWorkspaceHeader(initialPath, "x-total-count");
   const initialProfile = useWorkspaceRead<{ timezone: string }>("/api/app/profile");
   const [bookings, setBookings] = useState<BookingRecord[] | undefined>(initialBookings);

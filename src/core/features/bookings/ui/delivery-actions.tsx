@@ -7,7 +7,7 @@ import { Icon } from "../../../shared/drawing/icons";
 type Cleanup = { completedAt: string | null; lastErrorCode: string | null };
 function retryNotice(state: string) { return state === "succeeded" ? "This retry has already completed." : state === "failed" ? "This retry also failed. Review the latest failed delivery below." : "Retry queued. Provider delivery will be checked again."; }
 
-export function DeliveryActions({ bookingId, onErased }: { bookingId: string; onErased: (notice: string, id: string) => void }) {
+export function useBookingDeliveries({ bookingId, onErased }: { bookingId: string; onErased: (notice: string, id: string) => void }) {
   const [deliveries, setDeliveries] = useState<Delivery[]>();
   const [notice, setNotice] = useState("");
   const [working, setWorking] = useState(false);
@@ -16,8 +16,8 @@ export function DeliveryActions({ bookingId, onErased }: { bookingId: string; on
     try {
       const response = await api.api.app.bookings[":id"].deliveries.$get({ param: { id: bookingId } });
       if (!response.ok) throw new Error(await errorMessage(response));
-      setDeliveries(await response.json()); setLoadError("");
-    } catch { setLoadError("Delivery status could not be loaded. Refresh to try again."); }
+      setDeliveries(await response.json()); setLoadError(""); return true;
+    } catch { setLoadError("Delivery status could not be loaded. Refresh to try again."); return false; }
   }
   useEffect(() => { void load(); }, [bookingId]);
   async function retry(deliveryId: string) {
@@ -37,15 +37,16 @@ export function DeliveryActions({ bookingId, onErased }: { bookingId: string; on
       onErased("Local booking data erased. Calendar cleanup is tracked below.", bookingId);
     } catch { setNotice("Erasure could not be checked. Refresh to check the booking before trying again."); } finally { setWorking(false); }
   }
-  return <div className="mt-6 border-t border-line-soft pt-5">
+  const content = <div className="mt-6 border-t border-line-soft pt-5">
     {deliveries ? <DeliveryList deliveries={deliveries} working={working} onRetry={id => void retry(id)} /> : !loadError ? <p className="text-sm text-muted">Loading deliveries…</p> : null}
     {loadError ? <p role="alert" className={noticeClassName("error", "my-3")}>{loadError}</p> : null}
     {notice ? <p role="status" className={noticeClassName("success", "my-3")}>{notice}</p> : null}
-    <div className="mt-4 flex flex-wrap gap-3">
-      <Button variant="secondary" disabled={working} onClick={() => { setNotice(""); void load(); }}>Refresh deliveries</Button>
-      <Button variant="quiet" disabled={working} onClick={() => void erase()}><Icon name="file" className="line-icon h-5 w-5" />Erase invitee data</Button>
-    </div>
   </div>;
+  const actions = <>
+    <Button variant="secondary" disabled={working} onClick={() => { setNotice(""); void load().then(updated => { if (updated) setNotice("Updated"); }); }}>Refresh deliveries</Button>
+    <Button variant="quiet" disabled={working} onClick={() => void erase()}><Icon name="file" className="line-icon h-5 w-5" />Erase invitee data</Button>
+  </>;
+  return { content, actions };
 }
 
 /** Cleanup references contain no invitee details and survive an operator reload. */

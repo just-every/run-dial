@@ -81,7 +81,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
     finally { setSaving(false); }
   }
   return <div className="grid gap-7">
-    <PageHeader eyebrow={request ? "Alternative request" : "Operator booking"} title={request ? `Book time with ${request.inviteeName}` : "Create booking"} description={request ? `This will link the agreed booking to ${request.eventTitle} and notify the invitee once.` : "Calendar availability is checked before the booking is written."} />
+    <PageHeader title={request ? `Book time with ${request.inviteeName}` : "Create booking"} description={request ? `This will link the agreed booking to ${request.eventTitle} and notify the invitee once.` : "Calendar availability is checked before the booking is written."} />
     {notice ? <p role="alert" className={noticeClassName("error", "font-semibold")}>{notice}</p> : null}
     {hostTimezone === null ? <p role="status" className={noticeClassName("warning")}>Set up the host profile before creating a booking. <Link to="/app/profile" className="font-semibold underline">Set up host profile</Link></p> : null}
     {events && !events.length ? <p role="status" className={noticeClassName("warning")}>Create an event type before creating a booking.</p> : null}

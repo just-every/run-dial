@@ -17,7 +17,7 @@ export function BookingHistory({ booking }: { booking: BookingRecord }) {
   const actor = (entry: BookingHistoryEntry) => {
     if (entry.actorType === "operator") {
       const operator = operators.find(operator => operator.id === entry.actorId);
-      return `Operator ${operator ? `${operator.email} · ` : ""}${entry.actorId ?? "identity not recorded"}`;
+      return operator?.email ?? "Name unavailable";
     }
     return { invitee: "Manage-link holder", calendar_provider: "Calendar provider", system: "System" }[entry.actorType];
   };

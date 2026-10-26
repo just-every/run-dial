@@ -35,8 +35,8 @@ async function requestJourney(context) {
   assert.equal(inbox.length, 1);
   assert.equal(inbox[0].inviteeEmail, body.inviteeEmail);
   const detail = await json(await fetch(`${server.origin}/api/app/availability-requests/${inbox[0].id}`, { headers: { cookie } }));
-  assert.match(detail.windows[0].inviteeLabel, /1:00\sPM UTC\+00:00.*\(UTC\)$/, "REQUEST-003: the window in the invitee's zone");
-  assert.match(detail.windows[0].hostLabel, /11:00\sPM UTC\+10:00.*\(Australia\/Brisbane\)$/, "REQUEST-003: the same window in the host's zone");
+  assert.match(detail.windows[0].inviteeLabel, /, 1-2 PM$/, "REQUEST-003: the window in the invitee's zone");
+  assert.match(detail.windows[0].hostLabel, /, 11 PM-.+, 12 AM$/, "REQUEST-003: the same window in the host's zone");
   const handled = await fetch(`${server.origin}/api/app/availability-requests/${inbox[0].id}/state`, { ...post({ state: "handled" }), headers: { ...post({}).headers, cookie } });
   assert.equal(handled.status, 200, await handled.clone().text());
   const repeatTransition = await fetch(`${server.origin}/api/app/availability-requests/${inbox[0].id}/state`, { ...post({ state: "handled" }), headers: { ...post({}).headers, cookie } });

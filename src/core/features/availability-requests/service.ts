@@ -1,4 +1,5 @@
-import { offsetMinutesForInstant, wallClockInstants } from "../availability";
+import { operatorTimeRange } from "../../shared/operator-format";
+import { wallClockInstants } from "../availability";
 import { hashToken, createOpaqueToken } from "../../platform/auth/tokens";
 import { hostDateToday, isCanonicalIanaTimeZone } from "../../shared/scheduling";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
@@ -228,14 +229,7 @@ function formatWindow(window: RequestedWindow, timeZone: string) {
 function formatWindowInZone(window: RequestedWindow, sourceTimeZone: string, destinationTimeZone: string) {
   const instants = windowInstants(window, sourceTimeZone);
   if (!instants) throw new Error("Persisted alternative request contains a nonexistent local time");
-  const formatter = new Intl.DateTimeFormat(undefined, { timeZone: destinationTimeZone, dateStyle: "medium", timeStyle: "short" });
-  return `${formatter.format(instants.start)} ${utcOffset(offsetMinutesForInstant(instants.start.toISOString(), destinationTimeZone))}–${formatter.format(instants.end)} ${utcOffset(offsetMinutesForInstant(instants.end.toISOString(), destinationTimeZone))} (${destinationTimeZone})`;
-}
-
-function utcOffset(minutes: number) {
-  const sign = minutes >= 0 ? "+" : "-";
-  const absolute = Math.abs(minutes);
-  return `UTC${sign}${String(Math.floor(absolute / 60)).padStart(2, "0")}:${String(absolute % 60).padStart(2, "0")}`;
+  return operatorTimeRange(instants.start.toISOString(), instants.end.toISOString(), destinationTimeZone);
 }
 
 function windowInstants(window: RequestedWindow, timeZone: string) {

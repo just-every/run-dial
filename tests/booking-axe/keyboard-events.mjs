@@ -34,6 +34,25 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   assert.equal((await get(page, origin, `/api/app/event-types/${event.id}`)).title, `Keyboard edited ${width}`);
   await mutation(page, `/api/app/event-types/${event.id}/publish`, () => keys.activate(button(page, "Publish event type"), "Publish event type"));
   assert.equal((await get(page, origin, `/api/app/event-types/${event.id}`)).status, "published");
+  const eventCard = page.locator("section").filter({ has: page.getByRole("heading", { name: `Keyboard edited ${width}`, exact: true }) });
+  async function openCardActions() {
+    await keys.navigate("Event types");
+    await eventCard.waitFor();
+    const more = button(eventCard, "More actions");
+    if (await more.isVisible()) {
+      assert.equal(await more.getAttribute("aria-expanded"), "false");
+      await keys.activate(more, "Reveal event actions");
+      assert.equal(await more.getAttribute("aria-expanded"), "true");
+    }
+  }
+  await openCardActions();
+  await keys.focus(button(eventCard, "Copy booking link"), "Event card copy booking link");
+  await keys.focus(button(eventCard, `Duplicate Keyboard edited ${width}`), "Event card duplicate");
+  await keys.activate(eventCard.getByRole("link", { name: "Edit", exact: true }), "Event card edit");
+  await field(page, "Event name").waitFor();
+  await openCardActions();
+  await keys.activate(eventCard.getByRole("link", { name: "Availability", exact: true }), "Event card availability");
+  await field(page, "Sunday window 1 start time").waitFor();
   await keys.navigate("Availability");
   const card = page.locator("section").filter({ has: page.getByRole("heading", { name: `Keyboard edited ${width}`, exact: true }) });
   await keys.activate(card.getByRole("link", { name: "Edit availability", exact: true }), "Open event from Availability");
@@ -86,5 +105,5 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await mutation(page, `/api/app/event-types/${event.id}`, () => keys.native(remove, "Confirm event deletion", "confirm", true), 204);
   await page.getByRole("heading", { name: "Event types", exact: true, level: 1 }).waitFor();
   assert.ok(!(await get(page, origin, "/api/app/event-types")).some(row => row.id === event.id));
-  checks.push({ width, flow: "Create, edit and delete event; native required validation; recurring availability keyboard edit and API readback", passed: true });
+  checks.push({ width, flow: "Create, edit and delete event; event card actions through keyboard; native required validation; recurring availability keyboard edit and API readback", passed: true });
 }
