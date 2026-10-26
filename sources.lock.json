@@ -6208,7 +6208,7 @@
       "executable": false
     },
     "src/core/features/payments/ui/accounting-card.tsx": {
-      "sha256": "ad66cc960b26664f5fdb2a43044142f0efacab247cdc3394c4788f03c210e30d",
+      "sha256": "13b62af2c44bbdaecb13cc54663937e6efdc1c4cf2f17fcd0b0d97fa759fa886",
       "executable": false
     },
     "src/core/features/payments/ui/accounting-feedback.ts": {
