@@ -16,6 +16,7 @@ export function DateOverrideEditor({ eventId, timezone }: { eventId: string; tim
   const restoreFocus = useRef(false);
   const inFlight = useRef(false);
   const loadEpoch = useRef(0);
+  const edited = useRef(false);
   const [overrides, setOverrides] = useState<DateAvailabilityOverrideRecord[]>();
   const [draft, setDraft] = useState<OverrideDraft>();
   const [error, setError] = useState("");
@@ -35,12 +36,13 @@ export function DateOverrideEditor({ eventId, timezone }: { eventId: string; tim
       if (epoch !== loadEpoch.current) return;
       if (!response.ok) { const message = await errorMessage(response); if (epoch === loadEpoch.current) setError(message); return; }
       const records = await response.json();
-      if (epoch === loadEpoch.current) setOverrides(records);
+      if (epoch === loadEpoch.current && !edited.current) setOverrides(records);
     } catch { if (epoch === loadEpoch.current) setError("Date overrides could not be loaded. Reload to try again."); }
   }, [eventId]);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; }; }, [load]);
 
   function update(next: Partial<OverrideDraft>) {
+    edited.current = true;
     setDraft((current) => ({ ...(current ?? blankOverride()), ...next }));
   }
 
