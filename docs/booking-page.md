@@ -72,6 +72,6 @@ Under **Alternative request email** in the event type's email settings, choose w
 
 ## Embed it on your site
 
-In **Settings**, under **Origin-gated embeds**, add the exact address of your site, such as one starting with `https://`. Wildcards and paths are refused. Choose a published event type, then **Copy inline tag** or **Copy modal tag**, and paste it where you want the flow. Modal adds a button that opens it in a window.
+In **Settings**, under **Embed**, choose the event, then **Copy inline code** or **Copy popup code** and paste it where you want the flow. The first copy asks for your site's address and allows it. Popup adds a button that opens the flow in a window.
 
 Next, set up mail and optional calendar integration in [Calendar and email](calendar-and-email.md).
