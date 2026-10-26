@@ -6192,7 +6192,11 @@
       "executable": false
     },
     "src/core/features/payments/ui/accounting-card.tsx": {
-      "sha256": "1e5be7e9d31e0f2bffc593f8462398e6c2afc95c6083e5bffed7fd26eb8da366",
+      "sha256": "ad66cc960b26664f5fdb2a43044142f0efacab247cdc3394c4788f03c210e30d",
+      "executable": false
+    },
+    "src/core/features/payments/ui/accounting-feedback.ts": {
+      "sha256": "2e3e5f28d4d9dccf58608dd383c287c69e5043b2dbc6dd219d2289264337e6fa",
       "executable": false
     },
     "src/core/features/payments/ui/event-payment-settings.tsx": {
