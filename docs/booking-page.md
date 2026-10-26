@@ -18,7 +18,7 @@ Open **Profile** in the operator app. Dial has one host and one profile. Fill in
 
 Open **Event types** and choose **New event type**. Each has an **Event name**, a **Description**, a **Duration** from 5 to 480 minutes and a **Slug** for its address, which you find under **More options**. A slug follows the handle rules. If you change it, the old link and any embeds stop working, but the manage links of existing bookings keep working.
 
-**Location.** Pick **Google Meet**, **Fixed link**, **Host phone number** or **In-person address**. Clients see only the label until they book, then the link, number or address appears in the receipt, email and any connected calendar event. Google Meet requires a connected Google Calendar; the other locations can work without one.
+**Location.** Pick **Google Meet**, **Meeting link**, **Host phone number** or **In-person address**. Clients see only the label until they book, then the link, number or address appears in the receipt, email and any connected calendar event. Google Meet requires a connected Google Calendar; the other locations can work without one.
 
 **Questions.** Name and email are always asked. Add your own, up to 25, as text, textarea, single choice, multiple choice or checkbox, each required or optional. New event types start with an optional Agenda question.
 
