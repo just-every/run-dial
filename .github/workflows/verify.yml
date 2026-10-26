@@ -14,7 +14,7 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Each runner owns its native listeners/state. The slow README installation
     # and real-time Cron journey live in nightly-journeys.yml; all other test
