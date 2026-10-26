@@ -13,7 +13,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
 import { useHydrated } from "../../../app/use-hydrated";
-import { EmptyState } from "../../../app/ui/empty-state";
 import { RedirectFields } from "./redirect-fields";
 import { QuestionsEditor } from "./questions-editor";
 import { defaultEventTypeInput } from "../defaults";
