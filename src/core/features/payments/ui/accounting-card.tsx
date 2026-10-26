@@ -51,7 +51,7 @@ export function AccountingCard(){
   }
   const reason=status?.reason?accountingFeedback(status.reason,'accounting',true):null;
   const reasonText=reason?(error?[reason.message]:[reason.message,reason.guidance]).filter(text=>text!==error?.message&&text!==error?.guidance).join(' '):'';
-  const setupLine='Ask your installation administrator to finish QuickBooks connection setup.';
+  const setupLine=accountingFeedback('accounting_not_configured').guidance;
   return <Card id="payment-reconciliation" className="min-w-0 p-5 sm:p-6 xl:col-span-2"><SectionHeading icon="calendar" title="Payments and accounting" action={<Badge tone={status?.state==='connected'?'success':'warning'}>{status?.state??'Loading'}</Badge>}/><p className="mt-3 text-sm text-soft">Charges, refunds, processor fees and disputes, with Stripe references. Reconciliation records processor facts and never moves money.</p>
     {reasonText?<p className="mt-3 text-sm text-ink">{reasonText}</p>:null}
     {error?<p role="alert" className={noticeClassName('error','mt-3')}>{error.message} {error.guidance}{error.signIn?<a className="ml-1 font-semibold underline" href="/signin?next=%2Fapp%2Fsettings">Sign in</a>:null}</p>:null}{notice?<p role="status" className={noticeClassName('success','mt-3')}>{notice}</p>:null}
