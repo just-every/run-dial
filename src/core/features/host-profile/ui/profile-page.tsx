@@ -61,7 +61,7 @@ export function ProfilePage() {
 
   return (
     <form className="grid gap-7" onSubmit={save}>
-      <PageHeader eyebrow="Host configuration" title="Profile" description="This is the single host identity shown across your public scheduling pages." actions={<Button type="submit" disabled={!hydrated || saving}>{saving ? "Saving…" : "Save profile"}</Button>} />
+      <PageHeader title="Profile" description="This is the single host identity shown across your public scheduling pages." actions={<Button type="submit" disabled={!hydrated || saving}>{saving ? "Saving…" : "Save profile"}</Button>} />
       {error ? <p role="alert" className="rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{error}</p> : null}
       {saved ? <p role="status" className={noticeClassName("success")}>Profile saved.</p> : null}
       <fieldset disabled={!hydrated || saving} className="grid gap-6 border-0 p-0 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -83,7 +83,7 @@ export function ProfilePage() {
             </div>
           </Card>
           <Card className="p-5 sm:p-6">
-            <SectionHeading icon="message" title="Operator-authored social proof" description="Quotes and attributions are typed by you; Dial never collects ratings or reviews." action={<Button variant="secondary" type="button" disabled={profile.socialProof.length >= 3} onClick={() => update("socialProof", [...profile.socialProof, { quote: "", attribution: "" }])}>Add quote</Button>} />
+            <SectionHeading icon="message" title="Quotes" description="Quotes and attributions are typed by you; Dial never collects ratings or reviews." action={<Button variant="secondary" type="button" disabled={profile.socialProof.length >= 3} onClick={() => update("socialProof", [...profile.socialProof, { quote: "", attribution: "" }])}>Add quote</Button>} />
             <div className="mt-5 grid gap-4">
               {profile.socialProof.map((entry, index) => <div key={index} className="rounded-2xl bg-row p-4"><Field label="Quote"><Textarea maxLength={280} value={entry.quote} onChange={(event) => update("socialProof", profile.socialProof.map((item, position) => position === index ? { ...item, quote: event.target.value } : item))} required /></Field><div className="mt-3 flex gap-2"><div className="flex-1"><Field label="Attribution"><Input maxLength={120} value={entry.attribution} onChange={(event) => update("socialProof", profile.socialProof.map((item, position) => position === index ? { ...item, attribution: event.target.value } : item))} required /></Field></div><Button className="mt-6" variant="quiet" type="button" onClick={() => update("socialProof", profile.socialProof.filter((_, position) => position !== index))}>Remove</Button></div></div>)}
             </div>

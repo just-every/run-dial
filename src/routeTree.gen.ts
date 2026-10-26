@@ -30,9 +30,11 @@ import { Route as SetupIndexRouteImport } from './routes/setup.index'
 import { Route as SetupEventTypesRouteImport } from './routes/setup.event-types'
 import { Route as SetupProfileRouteImport } from './routes/setup.profile'
 import { Route as SetupSettingsRouteImport } from './routes/setup.settings'
+import { Route as AppBookingsIdRouteImport } from './routes/app.bookings.$id'
 import { Route as AppBookingsNewRouteImport } from './routes/app.bookings_.new'
 import { Route as AppEventTypesIdRouteImport } from './routes/app.event-types_.$id'
 import { Route as AppEventTypesNewRouteImport } from './routes/app.event-types_.new'
+import { Route as AppRequestsIdRouteImport } from './routes/app.requests.$id'
 import { Route as BookHandleSlugRouteImport } from './routes/book.$handle_.$slug'
 import { Route as EmbedHandleSlugRouteImport } from './routes/embed.$handle.$slug'
 import { Route as EmbedManageTokenRouteImport } from './routes/embed.manage.$token'
@@ -156,6 +158,11 @@ const SetupSettingsRoute = SetupSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => SetupRoute,
 } as any)
+const AppBookingsIdRoute = AppBookingsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppBookingsRoute,
+} as any)
 const AppBookingsNewRoute = AppBookingsNewRouteImport.update({
   id: '/bookings_/new',
   path: '/bookings/new',
@@ -170,6 +177,11 @@ const AppEventTypesNewRoute = AppEventTypesNewRouteImport.update({
   id: '/event-types_/new',
   path: '/event-types/new',
   getParentRoute: () => AppRoute,
+} as any)
+const AppRequestsIdRoute = AppRequestsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppRequestsRoute,
 } as any)
 const BookHandleSlugRoute = BookHandleSlugRouteImport.update({
   id: '/book/$handle_/$slug',
@@ -267,10 +279,10 @@ export interface FileRoutesByFullPath {
   '/setup': typeof SetupRouteWithChildren
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
-  '/app/bookings': typeof AppBookingsRoute
+  '/app/bookings': typeof AppBookingsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
   '/app/profile': typeof AppProfileRoute
-  '/app/requests': typeof AppRequestsRoute
+  '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -282,9 +294,11 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
+  '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
   '/app/event-types/$id': typeof AppEventTypesIdRoute
   '/app/event-types/new': typeof AppEventTypesNewRoute
+  '/app/requests/$id': typeof AppRequestsIdRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
@@ -308,10 +322,10 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
-  '/app/bookings': typeof AppBookingsRoute
+  '/app/bookings': typeof AppBookingsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
   '/app/profile': typeof AppProfileRoute
-  '/app/requests': typeof AppRequestsRoute
+  '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -323,9 +337,11 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/docs': typeof DocsIndexRoute
   '/setup': typeof SetupIndexRoute
+  '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
   '/app/event-types/$id': typeof AppEventTypesIdRoute
   '/app/event-types/new': typeof AppEventTypesNewRoute
+  '/app/requests/$id': typeof AppRequestsIdRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
@@ -352,10 +368,10 @@ export interface FileRoutesById {
   '/setup': typeof SetupRouteWithChildren
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
-  '/app/bookings': typeof AppBookingsRoute
+  '/app/bookings': typeof AppBookingsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
   '/app/profile': typeof AppProfileRoute
-  '/app/requests': typeof AppRequestsRoute
+  '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -367,9 +383,11 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
+  '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings_/new': typeof AppBookingsNewRoute
   '/app/event-types_/$id': typeof AppEventTypesIdRoute
   '/app/event-types_/new': typeof AppEventTypesNewRoute
+  '/app/requests/$id': typeof AppRequestsIdRoute
   '/book/$handle_/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
@@ -412,9 +430,11 @@ export interface FileRouteTypes {
     | '/app/'
     | '/docs/'
     | '/setup/'
+    | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
     | '/app/event-types/new'
+    | '/app/requests/$id'
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -453,9 +473,11 @@ export interface FileRouteTypes {
     | '/app'
     | '/docs'
     | '/setup'
+    | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
     | '/app/event-types/new'
+    | '/app/requests/$id'
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -496,9 +518,11 @@ export interface FileRouteTypes {
     | '/app/'
     | '/docs/'
     | '/setup/'
+    | '/app/bookings/$id'
     | '/app/bookings_/new'
     | '/app/event-types_/$id'
     | '/app/event-types_/new'
+    | '/app/requests/$id'
     | '/book/$handle_/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -692,6 +716,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupSettingsRouteImport
       parentRoute: typeof SetupRoute
     }
+    '/app/bookings/$id': {
+      id: '/app/bookings/$id'
+      path: '/$id'
+      fullPath: '/app/bookings/$id'
+      preLoaderRoute: typeof AppBookingsIdRouteImport
+      parentRoute: typeof AppBookingsRoute
+    }
     '/app/bookings_/new': {
       id: '/app/bookings_/new'
       path: '/bookings/new'
@@ -712,6 +743,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/event-types/new'
       preLoaderRoute: typeof AppEventTypesNewRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/requests/$id': {
+      id: '/app/requests/$id'
+      path: '/$id'
+      fullPath: '/app/requests/$id'
+      preLoaderRoute: typeof AppRequestsIdRouteImport
+      parentRoute: typeof AppRequestsRoute
     }
     '/book/$handle_/$slug': {
       id: '/book/$handle_/$slug'
@@ -835,12 +873,36 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppBookingsRouteChildren {
+  AppBookingsIdRoute: typeof AppBookingsIdRoute
+}
+
+const AppBookingsRouteChildren: AppBookingsRouteChildren = {
+  AppBookingsIdRoute: AppBookingsIdRoute,
+}
+
+const AppBookingsRouteWithChildren = AppBookingsRoute._addFileChildren(
+  AppBookingsRouteChildren,
+)
+
+interface AppRequestsRouteChildren {
+  AppRequestsIdRoute: typeof AppRequestsIdRoute
+}
+
+const AppRequestsRouteChildren: AppRequestsRouteChildren = {
+  AppRequestsIdRoute: AppRequestsIdRoute,
+}
+
+const AppRequestsRouteWithChildren = AppRequestsRoute._addFileChildren(
+  AppRequestsRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAvailabilityRoute: typeof AppAvailabilityRoute
-  AppBookingsRoute: typeof AppBookingsRoute
+  AppBookingsRoute: typeof AppBookingsRouteWithChildren
   AppEventTypesRoute: typeof AppEventTypesRoute
   AppProfileRoute: typeof AppProfileRoute
-  AppRequestsRoute: typeof AppRequestsRoute
+  AppRequestsRoute: typeof AppRequestsRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppBookingsNewRoute: typeof AppBookingsNewRoute
@@ -852,10 +914,10 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAvailabilityRoute: AppAvailabilityRoute,
-  AppBookingsRoute: AppBookingsRoute,
+  AppBookingsRoute: AppBookingsRouteWithChildren,
   AppEventTypesRoute: AppEventTypesRoute,
   AppProfileRoute: AppProfileRoute,
-  AppRequestsRoute: AppRequestsRoute,
+  AppRequestsRoute: AppRequestsRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
   AppBookingsNewRoute: AppBookingsNewRoute,

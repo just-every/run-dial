@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { operatorDateTime, operatorTimeRange } from "../../shared/operator-format";
 import { errorMessage } from "../../api/client";
 import { Button, Card, Input, Select, Textarea } from "../../app/ui/primitives";
 import { useHydrated } from "../../app/use-hydrated";
@@ -124,7 +125,7 @@ function OfferForm({ event, host, onCreated }: { event: EventTypeRecord; host: H
       if (!result.id || !result.url) throw new Error("The server did not return the created offer link. Check your booking links before creating another.");
       const email = [`Choose a time for ${event.title} (${event.durationMinutes} minutes).`, `All times are in ${host.timezone}.`, "",
         ...selected.map(slot => `${offeredLabel(slot, host.timezone)} — ${result.url}`), "",
-        `Choose one time using the link above. The link expires ${new Intl.DateTimeFormat("en-US", { timeZone: host.timezone, dateStyle: "medium", timeStyle: "short" }).format(expiresAt)} (${host.timezone}).`,
+        `Choose one time using the link above. The link expires ${operatorDateTime(expiresAt.toISOString(), host.timezone)}.`,
       ].join("\n");
       onCreated({ url: result.url, email });
       setSelected([]); setRefresh(value => value + 1);
@@ -155,5 +156,5 @@ function OfferForm({ event, host, onCreated }: { event: EventTypeRecord; host: H
 }
 
 function offeredLabel(slot: PickerSlot, timezone: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short", year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "longOffset" }).format(new Date(slot.startAt));
+  return operatorTimeRange(slot.startAt, slot.endAt, timezone);
 }

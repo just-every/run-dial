@@ -30,7 +30,6 @@ function deliveryStatus(delivery: Delivery, state = delivery.state) {
 export function DeliveryList({ deliveries, working, onRetry }: { deliveries: Delivery[]; working: boolean; onRetry(id: string): void }) {
   return <section aria-label="Deliveries">
     <h3 className="font-bold text-ink">Deliveries</h3>
-    <p className="mt-2 text-sm text-muted">Sent means accepted by the mail provider.</p>
     {deliveries.some(delivery => delivery.state === "failed" && !delivery.retryState) ? <p className="mt-3 flex items-start gap-2 rounded-xl bg-gold-wash p-3 text-sm text-ink"><WarningMark />Check the provider connection in settings before retrying a failed delivery.</p> : null}
     {deliveries.length ? <ul aria-label="Delivery history" className="mt-4 grid gap-3">{deliveries.map(delivery => <li key={delivery.id} data-delivery-id={delivery.id} className="min-w-0 break-words rounded-xl border border-line-soft p-3.5 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-ink">{deliveryLabel(delivery.kind)}</strong><span className={delivery.state === "failed" ? "font-semibold text-danger" : "font-semibold text-soft"}>{deliveryStatus(delivery)}</span></div>

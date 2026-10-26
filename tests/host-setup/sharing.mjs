@@ -71,6 +71,10 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   const fresh = await browser.newContext({ storageState: await context.storageState(), viewport: page.viewportSize() });
   try { const freshPage = await fresh.newPage(); await freshPage.goto(origin + "/app"); const state = await (await freshPage.request.get(origin + "/api/app/host-setup")).json(); assert.ok(state.links[0].copiedAt); await freshPage.reload(); assert.ok((await (await freshPage.request.get(origin + "/api/app/host-setup")).json()).links[0].copiedAt); } finally { await fresh.close(); }
   await page.goto(origin + "/setup/event-types");
+  const eventCard = page.locator(".dial-event-card").first();
+  const moreActions = eventCard.getByRole("button", { name: "More actions", exact: true });
+  if (await moreActions.isVisible()) await moreActions.click();
+  else await eventCard.hover();
   await page.getByRole("main").getByRole("button", { name: "Copy booking link", exact: true }).click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText("Booking link copied.");
   assert.equal(await page.evaluate(() => globalThis.navigator.clipboard.readText()), expected);
