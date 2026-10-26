@@ -36,7 +36,7 @@ contract('LINK-002','host offers held times and recipient books one at desktop a
       await expect(form.getByRole('checkbox').first()).toBeEnabled({timeout:45000});
       await form.getByLabel('Week starting',{exact:true}).fill(new Date(Date.now()+10*86400000).toISOString().slice(0,10));
       await expect(form.getByRole('checkbox').first()).toBeEnabled({timeout:45000});
-      for(const time of [/^9:00 AM/,/^9:30 AM/,/^10:00 AM/])await form.getByRole('checkbox',{name:time}).first().check();
+      for(const time of [/, 9-/,/, 9:30-/,/, 10-/])await form.getByRole('checkbox',{name:time}).first().check();
       await form.getByLabel('Link expires (your device timezone)',{exact:true}).fill(new Date(Date.now()+4*86400000).toISOString().slice(0,16));
       assert.equal(await form.getByLabel('Hold duration (hours)',{exact:true}).inputValue(),'48');
       await snapshot(page,width,'selected');

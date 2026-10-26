@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type KeyboardEvent } from "react";
-import { dayLabel, groupSlotsByDay, slotTimeLabel, type PickerSlot } from "../public-booking";
+import { operatorTimeRange } from "../../shared/operator-format";
+import { dayLabel, groupSlotsByDay, type PickerSlot } from "../public-booking";
 
 /** Each day's toolbar is one tab stop; arrows reach every live time within it. */
 export function OfferedTimeChoices({ slots, timezone, selected, onToggle }: {
@@ -53,7 +54,7 @@ function DayChoices({ date, slots, timezone, selected, onToggle, instructions }:
         const isChecked = checked.has(slot.startAt);
         return <label key={slot.startAt} className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm ${isChecked ? "border-ink bg-gold-wash" : "border-line"}`}>
           <input ref={element => { if (element) controls.current.set(slot.startAt, element); else controls.current.delete(slot.startAt); }} type="checkbox" checked={isChecked} disabled={!isChecked && selected.length >= 12} tabIndex={slot.startAt === tabStop ? 0 : -1} onFocus={() => setActive(slot.startAt)} onKeyDown={event => move(event, slot.startAt)} onChange={() => onToggle(slot)} />
-          <span>{slotTimeLabel(slot.startAt, timezone)}</span>
+          <span>{operatorTimeRange(slot.startAt, slot.endAt, timezone)}</span>
         </label>;
       })}
     </div>

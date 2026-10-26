@@ -1,7 +1,7 @@
 /** Compact operator dates; the surrounding section states the time zone once. */
-export function operatorDateTime(value: string, timezone = "UTC") {
+export function operatorDateTime(value: string, timezone = "UTC", referenceInstant = new Date().toISOString()) {
   const parts = localParts(value, timezone);
-  return `${dateLabel(parts, timezone)}, ${clockLabel(parts)}`;
+  return `${dateLabel(parts, timezone, referenceInstant)}, ${clockLabel(parts)}`;
 }
 
 export function operatorTimeRange(start: string | null, end: string | null, timezone: string) {
@@ -12,8 +12,8 @@ export function operatorTimeRange(start: string | null, end: string | null, time
   return `${dateLabel(first, timezone)}, ${clockLabel(first, first.dayPeriod !== last.dayPeriod)}-${clockLabel(last)}`;
 }
 
-export function operatorTimestamp(value: string, timezone = "UTC") {
-  return operatorDateTime(value, timezone);
+export function operatorTimestamp(value: string, timezone = "UTC", referenceInstant?: string) {
+  return operatorDateTime(value, timezone, referenceInstant);
 }
 
 function localParts(value: string, timezone: string) {
@@ -23,8 +23,8 @@ function localParts(value: string, timezone: string) {
   }).formatToParts(new Date(value)).map(part => [part.type, part.value]));
 }
 
-function dateLabel(parts: Record<string, string>, timezone: string) {
-  const currentYear = new Intl.DateTimeFormat("en-US", { timeZone: timezone, year: "numeric" }).format(new Date());
+function dateLabel(parts: Record<string, string>, timezone: string, referenceInstant = new Date().toISOString()) {
+  const currentYear = new Intl.DateTimeFormat("en-US", { timeZone: timezone, year: "numeric" }).format(new Date(referenceInstant));
   return `${parts.weekday} ${parts.day} ${parts.month}${parts.year === currentYear ? "" : ` ${parts.year}`}`;
 }
 
