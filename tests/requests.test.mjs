@@ -3,11 +3,8 @@ import assert from "node:assert/strict";
 import { startWorker, executeD1, queuedMail } from "./requests/runtime.mjs";
 import { contract } from "./contract.mjs";
 
-let journey;
-const gate = (context) => journey ??= requestJourney(context);
-contract("REQUEST-002", "reviewed alternative requests replay exactly after nonce expiry and retain no public internal identifiers", gate);
-contract("REQUEST-003", "operators list requests by state, read each window in the invitee's and the host's zone, and mark a request handled or closed once", gate);
-contract("REQUEST-004", "a request mails every host by default; a subset mails only the chosen operators; suppressed email keeps the in-app record and mails nobody", gate);
+// One request moves through review, private handling and its event's recipient policy.
+contract(["REQUEST-002", "REQUEST-003", "REQUEST-004"], "reviewed alternative request flows through private handling and per-event mail routing", requestJourney);
 
 async function requestJourney(context) {
   const server = await startWorker(context);

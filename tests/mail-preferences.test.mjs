@@ -7,10 +7,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { contract } from "./contract.mjs";
 
-let journey;
-const gate = (context) => journey ??= preferencesJourney(context);
-contract("NOTIFY-001", "native per-operator mail preferences apply at delivery time and persist through restart", gate);
-contract("NOTIFY-008", "single-host recipients: the invitee and every operator as host get each booking mail, a muted operator's booking mail is suppressed at send time without touching the invitee or the other operator, and request notices reach every operator", gate);
+contract(["NOTIFY-001", "NOTIFY-008"], "per-operator booking mail respects saved delivery preferences and recipient scope across restart", preferencesJourney);
 
 async function preferencesJourney(context) {
   const persist = await mkdtemp(resolve(tmpdir(), "dial-mail-preferences-"));
