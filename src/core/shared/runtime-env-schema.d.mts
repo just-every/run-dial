@@ -25,6 +25,7 @@ export const runtimeEnvironmentSchema: z.ZodObject<{
   SLACK_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
   QBO_CLIENT_ID: z.ZodOptional<z.ZodString>;
   QBO_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
+  QBO_ENVIRONMENT: z.ZodOptional<z.ZodEnum<{ production: "production"; sandbox: "sandbox" }>>;
   STRIPE_SECRET_KEY: z.ZodOptional<z.ZodString>;
   STRIPE_CONNECT_CLIENT_ID: z.ZodOptional<z.ZodString>;
   STRIPE_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;

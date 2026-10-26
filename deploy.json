@@ -55,6 +55,11 @@
       "optional": true
     },
     {
+      "binding": "QBO_ENVIRONMENT",
+      "environment": "QBO_ENVIRONMENT",
+      "optional": true
+    },
+    {
       "binding": "SLACK_CLIENT_ID",
       "environment": "SLACK_CLIENT_ID",
       "optional": true

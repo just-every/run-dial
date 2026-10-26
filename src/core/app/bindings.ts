@@ -33,6 +33,7 @@ export type AppBindings = {
   SLACK_CLIENT_SECRET?: string;
   QBO_CLIENT_ID?: string;
   QBO_CLIENT_SECRET?: string;
+  QBO_ENVIRONMENT?: "production" | "sandbox";
   STRIPE_SECRET_KEY?: string;
   STRIPE_CONNECT_CLIENT_ID?: string;
   STRIPE_WEBHOOK_SECRET?: string;

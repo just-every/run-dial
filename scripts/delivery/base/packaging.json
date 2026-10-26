@@ -92,6 +92,7 @@
         "RESEND_WEBHOOK_SECRET",
         "QBO_CLIENT_ID",
         "QBO_CLIENT_SECRET",
+        "QBO_ENVIRONMENT",
         "SLACK_CLIENT_ID",
         "SLACK_CLIENT_SECRET"
       ],

@@ -26,6 +26,7 @@ export const runtimeEnvironmentSchema = z.object({
   SLACK_CLIENT_SECRET: z.string().min(1).optional(),
   QBO_CLIENT_ID: z.string().min(1).optional(),
   QBO_CLIENT_SECRET: z.string().min(1).optional(),
+  QBO_ENVIRONMENT: z.enum(["production", "sandbox"]).optional(),
   STRIPE_SECRET_KEY: z.string().regex(/^(sk|rk)_(test|live)_[A-Za-z0-9]+$/).optional(),
   STRIPE_CONNECT_CLIENT_ID: z.string().regex(/^ca_[A-Za-z0-9]+$/).optional(),
   STRIPE_WEBHOOK_SECRET: z.string().regex(/^whsec_[A-Za-z0-9]+$/).optional(),

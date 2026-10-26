@@ -630,6 +630,12 @@
       "why": "PAY-006 (external quickbooks-online): QuickBooks Online OAuth client secret. Stored only as deployment configuration; accounting credentials never travel in an archive."
     },
     {
+      "name": "QBO_ENVIRONMENT",
+      "secret": false,
+      "required": false,
+      "why": "PAY-006 (external quickbooks-online): production (the default) or sandbox. Selects only the QuickBooks Online accounting API base; Intuit development keys reach only sandbox companies, at sandbox-quickbooks.api.intuit.com. Any other value fails runtime configuration naming this variable."
+    },
+    {
       "name": "SLACK_CLIENT_ID",
       "secret": true,
       "required": false,

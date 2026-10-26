@@ -1,5 +1,5 @@
 /** Contract-shaped QuickBooks HTTP double. Product code never sees these tables. */
-export const accountingHosts=['oauth.platform.intuit.com','quickbooks.api.intuit.com'];
+export const accountingHosts=['oauth.platform.intuit.com','quickbooks.api.intuit.com','sandbox-quickbooks.api.intuit.com'];
 export async function accountingWire(db:D1Database,url:URL,method:string,init:RequestInit){
   await db.batch([
     db.prepare('CREATE TABLE IF NOT EXISTS wire_accounting_objects(id TEXT PRIMARY KEY,kind TEXT,payload TEXT)'),
@@ -12,7 +12,9 @@ export async function accountingWire(db:D1Database,url:URL,method:string,init:Re
     if(!new Headers(init.headers).get('authorization')?.startsWith('Basic ')||!['authorization_code','refresh_token'].includes(form.get('grant_type')??''))throw Error('invalid synthetic accounting exchange');
     return Response.json({access_token:'synthetic-dial-100',refresh_token:'synthetic-dial-101',expires_in:3600});
   }
-  if(new Headers(init.headers).get('authorization')!=='Bearer synthetic-dial-100'||await control('accounting-revoked'))return Response.json({Fault:{type:'AuthenticationFault'}},{status:401});
+  // A sandbox company's token works only on the sandbox base and a production company's only on the production base.
+  const wrongBase=(url.hostname==='sandbox-quickbooks.api.intuit.com')!==Boolean(await control('accounting-sandbox-company'));
+  if(new Headers(init.headers).get('authorization')!=='Bearer synthetic-dial-100'||await control('accounting-revoked')||wrongBase)return Response.json({Fault:{type:'AuthenticationFault'}},{status:401});
   const body=init.body?JSON.parse(String(init.body)) as Record<string,unknown>:undefined;
   // Captured API bodies deliberately omit credentials.
   await db.prepare('INSERT INTO wire_calls(url,method,body,headers) VALUES(?,?,?,?)').bind(url.toString(),method,body?JSON.stringify(body):null,'{}').run();
