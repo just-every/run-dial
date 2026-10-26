@@ -14,6 +14,7 @@ export function ProfilePage() {
   const hydrated = useHydrated();
   const inFlight = useRef(false);
   const loadEpoch = useRef(0);
+  const edited = useRef(false);
   const initialProfile = useWorkspaceRead<ProfileRecord>("/api/app/profile");
   const [profile, setProfile] = useState<ProfileInput | ProfileRecord | undefined>(initialProfile);
   const [error, setError] = useState("");
@@ -27,7 +28,7 @@ export function ProfilePage() {
       if (epoch !== loadEpoch.current) return;
       if (response.ok) {
         const current = await response.json();
-        if (epoch === loadEpoch.current) setProfile(current ?? { handle: "", name: "", title: "", biography: "", timezone: "", focusAreas: [], socialProof: [] });
+        if (epoch === loadEpoch.current && !edited.current) setProfile(current ?? { handle: "", name: "", title: "", biography: "", timezone: "", focusAreas: [], socialProof: [] });
         return;
       }
       const message = await errorMessage(response); if (epoch === loadEpoch.current) setError(message);
@@ -38,6 +39,7 @@ export function ProfilePage() {
   if (!profile) return <WorkspaceLoadState error={error} label="Loading profile…" onRetry={() => load()} />;
 
   function update<K extends keyof ProfileInput>(key: K, value: ProfileInput[K]) {
+    edited.current = true;
     setSaved(false);
     setProfile((current) => (current ? { ...current, [key]: value } : current));
   }
