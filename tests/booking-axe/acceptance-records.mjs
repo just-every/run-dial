@@ -57,7 +57,9 @@ export async function bookingRecordDeliveryJourney(browser, owner, origin, booki
         await page.getByRole("region", { name: "Deliveries", exact: true }).screenshot({ path: evidencePath(`OPER-004-${width}-${state}-deliveries.png`), caret: "initial" });
       };
       assert.ok(await page.getByText("A detailed discussion of a useful next step.", { exact: false }).first().isVisible());
-      for (const [label, zone] of [["Host time", booking.hostTimezone], ["Invitee time", booking.inviteeTimezone]]) {
+      const timeFacts = booking.inviteeTimezone === booking.hostTimezone ? [["Time", booking.hostTimezone]] : [["Host time", booking.hostTimezone], ["Invitee time", booking.inviteeTimezone]];
+      assert.equal(await page.locator("dl dt").filter({ hasText: /^(Time|Host time|Invitee time)$/ }).count(), timeFacts.length, "each distinct zone has exactly one time fact");
+      for (const [label, zone] of timeFacts) {
         const value = page.locator("dl > div").filter({ has: page.getByText(label, { exact: true }) }).locator("dd");
         const formatter = new Intl.DateTimeFormat("en-US", { timeZone: zone, weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true });
         const tokens = [booking.occurrence.startAt, booking.occurrence.endAt].flatMap(instant => formatter.formatToParts(new Date(instant)).filter(part => part.type !== "literal" && !(part.type === "minute" && part.value === "00")).map(part => part.value));
