@@ -6075,6 +6075,10 @@
       "sha256": "7f1f0e61430d047d240d4fafaf624bc86e0e42968bf1072db9af8dcd094107fe",
       "executable": false
     },
+    "src/core/features/payments/accounting-message.ts": {
+      "sha256": "465b059d1869870feb376dac894a943567c74897c909b9d122e5959e127493d1",
+      "executable": false
+    },
     "src/core/features/payments/accounting-routes.ts": {
       "sha256": "8a122571d0e8f4cb2ee4bff4e3c7f94bbee5dd56c967e601531c5b96607560d0",
       "executable": false
