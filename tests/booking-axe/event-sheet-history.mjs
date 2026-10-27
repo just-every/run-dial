@@ -13,8 +13,16 @@ export async function eventSheetHistory(page, origin, eventId, title, keys, chec
   }
   async function openEvent() {
     await keys.navigate("Event types");
-    const card = page.locator("section").filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-    await keys.activate(card.getByRole("link", { name: "Edit", exact: true }), "Open event for sheet history");
+    // Keep the same event target while hover/focus changes the actions' accessibility visibility.
+    const edit = page.locator(`#event-actions-${eventId} a[href="${eventPath}"]`);
+    const card = page.locator("section").filter({ has: edit });
+    await card.getByRole("heading", { name: title, exact: true }).waitFor();
+    const more = button(card, "More actions");
+    if (await more.isVisible()) {
+      if (await more.getAttribute("aria-expanded") !== "true") await keys.activate(more, "Reveal event actions for sheet history");
+      assert.equal(await more.getAttribute("aria-expanded"), "true", "event actions are expanded before keyboard traversal");
+    }
+    await keys.activate(edit, "Open event for sheet history");
     await field(page, "Name").waitFor();
     await at(eventPath, "List → event");
   }
