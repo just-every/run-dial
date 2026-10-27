@@ -61,16 +61,18 @@ export function OtherHours({ initial, windows }: { initial: HoursRead["others"];
   const [adding, setAdding] = useState(false);
   const [addedId, setAddedId] = useState("");
   return <div className="grid gap-4">
-    {others.map(schedule => <OtherHoursEditor key={schedule.id} initial={schedule} open={addedId === schedule.id} />)}
-    {adding ? <NewOtherHours windows={windows} onAdded={schedule => { setOthers(current => [...current, schedule]); setAddedId(schedule.id); setAdding(false); }} onCancel={() => setAdding(false)} /> : <Button type="button" variant="secondary" onClick={() => setAdding(true)}>Add other hours</Button>}
+    {others.map(schedule => <OtherHoursEditor key={schedule.id} initial={schedule} open={addedId === schedule.id} others={others} onSaved={name => setOthers(current => current.map(other => other.id === schedule.id ? { ...other, name } : other))} />)}
+    {adding ? <NewOtherHours others={others} windows={windows} onAdded={schedule => { setOthers(current => [...current, schedule]); setAddedId(schedule.id); setAdding(false); }} onCancel={() => setAdding(false)} /> : <Button type="button" variant="secondary" onClick={() => setAdding(true)}>Add other hours</Button>}
   </div>;
 }
 
-function OtherHoursEditor({ initial, open }: { initial: HoursRead["others"][number]; open: boolean }) {
+function OtherHoursEditor({ initial, open, others, onSaved }: { initial: HoursRead["others"][number]; open: boolean; others: HoursRead["others"]; onSaved(name: string): void }) {
   const form = useAutosave(`other-hours:${initial.id}`, { name: initial.name, windows: initial.windows }, async (next, init) => {
+    if (duplicateName(others.filter(other => other.id !== initial.id), next.name)) throw new Error("These hours already have that name. Choose another name.");
     if (next.windows.some(window => window.endMinute <= window.startMinute)) throw new Error("Ends before it starts. Choose a later end time.");
     const response = await api.api.app["availability-schedules"][":id"].$put({ param: { id: initial.id }, json: { ...next, blockUsHolidays: false, reopenedHolidays: [], timeOff: [] } }, { init });
     if (!response.ok) throw new Error(await errorMessage(response));
+    onSaved(next.name.trim());
   });
   return <details className="min-w-0" open={open}>
     <summary className="flex min-h-11 cursor-pointer items-center text-sm font-bold">{form.values.name || initial.name}</summary>
@@ -84,7 +86,7 @@ function OtherHoursEditor({ initial, open }: { initial: HoursRead["others"][numb
   </details>;
 }
 
-function NewOtherHours({ windows, onAdded, onCancel }: { windows: AvailabilityWindowInput[]; onAdded(schedule: HoursRead["others"][number]): void; onCancel(): void }) {
+function NewOtherHours({ others, windows, onAdded, onCancel }: { others: HoursRead["others"]; windows: AvailabilityWindowInput[]; onAdded(schedule: HoursRead["others"][number]): void; onCancel(): void }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -93,6 +95,7 @@ function NewOtherHours({ windows, onAdded, onCancel }: { windows: AvailabilityWi
   async function add(event?: React.FormEvent) {
     event?.preventDefault();
     if (busy || !name.trim()) { creationForm.current?.querySelector<HTMLInputElement>("input")?.focus(); return; }
+    if (duplicateName(others, name)) { setError("These hours already have that name. Choose another name."); return; }
     setBusy(true); setError("");
     try {
       const response = await api.api.app["availability-schedules"].$post({ json: { name, windows, blockUsHolidays: false, reopenedHolidays: [], timeOff: [] } });
@@ -103,10 +106,12 @@ function NewOtherHours({ windows, onAdded, onCancel }: { windows: AvailabilityWi
     finally { setBusy(false); }
   }
   return <form ref={creationForm} onSubmit={event => void add(event)} className="grid gap-3">
-    <label className="grid gap-1.5 text-sm font-semibold">Hours name<Input required maxLength={120} value={name} onChange={event => setName(event.target.value)} /></label>
-    {error ? <p role="alert" className="text-sm text-danger">{error} <button type="button" className="min-h-11 font-semibold underline" onClick={() => void add()}>Retry</button></p> : null}
+    <label className="grid gap-1.5 text-sm font-semibold">Hours name<Input required maxLength={120} value={name} aria-invalid={!!error} aria-describedby={error ? "other-hours-name-error" : undefined} onChange={event => { setName(event.target.value); setError(""); }} /></label>
+    {error ? <p id="other-hours-name-error" role="alert" className="text-sm text-danger">{error} <button type="button" className="min-h-11 font-semibold underline" onClick={() => void add()}>Retry</button></p> : null}
     <div className="flex flex-wrap gap-2"><Button type="submit" disabled={busy}>Add hours</Button><Button type="button" variant="quiet" onClick={onCancel}>Cancel</Button></div>
   </form>;
 }
 
 function shortDate(date: string) { return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`)); }
+
+function duplicateName(others: HoursRead["others"], name: string) { return others.some(other => other.name.trim().toLocaleLowerCase() === name.trim().toLocaleLowerCase()); }
