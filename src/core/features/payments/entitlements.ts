@@ -40,7 +40,7 @@ export class Entitlements {
  async resolve(eventId:string,email:string,code:string|undefined,units:number) {
   const now=(await this.clock()).toISOString();
   const hash=code?await hashToken(code,this.runtime.SESSION_SECRET):null;
-  const row=await this.db.prepare(`SELECT * FROM payment_entitlements WHERE event_type_id=? AND (? IS NOT NULL AND code_hash=? OR ? IS NULL AND purchaser_email_folded=?) ORDER BY CASE WHEN state='active' AND balance>0 THEN 0 ELSE 1 END,expires_at,id LIMIT 1`).bind(eventId,hash,hash,hash,foldEmail(email)).first<Entitlement>();
+  const row=await this.db.prepare(`SELECT * FROM payment_entitlements WHERE event_type_id=? AND (? IS NOT NULL AND code_hash=? OR ? IS NULL AND purchaser_email_folded=?) ORDER BY CASE WHEN state='active' AND balance>=CASE WHEN kind='gift' THEN ? ELSE 1 END AND expires_at>? AND (kind<>'membership' OR (period_start<=? AND period_end>?)) THEN 0 ELSE 1 END,expires_at,id LIMIT 1`).bind(eventId,hash,hash,hash,foldEmail(email),units,now,now,now).first<Entitlement>();
   const need=row?.kind==='gift'?units:1;
   const reason=!row?"credit_not_found":row.state!=="active"?row.state==='past_due'?"membership_unpaid":"credit_not_active":row.expires_at<=now||(row.kind==='membership'&&(!row.period_end||row.period_end<=now||!row.period_start||row.period_start>now))?"credit_expired":row.balance<need?"credit_balance_insufficient":undefined;
   return reason||!row?{kind:"refused" as const,reason:reason!,balance:row?.balance??0}:{kind:"available" as const,id:row.id,units:need,at:now};
