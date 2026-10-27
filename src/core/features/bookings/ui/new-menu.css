@@ -1,0 +1,24 @@
+.dial-bookings-new-menu {
+  position: fixed;
+  inset: auto;
+  width: 256px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  margin: 0;
+  border: 0;
+  overflow: auto;
+}
+
+@media (width < 640px) {
+  .dial-bookings-new-menu {
+    inset: auto 0 0 !important;
+    width: auto;
+    max-width: none;
+    border-radius: 22px 22px 0 0;
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  }
+
+  .dial-bookings-new-menu::backdrop {
+    background: color-mix(in srgb, var(--color-ink) 40%, transparent);
+  }
+}

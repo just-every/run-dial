@@ -1,0 +1,4 @@
+.offered-day[data-active="false"] { display: none; }
+@media (min-width: 640px) {
+  .offered-day[data-active="false"] { display: block; }
+}

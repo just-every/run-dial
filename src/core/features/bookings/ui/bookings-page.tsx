@@ -1,3 +1,4 @@
+import { NewBookingMenu } from "./new-menu";
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { RecordNotFound } from "./record-not-found";
 import { CalendarWorkspace } from "./calendar-workspace";
@@ -108,7 +109,7 @@ function BookingList(): React.JSX.Element {
 
   if (notFound) return <RecordNotFound kind="booking" back="/app/bookings" />;
   return <div className="grid gap-7">
-    <PageHeader title="Bookings" description="Review bookings, delivery state, and attendance." actions={<><Link to="/app/bookings" search={() => ({ ...Object.fromEntries(new URLSearchParams(writeBookingFilters("", filters))), view: "calendar" })} className={buttonClassName("secondary")}>Calendar</Link><Link to="/app/bookings" search={() => ({ view: "polls" })} className={buttonClassName("secondary")}>Meeting polls</Link><Link to="/app/bookings" search={() => ({ view: "clients" })} className={buttonClassName("secondary")}>Clients</Link><Link to="/app/bookings" search={() => ({ view: "report" })} className={buttonClassName("secondary")}>Scheduling report</Link><Link to="/app/bookings/new" className={buttonClassName()}>Create booking</Link></>} />
+    <PageHeader title="Bookings" description="Review bookings, delivery state, and attendance." actions={<><Link to="/app/bookings" search={() => ({ ...Object.fromEntries(new URLSearchParams(writeBookingFilters("", filters))), view: "calendar" })} className={buttonClassName("secondary")}>Calendar</Link><Link to="/app/bookings" search={() => ({ view: "polls" })} className={buttonClassName("secondary")}>Meeting polls</Link><Link to="/app/bookings" search={() => ({ view: "clients" })} className={buttonClassName("secondary")}>Clients</Link><Link to="/app/bookings" search={() => ({ view: "report" })} className={buttonClassName("secondary")}>Scheduling report</Link><NewBookingMenu /></>} />
     {hostTimezone ? <p className="text-sm text-muted">Times in {hostTimezone}</p> : null}
     {notice ? <p ref={noticeElement} tabIndex={-1} role="status" aria-label="Booking update" className={noticeClassName("success", "font-semibold")}>{notice}</p> : null}
     {listError ? <WorkspaceLoadState error={listError} onRetry={() => load()} /> : null}

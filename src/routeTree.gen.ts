@@ -42,6 +42,8 @@ import { Route as ManageBalanceTokenRouteImport } from './routes/manage.balance.
 import { Route as ManageInviteTokenRouteImport } from './routes/manage.invite.$token'
 import { Route as SetupEventTypesIdRouteImport } from './routes/setup.event-types_.$id'
 import { Route as SetupEventTypesNewRouteImport } from './routes/setup.event-types_.new'
+import { Route as AppBookingsNewOfferRouteImport } from './routes/app.bookings_.new_.offer'
+import { Route as AppBookingsNewPrivateLinkRouteImport } from './routes/app.bookings_.new_.private-link'
 import { Route as AppEventTypesIdAvailabilityRouteImport } from './routes/app.event-types_.$id_.availability'
 import { Route as AppEventTypesIdPreviewRouteImport } from './routes/app.event-types_.$id_.preview'
 import { Route as BookHandleSlugConfirmedRouteImport } from './routes/book.$handle_.$slug_.confirmed'
@@ -218,6 +220,17 @@ const SetupEventTypesNewRoute = SetupEventTypesNewRouteImport.update({
   path: '/event-types/new',
   getParentRoute: () => SetupRoute,
 } as any)
+const AppBookingsNewOfferRoute = AppBookingsNewOfferRouteImport.update({
+  id: '/bookings_/new_/offer',
+  path: '/bookings/new/offer',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBookingsNewPrivateLinkRoute =
+  AppBookingsNewPrivateLinkRouteImport.update({
+    id: '/bookings_/new_/private-link',
+    path: '/bookings/new/private-link',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppEventTypesIdAvailabilityRoute =
   AppEventTypesIdAvailabilityRouteImport.update({
     id: '/event-types_/$id_/availability',
@@ -306,6 +319,8 @@ export interface FileRoutesByFullPath {
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
+  '/app/bookings/new/offer': typeof AppBookingsNewOfferRoute
+  '/app/bookings/new/private-link': typeof AppBookingsNewPrivateLinkRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
   '/app/event-types/$id/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle/$slug/confirmed': typeof BookHandleSlugConfirmedRoute
@@ -349,6 +364,8 @@ export interface FileRoutesByTo {
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
+  '/app/bookings/new/offer': typeof AppBookingsNewOfferRoute
+  '/app/bookings/new/private-link': typeof AppBookingsNewPrivateLinkRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
   '/app/event-types/$id/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle/$slug/confirmed': typeof BookHandleSlugConfirmedRoute
@@ -395,6 +412,8 @@ export interface FileRoutesById {
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types_/$id': typeof SetupEventTypesIdRoute
   '/setup/event-types_/new': typeof SetupEventTypesNewRoute
+  '/app/bookings_/new_/offer': typeof AppBookingsNewOfferRoute
+  '/app/bookings_/new_/private-link': typeof AppBookingsNewPrivateLinkRoute
   '/app/event-types_/$id_/availability': typeof AppEventTypesIdAvailabilityRoute
   '/app/event-types_/$id_/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle_/$slug_/confirmed': typeof BookHandleSlugConfirmedRoute
@@ -442,6 +461,8 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
+    | '/app/bookings/new/offer'
+    | '/app/bookings/new/private-link'
     | '/app/event-types/$id/availability'
     | '/app/event-types/$id/preview'
     | '/book/$handle/$slug/confirmed'
@@ -485,6 +506,8 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
+    | '/app/bookings/new/offer'
+    | '/app/bookings/new/private-link'
     | '/app/event-types/$id/availability'
     | '/app/event-types/$id/preview'
     | '/book/$handle/$slug/confirmed'
@@ -530,6 +553,8 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types_/$id'
     | '/setup/event-types_/new'
+    | '/app/bookings_/new_/offer'
+    | '/app/bookings_/new_/private-link'
     | '/app/event-types_/$id_/availability'
     | '/app/event-types_/$id_/preview'
     | '/book/$handle_/$slug_/confirmed'
@@ -800,6 +825,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupEventTypesNewRouteImport
       parentRoute: typeof SetupRoute
     }
+    '/app/bookings_/new_/offer': {
+      id: '/app/bookings_/new_/offer'
+      path: '/bookings/new/offer'
+      fullPath: '/app/bookings/new/offer'
+      preLoaderRoute: typeof AppBookingsNewOfferRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/bookings_/new_/private-link': {
+      id: '/app/bookings_/new_/private-link'
+      path: '/bookings/new/private-link'
+      fullPath: '/app/bookings/new/private-link'
+      preLoaderRoute: typeof AppBookingsNewPrivateLinkRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/event-types_/$id_/availability': {
       id: '/app/event-types_/$id_/availability'
       path: '/event-types/$id/availability'
@@ -908,6 +947,8 @@ interface AppRouteChildren {
   AppBookingsNewRoute: typeof AppBookingsNewRoute
   AppEventTypesIdRoute: typeof AppEventTypesIdRoute
   AppEventTypesNewRoute: typeof AppEventTypesNewRoute
+  AppBookingsNewOfferRoute: typeof AppBookingsNewOfferRoute
+  AppBookingsNewPrivateLinkRoute: typeof AppBookingsNewPrivateLinkRoute
   AppEventTypesIdAvailabilityRoute: typeof AppEventTypesIdAvailabilityRoute
   AppEventTypesIdPreviewRoute: typeof AppEventTypesIdPreviewRoute
 }
@@ -923,6 +964,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppBookingsNewRoute: AppBookingsNewRoute,
   AppEventTypesIdRoute: AppEventTypesIdRoute,
   AppEventTypesNewRoute: AppEventTypesNewRoute,
+  AppBookingsNewOfferRoute: AppBookingsNewOfferRoute,
+  AppBookingsNewPrivateLinkRoute: AppBookingsNewPrivateLinkRoute,
   AppEventTypesIdAvailabilityRoute: AppEventTypesIdAvailabilityRoute,
   AppEventTypesIdPreviewRoute: AppEventTypesIdPreviewRoute,
 }

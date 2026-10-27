@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { operatorDateTime, operatorTimeRange } from "../../shared/operator-format";
 import { errorMessage } from "../../api/client";
 import { Button, Card, Input, Select, Textarea } from "../../app/ui/primitives";
+import { Tooltip } from "../../app/ui/tooltip";
 import { useHydrated } from "../../app/use-hydrated";
 import type { EventTypeRecord } from "../event-types";
 import type { ProfileRecord } from "../host-profile";
@@ -10,7 +11,7 @@ import { OfferedTimeChoices } from "./offered-time-choices";
 
 type Host = Pick<ProfileRecord, "handle" | "timezone">;
 type CreatedOffer = { url: string; email: string };
-const fieldLabel = "grid gap-2 text-sm font-[650] text-ink";
+const fieldLabel = "grid min-w-0 content-start gap-2 text-sm font-[650] text-ink";
 
 export function OfferedTimesPanel({ events }: { events: EventTypeRecord[] }) {
   const [host, setHost] = useState<Host>();
@@ -46,20 +47,20 @@ export function OfferedTimesPanel({ events }: { events: EventTypeRecord[] }) {
   }
 
   return <Card className="p-5 sm:p-6">
-    <h2 className="text-[22px] font-bold">Offer specific times</h2>
-    <p className="mt-2 text-sm text-soft">Pick up to 12 available times. Your recipient books one, and the other times are released.</p>
-    {!eligible.length ? <p className="mt-4 text-sm">Publish an event type with automatic booking to offer times.</p> : <>
-      <label className={`${fieldLabel} mt-5`}>Event type<Select value={selectedEvent?.id ?? ""} onChange={event => setEventId(event.target.value)}>
-        {eligible.map(event => <option key={event.id} value={event.id}>{event.title} · {event.durationMinutes} min</option>)}
-      </Select></label>
-      {profileError ? <div className="mt-4"><p role="alert" className="text-sm text-danger">{profileError}</p><Button type="button" variant="quiet" onClick={() => setRetry(value => value + 1)}>Retry profile</Button></div> : !host ? <p role="status" className="mt-4 text-sm text-soft">Loading host timezone…</p> : selectedEvent ? <OfferForm key={`${selectedEvent.id}:${host.handle}:${host.timezone}`} event={selectedEvent} host={host} onCreated={offer => { setCreated(offer); setCopyNotice(""); }} /> : null}
+    {!eligible.length ? <p className="text-sm">Publish an event type with automatic booking to offer times.</p> : <>
+      {eligible.length > 1 ? <label className={fieldLabel}>Event<Select aria-label="Event" value={selectedEvent?.id ?? ""} onChange={event => setEventId(event.target.value)}>
+        {eligible.map(event => <option key={event.id} value={event.id}>{event.title}</option>)}
+      </Select></label> : <p className="font-semibold">{selectedEvent?.title}</p>}
+      {profileError ? <div className="mt-4"><p role="alert" className="text-sm text-danger">{profileError}</p><Button type="button" variant="quiet" onClick={() => setRetry(value => value + 1)}>Retry profile</Button></div> : !host ? <p role="status" className="mt-4 text-sm text-soft">Checking your hours…</p> : selectedEvent ? <OfferForm event={selectedEvent} host={host} onCreated={offer => { setCreated(offer); setCopyNotice(""); }} /> : null}
     </>}
-    {created ? <div className="mt-6 grid gap-3 border-t border-line pt-5">
-      <p role="status" className="font-semibold">Your offered-times link is ready. Copy it before leaving this page.</p>
+    {created ? <div className="mt-6 grid gap-3">
+      <p role="status" className="font-semibold">Link created</p>
       <label className={fieldLabel}>Offer link<Input readOnly value={created.url} onFocus={event => event.target.select()} /></label>
-      <div><Button type="button" variant="secondary" onClick={() => void copy(created.url)}>Copy offer link</Button></div>
-      <label className={fieldLabel}>Email text<Textarea readOnly rows={8} value={created.email} onFocus={event => event.target.select()} /></label>
-      <div><Button type="button" variant="secondary" onClick={() => void copy(created.email)}>Copy email text</Button></div>
+      <div><Button type="button" variant="secondary" onClick={() => void copy(created.url)}>Copy link</Button></div>
+      <details><summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">Email text</summary>
+        <div className="grid gap-3 pt-2"><label className={fieldLabel}>Text to send<Textarea readOnly rows={8} value={created.email} onFocus={event => event.target.select()} /></label>
+          <div><Button type="button" variant="secondary" onClick={() => void copy(created.email)}>Copy email text</Button></div></div>
+      </details>
       {copyNotice ? <p role="status" className="text-sm text-soft">{copyNotice}</p> : null}
     </div> : null}
   </Card>;
@@ -75,22 +76,22 @@ function OfferForm({ event, host, onCreated }: { event: EventTypeRecord; host: H
   const [loading, setLoading] = useState(true);
   const [availabilityError, setAvailabilityError] = useState("");
   const [selected, setSelected] = useState<PickerSlot[]>([]);
-  const [hold, setHold] = useState("held");
   const [holdHours, setHoldHours] = useState("48");
   const [expiry, setExpiry] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => { setSelected([]); }, [event.id]);
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true); setAvailability(undefined); setAvailabilityError("");
+    setLoading(true); setAvailabilityError("");
     void (async () => {
       try {
         const path = `/api/public/book/${encodeURIComponent(host.handle)}/${encodeURIComponent(event.slug)}/availability`;
         const response = await fetch(`${path}?${new URLSearchParams({ week })}`, { credentials: "same-origin", cache: "no-store", signal: controller.signal });
         if (!response.ok) throw new Error(await errorMessage(response));
         const result = await response.json() as PickerAvailability;
-        if (result.state !== "available") throw new Error("Calendar availability cannot be checked right now. Refresh times to try again.");
+        if (result.state !== "available") throw new Error("Calendar availability cannot be checked right now.");
         if (!controller.signal.aborted) setAvailability(result);
       } catch (error) {
         if (!controller.signal.aborted) setAvailabilityError(error instanceof Error ? error.message : "Available times could not be loaded.");
@@ -109,11 +110,10 @@ function OfferForm({ event, host, onCreated }: { event: EventTypeRecord; host: H
   async function create(formEvent: FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
     if (busy.current) return;
-    const expiresAt = new Date(expiry);
-    const hours = hold === "held" ? Number(holdHours) : 0;
+    const expiresAt = new Date(expiry), hours = Number(holdHours);
     if (!selected.length || selected.length > 12) { setError("Choose between 1 and 12 available times."); return; }
     if (!Number.isFinite(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) { setError("Choose an expiry date and time in the future."); return; }
-    if (hold === "held" && (!Number.isInteger(hours) || hours < 1 || hours > 168)) { setError("Enter a hold between 1 and 168 hours."); return; }
+    if (!Number.isInteger(hours) || hours < 0 || hours > 168) { setError("Choose no hold or a hold up to 168 hours."); return; }
     busy.current = true; setSaving(true); setError("");
     try {
       const response = await fetch("/api/app/booking-links", {
@@ -136,20 +136,28 @@ function OfferForm({ event, host, onCreated }: { event: EventTypeRecord; host: H
 
   return <form className="mt-4 grid gap-4" onSubmit={formEvent => void create(formEvent)}>
     <fieldset disabled={!hydrated || saving} className="grid min-w-0 gap-4 border-0 p-0">
-      <p className="text-sm text-soft">{event.durationMinutes} minutes · Times shown in {host.timezone}. Availability is checked again when you create the offer and when your recipient books.</p>
-      <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
-        <label className={fieldLabel}>Week starting<Input type="date" min={today} value={week} required onChange={entry => { if (entry.target.value) setWeek(entry.target.value); }} /></label>
-        <div className="flex flex-wrap gap-3"><Button type="button" variant="secondary" disabled={loading || week <= today} onClick={() => setWeek(shiftHostDate(week, -7) < today ? today : shiftHostDate(week, -7))}>Previous</Button><Button type="button" variant="secondary" disabled={loading} onClick={() => setWeek(shiftHostDate(week, 7))}>Next</Button><Button type="button" variant="quiet" disabled={loading} onClick={() => setRefresh(value => value + 1)}>Refresh times</Button></div>
+      <p className="text-sm text-soft">Times in {host.timezone} · {event.durationMinutes} minutes</p>
+      <div className="flex items-end gap-2" data-offer-week-header>
+        <Tooltip label="Previous week"><Button type="button" variant="secondary" className="min-w-11 shrink-0 px-0" disabled={week <= today} onClick={() => setWeek(shiftHostDate(week, -7) < today ? today : shiftHostDate(week, -7))}>‹</Button></Tooltip>
+        <label className={`${fieldLabel} min-w-0 flex-1`}>Week starting<Input type="date" min={today} value={week} required onChange={entry => { if (entry.target.value) setWeek(entry.target.value); }} /></label>
+        <Tooltip label="Next week"><Button type="button" variant="secondary" className="min-w-11 shrink-0 px-0" onClick={() => setWeek(shiftHostDate(week, 7))}>›</Button></Tooltip>
       </div>
-      {loading ? <p role="status" className="text-sm text-soft">Checking live availability…</p> : availabilityError ? <p role="alert" className="text-sm text-danger">{availabilityError}</p> : availability?.state === "available" ? <OfferedTimeChoices slots={availability.slots} timezone={host.timezone} selected={selected} onToggle={toggle} /> : null}
-      <div><p role="status" className="text-sm font-semibold">{selected.length} of 12 times selected</p>{selected.length ? <ul className="mt-2 grid gap-1">{selected.map(slot => <li key={slot.startAt} className="flex flex-wrap items-center justify-between gap-x-3 text-sm"><span>{offeredLabel(slot, host.timezone)}</span><Button type="button" variant="quiet" aria-label={`Remove ${offeredLabel(slot, host.timezone)}`} onClick={() => toggle(slot)}>Remove</Button></li>)}</ul> : null}</div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className={fieldLabel}>Hold selected times<Select value={hold} onChange={entry => setHold(entry.target.value)}><option value="held">Hold for recipient</option><option value="none">No hold</option></Select></label>
-        {hold === "held" ? <label className={fieldLabel}>Hold duration (hours)<Input type="number" min={1} max={168} step={1} value={holdHours} required onChange={entry => setHoldHours(entry.target.value)} /></label> : null}
-        <label className={fieldLabel}>Link expires (your device timezone)<Input type="datetime-local" value={expiry} required onChange={entry => setExpiry(entry.target.value)} /></label>
+      <div aria-busy={loading}>
+        <div className="flex min-h-6 items-center justify-between gap-3 text-sm text-soft">
+          <span role="status">{loading ? "Updating times…" : `${selected.length} of 12 times selected`}</span>
+          {availabilityError ? <Button type="button" variant="quiet" onClick={() => setRefresh(value => value + 1)}>Retry times</Button> : null}
+        </div>
+        {availabilityError ? <p role="alert" className="my-2 text-sm text-danger">{availabilityError}</p> : null}
+        <fieldset disabled={loading || Boolean(availabilityError)} className="min-w-0 border-0 p-0">
+          <OfferedTimeChoices pending={loading} slots={availability?.state === "available" ? availability.slots : []} timezone={host.timezone} selected={selected} onToggle={toggle} />
+        </fieldset>
       </div>
-      <p className="text-sm text-soft">{hold === "held" ? "Held times leave public availability until the hold ends, the link expires, or one time is booked." : "Times stay available to others and may be booked before your recipient chooses."}</p>
-      <div><Button disabled={!selected.length || loading || Boolean(availabilityError)}>{saving ? "Creating offer…" : "Create offered-times link"}</Button></div>
+      {selected.length ? <ul className="grid gap-1">{selected.map(slot => <li key={slot.startAt} className="flex flex-wrap items-center justify-between gap-x-3 text-sm"><span>{offeredLabel(slot, host.timezone)}</span><Button type="button" variant="quiet" aria-label={`Remove ${offeredLabel(slot, host.timezone)}`} onClick={() => toggle(slot)}>Remove</Button></li>)}</ul> : null}
+      <div className="grid items-start gap-4 sm:grid-cols-2">
+        <label className={fieldLabel}>Hold<Select aria-label="Hold" value={holdHours} onChange={entry => setHoldHours(entry.target.value)}><option value="0">No hold</option>{Array.from({ length: 168 }, (_, index) => index + 1).map(hours => <option key={hours} value={hours}>{hours} {hours === 1 ? "hour" : "hours"}</option>)}</Select></label>
+        <label className={fieldLabel}>Link expires (device time)<Input aria-label="Link expires" type="datetime-local" value={expiry} required onChange={entry => setExpiry(entry.target.value)} /></label>
+      </div>
+      <div><Button disabled={!selected.length || loading || Boolean(availabilityError)}>{saving ? "Creating…" : "Create link"}</Button></div>
     </fieldset>
     {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
   </form>;
