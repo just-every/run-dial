@@ -5172,7 +5172,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/booking-changes.tsx": {
-      "sha256": "1c09ad41e405088c6d2cc84bd094891dc85fabee3c18c7f27c9556131f48c783",
+      "sha256": "74697ccb2a2e792c30aff8952bc997952c2b6f3084b7f300eafc9fcca32e0cfa",
       "executable": false
     },
     "src/core/features/bookings/ui/booking-detail.tsx": {
@@ -5216,7 +5216,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/create-booking-page.tsx": {
-      "sha256": "0af94171a2b859dcd8186249d04342530f09386dbf1c6c9a83cc4f051b343ca0",
+      "sha256": "76f04fc94d7ae69ebdaa6e8e0c43cdecdf008e8716e32aae31282810384348d9",
       "executable": false
     },
     "src/core/features/bookings/ui/delivery-actions.tsx": {
