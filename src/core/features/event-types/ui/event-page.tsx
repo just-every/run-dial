@@ -45,7 +45,7 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
   const [record, setRecord] = useState(initial);
   const initialReadiness = useWorkspaceRead<EventReadiness>(`/api/app/event-types/${initial.id}/readiness`);
   const [readiness, setReadiness] = useState(initialReadiness), [checking, setChecking] = useState(!initialReadiness);
-  const [hours, setHours] = useState<HoursRead>();
+  const [hours, setHours] = useState<HoursRead | null>();
   const initialFields = useWorkspaceRead<{ id: string }[]>(`/api/app/custom-fields/eventType/${initial.id}`);
   const [hasPrivateFields, setHasPrivateFields] = useState(Boolean(initialFields?.length));
   const readinessEpoch = useRef(0);
@@ -79,10 +79,11 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
     let active = true;
     const loadHours = async () => {
       try {
-        const [response, fieldsResponse] = await Promise.all([api.api.app.hours.$get(), fetch(`/api/app/custom-fields/eventType/${initial.id}`)]);
-        if (response.ok) { const current = await response.json(); if (active) setHours(current); }
-        if (fieldsResponse.ok) { const fields = await fieldsResponse.json() as { id: string }[]; if (active) setHasPrivateFields(fields.length > 0); }
-      } catch { /* The row names the unavailable read and still opens its sheet. */ }
+        const [hoursRead, fieldsRead] = await Promise.allSettled([api.api.app.hours.$get(), fetch(`/api/app/custom-fields/eventType/${initial.id}`)]);
+        if (hoursRead.status === "fulfilled" && hoursRead.value.ok) { const current = await hoursRead.value.json(); if (active) setHours(current); }
+        else if (active) setHours(current => current ?? null);
+        if (fieldsRead.status === "fulfilled" && fieldsRead.value.ok) { const fields = await fieldsRead.value.json() as { id: string }[]; if (active) setHasPrivateFields(fields.length > 0); }
+      } catch { if (active) setHours(current => current ?? null); }
     };
     void loadHours();
     window.addEventListener("dial-host-setup-changed", loadHours);
@@ -91,7 +92,7 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
   // Lifecycle actions flush details first; a changed lifecycle then gets the right address-confirm policy.
   return <EventDetailsScope key={`${initial.id}:${record.status}`} initial={record} workspace={workspace} paymentEditor={paymentEditor} hostName={hostName} hostTimezone={hostTimezone} onSaved={onSaved} onHoursClosed={onHoursClosed} readiness={readiness} checking={checking} setRecord={setRecord} hours={hours} hasPrivateFields={hasPrivateFields}>{children}</EventDetailsScope>;
 }
-type DetailsScopeProps = { initial: EventTypeRecord; workspace: "/app" | "/setup"; paymentEditor: EventPaymentEditor; hostName: string; hostTimezone: string; onSaved(): void; onHoursClosed(): void; readiness?: EventReadiness; checking: boolean; setRecord(event: EventTypeRecord): void; hours?: HoursRead; hasPrivateFields: boolean; children?: ReactNode };
+type DetailsScopeProps = { initial: EventTypeRecord; workspace: "/app" | "/setup"; paymentEditor: EventPaymentEditor; hostName: string; hostTimezone: string; onSaved(): void; onHoursClosed(): void; readiness?: EventReadiness; checking: boolean; setRecord(event: EventTypeRecord): void; hours?: HoursRead | null; hasPrivateFields: boolean; children?: ReactNode };
 function EventDetailsScope({ initial, workspace, paymentEditor, hostName, hostTimezone, onSaved, onHoursClosed, readiness, checking, setRecord, hours, hasPrivateFields, children }: DetailsScopeProps) {
   const details = useAutosave(`event:${initial.id}:details:${initial.status}`, detailsOf(initial), async (next, init) => {
     const response = await api.api.app["event-types"][":id"].details.$patch({ param: { id: initial.id }, json: next }, { init });

@@ -2,7 +2,7 @@ import type { HoursRead } from "../../availability";
 import type { AvailabilityWindowInput, EventTypeRecord } from "../repository";
 
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-function time(minute: number) { const hour = Math.floor(minute / 60); return `${hour % 12 || 12}:${String(minute % 60).padStart(2, "0")} ${hour < 12 ? "AM" : "PM"}`; }
+function time(minute: number) { const hour = Math.floor(minute / 60) % 24; return `${hour % 12 || 12}:${String(minute % 60).padStart(2, "0")} ${hour < 12 ? "AM" : "PM"}`; }
 export function windowsSummary(windows: AvailabilityWindowInput[]) {
   if (!windows.length) return "No hours set";
   const groups = new Map<string, { days: number[]; start: number; end: number }>();
@@ -19,8 +19,9 @@ export function windowsSummary(windows: AvailabilityWindowInput[]) {
     return `${label} ${time(group.start)} – ${time(group.end)}`;
   }).join(" · ");
 }
-export function hoursSummary(event: EventTypeRecord, hours?: HoursRead) {
-  if (!hours) return "Hours could not be loaded";
+export function hoursSummary(event: EventTypeRecord, hours?: HoursRead | null) {
+  if (hours === undefined) return "";
+  if (hours === null) return "Hours could not be loaded";
   const uses = hours.events.find(item => item.id === event.id)?.uses;
   if (uses === "yours") return `Your hours · ${windowsSummary(hours.yours?.windows ?? [])}`;
   if (uses && uses !== "own") return hours.others.find(item => item.id === uses)?.name ?? "Hours unavailable";

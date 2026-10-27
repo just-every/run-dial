@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { cloneElement, useState, type ReactElement } from "react";
 import { Input, Select, IconTile } from "../../../app/ui/primitives";
 import { SavedMark, SaveFailed } from "../../../app/ui/autosave/saved-state";
 import { useEventPage } from "./event-page-context";
@@ -10,8 +10,8 @@ export function SchedulingLimits() {
   const [open, setOpen] = useState(false);
   const notice = value.minimumNoticeMinutes >= 1440 ? `${value.minimumNoticeMinutes / 1440} ${value.minimumNoticeMinutes === 1440 ? "day’s" : "days’"}` : `${value.minimumNoticeMinutes} min`;
   const horizon = value.bookingHorizonMode === "indefinite" ? "no end date" : value.bookingHorizonMode === "fixed_range" ? `${value.bookingStartDate} – ${value.bookingEndDate}` : `up to ${value.bookingHorizonDays} ${value.bookingHorizonMode === "weekdays" ? "weekdays" : "days"} ahead`;
-  function field(key: keyof EventDetailsInput, label: string, child: ReactNode) {
-    return <div className="grid min-w-0 gap-2"><label className="grid gap-2 text-sm font-semibold"><span className="flex flex-wrap items-center justify-between gap-2">{label}<SavedMark state={details.state(key)} /></span>{child}</label><SaveFailed id={`schedule-${key}-error`} state={details.state(key)} what={label.toLowerCase()} onRetry={details.retry} /></div>;
+  function field(key: keyof EventDetailsInput, label: string, child: ReactElement<{ "aria-label"?: string }>) {
+    return <div className="grid min-w-0 gap-2"><label className="grid gap-2 text-sm font-semibold"><span className="flex flex-wrap items-center justify-between gap-2">{label}<SavedMark state={details.state(key)} /></span>{cloneElement(child, { "aria-label": label })}</label><SaveFailed id={`schedule-${key}-error`} state={details.state(key)} what={label.toLowerCase()} onRetry={details.retry} /></div>;
   }
   function number(key: "minimumNoticeMinutes" | "bookingHorizonDays" | "beforeBufferMinutes" | "afterBufferMinutes" | "hostDayBookingLimit", label: string, min: number, max?: number) {
     return field(key, label, <Input type="number" min={min} max={max} value={value[key] ?? ""} onChange={entry => details.type(key, entry.target.value === "" && key === "hostDayBookingLimit" ? null : Number(entry.target.value))} onBlur={details.leave} />);

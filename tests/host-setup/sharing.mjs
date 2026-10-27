@@ -107,7 +107,15 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
     throw new Error(`${error.message}\nEvent page: ${text.slice(0, 2500)}`);
   });
   const publicPage = await context.newPage();
-  try { await publicPage.goto(expected); if (requestsOnly) { await expect(publicPage.getByRole("heading", { name: "Request a time with Fresh Host.", exact: true })).toBeVisible(); await expect(publicPage.locator(".pb-event-flow").getByRole("heading", { name: "First event", exact: true })).toBeVisible(); assert.equal(await publicPage.locator(".pb-slot-button").count(), 0); } else await expect(publicPage.locator(".pb-slot-button").first()).toBeVisible(); }
+  try { await publicPage.goto(expected); if (requestsOnly) { await expect(publicPage.getByRole("heading", { name: "Request a time with Fresh Host.", exact: true })).toBeVisible(); await expect(publicPage.locator(".pb-event-flow").getByRole("heading", { name: "First event", exact: true })).toBeVisible(); assert.equal(await publicPage.locator(".pb-slot-button").count(), 0); } else {
+    // The public picker is day-first. Wait for its hydrated choices, then
+    // choose a real available day before asserting that its times are shown.
+    const day = publicPage.getByRole("group", { name: "Choose a day", exact: true }).getByRole("button").first();
+    await day.waitFor();
+    await day.click();
+    await expect(day).toHaveAttribute("aria-pressed", "true");
+    await expect(publicPage.locator(".pb-slot-button").first()).toBeVisible();
+  } }
   catch (error) {
     await publicPage.screenshot({ path: evidencePath(`host-public-unavailable-${page.viewportSize().width}.png`), fullPage: true });
     const text = (await publicPage.locator("body").innerText()).replace(/https?:\/\/[^\s"'<>]+/g, url => new URL(url).pathname);

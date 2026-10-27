@@ -28,7 +28,11 @@ export async function hostJourneys(origin, scenario) {
         surface.on("request", request => requestSteps.set(request, `${step} at ${Date.now() - startedAt}ms`));
         surface.on("pageerror", () => errors.push("Uncaught browser error"));
         surface.on("console", message => {
-          if (message.type() === "error" && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) errors.push("Browser console error: " + message.text().replace(/https?:\/\/[^\s"'<>]+/g, url => safeRequestPath(url)) + ` at ${safeRequestPath(message.location().url || surface.url())} during ${step}`);
+          if (message.type() === "error" && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) {
+            const location = message.location().url || surface.url();
+            const entry = "Browser console error: " + message.text().replace(/https?:\/\/[^\s"'<>]+/g, url => safeRequestPath(url)) + ` at ${safeRequestPath(location)} appOrigin=${new URL(location).origin === origin} during ${step}`;
+            errors.push(entry); console.log(entry);
+          }
           if (/hydration|hydrating|did not match/i.test(message.text())) errors.push("Hydration diagnostic");
         });
         surface.on("response", response => {
@@ -119,6 +123,11 @@ export async function hostJourneys(origin, scenario) {
         if (requestsOnly) { await page.getByText(/Booking configuration/).click(); await expect(page.locator('[data-step="calendar"]')).toContainText("Optional"); await expect(page.locator('[data-step="availability"]')).toContainText("To do"); }
         else { assert.ok(state.steps.every(step => step.done), "published host completes every returned setup step"); await expect(page.getByRole("list", { name: "Booking configuration" })).toBeHidden(); step = "activity"; if (calendarOptional) await calendarOptionalJourney(browser, page, origin, eventId, width, scan); else await activityJourney(page, origin, eventId, scan); }
         await scan("complete"); assert.deepEqual(errors, []);
+      } catch (error) {
+        await page.screenshot({ path: evidencePath(`host-${calendarOptional ? "calendar-optional" : requestsOnly ? "requests" : "published"}-${width}-failure.png`), fullPage: true, caret: "initial" }).catch(() => {});
+        const text = await page.locator("body").innerText().catch(() => "Page body unavailable.");
+        const safeText = text.replace(/https?:\/\/[^\s"'<>]+/g, url => safeRequestPath(url));
+        throw new Error(`${step}: ${error.message}\nBrowser diagnostics: ${JSON.stringify(errors)}\nPage: ${safeText.slice(0, 2500)}`, { cause: error });
       } finally { await context.close(); }
     }
     console.log(`${scans} host setup axe scans; ${scenario.requestsOnly ? "requests-only" : "published"} journey at ${scenario.width}px.`);
