@@ -40,6 +40,7 @@ function HoursSettings({ data: { hours, limits } }: { data: Read }) {
   const scheduleId = useRef(hours.yours?.id);
   const initial = { name: "Your hours", windows: hours.yours?.windows ?? [1, 2, 3, 4, 5].map(weekday => ({ weekday, startMinute: 540, endMinute: 1020 })), blockUsHolidays: hours.yours?.blockUsHolidays ?? false, reopenedHolidays: hours.yours?.reopenedHolidays ?? [], timeOff: hours.yours?.timeOff ?? [] };
   const form = useAutosave("settings:your-hours", initial, async (next, init) => {
+    if (next.windows.some(window => window.endMinute <= window.startMinute)) throw new Error("Ends before it starts. Choose a later end time.");
     // A fresh installation has no schedule yet. The first edit creates yours without binding any event.
     if (!scheduleId.current) {
       const response = await api.api.app.hours.closures.$put({ json: { blockUsHolidays: next.blockUsHolidays, reopenedHolidays: next.reopenedHolidays, timeOff: next.timeOff } }, { init });

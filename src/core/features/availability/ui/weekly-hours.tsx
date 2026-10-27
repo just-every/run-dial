@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Input } from "../../../app/ui/primitives";
 import { Tooltip } from "../../../app/ui/tooltip";
 import type { AvailabilityWindowInput } from "../../event-types";
@@ -8,6 +9,7 @@ const iconButton = "grid size-11 shrink-0 place-items-center rounded-full bg-was
 
 /** The same seven compact, directly editable day rows wherever a set of hours is used. */
 export function WeeklyHours({ windows, onChange, label = "Weekly hours" }: { windows: AvailabilityWindowInput[]; onChange(windows: AvailabilityWindowInput[]): void; label?: string }) {
+  const id = useId();
   return <div role="group" aria-label={label} className="grid gap-1">
     {weekdays.map(([weekday, day, short]) => <div key={weekday} role="group" aria-label={day} className="grid grid-cols-[2.5rem_minmax(0,1fr)_2.75rem] items-start gap-2">
       <span className="flex min-h-11 items-center text-sm font-semibold" aria-hidden="true">{short}</span>
@@ -18,15 +20,16 @@ export function WeeklyHours({ windows, onChange, label = "Weekly hours" }: { win
               {clockLabel(window.startMinute)}–{clockLabel(window.endMinute)}
             </summary>
             <div className="grid min-w-0 gap-2 pt-2">
-              <label className="grid min-w-0 gap-1 text-[13px] text-soft">From<Input type="time" className="min-w-0 px-2 text-[13px]" aria-label={`${day} window ${indexOnDay(windows, position)} start time`} value={timeInput(window.startMinute)} onChange={event => {
+              <label className="grid min-w-0 gap-1 text-[13px] text-soft">From<Input type="time" className="min-w-0 px-2 text-[13px]" aria-label={`${day} window ${indexOnDay(windows, position)} start time`} aria-invalid={window.endMinute <= window.startMinute || undefined} aria-describedby={window.endMinute <= window.startMinute ? `${id}-${position}-error` : undefined} value={timeInput(window.startMinute)} onChange={event => {
                 const minute = timeMinutes(event.target.value);
                 if (Number.isFinite(minute)) onChange(windows.map((current, index) => index === position ? { ...current, startMinute: minute } : current));
               }} /></label>
-              <label className="grid min-w-0 gap-1 text-[13px] text-soft">Until<Input type="time" className="min-w-0 px-2 text-[13px]" aria-label={`${day} window ${indexOnDay(windows, position)} end time`} value={timeInput(window.endMinute)} onChange={event => {
+              <label className="grid min-w-0 gap-1 text-[13px] text-soft">Until<Input type="time" className="min-w-0 px-2 text-[13px]" aria-label={`${day} window ${indexOnDay(windows, position)} end time`} aria-invalid={window.endMinute <= window.startMinute || undefined} aria-describedby={window.endMinute <= window.startMinute ? `${id}-${position}-error` : undefined} value={timeInput(window.endMinute)} onChange={event => {
                 const minute = timeMinutes(event.target.value, true);
                 if (Number.isFinite(minute)) onChange(windows.map((current, index) => index === position ? { ...current, endMinute: minute } : current));
               }} /></label>
             </div>
+            {window.endMinute <= window.startMinute ? <p id={`${id}-${position}-error`} role="alert" className="mt-2 text-sm text-danger">Ends before it starts. Choose a later end time.</p> : null}
           </details>
           <Tooltip label="Remove hours"><button type="button" className={iconButton} onClick={() => onChange(windows.filter((_, index) => index !== position))}><span aria-hidden="true">×</span></button></Tooltip>
         </div> : null) : <span className="flex min-h-11 items-center text-sm text-muted">Unavailable</span>}

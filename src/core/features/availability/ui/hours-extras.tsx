@@ -68,6 +68,7 @@ export function OtherHours({ initial, windows }: { initial: HoursRead["others"];
 
 function OtherHoursEditor({ initial, open }: { initial: HoursRead["others"][number]; open: boolean }) {
   const form = useAutosave(`other-hours:${initial.id}`, { name: initial.name, windows: initial.windows }, async (next, init) => {
+    if (next.windows.some(window => window.endMinute <= window.startMinute)) throw new Error("Ends before it starts. Choose a later end time.");
     const response = await api.api.app["availability-schedules"][":id"].$put({ param: { id: initial.id }, json: { ...next, blockUsHolidays: false, reopenedHolidays: [], timeOff: [] } }, { init });
     if (!response.ok) throw new Error(await errorMessage(response));
   });
