@@ -1,0 +1,83 @@
+/* Save as you go (autosave/*), in Dial's own tokens: the quiet Saved beside a field's label, a failed save's one line under its
+   field, and the one-step confirm under a field. None of them draws a border, so no field gains a second one (H17) and no
+   rounded box a one-sided one (H5); all text is 13 px or more (H11). Unlayered, as tooltip.css, so it holds over the utilities. */
+
+.autosave-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font: 600 13px/1.4 var(--font);
+  white-space: nowrap;
+}
+
+.autosave-saved-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.autosave-failed {
+  margin: 8px 0 0;
+  border-radius: 12px;
+  padding: 9px 12px;
+  background: var(--danger-wash);
+  color: var(--danger);
+  font: 600 14px/1.5 var(--font);
+}
+
+/* An underlined text button in ink, as the app's quiet buttons. Its ::after takes the tap target past 44 px tall without
+   growing the line, so focus still rings the word. */
+.autosave-retry {
+  position: relative;
+  margin: 0;
+  border: 0;
+  padding: 0 2px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline 1.5px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.autosave-retry::after {
+  content: "";
+  position: absolute;
+  inset: -13px -8px;
+}
+
+.autosave-retry:hover {
+  text-decoration-color: var(--gold-deep);
+}
+
+.autosave-confirm {
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--gold-wash);
+}
+
+.autosave-confirm-text {
+  margin: 0;
+  color: var(--ink);
+  font: 550 15px/1.6 var(--font);
+}
+
+.autosave-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .autosave-confirm {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .autosave-confirm-actions {
+    flex-direction: column;
+  }
+}
