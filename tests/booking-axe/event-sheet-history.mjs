@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { setTimeout as delay } from "node:timers/promises";
 import { button, field } from "./keyboard-controls.mjs";
 
 /** Sheet close removes the row-opened entry, while direct links replace it. */
@@ -27,6 +28,10 @@ export async function eventSheetHistory(page, origin, eventId, title, keys, chec
     await at(eventPath, "List → event");
   }
   for (const { rowName, suffix, closeName } of [{ rowName: /^Advanced settings/, suffix: "advanced", closeName: "Close settings" }, { rowName: /^Hours/, suffix: "hours", closeName: "Close hours" }]) {
+    // Route loaders and focus preloads share the native rolling admission window.
+    // Give each independent history matrix a fresh window, as the journey driver does.
+    console.log(`Waiting one native admission minute before the ${suffix} history matrix.`);
+    await delay(60_000);
     for (const escape of [false, true]) {
       await openEvent();
       const row = page.locator("[data-event-page]").getByRole("link", { name: rowName });
@@ -55,6 +60,8 @@ export async function eventSheetHistory(page, origin, eventId, title, keys, chec
   await keys.activate(button(page, "Close settings"), "Close direct advanced link");
   await at(eventPath, "Direct advanced close → event");
   await page.goBack(); await at(listPath, "Back after direct advanced close → list");
+  console.log("Waiting one native admission minute before returning to the original event journey.");
+  await delay(60_000);
   await openEvent();
   checks.push({ width, check: "Advanced and Hours ×/Escape consume row history; Back/Forward and direct-link replacement", steps, passed: true });
 }
