@@ -1,3 +1,4 @@
+export { MicrosoftCalendarAdapter, type MicrosoftCalendarConfiguration } from "./microsoft";
 export { GoogleCalendarAdapter } from "./google";
 export type { GoogleCalendarConfiguration } from "./google";
 export { ProviderFailure } from "./types";

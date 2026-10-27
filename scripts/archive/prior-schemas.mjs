@@ -12,6 +12,10 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // CAL-010 widens the supported provider constraint while preserving existing connection values.
+  'core/0084_microsoft_calendar.sql': (_table,row) => row,
+  // PAY-004 adds new empty catalog, purchaser balance, redemption and replay tables.
+  'core/0083_payment_entitlements.sql': (_table,row) => row,
   // A schedule existed before any was yours; transfer.mjs replays the update's choice after the restore (your-hours.mjs).
   'core/0081_your_hours.sql': (table,row) => table==='availability_schedules'?{...row,is_default:0}:row,
   'core/0078_meeting_polls.sql': (_table,row) => row,

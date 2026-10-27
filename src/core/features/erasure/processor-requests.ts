@@ -45,10 +45,12 @@ export class ProcessorRequestsRepository {
     const invoices=(await this.db.prepare("SELECT m.id,m.kind,m.stripe_customer_observed,m.account_id,m.stripe_customer_id,m.checkout_session_id FROM payment_movements m JOIN bookings b ON b.id=m.booking_id WHERE b.invitee_email_folded=?").bind(email).all<{id:string;kind:string;stripe_customer_observed:number;account_id:string;stripe_customer_id:string|null;checkout_session_id:string|null}>()).results;
     for(const row of invoices){if(row.kind==="invoice"&&!row.stripe_customer_observed&&!row.stripe_customer_id)records.push({kind:"stripe_customer_unobserved",accountId:row.account_id,processorRef:row.id,reason:"customer_creation_unobserved_no_reference"});add("stripe_customer_anonymize",row.account_id,row.stripe_customer_id);add("stripe_checkout_email",row.account_id,row.checkout_session_id);}
     const sessions=(await this.db.prepare(`SELECT p.account_id,p.checkout_session_id FROM booking_payments p JOIN bookings b ON b.id=p.booking_id WHERE b.invitee_email_folded=?
-      UNION SELECT account_id,checkout_session_id FROM payment_holds WHERE invitee_email_folded=?`).bind(email,email).all<{account_id:string;checkout_session_id:string|null}>()).results;
+      UNION SELECT account_id,checkout_session_id FROM payment_holds WHERE invitee_email_folded=?
+      UNION SELECT account_id,checkout_session_id FROM payment_entitlements WHERE purchaser_email_folded=?`).bind(email,email,email).all<{account_id:string;checkout_session_id:string|null}>()).results;
     for(const row of sessions)add("stripe_checkout_email",row.account_id,row.checkout_session_id);
     const calendar=(await this.db.prepare("SELECT id,calendar_provider_event_id FROM bookings WHERE invitee_email_folded=? AND calendar_required=1 AND (imported=0 OR calendar_provider_event_id IS NOT NULL OR EXISTS(SELECT 1 FROM delivery_outbox d WHERE d.booking_id=bookings.id AND d.kind='calendar_upsert' AND CASE WHEN json_valid(d.payload_json) THEN json_extract(d.payload_json,'$.archiveHistorical') END IS NOT 1))").bind(email).all<{id:string;calendar_provider_event_id:string|null}>()).results;
-    for(const row of calendar)add("calendar_event_cancel","google_calendar",row.calendar_provider_event_id??row.id,row.id);
+    const provider=(await this.db.prepare("SELECT provider FROM calendar_connections WHERE singleton_key='default'").first<{provider:string}>())?.provider==='microsoft'?'microsoft_calendar':'google_calendar';
+    for(const row of calendar)add("calendar_event_cancel",provider,row.calendar_provider_event_id??row.id,row.id);
     return records.filter((row,index)=>records.findIndex(other=>other.kind===row.kind&&other.accountId===row.accountId&&other.processorRef===row.processorRef)===index)
       .map(row=>({...row,state:"pending" as const,reason:row.reason??"awaiting_erasure_confirmation",requested:false}));
   }

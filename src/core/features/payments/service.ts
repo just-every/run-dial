@@ -1,3 +1,4 @@
+import { Entitlements } from "./entitlements";
 import { Accounting } from "./accounting";
 import { Reconciliation } from "./reconciliation";
 import { deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
@@ -41,6 +42,7 @@ type ApprovalLifecycle = {receive(hold:PaymentHold,event:StripeEvent):Promise<We
 export type WebhookResult = { kind: "unauthorized" | "processed" | "ignored" | "rejected" } | { kind: "limited"; retryAfterSeconds: number };
 
 export class PaymentsService {
+  readonly entitlements: Entitlements;
   readonly accounting: Accounting;
   readonly reconciliation: Reconciliation;
   readonly processorErasure: ProcessorErasure;
@@ -52,7 +54,7 @@ export class PaymentsService {
   private readonly db: D1Database;
   private convert?: PaidConversion;
   private approvalLifecycle?: ApprovalLifecycle;
-  constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, processorRequests:ProcessorRequestsRepository, private readonly transport: typeof fetch = fetch) {
+  constructor(db: D1Database, private readonly runtime: RuntimeEnvironment, processorRequests:ProcessorRequestsRepository, private readonly transport: typeof fetch = fetch, clock?:()=>Promise<Date>) {
     this.db = db;
     this.reconciliation = new Reconciliation(db, stripeConfiguration(runtime) ? new StripeApi(stripeConfiguration(runtime)!.secretKey,transport) : undefined);
     this.accounting = new Accounting(db, runtime, transport);
@@ -61,6 +63,7 @@ export class PaymentsService {
     this.connection = new StripeConnection(this.repository, runtime, transport);
     const movements = new MovementsRepository(db);
     this.money = new MoneyService(db, this.repository, this.terms, movements, runtime, transport);
+    this.entitlements = new Entitlements(db,runtime,()=>this.money.live(),clock);
     this.processorErasure = new ProcessorErasure(db, () => this.money.live(),processorRequests);
     this.invoices = new InvoiceService(db, this.repository, this.terms, movements, this.money);
   }
@@ -154,6 +157,10 @@ export class PaymentsService {
   async bookingPayment(bookingId: string) { return this.repository.bookingPayment(bookingId); }
 
   async erasePendingHolds(email: string) {
+    await this.entitlements.erasePurchases(email,async(accountId,processorRef)=>{
+      const receiptId=await this.processorErasure.requests.receiptForEmail(email);
+      if(receiptId)await this.processorErasure.requests.ensure(receiptId,{kind:"stripe_checkout_email",accountId,processorRef,state:"pending",reason:"checkout_customer_email_not_editable_no_erasure_api",requested:false});
+    },(account,id)=>this.processorErasure.customer(email,account,id));
     const outcomes = await erasePendingPayments(this.db, email, () => this.money.live(), (account, ref) => this.processorErasure.detach(email, account, ref));
     for (const outcome of outcomes) {
       if(outcome.customerId)await this.processorErasure.customer(email,outcome.accountId,outcome.customerId);
@@ -189,6 +196,8 @@ export class PaymentsService {
       await this.repository.markDeauthorized(event.account);
       return { kind: "processed" };
     }
+    const entitlement = await this.entitlements.receive(event);
+    if(entitlement)return entitlement;
     const reconciliation = await this.reconciliation.receive(event);
     if (reconciliation) return reconciliation;
     const object = event.data.object;

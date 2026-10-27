@@ -1,6 +1,6 @@
-import mappings from './case-fold-data.json' with { type: 'json' };
+import { foldCase } from '../../../shared/case-fold.mjs';
 
 /** Full default Unicode case folding; punctuation is always literal. */
 export function foldBookingSearch(value) {
-  return Array.from(value, character => mappings[character.codePointAt(0)] ?? character).join('');
+  return foldCase(value);
 }

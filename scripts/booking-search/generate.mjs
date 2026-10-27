@@ -9,7 +9,7 @@ for (const line of source.split('\n')) {
   if (match) mappings[parseInt(match[1], 16)] = String.fromCodePoint(...match[2].trim().split(' ').map(code => parseInt(code, 16)));
 }
 const root = new URL('../../', import.meta.url);
-await writeFile(new URL('src/core/features/bookings/search/case-fold-data.json', root), JSON.stringify(mappings, null, 2) + '\n');
+await writeFile(new URL('src/core/shared/case-fold-data.json', root), JSON.stringify(mappings, null, 2) + '\n');
 const literal = value => `'${value.replaceAll("'", "''")}'`;
 const fold = value => `(WITH RECURSIVE fold(remaining, result) AS (
   SELECT ${value}, ''
