@@ -81,9 +81,17 @@ export async function paymentErasureProbes({ data, call, state, hold, slot, day,
       assert.equal(requests.length,1);assert.equal(JSON.parse(requests[0].headers).account,item.accountId);
       if(item.kind==="stripe_customer_anonymize")assert.deepEqual(JSON.parse(requests[0].body),{email:"",name:"",phone:"",address:"",shipping:"",description:"",metadata:""});
     }
-    const beforeRetry=(await state()).wire_calls.length;
-    await data(`/api/app/privacy/receipts/${receipt.id}/retry`,{});await erase(email);
-    assert.equal((await state()).wire_calls.length,beforeRetry,"retry and duplicate erasure never repeat completed processor requests");
+    // The wire also records calendar health checks; count every Stripe request, regardless of method or outcome.
+    const processorCalls = snapshot => snapshot.wire_calls.filter(row => ["api.stripe.com", "connect.stripe.com"].includes(new URL(row.url).hostname));
+    const completedRequests = result => result.externalRequests.filter(item => item.state === "completed");
+    const beforeRetry = processorCalls(await state()).length;
+    const retried = await data(`/api/app/privacy/receipts/${receipt.id}/retry`, {});
+    const afterRetry = processorCalls(await state()).length;
+    assert.equal(afterRetry - beforeRetry, 0, "retry never repeats completed processor requests");
+    assert.deepEqual(completedRequests(retried), completedRequests(receipt), "retry preserves the completed-request list");
+    await erase(email);
+    assert.equal(processorCalls(await state()).length - afterRetry, 0, "duplicate erasure never repeats completed processor requests");
+    assert.deepEqual(completedRequests(await data(`/api/app/privacy/receipts/${receipt.id}`)), completedRequests(retried), "duplicate erasure preserves the completed-request list");
     await call(`/api/public/payments/${pending.returnToken}`, undefined, 404);
     const assertGone = async () => {
       const rows = await data("/__fixtures/payments/all-rows"), serialized = JSON.stringify(rows);

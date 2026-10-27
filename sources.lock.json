@@ -8172,7 +8172,7 @@
       "executable": false
     },
     "tests/booking-wire/payment-erasure-probes.mjs": {
-      "sha256": "dfd1955f4cf2cd5d48bc575d25c31168e353b562e9146e492ea7a2ff1416143e",
+      "sha256": "60df444972495bac37bc787951eed10ca65416f365dddd905796a056c0903e60",
       "executable": false
     },
     "tests/booking-wire/payment-fixtures.ts": {
