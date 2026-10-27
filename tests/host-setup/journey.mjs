@@ -1,3 +1,4 @@
+import { hoursJourney } from "./hours.mjs";
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -12,7 +13,7 @@ import { localSignIn } from "./local-signin.mjs";
 const safeRequestPath = url => new URL(url).pathname.replace(/(\/(?:manage|review|alternative-time)\/)[^/]+/g, "$1[redacted]");
 
 export async function hostJourneys(origin, scenario) {
-  const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
+  const browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), args: ["--use-mock-keychain", "--password-store=basic"] });
   let scans = 0;
   try {
     {
@@ -21,6 +22,7 @@ export async function hostJourneys(origin, scenario) {
       const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, locale: "de-DE", timezoneId: "America/New_York", permissions: ["clipboard-read", "clipboard-write"] });
       const page = await context.newPage();
       const errors = [];
+      let hoursOffline = false;
       let step = "public landing";
       const requestSteps = new WeakMap();
       const startedAt = Date.now();
@@ -28,7 +30,7 @@ export async function hostJourneys(origin, scenario) {
         surface.on("request", request => requestSteps.set(request, `${step} at ${Date.now() - startedAt}ms`));
         surface.on("pageerror", () => errors.push("Uncaught browser error"));
         surface.on("console", message => {
-          if (message.type() === "error" && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) errors.push("Browser console error");
+          if (message.type() === "error" && !(hoursOffline && message.text() === "Failed to load resource: net::ERR_FAILED" && new URL(message.location().url).pathname.startsWith("/api/app/availability-schedules/")) && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) errors.push("Browser console error");
           if (/hydration|hydrating|did not match/i.test(message.text())) errors.push("Hydration diagnostic");
         });
         surface.on("response", response => {
@@ -134,6 +136,10 @@ export async function hostJourneys(origin, scenario) {
         await page.goto(origin + "/app/settings/hours");
         await expect(page.getByRole("heading", { name: "Hours", exact: true, level: 1 })).toBeVisible();
         await expect(page.getByRole("switch", { name: "US public holidays", exact: true })).toBeVisible();
+        if (width === 1440 && !requestsOnly && !calendarOptional) {
+          step = "hours follow-up";
+          await hoursJourney(page, origin, eventId, offline => { hoursOffline = offline; });
+        }
         await page.locator("details").filter({ has: page.locator("summary", { hasText: /^Time off/ }) }).locator("summary").click();
         await expect(page.getByRole("button", { name: "Add time off", exact: true })).toBeVisible();
         step = "completed setup"; await page.goto(origin + "/setup");

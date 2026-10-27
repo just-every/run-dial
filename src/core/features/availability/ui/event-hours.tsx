@@ -65,7 +65,7 @@ function HoursContent({ data }: { data: Read }) {
   const server = useRef({ uses, windows: event.availability, copy: 0 });
   const applyCopy = useRef<((windows: EventTypeRecord["availability"]) => void) | null>(null);
   const form = useAutosave(`event-hours:${event.id}`, { uses, windows: event.availability, copy: { source: "", turn: 0 } }, async (next, init) => {
-    if (next.windows.some(window => window.endMinute <= window.startMinute)) throw new Error("Ends before it starts. Choose a later end time.");
+    if (next.uses === "own" && next.copy.turn === server.current.copy && next.windows.some(window => window.endMinute <= window.startMinute)) throw new Error("Ends before it starts. Choose a later end time.");
     const copying = next.copy.turn !== server.current.copy;
     if (next.uses !== server.current.uses || copying) {
       const response = await api.api.app["event-types"][":id"].hours.$put({ param: { id: event.id }, json: next.uses === "own" ? { uses: "own", ...copying ? { startFrom: next.copy.source } : {} } : { uses: next.uses } }, { init });

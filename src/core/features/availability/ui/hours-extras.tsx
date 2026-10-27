@@ -77,7 +77,7 @@ function OtherHoursEditor({ initial, open, others, onSaved }: { initial: HoursRe
   return <details className="min-w-0" open={open}>
     <summary className="flex min-h-11 cursor-pointer items-center text-sm font-bold">{form.values.name || initial.name}</summary>
     <div className="grid gap-4 pt-2">
-      <label className="grid gap-1.5 text-sm font-semibold"><span className="flex flex-wrap items-center justify-between gap-2">Name<SavedMark state={form.state("name")} /></span><Input aria-label={`Name for ${initial.name}`} maxLength={120} value={form.values.name} aria-describedby={form.state("name").failed ? `${initial.id}-name-failure` : undefined} onChange={event => form.type("name", event.target.value)} onBlur={form.leave} /></label>
+      <label className="grid gap-1.5 text-sm font-semibold"><span className="flex flex-wrap items-center justify-between gap-2">Name<SavedMark state={form.state("name")} /></span><Input aria-label={`Name for ${initial.name}`} maxLength={120} aria-invalid={form.state("name").failed || undefined} value={form.values.name} aria-describedby={form.state("name").failed ? `${initial.id}-name-failure` : undefined} onChange={event => form.type("name", event.target.value)} onBlur={form.leave} /></label>
       <SaveFailed id={`${initial.id}-name-failure`} state={form.state("name")} what="hours name" onRetry={form.retry} />
       <div className="flex items-center justify-between gap-2 text-sm font-semibold">Weekly hours<SavedMark state={form.state("windows")} /></div>
       <WeeklyHours label={`${initial.name} weekly hours`} windows={form.values.windows} onChange={next => form.choose("windows", next)} />
