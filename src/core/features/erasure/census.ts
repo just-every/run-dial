@@ -126,6 +126,8 @@ export const applicationTables = [
   "oc_owner_claims",
   // PAY-001: the connected account ID and status; no personal data.
   "payment_connections",
+  // PAY-004 configuration and purchaser identity; person erasure removes balances and their dependent history.
+  "payment_products", "payment_entitlements", "payment_redemptions", "payment_entitlement_events",
   // PAY-001: a pending hold carries the payer's folded email and pending booking until it ends; erased by email and with its booking.
   "payment_holds",
   "payment_oauth_states",

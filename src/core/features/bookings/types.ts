@@ -133,6 +133,7 @@ export type BookingSelection = { startAt: string; endAt: string; inviteeTimezone
 export type BookingNonce = { nonce: string; expiresAt: string; selection: BookingSelection };
 export type BookingActor = { type: "invitee" } | { type: "operator"; operatorId: string } | { type: "calendar_provider" };
 export type BookingConfirmation = {
+  entitlement?: Awaited<ReturnType<import("../payments/entitlements").Entitlements["forBooking"]>>;
   guests?: string[]; guestLimit?: number;
   rescheduleRequest?: import("./reschedule-requests").RescheduleRequest;
   lockedTimezone?: string;
@@ -171,6 +172,7 @@ export type BookingEmail = {
 };
 
 export type BookingClaim = {
+  entitlement?: import("../payments/entitlement-repository").Redemption;
   /** PAY-003: the terms snapshot, card consent and balance-link salt a payment hold carries until confirmation. */
   money?: import("../payments").PendingMoney;
   attribution?: BookingAttribution;

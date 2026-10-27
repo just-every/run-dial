@@ -57,13 +57,14 @@ async function checkoutSessions(db: D1Database, url: URL, method: string, form: 
     const items = [...new Set([...form.keys()].map(name => /^line_items\[(\d+)\]/.exec(name)?.[1]).filter(Boolean))];
     // The current Checkout API uses allowed_payment_method_types, and rejects the old parameter.
     if ([...form.keys()].some(name => name.startsWith("payment_method_types[")) || !form.get("success_url")?.includes("{CHECKOUT_SESSION_ID}")) return stripeError(400, "parameter_invalid");
-    if (mode === "payment" ? !items.length || items.some(index => form.get(`line_items[${index}][price_data][currency]`) !== "usd") : mode !== "setup" || form.get("currency") !== "usd" || items.length) return stripeError(400, "parameter_invalid");
+    if ((mode === "payment" || mode === "subscription") ? !items.length || items.some(index => form.get(`line_items[${index}][price_data][currency]`) !== "usd") : mode !== "setup" || form.get("currency") !== "usd" || items.length) return stripeError(400, "parameter_invalid");
     const sessionId = `cs_test_wire${crypto.randomUUID().replaceAll("-", "")}`;
     const session = { id: sessionId, object: "checkout.session", url: `https://checkout.stripe.com/c/pay/${sessionId}`, status: "open", payment_status: mode === "setup" ? "no_payment_required" : "unpaid", mode,
       amount_total: mode === "setup" ? null : items.reduce((total, index) => total + Number(form.get(`line_items[${index}][price_data][unit_amount]`)) * Number(form.get(`line_items[${index}][quantity]`) ?? 1), 0),
       currency: "usd", payment_intent: null, setup_intent: null, customer: null, expires_at: Number(form.get("expires_at")),
       client_reference_id: form.get("client_reference_id"), metadata: prefixed(form, "metadata"), customer_creation: form.get("customer_creation"), customer_email: form.get("customer_email"),
       allowed_payment_method_types: [...form.entries()].filter(([name]) => name.startsWith("allowed_payment_method_types[")).map(([, value]) => value),
+      subscription_data: {metadata:prefixed(form,"subscription_data[metadata]")},
       setup_intent_data: { metadata: prefixed(form, "setup_intent_data[metadata]") },
       payment_intent_data: { capture_method: form.get("payment_intent_data[capture_method]") ?? "automatic", metadata: prefixed(form, "payment_intent_data[metadata]"), setup_future_usage: form.get("payment_intent_data[setup_future_usage]") },
       line_items: items.map(index => ({ name: form.get(`line_items[${index}][price_data][product_data][name]`), amount: Number(form.get(`line_items[${index}][price_data][unit_amount]`)) })),
@@ -92,6 +93,13 @@ async function stripeObjects(db: D1Database, url: URL, method: string, form: URL
   if(erasure)return erasure;
   const authorization = await stripeAuthorization(db, url, method, form);
   if (authorization) return authorization;
+  const subscription=/^\/v1\/subscriptions\/([^/]+)$/.exec(url.pathname);
+  if(subscription) {
+    const row=await object(db,subscription[1]);
+    if(!row||row.type!=="subscriptions")return stripeError(404,"resource_missing");
+    if(method==='GET')return Response.json(row.payload);
+    if(method==='DELETE'){const canceled={...row.payload,status:'canceled'};await save(db,row.id,row.type,canceled);return Response.json(canceled);}
+  }
   const intent = /^\/v1\/(payment_intents|setup_intents)\/([^/]+)$/.exec(url.pathname);
   if (intent && method === "GET") {
     const found = await object(db, intent[2]);
@@ -189,7 +197,7 @@ export async function payStripeSession(db: D1Database, id: string, paymentStatus
   if (session.status === "complete") return session;
   if (session.status !== "open") return undefined;
   const suffix = id.slice(-12), saveCard = session.mode === "setup" || session.payment_intent_data.setup_future_usage === "off_session";
-  const customer = session.customer_creation === "always" ? `cus_wire${suffix}` : null, card = saveCard ? `pm_wire${suffix}` : null;
+  const customer = (session.customer_creation === "always" || session.mode === "subscription") ? `cus_wire${suffix}` : null, card = saveCard ? `pm_wire${suffix}` : null;
   if (customer) await save(db, customer, "customers", { id: customer, object: "customer", email: session.customer_email });
   if (card) await save(db, card, "payment_methods", { id: card, object: "payment_method", type: "card", customer });
   const completed = { ...session, status: "complete", url: null, customer,
@@ -204,6 +212,11 @@ export async function payStripeSession(db: D1Database, id: string, paymentStatus
     const intent = { id: `pi_wire${suffix}`, object: "payment_intent", status: manual ? "requires_capture" : paymentStatus === "paid" ? "succeeded" : "processing", capture_method: manual ? "manual" : "automatic", amount: session.amount_total, amount_capturable: manual ? session.amount_total : 0, amount_received: !manual && paymentStatus === "paid" ? session.amount_total : 0, payment_method_types: [paymentMethod], amount_refunded: 0, currency: "usd", customer, payment_method: card ?? `pm_wire_once${suffix}`, setup_future_usage: session.payment_intent_data.setup_future_usage, metadata: session.payment_intent_data.metadata };
     await save(db, intent.id, "payment_intents", intent);
     Object.assign(completed, { payment_intent: intent.id, payment_status: manual ? "unpaid" : paymentStatus });
+  }
+  if(session.mode==='subscription') {
+    const clock=Math.floor((await control(db,'entitlement-clock')||Date.now())/1000),end=new Date(clock*1000);end.setUTCMonth(end.getUTCMonth()+1);
+    const subscription={id:`synthetic-dial-subscription-${suffix}`,status:'active',metadata:(session.subscription_data as {metadata:Record<string,string>}).metadata,items:{data:[{current_period_start:clock,current_period_end:Math.floor(end.getTime()/1000)}]}};
+    await save(db,subscription.id,"subscriptions",subscription);Object.assign(completed,{subscription:subscription.id});
   }
   await db.prepare("UPDATE wire_stripe_sessions SET payload=? WHERE id=?").bind(JSON.stringify(completed), id).run();
   return completed;

@@ -67,3 +67,12 @@ export async function reconciliationUpgrade(source) {
 }
 
 export async function noticeUpgrade(source){return preservedUpgrade(source,"core/0080_workspace_notices.sql",prior=>{assert.ok(prior.prepare("SELECT count(*) AS n FROM bookings").get().n>0,"upgrade preserves a populated booking");for(const table of ["workspace_notice_destinations","workspace_notice_deliveries","notice_oauth_states","notice_erasure_requests"])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,"new notice record kinds start empty");});}
+
+
+export async function entitlementUpgrade(source) {
+  return preservedUpgrade(source,"core/0083_payment_entitlements.sql",prior=>{
+    assert.ok(prior.prepare("SELECT count(*) AS n FROM bookings").get().n>0,"entitlement upgrade preserves populated booking data");
+    assert.ok(prior.prepare("SELECT count(*) AS n FROM booking_payments").get().n>0,"entitlement upgrade preserves captured payments");
+    for(const table of ["payment_products","payment_entitlements","payment_redemptions","payment_entitlement_events"])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,"existing installs gain no invented appointment credit");
+  });
+}
