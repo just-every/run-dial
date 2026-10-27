@@ -19,8 +19,12 @@ export function EventActions({ event, workspace, readiness, checking, onChange, 
   const inFlight = useRef(false);
   const [open, setOpen] = useState(false), [asking, setAsking] = useState<Action>();
   const [working, setWorking] = useState(false), [error, setError] = useState("");
-  const [requirements, setRequirements] = useState<string[]>();
+  const [requirements, setRequirements] = useState<{ missing: string[]; readiness?: EventReadiness }>();
+  const latestReadiness = useRef(readiness);
+  useEffect(() => { latestReadiness.current = readiness; }, [readiness]);
+  const currentRequirements = requirements?.readiness === readiness ? requirements?.missing ?? readiness?.missing : readiness?.missing;
   const live = event.status === "published";
+  const liveMissing = event.requestOnly ? readiness?.requests?.missing.filter(code => code !== "event_already_published") : readiness?.missing;
   const state = event.status === "draft" ? "Draft" : event.status === "disabled" ? "Paused" : event.requestOnly ? "Requests only" : "Live";
   useEffect(() => {
     if (!open) return;
@@ -46,11 +50,11 @@ export function EventActions({ event, workspace, readiness, checking, onChange, 
         : action === "delete" ? await endpoint.$delete({ param })
         : action === "pause" ? await endpoint.disable.$post({ param })
         : action === "requests" ? await endpoint["alternative-requests"].$patch({ param, json: { enabled: !event.alternativeRequestsEnabled } })
-        : action === "open-requests" ? await endpoint["open-requests"].$post({ param })
+        : action === "open-requests" || action === "resume" && event.requestOnly ? await endpoint["open-requests"].$post({ param })
         : await endpoint.publish.$post({ param });
       if (!response.ok && !(action === "delete" && response.status === 404)) {
         const failure = await response.clone().json().catch(() => undefined) as { error?: { details?: string[] } } | undefined;
-        setRequirements(failure?.error?.details); throw new Error(await errorMessage(response));
+        setRequirements(failure?.error?.details ? { missing: failure.error.details, readiness: latestReadiness.current } : undefined); throw new Error(await errorMessage(response));
       }
       setAsking(undefined); setOpen(false);
       if (action === "delete") { await navigate({ to: `${workspace}/event-types` }); return; }
@@ -79,8 +83,8 @@ export function EventActions({ event, workspace, readiness, checking, onChange, 
         </div> : null}
       </div>
     </div>
-    {live && readiness?.missing.length ? <p className="text-sm text-soft">Needs attention: {readiness.missing.map((code, index) => { const fix = readinessFix(code, event.id); return <span key={code}>{index ? " · " : ""}<Link to={fix.href.replace(/\/availability$/, "/hours").replace(/^\/app/, workspace)} className="font-semibold underline underline-offset-4">{fix.label}</Link></span>; })}</p> : null}
-    {asking === "publish" ? <section aria-label="Publish event" className="grid gap-4 rounded-[18px] bg-gold-wash p-5"><ReadinessPanel workspace={workspace} eventId={event.id} missing={requirements ?? readiness?.missing} checking={checking} /><p className="text-sm text-soft">Publishing turns on real bookings. Without a connected calendar, Dial does not check external calendar conflicts.</p><div className="flex flex-wrap gap-2"><Button type="button" disabled={working || checking || (requirements ?? readiness?.missing ?? []).length > 0} onClick={() => void act("publish")}>Publish event</Button>{readiness?.requests?.ready ? <Button type="button" variant="secondary" disabled={working} onClick={() => void act("open-requests")}>Open requests</Button> : null}<Button type="button" variant="secondary" onClick={() => setAsking(undefined)}>Keep draft</Button></div></section> : asking ? <InlineConfirm question={asking === "pause" ? `Pause ${event.title}?` : asking === "delete" ? `Delete ${event.title}?` : `Turn off time requests for ${event.title}?`} detail={asking === "delete" ? "Its booking link and availability will be removed. This cannot be undone." : "Bookings already made stay as they are."} action={asking === "pause" ? "Pause event" : asking === "delete" ? "Delete event" : "Turn off time requests"} keep={asking === "pause" ? "Keep it live" : asking === "delete" ? "Keep event" : "Keep requests on"} onAction={() => { if (!working) void act(asking); }} onKeep={() => setAsking(undefined)} /> : null}
+    {live && liveMissing?.length ? <p className="text-sm text-soft">Needs attention: {liveMissing.map((code, index) => { const fix = readinessFix(code, event.id); return <span key={code}>{index ? " · " : ""}<Link to={fix.href.replace(/\/availability$/, "/hours").replace(/^\/app/, workspace)} className="font-semibold underline underline-offset-4">{fix.label}</Link></span>; })}</p> : null}
+    {asking === "publish" ? <section aria-label="Publish event" className="grid gap-4 rounded-[18px] bg-gold-wash p-5"><ReadinessPanel workspace={workspace} eventId={event.id} missing={currentRequirements} checking={checking} /><p className="text-sm text-soft">Publishing turns on real bookings. Without a connected calendar, Dial does not check external calendar conflicts.</p><div className="flex flex-wrap gap-2"><Button type="button" disabled={working || checking || (currentRequirements ?? []).length > 0} onClick={() => void act("publish")}>Publish event</Button>{readiness?.requests?.ready ? <Button type="button" variant="secondary" disabled={working} onClick={() => void act("open-requests")}>Open requests</Button> : null}<Button type="button" variant="secondary" onClick={() => setAsking(undefined)}>Keep draft</Button></div></section> : asking ? <InlineConfirm question={asking === "pause" ? `Pause ${event.title}?` : asking === "delete" ? `Delete ${event.title}?` : `Turn off time requests for ${event.title}?`} detail={asking === "delete" ? "Its booking link and availability will be removed. This cannot be undone." : "Bookings already made stay as they are."} action={asking === "pause" ? "Pause event" : asking === "delete" ? "Delete event" : "Turn off time requests"} keep={asking === "pause" ? "Keep it live" : asking === "delete" ? "Keep event" : "Keep requests on"} onAction={() => { if (!working) void act(asking); }} onKeep={() => setAsking(undefined)} /> : null}
     {error ? <p role="alert" className={noticeClassName("error")}>{error}</p> : null}
   </header>;
 }

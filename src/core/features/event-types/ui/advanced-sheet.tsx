@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Card, IconTile } from "../../../app/ui/primitives";
 import { ExtensionSlot } from "../../../app/extensions";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
@@ -53,6 +53,45 @@ function AdvancedGroups({ event, details, onSaved, hostName, hostTimezone, data 
   const [visited, setVisited] = useState<Set<string>>(new Set());
   const [current, setCurrent] = useState(data);
   const summaryEpoch = useRef(0);
+  const groupsElement = useRef<HTMLDivElement>(null);
+  const attentionAfterOpen = useRef<HTMLElement | undefined>(undefined);
+  useLayoutEffect(() => {
+    const attention = attentionAfterOpen.current;
+    if (attention && attention.closest<HTMLElement>("[data-advanced-group]")?.dataset.advancedGroup === open) {
+      attentionAfterOpen.current = undefined;
+      attention.focus();
+    }
+  }, [open]);
+  useEffect(() => {
+    const element = groupsElement.current;
+    if (!element) return;
+    let leaving = false;
+    const reveal = () => {
+      if (!leaving) return;
+      const attention = element.querySelector<HTMLElement>("[data-autosave-attention]");
+      const panel = attention?.closest<HTMLElement>("[data-advanced-group]");
+      if (!attention || !panel?.dataset.advancedGroup) return;
+      leaving = false;
+      if (panel.hidden) { attentionAfterOpen.current = attention; setOpen(panel.dataset.advancedGroup); }
+      else attention.focus();
+    };
+    const beginLeave = () => { leaving = true; reveal(); };
+    const click = (entry: MouseEvent) => {
+      if (entry.defaultPrevented || entry.button !== 0 || entry.metaKey || entry.ctrlKey || entry.shiftKey || entry.altKey || !(entry.target instanceof Element)) return;
+      if (entry.target.closest('button[aria-label="Close settings"]')) { beginLeave(); return; }
+      const link = entry.target.closest<HTMLAnchorElement>("a[href]");
+      if (link && link.target !== "_blank" && new URL(link.href).pathname !== location.pathname) beginLeave();
+    };
+    const key = (entry: KeyboardEvent) => { if (entry.key === "Escape") beginLeave(); };
+    // The shared guard owns navigation and flushing. Watch only the user's leave intent and any refusal it reveals;
+    // a second history blocker would run after that guard and never see a navigation the guard already blocked.
+    const observer = new MutationObserver(reveal);
+    observer.observe(element, { childList: true, subtree: true });
+    document.addEventListener("click", click, true);
+    document.addEventListener("keydown", key, true);
+    window.addEventListener("popstate", beginLeave);
+    return () => { observer.disconnect(); document.removeEventListener("click", click, true); document.removeEventListener("keydown", key, true); window.removeEventListener("popstate", beginLeave); };
+  }, []);
   useEffect(() => () => { summaryEpoch.current++; }, []);
   async function updated() {
     onSaved();
@@ -79,10 +118,10 @@ function AdvancedGroups({ event, details, onSaved, hostName, hostTimezone, data 
     { name: "Address and listing", icon: "file", summary: `${details.values.slug} · ${details.values.listed ? "on your public profile" : "link only"}`, content: <AddressAndListing details={details} live={event.status === "published"} /> },
     ...(data.fields.length ? [{ name: "Private fields", icon: "shield" as const, summary: `${data.fields.length} private field${data.fields.length === 1 ? "" : "s"}`, content: <ExtensionSlot id="event-type.settings.after.v1" entityId={event.id} autosave onSaved={onSaved} /> }] : []),
   ];
-  return <Card className="advanced-groups">{groups.map((group, index) => {
+  return <div ref={groupsElement}><Card className="advanced-groups">{groups.map((group, index) => {
     const expanded = open === group.name;
-    return <div key={group.name} className="advanced-group"><button className="advanced-group-row" type="button" aria-expanded={expanded} aria-controls={`advanced-group-${index}`} onClick={() => { setOpen(expanded ? undefined : group.name); setVisited(previous => new Set([...previous, group.name])); }}><IconTile icon={group.icon} /><span className="min-w-0"><span className="block font-bold">{group.name}</span><span className="mt-1 block text-sm font-normal text-soft">{group.summary}</span></span><span aria-hidden="true" className="advanced-group-chevron">{expanded ? "⌄" : "›"}</span></button><div id={`advanced-group-${index}`} className="advanced-group-fields" hidden={!expanded}>{visited.has(group.name) ? group.content : null}</div></div>;
-  })}</Card>;
+    return <div key={group.name} className="advanced-group"><button className="advanced-group-row" type="button" aria-expanded={expanded} aria-controls={`advanced-group-${index}`} onClick={() => { setOpen(expanded ? undefined : group.name); setVisited(previous => new Set([...previous, group.name])); }}><IconTile icon={group.icon} /><span className="min-w-0"><span className="block font-bold">{group.name}</span><span className="mt-1 block text-sm font-normal text-soft">{group.summary}</span></span><span aria-hidden="true" className="advanced-group-chevron">{expanded ? "⌄" : "›"}</span></button><div id={`advanced-group-${index}`} className="advanced-group-fields" data-advanced-group={group.name} hidden={!expanded}>{visited.has(group.name) ? group.content : null}</div></div>;
+  })}</Card></div>;
 }
 function cutoff(minutes: number | null) { return minutes === null ? "your usual rule" : minutes === 0 ? "until the start" : `${minutes / 60} hours before`; }
 function priceSummary(price: EventPrice) { return price.amountCents === null && !price.durationPrices.length ? "Free" : price.amountCents !== null ? `$${price.amountCents / 100}` : "Prices by length"; }

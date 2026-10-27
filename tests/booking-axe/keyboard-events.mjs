@@ -66,6 +66,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await page.waitForFunction(element => element === globalThis.document.activeElement, await advancedRow.elementHandle());
   await keys.restored(advancedRow, "Advanced settings close");
   await keys.activate(advancedRow, "Reopen event advanced settings");
+  await sheet.waitFor({ state: "visible" });
   await page.keyboard.press("Escape");
   await page.waitForURL(origin + `/app/event-types/${event.id}`);
   await page.waitForFunction(element => element === globalThis.document.activeElement, await advancedRow.elementHandle());
