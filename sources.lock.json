@@ -5172,7 +5172,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/booking-changes.tsx": {
-      "sha256": "1bf7ac96834964158de1b955391f227a8460e0c3393ba58a424b4dadc2fbc73a",
+      "sha256": "1c09ad41e405088c6d2cc84bd094891dc85fabee3c18c7f27c9556131f48c783",
       "executable": false
     },
     "src/core/features/bookings/ui/booking-detail.tsx": {

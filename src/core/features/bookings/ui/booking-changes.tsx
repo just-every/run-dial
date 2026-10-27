@@ -32,7 +32,8 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
     try {
       const response = await api.api.app.bookings[":id"]["calendar-conflicts"][":conflictId"].restore.$post({ param: { id: booking.id, conflictId } });
       if (!response.ok) { setNotice(await errorMessage(response)); return; }
-      await onChanged("Restore queued. Calendar delivery is pending."); setConflictsOpen(false);
+      setConflictsOpen(false);
+      await onChanged("Restore queued. Calendar delivery is pending.");
     } catch { setNotice("Restoration could not be checked. Refresh the booking before trying again."); }
     finally { setWorking(false); }
   }
