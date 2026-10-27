@@ -1,4 +1,4 @@
-import { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "../payments/entitlement-repository";
+import { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "../payments";
 import { ApprovalsRepository } from "./approvals";
 import { GuestsRepository } from "./guests";
 import { offeredHoldPredicate } from "../booking-links";

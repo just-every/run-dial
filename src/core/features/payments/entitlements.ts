@@ -1,5 +1,5 @@
-import { foldBookingSearch } from "../bookings/search/case-fold.mjs";
-const foldEmail=(email:string)=>foldBookingSearch(email.trim());
+import { foldCase } from "../../shared/case-fold.mjs";
+const foldEmail=(email:string)=>foldCase(email.trim());
 import { z } from "zod";
 import { createId, nowIso } from "../../shared/ids";
 import { deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
