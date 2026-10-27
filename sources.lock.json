@@ -4827,6 +4827,26 @@
       "sha256": "25a765cc2f6714aac11030b086c33a141122270ee6347d738cffa9fd1ccb807a",
       "executable": false
     },
+    "src/core/app/ui/autosave/autosave.css": {
+      "sha256": "1ffa613ded1bccb7e754ed44c45b52a5582b9bcc32a98b9a76b977006cdcec60",
+      "executable": false
+    },
+    "src/core/app/ui/autosave/inline-confirm.tsx": {
+      "sha256": "5af45704f5747c786006c839c46a7357668e748eb9ca1496727370e38b4246f2",
+      "executable": false
+    },
+    "src/core/app/ui/autosave/leave-guard.ts": {
+      "sha256": "93bf3ad85ae0161e6e6ab6f63c463f4bcf5e515d508e673bd340de3ffa944db8",
+      "executable": false
+    },
+    "src/core/app/ui/autosave/saved-state.tsx": {
+      "sha256": "205d1c97fc7ea4a2ccb510d7979a168745cfb2063cb890e39811ddc94eac012a",
+      "executable": false
+    },
+    "src/core/app/ui/autosave/use-autosave.ts": {
+      "sha256": "d114ed1ea70de3230ea89888f0218e34cc9e8f131ef6f051cb78e3b00eb2475a",
+      "executable": false
+    },
     "src/core/app/ui/empty-state.tsx": {
       "sha256": "76409bc05072f33d8a5a479b04954de92902cdc8d7e4a2b2386df788d7b87b46",
       "executable": false
@@ -4995,8 +5015,12 @@
       "sha256": "89787a05169b62d0c7a7e9fcc0ce77a0334832ed1b82866091e488d02ad44e17",
       "executable": false
     },
+    "src/core/features/booking-links/booking-link-page.tsx": {
+      "sha256": "76eeffc583e065f4fc31945862a0bedc90cb57c788da017a27cdd593ab3ec5bc",
+      "executable": false
+    },
     "src/core/features/booking-links/client.ts": {
-      "sha256": "ddb0d20011dc7fccc955b4fa8c3494fa2803ac68d77d17ecbfcbd5af7eab4070",
+      "sha256": "4e13f7d6dd41fb1e3afeca150a64721cd66102a944b3c23d6dfe72e32b082bbb",
       "executable": false
     },
     "src/core/features/booking-links/holds.ts": {
@@ -5007,12 +5031,16 @@
       "sha256": "ca044d9354d02be37b7c559fac68069f619b56f80d152b34bcc429d65753c5fc",
       "executable": false
     },
+    "src/core/features/booking-links/offered-time-choices.css": {
+      "sha256": "5c9a15eed773531879b28f164e22ce749e68cc4cbdcb91f6b105d464da5da010",
+      "executable": false
+    },
     "src/core/features/booking-links/offered-time-choices.tsx": {
-      "sha256": "958f7b1e789ac30f6929d6ac2611a417079b2d9fde5477d0cf355cd911f7038b",
+      "sha256": "7e9c72a88b1feff6676e1660d3ee670433163bb1b1cb7d997aa977b4f7834a53",
       "executable": false
     },
     "src/core/features/booking-links/offered-times-ui.tsx": {
-      "sha256": "9f613e3e9a9dc568937f624a1495b6f110ed957f85652dcd2acf90ee4b10f13f",
+      "sha256": "7ee8e835fc1a0d5dff3186af0c32031579c03780d8b79024022c8fb70f776343",
       "executable": false
     },
     "src/core/features/booking-links/repository.ts": {
@@ -5032,7 +5060,7 @@
       "executable": false
     },
     "src/core/features/booking-links/ui.tsx": {
-      "sha256": "827da62949a9017e1a9ebbd8848ca7f80459c2aa04c3a12c8fe811e270821391",
+      "sha256": "26b9c550dbcaaa7ef2219e57e15dde89bff4253a3fee4d15b23230ea4cb0dc0f",
       "executable": false
     },
     "src/core/features/bookings/approval-payment-commands.ts": {
@@ -5216,7 +5244,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/bookings-page.tsx": {
-      "sha256": "b8bbdcdf28822cb3e65d8cb0548a158d4ec0596d756758ae6458f97a6e8c793f",
+      "sha256": "3c72a2faac4eaa185dd2c5aafa8aba82a89d3476d410d0bfe050af6bdbe27a7c",
       "executable": false
     },
     "src/core/features/bookings/ui/calendar-dates.ts": {
@@ -5245,6 +5273,14 @@
     },
     "src/core/features/bookings/ui/delivery-list.tsx": {
       "sha256": "e1c634151a03526ace0b0af59a3f95e6ed75fe9afb98a7ea9ee1409004a0941d",
+      "executable": false
+    },
+    "src/core/features/bookings/ui/new-menu.css": {
+      "sha256": "ee8e093b1ec3b5d171718cfab7157578f00dd1a0d54e912fb5c10e4c7e45d40c",
+      "executable": false
+    },
+    "src/core/features/bookings/ui/new-menu.tsx": {
+      "sha256": "4617ba5a28fec8bec0399415b5271fc757a6ab50bc2dae35aa4223beb785747d",
       "executable": false
     },
     "src/core/features/bookings/ui/operator-location.tsx": {
@@ -5720,7 +5756,7 @@
       "executable": false
     },
     "src/core/features/event-types/routes.ts": {
-      "sha256": "5684f6677b5d369cecf2fdf359bf54c0747d54a4bc49028cda9cff8973885a09",
+      "sha256": "27381b164bd8d20e855c8400a749e443d1dcc35f53a894a6251a41dba97d93de",
       "executable": false
     },
     "src/core/features/event-types/service.ts": {
@@ -5780,7 +5816,7 @@
       "executable": false
     },
     "src/core/features/event-types/ui/event-types-page.tsx": {
-      "sha256": "97b401ff2b5554543c3ea8668a223d08c5b744eac999f5d576dcaa6adfa7a508",
+      "sha256": "a25009de5a0c7ca0c40bc201322c1fc5c13e4422e0d8fc0bc8880805b6257275",
       "executable": false
     },
     "src/core/features/event-types/ui/guest-settings.tsx": {
@@ -5793,6 +5829,14 @@
     },
     "src/core/features/event-types/ui/locked-zone-fields.tsx": {
       "sha256": "b579b61f8616f9c366003a7c3ba8ad1519f1ae7a8bcb527bbfb67bdd81a24ed6",
+      "executable": false
+    },
+    "src/core/features/event-types/ui/new-event-steps.css": {
+      "sha256": "4023e49ec2736b1b3cc9a966c529154725ad8bcfa698447192d2a297d2d8ccfb",
+      "executable": false
+    },
+    "src/core/features/event-types/ui/new-event-steps.tsx": {
+      "sha256": "05f06410d5e4dcd0f06bb23c11842f112efc245d2fdcab45ed4f688735393152",
       "executable": false
     },
     "src/core/features/event-types/ui/questions-editor.tsx": {
@@ -5813,6 +5857,22 @@
     },
     "src/core/features/event-types/ui/schedule-holidays.tsx": {
       "sha256": "c78680887287cd4a200d5837ec3ef016e5e9f28e414f6a96b9ed045cfc33c191",
+      "executable": false
+    },
+    "src/core/features/event-types/ui/step-length.tsx": {
+      "sha256": "980f693dbd4e197e778e29b2122879665d41d6a08106872db9ecc0291d7d1e67",
+      "executable": false
+    },
+    "src/core/features/event-types/ui/step-name.tsx": {
+      "sha256": "58eeb6d9e779f4339c6eff4c507e87006b22399f2ba8510e339a185d9a5c93a6",
+      "executable": false
+    },
+    "src/core/features/event-types/ui/step-when.tsx": {
+      "sha256": "95bba57774a129416ea76a1a1acd5faacaa3183199d360608cb05dde7cd9b8d8",
+      "executable": false
+    },
+    "src/core/features/event-types/ui/step-where.tsx": {
+      "sha256": "aaf05258036a304a3386572e23e21ee704835394bd8807225bf1bcaf020a34f3",
       "executable": false
     },
     "src/core/features/event-types/ui/window-time.ts": {
@@ -7527,6 +7587,14 @@
       "sha256": "d33b991caaf020a9406f491c36491b5cb7fe55e4182a850442bbd141e3dc4aa7",
       "executable": false
     },
+    "src/routes/app.bookings_.new_.offer.tsx": {
+      "sha256": "5a1c3ee341302c317a96a3019d16ba028bb9420059a567564890274da62f11e1",
+      "executable": false
+    },
+    "src/routes/app.bookings_.new_.private-link.tsx": {
+      "sha256": "7fb40a968f4684105128c474592b2d11aa4393de0dd0b6ce6d5d9ddb6b06c08f",
+      "executable": false
+    },
     "src/routes/app.bookings_.new.tsx": {
       "sha256": "a4fcd9841b71673cd517d9836179122e96dd8461834a2eb1426e5620efbbe946",
       "executable": false
@@ -7552,7 +7620,7 @@
       "executable": false
     },
     "src/routes/app.event-types_.new.tsx": {
-      "sha256": "cb90a49d06737fb56bd1ae6a9ccde9a4b7a556e4aa4b3e4d6d9c7479b3de42af",
+      "sha256": "8e119a19b33bed39dd8af4bf505e94e88369f965abbfdc9c74bc90d722b6d200",
       "executable": false
     },
     "src/routes/app.event-types.tsx": {
@@ -7668,7 +7736,7 @@
       "executable": false
     },
     "src/routes/setup.event-types_.new.tsx": {
-      "sha256": "86ad495c13205ce21b0276f30cae4a43763eafb03672009fe5d3f595d69e529e",
+      "sha256": "4bf895e9b01b55560a70f419591fdee84a9ee1fc1116e4f9c46d975346febf23",
       "executable": false
     },
     "src/routes/setup.event-types.tsx": {
@@ -7696,7 +7764,7 @@
       "executable": false
     },
     "src/routeTree.gen.ts": {
-      "sha256": "7e9eb6516676b313b9163f6feb86e10dfe7ee015c832c5e362eb85066659aaed",
+      "sha256": "30466343754fb931d7ab8ac525a23c0aa47531868bf88a017c72fdb991892f2c",
       "executable": false
     },
     "src/server.dev.ts": {
@@ -7924,7 +7992,7 @@
       "executable": false
     },
     "tests/booking-axe/keyboard-events.mjs": {
-      "sha256": "0a99f55c417e181e75ef87a87500a032e8b02394d9a9527b0522b6a8d2b06adc",
+      "sha256": "67d4e2ba82edb0c0b0c219a73687d3060fdcb03add8a4a2a5e77708bc1c1691a",
       "executable": false
     },
     "tests/booking-axe/keyboard-filters.mjs": {
@@ -8384,7 +8452,7 @@
       "executable": false
     },
     "tests/empty-workspace/journey.mjs": {
-      "sha256": "8173c41cc9b9f7bbc2b1be5041411a90091c576b0f56465acba3bdedb9614d8a",
+      "sha256": "77b5b05fb6bfbf356ddf58006ddcac10f2bbe20ad265c512fea60076f19b3c05",
       "executable": false
     },
     "tests/erasure/cli-fence.mjs": {
@@ -8492,7 +8560,7 @@
       "executable": false
     },
     "tests/host-setup/journey.mjs": {
-      "sha256": "3a741728af7892bae1857122fb0e30a5aa5678d5521ae2f49f6aabf1987fbaf1",
+      "sha256": "e8f877270c68f44d48d7417c1fe750f4c2182c179ff7eaee5a1d364643e946ff",
       "executable": false
     },
     "tests/host-setup/local-signin.mjs": {
@@ -8508,7 +8576,7 @@
       "executable": false
     },
     "tests/host-setup/worker.ts": {
-      "sha256": "3c9cd11e4d5c605e7ea4e435777dfc55b4fe2ce9c09255e39491d3135cebbeb8",
+      "sha256": "a8edddc6d85d8e835b172f719cc8eb98435e31e88cb13eaca6f06f74474253ea",
       "executable": false
     },
     "tests/host-setup/worker.wrangler.toml": {
@@ -8556,7 +8624,7 @@
       "executable": false
     },
     "tests/local-setup/first-run.mjs": {
-      "sha256": "28b040667132eaf8bd5db7ef40e964ae4cc48d6c1267a4a473b6aa050e2548a6",
+      "sha256": "a134f0f0debd9b2170e3e4ebc8ef22ffdd121ad7108c928c76550c433b51018b",
       "executable": false
     },
     "tests/local-setup/hosted-authority.mjs": {
@@ -9116,7 +9184,7 @@
       "executable": false
     },
     "tests/offered-times.test.mjs": {
-      "sha256": "c0eed2607c142a567667183731a7b4411ec248953d07bfbaab667161f8678037",
+      "sha256": "3da9978f230713b6e0636521784367c535f42a6cdf7fc35547a482da4271cc33",
       "executable": false
     },
     "tests/operations-command/fixture.mjs": {

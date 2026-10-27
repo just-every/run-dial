@@ -78,6 +78,12 @@ export async function verifyEmptyWorkspace(origin) {
       await page.goBack();
       await expect(page).toHaveURL(origin + "/setup/settings");
       await expect(page.getByRole("button", { name: "Check sender", exact: true })).toBeEnabled();
+      await page.getByRole("navigation", { name: "Setup navigation" }).getByRole("link", { name: "Event types", exact: true }).click();
+      await expect(page).toHaveURL(origin + "/setup/event-types/new");
+      await page.getByRole("button", { name: "Close", exact: true }).click();
+      await expect(page).toHaveURL(origin + "/setup");
+      await page.getByRole("navigation", { name: "Setup navigation" }).getByRole("link", { name: "Settings", exact: true }).click();
+      await expect(page).toHaveURL(origin + "/setup/settings");
 
       // Real setup profile reads encounter test-only transport faults. No failure
       // may become a blank editable profile or permit a destructive empty save.

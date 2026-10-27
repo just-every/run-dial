@@ -125,7 +125,11 @@ export async function hostJourneys(origin, scenario) {
         await expect(page.getByRole("checkbox", { name: "Block US federal holidays and observed dates", exact: true })).toBeVisible(); await expect(page.getByRole("button", { name: "Add time off", exact: true })).toBeVisible();
         if (!requestsOnly) { const closed = page.locator("div.rounded-2xl").filter({ has: page.getByText("Unavailable", { exact: true }) }); for (let day = 0; day < 7 && await closed.count(); day++) await closed.first().getByRole("button", { name: "Add window", exact: true }).click(); }
         else { const remove = page.getByRole("button", { name: /^Remove \w+ window \d+$/ }); for (let left = 20; left && await remove.count(); left--) await remove.first().click(); }
-        await page.getByRole("button", { name: "Save recurring availability", exact: true }).click();
+        const [availabilityResponse] = await Promise.all([
+          page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${draft.id}/availability` && response.request().method() === "PUT"),
+          page.getByRole("button", { name: "Save recurring availability", exact: true }).click(),
+        ]);
+        assert.equal(availabilityResponse.status(), 200);
         await page.waitForURL(/\/setup\/event-types\/[A-Z0-9]{26}$/);
         const eventId = new URL(page.url()).pathname.split("/").at(-1);
         const publish = page.getByRole("button", { name: "Publish event type", exact: true });
