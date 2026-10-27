@@ -1,3 +1,4 @@
+import { paymentEntitlements } from "./payment-entitlements-journey.mjs";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { writeFile } from "node:fs/promises";
@@ -198,6 +199,8 @@ for (const mail of changeMail) {
   assert.ok(textBody(mail).includes(session.id), `${mail.subject} keeps the processor reference`);
 }
 checks.push("reschedule keeps $90 paid; cancel keeps the payment record and, with no cancellation policy, issues no refund; change and cancellation mail state the payment kept");
+
+await paymentEntitlements({data,call,webhook,stripeEvent,future});
 
 // S1: account.application.deauthorized marks the connection unhealthy and stops new paid bookings with a named reason.
 await webhook(stripeEvent("account.application.deauthorized", { id: "ca_wire", object: "application" }, "acct_someoneelse"), 401);

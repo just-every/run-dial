@@ -49,7 +49,7 @@ import { suppressesMail } from "../platform/mail/development";
 import { BaseMailSender, mailConfiguration } from "../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 
-export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { operatorNotifications?: OperatorNotificationCommand; files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsTransport?: typeof fetch } = {}) {
+export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { operatorNotifications?: OperatorNotificationCommand; files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsClock?:()=>Promise<Date>; paymentsTransport?: typeof fetch } = {}) {
   const noticeTransport=adapters.paymentsTransport??fetch;
   const notices={destinations:new NoticeDestinations(binding,runtime,noticeTransport),delivery:new NoticeDelivery(binding,runtime,noticeTransport),erasure:new NoticeErasure(binding,runtime,noticeTransport)};
   const hostProfile = new HostProfileService(new HostProfileRepository(binding));
@@ -62,7 +62,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const bookingLinks = new BookingLinksService(new BookingLinksRepository(binding), eventTypes, runtime.SESSION_SECRET);
   const availability = new AvailabilityService(new AvailabilityRepository(binding), hostProfile, eventTypes, calendar, bookingLinks);
   const bookingsRepository = new BookingsRepository(binding);
-  const payments = new PaymentsService(binding, runtime, new ProcessorRequestsRepository(binding), adapters.paymentsTransport);
+  const payments = new PaymentsService(binding, runtime, new ProcessorRequestsRepository(binding), adapters.paymentsTransport,adapters.paymentsClock);
   payments.setConversion((claim, payment, approval) => bookingsRepository.claim(claim, payment, approval));
   const bookings = new BookingsService(bookingsRepository, availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
