@@ -347,7 +347,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `AUTH-002` | Booking nonce | published | done | `tests/booking-http.test.mjs` |  |
 | `AUTH-003` | Booking access | published | done | `tests/embed-document-authorization.test.mjs` |  |
 | `AUTH-004` | Calendar authorization callback | published | done | `tests/providers-runtime.test.mjs` |  |
-| `AUTH-005` | Provider callbacks | published | done | `tests/providers-runtime.test.mjs`, `tests/mail-connection.test.mjs` ("mail readiness starts unchecked, records sender checks and permits publication only after fresh provider verification") |  |
+| `AUTH-005` | Provider callbacks | published | done | `tests/providers-runtime.test.mjs`, `tests/mail-connection.test.mjs` |  |
 | `AUTH-006` | First-owner admission | published | done | `tests/owner-signin.test.mjs`, `tests/managed-admission.test.mjs` |  |
 | `AUTH-007` | Capabilities for new public surfaces | target | done | `tests/booking-wire/booking-links-journey.mjs`, `tests/booking-wire/invitation-manage-journey.mjs`, `src/core/features/booking-links/`, `src/core/features/bookings/repository.ts` | Routing, poll, payment-return and workflow-unsubscribe capabilities are carried by `ROUTE-001`, `POLL-001`, `PAY-001` and `FLOW-001`, which each name this clause. |
 | `AUTH-008` | API credentials and connected apps | target | missing |  | No implementing code yet. |

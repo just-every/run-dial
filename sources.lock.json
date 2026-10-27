@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "efc8e2e37437c8aae161ee282a0b234fabc031570a8ebf8f6e57a9bf26b34e2f",
+      "sha256": "a1505be28c792cf573cdd41e7c65e5f5da94232a7808ed4cf3cae7af5f50e911",
       "executable": false
     },
     "DEMO.md": {
@@ -7796,7 +7796,7 @@
       "executable": false
     },
     "tests/booking-axe.test.mjs": {
-      "sha256": "c16761d275c7fb5d81130155010870097d11ed7cdc1f66f83724c4a179135058",
+      "sha256": "db4dac734deac402885e946aa1164a1faaea5a3d6e0c8fb9d66f5f3efda61924",
       "executable": false
     },
     "tests/booking-axe/acceptance-avatar-boundary.mjs": {
@@ -8036,7 +8036,7 @@
       "executable": false
     },
     "tests/booking-wire/occurrence-duration-journey.mjs": {
-      "sha256": "e2bca4a47a4690bc0b2d0a50cf6f81d48c6d7e91f8cef29794cb67e593c98be8",
+      "sha256": "79ee2445d04f07220a297eda9c1578a117780df27c8e95d44835e7e2a7da940f",
       "executable": false
     },
     "tests/booking-wire/offered-times-journey.mjs": {
@@ -8540,7 +8540,7 @@
       "executable": false
     },
     "tests/mail-connection.test.mjs": {
-      "sha256": "8431073af4589734ac5c042c31f538a4959a0b1cb7d5c113ca9fddfc85ae4bc0",
+      "sha256": "3408d248b4cf611b4af320d75c41ba03de9afa5a4cc98967ad31e69d27b38d68",
       "executable": false
     },
     "tests/mail-connection/booking-journey.mjs": {
@@ -8564,7 +8564,7 @@
       "executable": false
     },
     "tests/mail-preferences.test.mjs": {
-      "sha256": "d06b38743d4eaddc7e2f136512697ae66d109fb6d23ae8cabe1b29b16f814ea4",
+      "sha256": "f60d1104467a0c9403251a96e0a109eb4941a3ff15894cb29f211c9a02eae7f0",
       "executable": false
     },
     "tests/mail-preferences/before-restart.mjs": {
@@ -9032,7 +9032,7 @@
       "executable": false
     },
     "tests/occurrence-mail-duration.test.mjs": {
-      "sha256": "6996c898ff31e574f1316c22ca9fd08c0cf58cdf0ae68b73824612f05b54c7d2",
+      "sha256": "0481d0af64b58964e0e168431900bff42003519edfb22d25700d552f38a03f2f",
       "executable": false
     },
     "tests/offered-times.test.mjs": {
@@ -9240,7 +9240,7 @@
       "executable": false
     },
     "tests/request-json-boundary.test.mjs": {
-      "sha256": "66d4f796a54804b4f316ab34802848e7f226b17f138535fa1467d323ab5e32dd",
+      "sha256": "cf465fad9d62839ba6b74b49a068d0564bba5eca7c3ee8c7815b489f8b770f0b",
       "executable": false
     },
     "tests/request-json-boundary/fixture.mjs": {
@@ -9252,7 +9252,7 @@
       "executable": false
     },
     "tests/requests.test.mjs": {
-      "sha256": "cd2e2c3cf38e88e12140b73f6e8da1df1358f1bd22b19ad03ef2ac9eef08959a",
+      "sha256": "f1f15ebeb10bc35afc2dd5affb1108bf7d5e425af3effddfc4b90ce9154757e4",
       "executable": false
     },
     "tests/requests/runtime.mjs": {
