@@ -4824,7 +4824,7 @@
       "executable": false
     },
     "src/core/app/ui/app-shell.tsx": {
-      "sha256": "e739db37a4dcbd5c018bf890317225f20bf06fbfe4c40c6096b978cd7e36a0ea",
+      "sha256": "bae354993db7fca9398d279b96c3a5812006be489fcfcc02aeae02ffc0769172",
       "executable": false
     },
     "src/core/app/ui/autosave/autosave.css": {
@@ -4872,7 +4872,7 @@
       "executable": false
     },
     "src/core/app/ui/route-load-error.tsx": {
-      "sha256": "04e46b9695babf5792122a3c1e006356cdd0ef358b1e3244b6cd41abfea0f237",
+      "sha256": "68079ecdbc9a234d0767653430e061e980353a5b3513aef185646d961f1b077b",
       "executable": false
     },
     "src/core/app/ui/tooltip.css": {
@@ -5008,15 +5008,15 @@
       "executable": false
     },
     "src/core/features/availability/ui/event-hours.tsx": {
-      "sha256": "a04c2b0c2d338fdf9ef4eee8f3faf1c89d1efdaf299cc7a63f07c1ef36593be1",
+      "sha256": "178661860fa0f2e6faa09d927cfd4352d262db68fecfa8c2364b62683abcb48b",
       "executable": false
     },
     "src/core/features/availability/ui/hours-extras.tsx": {
-      "sha256": "2e46fcd2e0520a7f9b78f983300aabe765a067f34e00e0fc87a55678f8a5bdd6",
+      "sha256": "2ba3d7137aff425fe72f24e63e3a0731ff6ce1e92e03f5d5a0d25139c79b9369",
       "executable": false
     },
     "src/core/features/availability/ui/hours-page.tsx": {
-      "sha256": "086e7090b8d7b468a781f4a1a0d21a280ff0df0633cd0d1dce6b104e420ac6fb",
+      "sha256": "44f0194be9bb6a1ef9033d0e00ad0a116475460f073b3113434055e11bb10087",
       "executable": false
     },
     "src/core/features/availability/ui/hours-row.tsx": {
@@ -5024,7 +5024,7 @@
       "executable": false
     },
     "src/core/features/availability/ui/weekly-hours.tsx": {
-      "sha256": "1b4d70ada95c0170d406d72e076cb996d28f0515e15414b3df4e09b5bf8f2c80",
+      "sha256": "cc81f0b6af295cdef0b9a4a0fbf29879655bb26bc2c250cefeb238fe1251043a",
       "executable": false
     },
     "src/core/features/availability/ui/window-time.ts": {
@@ -8511,12 +8511,16 @@
       "sha256": "c88c6b755027030b35b5165306ea30669e63e4e70ecbd2e86adbb4fe43cd94a9",
       "executable": false
     },
+    "tests/host-setup/hours.mjs": {
+      "sha256": "d69f50bc16f9ea7c047ac6637a4eb04a3fd4eede85638a4f48290ae168e922ea",
+      "executable": false
+    },
     "tests/host-setup/identity-evidence.mjs": {
       "sha256": "81e96f44951536dfdfe7a62f4b3c44aeeeea3c15e53783c7ad853609327c27f3",
       "executable": false
     },
     "tests/host-setup/journey.mjs": {
-      "sha256": "f34e0c99046802f359b65249842969a2135197db1e3a02f3a9aebfc3783f8fff",
+      "sha256": "b4b2717aad4d8826f62c1fe3fffab9155d1094d27cef42c34499a10b8312daaa",
       "executable": false
     },
     "tests/host-setup/local-signin.mjs": {
