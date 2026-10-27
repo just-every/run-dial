@@ -61,7 +61,7 @@ export async function paymentEntitlements({data,call,webhook,stripeEvent,future}
  const memberRow=(await rows()).payment_entitlements.find(row=>row.id===memberPurchase.entitlement.id);
  const memberPaid=await data('/__fixtures/payments/pay',{sessionId:memberRow.checkout_session_id});assert.equal(memberPaid.mode,'subscription');
  await webhook(stripeEvent('checkout.session.completed',memberPaid));
- await data(`${root}/confirm`,await selection((await slots())[0],{code:memberPurchase.code}),201);
+ await data(`${root}/confirm`,await selection((await slots())[0],{}),201);
  assert.equal((await data('/api/app/payments/entitlements')).find(row=>row.id===memberRow.id).balance,3);
  const clock=Date.UTC(2027,1,1),start=Math.floor(clock/1000),end=Date.UTC(2027,2,1)/1000;
  await data('/__fixtures/payments/control',{name:'entitlement-clock',value:clock});
