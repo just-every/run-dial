@@ -9,15 +9,39 @@ after(async () => { await f?.close(); });
 const malformed = '{"url":"synthetic-private-body-value",';
 const invalid = { error: { code: 'invalid_request', message: 'The request contains invalid fields.' } };
 
-contract('AUTH-001', 'authenticated malformed JSON copy reports return a sanitized client error without changing native D1 state', async () => {
-  const before = await f.snapshot();
-  for (const rawBody of [malformed, '', '{', '[1,']) {
-    const response = await f.send(f.endpoint, { rawBody });
-    assert.equal(response.status, 400);
-    assert.deepEqual(await response.json(), invalid);
-    assert.deepEqual(await f.snapshot(), before);
+contract('AUTH-001', 'copy-report input validation rejects malformed JSON and wrong shapes without writes, then accepts the native report', async () => {
+  async function step(title, run) {
+    try { await run(); }
+    catch (error) { error.message = `${title}: ${error.message}`; throw error; }
   }
-  assert.deepEqual(before.effects, { mailCalls: 0, queueCalls: 0 });
+  await step('malformed JSON is inert and sanitized', async () => {
+    const before = await f.snapshot();
+    for (const rawBody of [malformed, '', '{', '[1,']) {
+      const response = await f.send(f.endpoint, { rawBody });
+      assert.equal(response.status, 400);
+      assert.deepEqual(await response.json(), invalid);
+      assert.deepEqual(await f.snapshot(), before);
+    }
+    assert.deepEqual(before.effects, { mailCalls: 0, queueCalls: 0 });
+  });
+  await step('strict shapes are inert and a valid native report succeeds', async () => {
+    const before = await f.snapshot();
+    for (const body of [{ url: f.url, acceptedAt: '2000-01-01T00:00:00Z' }, { url: 1 }, {}, null]) {
+      const response = await f.send(f.endpoint, { body });
+      assert.equal(response.status, 400);
+      const result = await response.json();
+      assert.equal(result.error.code, 'invalid_request');
+      assert.ok(Array.isArray(result.error.details));
+      assert.deepEqual(await f.snapshot(), before);
+    }
+    const response = await f.send(f.endpoint, { body: { url: f.url } });
+    assert.equal(response.status, 200);
+    const report = await response.json();
+    assert.equal(report.canonicalUrl, f.url);
+    assert.equal(report.eventTypeId, before.host_link_copy_reports[0].event_type_id);
+    assert.ok(Number.isFinite(Date.parse(report.acceptedAt)));
+    assert.deepEqual(await (await f.send('/__fixture/effects')).json(), { mailCalls: 0, queueCalls: 0 });
+  });
 });
 
 contract('BASE-ACCESS-002', 'copy-report session and Origin guards retain precedence over malformed JSON', async () => {
@@ -37,25 +61,6 @@ contract('BASE-ACCESS-002', 'copy-report session and Origin guards retain preced
   }
   assert.equal((await f.send(f.endpoint, { method: 'PUT', rawBody: malformed })).status, 404);
   assert.deepEqual(await f.snapshot(), before);
-});
-
-contract('AUTH-001', 'strict JSON shape rejection and valid authenticated copy reporting retain their native behavior', async () => {
-  const before = await f.snapshot();
-  for (const body of [{ url: f.url, acceptedAt: '2000-01-01T00:00:00Z' }, { url: 1 }, {}, null]) {
-    const response = await f.send(f.endpoint, { body });
-    assert.equal(response.status, 400);
-    const result = await response.json();
-    assert.equal(result.error.code, 'invalid_request');
-    assert.ok(Array.isArray(result.error.details));
-    assert.deepEqual(await f.snapshot(), before);
-  }
-  const response = await f.send(f.endpoint, { body: { url: f.url } });
-  assert.equal(response.status, 200);
-  const report = await response.json();
-  assert.equal(report.canonicalUrl, f.url);
-  assert.equal(report.eventTypeId, before.host_link_copy_reports[0].event_type_id);
-  assert.ok(Number.isFinite(Date.parse(report.acceptedAt)));
-  assert.deepEqual(await (await f.send('/__fixture/effects')).json(), { mailCalls: 0, queueCalls: 0 });
 });
 
 contract('BASE-SECRET-001', 'real D1 copy-report write failures remain sanitized server failures and preserve the saved report', async () => {

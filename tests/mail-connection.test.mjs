@@ -4,31 +4,7 @@ import { generateKeyPairSync, sign } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fixture, configuration } from './mail-connection/fixture.mjs';
 
-// One public route flow for optional tracking, including the real publication check.
-test('SendGrid without optional tracking verifies its sender and permits publication only after an actual provider check', async t => {
-  const f = await fixture(t);
-  const health = await (await f.request('/api/app/mail/connection')).json();
-  assert.equal(health.eventTracking, 'off');
-  const declaration = JSON.parse(await readFile('deploy.json', 'utf8'));
-  const { secretBindings } = await import('../node_modules/@runeditrun/rer/modules/deploy-kit/worker.mjs');
-  const { ownerPlan } = await import('../node_modules/@runeditrun/rer/modules/deploy-kit/owner.mjs');
-  const plan = ownerPlan({ project: declaration.project, environment: 'production', worker: 'mail-fixture', origin: configuration.APP_URL }, declaration, { migrations: [] });
-  const inputs = { OWNER_EMAIL: configuration.OWNER_EMAIL, SESSION_SECRET: configuration.SESSION_SECRET, SETUP_TOKEN: configuration.SETUP_TOKEN, SENDGRID_API_KEY: configuration.MAIL_API_KEY, MAIL_FROM: configuration.MAIL_FROM };
-  await secretBindings({}, 'fixture-worker', plan, inputs, false);
-  for (const missing of ['SENDGRID_API_KEY', 'MAIL_FROM']) await assert.rejects(secretBindings({}, 'fixture-worker', plan, { ...inputs, [missing]: undefined }, false), /missing-secret/);
-  const event = await (await f.request('/__fixture/seed')).json();
-  f.verified = false;
-  assert.equal((await f.request(`/api/app/event-types/${event.id}/publish`, {})).status, 409);
-  assert.ok(f.calls > 0);
-  assert.equal((await (await f.request(`/api/app/event-types/${event.id}`)).json()).status, 'draft');
-  f.verified = true;
-  assert.equal((await f.request('/api/app/mail/check', {})).status, 200);
-  const calls = f.calls;
-  assert.equal((await f.request(`/api/app/event-types/${event.id}/publish`, {})).status, 200);
-  assert.ok(f.calls > calls, 'publication performs a fresh provider check');
-});
-
-test('fresh mail health stays unchecked until the public sender check records actual success or missing inputs', async t => {
+test('mail readiness starts unchecked, records sender checks and permits publication only after fresh provider verification', async t => {
   for (const overrides of [{}, { MAIL_API_KEY: undefined }, { MAIL_FROM: undefined }]) {
     const f = await fixture(t, overrides);
     const before = await f.snapshot();
@@ -45,9 +21,34 @@ test('fresh mail health stays unchecked until the public sender check records ac
     assert.equal(checked.reason, missing ? 'missing_configuration' : null);
     assert.ok(Number.isFinite(Date.parse(checked.checkedAt)));
     assert.equal(f.calls, missing ? 0 : 2);
+    if (!missing) await verifyPublication(f);
     await f.close();
   }
 });
+
+async function verifyPublication(f) {
+  const health = await (await f.request('/api/app/mail/connection')).json();
+  assert.equal(health.eventTracking, 'off');
+  const declaration = JSON.parse(await readFile('deploy.json', 'utf8'));
+  const { secretBindings } = await import('../node_modules/@runeditrun/rer/modules/deploy-kit/worker.mjs');
+  const { ownerPlan } = await import('../node_modules/@runeditrun/rer/modules/deploy-kit/owner.mjs');
+  const plan = ownerPlan({ project: declaration.project, environment: 'production', worker: 'mail-fixture', origin: configuration.APP_URL }, declaration, { migrations: [] });
+  const inputs = { OWNER_EMAIL: configuration.OWNER_EMAIL, SESSION_SECRET: configuration.SESSION_SECRET, SETUP_TOKEN: configuration.SETUP_TOKEN, SENDGRID_API_KEY: configuration.MAIL_API_KEY, MAIL_FROM: configuration.MAIL_FROM };
+  await secretBindings({}, 'fixture-worker', plan, inputs, false);
+  for (const missing of ['SENDGRID_API_KEY', 'MAIL_FROM']) await assert.rejects(secretBindings({}, 'fixture-worker', plan, { ...inputs, [missing]: undefined }, false), /missing-secret/);
+  const event = await (await f.request('/__fixture/seed')).json();
+  const beforeRefusalCalls = f.calls;
+  f.verified = false;
+  assert.equal((await f.request(`/api/app/event-types/${event.id}/publish`, {})).status, 409);
+  assert.ok(f.calls > 0);
+  assert.ok(f.calls > beforeRefusalCalls, 'refused publication also performs a fresh provider check');
+  assert.equal((await (await f.request(`/api/app/event-types/${event.id}`)).json()).status, 'draft');
+  f.verified = true;
+  assert.equal((await f.request('/api/app/mail/check', {})).status, 200);
+  const calls = f.calls;
+  assert.equal((await f.request(`/api/app/event-types/${event.id}/publish`, {})).status, 200);
+  assert.ok(f.calls > calls, 'publication performs a fresh provider check');
+}
 
 test('provider webhooks refuse unsigned or oversized bodies before verifying them', async t => {
   const f = await fixture(t, { MAIL_WEBHOOK_KEY: 'synthetic-dial-1', RESEND_WEBHOOK_SECRET: 'synthetic-dial-2' });
