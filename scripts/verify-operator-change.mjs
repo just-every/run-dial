@@ -174,6 +174,13 @@ try {
   await update.waitFor();
   assert.ok((await update.innerText()).trim(), "the successful restore remains acknowledged after the booking refresh");
   assert.equal(await page.getByRole("dialog", { name: "Calendar conflicts", exact: true }).count(), 0);
+  const conflictsOpener = page.getByRole("button", { name: "Review calendar conflicts", exact: true });
+  await page.waitForFunction(element => !element.matches(":disabled"), await conflictsOpener.elementHandle());
+  assert.equal(await conflictsOpener.evaluate(element => element === document.activeElement), true, "successful Restore returns focus to Review calendar conflicts after the refresh");
+  assert.equal(await conflictsOpener.evaluate(element => element.matches(":focus-visible")), true, "the restored conflicts opener has a visible focus ring");
+  await page.keyboard.press("Tab");
+  assert.equal(await page.getByRole("button", { name: "Ask invitee to pick a new time", exact: true }).evaluate(element => element === document.activeElement), true, "Tab after Restore advances from the conflicts opener to Ask invitee");
+  mark("successful Restore returns focus to the conflicts opener and preserves the next Tab stop");
   const calendarDelivery = page.getByText("Calendar delivery", { exact: true }).locator("..").locator("dd");
   assert.equal(await calendarDelivery.innerText(), "Update pending");
   acknowledgedEmptyActions.add(completedRestore.url());

@@ -12,6 +12,7 @@ type Props = { booking: BookingRecord; onChanged(notice?: string): Promise<void>
 
 export function BookingChanges({ booking, onChanged, onCancel, renderActions }: Props) {
   const hydrated = useHydrated();
+  const conflictsOpener = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -23,7 +24,10 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
   useEffect(() => { setFutureStart(Date.parse(booking.occurrence.startAt) > Date.now()); }, [booking.occurrence.startAt]);
   useEffect(() => {
     if (!working && returnFocus.current) {
-      if (returnFocus.current.isConnected) returnFocus.current.focus();
+      if (returnFocus.current.isConnected) {
+        const options = { preventScroll: false, ...(returnFocus.current === conflictsOpener.current ? { focusVisible: true } : {}) };
+        returnFocus.current.focus(options);
+      }
       returnFocus.current = null;
     }
   }, [working]);
@@ -32,6 +36,7 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
     try {
       const response = await api.api.app.bookings[":id"]["calendar-conflicts"][":conflictId"].restore.$post({ param: { id: booking.id, conflictId } });
       if (!response.ok) { setNotice(await errorMessage(response)); return; }
+      returnFocus.current = conflictsOpener.current;
       setConflictsOpen(false);
       await onChanged("Restore queued. Calendar delivery is pending.");
     } catch { setNotice("Restoration could not be checked. Refresh the booking before trying again."); }
@@ -72,7 +77,7 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
     {renderActions(
       booking.state !== "cancelled" && futureStart ? <Button variant="secondary" type="button" disabled={!booking.eventTypeId} onClick={() => { setRequesting(false); setCancelling(false); setEditing(current => !current); }}>Reschedule booking</Button> : null,
       <>
-        {booking.calendarConflicts.length ? <Button type="button" variant="secondary" onClick={() => setConflictsOpen(true)}>Review calendar conflicts</Button> : null}
+        {booking.calendarConflicts.length ? <Button ref={conflictsOpener} type="button" variant="secondary" onClick={() => setConflictsOpen(true)}>Review calendar conflicts</Button> : null}
         {booking.state !== "cancelled" ? <>
           {!futureStart ? <Button variant="secondary" type="button" disabled={!booking.eventTypeId} onClick={() => { setRequesting(false); setCancelling(false); setEditing(current => !current); }}>Reschedule booking</Button> : null}
           {hydrated && booking.eventTypeId && futureStart && (booking.rescheduleRequest?.archiveHistorical || booking.rescheduleRequest?.state !== "open") ? <Button variant="secondary" type="button" aria-expanded={requesting} onClick={() => { setEditing(false); setCancelling(false); setRequesting(current => !current); }}>Ask invitee to pick a new time</Button> : null}
