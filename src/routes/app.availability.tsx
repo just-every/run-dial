@@ -1,7 +1,5 @@
-import { withEditorLeaf } from "../core/features/editor/editor-leaf";
-import { createFileRoute } from "@tanstack/react-router";
-import { AvailabilityIndexPage } from "../core/features/event-types/ui/availability-index-page";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 
-export const Route = createFileRoute('/app/availability' )({ codeSplitGroupings: [], component: withEditorLeaf(AvailabilityIndexPage) });
+export const Route = createFileRoute('/app/availability' )({ beforeLoad: () => { throw redirect({ to: "/app/settings/hours", replace: true }); } });
 

@@ -1,7 +1,7 @@
-import favicon from "../../src/core/features/public-booking/ui/favicon.svg?raw";
 import review from "../review/worker";
 export { BookingCoordinator } from "../review/worker";
 import type { AppBindings } from "../../src/core/app/bindings";
+import favicon from "../../src/core/features/public-booking/ui/favicon.svg?raw";
 
 export default {
   ...review,

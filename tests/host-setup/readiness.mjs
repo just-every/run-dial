@@ -5,7 +5,7 @@ import { expect } from "@playwright/test";
 export async function deletedEventRecovery(browser, owner, origin, eventId, requestsOnly) {
   const headers = { Origin: origin };
   const source = await (await owner.request.get(origin + `/api/app/event-types/${eventId}`)).json();
-  const created = await owner.request.post(origin + "/api/app/event-types", { headers, data: { ...source, slug: "publication-recovery" } });
+  const created = await owner.request.post(origin + "/api/app/event-types", { headers, data: { ...source, availability: undefined, slug: "publication-recovery", hours: { uses: "own", windows: source.availability } } });
   assert.equal(created.status(), 201);
   const event = await created.json();
   const context = await browser.newContext({ storageState: await owner.storageState() });

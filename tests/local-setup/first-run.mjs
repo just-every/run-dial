@@ -58,11 +58,20 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   await page.getByLabel("Private link, number, or address", { exact: true }).fill("+1 202 555 0100");
   onPhase("first-run event save");
   await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/availability$/);
-  // The event starts on your hours; a request-only host clears them, and saving returns to the event.
-  await page.getByRole("button", { name: "Save recurring availability", exact: true }).waitFor();
-  const remove = page.getByRole("button", { name: /^Remove \w+ window \d+$/ });
-  for (let left = 20; left && await remove.count(); left--) await remove.first().click();
-  await page.getByRole("button", { name: "Save recurring availability", exact: true }).click();
+  // A request-only event keeps its empty exception; your set-once hours stay available to other events.
+  const eventId = new URL(page.url()).pathname.split("/").at(-2);
+  const own = page.getByRole("radio", { name: "Its own hours", exact: true });
+  await expect(page.getByRole("radio", { name: "Your hours", exact: true })).toBeChecked();
+  const chosen = page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${eventId}/hours` && response.request().method() === "PUT");
+  await own.check(); assert.equal((await chosen).status(), 200);
+  const remove = page.getByRole("button", { name: "Remove hours", exact: true });
+  for (let left = 20; left && await remove.count(); left--) {
+    const saved = page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${eventId}/availability` && response.request().method() === "PUT");
+    await remove.first().click(); assert.equal((await saved).status(), 200);
+  }
+  await page.reload(); await expect(own).toBeChecked();
+  assert.deepEqual((await (await page.request.get(origin + `/api/app/event-types/${eventId}`)).json()).availability, [], "hours edits survive a reload without a Save button");
+  await page.getByRole("link", { name: "Back to event", exact: true }).click();
   onPhase("first-run request publication");
   await page.getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("button", { name: "Open requests", exact: true }).click();
