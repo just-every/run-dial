@@ -12,7 +12,7 @@ import { readProfile } from "../../features/host-profile/read-profile";
 import { Button, buttonClassName } from "./primitives";
 import { Icon } from "../../shared/drawing/icons";
 import { BrandMark } from "../../features/public-booking";
-import { navigation, RouteLoadPending, WorkspaceBootstrapRecovery } from "./route-load-error";
+import { currentNavigationPath, navigation, RouteLoadPending, WorkspaceBootstrapRecovery } from "./route-load-error";
 
 type ProfileSummary = { name: string; title: string; handle: string };
 
@@ -84,7 +84,7 @@ function AppShellContent() {
 }
 
 function SidebarContent({ bookingLink, pathname, profile, profileError, onSignOut, onNavigate, compact = false }: { bookingLink?: BookingLink; pathname: string; profile: ProfileSummary | null; profileError: string; onSignOut: () => Promise<void>; onNavigate?: () => void; compact?: boolean }) {
-  const currentPath = navigation.map(([, to]) => to).filter(to => pathname === to || to !== "/app" && pathname.startsWith(`${to}/`)).sort((left, right) => right.length - left.length)[0];
+  const currentPath = currentNavigationPath(pathname);
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
       {!compact ? <Link to="/app" className="mb-10 inline-flex items-center gap-2.5 text-[30px] font-extrabold leading-none tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></Link> : null}
@@ -96,7 +96,7 @@ function SidebarContent({ bookingLink, pathname, profile, profileError, onSignOu
       <nav aria-label="Operator navigation" className="grid gap-1">
         {navigation.map(([label, to, icon]) => {
           const active = to === currentPath;
-          return <Link key={label} to={to} aria-current={active ? "page" : undefined} onClick={onNavigate} className={`flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-[15px] leading-[1.2] transition-colors ${active ? "bg-gold-wash font-bold text-ink" : "font-[550] text-soft hover:bg-row"}`}>
+          return <Link key={label} to={to} activeOptions={{ exact: !active }} aria-current={active ? "page" : undefined} onClick={onNavigate} className={`flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-[15px] leading-[1.2] transition-colors ${active ? "bg-gold-wash font-bold text-ink" : "font-[550] text-soft hover:bg-row"}`}>
             <span aria-hidden="true" className={`-ml-1 h-[7px] w-[7px] shrink-0 rounded-full ${active ? "bg-gold" : ""}`} />
             <Icon name={icon} className="line-icon h-5 w-5 text-ink" />{label}
           </Link>;
