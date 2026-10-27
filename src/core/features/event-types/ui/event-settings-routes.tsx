@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Sheet } from "../../../app/ui/sheet";
 import { useEventPage } from "./event-page-context";
 import { AdvancedSettings } from "./advanced-sheet";
-import { AvailabilityPage } from "./availability-page";
+import { EventHours } from "../../availability";
 import { SchedulingLimits } from "./scheduling-limits";
 
 declare module "@tanstack/react-router" {
@@ -32,5 +32,5 @@ export function EventHoursRoute() {
   const { onHoursClosed } = page;
   useEffect(() => () => onHoursClosed(), [onHoursClosed]);
   const close = useCloseSettings();
-  return <Sheet title={`${page.event.title}’s hours`} closeLabel="Close hours" returnFocusId="event-hours-row" onClose={close}><AvailabilityPage eventId={page.event.id} workspace={page.workspace} /><SchedulingLimits /></Sheet>;
+  return <Sheet title={`${page.event.title}’s hours`} closeLabel="Close hours" returnFocusId="event-hours-row" onClose={close}><EventHours eventId={page.event.id} /><SchedulingLimits /></Sheet>;
 }

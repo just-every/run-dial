@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { EventHoursPage } from "../core/features/availability/ui/event-hours";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-
-export const Route = createFileRoute('/setup/event-types_/$id_/availability' )({ component: EventAvailabilityRoute });
-function EventAvailabilityRoute() { const { id } = Route.useParams(); return <EventHoursPage workspace="/setup" eventId={id} />; }
+export const Route = createFileRoute('/setup/event-types_/$id_/availability')({
+  beforeLoad: ({ params }) => { throw redirect({ to: "/setup/event-types/$id/hours", params: { id: params.id }, replace: true }); },
+});

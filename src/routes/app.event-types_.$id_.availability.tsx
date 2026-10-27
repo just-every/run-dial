@@ -1,7 +1,5 @@
-import { withEditorLeaf } from "../core/features/editor/editor-leaf";
-import { createFileRoute } from "@tanstack/react-router";
-import { EventHoursPage } from "../core/features/availability/ui/event-hours";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-
-export const Route = createFileRoute('/app/event-types_/$id_/availability' )({ component: withEditorLeaf(EventAvailabilityRoute) });
-function EventAvailabilityRoute() { const { id } = Route.useParams(); return <EventHoursPage eventId={id} />; }
+export const Route = createFileRoute('/app/event-types_/$id_/availability')({
+  beforeLoad: ({ params }) => { throw redirect({ to: "/app/event-types/$id/hours", params: { id: params.id }, replace: true }); },
+});
