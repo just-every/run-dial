@@ -3,6 +3,7 @@ import type { FieldState } from "../../../app/ui/autosave/use-autosave";
 import type { EventDetailsInput } from "../repository";
 
 export type EventFieldSaving = {
+  validation?(key: keyof EventDetailsInput): string | undefined;
   state?(key: keyof EventDetailsInput): FieldState;
   onLeave?(key: keyof EventDetailsInput): void;
   onRetry?(): void;
@@ -16,5 +17,7 @@ export function FieldSaved({ saving, field }: { saving: EventFieldSaving; field:
 
 export function FieldFailed({ saving, field, id, what }: { saving: EventFieldSaving; field: keyof EventDetailsInput; id: string; what: string }) {
   const state = saving.state?.(field);
+  const message = saving.validation?.(field);
+  if (message) return <p id={id} className="autosave-failed" role="alert" tabIndex={-1} data-autosave-attention>{message}</p>;
   return state ? <SaveFailed id={id} state={state} what={what} onRetry={() => saving.onRetry?.()} /> : null;
 }

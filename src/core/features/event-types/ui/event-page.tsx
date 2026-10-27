@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Link, useRouteContext } from "@tanstack/react-router";
 import { api, errorMessage } from "../../../api/client";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
-import { useAutosave } from "../../../app/ui/autosave/use-autosave";
+import { useDetailsDraft } from "./advanced-groups/details-draft";
 import { Card, IconTile } from "../../../app/ui/primitives";
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { RecordNotFound } from "../../bookings/client";
@@ -96,18 +96,18 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
 }
 type DetailsScopeProps = { initial: EventTypeRecord; workspace: "/app" | "/setup"; paymentEditor: EventPaymentEditor; hostName: string; hostTimezone: string; onSaved(): void; onHoursClosed(): void; readiness?: EventReadiness; checking: boolean; setRecord(event: EventTypeRecord): void; hours?: HoursRead | null; hasPrivateFields: boolean; children?: ReactNode };
 function EventDetailsScope({ initial, workspace, paymentEditor, hostName, hostTimezone, onSaved, onHoursClosed, readiness, checking, setRecord, hours, hasPrivateFields, children }: DetailsScopeProps) {
-  const details = useAutosave(`event:${initial.id}:details:${initial.status}`, detailsOf(initial), async (next, init) => {
+  const details = useDetailsDraft(`event:${initial.id}:details:${initial.status}`, detailsOf(initial), async (next, init) => {
     const response = await api.api.app["event-types"][":id"].details.$patch({ param: { id: initial.id }, json: next }, { init });
     if (!response.ok) throw new Error(await errorMessage(response));
     onSaved();
-  }, { asks: initial.status === "published" ? ["slug"] : [] });
+  }, initial.status === "published" ? ["slug"] : []);
   const event = { ...initial, ...details.values };
   return <EventPageContext.Provider value={{ event, details, workspace, hostName, hostTimezone, onSaved, onHoursClosed, paymentEditor }}>
     <div className="grid gap-5" data-event-page>
       <Link to={`${workspace}/event-types`} className="inline-flex min-h-11 sm:min-h-6 w-fit items-center text-sm font-semibold underline-offset-4 hover:underline">‹ Event types</Link>
       <EventActions event={event} workspace={workspace} readiness={readiness} checking={checking} onChange={setRecord} onSaved={onSaved} />
       <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,350px)]">
-        <Card className="min-w-0 p-5 sm:p-6"><EventFields mode="essentials" event={event} update={details.type} choose={details.choose} state={details.state} onLeave={details.leave} onRetry={details.retry} /></Card>
+        <Card className="min-w-0 p-5 sm:p-6"><EventFields mode="essentials" event={event} update={details.type} choose={details.choose} state={details.state} validation={details.validation} onLeave={details.leave} onRetry={details.retry} /></Card>
         <Card className="min-w-0 p-5 sm:p-6"><h2 className="text-[13px] font-bold uppercase tracking-[.1em] text-muted">As invitees see it</h2><div className="my-4 grid gap-3 rounded-2xl bg-gold-wash p-4"><h3 className="break-words text-[22px] font-bold leading-tight">{event.title}</h3><p className="whitespace-pre-wrap break-words text-sm leading-6 text-soft">{event.description}</p><div className="flex flex-wrap gap-2 text-[13px] font-semibold"><span className="rounded-full bg-card px-3 py-1.5">{eventDurationOptions(event).map(minutes => `${minutes} min`).join(" / ")}</span><span className="rounded-full bg-card px-3 py-1.5">{publicLocations(event).map(location => location.label).join(" / ")}</span></div></div><EventSharing eventId={event.id} workspace={workspace} /></Card>
         <Card className="min-w-0 p-2 xl:col-start-1"><SettingsRow id="event-hours-row" to={`${workspace}/event-types/${event.id}/hours`} icon="clock" title="Hours" summary={hoursSummary(event, hours)} /><SettingsRow id="event-advanced-row" to={`${workspace}/event-types/${event.id}/advanced`} icon="gear" title="Advanced settings" summary={`Price, questions, guests, emails and ${hasPrivateFields ? 5 : 4} more`} /></Card>
       </div>
