@@ -4536,7 +4536,7 @@
       "executable": false
     },
     "scripts/verify-operator-change.mjs": {
-      "sha256": "ccd6ca1f4a55f8aefaee58305f045975fc4fcfe7e126531b81aff84d76d2595c",
+      "sha256": "dee7dd968dc13b2dd5985f9e0c9b5c3f4ea5564c193ab0e7742989979617a6ce",
       "executable": false
     },
     "scripts/verify-operator-creation-recovery.mjs": {
@@ -5172,7 +5172,7 @@
       "executable": false
     },
     "src/core/features/bookings/ui/booking-changes.tsx": {
-      "sha256": "74697ccb2a2e792c30aff8952bc997952c2b6f3084b7f300eafc9fcca32e0cfa",
+      "sha256": "a7bdda67bffad3802d4786940f02cbdb6c2b002e96c8029e2ea118c51e5793d0",
       "executable": false
     },
     "src/core/features/bookings/ui/booking-detail.tsx": {
