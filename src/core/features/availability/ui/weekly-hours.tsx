@@ -16,7 +16,7 @@ export function WeeklyHours({ windows, onChange, label = "Weekly hours" }: { win
       <div className="flex min-w-0 flex-wrap gap-2">
         {windows.filter(window => window.weekday === weekday).length ? windows.map((window, position) => window.weekday === weekday ? <div key={position} className="grid w-full min-w-0 max-w-[16rem] grid-cols-[minmax(0,1fr)_2.75rem] items-start gap-1">
           <details className="min-w-0">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center rounded-full bg-wash px-2 text-[13px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" aria-label={`${day} window ${indexOnDay(windows, position)} hours`}>
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center rounded-full bg-wash px-2 text-[13px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" aria-label={`${day} ${clockLabel(window.startMinute)}–${clockLabel(window.endMinute)}`}>
               {clockLabel(window.startMinute)}–{clockLabel(window.endMinute)}
             </summary>
             <div className="grid min-w-0 gap-2 pt-2">
