@@ -5832,7 +5832,7 @@
       "executable": false
     },
     "src/core/features/event-types/ui/new-event-steps.css": {
-      "sha256": "4023e49ec2736b1b3cc9a966c529154725ad8bcfa698447192d2a297d2d8ccfb",
+      "sha256": "5b79d096c371fa4cc4f47ad81245bf5078d9a8145f0d78064406a6575f0732dc",
       "executable": false
     },
     "src/core/features/event-types/ui/new-event-steps.tsx": {
@@ -5868,7 +5868,7 @@
       "executable": false
     },
     "src/core/features/event-types/ui/step-when.tsx": {
-      "sha256": "95bba57774a129416ea76a1a1acd5faacaa3183199d360608cb05dde7cd9b8d8",
+      "sha256": "b42f53730b800132bc25485304b3e4422134b48b35cc755357c356e12aa54050",
       "executable": false
     },
     "src/core/features/event-types/ui/step-where.tsx": {
@@ -8560,7 +8560,7 @@
       "executable": false
     },
     "tests/host-setup/journey.mjs": {
-      "sha256": "e8f877270c68f44d48d7417c1fe750f4c2182c179ff7eaee5a1d364643e946ff",
+      "sha256": "bd9fe413a0d1b4d4427381365b89ad761f7cf03689fc20b478d324ffa9bd4e40",
       "executable": false
     },
     "tests/host-setup/local-signin.mjs": {
