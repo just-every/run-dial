@@ -99,6 +99,8 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await openCardActions();
   await keys.activate(eventCard.getByRole("link", { name: "Availability", exact: true }), "Event card availability");
   await page.getByRole("radio", { name: "Its own hours", exact: true }).waitFor();
+  await keys.activate(button(page, "Close hours"), "Close event hours before opening your hours");
+  await field(page, "Name").waitFor();
   await keys.navigate("Hours");
   const ownEvents = page.locator("details").filter({ has: page.locator("summary", { hasText: /^Events with their own hours/ }) });
   if (await ownEvents.getAttribute("open") === null) await keys.activate(ownEvents.locator("summary"), "Events with their own hours");
