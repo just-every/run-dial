@@ -13,3 +13,16 @@
   .advanced-group-fields { padding-inline: 6px; }
   .advanced-group-fields input[type="checkbox"] { position: relative; }
 }
+
+.event-payment-layout { display:grid; gap:20px; }
+.event-payment-price,.event-payment-terms,.event-payment-fees { display:contents; }
+.event-payment-layout .autosave-saved { flex:0 0 56px; min-width:56px; }
+@media(min-width:640px) {
+  .event-payment-layout { grid-template-columns:repeat(6,minmax(0,1fr)); gap:16px; align-items:start; }
+  .event-payment-price-main { grid-column:1 / span 2; grid-row:1; }
+  .event-payment-deposit { grid-column:3 / span 4; grid-row:1; }
+  .event-payment-price-confirm,.event-payment-lengths { grid-column:1 / -1; }
+  .event-payment-balance { grid-column:1 / -1; }
+  .event-payment-window,.event-payment-fees > div { grid-column:span 2; }
+  .event-payment-account { grid-column:1 / -1; }
+}

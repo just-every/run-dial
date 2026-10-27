@@ -15,6 +15,7 @@ export type EventPageState = {
   hostName: string;
   hostTimezone: string;
   onSaved(): void;
+  onHoursClosed(): void;
 };
 export const EventPageContext = createContext<EventPageState | undefined>(undefined);
 export function useEventPage() {

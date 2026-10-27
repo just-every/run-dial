@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { Segmented } from "../../../app/ui/primitives";
+import { SavedMark } from "../../../app/ui/autosave/saved-state";
+import type { FieldState } from "../../../app/ui/autosave/use-autosave";
 import { defaultRequestRouting, type RequestRouting } from "../../../shared/correspondence";
 
 type Operator = { id: string; email: string; status: string };
@@ -8,7 +10,7 @@ const modes = [["host_recipients", "Every host"], ["selected", "Selected people"
 
 
 /** Policy `availability-request.routing.v1`; saved with the event's email settings. */
-export function RequestRoutingFields({ value = defaultRequestRouting, disabled, onChange, operators: initialOperators }: { value?: RequestRouting; disabled: boolean; operators?: Operator[]; onChange(value: RequestRouting): void }) {
+export function RequestRoutingFields({ value = defaultRequestRouting, disabled, onChange, operators: initialOperators, state }: { value?: RequestRouting; disabled: boolean; operators?: Operator[]; onChange(value: RequestRouting): void; state?: FieldState }) {
   const [operators, setOperators] = useState<Operator[]>(initialOperators?.filter(operator => operator.status === "active") ?? []), [error, setError] = useState("");
   useEffect(() => {
     if (initialOperators) return;
@@ -28,7 +30,7 @@ export function RequestRoutingFields({ value = defaultRequestRouting, disabled, 
     onChange({ mode: "selected", operatorIds: operators.map(operator => operator.id).filter(candidate => candidate === id ? checked : chosen.has(candidate)) });
   }
   return <fieldset className="mt-5 grid min-w-0 gap-3">
-    <legend className="text-sm font-semibold text-ink">Alternative request email</legend>
+    <legend className="w-full text-sm font-semibold text-ink"><span className="flex items-center justify-between gap-2">Alternative request email{state ? <SavedMark state={state} /> : null}</span></legend>
     <Segmented label="Who is emailed" name="request-routing" value={value.mode} options={modes} stacked onChange={mode => onChange({ mode, operatorIds: mode === "selected" ? value.operatorIds : [] })} />
     {value.mode === "selected" ? <div className="grid min-w-0 gap-2">
       {operators.map(operator => <label key={operator.id} className="flex min-h-11 min-w-0 items-center gap-3 text-sm">

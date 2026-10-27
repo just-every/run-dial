@@ -29,6 +29,7 @@ function CompactDurationFields({ event, update, ...saving }: Props) {
           <div className="grid min-w-0 flex-1 gap-2">
             <Select aria-label={options.length === 1 ? "Length" : `Length ${index + 1}`} aria-describedby={saving.state?.("durationOptionsMinutes").failed ? `${id}-failed` : undefined} value={custom === index ? "other" : value} onBlur={() => saving.onLeave?.("durationOptionsMinutes")} onChange={entry => {
               if (entry.target.value === "other") { setCustom(index); return; }
+              setCustom(undefined);
               change(options.map((duration, position) => position === index ? Number(entry.target.value) : duration));
             }}>
               {[...new Set([...commonLengths, value])].sort((a, b) => a - b).map(length => <option key={length} value={length} disabled={length !== value && options.includes(length)}>{length} min</option>)}

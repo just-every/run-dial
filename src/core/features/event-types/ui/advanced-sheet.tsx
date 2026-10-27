@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Card, IconTile } from "../../../app/ui/primitives";
 import { ExtensionSlot } from "../../../app/extensions";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
@@ -52,13 +52,16 @@ function AdvancedGroups({ event, details, onSaved, hostName, hostTimezone, data 
   const [open, setOpen] = useState<string>();
   const [visited, setVisited] = useState<Set<string>>(new Set());
   const [current, setCurrent] = useState(data);
+  const summaryEpoch = useRef(0);
+  useEffect(() => () => { summaryEpoch.current++; }, []);
   async function updated() {
     onSaved();
+    const epoch = ++summaryEpoch.current;
     // Only summaries take the fresh read; mounted forms retain their own save state and focus.
     const prefix = `/api/app/event-types/${event.id}`;
     try {
       const [price, terms, guests, approval, policy, correspondence] = await Promise.all([readSetting<EventPrice>(`${prefix}/price`), readSetting<PaymentTerms>(`${prefix}/payment-terms`), readSetting<Data["guests"]>(`${prefix}/guests`), readSetting<Data["approval"]>(`${prefix}/approval`), readSetting<EventBookingPolicy>(`${prefix}/booking-policy`), readSetting<CorrespondenceConfig>(`${prefix}/correspondence`)]);
-      setCurrent(value => ({ ...value, price, terms, guests, approval, policy, correspondence }));
+      if (epoch === summaryEpoch.current) setCurrent(value => ({ ...value, price, terms, guests, approval, policy, correspondence }));
     } catch { /* A save succeeded; its own field remains authoritative until the next read. */ }
   }
   const changed = { eventId: event.id, hostTimezone, onSaved: updated };

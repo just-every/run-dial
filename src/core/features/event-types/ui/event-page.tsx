@@ -49,6 +49,7 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
   const initialFields = useWorkspaceRead<{ id: string }[]>(`/api/app/custom-fields/eventType/${initial.id}`);
   const [hasPrivateFields, setHasPrivateFields] = useState(Boolean(initialFields?.length));
   const readinessEpoch = useRef(0);
+  const hoursReadEpoch = useRef(0);
   const shell = useRouteContext({ strict: false }).shell;
   const hostName = shell?.profile?.name ?? "";
   const hostTimezone = shell?.profile?.timezone ?? "UTC";
@@ -64,6 +65,15 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
     finally { if (epoch === readinessEpoch.current) setChecking(false); }
   }, [initial.id]);
   const onSaved = useCallback(() => { void checkReadiness(); hostSetupChanged(); }, [checkReadiness]);
+  const onHoursClosed = useCallback(() => {
+    const epoch = ++hoursReadEpoch.current;
+    void api.api.app["event-types"][":id"].$get({ param: { id: initial.id } }).then(async response => {
+      if (!response.ok) return;
+      const fresh = await response.json();
+      if (epoch === hoursReadEpoch.current) setRecord(current => ({ ...current, availability: fresh.availability }));
+    }).catch(() => { /* Keep the last known hours when the refresh is unavailable. */ });
+    onSaved();
+  }, [initial.id, onSaved]);
   useEffect(() => { void checkReadiness(); return () => { readinessEpoch.current++; }; }, [checkReadiness]);
   useEffect(() => {
     let active = true;
@@ -79,17 +89,17 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
     return () => { active = false; window.removeEventListener("dial-host-setup-changed", loadHours); };
   }, [initial.id]);
   // Lifecycle actions flush details first; a changed lifecycle then gets the right address-confirm policy.
-  return <EventDetailsScope key={`${initial.id}:${record.status}`} initial={record} workspace={workspace} paymentEditor={paymentEditor} hostName={hostName} hostTimezone={hostTimezone} onSaved={onSaved} readiness={readiness} checking={checking} setRecord={setRecord} hours={hours} hasPrivateFields={hasPrivateFields}>{children}</EventDetailsScope>;
+  return <EventDetailsScope key={`${initial.id}:${record.status}`} initial={record} workspace={workspace} paymentEditor={paymentEditor} hostName={hostName} hostTimezone={hostTimezone} onSaved={onSaved} onHoursClosed={onHoursClosed} readiness={readiness} checking={checking} setRecord={setRecord} hours={hours} hasPrivateFields={hasPrivateFields}>{children}</EventDetailsScope>;
 }
-type DetailsScopeProps = { initial: EventTypeRecord; workspace: "/app" | "/setup"; paymentEditor: EventPaymentEditor; hostName: string; hostTimezone: string; onSaved(): void; readiness?: EventReadiness; checking: boolean; setRecord(event: EventTypeRecord): void; hours?: HoursRead; hasPrivateFields: boolean; children?: ReactNode };
-function EventDetailsScope({ initial, workspace, paymentEditor, hostName, hostTimezone, onSaved, readiness, checking, setRecord, hours, hasPrivateFields, children }: DetailsScopeProps) {
+type DetailsScopeProps = { initial: EventTypeRecord; workspace: "/app" | "/setup"; paymentEditor: EventPaymentEditor; hostName: string; hostTimezone: string; onSaved(): void; onHoursClosed(): void; readiness?: EventReadiness; checking: boolean; setRecord(event: EventTypeRecord): void; hours?: HoursRead; hasPrivateFields: boolean; children?: ReactNode };
+function EventDetailsScope({ initial, workspace, paymentEditor, hostName, hostTimezone, onSaved, onHoursClosed, readiness, checking, setRecord, hours, hasPrivateFields, children }: DetailsScopeProps) {
   const details = useAutosave(`event:${initial.id}:details:${initial.status}`, detailsOf(initial), async (next, init) => {
     const response = await api.api.app["event-types"][":id"].details.$patch({ param: { id: initial.id }, json: next }, { init });
     if (!response.ok) throw new Error(await errorMessage(response));
     onSaved();
   }, { asks: initial.status === "published" ? ["slug"] : [] });
   const event = { ...initial, ...details.values };
-  return <EventPageContext.Provider value={{ event, details, workspace, hostName, hostTimezone, onSaved, paymentEditor }}>
+  return <EventPageContext.Provider value={{ event, details, workspace, hostName, hostTimezone, onSaved, onHoursClosed, paymentEditor }}>
     <div className="grid gap-5" data-event-page>
       <Link to={`${workspace}/event-types`} className="inline-flex min-h-11 sm:min-h-6 w-fit items-center text-sm font-semibold underline-offset-4 hover:underline">‹ Event types</Link>
       <EventActions event={event} workspace={workspace} readiness={readiness} checking={checking} onChange={setRecord} onSaved={onSaved} />

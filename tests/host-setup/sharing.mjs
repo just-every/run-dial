@@ -101,9 +101,21 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   if (mobile) await page.keyboard.press("Escape");
   await scan("event-links");
   await page.goto(origin + `/app/event-types/${eventId}`);
-  await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeVisible().catch(async error => {
+    await page.screenshot({ path: evidencePath(`host-event-copy-missing-${page.viewportSize().width}.png`), fullPage: true });
+    const text = (await page.getByRole("main").innerText()).replace(/https?:\/\/[^\s"'<>]+/g, url => new URL(url).pathname);
+    throw new Error(`${error.message}\nEvent page: ${text.slice(0, 2500)}`);
+  });
   const publicPage = await context.newPage();
-  try { await publicPage.goto(expected); if (requestsOnly) { await expect(publicPage.getByRole("heading", { name: "Request a time with Fresh Host.", exact: true })).toBeVisible(); await expect(publicPage.locator(".pb-event-flow").getByRole("heading", { name: "First event", exact: true })).toBeVisible(); assert.equal(await publicPage.locator(".pb-slot-button").count(), 0); } else await expect(publicPage.locator(".pb-slot-button").first()).toBeVisible(); } finally { await publicPage.close(); }
+  try { await publicPage.goto(expected); if (requestsOnly) { await expect(publicPage.getByRole("heading", { name: "Request a time with Fresh Host.", exact: true })).toBeVisible(); await expect(publicPage.locator(".pb-event-flow").getByRole("heading", { name: "First event", exact: true })).toBeVisible(); assert.equal(await publicPage.locator(".pb-slot-button").count(), 0); } else await expect(publicPage.locator(".pb-slot-button").first()).toBeVisible(); }
+  catch (error) {
+    await publicPage.screenshot({ path: evidencePath(`host-public-unavailable-${page.viewportSize().width}.png`), fullPage: true });
+    const text = (await publicPage.locator("body").innerText()).replace(/https?:\/\/[^\s"'<>]+/g, url => new URL(url).pathname);
+    const availability = await publicPage.request.get(origin + `/api/public/book/fresh-host/first-event/availability?week=${new Date().toISOString().slice(0, 10)}`);
+    const result = await availability.json();
+    const diagnostic = { status: availability.status(), state: result.state, slots: result.slots?.length, error: result.error?.code };
+    throw new Error(`${error.message}\nPublic page: ${text.slice(0, 2500)}\nAvailability: ${JSON.stringify(diagnostic)}`);
+  } finally { await publicPage.close(); }
   await page.bringToFront();
   const snippets = {};
   const host = createServer((request, response) => { response.setHeader("Content-Type", "text/html"); response.end(`<!doctype html><html lang="en"><head><title>Embed host</title></head><body><main>${snippets[request.url === "/modal" ? "modal" : "inline"]}</main></body></html>`); });

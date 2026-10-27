@@ -84,8 +84,8 @@ function CorrespondenceForm({ eventId, hostName, eventTitle, questions, initial,
         <span>Include invitation manage link</span><SavedMark state={save.state("invitationManageLinkEnabled")} />
       </label>
       <SaveFailed id={`${id}-manage-failed`} state={save.state("invitationManageLinkEnabled")} what="the manage link" choice onRetry={save.retry} />
-      <RequestRoutingFields value={value.requestRouting} operators={operators} disabled={disabled} onChange={routing => save.choose("requestRouting", routing)} />
-      <SavedMark state={save.state("requestRouting")} /><SaveFailed id={`${id}-routing-failed`} state={save.state("requestRouting")} what="request email" choice onRetry={save.retry} />
+      <RequestRoutingFields value={value.requestRouting} operators={operators} disabled={disabled} state={save.state("requestRouting")} onChange={routing => save.choose("requestRouting", routing)} />
+      <SaveFailed id={`${id}-routing-failed`} state={save.state("requestRouting")} what="request email" choice onRetry={save.retry} />
       <div className="mt-5 grid min-w-0 gap-5">
         <label className="grid gap-2 text-sm font-semibold">Template
           <Select value={kindIndex} disabled={disabled} onChange={event => setKindIndex(Number(event.target.value))}>{kinds.map((kind, index) => <option key={kind.name} value={index}>{kind.name}</option>)}</Select>

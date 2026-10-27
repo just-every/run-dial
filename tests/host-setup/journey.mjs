@@ -28,7 +28,7 @@ export async function hostJourneys(origin, scenario) {
         surface.on("request", request => requestSteps.set(request, `${step} at ${Date.now() - startedAt}ms`));
         surface.on("pageerror", () => errors.push("Uncaught browser error"));
         surface.on("console", message => {
-          if (message.type() === "error" && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) errors.push("Browser console error");
+          if (message.type() === "error" && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) errors.push("Browser console error: " + message.text().replace(/https?:\/\/[^\s"'<>]+/g, url => safeRequestPath(url)) + ` at ${safeRequestPath(message.location().url || surface.url())} during ${step}`);
           if (/hydration|hydrating|did not match/i.test(message.text())) errors.push("Hydration diagnostic");
         });
         surface.on("response", response => {
