@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 export async function verifyEmptyWorkspace(origin) {
-  const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ["--use-mock-keychain", "--password-store=basic", "--no-sandbox"] });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
     const page = await context.newPage();
@@ -66,6 +66,16 @@ export async function verifyEmptyWorkspace(origin) {
       assert.equal(await page.evaluate("document.documentElement.scrollWidth > innerWidth"), false, "the empty profile editor fits the viewport");
       await capture(page, width === 390 ? "mobile-profile" : "desktop-profile");
       await page.getByRole("navigation", { name: "Setup navigation" }).getByRole("link", { name: "Settings", exact: true }).click();
+      await expect(page).toHaveURL(origin + "/setup/settings");
+      await expect(page.getByRole("button", { name: "Check sender", exact: true })).toBeEnabled();
+
+      await page.getByRole("navigation", { name: "Setup navigation" }).getByRole("link", { name: "Event types", exact: true }).click();
+      await expect(page).toHaveURL(origin + "/setup/event-types/new");
+      await expect(page.getByLabel("Name", { exact: true })).toBeFocused();
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
+      assert.equal(await page.getByLabel("Name", { exact: true }).evaluate(node => node.validity.valueMissing), true);
+      assert.deepEqual(await (await page.request.get(origin + "/api/app/event-types")).json(), [], "opening and validating creation does not create an event");
+      await page.goBack();
       await expect(page).toHaveURL(origin + "/setup/settings");
       await expect(page.getByRole("button", { name: "Check sender", exact: true })).toBeEnabled();
 

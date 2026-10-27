@@ -51,13 +51,23 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   await expect(page.getByText("Mail sender verified.", { exact: true })).toBeVisible();
   onPhase("first-run event editor");
   await page.getByRole("link", { name: "Event types", exact: true }).click();
-  await page.getByRole("link", { name: "New event type", exact: true }).first().click();
-  await page.getByLabel("Event name", { exact: true }).fill("First request");
+  await page.waitForURL(origin + "/setup/event-types/new");
+  await expect(page.getByLabel("Name", { exact: true })).toBeFocused();
+  await page.getByLabel("Name", { exact: true }).fill("First request");
   await page.getByLabel("Description", { exact: true }).fill("Suggest a time to meet.");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("button", { name: "30 min", exact: true }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("combobox", { name: "Location kind", exact: true }).selectOption("phone");
   await page.getByLabel("Private link, number, or address", { exact: true }).fill("+1 202 555 0100");
-  onPhase("first-run event save");
-  await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/availability$/);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByRole("radio", { name: /^Your hours/ })).toBeChecked();
+  onPhase("first-run event create");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.waitForURL(/\/setup\/event-types\/[A-Z0-9]{26}$/);
+  const draft = await (await page.request.get(origin + "/api/app/event-types")).json();
+  assert.equal(draft[0].status, "draft");
+  await page.getByRole("link", { name: "Edit recurring availability →", exact: true }).click();
   // The event starts on your hours; a request-only host clears them, and saving returns to the event.
   await page.getByRole("button", { name: "Save recurring availability", exact: true }).waitFor();
   const remove = page.getByRole("button", { name: /^Remove \w+ window \d+$/ });

@@ -7,6 +7,8 @@ export default {
   async fetch(request: Request, env: AppBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response(null, { status: 404 });
+    // Native auth documents use the browser's default icon request; this fixture serves the real public mark.
+    if (url.pathname === "/favicon.ico" && ["GET", "HEAD"].includes(request.method)) return Response.redirect(new URL("/rer-mark.svg", url).href, 302);
     if (url.pathname === "/__host/reset" && request.method === "POST") {
       const existing = await env.DB.prepare("SELECT count(*) AS count FROM oa_operators").first<{ count: number }>();
       if (existing?.count) return new Response("Fixture requires fresh native state", { status: 409 });

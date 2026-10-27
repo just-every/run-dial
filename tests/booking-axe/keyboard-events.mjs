@@ -4,14 +4,20 @@ import { button, field, get, mutation } from "./keyboard-controls.mjs";
 export async function eventKeyboardJourney(page, origin, width, keys, checks, errors) {
   await keys.navigate("Event types");
   await keys.activate(page.getByRole("link", { name: "New event type", exact: true }), "Create event type");
-  await button(page, "Save changes").waitFor();
-  await keys.activate(button(page, "Save changes"), "Submit empty event");
-  assert.ok(await field(page, "Event name").evaluate(el => el === globalThis.document.activeElement && el.validity.valueMissing && el.matches(":invalid")), "native required-field validation focuses the missing event name");
-  await keys.type(field(page, "Event name"), `Keyboard event ${width}`, "Event name");
+  await button(page, "Continue").waitFor();
+  await keys.activate(button(page, "Continue"), "Submit empty event name");
+  assert.ok(await field(page, "Name").evaluate(el => el === globalThis.document.activeElement && el.validity.valueMissing && el.matches(":invalid")), "native required-field validation focuses the missing event name");
+  await keys.type(field(page, "Name"), `Keyboard event ${width}`, "Event name");
   await keys.type(field(page, "Description"), "A keyboard-created conversation", "Event description");
+  await keys.activate(button(page, "Continue"), "Continue to length");
+  await keys.activate(button(page, "30 min"), "Choose thirty minutes");
+  await keys.activate(button(page, "Continue"), "Continue to location");
   await keys.type(field(page, "Private link, number, or address"), "https://meet.example.test/keyboard", "Private meeting link");
-  const created = await mutation(page, "/api/app/event-types", () => keys.activate(button(page, "Save changes"), "Save new event"), 201);
+  await keys.activate(button(page, "Continue"), "Continue to hours");
+  const created = await mutation(page, "/api/app/event-types", () => keys.activate(button(page, "Create"), "Create new event"), 201);
   const event = await created.json();
+  assert.equal(event.status, "draft");
+  await keys.activate(page.getByRole("link", { name: "Edit recurring availability →", exact: true }), "Open new event hours");
   await button(page, "Save recurring availability").waitFor();
   // A new event starts on your hours; this one keeps its own, cleared, so its edits leave the other events' hours alone.
   await keys.select(field(page, "Schedule"), "", "Keep independent hours");

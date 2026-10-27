@@ -71,10 +71,10 @@ const eventTypeInputSchema = z
   })
   .superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
 
-const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
+const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, description: z.string().max(4000), availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
 // A new event uses your hours unless `hours` (or windows in the weekly `availability` the API has always taken) gives its own.
 const newEventHoursSchema = z.union([z.object({ uses: z.literal("yours") }).strict(), z.object({ uses: z.literal("own"), windows: recurringAvailabilitySchema }).strict()]);
-const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions), availability: recurringAvailabilitySchema.optional(), hours: newEventHoursSchema.optional() })
+const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, description: z.string().max(4000), questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions), availability: recurringAvailabilitySchema.optional(), hours: newEventHoursSchema.optional() })
   .superRefine(requirePrivateLocation).superRefine(validateEventRedirect)
   .superRefine((input, context) => { if (input.hours && input.availability?.length) context.addIssue({ code: "custom", path: ["hours"], message: "Give the event's hours once, as hours or as availability." }); });
 

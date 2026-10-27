@@ -12,7 +12,7 @@ import { localSignIn } from "./local-signin.mjs";
 const safeRequestPath = url => new URL(url).pathname.replace(/(\/(?:manage|review|alternative-time)\/)[^/]+/g, "$1[redacted]");
 
 export async function hostJourneys(origin, scenario) {
-  const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ["--use-mock-keychain", "--password-store=basic", "--no-sandbox"] });
   let scans = 0;
   try {
     {
@@ -28,7 +28,7 @@ export async function hostJourneys(origin, scenario) {
         surface.on("request", request => requestSteps.set(request, `${step} at ${Date.now() - startedAt}ms`));
         surface.on("pageerror", () => errors.push("Uncaught browser error"));
         surface.on("console", message => {
-          if (message.type() === "error" && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) errors.push("Browser console error");
+          if (message.type() === "error" && !/^Failed to load resource: the server responded with a status of 503/.test(message.text())) errors.push(`Browser console error during ${step} at ${message.location().url ? safeRequestPath(message.location().url) : "unknown source"}: ` + message.text().replace(/([?&#](?:token|state|nonce|key)=)[^\s&"<>]+/gi, "$1[redacted]"));
           if (/hydration|hydrating|did not match/i.test(message.text())) errors.push("Hydration diagnostic");
         });
         surface.on("response", response => {
@@ -79,22 +79,45 @@ export async function hostJourneys(origin, scenario) {
           await page.getByRole("button", { name: "Check connection", exact: true }).click(); await expect(page.getByText("Calendar check passed.", { exact: true })).toBeVisible(); await scan("connected-settings");
         }
         await page.goto(origin + "/setup"); await expect(page.locator('[data-step="mail"]')).toContainText("Done"); if (requestsOnly) { await expect(page.locator('[data-step="calendar"]')).toContainText("Optional"); await overviewHealth(page, origin, { calendar: "disconnected", mail: "healthy" }); await scan("mail-without-calendar"); }
-        step = "event editor"; await page.getByRole("link", { name: "New event type", exact: true }).first().click();
-        const more = page.locator("details").filter({ has: page.locator("summary", { hasText: "More options" }) }); await expect(more).not.toHaveAttribute("open");
-        await page.getByLabel("Event name", { exact: true }).fill("First event"); await page.getByLabel("Duration 1 (minutes)", { exact: true }).fill("30");
-        assert.equal(await page.getByLabel("Event name", { exact: true }).evaluate(node => Boolean(node.compareDocumentPosition(globalThis.document.querySelector('input[type="number"]')) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING)), true);
-        await page.getByRole("combobox", { name: "Location kind", exact: true }).selectOption("phone"); await page.getByLabel("Private link, number, or address", { exact: true }).fill("+1 202 555 0100"); await page.getByRole("button", { name: "Save changes", exact: true }).click();
-        assert.equal(await page.getByLabel("Description", { exact: true }).evaluate(node => node.validity.valueMissing), true);
+        step = "new event steps"; await page.getByRole("link", { name: "New event type", exact: true }).first().click();
+        await expect(page.getByLabel("Name", { exact: true })).toBeFocused();
+        await page.getByRole("button", { name: "Continue", exact: true }).click();
+        assert.equal(await page.getByLabel("Name", { exact: true }).evaluate(node => node.validity.valueMissing), true);
         assert.deepEqual(await (await page.request.get(origin + "/api/app/event-types")).json(), [], "invalid new event creates nothing");
-        await page.getByLabel("Description", { exact: true }).fill("A useful first meeting.");
-        assert.equal(await page.getByLabel("Duration 1 (minutes)", { exact: true }).evaluate(node => Boolean(node.compareDocumentPosition(globalThis.document.querySelector("select")) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING)), true, "duration precedes location");
+        await page.getByLabel("Name", { exact: true }).fill("First event");
+        assert.equal(await page.getByLabel("Description", { exact: true }).evaluate(node => node.required), false, "new event description is optional");
+        if (!requestsOnly) await page.getByLabel("Description", { exact: true }).fill("A useful first meeting.");
+        await page.getByRole("button", { name: "Continue", exact: true }).click();
+        await page.getByRole("button", { name: "30 min", exact: true }).click();
+        await page.getByRole("button", { name: "Continue", exact: true }).click();
+        await page.getByRole("combobox", { name: "Location kind", exact: true }).selectOption("phone");
+        await page.getByLabel("Private link, number, or address", { exact: true }).fill("+1 202 555 0100");
+        await page.getByRole("button", { name: "Continue", exact: true }).click();
+        await expect(page.getByRole("radio", { name: /^Your hours/ })).toBeChecked();
+        await scan("event-form");
+        await expect(page.getByRole("button", { name: "Create", exact: true })).toBeEnabled();
+        const createdResponse = page.waitForResponse(response => new URL(response.url()).pathname === "/api/app/event-types" && response.request().method() === "POST");
+        await page.getByRole("button", { name: "Create", exact: true }).click();
+        const created = await createdResponse; assert.equal(created.status(), 201); const draft = await created.json();
+        assert.equal(draft.status, "draft"); if (requestsOnly) assert.equal(draft.description, "", "optional description stays empty on Create"); assert.equal(draft.durationMinutes, 30); assert.equal(draft.slotIncrementMinutes, 15);
+        assert.equal(draft.minimumNoticeMinutes, 240); assert.equal(draft.bookingHorizonDays, 60);
+        assert.equal(draft.beforeBufferMinutes, 0); assert.equal(draft.afterBufferMinutes, 0); assert.equal(draft.hostDayBookingLimit, null);
+        await page.waitForURL(origin + `/setup/event-types/${draft.id}`);
+        // The existing editor still requires a description when its details are changed.
+        if (requestsOnly) await page.getByLabel("Description", { exact: true }).fill("A useful first meeting.");
+        // Questions and advanced controls remain on the saved event, after the short creation flow.
+        const more = page.locator("details").filter({ has: page.locator("summary", { hasText: "More options" }) }); await expect(more).not.toHaveAttribute("open");
         await page.getByRole("combobox", { name: "Question 1 type", exact: true }).selectOption("text");
         await page.getByRole("textbox", { name: "Question 1 label", exact: true }).fill("Meeting goals");
         await page.getByRole("checkbox", { name: "Question 1 is required", exact: true }).uncheck();
-        await more.locator("summary").click(); await expect(page.getByLabel("Slug", { exact: true })).toHaveValue("first-event");
+        await more.locator("summary").click(); await expect(more.getByLabel("Slug", { exact: true })).toHaveValue("first-event");
         for (const label of ["Minimum notice", "Booking horizon (days)", "Before buffer (minutes)", "After buffer (minutes)", "Host-day cap (optional)", "Colour"]) await expect(more.getByLabel(label, { exact: true })).toBeEnabled();
-        await expect(more.getByRole("combobox", { name: "Start increment", exact: true })).toBeEnabled(); await more.locator("summary").click(); await scan("event-form");
-        await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/availability$/);
+        await expect(more.getByRole("combobox", { name: "Start increment", exact: true })).toBeEnabled(); await more.locator("summary").click();
+        const savedDetails = page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${draft.id}/details` && response.request().method() === "PATCH");
+        await page.getByRole("button", { name: "Save changes", exact: true }).click();
+        assert.equal((await savedDetails).status(), 200);
+        await expect(page.getByRole("button", { name: "Save changes", exact: true })).toBeEnabled();
+        await page.getByRole("link", { name: "Edit recurring availability →", exact: true }).click();
         await expect(page.getByRole("button", { name: "Save recurring availability", exact: true })).toBeVisible();
         // The first event starts on your hours, whose holidays and time off are set on this page.
         const hours = await (await page.request.get(origin + "/api/app/hours")).json();
