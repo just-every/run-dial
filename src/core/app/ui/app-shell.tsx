@@ -10,19 +10,9 @@ import { Suspense, use, useEffect, useInsertionEffect, useRef, useState } from "
 import { api } from "../../api/client";
 import { readProfile } from "../../features/host-profile/read-profile";
 import { Button, buttonClassName } from "./primitives";
-import { Icon, type IconName } from "../../shared/drawing/icons";
+import { Icon } from "../../shared/drawing/icons";
 import { BrandMark } from "../../features/public-booking";
-import { RouteLoadPending, WorkspaceBootstrapRecovery } from "./route-load-error";
-
-const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
-  ["Overview", "/app", "home"],
-  ["Bookings", "/app/bookings", "calendar"],
-  ["Event types", "/app/event-types", "clock"],
-  ["Hours", "/app/settings/hours", "overrides"],
-  ["Requests", "/app/requests", "mail"],
-  ["Profile", "/app/profile", "user"],
-  ["Settings", "/app/settings", "gear"],
-];
+import { navigation, RouteLoadPending, WorkspaceBootstrapRecovery } from "./route-load-error";
 
 type ProfileSummary = { name: string; title: string; handle: string };
 

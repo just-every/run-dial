@@ -1,3 +1,4 @@
+import type { IconName } from "../../shared/drawing/icons";
 import { Link, useMatch, useRouter, useRouterState, type ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { boundedWorkspaceRead, clearWorkspaceReads, retryWorkspaceReads, workspaceReadTimeout } from "../workspace-reads";
@@ -61,7 +62,15 @@ export function WorkspaceLoadState({ error, onRetry, label = "Loading…" }: { e
   </div>;
 }
 
-const navigation = [["Overview", "/app"], ["Bookings", "/app/bookings"], ["Event types", "/app/event-types"], ["Availability", "/app/availability"], ["Requests", "/app/requests"], ["Profile", "/app/profile"], ["Settings", "/app/settings"]] as const;
+export const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
+  ["Overview", "/app", "home"],
+  ["Bookings", "/app/bookings", "calendar"],
+  ["Event types", "/app/event-types", "clock"],
+  ["Hours", "/app/settings/hours", "overrides"],
+  ["Requests", "/app/requests", "mail"],
+  ["Profile", "/app/profile", "user"],
+  ["Settings", "/app/settings", "gear"],
+];
 
 /** The app parent can fail before AppShell exists; keep its recovery inside app chrome. */
 function RouteLoadFrame({ children }: { children: ReactNode }) {
