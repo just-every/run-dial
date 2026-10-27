@@ -16,8 +16,8 @@ export async function hoursJourney(page, origin, eventId, setOffline = () => {})
   const end = monday.getByLabel("Monday window 1 end time", { exact: true });
   const start = monday.getByLabel("Monday window 1 start time", { exact: true });
   const original = await end.inputValue();
-  let writes = 0;
-  const count = request => { if (request.method() === "PUT" && new URL(request.url()).pathname.startsWith("/api/app/availability-schedules/")) writes++; };
+  let writes = 0, creates = 0;
+  const count = request => { if (request.method() === "POST" && new URL(request.url()).pathname === "/api/app/availability-schedules") creates++; if (request.method() === "PUT" && new URL(request.url()).pathname.startsWith("/api/app/availability-schedules/")) writes++; };
   page.on("request", count);
   try {
     await end.fill(await start.inputValue());
@@ -70,10 +70,12 @@ export async function hoursJourney(page, origin, eventId, setOffline = () => {})
     assert.equal((await created).status(), 201);
     await page.getByRole("button", { name: "Add other hours", exact: true }).click();
     const name = page.getByLabel("Hours name", { exact: true });
+    const beforeDuplicate = creates;
     await name.fill(` ${uniqueName.toLowerCase()} `);
     await page.getByRole("button", { name: "Add hours", exact: true }).last().click();
     await expect(page.getByRole("alert")).toContainText("These hours already have that name. Choose another name.");
     await expect(name).toHaveValue(` ${uniqueName.toLowerCase()} `);
+    assert.equal(creates, beforeDuplicate, "duplicate creation sends no request");
     const schedules = await (await page.request.get(origin + "/api/app/availability-schedules")).json();
     assert.equal(schedules.filter(schedule => schedule.name.toLowerCase() === uniqueName.toLowerCase()).length, 1);
     await page.getByRole("button", { name: "Cancel", exact: true }).click();
