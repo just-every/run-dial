@@ -1,3 +1,4 @@
+import { entitlementRoutes } from "./entitlement-routes";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
@@ -23,6 +24,7 @@ const moneyRefusalMessages: Record<MoneyRefusal, string> = {
 };
 
 export const paymentRoutes = new Hono<AppEnvironment>()
+  .route("/",entitlementRoutes)
   .get("/api/app/payments/stripe", async context => context.json(await context.get("services").payments.connection.status()))
   .get("/api/app/payments/stripe/oauth/start", async context => {
     const redirect = await context.get("services").payments.connection.begin(context.get("session"));

@@ -15,6 +15,7 @@ import { createId, nowIso } from "../../shared/ids";
 export type CalendarConnectionStatus = "disconnected" | "healthy" | "unhealthy";
 export type CalendarSelection = { calendarId: string; purpose: "destination" | "conflict"; conferenceCapable: boolean };
 export type CalendarConnectionRecord = {
+  provider: "google" | "microsoft";
   status: CalendarConnectionStatus;
   authorisedByOperatorId: string | null;
   accountEmail: string | null;
@@ -40,6 +41,7 @@ export class CalendarConnectionRepository {
     if (!connection) return undefined;
     const selected = await this.db.select().from(calendarConnectionCalendars).orderBy(asc(calendarConnectionCalendars.purpose), asc(calendarConnectionCalendars.calendarId));
     return {
+      provider: connection.provider,
       status: connection.status,
       authorisedByOperatorId: connection.authorisedByOperatorId,
       accountEmail: connection.accountEmail,
@@ -78,17 +80,19 @@ export class CalendarConnectionRepository {
   }
 
   async saveCredentials(input: {
+    provider?: "google" | "microsoft";
     operatorId: string;
     accessTokenCiphertext: string;
     refreshTokenCiphertext: string;
     accessTokenExpiresAt: string;
   }) {
     const timestamp = nowIso();
+    const changedProvider = (await this.get())?.provider !== (input.provider ?? "google");
     const write = this.db
       .insert(calendarConnections)
       .values({
         singletonKey: "default",
-        provider: "google",
+        provider: input.provider ?? "google",
         status: "unhealthy",
         authorisedByOperatorId: input.operatorId,
         accountEmail: null,
@@ -108,7 +112,7 @@ export class CalendarConnectionRepository {
       .onConflictDoUpdate({
         target: calendarConnections.singletonKey,
         set: {
-          provider: "google",
+          provider: input.provider ?? "google",
           status: "unhealthy",
           authorisedByOperatorId: input.operatorId,
           accessTokenCiphertext: input.accessTokenCiphertext,
@@ -126,6 +130,7 @@ export class CalendarConnectionRepository {
       }).toSQL();
     await this.binding.batch([
       healthChangeStatement(this.binding, "unhealthy", "selection_required", timestamp),
+      ...(changedProvider ? ["calendar_connection_calendars", "calendar_busy_intervals", "calendar_busy_read_windows", "calendar_push_channels"].map(table => this.binding.prepare(`DELETE FROM ${table}`)) : []),
       this.binding.prepare(write.sql).bind(...write.params),
     ]);
   }

@@ -37,4 +37,12 @@ test("OPER-002 migration preserves prior operator identity, session and authored
   const after = await snapshot();
   assert.deepEqual(after[3], before[3]); assert.deepEqual(after[4], before[4], "removal preserves the actual deployment calendar connection"); assert.equal(after[0][0].id, "prior-id");
   assert.equal(after[1][0].revoked_at, "removed"); assert.equal(after[2][0].consumed_at, "removed");
+  const googleBefore = await snapshot();
+  await run(["--file", "migrations/core/0084_microsoft_calendar.sql"]);
+  assert.deepEqual(await snapshot(), googleBefore, "Microsoft provider upgrade preserves the populated prior connection and authored rows");
+  await run(["--command", "UPDATE calendar_connections SET provider='microsoft' WHERE singleton_key='default';"]);
+  const microsoft = await snapshot();
+  assert.equal(microsoft[4][0].provider, "microsoft");
+  assert.deepEqual({ ...microsoft[4][0], provider: "google" }, googleBefore[4][0]);
+
 });

@@ -8,6 +8,17 @@ import { stripeAuthorization } from "./stripe-authorization";
 /** PAY-001 test-only controls: the payer finishing Stripe's page, a payment window or OAuth state reaching its
  * end, the production sweep, and a full-table scan for payer details. */
 export async function paymentFixtures(url: URL, request: Request, db: D1Database, providerDb: D1Database, services: AppServices) {
+  if(url.pathname==='/__fixtures/payments/entitlement-expiry') {
+    const {id,expiresAt}=await request.json<{id:string;expiresAt:string}>();
+    await db.prepare("UPDATE payment_entitlements SET expires_at=? WHERE id=?").bind(expiresAt,id).run();return Response.json({ok:true});
+  }
+  if(url.pathname==='/__fixtures/payments/subscription-period') {
+    const {id,start,end,status}=await request.json<{id:string;start:number;end:number;status:string}>();
+    const row=await providerDb.prepare("SELECT payload FROM wire_stripe_objects WHERE id=? AND type='subscriptions'").bind(id).first<{payload:string}>();
+    if(!row)return new Response(null,{status:404});
+    const payload={...JSON.parse(row.payload),status,items:{data:[{current_period_start:start,current_period_end:end}]}};
+    await providerDb.prepare("UPDATE wire_stripe_objects SET payload=? WHERE id=?").bind(JSON.stringify(payload),id).run();return Response.json(payload);
+  }
   if (url.pathname === "/__fixtures/payments/accounting-seed" && request.method === "POST") {
     // Held fleet grant exchanged once by the harness and seeded by fixture;
     // Dial's refresh path and the OAuth consent door were not exercised.

@@ -18,7 +18,8 @@ export type CleanupPendingPayments = (email: string) => Promise<PendingPaymentCl
  * safely resumable; receipt counts, anonymous accounting, nonce retirement and hold deletion commit together. */
 export async function erasePendingPayments(db: D1Database, email: string, session: SessionRecord, cleanup?: CleanupPendingPayments) {
   const holds = (await db.prepare("SELECT id, nonce_id, checkout_session_id FROM payment_holds WHERE invitee_email_folded=? ORDER BY id").bind(email).all<{ id: string; nonce_id: string; checkout_session_id: string | null }>()).results;
-  if (!holds.length) return;
+  const purchases=await db.prepare("SELECT 1 FROM payment_entitlements WHERE purchaser_email_folded=? AND (state='pending' OR subscription_id IS NOT NULL OR checkout_session_id IS NOT NULL) LIMIT 1").bind(email).first();
+  if (!holds.length && !purchases) return;
   if (!cleanup) throw new ErasureError("payment_erasure_unavailable", 503);
   const fence = await erasurePortability(db);
   const outcomes = await cleanup(email);

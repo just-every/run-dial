@@ -7,6 +7,7 @@ export async function exportPolicy(db, vars, schemaProof) {
  await assertMigrationLedger(db, JSON.parse(schemaProof).migrations);
  if (!vars.SESSION_SECRET) throw Error('archive-owner-salt-required');
  if (await db.prepare("SELECT 1 FROM rer_erasure_operations WHERE phase<>'complete' OR subject IS NOT NULL OR completed_at IS NULL UNION ALL SELECT 1 FROM person_erasure_receipts WHERE completed_at IS NULL UNION ALL SELECT 1 FROM person_erasure_locks UNION ALL SELECT 1 FROM operator_erasure_subjects LIMIT 1").first()) throw Error('archive-erasure-incomplete');
+ if (await db.prepare("SELECT 1 FROM payment_products UNION ALL SELECT 1 FROM payment_entitlements UNION ALL SELECT 1 FROM payment_redemptions UNION ALL SELECT 1 FROM payment_entitlement_events LIMIT 1").first()) throw Error('archive-payment-entitlements-not-portable');
  const names = (await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results.map(row => row.name).filter(name => !name.startsWith('rer_portability_'));
  assertCoverage(names);
  const rows = await db.batch([...exported, ...Object.keys(excluded)].map(name => db.prepare(`SELECT * FROM ${quote(name)}`)));
