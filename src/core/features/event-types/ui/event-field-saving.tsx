@@ -5,6 +5,7 @@ import type { EventDetailsInput } from "../repository";
 export type EventFieldSaving = {
   validation?(key: keyof EventDetailsInput): string | undefined;
   state?(key: keyof EventDetailsInput): FieldState;
+  onFlush?(): void;
   onLeave?(key: keyof EventDetailsInput): void;
   onRetry?(): void;
   choose?<K extends keyof EventDetailsInput>(key: K, value: EventDetailsInput[K]): void;
