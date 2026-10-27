@@ -7,7 +7,8 @@ export class StripeApiError extends Error {
 export type CheckoutSession = {
   id: string;
   url: string | null;
-  mode?: "payment" | "setup";
+  mode?: "payment" | "setup" | "subscription";
+  subscription?: string | null;
   status: "open" | "complete" | "expired";
   payment_status: "paid" | "unpaid" | "no_payment_required";
   amount_total: number | null;
@@ -152,12 +153,19 @@ export class StripeApi {
     }return transactions;
   }
 
-  private async request<T>(url: string, form?: Record<string, string>, options: { account?: string; idempotencyKey?: string } = {}): Promise<T> {
+  getAppointmentSubscription(accountId:string,id:string) {
+    return this.request<{id:string;status:string;customer?:string|null;metadata?:Record<string,string>;items?:{data:Array<{current_period_start:number;current_period_end:number}>}}>(`${apiOrigin}/v1/subscriptions/${encodeURIComponent(id)}`,undefined,{account:accountId});
+  }
+  cancelAppointmentSubscription(accountId:string,id:string,idempotencyKey:string) {
+    return this.request<{id:string;status:string}>(`${apiOrigin}/v1/subscriptions/${encodeURIComponent(id)}`,undefined,{account:accountId,idempotencyKey},"DELETE");
+  }
+
+  private async request<T>(url: string, form?: Record<string, string>, options: { account?: string; idempotencyKey?: string } = {}, method?:string): Promise<T> {
     const headers: Record<string, string> = { authorization: `Bearer ${this.secretKey}` };
     if (form) headers["content-type"] = "application/x-www-form-urlencoded";
     if (options.account) headers["stripe-account"] = options.account;
     if (options.idempotencyKey) headers["idempotency-key"] = options.idempotencyKey;
-    const response = await this.transport(url, { method: form ? "POST" : "GET", headers, ...(form ? { body: new URLSearchParams(form).toString() } : {}) });
+    const response = await this.transport(url, { method: method ?? (form ? "POST" : "GET"), headers, ...(form ? { body: new URLSearchParams(form).toString() } : {}) });
     const body = await response.json().catch(() => undefined) as (T & { error?: { code?: unknown; type?: unknown } | string }) | undefined;
     if (!response.ok || !body) {
       // Only Stripe's machine code leaves this boundary; messages can echo request values.

@@ -8,12 +8,13 @@ import { captures, operators, request, runtime, token } from './archive/auth.mjs
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
-import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade, noticeUpgrade } from './archive/payment-erasure-upgrade.mjs';
+import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade, noticeUpgrade, entitlementUpgrade } from './archive/payment-erasure-upgrade.mjs';
 import { clientUpgrade } from './archive/client-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    await entitlementUpgrade(source.db);
     await noticeUpgrade(source.db);
     await reconciliationUpgrade(source.db);
     await paymentErasureUpgrade(source.db);
@@ -57,7 +58,12 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.prepare("UPDATE bookings SET location_type='invitee_phone',location_value=?").run(phone);
     source.db.prepare(`INSERT INTO booking_answers(id,booking_id,question_key,question_label,question_kind,value_json,created_at)
       SELECT id||'-phone',booking_id,'synthetic-dial-907','Phone','phone',?,created_at FROM booking_answers`).run(JSON.stringify(phone));
+    // PAY-004 refuses a populated entitlement catalog before an archive can omit balances or carry code hashes.
+    source.db.exec("INSERT INTO payment_products(id,event_type_id,kind,name,sessions,amount_cents,validity_days,created_at,updated_at) VALUES('synthetic-dial-archive-credit','event_types-1','package','Appointment credit',3,300,30,'2026-10-07T00:00:00.000Z','2026-10-07T00:00:00.000Z')");
+    await assert.rejects(createArchive(testPlatform(source.db)), /archive-payment-entitlements-not-portable/);
+    source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
     const archive = await createArchive(testPlatform(source.db));
+    assert.ok(!archive.tables.some(table=>['payment_products','payment_entitlements','payment_redemptions','payment_entitlement_events'].includes(table.name)),'live entitlement and redemption authority never leave an archive');
     assert.equal(archive.tables.some(table=>table.name==='client_remember_links'),false);
     assert.equal(archive.tables.some(table=>table.name==='poll_vote_tokens'),false);
     assert.equal(JSON.stringify(archive).includes(poll.token),false);assert.equal(JSON.stringify(archive).includes(poll.hash),false);

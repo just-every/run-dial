@@ -10,8 +10,8 @@ export async function personScope(db: D1Database, raw: string) {
   const emails = client ? (await db.prepare("SELECT email FROM client_aliases WHERE client_id=? ORDER BY email").bind(client.id).all<{email:string}>()).results.map(row => row.email) : [email];
   const polls=(await db.prepare("SELECT id,revision FROM poll_participants WHERE email IN(SELECT value FROM json_each(?)) ORDER BY id").bind(JSON.stringify(emails)).all<{id:string;revision:number}>()).results;
   const records = await Promise.all(emails.map(alias => personalRecords(db,alias)));
-  const union = (key: "bookings" | "requests" | "approvals" | "holds" | "addresses") => [...new Set(records.flatMap(record => record[key]))].sort();
-  return { client, emails, polls, bookings: union("bookings"), requests: union("requests"), approvals: union("approvals"), holds: union("holds"), addresses: [...new Set([...emails,...union("addresses")])].sort() };
+  const union = (key: "bookings" | "requests" | "approvals" | "holds" | "entitlements" | "addresses") => [...new Set(records.flatMap(record => record[key]))].sort();
+  return { client, emails, polls, bookings: union("bookings"), requests: union("requests"), approvals: union("approvals"), holds: union("holds"), entitlements: union("entitlements"), addresses: [...new Set([...emails,...union("addresses")])].sort() };
 }
 export type PersonScope = Awaited<ReturnType<typeof personScope>>;
 export async function scopeOperatorOverlap(db: D1Database, emails: string[]) {
@@ -39,6 +39,7 @@ export async function admitPersonScope(db: D1Database, scope: PersonScope, sessi
     idsGuard("availability_requests",emailFoldSql("invitee_email"),scope.requests),
     idsGuard("booking_approval_requests",emailFoldSql("invitee_email"),scope.approvals),
     idsGuard("payment_holds","invitee_email_folded",scope.holds),
+    idsGuard("payment_entitlements","purchaser_email_folded",scope.entitlements),
     db.prepare(`SELECT CASE WHEN (${scope.emails.map(() => operatorOverlapSql()).join(" OR ")})=? THEN 1 ELSE abs(-9223372036854775808) END`).bind(...scope.emails.flatMap(email => [email,email]),operatorIdentityRetained?1:0),
     ...scope.emails.map(email => db.prepare("INSERT INTO person_erasure_locks(email,requested_at) VALUES(?,?) ON CONFLICT(email) DO NOTHING").bind(email,now)),
     db.prepare("INSERT INTO person_erasure_receipts(id,bookings,requests,requested_at,operator_identity_retained,stripe_customers_retained,stripe_sessions_retained) VALUES(?,?,?,?,?,0,0) ON CONFLICT(id) DO NOTHING").bind(id,scope.bookings.length,scope.requests.length+scope.approvals.length,now,operatorIdentityRetained?1:0),

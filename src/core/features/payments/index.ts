@@ -15,3 +15,5 @@ export type { PaymentHold } from "./repository";
 export type { WebhookResult } from "./service";
 
 export { approvalCardSetup, closeApprovalSetup } from "./approval-card";
+
+export { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "./entitlement-repository";

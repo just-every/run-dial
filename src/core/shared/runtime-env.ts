@@ -30,3 +30,8 @@ export function googleCalendarConfiguration(runtime: RuntimeEnvironment) {
   const { GOOGLE_OAUTH_CLIENT_ID: clientId, GOOGLE_OAUTH_CLIENT_SECRET: clientSecret, CALENDAR_WEBHOOK_SECRET: webhookSecret } = runtime;
   return clientId && clientSecret ? { clientId, clientSecret, webhookSecret } : undefined;
 }
+
+export function microsoftCalendarConfiguration(runtime: RuntimeEnvironment) {
+  const { MICROSOFT_OAUTH_CLIENT_ID: clientId, MICROSOFT_OAUTH_CLIENT_SECRET: clientSecret, CALENDAR_WEBHOOK_SECRET: webhookSecret } = runtime;
+  return clientId && clientSecret ? { clientId, clientSecret, webhookSecret } : undefined;
+}
