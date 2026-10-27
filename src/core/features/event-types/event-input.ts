@@ -81,4 +81,3 @@ function requirePrivateLocation(input: { durationMinutes: number; durationOption
   if (new Set(options.map(location => location.id)).size !== options.length) context.addIssue({ code: "custom", path: ["locations"], message: "Location keys must be unique." });
   options.forEach((location, index) => { const message = locationIssue(location); if (message) context.addIssue({ code: "custom", path: input.locations ? ["locations", index] : ["locationValue"], message }); });
 }
-

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { guard } from "../../../../app/ui/autosave/leave-guard";
 import { useAutosave, type Write } from "../../../../app/ui/autosave/use-autosave";
+import { offeredLocations } from "../../locations";
 import { eventDetailsInputSchema } from "../../event-input";
 import type { EventDetailsInput } from "../../repository";
 
@@ -14,7 +15,10 @@ function completeDetails(values: EventDetailsInput, saved: EventDetailsInput) {
   const next = { ...values };
   for (let attempt = 0; attempt <= Object.keys(next).length; attempt++) {
     const result = eventDetailsInputSchema.safeParse(next);
-    if (result.success) return next;
+    if (result.success) {
+      if (same(next.locations, offeredLocations(saved))) next.locations = saved.locations;
+      return next;
+    }
     const before = JSON.stringify(next);
     for (const issue of result.error.issues) {
       const field = issue.path[0] as Field;
@@ -50,16 +54,18 @@ function missing(values: EventDetailsInput, field: Field) {
 export function useDetailsDraft(key: string, initial: EventDetailsInput, write: Write<EventDetailsInput>, asks: Field[]) {
   const saved = useRef(initial);
   const draftRef = useRef<Draft>({});
-  const [draft, setDraft] = useState<Draft>({});
+  const [local, setLocal] = useState<{ draft: Draft; savedValues: EventDetailsInput }>({ draft: {}, savedValues: initial });
+  const { draft, savedValues } = local;
+  const setDraft = (pending: Draft) => setLocal(previous => ({ ...previous, draft: pending }));
   const [left, setLeft] = useState<Set<Field>>(new Set());
   const save = useAutosave(key, initial, async (next, init) => {
     const parsed = eventDetailsInputSchema.parse(completeDetails({ ...next, ...draftRef.current }, saved.current)) as EventDetailsInput;
     await write(parsed, init);
     saved.current = parsed;
+    setLocal(previous => ({ ...previous, savedValues: parsed }));
   }, { asks });
   const values = { ...save.values, ...draft };
   const current = useRef({ values, draft });
-  current.current = { values, draft };
   useEffect(() => guard({
     key: `${key}:incomplete`, mounted: 1,
     flush: async () => {
@@ -70,11 +76,11 @@ export function useDetailsDraft(key: string, initial: EventDetailsInput, write: 
     sendOnHide: () => undefined,
   }), [key]);
   function change<K extends Field>(field: K, value: EventDetailsInput[K], choice: boolean) {
-    const raw = { ...current.current.values, [field]: value };
+    const raw = { ...save.values, ...current.current.draft, [field]: value };
     const complete = completeDetails(raw, saved.current);
     const pending = { ...current.current.draft };
     for (const name of stagedFields) {
-      if (!same(raw[name], complete[name])) Object.assign(pending, { [name]: raw[name] });
+      if (missing(raw, name)) Object.assign(pending, { [name]: raw[name] });
       else delete pending[name];
     }
     current.current = { values: raw, draft: pending };
@@ -84,7 +90,7 @@ export function useDetailsDraft(key: string, initial: EventDetailsInput, write: 
     (choice ? save.choose : save.type)(field, complete[field]);
   }
   return {
-    ...save, values, savedValues: saved.current,
+    ...save, values, savedValues,
     type: <K extends Field>(field: K, value: EventDetailsInput[K]) => change(field, value, false),
     choose: <K extends Field>(field: K, value: EventDetailsInput[K]) => change(field, value, true),
     leave: (field?: Field | unknown) => {
