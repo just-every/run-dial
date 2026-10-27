@@ -9140,7 +9140,7 @@
       "executable": false
     },
     "tests/offered-times.test.mjs": {
-      "sha256": "c0eed2607c142a567667183731a7b4411ec248953d07bfbaab667161f8678037",
+      "sha256": "dc247319f98c9045da4a3c41f3e593506473fcb317063c88002d31cf2912d92a",
       "executable": false
     },
     "tests/operations-command/fixture.mjs": {
