@@ -8044,7 +8044,7 @@
       "executable": false
     },
     "tests/booking-axe/event-sheet-history.mjs": {
-      "sha256": "213995e245a52ab03777471d92896c29912ed024054a73bbd186151bdb5bb0a6",
+      "sha256": "eeed292d92b82d28a75e2bdf229ce618cd290161b8f1ba5837cac780ef663574",
       "executable": false
     },
     "tests/booking-axe/first-run-fixture.mjs": {
