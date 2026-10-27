@@ -105,10 +105,12 @@ export async function hostJourneys(origin, scenario) {
         await page.getByRole("button", { name: "Save recurring availability", exact: true }).click();
         await page.waitForURL(/\/setup\/event-types\/[A-Z0-9]{26}$/);
         const eventId = new URL(page.url()).pathname.split("/").at(-1);
-        const publish = page.getByRole("button", { name: "Publish event type", exact: true });
+        await page.getByRole("button", { name: "Publish", exact: true }).click();
+        const publish = page.getByRole("button", { name: "Publish event", exact: true });
+        if (calendarOptional) await expect(page.getByRole("region", { name: "Publish event", exact: true })).toContainText(/does not check external calendar conflicts/i);
         if (requestsOnly) { await expect(publish).toBeDisabled(); await expect(page.getByRole("link", { name: "Add at least one open availability window.", exact: true })).toBeVisible(); }
-        await page.getByRole("button", { name: requestsOnly ? "Open requests" : "Publish event type", exact: true }).click();
-        await expect(page.getByRole("link", { name: "Embed on your website", exact: true })).toBeVisible();
+        await page.getByRole("button", { name: requestsOnly ? "Open requests" : "Publish event", exact: true }).click();
+        await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeVisible();
         step = "security probes"; await securityJourney(page, origin, eventId);
         step = "deleted event recovery"; await deletedEventRecovery(browser, context, origin, eventId, requestsOnly);
         step = "clipboard and embeds"; await clipboardJourney({ browser, page, context, origin, eventId, requestsOnly, scan });

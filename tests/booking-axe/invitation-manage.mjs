@@ -3,17 +3,26 @@ import { expect } from '@playwright/test';
 import { auditor, trackPage } from './audit.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
 
+export async function openEmails(page) {
+  await page.getByRole('button', { name: /^Emails and calendar invite/ }).click();
+}
+
+export async function correspondenceChange(page, change) {
+  const saved = page.waitForResponse(response => /\/api\/app\/event-types\/[^/]+\/correspondence$/.test(new URL(response.url()).pathname) && response.request().method() === 'PUT');
+  await change();
+  const response = await saved; assert.equal(response.status(), 200);
+}
+
 export async function invitationSettings(page, form, width) {
   const toggle = form.getByRole('checkbox', { name: /^Include invitation manage link/ });
   await expect(toggle).toBeChecked();
-  await toggle.uncheck();
-  await form.getByRole('button', { name: 'Save templates', exact: true }).click();
-  await expect(form.getByRole('status')).toContainText('saved'); await page.reload();
+  await correspondenceChange(page, () => toggle.uncheck());
+  await page.reload(); await openEmails(page);
   await expect(toggle).not.toBeChecked(); await expect(toggle).toBeEnabled();
   await toggle.evaluate(element => element.scrollIntoView({ block: 'center' }));
   await page.screenshot({ caret: "initial", path: evidencePath(`NOTIFY-009-settings-off-${width}.png`) });
-  await toggle.check(); await form.getByRole('button', { name: 'Save templates', exact: true }).click();
-  await expect(form.getByRole('status')).toContainText('saved'); await page.reload();
+  await correspondenceChange(page, () => toggle.check());
+  await page.reload(); await openEmails(page);
   await expect(toggle).toBeChecked(); await expect(toggle).toBeEnabled();
   await toggle.evaluate(element => element.scrollIntoView({ block: 'center' }));
   await page.screenshot({ caret: "initial", path: evidencePath(`NOTIFY-009-settings-on-${width}.png`) });

@@ -1,0 +1,8 @@
+.event-action-anchor { position:relative; }
+.event-actions-menu { position:absolute; z-index:30; right:0; top:calc(100% + 8px); min-width:250px; padding:8px; border-radius:18px; background:var(--color-card); box-shadow:var(--shadow-panel); }
+.event-actions-menu button { display:flex; align-items:center; min-height:44px; width:100%; padding:10px 16px; text-align:left; border-radius:12px; font-size:15px; font-weight:600; }
+.event-actions-menu button:hover,.event-actions-menu button:focus-visible { background:var(--color-gold-wash); outline:2px solid var(--color-ink); outline-offset:-2px; }
+@media(max-width:639px) { .event-action-anchor { width:100%; justify-content:flex-end; } .event-actions-menu { position:fixed; left:12px; right:12px; top:auto; bottom:12px; min-width:0; box-shadow:0 0 0 100vmax color-mix(in srgb,var(--ink) 40%,transparent),var(--shadow-panel); } }
+
+[data-event-page] .event-essentials-description { min-height:96px; height:96px; }
+@media(min-width:640px) { [data-event-page] .event-essentials-description { min-height:88px; height:88px; } }

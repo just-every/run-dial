@@ -64,10 +64,11 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   for (let left = 20; left && await remove.count(); left--) await remove.first().click();
   await page.getByRole("button", { name: "Save recurring availability", exact: true }).click();
   onPhase("first-run request publication");
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("button", { name: "Open requests", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Copy booking link", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeVisible();
   onPhase("first-run booking link copy");
-  await page.getByRole("button", { name: "Copy booking link", exact: true }).click();
+  await page.getByRole("button", { name: "Copy link", exact: true }).click();
   await expect(page.getByText("Booking link copied.", { exact: true })).toBeVisible();
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), origin + "/book/preserved-host/first-request");
   onPhase("first-run completion checklist");

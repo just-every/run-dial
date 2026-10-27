@@ -1,0 +1,15 @@
+.advanced-groups { padding: 10px; }
+.advanced-group-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 20px; align-items: center; gap: 14px; min-height: 106px; width: 100%; padding: 18px 12px; text-align: left; border-radius: 16px; font-size: 16px; }
+.advanced-group-row:hover, .advanced-group-row[aria-expanded="true"] { background: var(--color-row); }
+.advanced-group-row:focus-visible { outline: 2px solid var(--color-ink); outline-offset: -2px; }
+.advanced-group-chevron { font-size: 26px; text-align: center; }
+.advanced-group-fields { padding: 10px 14px 24px; }
+.advanced-group-fields[hidden] { display: none; }
+.advanced-group-fields input[type="checkbox"] { min-width: 20px; min-height: 20px; }
+.advanced-group-fields [role="radiogroup"] label > span { min-height: 44px; }
+.advanced-group-fields select { align-self: start; }
+@media (max-width: 639px) {
+  .advanced-group-row { min-height: 108px; padding: 16px 6px; gap: 10px; }
+  .advanced-group-fields { padding-inline: 6px; }
+  .advanced-group-fields input[type="checkbox"] { position: relative; }
+}

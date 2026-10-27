@@ -40,8 +40,8 @@ export async function securityJourney(page, origin, eventId) {
 
 export async function clipboardJourney({ browser, page, context, origin, eventId, requestsOnly, scan }) {
   const expected = origin + "/book/fresh-host/first-event", endpoint = `**/api/app/event-types/${eventId}/copy-report`;
-  const share = page.locator("section").filter({ has: page.getByRole("heading", { name: "Share this event", exact: true }) });
-  const copy = share.getByRole("button", { name: "Copy booking link", exact: true });
+  const share = page.getByRole("region", { name: "Booking link", exact: true });
+  const copy = share.getByRole("button", { name: "Copy link", exact: true });
   let posts = 0; const listener = request => { if (request.url().endsWith(`/${eventId}/copy-report`) && request.method() === "POST") posts++; }; page.on("request", listener);
   const setup = async () => (await page.request.get(origin + "/api/app/host-setup")).json();
   const unavailable = route => route.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Completion temporarily unavailable." } } });
@@ -101,8 +101,7 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   if (mobile) await page.keyboard.press("Escape");
   await scan("event-links");
   await page.goto(origin + `/app/event-types/${eventId}`);
-  const embedLink = page.getByRole("link", { name: "Embed on your website", exact: true });
-  await expect(embedLink).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeVisible();
   const publicPage = await context.newPage();
   try { await publicPage.goto(expected); if (requestsOnly) { await expect(publicPage.getByRole("heading", { name: "Request a time with Fresh Host.", exact: true })).toBeVisible(); await expect(publicPage.locator(".pb-event-flow").getByRole("heading", { name: "First event", exact: true })).toBeVisible(); assert.equal(await publicPage.locator(".pb-slot-button").count(), 0); } else await expect(publicPage.locator(".pb-slot-button").first()).toBeVisible(); } finally { await publicPage.close(); }
   await page.bringToFront();
@@ -111,8 +110,9 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   await new Promise((resolve, reject) => { host.once("error", reject); host.listen(0, "127.0.0.1", resolve); });
   try {
     const hostOrigin = `http://127.0.0.1:${host.address().port}`;
-    await embedLink.click();
+    await page.goto(origin + "/app/settings#embed-settings");
     const embed = page.locator("#embed-settings");
+    await embed.getByRole("combobox", { name: "Event", exact: true }).selectOption("first-event");
     await expect(embed.getByRole("combobox", { name: "Event", exact: true })).toHaveValue("first-event");
     for (const mode of ["inline", "modal"]) {
       await embed.getByRole("button", { name: mode === "inline" ? "Copy inline code" : "Copy popup code", exact: true }).click();

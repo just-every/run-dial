@@ -5,16 +5,13 @@ import { defaultRequestRouting, type RequestRouting } from "../../../shared/corr
 
 type Operator = { id: string; email: string; status: string };
 const modes = [["host_recipients", "Every host"], ["selected", "Selected people"], ["suppressed", "No email"]] as const;
-const help: Record<RequestRouting["mode"], string> = {
-  host_recipients: "Everyone with access is emailed about each new request for this event type.",
-  selected: "Only the people you choose are emailed. Everyone still sees the request in Requests.",
-  suppressed: "Nobody is emailed. New requests still appear in Requests and the invitee still gets an acknowledgment.",
-};
+
 
 /** Policy `availability-request.routing.v1`; saved with the event's email settings. */
-export function RequestRoutingFields({ value = defaultRequestRouting, disabled, onChange }: { value?: RequestRouting; disabled: boolean; onChange(value: RequestRouting): void }) {
-  const [operators, setOperators] = useState<Operator[]>([]), [error, setError] = useState("");
+export function RequestRoutingFields({ value = defaultRequestRouting, disabled, onChange, operators: initialOperators }: { value?: RequestRouting; disabled: boolean; operators?: Operator[]; onChange(value: RequestRouting): void }) {
+  const [operators, setOperators] = useState<Operator[]>(initialOperators?.filter(operator => operator.status === "active") ?? []), [error, setError] = useState("");
   useEffect(() => {
+    if (initialOperators) return;
     let active = true;
     void (async () => {
       try {
@@ -25,17 +22,16 @@ export function RequestRoutingFields({ value = defaultRequestRouting, disabled, 
       } catch (cause) { if (active) setError(cause instanceof Error ? cause.message : "People with access could not be loaded."); }
     })();
     return () => { active = false; };
-  }, []);
+  }, [initialOperators]);
   const chosen = new Set(value.operatorIds);
   function toggle(id: string, checked: boolean) {
     onChange({ mode: "selected", operatorIds: operators.map(operator => operator.id).filter(candidate => candidate === id ? checked : chosen.has(candidate)) });
   }
-  return <fieldset className="mt-5 grid min-w-0 gap-3" aria-describedby="request-routing-help">
+  return <fieldset className="mt-5 grid min-w-0 gap-3">
     <legend className="text-sm font-semibold text-ink">Alternative request email</legend>
     <Segmented label="Who is emailed" name="request-routing" value={value.mode} options={modes} stacked onChange={mode => onChange({ mode, operatorIds: mode === "selected" ? value.operatorIds : [] })} />
-    <p id="request-routing-help" className="text-sm leading-6 text-soft">{help[value.mode]}</p>
     {value.mode === "selected" ? <div className="grid min-w-0 gap-2">
-      {operators.map(operator => <label key={operator.id} className="flex min-w-0 items-center gap-3 text-sm">
+      {operators.map(operator => <label key={operator.id} className="flex min-h-11 min-w-0 items-center gap-3 text-sm">
         <input type="checkbox" className="h-6 w-6 shrink-0 accent-ink" checked={chosen.has(operator.id)} disabled={disabled} onChange={event => toggle(operator.id, event.target.checked)} />
         <span className="min-w-0 break-words [overflow-wrap:anywhere]">{operator.email}</span>
       </label>)}

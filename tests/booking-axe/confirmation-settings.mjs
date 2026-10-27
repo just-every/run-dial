@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { invitationSettings, invitationBrowserJourney } from './invitation-manage.mjs';
+import { invitationSettings, invitationBrowserJourney, correspondenceChange, openEmails } from './invitation-manage.mjs';
 import { expect } from '@playwright/test';
 import { auditor, trackPage } from './audit.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
@@ -11,15 +11,14 @@ export async function confirmationSettingsJourney(browser, owner, origin, eventI
     const context = await browser.newContext({ storageState, viewport: { width, height: width === 1440 ? 1024 : 844 } });
     try {
       const page = await context.newPage(); trackPage(page, errors);
-      await page.goto(origin + `/app/event-types/${eventId}`);
+      await page.goto(origin + `/app/event-types/${eventId}/advanced`);
+      await page.getByRole('button', { name: /^Emails and calendar invite/ }).click();
       const form = page.getByRole('form', { name: 'Invitation and email templates', exact: true });
       const checkbox = form.getByRole('checkbox', { name: /^Send Dial confirmation to invitees/ });
       await expect(checkbox).toBeEnabled();
       await invitationSettings(page, form, width);
-      await checkbox.uncheck();
-      await form.getByRole('button', { name: 'Save templates', exact: true }).click();
-      await expect(form.getByRole('status')).toContainText('saved');
-      await page.reload();
+      await correspondenceChange(page, () => checkbox.uncheck());
+      await page.reload(); await openEmails(page);
       await expect(checkbox).not.toBeChecked();
       await expect(checkbox).toBeEnabled();
       await checkbox.evaluate(element => element.scrollIntoView({ block: 'center' }));
@@ -58,11 +57,10 @@ export async function confirmationSettingsJourney(browser, owner, origin, eventI
       await expect(history.getByText('Manage link replaced · System', { exact: true })).toBeVisible();
       await history.screenshot({ caret: "initial", path: evidencePath(`NOTIFY-009-audit-${width}.png`) });
 
-      await page.goto(origin + `/app/event-types/${eventId}`);
-      await expect(checkbox).toBeEnabled(); await checkbox.check();
-      await form.getByRole('button', { name: 'Save templates', exact: true }).click();
-      await expect(form.getByRole('status')).toContainText('saved');
-      await page.reload(); await expect(checkbox).toBeEnabled(); await expect(checkbox).toBeChecked();
+      await page.goto(origin + `/app/event-types/${eventId}/advanced`);
+      await openEmails(page);
+      await expect(checkbox).toBeEnabled(); await correspondenceChange(page, () => checkbox.check());
+      await page.reload(); await openEmails(page); await expect(checkbox).toBeEnabled(); await expect(checkbox).toBeChecked();
       await checkbox.evaluate(element => element.scrollIntoView({ block: 'center' }));
       await page.screenshot({ caret: 'initial', path: evidencePath(`NOTIFY-001-settings-on-${width}.png`) });
     } finally { await context.close(); }

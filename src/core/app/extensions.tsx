@@ -11,4 +11,4 @@ const slots: Record<DetailSlotId, {entity:FieldEntity; component:typeof CustomFi
   "availability-request.detail.after.v1": {entity:"availabilityRequest", component:CustomFieldDetail},
 };
 export function ExtensionContribution({id}:{id:SettingsContributionId}) { const Component = contributions[id];return <Component />; }
-export function ExtensionSlot({id,entityId}:{id:DetailSlotId;entityId:string}) { const slot = slots[id];const Component=slot.component;return <Component entity={slot.entity} id={entityId} />; }
+export function ExtensionSlot({id,entityId,autosave=false,onSaved}:{id:DetailSlotId;entityId:string;autosave?:boolean;onSaved?():void}) { const slot = slots[id];const Component=slot.component;return <Component entity={slot.entity} id={entityId} autosave={autosave} onSaved={onSaved} />; }

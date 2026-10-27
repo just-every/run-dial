@@ -1,7 +1,6 @@
 import { EventPaymentSettings } from "../core/features/payments/ui/event-payment-settings";
-import { createFileRoute } from "@tanstack/react-router";
-import { EventEditorPage } from "../core/features/event-types/ui/event-editor-page";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { EventPage } from "../core/features/event-types/ui/event-page";
 
-
-export const Route = createFileRoute('/setup/event-types_/$id' )({ codeSplitGroupings: [], component: EventEditorRoute });
-function EventEditorRoute() { const { id } = Route.useParams(); return <EventEditorPage workspace="/setup" eventId={id} priceEditor={(id, durations) => <EventPaymentSettings eventId={id} durations={durations} />} />; }
+export const Route = createFileRoute('/setup/event-types_/$id')({ codeSplitGroupings: [], component: EventRoute });
+function EventRoute() { const { id } = Route.useParams(); return <EventPage paymentEditor={props => <EventPaymentSettings {...props} />} eventId={id} workspace="/setup"><Outlet /></EventPage>; }

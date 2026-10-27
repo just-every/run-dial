@@ -10,10 +10,9 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
   const path = "/api/public/book/fresh-host/first-event";
   try {
     await owner.goto(origin + `/app/event-types/${eventId}`);
-    // Check the operator can review the disconnected booking limitation beside publication.
-    const lifecycle = owner.locator("section").filter({ has: owner.getByRole("heading", { name: "Lifecycle", exact: true }) });
-    await expect(lifecycle).toContainText(/does not check external calendar conflicts/i);
-    await expect(lifecycle.getByRole("button", { name: "Update published event", exact: true })).toBeEnabled();
+    // The disconnected limitation was reviewed under Publish before this live event opened.
+    await expect(owner.getByRole("button", { name: "Event actions", exact: true })).toBeEnabled();
+    await expect(owner.getByText("Live", { exact: true })).toBeVisible();
     const guest = await visitor.newPage();
     await guest.goto(origin + "/book/fresh-host/first-event");
     await expect(guest.locator(".pb-slot-button").first()).toBeVisible();
