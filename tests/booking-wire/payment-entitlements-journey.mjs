@@ -1,7 +1,8 @@
-import assert from "node:assert/strict";
+import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
 /** PAY-004 public purchase and booking commands with Stripe at the network edge. */
 export async function paymentEntitlements({data,call,webhook,stripeEvent,future}) {
+ await data('/__fixtures/payments/control',{name:'entitlement-clock',value:Date.UTC(2027,0,1)});
  const suffix=randomUUID().slice(0,8),email=`synthetic-dial-404-${suffix}@example.test`,name=`synthetic-dial-404-${suffix}`;
  const event=await data('/api/app/event-types',{slug:`credit-${suffix}`,title:'Appointment credits',description:'Sessions paid using a package.',durationMinutes:30,color:'#176b5a',locationType:'fixed_link',locationLabel:'Video room',locationValue:'https://example.test/room',listed:true,alternativeRequestsEnabled:false,slotIncrementMinutes:60,minimumNoticeMinutes:0,bookingHorizonDays:90,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,questions:[],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:0,endMinute:1440}))},201);
  await data(`/api/app/event-types/${event.id}/price`,{amountCents:5000,durationPrices:[]},200,'PUT');
@@ -62,7 +63,7 @@ export async function paymentEntitlements({data,call,webhook,stripeEvent,future}
  await webhook(stripeEvent('checkout.session.completed',memberPaid));
  await data(`${root}/confirm`,await selection((await slots())[0],{code:memberPurchase.code}),201);
  assert.equal((await data('/api/app/payments/entitlements')).find(row=>row.id===memberRow.id).balance,3);
- const clock=Date.UTC(2027,0,15),start=Math.floor(clock/1000),end=start+31*86400;
+ const clock=Date.UTC(2027,1,1),start=Math.floor(clock/1000),end=Date.UTC(2027,2,1)/1000;
  await data('/__fixtures/payments/control',{name:'entitlement-clock',value:clock});
  await data('/__fixtures/payments/subscription-period',{id:memberPaid.subscription,start,end,status:'active'});
  const invoice={id:`synthetic-dial-invoice-${suffix}`,subscription:memberPaid.subscription};

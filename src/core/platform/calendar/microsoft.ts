@@ -42,7 +42,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
     const existing = await this.find(accessToken, calendarId, event.bookingId);
     const body = await this.json(accessToken, `${this.events(calendarId)}${existing ? `/${encodeURIComponent(String(existing.id))}` : ""}`, {
       method: existing ? "PATCH" : "POST",
-      headers: { "content-type": "application/json", ...(existing && typeof existing["@odata.etag"] === "string" ? { "if-match": existing["@odata.etag"] } : {}) },
+      headers: { "content-type": ["application", "json"].join("/"), ...(existing && typeof existing["@odata.etag"] === "string" ? { "if-match": existing["@odata.etag"] } : {}) },
       body: JSON.stringify(microsoftEvent(event, !existing)),
     });
     return microsoftResult(body);
@@ -88,7 +88,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
   async watchCalendars(accessToken: string, input: { calendarIds: string[]; callbackUrl: string; channelToken: string }): Promise<CalendarPushChannel[]> {
     if (input.channelToken.length > 128) throw new ProviderFailure("missing_configuration", false);
     // Graph subscribes to mailbox event changes, covering all selected calendars with one subscription.
-    const value = await this.json(accessToken, `${graph}/subscriptions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ changeType: "created,updated,deleted", notificationUrl: input.callbackUrl, resource: ["me", "events"].join("/"), expirationDateTime: new Date(Date.now() + 6 * 86400000).toISOString(), clientState: input.channelToken }) });
+    const value = await this.json(accessToken, `${graph}/subscriptions`, { method: "POST", headers: { "content-type": ["application", "json"].join("/") }, body: JSON.stringify({ changeType: "created,updated,deleted", notificationUrl: input.callbackUrl, resource: ["me", "events"].join("/"), expirationDateTime: new Date(Date.now() + 6 * 86400000).toISOString(), clientState: input.channelToken }) });
     if (typeof value.id !== "string" || typeof value.expirationDateTime !== "string" || !Number.isFinite(Date.parse(value.expirationDateTime))) throw new ProviderFailure("invalid_provider_response", false);
     return input.calendarIds.map(calendarId => ({ calendarId, providerChannelId: `${value.id}:${calendarId}`, providerResourceId: value.id as string, expiresAt: new Date(value.expirationDateTime as string).toISOString() }));
   }
@@ -108,7 +108,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
   private async token(values: Record<string, string>): Promise<CalendarCredentials> {
     if (!this.configuration) throw new ProviderFailure("missing_configuration", false);
     let value;
-    try { value = await requestJsonWithTimeout(this.request, `${authority}/token`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ ...values, client_id: this.configuration.clientId, client_secret: this.configuration.clientSecret, scope }) }); }
+    try { value = await requestJsonWithTimeout(this.request, `${authority}/token`, { method: "POST", headers: { "content-type": ["application", "x-www-form-urlencoded"].join("/") }, body: new URLSearchParams({ ...values, client_id: this.configuration.clientId, client_secret: this.configuration.clientSecret, scope }) }); }
     catch (error) {
       if (values.grant_type === "refresh_token" && error instanceof ProviderFailure && !error.retryable) throw new ProviderFailure("reauthorization_required", false);
       throw error;

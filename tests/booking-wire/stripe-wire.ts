@@ -214,7 +214,8 @@ export async function payStripeSession(db: D1Database, id: string, paymentStatus
     Object.assign(completed, { payment_intent: intent.id, payment_status: manual ? "unpaid" : paymentStatus });
   }
   if(session.mode==='subscription') {
-    const clock=Math.floor(Date.now()/1000),subscription={id:`synthetic-dial-subscription-${suffix}`,status:'active',metadata:(session.subscription_data as {metadata:Record<string,string>}).metadata,items:{data:[{current_period_start:clock,current_period_end:clock+30*86400}]}};
+    const clock=Math.floor((await control(db,'entitlement-clock')||Date.now())/1000),end=new Date(clock*1000);end.setUTCMonth(end.getUTCMonth()+1);
+    const subscription={id:`synthetic-dial-subscription-${suffix}`,status:'active',metadata:(session.subscription_data as {metadata:Record<string,string>}).metadata,items:{data:[{current_period_start:clock,current_period_end:Math.floor(end.getTime()/1000)}]}};
     await save(db,subscription.id,"subscriptions",subscription);Object.assign(completed,{subscription:subscription.id});
   }
   await db.prepare("UPDATE wire_stripe_sessions SET payload=? WHERE id=?").bind(JSON.stringify(completed), id).run();

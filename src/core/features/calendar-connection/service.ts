@@ -70,15 +70,18 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     if (!Number.isFinite(issuedAt) || Date.now() - issuedAt > oauthStateLifetimeMs || issuedAt > Date.now() + 60_000) return { kind: "invalid_state" as const };
     const consumed = await this.repository.consumeOAuthState({ id: state.id, sessionId: state.sessionId, operatorId: state.operatorId, now: new Date().toISOString() });
     if (!consumed || !input.code) return { kind: "invalid_state" as const };
+    const provider = this.runtime.CALENDAR_PROVIDER ?? "google";
+    if (await this.repository.providerSwitchBlocked(provider)) return { kind: "provider_failure" as const, code: "calendar_provider_switch_blocked" };
     try {
       const credentials = await this.calendar.exchangeAuthorizationCode(input.code, callbackUrl(this.runtime));
-      await this.repository.saveCredentials({
+      const saved = await this.repository.saveCredentials({
         provider: this.runtime.CALENDAR_PROVIDER ?? "google",
         operatorId: input.session.id,
         accessTokenCiphertext: await seal(credentials.accessToken, this.runtime.SESSION_SECRET),
         refreshTokenCiphertext: await seal(credentials.refreshToken, this.runtime.SESSION_SECRET),
         accessTokenExpiresAt: credentials.expiresAt,
       });
+      if (!saved) return { kind: "provider_failure" as const, code: "calendar_provider_switch_blocked" };
       return { kind: "connected" as const };
     } catch (error) {
       return { kind: "provider_failure" as const, code: failureCode(error) };

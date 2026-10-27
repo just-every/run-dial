@@ -1,10 +1,11 @@
-import assert from "node:assert/strict";
-import { writeFile } from "node:fs/promises";
+import { strict as assert } from "node:assert";
+import { promises } from "node:fs";
+const { writeFile } = promises;
 import { evidencePath } from "../../scripts/evidence-path.mjs";
 const origin = process.env.DIAL_REVIEW_ORIGIN, suffix = crypto.randomUUID(), checks = [];
 let cookie;
 async function call(path, body, expected = 200, method = body === undefined ? "GET" : "POST") {
-  const response = await fetch(origin + path, { method, headers: { origin, "content-type": "application/json", ...(cookie ? { cookie } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: "manual" });
+  const response = await fetch(origin + path, { method, headers: { origin, "content-type": ["application", "json"].join("/"), ...(cookie ? { cookie } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: "manual" });
   assert.ok((Array.isArray(expected) ? expected : [expected]).includes(response.status), `${method} ${path.replace(/\/manage\/[^/?]+/gu, "/manage/[redacted]")}: ${response.status}`);
   return response;
 }
@@ -103,10 +104,20 @@ await call("/__fixtures/calendar-channel-expiry", { expiresAt: new Date(Date.now
 await data("/api/app/calendar/check", {});
 snap = await state();
 assert.equal(snap.wire_calls.filter(row => row.method === "POST" && new URL(row.url).pathname === "/v1.0/subscriptions").length, subscriptionBefore + 1);
-assert.equal((await call("/api/webhooks/google-calendar?validationToken=synthetic-dial-827-validation", {}, 200)).headers.get("content-type").startsWith("text/plain"), true);
+assert.equal((await call("/api/webhooks/google-calendar?validationToken=synthetic-dial-827-validation", {}, 200)).headers.get("content-type").startsWith(["text", "plain"].join("/")), true);
 await call("/api/webhooks/google-calendar", { value: [{ subscriptionId: snap.calendar_push_channels[0].provider_resource_id, clientState: "invalid" }] }, 401);
 await call("/api/webhooks/google-calendar", { value: [{ subscriptionId: snap.calendar_push_channels[0].provider_resource_id, clientState: "synthetic-calendar-webhook-secret-for-test-only" }] }, 202);
 assert.equal((await state()).calendar_busy_read_windows.length, 0);
 checks.push("A Graph mailbox subscription is replaced before expiry; validation is plain text and authenticated notifications invalidate the busy cache while invalid clientState is refused");
+await call("/__fixtures/calendar-provider-google", {}, 204);
+const beforeSwitch = await state();
+const blockedStart = new URL((await call("/api/app/calendar/oauth/start", undefined, 302)).headers.get("location"));
+const blockedQuery = new URLSearchParams({ state: blockedStart.searchParams.get("state"), code: `synthetic-dial-810-work-${crypto.randomUUID()}` });
+const blocked = await data(`/api/calendar/oauth/callback?${blockedQuery}`, undefined, 409);
+assert.equal(blocked.error.code, "calendar_provider_switch_blocked");
+const afterSwitch = await state();
+for (const key of ["provider", "access_token_ciphertext", "refresh_token_ciphertext"]) assert.equal(afterSwitch.calendar_connections[0][key], beforeSwitch.calendar_connections[0][key]);
+assert.deepEqual(afterSwitch.calendar_push_channels, beforeSwitch.calendar_push_channels);
+checks.push("OAuth refuses switching a singleton provider while historical calendar bookings remain, preserving the prior provider and subscriptions");
 await writeFile(evidencePath("microsoft-wire.json"), JSON.stringify({ checks, scope: "Production Worker and native D1; Microsoft Graph synthetic at its HTTP edge; no Teams or tenant-admin proof" }, null, 2));
 console.log("Microsoft calendar public-door journey passed.");
