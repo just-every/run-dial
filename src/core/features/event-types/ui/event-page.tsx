@@ -116,5 +116,5 @@ function EventDetailsScope({ initial, workspace, paymentEditor, hostName, hostTi
   </EventPageContext.Provider>;
 }
 function SettingsRow({ id, to, icon, title, summary }: { id: string; to: string; icon: "clock" | "gear"; title: string; summary: string }) {
-  return <Link id={id} to={to} className="flex min-h-[88px] sm:min-h-[72px] items-center gap-3 rounded-2xl p-3 text-left hover:bg-row focus-visible:outline-2 focus-visible:outline-ink"><IconTile icon={icon} /><span className="min-w-0 flex-1"><span className="block font-bold">{title}</span><span className="mt-1 block text-sm leading-5 text-soft">{summary}</span></span><span aria-hidden="true" className="text-xl">›</span></Link>;
+  return <Link id={id} to={to} state={{ eventSettingsFrom: to.slice(0, to.lastIndexOf("/")) }} className="flex min-h-[88px] sm:min-h-[72px] items-center gap-3 rounded-2xl p-3 text-left hover:bg-row focus-visible:outline-2 focus-visible:outline-ink"><IconTile icon={icon} /><span className="min-w-0 flex-1"><span className="block font-bold">{title}</span><span className="mt-1 block text-sm leading-5 text-soft">{summary}</span></span><span aria-hidden="true" className="text-xl">›</span></Link>;
 }

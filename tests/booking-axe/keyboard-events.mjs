@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { button, field, get, mutation } from "./keyboard-controls.mjs";
+import { eventDraftJourney } from "./event-draft-journey.mjs";
+import { eventSheetHistory } from "./event-sheet-history.mjs";
 
 export async function eventKeyboardJourney(page, origin, width, keys, checks, errors) {
   await keys.navigate("Event types");
@@ -38,6 +40,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await page.reload(); await field(page, "Name").waitFor();
   assert.equal(await field(page, "Name").inputValue(), `Keyboard edited ${width}`, "event edits persist after reload without a save button");
   assert.equal((await get(page, origin, `/api/app/event-types/${event.id}`)).title, `Keyboard edited ${width}`);
+  if (width === 1440) await eventDraftJourney(page, origin, event.id, keys, checks, width);
   await keys.activate(page.getByRole("link", { name: /^Advanced settings/ }), "Open event advanced settings");
   const sheet = page.getByRole("dialog", { name: "Advanced settings", exact: true });
   await sheet.waitFor({ state: "visible" });
@@ -73,6 +76,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await page.waitForURL(origin + `/app/event-types/${event.id}`);
   await page.waitForFunction(element => element === globalThis.document.activeElement, await advancedRow.elementHandle());
   await keys.restored(advancedRow, "Advanced settings Escape");
+  if (width === 1440) await eventSheetHistory(page, origin, event.id, `Keyboard edited ${width}`, keys, checks, width);
   await keys.activate(button(page, "Publish"), "Review publication requirements");
   await mutation(page, `/api/app/event-types/${event.id}/publish`, () => keys.activate(button(page, "Publish event"), "Publish event type"));
   assert.equal((await get(page, origin, `/api/app/event-types/${event.id}`)).status, "published");
@@ -139,7 +143,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await mutation(page, `/api/app/event-types/${event.id}/availability-overrides/${date}`, () => keys.activate(button(page, "Remove date"), "Remove date override"), 204);
   assert.deepEqual(await get(page, origin, `/api/app/event-types/${event.id}/availability-overrides`), []);
   await keys.restored(addOverride, "Date override removal completion");
-  await keys.activate(page.getByRole("link", { name: "Back to event", exact: true }), "Return to event");
+  await keys.activate(button(page, "Close hours"), "Return to event");
   let dialogs = 0;
   const dialogProbe = async dialog => { dialogs++; await dialog.dismiss(); };
   page.on("dialog", dialogProbe);
