@@ -7,7 +7,7 @@ import { contract } from "./contract.mjs";
 import { evidencePath } from "../scripts/evidence-path.mjs";
 import { occurrenceDurationJourney } from "./booking-wire/occurrence-duration-journey.mjs";
 
-contract("BOOK-004", "occurrence-specific mail facts survive an actual 30-to-60-minute reschedule on migrated native D1", async t => {
+contract(["BOOK-004", "NOTIFY-001", "NOTIFY-002", "NOTIFY-003", "NOTIFY-004"], "occurrence-specific mail facts survive an actual 30-to-60-minute reschedule on migrated native D1", async t => {
   const state = await mkdtemp(resolve(tmpdir(), "dial-occurrence-mail-"));
   const origin = "http://127.0.0.1:15764";
   const config = resolve(state, "worker.wrangler.toml");
@@ -35,7 +35,7 @@ contract("BOOK-004", "occurrence-specific mail facts survive an actual 30-to-60-
     await new Promise(done => setTimeout(done, 125));
   }
   assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
-  const result = await occurrenceDurationJourney(origin, t);
+  const result = await occurrenceDurationJourney(origin);
   await writeFile(evidencePath("occurrence-mail-duration.json"), JSON.stringify(result, null, 2));
 });
 
