@@ -1,12 +1,15 @@
 import review from "../review/worker";
 export { BookingCoordinator } from "../review/worker";
 import type { AppBindings } from "../../src/core/app/bindings";
+import favicon from "../../src/core/features/public-booking/ui/favicon.svg?raw";
 
 export default {
   ...review,
   async fetch(request: Request, env: AppBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response(null, { status: 404 });
+    // Native auth documents can ask for the browser's fallback icon; keep this fixture on Dial's one icon source.
+    if (url.pathname === "/favicon.ico" && request.method === "GET") return new Response(favicon, { headers: { "Content-Type": "image/svg+xml" } });
     if (url.pathname === "/__host/reset" && request.method === "POST") {
       const existing = await env.DB.prepare("SELECT count(*) AS count FROM oa_operators").first<{ count: number }>();
       if (existing?.count) return new Response("Fixture requires fresh native state", { status: 409 });

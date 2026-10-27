@@ -95,16 +95,34 @@ export async function hostJourneys(origin, scenario) {
         for (const label of ["Minimum notice", "Booking horizon (days)", "Before buffer (minutes)", "After buffer (minutes)", "Host-day cap (optional)", "Colour"]) await expect(more.getByLabel(label, { exact: true })).toBeEnabled();
         await expect(more.getByRole("combobox", { name: "Start increment", exact: true })).toBeEnabled(); await more.locator("summary").click(); await scan("event-form");
         await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/availability$/);
-        await expect(page.getByRole("button", { name: "Save recurring availability", exact: true })).toBeVisible();
-        // The first event starts on your hours, whose holidays and time off are set on this page.
+        const eventId = new URL(page.url()).pathname.split("/").at(-2);
+        // New events use your set-once hours. A request-only exception belongs to this event alone.
         const hours = await (await page.request.get(origin + "/api/app/hours")).json();
-        assert.equal(hours.events.find(event => event.id === new URL(page.url()).pathname.split("/").at(-2)).uses, "yours"); assert.ok(hours.yours);
-        await expect(page.getByRole("checkbox", { name: "Block US federal holidays and observed dates", exact: true })).toBeVisible(); await expect(page.getByRole("button", { name: "Add time off", exact: true })).toBeVisible();
-        if (!requestsOnly) { const closed = page.locator("div.rounded-2xl").filter({ has: page.getByText("Unavailable", { exact: true }) }); for (let day = 0; day < 7 && await closed.count(); day++) await closed.first().getByRole("button", { name: "Add window", exact: true }).click(); }
-        else { const remove = page.getByRole("button", { name: /^Remove \w+ window \d+$/ }); for (let left = 20; left && await remove.count(); left--) await remove.first().click(); }
-        await page.getByRole("button", { name: "Save recurring availability", exact: true }).click();
+        assert.equal(hours.events.find(event => event.id === eventId).uses, "yours"); assert.ok(hours.yours);
+        await expect(page.getByRole("radio", { name: "Your hours", exact: true })).toBeChecked();
+        const chosen = page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${eventId}/hours` && response.request().method() === "PUT");
+        await page.getByRole("radio", { name: "Its own hours", exact: true }).check(); assert.equal((await chosen).status(), 200);
+        if (!requestsOnly) {
+          for (const day of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) {
+            const row = page.getByRole("group", { name: day, exact: true });
+            if (await row.getByText("Unavailable", { exact: true }).count()) {
+              const saved = page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${eventId}/availability` && response.request().method() === "PUT");
+              await row.getByRole("button", { name: "Add hours", exact: true }).click(); assert.equal((await saved).status(), 200);
+            }
+          }
+        } else {
+          const remove = page.getByRole("button", { name: "Remove hours", exact: true });
+          for (let left = 20; left && await remove.count(); left--) {
+            const saved = page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${eventId}/availability` && response.request().method() === "PUT");
+            await remove.first().click(); assert.equal((await saved).status(), 200);
+          }
+        }
+        await page.reload(); await expect(page.getByRole("radio", { name: "Its own hours", exact: true })).toBeChecked();
+        const storedHours = (await (await page.request.get(origin + `/api/app/event-types/${eventId}`)).json()).availability;
+        assert.equal(storedHours.length === 0, requestsOnly, "changed hours persist after a reload without a Save button");
+        assert.deepEqual((await (await page.request.get(origin + "/api/app/hours")).json()).yours.windows, hours.yours.windows, "the event's exception leaves your hours unchanged");
+        await page.getByRole("link", { name: "Back to event", exact: true }).click();
         await page.waitForURL(/\/setup\/event-types\/[A-Z0-9]{26}$/);
-        const eventId = new URL(page.url()).pathname.split("/").at(-1);
         const publish = page.getByRole("button", { name: "Publish event type", exact: true });
         if (requestsOnly) { await expect(publish).toBeDisabled(); await expect(page.getByRole("link", { name: "Add at least one open availability window.", exact: true })).toBeVisible(); }
         await page.getByRole("button", { name: requestsOnly ? "Open requests" : "Publish event type", exact: true }).click();
@@ -112,6 +130,12 @@ export async function hostJourneys(origin, scenario) {
         step = "security probes"; await securityJourney(page, origin, eventId);
         step = "deleted event recovery"; await deletedEventRecovery(browser, context, origin, eventId, requestsOnly);
         step = "clipboard and embeds"; await clipboardJourney({ browser, page, context, origin, eventId, requestsOnly, scan });
+        step = "set-once hours";
+        await page.goto(origin + "/app/settings/hours");
+        await expect(page.getByRole("heading", { name: "Hours", exact: true, level: 1 })).toBeVisible();
+        await expect(page.getByRole("switch", { name: "US public holidays", exact: true })).toBeVisible();
+        await page.locator("details").filter({ has: page.locator("summary", { hasText: /^Time off/ }) }).locator("summary").click();
+        await expect(page.getByRole("button", { name: "Add time off", exact: true })).toBeVisible();
         step = "completed setup"; await page.goto(origin + "/setup");
         const state = await (await page.request.get(origin + "/api/app/host-setup")).json(); assert.equal(state.steps.find(step => step.id === "copy").done, true);
         if (requestsOnly) { await page.getByText(/Booking configuration/).click(); await expect(page.locator('[data-step="calendar"]')).toContainText("Optional"); await expect(page.locator('[data-step="availability"]')).toContainText("To do"); }

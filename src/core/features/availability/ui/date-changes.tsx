@@ -9,7 +9,7 @@ import { timeInput, timeMinutes } from "./window-time";
 
 type DateHours = { mode: "open" | "closed"; windows: DateAvailabilityWindowInput[] };
 const defaultWindow = () => ({ startMinute: 540, endMinute: 1020 });
-const shortDate = (date: string) => new Intl.DateTimeFormat("en", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
+const shortDate = (date: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
 
 /** Date exceptions belong to this event; weekly hours, holidays and time off keep their own homes. */
 export function DateChanges({ eventId }: { eventId: string; timezone?: string }) {

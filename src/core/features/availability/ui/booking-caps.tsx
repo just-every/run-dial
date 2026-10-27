@@ -49,7 +49,7 @@ function CapFields({ scope, initial, onSaved }: { scope: string; initial: Bookin
     </div>)}</div>
     <label className="grid content-start gap-1.5 text-sm">
       <span className="flex flex-wrap items-center justify-between gap-1">Minimum gap for the same invitee (minutes)<SavedMark state={form.state("inviteeGapMinutes")} /></span>
-      <Input type="number" min="0" step="1" value={form.values.inviteeGapMinutes} aria-describedby={form.state("inviteeGapMinutes").failed ? `${scope}-gap-failure` : undefined} onChange={event => form.type("inviteeGapMinutes", event.target.value)} onBlur={form.leave} />
+      <Input type="number" min="0" step="1" aria-label="Minimum gap for the same invitee (minutes)" value={form.values.inviteeGapMinutes} aria-describedby={form.state("inviteeGapMinutes").failed ? `${scope}-gap-failure` : undefined} onChange={event => form.type("inviteeGapMinutes", event.target.value)} onBlur={form.leave} />
       <SaveFailed id={`${scope}-gap-failure`} state={form.state("inviteeGapMinutes")} what="invitee gap" onRetry={form.retry} />
     </label>
   </div>;

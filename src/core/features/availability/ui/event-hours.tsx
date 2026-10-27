@@ -97,7 +97,7 @@ function HoursContent({ data }: { data: Read }) {
         <p className="mb-5 mt-2 text-sm text-soft">Only this event uses these. Time off and holidays are yours, in <Link to="/app/settings/hours" className={textLinkClassName}>Settings › Hours</Link>.</p>
         <WeeklyHours windows={form.values.windows} onChange={windows => form.choose("windows", windows)} />
         <SaveFailed id="event-windows-failed" state={form.state("windows")} what="weekly hours" choice onRetry={form.retry} />
-        <label className="mt-5 grid content-start gap-2 text-sm font-semibold">Start from<Select value="" onChange={change => { if (change.target.value) form.choose("copy", { source: change.target.value, turn: form.values.copy.turn + 1 }); }}><option value="">Choose hours to copy</option><option value="yours">Your hours</option>{hours.events.filter(item => item.id !== event.id).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</Select></label>
+        <label className="mt-5 grid content-start gap-2 text-sm font-semibold">Start from<Select aria-label="Start from" value="" onChange={change => { if (change.target.value) form.choose("copy", { source: change.target.value, turn: form.values.copy.turn + 1 }); }}><option value="">Choose hours to copy</option><option value="yours">Your hours</option>{hours.events.filter(item => item.id !== event.id).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</Select></label>
         <SaveFailed id="event-copy-failed" state={form.state("copy")} what="starting hours" choice onRetry={form.retry} />
       </Card>
     </div>
