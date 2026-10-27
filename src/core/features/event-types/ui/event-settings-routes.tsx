@@ -1,9 +1,8 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Sheet } from "../../../app/ui/sheet";
 import { useEventPage } from "./event-page-context";
 import { AdvancedSettings } from "./advanced-sheet";
-import { EventHours } from "../../availability";
 import { SchedulingLimits } from "./scheduling-limits";
 
 declare module "@tanstack/react-router" {
@@ -27,10 +26,10 @@ export function EventAdvancedRoute() {
   const close = useCloseSettings();
   return <Sheet title="Advanced settings" closeLabel="Close settings" returnFocusId="event-advanced-row" onClose={close}><AdvancedSettings event={page.event} details={page.details} onSaved={page.onSaved} hostName={page.hostName} hostTimezone={page.hostTimezone} /></Sheet>;
 }
-export function EventHoursRoute() {
+export function EventHoursRoute({ children }: { children: ReactNode }) {
   const page = useEventPage();
   const { onHoursClosed } = page;
   useEffect(() => () => onHoursClosed(), [onHoursClosed]);
   const close = useCloseSettings();
-  return <Sheet title={`${page.event.title}’s hours`} closeLabel="Close hours" returnFocusId="event-hours-row" onClose={close}><EventHours eventId={page.event.id} /><SchedulingLimits /></Sheet>;
+  return <Sheet title={`${page.event.title}’s hours`} closeLabel="Close hours" returnFocusId="event-hours-row" onClose={close}>{children}<SchedulingLimits /></Sheet>;
 }

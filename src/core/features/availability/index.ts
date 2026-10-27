@@ -15,4 +15,3 @@ export type { BookingLimitsConfig, BookingLimitExclusion } from "./booking-limit
 export { closureFields, scheduleInputSchema } from "./schedule-input";
 export type { NamedSchedule, ScheduleInput } from "./schedule-input";
 export { usFederalHolidays } from "./us-holidays";
-export { EventHours } from "./ui/event-hours";
