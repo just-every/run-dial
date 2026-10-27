@@ -8,6 +8,7 @@ export async function eventSheetHistory(page, origin, eventId, title, keys, chec
   async function at(path, step) {
     await page.waitForURL(origin + path);
     assert.equal(new URL(page.url()).pathname, path, step);
+    if (/\/(advanced|hours)$/.test(path)) await page.locator("dialog[open]").waitFor({ state: "visible" });
     steps.push({ step, url: page.url() });
   }
   async function openEvent() {
@@ -20,7 +21,7 @@ export async function eventSheetHistory(page, origin, eventId, title, keys, chec
   for (const { rowName, suffix, closeName } of [{ rowName: /^Advanced settings/, suffix: "advanced", closeName: "Close settings" }, { rowName: /^Hours/, suffix: "hours", closeName: "Close hours" }]) {
     for (const escape of [false, true]) {
       await openEvent();
-      const row = page.getByRole("link", { name: rowName });
+      const row = page.locator("[data-event-page]").getByRole("link", { name: rowName });
       await keys.activate(row, `Open ${suffix} for history`);
       await at(`${eventPath}/${suffix}`, `${suffix}: row → sheet`);
       if (escape) await page.keyboard.press("Escape"); else await keys.activate(button(page, closeName), `Close ${suffix} for history`);
@@ -31,7 +32,7 @@ export async function eventSheetHistory(page, origin, eventId, title, keys, chec
       await at(listPath, `${suffix}: Back after close → list`);
     }
     await openEvent();
-    await keys.activate(page.getByRole("link", { name: rowName }), `Open ${suffix} for Back and Forward`);
+    await keys.activate(page.locator("[data-event-page]").getByRole("link", { name: rowName }), `Open ${suffix} for Back and Forward`);
     await at(`${eventPath}/${suffix}`, `${suffix}: open before Back`);
     await page.goBack(); await at(eventPath, `${suffix}: Back from open → event`);
     await page.goForward(); await at(`${eventPath}/${suffix}`, `${suffix}: Forward → open sheet`);

@@ -2,7 +2,7 @@ import { SectionHeading } from "../../../app/ui/page-header";
 import { useEffect, useId, useState } from "react";
 import { Card, Button, Input, Select, noticeClassName } from "../../../app/ui/primitives";
 import { Tooltip } from "../../../app/ui/tooltip";
-import { offeredLocations, type EventLocationOption } from "../locations";
+import { locationIssue, offeredLocations, type EventLocationOption } from "../locations";
 import type { EventDetailsInput, EventTypeInput } from "../repository";
 import { FieldFailed, FieldSaved, type EventFieldSaving } from "./event-field-saving";
 
@@ -16,13 +16,13 @@ function CompactLocationFields({ event, update, ...saving }: Props) {
   const locations = offeredLocations(event);
   const choose = saving.choose ?? update;
   function change(index: number, patch: Partial<EventLocationOption>, immediate = false) {
-    (immediate ? choose : update)("locations", locations.map((location, position) => position === index ? { ...location, ...patch } : location));
+    (immediate && !locationIssue({ ...locations[index], ...patch }) ? choose : update)("locations", locations.map((location, position) => position === index ? { ...location, ...patch } : location));
   }
   return <fieldset className="grid min-w-0 gap-2 border-0 p-0" onBlur={entry => { if (!entry.currentTarget.contains(entry.relatedTarget)) saving.onLeave?.("locations"); }}>
     <legend className="mb-2 w-full text-sm font-[650]"><span className="flex items-center justify-between gap-3">Where<FieldSaved saving={saving} field="locations" /></span></legend>
     <div className="grid min-w-0 gap-4">{locations.map((location, index) => <div key={location.id} className="grid min-w-0 gap-1">
       <div className="grid min-w-0 items-start gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-        <Select aria-label={locations.length === 1 ? "Location kind" : `Location ${index + 1} kind`} value={location.type} onChange={entry => { const type = entry.target.value as EventLocationOption["type"]; change(index, { type, label: labels[type], value: "", prompt: type === "ask_invitee" ? "Where should we meet?" : undefined }, false); }}>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</Select>
+        <Select aria-label={locations.length === 1 ? "Location kind" : `Location ${index + 1} kind`} value={location.type} onChange={entry => { const type = entry.target.value as EventLocationOption["type"]; change(index, { type, label: labels[type], value: "", prompt: type === "ask_invitee" ? "Where should we meet?" : undefined }, true); }}>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</Select>
         {location.type === "google_meet" ? <p className="flex min-h-11 items-center text-sm text-soft">A meeting link is added when booked.</p> : location.type === "invitee_phone" ? <p className="flex min-h-11 items-center text-sm text-soft">Invitees give the number to call.</p> : <Input aria-label={location.type === "ask_invitee" ? "Required invitee prompt" : location.type === "custom" ? "Private instruction" : "Private link, number, or address"} aria-describedby={saving.state?.("locations").failed ? `${id}-failed` : undefined} required maxLength={location.type === "ask_invitee" ? 500 : 1000} value={location.type === "ask_invitee" ? location.prompt ?? "" : location.value} onChange={entry => change(index, location.type === "ask_invitee" ? { prompt: entry.target.value } : { value: entry.target.value })} />}
       </div>
       <div className="flex min-w-0 items-start justify-between gap-2">
