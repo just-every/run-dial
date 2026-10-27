@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+import { strict as assert } from 'node:assert';
 import { randomBytes } from 'node:crypto';
 
 /** Unbooked purchases are personal records too; the native person door clears their authority and history. */

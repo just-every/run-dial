@@ -37,6 +37,7 @@ export default {
       return Response.json(Object.fromEntries(await Promise.all(tables.map(async table => [table, (await (table.startsWith("wire_") ? providerDb(env) : env.DB).prepare(`SELECT * FROM ${table}`).all()).results]))));
     }
     if (url.pathname.startsWith("/__fixtures/payments/")) return paymentFixtures(url, request, env.DB, providerDb(env), servicesFor(env));
+    if (url.pathname === "/__fixtures/calendar-provider-google") { await env.DB.prepare("UPDATE calendar_connections SET provider='google',status='unhealthy',unhealthy_code='reauthorization_required' WHERE singleton_key='default'").run(); return new Response(null, { status: 204 }); }
     if (url.pathname === "/__fixtures/calendar-token-expired") { await env.DB.prepare("UPDATE calendar_connections SET access_token_expires_at='2000-01-01T00:00:00.000Z'").run(); return new Response(null, { status: 204 }); }
     if (url.pathname === "/__fixtures/calendar-cache-expired") { await env.DB.prepare("UPDATE calendar_busy_read_windows SET observed_at='2000-01-01T00:00:00.000Z'").run(); return new Response(null, { status: 204 }); }
     if (url.pathname === "/__fixtures/calendar-channel-expiry") {

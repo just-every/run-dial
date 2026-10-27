@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, gte, inArray, isNull, lt, lte } from "drizzle-orm";
+import { and, asc, eq, gt, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { createDatabase } from "../../platform/db/client";
 import {
   calendarBusyIntervals,
@@ -11,6 +11,11 @@ import {
 } from "../../platform/db/provider-schema";
 import { healthChangeStatement, recentHealthChanges } from "./health-history";
 import { createId, nowIso } from "../../shared/ids";
+
+const noCalendarObligations = `NOT EXISTS(SELECT 1 FROM bookings WHERE calendar_required=1)
+  AND NOT EXISTS(SELECT 1 FROM delivery_outbox WHERE kind IN ('calendar_upsert','calendar_cancel') AND state IN ('pending','processing'))
+  AND NOT EXISTS(SELECT 1 FROM processor_erasure_requests WHERE kind='calendar_event_cancel' AND state='pending')`;
+const providerSwitchAllowed = `NOT EXISTS(SELECT 1 FROM calendar_connections WHERE singleton_key='default' AND provider<>?) OR (${noCalendarObligations})`;
 
 export type CalendarConnectionStatus = "disconnected" | "healthy" | "unhealthy";
 export type CalendarSelection = { calendarId: string; purpose: "destination" | "conflict"; conferenceCapable: boolean };
@@ -79,6 +84,10 @@ export class CalendarConnectionRepository {
     return result.meta.changes === 1;
   }
 
+  async providerSwitchBlocked(provider: "google" | "microsoft") {
+    return Boolean(await this.binding.prepare(`SELECT 1 WHERE NOT (${providerSwitchAllowed})`).bind(provider).first());
+  }
+
   async saveCredentials(input: {
     provider?: "google" | "microsoft";
     operatorId: string;
@@ -87,7 +96,7 @@ export class CalendarConnectionRepository {
     accessTokenExpiresAt: string;
   }) {
     const timestamp = nowIso();
-    const changedProvider = (await this.get())?.provider !== (input.provider ?? "google");
+    const provider = input.provider ?? "google";
     const write = this.db
       .insert(calendarConnections)
       .values({
@@ -111,6 +120,7 @@ export class CalendarConnectionRepository {
       })
       .onConflictDoUpdate({
         target: calendarConnections.singletonKey,
+        setWhere: sql`${calendarConnections.provider} = ${provider} OR (${sql.raw(noCalendarObligations)})`,
         set: {
           provider: input.provider ?? "google",
           status: "unhealthy",
@@ -128,11 +138,13 @@ export class CalendarConnectionRepository {
           updatedAt: timestamp,
         },
       }).toSQL();
-    await this.binding.batch([
-      healthChangeStatement(this.binding, "unhealthy", "selection_required", timestamp),
-      ...(changedProvider ? ["calendar_connection_calendars", "calendar_busy_intervals", "calendar_busy_read_windows", "calendar_push_channels"].map(table => this.binding.prepare(`DELETE FROM ${table}`)) : []),
+    const results = await this.binding.batch([
+      healthChangeStatement(this.binding, "unhealthy", "selection_required", timestamp, { sql: providerSwitchAllowed, params: [provider] }),
+      ...["calendar_connection_calendars", "calendar_busy_intervals", "calendar_busy_read_windows", "calendar_push_channels"].map(table => this.binding.prepare(`DELETE FROM ${table}
+        WHERE EXISTS(SELECT 1 FROM calendar_connections WHERE singleton_key='default' AND provider<>?) AND (${providerSwitchAllowed})`).bind(provider, provider)),
       this.binding.prepare(write.sql).bind(...write.params),
     ]);
+    return results.at(-1)!.meta.changes === 1;
   }
 
   recentHealthChanges() { return recentHealthChanges(this.binding); }

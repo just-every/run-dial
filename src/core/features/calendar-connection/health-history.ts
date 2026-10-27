@@ -11,13 +11,13 @@ export type CalendarHealthChange = {
 };
 
 /** Execute immediately before the state write in the same D1 batch: no lost or duplicate transitions. */
-export function healthChangeStatement(binding: D1Database, to: CalendarConnectionStatus, reason: string, at: string) {
+export function healthChangeStatement(binding: D1Database, to: CalendarConnectionStatus, reason: string, at: string, condition?: { sql: string; params: unknown[] }) {
   return binding.prepare(`INSERT INTO calendar_connection_health_changes
     (id, event_type, from_state, to_state, reason, occurred_at, created_at, updated_at)
     SELECT ?, 'calendar.connection-health-changed.v1',
       COALESCE((SELECT status FROM calendar_connections WHERE singleton_key='default'), 'disconnected'), ?, ?, ?, ?, ?
-    WHERE COALESCE((SELECT status FROM calendar_connections WHERE singleton_key='default'), 'disconnected') <> ?`)
-    .bind(createId(), to, reason, at, at, at, to);
+    WHERE COALESCE((SELECT status FROM calendar_connections WHERE singleton_key='default'), 'disconnected') <> ?${condition ? ` AND (${condition.sql})` : ""}`)
+    .bind(createId(), to, reason, at, at, at, to, ...(condition?.params ?? []));
 }
 
 export async function recentHealthChanges(binding: D1Database): Promise<CalendarHealthChange[]> {
