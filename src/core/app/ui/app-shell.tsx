@@ -18,7 +18,7 @@ const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
   ["Overview", "/app", "home"],
   ["Bookings", "/app/bookings", "calendar"],
   ["Event types", "/app/event-types", "clock"],
-  ["Availability", "/app/availability", "overrides"],
+  ["Hours", "/app/settings/hours", "overrides"],
   ["Requests", "/app/requests", "mail"],
   ["Profile", "/app/profile", "user"],
   ["Settings", "/app/settings", "gear"],
