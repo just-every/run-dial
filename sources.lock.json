@@ -4552,7 +4552,7 @@
       "executable": false
     },
     "scripts/verify-money-screens.mjs": {
-      "sha256": "72a3e58573c6406b5e0d3f70483dba8e23e4527162d90a277322c780708b4e35",
+      "sha256": "b122470f1436947c83ad7a568e56bbe4ea2206395a1a810d448f7c6ad9212aba",
       "executable": false
     },
     "scripts/verify-move-in-browser.mjs": {
@@ -4580,7 +4580,7 @@
       "executable": false
     },
     "scripts/verify-payment-screens.mjs": {
-      "sha256": "9016fd870f464b926091d6be4529f967f4e273541c9cd0667aad34502c07c9c0",
+      "sha256": "fab5c6d7b31f2a45d9b9c1e7a2afc28ac0cc5d58c5fe253dc8f0f14fb0bc31aa",
       "executable": false
     },
     "scripts/verify-payment-stripe-test-mode.mjs": {
