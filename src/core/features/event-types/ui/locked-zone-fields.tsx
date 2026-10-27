@@ -8,6 +8,7 @@ import { searchTimezones } from "../../../shared/timezone-choices";
 type Props = {
   value: string | null;
   onChange: (value: string | null) => void;
+  onDraftChange?: (value: string) => void;
   hostTimezone: string;
   disabled?: boolean;
   compact?: boolean;
@@ -18,7 +19,7 @@ type Props = {
 const invalidZoneMessage = "Choose a canonical IANA timezone, such as America/New_York.";
 
 /** Controlled editor only: persistence and the surrounding form belong to its parent. */
-export function LockedZoneFields({ value, onChange, hostTimezone, disabled = false, compact = false, state, onRetry }: Props) {
+export function LockedZoneFields({ value, onChange, onDraftChange, hostTimezone, disabled = false, compact = false, state, onRetry }: Props) {
   const id = useId();
   const fields = useRef<HTMLFieldSetElement | null>(null);
   const [draft, setDraft] = useState(value ?? hostTimezone);
@@ -47,7 +48,7 @@ export function LockedZoneFields({ value, onChange, hostTimezone, disabled = fal
     {locked ? <label className="grid gap-2 text-sm font-semibold" htmlFor={id}>
       <span className="flex items-center justify-between gap-2">Meeting timezone{state ? <SavedMark state={state} /> : null}</span>
       <Input id={id} aria-label="Meeting timezone" list={`${id}-options`} required autoComplete="off" value={draft}
-        aria-invalid={Boolean(error)} aria-describedby={[!compact ? `${id}-note` : "", error ? `${id}-error` : ""].filter(Boolean).join(" ") || undefined}
+        aria-invalid={Boolean(error)} aria-describedby={[!compact ? `${id}-note` : "", error && !state?.failed ? `${id}-error` : "", state?.failed ? `${id}-save-failed` : ""].filter(Boolean).join(" ") || undefined}
         onChange={event => {
           const next = event.target.value;
           const zone = canonicalTimezone(next);
@@ -55,6 +56,7 @@ export function LockedZoneFields({ value, onChange, hostTimezone, disabled = fal
           setError("");
           event.currentTarget.setCustomValidity(zone ? "" : invalidZoneMessage);
           if (zone && zone !== value) onChange(zone);
+          else if (!zone) onDraftChange?.(next);
         }}
         onBlur={event => {
           const zone = canonicalTimezone(event.currentTarget.value);
@@ -64,7 +66,7 @@ export function LockedZoneFields({ value, onChange, hostTimezone, disabled = fal
         }}
         onInvalid={() => setError(invalidZoneMessage)} />
       <datalist id={`${id}-options`}>{options.map(zone => <option key={zone} value={zone} />)}</datalist>
-      {error ? <span id={`${id}-error`} role="alert" className="text-sm font-normal text-danger">{error}</span> : null}
+      {error && !state?.failed ? <span id={`${id}-error`} role="alert" className="text-sm font-normal text-danger">{error}</span> : null}
     </label> : null}
     {state && onRetry ? <SaveFailed id={`${id}-save-failed`} state={state} what="the time zone" choice onRetry={onRetry} /> : null}
   </fieldset>;

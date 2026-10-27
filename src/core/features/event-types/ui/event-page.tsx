@@ -77,13 +77,15 @@ function EventPageForm({ initial, workspace, paymentEditor, children }: { initia
   useEffect(() => { void checkReadiness(); return () => { readinessEpoch.current++; }; }, [checkReadiness]);
   useEffect(() => {
     let active = true;
+    let readEpoch = 0;
     const loadHours = async () => {
+      const epoch = ++readEpoch;
       try {
         const [hoursRead, fieldsRead] = await Promise.allSettled([api.api.app.hours.$get(), fetch(`/api/app/custom-fields/eventType/${initial.id}`)]);
-        if (hoursRead.status === "fulfilled" && hoursRead.value.ok) { const current = await hoursRead.value.json(); if (active) setHours(current); }
-        else if (active) setHours(current => current ?? null);
-        if (fieldsRead.status === "fulfilled" && fieldsRead.value.ok) { const fields = await fieldsRead.value.json() as { id: string }[]; if (active) setHasPrivateFields(fields.length > 0); }
-      } catch { if (active) setHours(current => current ?? null); }
+        if (hoursRead.status === "fulfilled" && hoursRead.value.ok) { const current = await hoursRead.value.json(); if (active && epoch === readEpoch) setHours(current); }
+        else if (active && epoch === readEpoch) setHours(current => current ?? null);
+        if (fieldsRead.status === "fulfilled" && fieldsRead.value.ok) { const fields = await fieldsRead.value.json() as { id: string }[]; if (active && epoch === readEpoch) setHasPrivateFields(fields.length > 0); }
+      } catch { if (active && epoch === readEpoch) setHours(current => current ?? null); }
     };
     void loadHours();
     window.addEventListener("dial-host-setup-changed", loadHours);
