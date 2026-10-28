@@ -34,6 +34,12 @@ export class WebhookDelivery {
     try {
       const endpoint = await webhookEndpoint(row.endpoint, this.transport);
       const signature = await webhookSignature(await unseal(row.secret_ciphertext, this.secret), Math.floor(now.getTime() / 1000), row.body_json);
+      // DNS and key operations can yield while an owner deletes or erases.
+      // Re-read authority at the last boundary before starting the HTTP request.
+      const active = await this.db.prepare(`SELECT d.id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id=d.subscription_id
+        WHERE d.id=? AND d.lease_id=? AND d.state='sending' AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL
+        AND (d.booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=d.booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))`).bind(id, lease).first();
+      if (!active) return "unavailable";
       const response = await this.transport(endpoint, { method: "POST", redirect: "manual", signal: AbortSignal.timeout(10000), headers: { "Content-Type": "application/json", "Dial-Signature": signature, "Dial-Event-Id": row.event_id }, body: row.body_json });
       code = response.status;
       await response.body?.cancel();

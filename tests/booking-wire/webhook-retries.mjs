@@ -47,10 +47,24 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   await process(undefined, deletedDelivery.id); await book(); await process();
   assert.equal(receiver.captures.filter(row => row.path === "/deleted").length, 0);
   await call(`/api/app/webhook-deliveries/${deletedDelivery.id}/redeliver`, {}, 404);
+  const resolving = await subscribe("/deleted-during-dns", ["booking.created.v1"]); await book();
+  const resolvingDelivery = (await state()).webhook_deliveries.find(row => row.subscription_id === resolving.id);
+  const dnsStarted = receiver.pauseDns(), inFlight = process(undefined, resolvingDelivery.id);
+  await dnsStarted;
+  await call(`/api/app/webhooks/${resolving.id}`, undefined, 200, "DELETE");
+  receiver.resumeDns(); assert.deepEqual((await inFlight).results, ["unavailable"]);
+  assert.equal(receiver.captures.filter(row => row.path === "/deleted-during-dns").length, 0, "deletion during DNS stops the not-yet-started send");
   const eraseId = (await state()).webhook_deliveries.find(row => row.booking_id === first.booking.id).id;
   const preview = await data("/api/app/privacy/preview", { email: first.payload.email });
   await data("/api/app/privacy/erase", { email: first.payload.email, confirmation: preview.confirmation, expiresAt: preview.expiresAt });
   assert.ok((await state()).webhook_deliveries.every(row => row.booking_id !== first.booking.id));
   await call(`/api/app/webhook-deliveries/${eraseId}/redeliver`, {}, 404);
   const total = receiver.captures.length; await process(undefined, eraseId); assert.equal(receiver.captures.length, total);
+  const personal = await book(), pending = (await state()).webhook_deliveries.find(row => row.booking_id === personal.booking.id && row.subscription_id === workspace.id);
+  const erasingDns = receiver.pauseDns(), erasingSend = process(undefined, pending.id);
+  await erasingDns;
+  const personalPreview = await data("/api/app/privacy/preview", { email: personal.payload.email });
+  await data("/api/app/privacy/erase", { email: personal.payload.email, confirmation: personalPreview.confirmation, expiresAt: personalPreview.expiresAt });
+  receiver.resumeDns(); assert.deepEqual((await erasingSend).results, ["unavailable"]);
+  assert.equal(receiver.captures.filter(row => JSON.parse(row.body).data.bookingId === personal.booking.id).length, 0, "erasure while DNS resolves cannot expose a copied payload");
 }
