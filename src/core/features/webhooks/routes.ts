@@ -8,6 +8,8 @@ const subscription = z.object({ endpoint: z.string().url().max(2048), events: z.
 const id = z.object({ id: z.string().min(1).max(128) });
 const privateResponse: MiddlewareHandler<AppEnvironment> = async (context, next) => {
   context.header("Cache-Control", "no-store");
+  const session = await context.get("services").operators.auth.getSession(context.req.raw);
+  if (session?.operator.role !== "owner") return apiError(context, 403, "role_forbidden", "Only a workspace owner can manage webhook delivery.");
   await next();
 };
 export const webhookRoutes = new Hono<AppEnvironment>()

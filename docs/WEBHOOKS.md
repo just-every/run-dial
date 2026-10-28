@@ -2,6 +2,8 @@
 
 Dial sends selected durable events to an HTTPS receiver you control. Configure subscriptions in **Settings → Webhooks** at `/app/settings`. The management APIs require the installation's native operator session; the current single-host installation has owners as its operators.
 
+Only a native workspace owner can manage subscriptions, read delivery bodies or request redelivery. An authenticated non-owner is refused without changing subscriptions or queued work. This conservative authority floor remains in place until the role contract supplies the wider administration model.
+
 ## Create a subscription
 
 Enter a public HTTPS endpoint, choose events and a scope, then authorize sending the selected event data to that endpoint. Choose **Create webhook and send events**. Dial validates the endpoint again before each attempt. Private addresses, credentials in URLs and URL fragments are refused; redirects do not receive the signed event body.

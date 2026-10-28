@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "f60181f775e28e521e09f2ac34b4d30a45bd9ea2c2122140481e13274b2eb8dc",
+      "sha256": "0dd4b50557bfc11221639496b89b2f7faaa4e65587e9f17a07fb6b986e590f97",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a28e9f8c0b1b14507d36280bc3fd7324c339d28cb381f6fe653d727ecfda137c",
+      "sha256": "133f5a46f622ca6cd4e0c3f239df66a78d11c910e4c59003527fa7b7005159d1",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "9556d6b84035b48415745b0cf4b433526985aad8fb2d79572a1ffe7ce3ed6cc5",
+      "sha256": "97dbdb4a8b3a41dab9221cb8cf50e6c3e3657e8cf9adacf47c87b0aa2ee89b66",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -976,7 +976,7 @@
       "executable": false
     },
     "docs/WEBHOOKS.md": {
-      "sha256": "4eac7febbac810a15ba5c6089f90a65943b24a1a35d6cd8c9deb60867cc1fc7b",
+      "sha256": "c2b63b29693b88a3ea6668b1af77931905dc03dbe7e8512aa1d2d0b9c7123c25",
       "executable": false
     },
     "edition.json": {
@@ -7156,7 +7156,7 @@
       "executable": false
     },
     "src/core/features/webhooks/delivery.ts": {
-      "sha256": "2c291d2c9d648bf872da42dfa8b5bdb4438464359d23eadf3bc5ee5ba112fb9d",
+      "sha256": "41322d72e8df1178b70102b97f2d337df5f34da9fe25b0410643e68db3971d51",
       "executable": false
     },
     "src/core/features/webhooks/endpoint.ts": {
@@ -7164,7 +7164,7 @@
       "executable": false
     },
     "src/core/features/webhooks/routes.ts": {
-      "sha256": "19140bfb85c176cda84da93d95e0977d8694640a4777a19cbac328b049aed9a3",
+      "sha256": "26ceaee6ca23beb662260afb5d852dc2ae098a0a5fd6db2b3f588a5d6de46210",
       "executable": false
     },
     "src/core/features/webhooks/subscriptions.ts": {
@@ -7172,7 +7172,7 @@
       "executable": false
     },
     "src/core/features/webhooks/ui/settings-card.tsx": {
-      "sha256": "44df81622aab268c51bbe4a76520c2dd72ad9944c10afff90aaa71937614efa1",
+      "sha256": "890b5735d9bb3a3947a79faed80c4bfa166001ea18bfca78a0582fc61c21d9b9",
       "executable": false
     },
     "src/core/features/workspace-notices/alerts.ts": {
@@ -8508,11 +8508,11 @@
       "executable": false
     },
     "tests/booking-wire/webhook-journey.mjs": {
-      "sha256": "c23f5574d89245b32bb1ccd70ae453dbfd6b09520eacd3a4bd97ad2be18d1f6a",
+      "sha256": "f4131addedaae976e03d56d0f06dc4d8fc1203f10c0ddea747f7a0b45fa69409",
       "executable": false
     },
     "tests/booking-wire/webhook-receiver.mjs": {
-      "sha256": "d0c96baeee38d133c48138ed4f2d2d5127be1f0aeeedc49db086235111e97cd5",
+      "sha256": "af5139d9e38ce287d8e0656714e11964a35e6878c150c5142f621402d32b4428",
       "executable": false
     },
     "tests/booking-wire/webhook-retries.mjs": {

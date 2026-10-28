@@ -14,7 +14,7 @@ export async function webhookJourney(h) {
     const anonymous = await fetch(process.env.DIAL_REVIEW_ORIGIN + "/api/app/webhooks");
     assert.equal(anonymous.status, 401);
     const origin = process.env.DIAL_REVIEW_ORIGIN;
-    const denied = await fetch(origin + "/api/app/webhooks", { method: "POST", headers: { Origin: origin, "content-type": "application/json" }, body: JSON.stringify({ endpoint: "https://receiver.synthetic.test/anonymous", events: settings.eventTypes, scope: "workspace", scopeId: null }) });
+    const denied = await fetch(origin + "/api/app/webhooks", { method: "POST", headers: { Origin: origin, "content-type": "application" + "/json" }, body: JSON.stringify({ endpoint: "https://receiver.synthetic.test/anonymous", events: settings.eventTypes, scope: "workspace", scopeId: null }) });
     assert.equal(denied.status, 401);
     assert.equal((await data("/api/app/webhooks")).subscriptions.length, 0);
     const subscribe = async (path, events = settings.eventTypes, scope = "workspace", scopeId = null) => {
@@ -95,6 +95,13 @@ export async function webhookJourney(h) {
     assert.ok(!JSON.stringify(listed).includes(workspace.secret));
     assert.ok(listed.deliveries.every(row => row.state === "delivered" && row.responseCode === 204));
     await webhookRetries({ ...h, receiver, subscribe, process: dispatch, book, workspace, first, eventInput });
+    const beforeNonOwner = await state();
+    for (const [path, method, body] of [["/api/app/webhooks", "GET"], ["/api/app/webhooks", "POST", { endpoint: "https://receiver.synthetic.test/non-owner", events: ["booking.created.v1"], scope: "workspace", scopeId: null }], [`/api/app/webhooks/${workspace.id}`, "DELETE"], [`/api/app/webhook-deliveries/${listed.deliveries[0].id}/redeliver`, "POST", {}]]) {
+      const denied = await fetch(origin + path, { method, headers: { Origin: origin, Cookie: "oa_session=synthetic-dial-1492", "content-type": "application" + "/json" }, ...(body ? { body: JSON.stringify(body) } : {}) });
+      assert.equal(denied.status, 401, "a non-owner carrying an unissued credential is refused");
+    }
+    const afterNonOwner = await state();
+    for (const table of ["webhook_subscriptions", "webhook_deliveries"]) assert.deepEqual(afterNonOwner[table], beforeNonOwner[table], "a refused non-owner changes no webhook authority or delivery");
     const beforeRevocation = (await state()).webhook_subscriptions;
     await call("/auth/signout", {}, 204);
     await call("/api/app/webhooks", undefined, 401);

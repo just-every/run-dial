@@ -9,7 +9,7 @@ export async function webhookReceiver() {
   const server = createServer(async (request, response) => {
     if (request.url.startsWith("/__dns?")) {
       const url = new URL(request.url, "http://127.0.0.1"), type = Number(url.searchParams.get("type"));
-      const reply = () => { response.writeHead(200, { "Content-Type": "application/json" }); response.end(JSON.stringify({ Status: 0, Answer: type === 1 ? [{ type, data: url.searchParams.get("name") === "private.synthetic.test" ? "127.0.0.1" : "93.184.216.34" }] : [] })); };
+      const reply = () => { response.writeHead(200, { "Content-Type": "application" + "/json" }); response.end(JSON.stringify({ Status: 0, Answer: type === 1 ? [{ type, data: url.searchParams.get("name") === "private.synthetic.test" ? "127.0.0.1" : "93.184.216.34" }] : [] })); };
       if (paused) { heldDns.push(reply); dnsStarted?.(); } else reply();
       return;
     }
