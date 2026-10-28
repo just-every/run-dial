@@ -6564,7 +6564,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/analytics.ts": {
-      "sha256": "8ab1732cdfda4671e4f27c401e7cb677dc20286f755ecee5d77a68cfef06eb04",
+      "sha256": "4f78f800a0420563818edf3927501284b48e21a09b8a79dee31e5f0ab82f348b",
       "executable": false
     },
     "src/core/features/public-booking/ui/answer-retention.ts": {
@@ -8332,7 +8332,7 @@
       "executable": false
     },
     "tests/booking-axe/routing.mjs": {
-      "sha256": "04612f60c1b2478c9208f8a5ca0f29d0bea7a12edb8ded34e07f05a37d1d5483",
+      "sha256": "d362d93e547627b626825c64831b80a256e756f4ff68ef05c617c9ea6de7c67a",
       "executable": false
     },
     "tests/booking-axe/run-axe.mjs": {

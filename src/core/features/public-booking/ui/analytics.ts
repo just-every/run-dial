@@ -3,6 +3,7 @@ import { useEffect } from "react";
 type Tags = { ga4MeasurementId?: string; gtmContainerId?: string; metaPixelId?: string; googleAds?: { conversionId: string; conversionLabel: string }; linkedInPartnerId?: string };
 let configuration: Promise<Tags> | undefined, measurement: Promise<HTMLIFrameElement> | undefined;
 const deliveries = new Map<string, () => void>();
+const routingEmbedEvents = new Set<string>();
 function safePage() { return window.location.origin + window.location.pathname.replace(/\/(?:details|confirmed)$/, ""); }
 function reportFailure() { console.warn("Booking analytics could not be delivered."); }
 async function configured() {
@@ -58,8 +59,8 @@ export function routingEmbedEvent(event: "viewed" | "submitted", identity: strin
   try { parent = new URL(parents[0]); } catch { return; }
   if (parent.origin !== parents[0] || (parent.protocol !== "https:" && !(parent.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(parent.hostname)))) return;
   const key = `dial.analytics.routing_${event}.${parent.origin}.${identity}`;
-  if (sessionStorage.getItem(key)) return;
-  sessionStorage.setItem(key, "sent");
+  if (routingEmbedEvents.has(key)) return;
+  routingEmbedEvents.add(key);
   window.parent.postMessage(event === "viewed"
     ? { type: "dial:routing-viewed", slug: identity }
     : { type: "dial:routing-submitted", submissionReference: identity }, parent.origin);
