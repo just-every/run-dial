@@ -17,6 +17,7 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   assert.equal(replayed.at(-1).body, before[0].body);
   assert.notEqual(replayed.at(-1).headers["dial-signature"], before[0].headers["dial-signature"]);
   receiver.verify(replayed.at(-1), workspace.secret);
+  console.log("WEBHOOK_REDELIVERY " + JSON.stringify({ originalEventId: original.eventId, received: replayed.length, capture: replayed.at(-1) }));
   const retry = await subscribe("/retry", ["booking.created.v1"]);
   receiver.fail("/retry", 1); await book();
   const clock = new Date(Date.now() + 1000), started = clock.toISOString();
@@ -34,6 +35,7 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   assert.equal(attempts.filter(row => row.status === 204).length, 1);
   assert.equal(attempts[0].body, attempts[1].body);
   attempts.forEach(row => receiver.verify(row, retry.secret));
+  console.log("WEBHOOK_RETRY " + JSON.stringify({ delivery: { state: delivery.state, responseCode: delivery.responseCode, attempts: delivery.attempts }, captures: attempts }));
   const doomed = await subscribe("/exhausted", ["booking.created.v1"]); receiver.fail("/exhausted", 1000); await book();
   const doomedRow = (await state()).webhook_deliveries.find(row => row.subscription_id === doomed.id);
   assert.equal(Date.parse(doomedRow.retry_until) - Date.parse(doomedRow.created_at), 24 * 3600000);

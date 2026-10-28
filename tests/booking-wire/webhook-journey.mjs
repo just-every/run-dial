@@ -92,6 +92,7 @@ export async function webhookJourney(h) {
     const unrelated = receiver.captures.filter(row => row.path === "/unrelated-team" && JSON.parse(row.body).type !== "calendar.connection-health-changed.v1"); assert.equal(unrelated.length, 0);
     assert.equal(receiver.captures.filter(row => row.path === "/unrelated-team" && JSON.parse(row.body).type === "calendar.connection-health-changed.v1").length, 1, "team receives its actual host calendar health");
     for (const capture of receiver.captures) receiver.verify(capture, capture.path === "/workspace" ? workspace.secret : capture.path === "/host" ? host.secret : capture.path === "/unrelated-team" ? unrelatedSub.secret : teamSub.secret);
+    console.log("WEBHOOK_CREATED " + JSON.stringify(created.find(row => row.path === "/workspace")));
     const listed = await data("/api/app/webhooks");
     assert.ok(!JSON.stringify(listed).includes(workspace.secret));
     assert.ok(listed.deliveries.every(row => row.state === "delivered" && row.responseCode === 204));

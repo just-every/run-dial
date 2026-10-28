@@ -55,6 +55,7 @@ import { BaseMailSender, mailConfiguration } from "../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 
 export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { operatorNotifications?: OperatorNotificationCommand; files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsClock?:()=>Promise<Date>; paymentsTransport?: typeof fetch; webhookTransport?: typeof fetch } = {}) {
+  const webhookTransport: typeof fetch = adapters.webhookTransport ?? ((input, init) => fetch(input, init));
   const noticeTransport=adapters.paymentsTransport??fetch;
   const analytics={settings:new AnalyticsSettings(binding,runtime.SESSION_SECRET),delivery:new AnalyticsDelivery(binding,runtime.SESSION_SECRET,adapters.paymentsTransport??fetch)};
   const notices={destinations:new NoticeDestinations(binding,runtime,noticeTransport),delivery:new NoticeDelivery(binding,runtime,noticeTransport),erasure:new NoticeErasure(binding,runtime,noticeTransport)};
@@ -87,7 +88,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     notices,
     teams: new TeamsRepository(binding),
     routing: new RoutingRepository(binding),
-    webhooks: { subscriptions: new WebhookSubscriptions(binding, runtime.SESSION_SECRET, adapters.webhookTransport ?? fetch), delivery: new WebhookDelivery(binding, runtime.SESSION_SECRET, adapters.webhookTransport ?? fetch) },
+    webhooks: { subscriptions: new WebhookSubscriptions(binding, runtime.SESSION_SECRET, webhookTransport), delivery: new WebhookDelivery(binding, runtime.SESSION_SECRET, webhookTransport) },
     analytics,
     invitationManage: new InvitationManageService(binding, runtime),
     correspondence: new EventCorrespondenceRepository(binding),

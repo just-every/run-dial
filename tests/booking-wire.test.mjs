@@ -46,8 +46,8 @@ async function wireJourney(t, feature) {
     const { startWebhookRuntime } = await import("./booking-wire/webhook-runtime.mjs");
     nativeRuntime = await startWebhookRuntime({ state, port, origin, receiver });
   } else {
-  server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", String(port), "--inspector-port", String(inspector), ...microsoft], { env, stdio: "pipe", detached: true });
-  server.stdout.on("data", chunk => { output += chunk; }); server.stderr.on("data", chunk => { output += chunk; });
+    server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", String(port), "--inspector-port", String(inspector), ...microsoft], { env, stdio: "pipe", detached: true });
+    server.stdout.on("data", chunk => { output += chunk; }); server.stderr.on("data", chunk => { output += chunk; });
   }
   for (let attempt = 0; ; attempt++) { if ((server && server.exitCode !== null) || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
   assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
