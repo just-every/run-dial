@@ -17,6 +17,7 @@ export const exported = [
   'delivery_outbox', 'delivery_attempts', 'provider_webhook_events', 'operator_delivery_preferences',
   'bookings', 'booking_approval_requests', 'booking_guests', 'booking_occurrences', 'booking_answers', 'booking_history', 'booking_request_history', 'booking_reschedule_requests', 'booking_attendance', 'booking_presentation', 'booking_correspondence',
   'blocked_address_rules', 'availability_requests', 'availability_request_windows', 'embed_allowed_origins',
+  'routing_forms', 'routing_submissions',
   'meeting_polls', 'poll_candidates', 'poll_participants', 'poll_votes',
   'client_profiles', 'client_aliases', 'client_notes', 'client_fields',
   'booking_calendar_conflicts', 'booking_links', 'anonymized_audit', 'erased_calendar_targets', 'calendar_deletion_probes',
@@ -52,6 +53,8 @@ export function assertCoverage(names) {
 }
 export function canonicalRow(name, source, secrets = []) {
   const row = Object.fromEntries(Object.entries(source).map(([key, value]) => [key, scrub(value, secrets, name === 'delivery_outbox' && key === 'payload_json')]));
+  // Historical answers travel without the single-use submission authority.
+  if (name === 'routing_submissions') row.capability_id = null;
   if (name === 'meeting_polls') row.state = 'closed';
   if (name === 'bookings') {
     row.invitee_name_folded = foldBookingSearch(row.invitee_name);

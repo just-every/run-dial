@@ -1,3 +1,4 @@
+import { routingRoutes } from "../features/routing/routes";
 import { appError } from "./hono";
 import { deferPrivateRead } from "./private-request.server";
 import { Hono } from "hono";
@@ -37,7 +38,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     .route("/", hostProfileRoutes).route("/", hostSetupRoutes).route("/", eventTypeRoutes)
     .route("/", bookingOperatorRoutes).route("/", availabilityRequestRoutes).route("/", deliveryRoutes)
     .route("/", calendarConnectionRoutes).route("/", operatorManagementRoutes).route("/", embedRoutes)
-    .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", clientRoutes).route("/", extensionRoutes);
+    .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", clientRoutes).route("/", extensionRoutes).route("/", routingRoutes);
   app.onError(appError);
   // Work a handler leaves for after its response (a due provider health refresh) follows this request's deferred reads.
   const execution = { waitUntil: (task: Promise<unknown>) => { deferPrivateRead(task); }, passThroughOnException() {}, props: {} } as ExecutionContext;
@@ -80,6 +81,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     reads[endpoint] = deferPrivateRead(Promise.resolve(fetchRead(endpoint)).then(async response => ({ body: await response.text(), status: response.status, headers: Object.fromEntries(response.headers) } satisfies WorkspaceRead)));
   }
   if (name === "/app/settings") routes.push(...["session", "calendar/connection", "calendar/setup", "mail/connection", "mail/preferences", "operators", "embed-settings", "blocked-addresses", "custom-fields", "move-in/jobs", "move-in/switch-over"].map(p => "/api/app/" + p));
+  if (name === "/app/settings/routing") routes.push("/api/app/routing-forms", "/api/app/event-types");
   const work = routes.map(read);
   if (name === "/app/bookings" && url.searchParams.get("view") === "clients") {
     const list = clientListPath(clientPage(url.searchParams.get("clientPage")));

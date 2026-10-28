@@ -42,6 +42,8 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  routing_submission_tokens: "Single-use routing submission capabilities; restored submissions are historical",
+  routing_handoffs: "Routing-to-booking capabilities and hashes; a restore never recreates booking handoff authority",
   payment_products: "Payment entitlement catalog is not portable yet; export refuses populated entitlement data",
   payment_entitlements: "Purchaser identity, redemption code hashes and live Stripe purchase authority never travel; export refuses populated entitlement data",
   payment_redemptions: "Live entitlement balances and booking redemption history are not portable yet; export refuses populated entitlement data",

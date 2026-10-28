@@ -1,3 +1,4 @@
+import type { RoutingRepository } from "../routing/repository";
 import { ApprovalService } from "./approval-service";
 import type { ApprovalSettings } from "./approvals";
 import { guestNotice, normalizedGuests } from "./guests";
@@ -79,6 +80,7 @@ export class BookingsService {
     private readonly deletions: Pick<DeletionReconciliationDependencies, "inspect" | "probes">,
     private readonly bookingLinks?: BookingLinksService,
     private readonly payments?: PaymentsService,
+    private readonly routingRepository?: RoutingRepository,
   ) { this.approvals=new ApprovalService({repository,availability,profiles,eventTypes,runtime,payments,confirmationEmails:input=>this.confirmationEmails(input),toConfirmation:(booking,profile,token)=>this.toConfirmation(booking,profile,token)}); }
 
   async approvalSettings(eventId:string){return this.approvals.settings(eventId);}
@@ -152,15 +154,15 @@ export class BookingsService {
     };
   }
 
-  async confirmPublic(input: { redemption?:{code?:string}; handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number; shownPriceCents?:number; shownPaymentCents?:number }): Promise<BookingConfirmationResult> {
+  async confirmPublic(input: { routeToken?:string; redemption?:{code?:string}; handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number; shownPriceCents?:number; shownPaymentCents?:number }): Promise<BookingConfirmationResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
     const now = nowIso();
     if (!nonce) return { kind: "invalid_nonce" };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
-    const attribution = cleanAttribution(input.attribution);
-    const payloadHash = await hashPayload({ ...(input.redemption?{redemption:input.redemption}:{}), ...(input.shownPriceCents===undefined?{}:{shownPriceCents:input.shownPriceCents}), ...(input.shownPaymentCents===undefined?{}:{shownPaymentCents:input.shownPaymentCents}), ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
+    let attribution = cleanAttribution(input.attribution);
+    const payloadHash = await hashPayload({ ...(input.routeToken?{routeToken:input.routeToken}:{}), ...(input.redemption?{redemption:input.redemption}:{}), ...(input.shownPriceCents===undefined?{}:{shownPriceCents:input.shownPriceCents}), ...(input.shownPaymentCents===undefined?{}:{shownPaymentCents:input.shownPaymentCents}), ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
     const profile = await this.profiles.getPublicProfile(input.handle);
     if (!profile) return { kind: "invalid_nonce" };
     const offer = this.bookingLinks ? await this.bookingLinks.resolve(input.slug, input.link) : undefined;
@@ -175,7 +177,11 @@ export class BookingsService {
     }
     if (nonce.purpose !== "confirm" || nonce.selectionStartAt !== input.startAt || nonce.inviteeTimezone !== input.inviteeTimezone) return { kind: "invalid_nonce" };
     if (offer && offer.kind !== "active") return {kind:"expired_nonce"};
-    const event = resolveBookingLocation(originalEvent, input);
+    const routing=input.routeToken?await this.routingRepository?.handoff(input.routeToken,originalEvent.id):undefined;
+    if(input.routeToken&&!routing)return {kind:"invalid_nonce"};
+    if(routing)attribution=cleanAttribution({...attribution,...routing.attribution});
+    const routedEvent=routing?.redirect?{...originalEvent,postBookingRedirect:routing.redirect}:originalEvent;
+    const event = resolveBookingLocation(routedEvent, input);
     if (!event) return {kind:"invalid_answers"};
     if (event.status !== "published") return { kind: "slot_invalid" };
     const selectedDuration = intervalDuration(nonce.selectionStartAt, nonce.selectionEndAt);
@@ -206,8 +212,9 @@ export class BookingsService {
     const hostDate = hostDateForInstant(selection.slot.startAt, profile.timezone);
     const expiresAt = new Date(Date.parse(selection.slot.startAt) + manageTokenLifetimeMs).toISOString();
     const claimBase = {
+      routing,
       attribution,
-      postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution }),
+      postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution, routingAnswers:routing?.answers }),
       bookingId, occurrenceId, nonceId: nonce.id, nonceHash, payloadHash, manageTokenId, manageTokenExpiresAt: expiresAt, event, invitee,
       selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone },
       hostTimezone: profile.timezone, hostDate,
@@ -241,9 +248,10 @@ export class BookingsService {
     const manageTokenHash = await hashToken(manageToken, this.runtime.SESSION_SECRET);
     const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired });
     const claimInput: BookingClaim = {
+      routing,
       entitlement,
       attribution,
-      postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution }),
+      postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution, routingAnswers:routing?.answers }),
       bookingId,
       occurrenceId,
       nonceId: nonce.id,

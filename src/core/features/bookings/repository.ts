@@ -1,3 +1,4 @@
+import { routingClaimStatements, routingReservation } from "../routing/booking";
 import { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "../payments";
 import { ApprovalsRepository } from "./approvals";
 import { GuestsRepository } from "./guests";
@@ -134,6 +135,7 @@ export class BookingsRepository {
       this.binding.prepare("UPDATE bookings SET current_occurrence_id = ? WHERE id = ? AND current_occurrence_id IS NULL").bind(input.occurrenceId, input.bookingId),
       ...bookingCorrespondenceStatements(this.binding, input.bookingId, event.id, input.now),
       ...this.guests.claimStatements(input),
+      ...routingClaimStatements(this.binding,input),
       ...bookingPresentationStatements(this.binding, input, true),
       ...answerStatements(this.binding, input.bookingId, event.questions, input.invitee.answers, input.now),
       this.binding.prepare(
@@ -171,6 +173,7 @@ export class BookingsRepository {
         WHERE ${guard.sql} AND (? IS NULL OR NOT EXISTS (SELECT 1 FROM payment_holds other WHERE other.link_id = ? AND other.state IN ('held', 'processing')))`)
         .bind(hold.id, input.nonceId, input.event.id, nonce?.linkId ?? null, hold.accountId, input.selection.startAt, input.selection.endAt, input.occupiedStartAt, input.occupiedEndAt, input.hostDate, hold.amountCents, hold.returnTokenHash, hold.returnExpiresAt, JSON.stringify({ ...input, emails: [] }), foldBookingSearch(input.invitee.email), hold.expiresAt, input.now, input.now, hold.kind, ...guard.params, nonce?.linkId ?? null, nonce?.linkId ?? null),
       this.binding.prepare("UPDATE booking_nonces SET consumed_at = ?, payload_hash = ? WHERE id = ? AND nonce_hash = ? AND consumed_at IS NULL AND EXISTS (SELECT 1 FROM payment_holds WHERE id = ?)").bind(input.now, input.payloadHash, input.nonceId, input.nonceHash, hold.id),
+      ...routingReservation(this.binding,input),
       blockedProbe(this.binding, input.invitee.email),
     ]);
     return results[0].meta.changes > 0 ? "claimed" : (results.at(-1)?.results[0] as { blocked: number }).blocked ? "blocked" : "slot_taken";

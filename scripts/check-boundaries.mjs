@@ -74,7 +74,7 @@ function checkFeatureBoundary(sourcePath, targetPath) {
   // Mail composition also has a pure public index: importing runtime delivery
   // would couple repositories and portable archive tooling to Worker bindings.
   const publicMailIndex = targetFeature === "delivery" && targetPath === "src/core/features/delivery/mail/index.ts";
-  const publicClientIndex = ["event-types", "booking-links", "reports", "bookings", "clients", "polls"].includes(targetFeature) && targetPath === `src/core/features/${targetFeature}/client.ts`;
+  const publicClientIndex = ["event-types", "booking-links", "reports", "bookings", "clients", "polls", "routing"].includes(targetFeature) && targetPath === `src/core/features/${targetFeature}/client.ts`;
   if (targetPath !== `src/core/features/${targetFeature}/index.ts` && !publicMailIndex && !publicClientIndex) {
     failures.push(`${sourcePath}: feature ${sourceFeature} must import ${targetFeature} through its public index`);
   }

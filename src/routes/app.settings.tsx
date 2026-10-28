@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { NoticeDestinationsCard } from '../core/features/workspace-notices/ui/destinations-card';
 import { AccountingCard } from "../core/features/payments/ui/accounting-card";
 import { StripeConnectionCard } from "../core/features/payments/ui/stripe-connection-card";
@@ -17,5 +18,5 @@ export const Route = createFileRoute('/app/settings' )({ codeSplitGroupings: [],
 
 function SettingsRoute() {
   const { shell } = Route.useRouteContext();
-  return <><SettingsPage paymentSettings={timezone => <><StripeConnectionCard timezone={timezone} /><AccountingCard /><NoticeDestinationsCard /></>} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} />{shell.canInspectArchive ? <ArchiveStatusCard /> : null}<div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
+  return <><div className="mb-6"><Link to="/app/settings/routing" className="underline">Routing forms</Link></div><SettingsPage paymentSettings={timezone => <><StripeConnectionCard timezone={timezone} /><AccountingCard /><NoticeDestinationsCard /></>} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} />{shell.canInspectArchive ? <ArchiveStatusCard /> : null}<div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
 }

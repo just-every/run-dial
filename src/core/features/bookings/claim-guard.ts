@@ -1,3 +1,4 @@
+import { routingGuard } from "../routing/booking";
 import { offeredHoldPredicate } from "../booking-links";
 import { BookingLimits, approvalHoldPredicate } from "../availability";
 import { blockedAddressSql, blockedAddressValues } from "../public-abuse";
@@ -5,12 +6,13 @@ import { paymentHoldPredicate } from "../payments";
 import type { BookingClaim } from "./types";
 
 type Admission = { sql: string; params: unknown[] };
-type GuardInput = Pick<BookingClaim, "event" | "hostTimezone" | "selection" | "invitee" | "occupiedStartAt" | "occupiedEndAt" | "hostDate">;
+type GuardInput = Pick<BookingClaim, "event" | "hostTimezone" | "selection" | "invitee" | "occupiedStartAt" | "occupiedEndAt" | "hostDate"> & Partial<Pick<BookingClaim,"routing"|"bookingId">>;
 
 /** The single atomic slot check (BOOK-002) shared by a free confirmation, a payment hold and a paid
  * conversion: no blocked address, an admitting capability, no overlapping booking or active payment hold,
  * the host-day cap, offered-time holds and booking limits. */
 export async function slotClaimGuard(binding: D1Database, input: GuardInput, admission: Admission, linkId?: string | null, exceptHoldId?: string, exceptApprovalId?: string) {
+  if(input.routing && input.bookingId){const route=routingGuard(input.routing,input.event.id,input.bookingId);admission={sql:`(${admission.sql}) AND ${route.sql}`,params:[...admission.params,...route.params]};}
   const holds = offeredHoldPredicate(input.occupiedStartAt, input.occupiedEndAt, linkId ?? undefined);
   const limits = await new BookingLimits(binding).predicate(input.event.id, input.hostTimezone, input.selection.startAt, input.selection.endAt, input.invitee.email, undefined);
   const approval = approvalHoldPredicate(input.occupiedStartAt,input.occupiedEndAt,exceptApprovalId);

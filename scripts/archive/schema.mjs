@@ -1,3 +1,4 @@
+import { validateRouting } from "./routing.mjs";
 import { validateLocations } from "./locations.mjs";
 import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
 import { validateAvailabilityConfig, validateAvailabilityReferences, validateYourHours } from './availability-config.mjs';
@@ -50,6 +51,7 @@ export function restoreStatements(tables, triggers) {
     ...triggers.map(trigger => ({ sql: trigger.sql, params: [] })),
   ];
 }
+
 export function validateRows(archive, model) {
   if (JSON.stringify(archive.migrations) !== JSON.stringify(model.migrations) || !Array.isArray(archive.tables) || JSON.stringify(archive.tables.map(table => table.name)) !== JSON.stringify(exported)) throw new Error('archive-schema-mismatch');
   for (const table of archive.tables) {
@@ -66,6 +68,7 @@ export function validateRows(archive, model) {
         }
       }
       if (table.name === 'event_questions' && ![0, 1].includes(row.private)) throw new Error('archive-invalid-question-privacy');
+      validateRouting(table.name, row);
       validateLocations(table.name, row);
       validateAvailabilityConfig(table.name, row);
       validateBookingPolicy(table.name, row);
@@ -87,6 +90,12 @@ export function validateRows(archive, model) {
   try {
     for (const statement of restoreStatements(archive.tables, triggers)) model.db.prepare(statement.sql).run(...statement.params);
     validateCustomFields(model.db);
+    for (const form of model.db.prepare("SELECT configuration_json FROM routing_forms").all()) {
+      const configuration = JSON.parse(form.configuration_json);
+      for (const outcome of [...configuration.rules.map(rule => rule.outcome), configuration.fallback]) {
+        if (outcome.kind === 'event' && !model.db.prepare("SELECT 1 FROM event_types WHERE id=?").get(outcome.eventTypeId)) throw new Error('archive-invalid-routing-reference');
+      }
+    }
     validateAvailabilityReferences(model.db);
     if (model.db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('archive-invalid-references');
     for (const { name, rows } of archive.tables) {

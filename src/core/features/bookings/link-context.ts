@@ -12,7 +12,7 @@ export function cleanAttribution(input: BookingAttribution = {}): BookingAttribu
 }
 
 /** Construct once, before the atomic claim. Replays read this committed projection. */
-export function bookingRedirect(input: { event: EventTypeRecord; selection: BookingSelection; invitee: ValidatedInvitee; hostName: string; bookingId: string; attribution: BookingAttribution }): string | null {
+export function bookingRedirect(input: { event: EventTypeRecord; selection: BookingSelection; invitee: ValidatedInvitee; hostName: string; bookingId: string; attribution: BookingAttribution; routingAnswers?: import("../routing/repository").RoutingAnswer[] }): string | null {
   const configuration = input.event.postBookingRedirect;
   if (!configuration) return null;
   const url = new URL(configuration.url);
@@ -26,6 +26,7 @@ export function bookingRedirect(input: { event: EventTypeRecord; selection: Book
   for (const question of input.event.questions) {
     if (question.key && !question.private && input.invitee.answers[question.key] !== undefined) values[`answer.${question.key}`] = input.invitee.answers[question.key];
   }
+  for(const answer of input.routingAnswers??[])if(!answer.private && !input.event.questions.some(q=>q.key===answer.key))values[`answer.${answer.key}`]=answer.value;
   for (const key of configuration.fields) {
     // A later privacy edit takes precedence over a previously selected answer field.
     if (!(key in values)) continue;

@@ -7,6 +7,8 @@ export async function canReadEmbedDocument(url: URL, embeds: Pick<EmbedsService,
   const parent = normaliseEmbedOrigin(parents[0]);
   if (!parent) return false;
 
+  if (/^\/embed\/route\/[a-z0-9-]{1,80}$/.test(url.pathname)) return embeds.isOriginAllowed(parent);
+
   const manage = /^\/embed\/manage\/([^/]+)$/.exec(url.pathname);
   if (manage) {
     let token: string;

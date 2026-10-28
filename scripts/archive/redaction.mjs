@@ -14,6 +14,8 @@ const credentialColumns = {
   oa_tokens: ['token_hash'], oa_sessions: ['token_hash'], oa_step_up_challenges: ['token_hash'],
   oa_owner_signins: ['token_hash'],
   booking_link_tokens: ['token_hash'],
+  routing_submission_tokens: ['token_hash'],
+  routing_handoffs: ['token_hash'],
   poll_vote_tokens: ['token_hash'],
   client_remember_links: ['token_hash'],
 };
@@ -26,6 +28,7 @@ const credentialFields = new Set([
   'secret', 'secrets', 'clientsecret', 'sessionsecret', 'webhooksecret', 'apisecret', 'secretaccesskey',
   'password', 'passwords', 'credential', 'credentials', 'authorization', 'proxyauthorization',
   'cookie', 'cookies', 'setcookie', 'apikey', 'privatekey', 'signingkey', 'webhookkey', 'webhooksignature',
+  'routetoken',
   'nonce', 'noncehash', 'ciphertext', 'manageurl', 'managelink',
 ]);
 const sensitiveField = key => credentialFields.has(key.replaceAll(/[_-]/g, '').toLowerCase());
@@ -58,6 +61,13 @@ export function scrub(value, secrets = [], commands = false) {
   }
   let result = value;
   for (const secret of secrets) if (secret) result = result.replaceAll(secret, '[redacted]');
+  result = result.replace(/https?:\/\/[^\s<>"']+|\/[^\s<>"']+/g, link => {
+    try {
+      const url = new URL(link, 'https://archive.invalid');
+      if (/^\/(?:embed\/)?book\//.test(url.pathname) && url.searchParams.has('routeToken')) return '[private-link-removed]';
+    } catch { /* Known secret bytes are already removed above. */ }
+    return link;
+  });
   return scrubPrivateLinks(result, secrets);
 }
 export function collectSecrets(tables, runtimeSecrets = []) {

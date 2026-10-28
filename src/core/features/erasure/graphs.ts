@@ -13,6 +13,10 @@ export function bookingGraph(statements?: Declaration["statements"]) {
     edges: [
       ...["booking_approval_requests", "booking_guests", "booking_reschedule_requests", "booking_request_history", "booking_answers", "booking_attendance", "booking_calendar_conflicts", "booking_correspondence", "booking_history", "booking_manage_tokens", "booking_nonces", "booking_occurrences", "booking_presentation", "calendar_deletion_probes", "operator_creation_receipts", "ext_custom_field_values", "move_in_differences", "booking_payments", "payment_holds", "booking_payment_terms", "payment_link_tokens", "booking_card_consents", "payment_movements", "client_remember_links", "payment_processor_facts", "accounting_exports", "workspace_notice_deliveries", "payment_redemptions"].map(table => child(table, "bookings", "booking_id")),
       {table:"delivery_outbox",from:"client_remember_links",where:"json_extract(payload_json,'$.clientRememberId')=?",params:["id"]},
+      child("routing_submissions", "bookings", "booking_id"),
+      child("routing_handoffs", "routing_submissions", "submission_id"),
+      // Reach capabilities from the booking so the edge order agrees with the submission FK.
+      { table: "routing_submission_tokens", from: "bookings", where: "id IN (SELECT capability_id FROM routing_submissions WHERE booking_id=?)", params: ["id"] },
       child("booking_approval_tokens", "booking_approval_requests", "request_id"),
       {table:"delivery_outbox",from:"booking_approval_requests",where:"json_extract(payload_json,'$.approvalRequestId')=?",params:["id"]},
       // The erasure's own provider cleanup command (calendar_cancel without an occurrence) keeps only the

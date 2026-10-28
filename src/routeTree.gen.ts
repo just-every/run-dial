@@ -26,6 +26,7 @@ import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
 import { Route as ManageTokenRouteImport } from './routes/manage.$token'
 import { Route as PollIdRouteImport } from './routes/poll.$id'
+import { Route as RouteSlugRouteImport } from './routes/route.$slug'
 import { Route as SetupIndexRouteImport } from './routes/setup.index'
 import { Route as SetupEventTypesRouteImport } from './routes/setup.event-types'
 import { Route as SetupProfileRouteImport } from './routes/setup.profile'
@@ -36,9 +37,11 @@ import { Route as AppEventTypesIdRouteImport } from './routes/app.event-types_.$
 import { Route as AppEventTypesNewRouteImport } from './routes/app.event-types_.new'
 import { Route as AppRequestsIdRouteImport } from './routes/app.requests.$id'
 import { Route as AppSettingsHoursRouteImport } from './routes/app.settings_.hours'
+import { Route as AppSettingsRoutingRouteImport } from './routes/app.settings_.routing'
 import { Route as BookHandleSlugRouteImport } from './routes/book.$handle_.$slug'
 import { Route as EmbedHandleSlugRouteImport } from './routes/embed.$handle.$slug'
 import { Route as EmbedManageTokenRouteImport } from './routes/embed.manage.$token'
+import { Route as EmbedRouteSlugRouteImport } from './routes/embed.route.$slug'
 import { Route as ManageBalanceTokenRouteImport } from './routes/manage.balance.$token'
 import { Route as ManageInviteTokenRouteImport } from './routes/manage.invite.$token'
 import { Route as SetupEventTypesIdRouteImport } from './routes/setup.event-types_.$id'
@@ -143,6 +146,11 @@ const PollIdRoute = PollIdRouteImport.update({
   path: '/poll/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RouteSlugRoute = RouteSlugRouteImport.update({
+  id: '/route/$slug',
+  path: '/route/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupIndexRoute = SetupIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -193,6 +201,11 @@ const AppSettingsHoursRoute = AppSettingsHoursRouteImport.update({
   path: '/settings/hours',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsRoutingRoute = AppSettingsRoutingRouteImport.update({
+  id: '/settings_/routing',
+  path: '/settings/routing',
+  getParentRoute: () => AppRoute,
+} as any)
 const BookHandleSlugRoute = BookHandleSlugRouteImport.update({
   id: '/book/$handle_/$slug',
   path: '/book/$handle/$slug',
@@ -206,6 +219,11 @@ const EmbedHandleSlugRoute = EmbedHandleSlugRouteImport.update({
 const EmbedManageTokenRoute = EmbedManageTokenRouteImport.update({
   id: '/embed/manage/$token',
   path: '/embed/manage/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedRouteSlugRoute = EmbedRouteSlugRouteImport.update({
+  id: '/embed/route/$slug',
+  path: '/embed/route/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManageBalanceTokenRoute = ManageBalanceTokenRouteImport.update({
@@ -319,18 +337,21 @@ export interface FileRoutesByFullPath {
   '/docs/$slug': typeof DocsSlugRoute
   '/manage/$token': typeof ManageTokenRoute
   '/poll/$id': typeof PollIdRoute
+  '/route/$slug': typeof RouteSlugRoute
   '/setup/event-types': typeof SetupEventTypesRoute
   '/setup/profile': typeof SetupProfileRoute
   '/setup/settings': typeof SetupSettingsRoute
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
+  '/embed/route/$slug': typeof EmbedRouteSlugRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
   '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types/new': typeof AppEventTypesNewRoute
   '/app/requests/$id': typeof AppRequestsIdRoute
   '/app/settings/hours': typeof AppSettingsHoursRoute
+  '/app/settings/routing': typeof AppSettingsRoutingRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
@@ -367,18 +388,21 @@ export interface FileRoutesByTo {
   '/docs/$slug': typeof DocsSlugRoute
   '/manage/$token': typeof ManageTokenRoute
   '/poll/$id': typeof PollIdRoute
+  '/route/$slug': typeof RouteSlugRoute
   '/setup/event-types': typeof SetupEventTypesRoute
   '/setup/profile': typeof SetupProfileRoute
   '/setup/settings': typeof SetupSettingsRoute
   '/app': typeof AppIndexRoute
   '/docs': typeof DocsIndexRoute
   '/setup': typeof SetupIndexRoute
+  '/embed/route/$slug': typeof EmbedRouteSlugRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
   '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types/new': typeof AppEventTypesNewRoute
   '/app/requests/$id': typeof AppRequestsIdRoute
   '/app/settings/hours': typeof AppSettingsHoursRoute
+  '/app/settings/routing': typeof AppSettingsRoutingRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
@@ -418,18 +442,21 @@ export interface FileRoutesById {
   '/docs/$slug': typeof DocsSlugRoute
   '/manage/$token': typeof ManageTokenRoute
   '/poll/$id': typeof PollIdRoute
+  '/route/$slug': typeof RouteSlugRoute
   '/setup/event-types': typeof SetupEventTypesRoute
   '/setup/profile': typeof SetupProfileRoute
   '/setup/settings': typeof SetupSettingsRoute
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
+  '/embed/route/$slug': typeof EmbedRouteSlugRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings_/new': typeof AppBookingsNewRoute
   '/app/event-types_/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types_/new': typeof AppEventTypesNewRoute
   '/app/requests/$id': typeof AppRequestsIdRoute
   '/app/settings_/hours': typeof AppSettingsHoursRoute
+  '/app/settings_/routing': typeof AppSettingsRoutingRoute
   '/book/$handle_/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
@@ -470,18 +497,21 @@ export interface FileRouteTypes {
     | '/docs/$slug'
     | '/manage/$token'
     | '/poll/$id'
+    | '/route/$slug'
     | '/setup/event-types'
     | '/setup/profile'
     | '/setup/settings'
     | '/app/'
     | '/docs/'
     | '/setup/'
+    | '/embed/route/$slug'
     | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
     | '/app/event-types/new'
     | '/app/requests/$id'
     | '/app/settings/hours'
+    | '/app/settings/routing'
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -518,18 +548,21 @@ export interface FileRouteTypes {
     | '/docs/$slug'
     | '/manage/$token'
     | '/poll/$id'
+    | '/route/$slug'
     | '/setup/event-types'
     | '/setup/profile'
     | '/setup/settings'
     | '/app'
     | '/docs'
     | '/setup'
+    | '/embed/route/$slug'
     | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
     | '/app/event-types/new'
     | '/app/requests/$id'
     | '/app/settings/hours'
+    | '/app/settings/routing'
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -568,18 +601,21 @@ export interface FileRouteTypes {
     | '/docs/$slug'
     | '/manage/$token'
     | '/poll/$id'
+    | '/route/$slug'
     | '/setup/event-types'
     | '/setup/profile'
     | '/setup/settings'
     | '/app/'
     | '/docs/'
     | '/setup/'
+    | '/embed/route/$slug'
     | '/app/bookings/$id'
     | '/app/bookings_/new'
     | '/app/event-types_/$id'
     | '/app/event-types_/new'
     | '/app/requests/$id'
     | '/app/settings_/hours'
+    | '/app/settings_/routing'
     | '/book/$handle_/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -613,7 +649,9 @@ export interface RootRouteChildren {
   DocsSlugRoute: typeof DocsSlugRoute
   ManageTokenRoute: typeof ManageTokenRoute
   PollIdRoute: typeof PollIdRoute
+  RouteSlugRoute: typeof RouteSlugRoute
   DocsIndexRoute: typeof DocsIndexRoute
+  EmbedRouteSlugRoute: typeof EmbedRouteSlugRoute
   BookHandleSlugRoute: typeof BookHandleSlugRoute
   EmbedHandleSlugRoute: typeof EmbedHandleSlugRoute
   EmbedManageTokenRoute: typeof EmbedManageTokenRoute
@@ -749,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PollIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/route/$slug': {
+      id: '/route/$slug'
+      path: '/route/$slug'
+      fullPath: '/route/$slug'
+      preLoaderRoute: typeof RouteSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setup/': {
       id: '/setup/'
       path: '/'
@@ -819,6 +864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsHoursRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/settings_/routing': {
+      id: '/app/settings_/routing'
+      path: '/settings/routing'
+      fullPath: '/app/settings/routing'
+      preLoaderRoute: typeof AppSettingsRoutingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/book/$handle_/$slug': {
       id: '/book/$handle_/$slug'
       path: '/book/$handle/$slug'
@@ -838,6 +890,13 @@ declare module '@tanstack/react-router' {
       path: '/embed/manage/$token'
       fullPath: '/embed/manage/$token'
       preLoaderRoute: typeof EmbedManageTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/route/$slug': {
+      id: '/embed/route/$slug'
+      path: '/embed/route/$slug'
+      fullPath: '/embed/route/$slug'
+      preLoaderRoute: typeof EmbedRouteSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manage/balance/$token': {
@@ -1019,6 +1078,7 @@ interface AppRouteChildren {
   AppEventTypesIdRoute: typeof AppEventTypesIdRouteWithChildren
   AppEventTypesNewRoute: typeof AppEventTypesNewRoute
   AppSettingsHoursRoute: typeof AppSettingsHoursRoute
+  AppSettingsRoutingRoute: typeof AppSettingsRoutingRoute
   AppEventTypesIdAvailabilityRoute: typeof AppEventTypesIdAvailabilityRoute
   AppEventTypesIdPreviewRoute: typeof AppEventTypesIdPreviewRoute
 }
@@ -1035,6 +1095,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEventTypesIdRoute: AppEventTypesIdRouteWithChildren,
   AppEventTypesNewRoute: AppEventTypesNewRoute,
   AppSettingsHoursRoute: AppSettingsHoursRoute,
+  AppSettingsRoutingRoute: AppSettingsRoutingRoute,
   AppEventTypesIdAvailabilityRoute: AppEventTypesIdAvailabilityRoute,
   AppEventTypesIdPreviewRoute: AppEventTypesIdPreviewRoute,
 }
@@ -1086,7 +1147,9 @@ const rootRouteChildren: RootRouteChildren = {
   DocsSlugRoute: DocsSlugRoute,
   ManageTokenRoute: ManageTokenRoute,
   PollIdRoute: PollIdRoute,
+  RouteSlugRoute: RouteSlugRoute,
   DocsIndexRoute: DocsIndexRoute,
+  EmbedRouteSlugRoute: EmbedRouteSlugRoute,
   BookHandleSlugRoute: BookHandleSlugRoute,
   EmbedHandleSlugRoute: EmbedHandleSlugRoute,
   EmbedManageTokenRoute: EmbedManageTokenRoute,
@@ -1103,12 +1166,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

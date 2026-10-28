@@ -29,6 +29,8 @@ export const applicationTables = [
   "booking_payments",
   "booking_search_casefold",
   "bookings",
+  // ROUTE-001: public form definitions, personal submissions and installation-local capabilities.
+  "routing_forms", "routing_submissions", "routing_submission_tokens", "routing_handoffs",
   "meeting_polls", "poll_candidates", "poll_participants", "poll_votes", "poll_vote_tokens",
   "client_profiles", "client_aliases", "client_notes", "client_fields", "client_remember_links",
   "booking_guests",

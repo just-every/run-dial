@@ -1,3 +1,4 @@
+import { routingRoutes } from "../features/routing/routes";
 import { pollRoutes } from "../features/polls";
 import { clientRoutes, rememberRoutes } from "../features/clients";
 import { noticeRoutes } from '../features/workspace-notices';
@@ -86,6 +87,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", operatorManagementRoutes)
     .route("/", publicAbuseRoutes)
     .route("/", bookingOperatorRoutes)
+    .route("/", routingRoutes)
     .route("/", pollRoutes)
     .route("/", clientRoutes)
     .route("/", hostProfileRoutes)

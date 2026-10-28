@@ -671,6 +671,7 @@
       "/book/",
       "/manage/",
       "/poll/",
+      "/route/",
       "/embed/",
       "/api/public/",
       "/api/calendar/oauth/callback",

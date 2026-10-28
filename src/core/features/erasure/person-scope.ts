@@ -1,4 +1,5 @@
 import { personalRecords, foldEmail, emailFoldSql, operatorOverlapSql } from "./identity";
+import { routingScope, routingScopeGuard } from "./routing";
 import { nowIso } from "../../shared/ids";
 import { admitErasure, erasureAuthority } from "./admission";
 import type { SessionRecord } from "../operators";
@@ -11,7 +12,8 @@ export async function personScope(db: D1Database, raw: string) {
   const polls=(await db.prepare("SELECT id,revision FROM poll_participants WHERE email IN(SELECT value FROM json_each(?)) ORDER BY id").bind(JSON.stringify(emails)).all<{id:string;revision:number}>()).results;
   const records = await Promise.all(emails.map(alias => personalRecords(db,alias)));
   const union = (key: "bookings" | "requests" | "approvals" | "holds" | "entitlements" | "addresses") => [...new Set(records.flatMap(record => record[key]))].sort();
-  return { client, emails, polls, bookings: union("bookings"), requests: union("requests"), approvals: union("approvals"), holds: union("holds"), entitlements: union("entitlements"), addresses: [...new Set([...emails,...union("addresses")])].sort() };
+  const routing = await routingScope(db, emails);
+  return { client, emails, polls, routing, bookings: union("bookings"), requests: union("requests"), approvals: union("approvals"), holds: union("holds"), entitlements: union("entitlements"), addresses: [...new Set([...emails,...union("addresses")])].sort() };
 }
 export type PersonScope = Awaited<ReturnType<typeof personScope>>;
 export async function scopeOperatorOverlap(db: D1Database, emails: string[]) {
@@ -35,6 +37,7 @@ export async function admitPersonScope(db: D1Database, scope: PersonScope, sessi
   await db.batch([
     db.prepare(authority.sql).bind(...authority.params), clientGuard,
     db.prepare("SELECT CASE WHEN (SELECT json_group_array(json_object('id',id,'revision',revision)) FROM (SELECT id,revision FROM poll_participants WHERE email IN(SELECT value FROM json_each(?)) ORDER BY id))=? THEN 1 ELSE abs(-9223372036854775808) END").bind(emails,JSON.stringify(scope.polls)),
+    routingScopeGuard(db, scope.emails, scope.routing),
     idsGuard("bookings","invitee_email_folded",scope.bookings),
     idsGuard("availability_requests",emailFoldSql("invitee_email"),scope.requests),
     idsGuard("booking_approval_requests",emailFoldSql("invitee_email"),scope.approvals),

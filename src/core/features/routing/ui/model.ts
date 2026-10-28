@@ -1,0 +1,10 @@
+export type Answer = string | number | string[];
+export type Answers = Record<string, string | string[]>;
+export type Question = {key:string;label:string;kind:string;required:boolean;options?:string[];parameter?:string;private?:boolean};
+export type Condition = {question:string;operator:'equals'|'contains'|'in'|'greater_than'|'range';value:Answer;max?:number} | {mode:'and'|'or';conditions:Condition[]};
+export type Outcome = {kind:'event';eventTypeId:string;redirect?:{url:string;fields:string[]}} | {kind:'message';message:string} | {kind:'url';url:string};
+export type RoutingForm = {id:string;title:string;slug:string;published:boolean;questions:Question[];rules:{id:string;label:string;when:Condition;outcome:Outcome}[];fallback:Outcome};
+export const kinds = ['text','email','phone','number','single_choice','multiple_choice','dropdown','company_size','country','us_state','hidden'];
+export const label = (value:string) => value.replaceAll('_',' ');
+export const emptyCondition = (key=''):Condition => ({question:key,operator:'equals',value:''});
+export const emptyOutcome = ():Outcome => ({kind:'message',message:''});

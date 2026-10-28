@@ -37,6 +37,8 @@ export function prefilledAnswers(questions: PublicEvent["questions"], context: L
 
 /** Carry only bounded native link fields; never copy arbitrary query parameters. */
 export function appendLinkContext(target: URLSearchParams, search: string) {
+  const routeToken=new URLSearchParams(search).get("routeToken");
+  if(routeToken && /^[A-Za-z0-9_-]{43}$/.test(routeToken))target.set("routeToken",routeToken);
   const remembered = new URLSearchParams(search).get("remember");
   if (remembered && /^[A-Za-z0-9_-]{43}$/.test(remembered)) target.set("remember",remembered);
   const context = readLinkContext(search);

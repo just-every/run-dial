@@ -1,3 +1,4 @@
+import { routingRemainders } from "./routing";
 import { entitlementRemainders } from "./entitlements";
 import { NoticeErasure } from '../workspace-notices';
 import { importPersonValues, erasePersonSourceCustody, erasePersonSharedCustody, finishPersonCustody } from "../move-in";
@@ -22,7 +23,7 @@ export class PersonErasure {
   constructor(private readonly db: D1Database, private readonly secret: string, private readonly processors?: {prepare(email:string,receiptId:string,actorId:string):Promise<void>;retry(receiptId:string):Promise<void>}) {}
   private records(email: string) { return personScope(this.db, email); }
   private signature(email: string, records: Awaited<ReturnType<PersonErasure["records"]>>, session: SessionRecord, expiresAt: number, operatorIdentityRetained: boolean) {
-    return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,records.holds,records.entitlements,records.client,records.emails,records.polls,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
+    return hashToken(this.secret, "person-erasure-confirmation", JSON.stringify([email,records.bookings,records.requests,records.approvals,records.holds,records.entitlements,records.client,records.emails,records.polls,records.routing,session.id,session.sessionId,expiresAt,operatorIdentityRetained]));
   }
   async preview(raw: string, session: SessionRecord) {
     await assertErasureCensus(this.db);
@@ -30,7 +31,7 @@ export class PersonErasure {
     const email=foldEmail(raw), records=await this.records(raw), expiresAt=Date.now()+300_000;
     const pending=Boolean(await this.db.prepare("SELECT 1 FROM person_erasure_locks WHERE email IN(SELECT value FROM json_each(?))").bind(JSON.stringify(records.emails)).first());
     const operatorIdentityRetained=await scopeOperatorOverlap(this.db,records.emails);
-    return { bookings: records.bookings.length, requests: records.requests.length+records.approvals.length, payments: records.holds.length+records.entitlements.length, pending, operatorIdentityRetained, expiresAt,
+    return { routingSubmissions: (JSON.parse(records.routing) as unknown[]).length, bookings: records.bookings.length, requests: records.requests.length+records.approvals.length, payments: records.holds.length+records.entitlements.length, pending, operatorIdentityRetained, expiresAt,
       externalRequests: [...processorReceiptItems((await Promise.all(records.emails.map(alias => new ProcessorRequestsRepository(this.db).preview(alias)))).flat()),...(await Promise.all(records.emails.map(alias=>NoticeErasure.preview(this.db,alias)))).flat()], confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
   }
   async erase(input: PersonConfirmation, session: SessionRecord, eraseEntity: EraseEntity, cleanupPending?: CleanupPendingPayments) {
@@ -71,7 +72,7 @@ export class PersonErasure {
     for(const item of mail){const plan=await mailEngine.nativeStatements("mail",{id:item.id});await this.db.batch([erasureAuthority(session),...plan.statements,erasureAuthority(session)].map(statement=>this.db.prepare(statement.sql).bind(...statement.params)));await mailEngine.deleteBlobs(plan.operationId);}
     const clientStatements = [];
     if (records.client) for (const table of ["client_notes","client_fields","client_aliases","client_profiles"]) clientStatements.push(...await deleteRows(this.db,fence,table,table === "client_profiles" ? "id=?" : "client_id=?",[records.client.id]));
-    const statements=[erasureAuthority(session), ...(await Promise.all(records.emails.map(alias=>entitlementRemainders(this.db,fence,alias,deleteRows)))).flat(), ...(await Promise.all(records.emails.map(alias=>addressRemainders(this.db,fence,alias,this.secret,addresses)))).flat(), ...clientStatements,
+    const statements=[erasureAuthority(session), ...await routingRemainders(this.db,fence,records.emails,deleteRows), ...(await Promise.all(records.emails.map(alias=>entitlementRemainders(this.db,fence,alias,deleteRows)))).flat(), ...(await Promise.all(records.emails.map(alias=>addressRemainders(this.db,fence,alias,this.secret,addresses)))).flat(), ...clientStatements,
       ...await deleteRows(this.db,fence,"person_erasure_locks","receipt_id=?",[id]),
       ...(await fence.invalidateTransfersStatements()).map(toD1Sql),
       {sql:`UPDATE person_erasure_receipts SET completed_at=?,operator_identity_retained=EXISTS(SELECT 1 FROM oa_operators WHERE ${emailFoldSql("email")} IN(SELECT value FROM json_each(?)) UNION ALL SELECT 1 FROM operators WHERE erased_at IS NULL AND ${emailFoldSql("normalized_email")} IN(SELECT value FROM json_each(?))) WHERE id=?`,params:[nowIso(),JSON.stringify(records.emails),JSON.stringify(records.emails),id]},

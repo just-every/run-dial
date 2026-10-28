@@ -1,3 +1,4 @@
+import { routingReservation } from "../routing/booking";
 import { createId, nowIso } from "../../shared/ids";
 import { foldBookingSearch } from "./search/case-fold.mjs";
 import { slotClaimGuard, nonceAdmission } from "./claim-guard";
@@ -52,6 +53,7 @@ export class ApprovalsRepository {
             this.db.prepare(`INSERT INTO booking_approval_requests(id,nonce_id,link_id,booking_id,event_type_id,state,invitee_email,invitee_name,event_title,start_at,end_at,occupied_start_at,occupied_end_at,host_date,expires_at,claim_json,created_at,updated_at) SELECT ?,?,?,?,?, 'pending',?,?,?,?,?,?,?,?,?,?,?,? WHERE ${guard.sql} AND (? IS NULL OR NOT EXISTS(SELECT 1 FROM booking_approval_requests other WHERE other.link_id=? AND other.state='pending' AND other.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now')) )`).bind(id, claim.nonceId, nonce?.linkId ?? null, claim.bookingId, claim.event.id, claim.invitee.email, claim.invitee.name, claim.event.title, claim.selection.startAt, claim.selection.endAt, claim.occupiedStartAt, claim.occupiedEndAt, claim.hostDate, expiresAt, JSON.stringify(claim), now, now, ...guard.params, nonce?.linkId ?? null, nonce?.linkId ?? null),
             this.db.prepare("INSERT INTO booking_approval_tokens(request_id,token_hash,created_at,updated_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=?)").bind(id, tokenHash, now, now, id),
             this.db.prepare("UPDATE booking_nonces SET consumed_at=?,payload_hash=? WHERE id=? AND EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=?)").bind(now, claim.payloadHash, claim.nonceId, id),
+            ...routingReservation(this.db,claim),
             ...emails.map(email => this.mail(id, "pending", email, now))];
         await this.db.batch(statements);
         return this.get(id);

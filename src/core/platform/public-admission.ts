@@ -28,7 +28,7 @@ export class PublicAdmissionGate {
     const client = clientIdentity(request, this.runtime);
     const clientKey = await hashToken(`public-client:${client}`, this.runtime.SESSION_SECRET);
     const path = new URL(request.url).pathname;
-    const mutation = request.method === "POST" && (/^\/api\/public\/polls\/[^/]+\/votes$/.test(path) || /^\/api\/public\/book\/[^/]+\/[^/]+\/(confirm|remember\/(request|redeem))$/.test(path) || /^\/api\/public\/manage\/[^/]+\/(cancel|reschedule)$/.test(path));
+    const mutation = request.method === "POST" && (/^\/api\/public\/routing\/[^/]+$/.test(path) || /^\/api\/public\/polls\/[^/]+\/votes$/.test(path) || /^\/api\/public\/book\/[^/]+\/[^/]+\/(confirm|remember\/(request|redeem))$/.test(path) || /^\/api\/public\/manage\/[^/]+\/(cancel|reschedule)$/.test(path));
     const invitation = request.method === "POST" && /^\/api\/public\/manage\/invite\/[^/]+\/email$/.test(path);
     const alternative = request.method === "POST" && /^\/api\/public\/events\/[^/]+\/[^/]+\/request$/.test(path);
     const minute = 60_000;
