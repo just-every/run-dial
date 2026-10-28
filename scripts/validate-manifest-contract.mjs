@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -10,6 +11,7 @@ const [contract, baseline, manifestText] = await Promise.all([
   readFile(resolve(root, "BASELINE.md"), "utf8"),
   readFile(resolve(root, "seed.json"), "utf8"),
 ]);
+execFileSync(process.execPath, ["scripts/contract-docs.mjs", "check"], { cwd: root, stdio: "inherit" });
 const manifest = JSON.parse(manifestText);
 const clauseIds = matches(contract, /\*\*([A-Z][A-Z-]*-\d{3})\s+—/g);
 await validateContractStatus(root, contract, clauseIds);

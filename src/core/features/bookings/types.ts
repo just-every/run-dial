@@ -1,3 +1,4 @@
+import type { ClickIds } from "../analytics";
 import type { BookingAttribution } from "./link-context";
 import type { EventQuestionInput, EventTypeRecord } from "../event-types";
 import type { MailAttachment } from "../../platform/mail";
@@ -173,6 +174,8 @@ export type BookingEmail = {
 
 export type BookingClaim = {
   routing?: import("../routing").RoutingClaim;
+  clickIds?: ClickIds;
+  embedded?: boolean;
   entitlement?: import("../payments/entitlement-repository").Redemption;
   /** PAY-003: the terms snapshot, card consent and balance-link salt a payment hold carries until confirmation. */
   money?: import("../payments").PendingMoney;

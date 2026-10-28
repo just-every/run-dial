@@ -1,28 +1,25 @@
-import { readFile,writeFile } from 'node:fs/promises';
-import assert from 'node:assert/strict';
-import { parseContract } from '../src/base/seed-contract.mjs';
-import { validateContractStatus } from './contract-status.mjs';
+import { readFile, writeFile } from "node:fs/promises";
+import { parseContract } from "../src/base/seed-contract.mjs";
 
-// Preserve this seed's historical acceptance notes; derive its clause ledger and census from the source.
-const [mode,...args]=process.argv.slice(2),touched=args.filter(value=>value!=='--touched');
-if(!['write','check'].includes(mode))throw new Error('Use write or check, followed by --touched and clause IDs.');
-const source=await readFile('CONTRACT.md','utf8'),rows=source.split('\n').filter(line=>/^\| `[A-Z][A-Z-]*-\d{3}` \|/.test(line)).map(line=>line.split('|').slice(1,-1).map(value=>value.trim()));
-const tally=selected=>['done','partial','missing'].map(status=>selected.filter(row=>row[3]===status).length).concat(selected.length);
-const summary=new Map([['Published',tally(rows.filter(row=>row[2]==='published'))],['Target and push further',tally(rows.filter(row=>row[2]!=='published'))],['All',tally(rows)]]);
-let contract=source.split('\n').map(line=>{const label=line.split('|')[1]?.trim();return summary.has(label)?`| ${label} | ${summary.get(label).join(' | ')} |`:line;}).join('\n');
-const parsed=parseContract(contract),ids=touched.length?touched:parsed.clauses.map(clause=>clause.id);
-for(const id of ids)assert.ok(parsed.clauses.some(clause=>clause.id===id),`Unknown clause ${id}`);
-let acceptance=await readFile('ACCEPTANCE.md','utf8'),claims=await readFile('docs/CLAIMS.md','utf8');
-for(const clause of parsed.clauses.filter(clause=>ids.includes(clause.id))){
- const point=clause.text.split('*Acceptance:*')[1]?.split(/\*(?:Implementation|Remaining|Native|Policy):\*/)[0].trim();
- if(!point)throw new Error(`No acceptance text for ${clause.id}`);
- const row=rows.find(row=>row[0]===`\`${clause.id}\``),status=clause.status[0].toUpperCase()+clause.status.slice(1);
- acceptance=acceptance.split('\n').map(line=>line.startsWith(`| ${clause.id} —`)?`| ${clause.id} — ${clause.title} | ${point.replaceAll('|','&#124;')} | ${row[4]||'—'} | ${status} |`:line).join('\n');
+// Generate this edition's retained table format without converting its contract.
+const command=process.argv[2];
+if(!["write","check"].includes(command)||process.argv.length!==3)throw new Error("Usage: node scripts/contract-docs.mjs write|check");
+const source=await readFile("CONTRACT.md","utf8"),parsed=parseContract(source.replace(/\| Clauses \| Done \| Partial \| Missing \| Total \|\n(?:\|[^\n]*\|\n){4}/, block=>block.replace(/[^\n]/g,"")));
+const lines=source.split("\n"),rows=parsed.clauses.map(clause=>({clause,cells:lines[clause.row-1].split("|").slice(1,-1).map(cell=>cell.trim())}));
+const counts=kind=>["done","partial","missing"].map(status=>rows.filter(row=>(!kind||row.clause.kind===kind)&&row.clause.status===status).length);
+const all=counts(),published=counts("published"),target=all.map((value,index)=>value-published[index]);
+const summary=["| Clauses | Done | Partial | Missing | Total |","| --- | ---: | ---: | ---: | ---: |",...[["Published",published],["Target and push further",target],["All",all]].map(([name,values])=>`| ${name} | ${values.join(" | ")} | ${values.reduce((sum,value)=>sum+value,0)} |`)].join("\n");
+const contract=source.replace(/\| Clauses \| Done \| Partial \| Missing \| Total \|\n(?:\|[^\n]*\|\n){4}/,summary+"\n");
+const display=value=>value.replace(/([A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)/g, "$1 [at] $2");
+const marker="<!-- Generated from CONTRACT.md by contract-docs. Edit CONTRACT.md, then regenerate. -->";
+const acceptance=[marker,"# Dial acceptance",`Counts: ${rows.length} clauses — ${all[0]} done, ${all[1]} partial, ${all[2]} missing.`,"CONTRACT.md is the source of requirements, acceptance and status. Every row below retains its acceptance text; provider and role boundaries remain in the source clause.","| Clause | Acceptance | Status |","| --- | --- | --- |",...rows.map(({clause})=>{
+ const text=lines[clause.line-1],acceptance=text.includes("*Acceptance:*")?text.split("*Acceptance:*").slice(1).join("*Acceptance:*").trim():clause.body;
+ return `| ${clause.id} — ${clause.title} | ${String(acceptance??text).replaceAll("|","\\|")} | ${clause.status} |`;
+})].join("\n\n").replace(/\|\n\n\|/g,"|\n|")+"\n";
+const claims=[marker,"# Implemented contract claims",`The contract census is ${all[0]} done / ${all[1]} partial / ${all[2]} missing (${rows.length} clauses).`,`Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.`,...rows.map(({clause,cells})=>`${clause.id} is ${clause.status}: ${clause.title}.\n\nEvidence: ${cells[4]||"None."}\n\nGap: ${cells[5]||"None."}`)].join("\n\n")+"\n";
+for(const [path,value] of [["CONTRACT.md",contract],["ACCEPTANCE.md",display(acceptance)],["docs/CLAIMS.md",display(claims)]]) {
+ const current=await readFile(path,"utf8");
+ if(command==="check"&&current!==value)throw new Error(`${path}: generated content differs; run contract-docs write.`);
+ if(command==="write"&&current!==value)await writeFile(path,value);
 }
-const {done,partial,missing,total}=parsed.counts;
-acceptance=acceptance.replace(/Counts: \d+ clauses — \d+ done, \d+ partial, \d+ missing\./,`Counts: ${total} clauses — ${done} done, ${partial} partial, ${missing} missing.`);
-claims=claims.replace(/The contract census is \d+ done \/ \d+ partial \/ \d+ missing \(\d+ clauses\)/,`The contract census is ${done} done / ${partial} partial / ${missing} missing (${total} clauses)`);
-const files=new Map([['CONTRACT.md',contract],['ACCEPTANCE.md',acceptance],['docs/CLAIMS.md',claims]]);
-for(const [path,content]of files)if(mode==='write')await writeFile(path,content);else assert.equal(await readFile(path,'utf8'),content,`${path} needs contract-docs write`);
-await validateContractStatus(process.cwd(),contract,parsed.clauses.map(clause=>clause.id));
-console.log(`Contract documentation ${mode}: ${total} clauses, ${done} done, ${partial} partial, ${missing} missing.`);
+console.log(command==="check"?"Contract documents are current.":"Contract documents regenerated.");

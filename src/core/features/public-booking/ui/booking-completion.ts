@@ -1,3 +1,4 @@
+import { confirmedAnalytics } from "./analytics";
 import type { Confirmation } from "./types";
 
 export type CommittedConfirmation = Confirmation & { bookingReference?: string; postBookingRedirectUrl?: string };
@@ -11,7 +12,8 @@ export function safePostBookingRedirect(value?: string) {
 }
 
 /** Only the initial committed confirmation emits a conversion; receipt/manage reads never do. */
-export function completeBooking(confirmation: CommittedConfirmation, embedded: boolean, search: string) {
+export async function completeBooking(confirmation: CommittedConfirmation, embedded: boolean, search: string) {
+  if (confirmation.bookingReference) await confirmedAnalytics(confirmation.bookingReference, embedded);
   const redirectUrl = safePostBookingRedirect(confirmation.postBookingRedirectUrl);
   if (!embedded) {
     if (redirectUrl) { window.location.assign(redirectUrl); return true; }

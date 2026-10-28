@@ -1,3 +1,4 @@
+import { clickIdsSchema } from "../analytics";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
@@ -40,9 +41,9 @@ export const routingRoutes=new Hono<AppEnvironment>()
   c.header("Cache-Control","no-store");c.header("Referrer-Policy","no-referrer");const result=await c.get("services").routing.read(c.req.valid("param").slug);
   return result?c.json(result):apiError(c,404,"routing_unavailable","This routing form is unavailable.");
  })
- .post("/api/public/routing/:slug",validate("param",slug),validate("json",z.object({token:z.string().max(200).optional(),answers,attribution:attributionSchema.optional()}).strict()),async c=>{
+ .post("/api/public/routing/:slug",validate("param",slug),validate("json",z.object({token:z.string().max(200).optional(),answers,attribution:attributionSchema.optional(),clickIds:clickIdsSchema.optional()}).strict()),async c=>{
   c.header("Cache-Control","no-store");c.header("Referrer-Policy","no-referrer");const input=c.req.valid("json");
-  const result=await c.get("services").routing.submit(c.req.valid("param").slug,input.token??"",input.answers,input.attribution);
+  const result=await c.get("services").routing.submit(c.req.valid("param").slug,input.token??"",input.answers,input.attribution,input.clickIds);
   if(result.kind==="invalid")return apiError(c,400,"invalid_answers",`Review: ${result.fields.join(", ")}.`,result.fields);
   return result.kind==="unavailable"?apiError(c,404,"routing_unavailable","This routing form or submission link is unavailable."):c.json(result,201);
  })

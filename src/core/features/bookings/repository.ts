@@ -1,4 +1,5 @@
 import { routingClaimStatements, routingReservation } from "../routing";
+import { conversionStatements } from "../analytics";
 import { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "../payments";
 import { ApprovalsRepository } from "./approvals";
 import { GuestsRepository } from "./guests";
@@ -145,6 +146,7 @@ export class BookingsRepository {
         "INSERT INTO booking_history (id, booking_id, occurrence_id, action, actor_type, actor_id, new_start_at, created_at) SELECT ?, ?, ?, 'created', 'invitee', NULL, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)",
       ).bind(createId(), input.bookingId, input.occurrenceId, input.selection.startAt, input.now, input.bookingId),
       ...outboxStatements(this.binding, input.bookingId, input.occurrenceId, input.calendarPayload, input.emails, input.now),
+      ...conversionStatements(this.binding, input),
       this.binding.prepare("UPDATE booking_links SET consumed_at=?,consumed_booking_id=?,updated_at=? WHERE id=(SELECT link_id FROM booking_nonces WHERE id=?) AND consumed_at IS NULL AND EXISTS(SELECT 1 FROM bookings WHERE id=?)").bind(input.now,input.bookingId,input.now,input.nonceId,input.bookingId),
       payment || approval
         // The hold consumed the nonce when the slot was held; the paid booking becomes its replay result.

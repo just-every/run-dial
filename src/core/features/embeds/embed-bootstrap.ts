@@ -9,6 +9,7 @@
 export const embedBootstrap = String.raw`(() => {
   const current = document.currentScript;
   const booked = new Set();
+  const routingViews = new Set(), routingSubmissions = new Set();
   const boot = () => {
     const scripts = current ? [current] : Array.from(document.querySelectorAll('script[data-dial-embed][src*="/embed/dial.js"]'));
     scripts.forEach(script => {
@@ -20,6 +21,10 @@ export const embedBootstrap = String.raw`(() => {
       const query = new URLSearchParams(), answerKeys = new Map();
       const limits = { name: 160, email: 320, utm_source: 500, utm_medium: 500, utm_campaign: 500, utm_term: 500, utm_content: 500, source: 500 };
       for (const [key, value] of scriptUrl.searchParams) {
+        if (key === 'gclid' || key === 'li_fat_id') {
+          if (/^[A-Za-z0-9_.~-]{1,500}$/.test(value) && !query.has(key)) query.set(key, value);
+          continue;
+        }
         if (routing && /^[A-Za-z0-9_-]{1,80}$/.test(key) && value.length <= 4000 && query.size < 50 && !query.has(key)) query.set(key, value);
         if (Object.hasOwn(limits, key) && value.length <= limits[key] && !query.has(key)) query.set(key, value);
         if (!/^answer\.[A-Za-z0-9_-]{1,100}$/.test(key) || value.length > 4000) continue;
@@ -32,7 +37,20 @@ export const embedBootstrap = String.raw`(() => {
       window.addEventListener('message', message => {
         if (message.origin !== source || !Array.from(frames).some(f => f.contentWindow === message.source)) return;
         const data = message.data;
-        if (!data || typeof data !== 'object' || data.type !== 'dial:booked' || typeof data.bookingReference !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(data.bookingReference) || booked.has(data.bookingReference)) return;
+        if (!data || typeof data !== 'object') return;
+        if (routing && data.type === 'dial:routing-viewed') {
+          if (data.slug !== slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 80 || routingViews.has(slug)) return;
+          routingViews.add(slug);
+          window.dispatchEvent(new CustomEvent('dial:routing-viewed', { detail: { slug } }));
+          return;
+        }
+        if (routing && data.type === 'dial:routing-submitted') {
+          if (typeof data.submissionReference !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(data.submissionReference) || routingSubmissions.has(data.submissionReference)) return;
+          routingSubmissions.add(data.submissionReference);
+          window.dispatchEvent(new CustomEvent('dial:routing-submitted', { detail: { submissionReference: data.submissionReference } }));
+          return;
+        }
+        if (data.type !== 'dial:booked' || typeof data.bookingReference !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(data.bookingReference) || booked.has(data.bookingReference)) return;
         let redirectUrl;
         if (typeof data.redirectUrl === 'string') {
           try { const url = new URL(data.redirectUrl); if (url.protocol === 'https:' && !url.username && !url.password) redirectUrl = url.href; } catch { /* Invalid redirects never navigate. */ }

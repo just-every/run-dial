@@ -1,3 +1,4 @@
+import type { ClickIds } from "../analytics";
 import type { EventTypesService } from "../event-types";
 import type { HostProfileService } from "../host-profile";
 import { cleanAttribution, type BookingAttribution } from "../bookings";
@@ -16,7 +17,7 @@ export class RoutingService {
  }
  async read(slug:string){const form=await this.repository.publicForm(slug);if(!form)return undefined;return {form:{title:form.title,questions:form.questions},...await this.repository.issue(form.id)};}
  async preview(id:string,answers:RoutingAnswers){const form=await this.repository.get(id);if(!form)return undefined;const validated=validateRoutingAnswers(form.questions,answers);return validated.ok?{ok:true as const,...matchRoute(form,validated.answers)}:validated;}
- async submit(slug:string,token:string,input:RoutingAnswers,attribution:BookingAttribution={}) {
+ async submit(slug:string,token:string,input:RoutingAnswers,attribution:BookingAttribution={},clickIds:ClickIds={}) {
   const form=await this.repository.publicForm(slug);if(!form)return {kind:"unavailable" as const};
   const capability=await this.repository.token(form.id,token);if(!capability)return {kind:"unavailable" as const};
   const checked=validateRoutingAnswers(form.questions,input);if(!checked.ok)return {kind:"invalid" as const,fields:checked.fields};
@@ -26,15 +27,16 @@ export class RoutingService {
   if(outcome.kind==="event"&&(!target||target.status!=="published"||!profile))return {kind:"unavailable" as const};
   const source=cleanAttribution({...Object.fromEntries(form.questions.filter(q=>q.kind==="hidden"&&["utm_source","utm_medium","utm_campaign","utm_term","utm_content","source"].includes(q.parameter??q.key)).flatMap(q=>typeof checked.answers[q.key]==="string"?[[q.parameter??q.key,checked.answers[q.key]]]:[])),...attribution});
   const submitted=await this.repository.submit(form,capability.id,checked.answers,source,route);if(!submitted)return {kind:"unavailable" as const};
-  if(outcome.kind!=="event")return outcome;
+  if(outcome.kind!=="event")return {...outcome,submissionReference:submitted.id};
   const url=new URL(`/book/${profile!.handle}/${target!.slug}`,this.origin);url.searchParams.set("routeToken",submitted.handoff);
+  for(const [key,value] of Object.entries(clickIds))if(value)url.searchParams.set(key,value);
   for(const question of form.questions){
    const value=checked.answers[question.key];if(value===undefined||question.private)continue;
    if((question.kind==="email"||question.key==="name")&&typeof value==="string")url.searchParams.set(question.kind==="email"?"email":"name",value);
    for(const part of Array.isArray(value)?value:[value])url.searchParams.append(`answer.${question.key}`,part);
   }
   for(const [key,value] of Object.entries(source))if(value)url.searchParams.set(key,value);
-  return {kind:"event" as const,url:url.toString()};
+  return {kind:"event" as const,url:url.toString(),submissionReference:submitted.id};
  }
  async detail(id:string,period:RoutingReportPeriod={}) {
   const form=await this.repository.get(id);if(!form)return undefined;

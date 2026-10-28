@@ -179,6 +179,13 @@ ships AGENTS.consumer.md as AGENTS.md, check the emitted guide against actual
 paths, commands and readiness. Preserve the author repository and owner forks.
 Commit, tag, publish and deploy only within session authority.
 
-Lander-Regenerate: node scripts/contract-docs.mjs write --touched ROUTE-001 ROUTE-002
+## Contract regeneration
+
+Keep the retained contract format until ct's judged conversion. Regenerate the
+acceptance table, claims and summary from CONTRACT.md before the source lock.
+
+Lander-Regenerate: node scripts/contract-docs.mjs write
 Lander-Regenerate: node scripts/edition-authoring/cli.mjs lock
-Contract views check: node scripts/contract-docs.mjs check --touched ROUTE-001 ROUTE-002
+
+Check with `node scripts/contract-docs.mjs check`, then
+`node scripts/edition-authoring/cli.mjs check`.

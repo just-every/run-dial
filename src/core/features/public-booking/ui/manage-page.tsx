@@ -1,3 +1,4 @@
+import { completePendingAnalytics } from "./analytics";
 import { ApprovalStatus } from "./approval-status";
 import { ManageGuests } from "./manage-guests";
 import { ManageChangeTerms } from "./booking-change-terms";
@@ -23,6 +24,7 @@ export function ManageBookingPage({ token, embedded = false }: { token: string; 
   const cancelButton = useRef<HTMLButtonElement>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [booking, setBooking] = useState<Confirmation | undefined>(useDocumentData<Confirmation>());
+  useEffect(() => { if (booking) void completePendingAnalytics(booking, embedded); }, [booking, embedded]);
   const [timezone, setTimezone] = useState<string>();
   const hostTimezone = booking?.host.timezone;
   useEffect(() => { if (hostTimezone) setTimezone(deviceTimezone(hostTimezone)); }, [hostTimezone]);

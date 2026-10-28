@@ -33,6 +33,7 @@ export async function routingRemainders(db: D1Database, fence: PortabilityFence 
   const bookingIds=JSON.stringify(rows.flatMap(row=>row.booking_id?[row.booking_id]:[]));
   return [
     ...(rows.some(row=>row.booking_id)?(await fence.redactionStatements()).map(toD1Sql):[]),
+    ...await deleteRows(db,fence,"analytics_deliveries","booking_id IN(SELECT value FROM json_each(?))",[bookingIds]),
     ...await deleteRows(db,fence,"booking_answers","booking_id IN(SELECT value FROM json_each(?)) AND question_key LIKE 'routing.%'",[bookingIds]),
     ...await deleteRows(db,fence,"booking_nonces","result_booking_id IN(SELECT value FROM json_each(?))",[bookingIds]),
     {sql:"UPDATE bookings SET post_booking_redirect_url=NULL WHERE id IN(SELECT value FROM json_each(?))",params:[bookingIds]},

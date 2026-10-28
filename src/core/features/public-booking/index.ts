@@ -5,3 +5,6 @@ export { dateInZone, dayLabel, groupSlotsByDay, shiftHostDate, slotTimeLabel } f
 export type { PickerAvailability, PickerSlot } from "./ui/day-picker-model";
 
 export { PublicTheme, PublicHeader, PublicFooter } from "./ui/public-shell";
+
+export {routingEmbedEvent,routingSubmittedAnalytics,useBookingAnalytics} from './ui/analytics';
+export {readLinkContext} from './ui/link-context';
