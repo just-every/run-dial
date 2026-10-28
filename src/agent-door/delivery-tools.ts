@@ -52,14 +52,14 @@ export function deliveryTools(services: AppServices): ToolDefinition[] {
       },
     }),
     nativeTool({
-      name: "dial.delivery.preferences-read", title: "Read own booking mail preference", scope: "dial:read", readOnly: true,
+      name: "dial.delivery.preferences_read", title: "Read own booking mail preference", scope: "dial:read", readOnly: true,
       description: "Read the authenticated native owner's booking-mail mute preference. Alternative-request and required system mail are outside this preference.",
       input: z.object({}).strict(), outputSchema: objectOutput, classes: ["standard"], clauses: ["NOTIFY-008"],
       classify: () => standard(),
       async run(_args, ctx) { return { result: await services.deliveryPreferences.get(ctx.person.id) }; },
     }),
     nativeTool({
-      name: "dial.delivery.preferences-update", title: "Update own booking mail preference", scope: "dial:write", readOnly: false,
+      name: "dial.delivery.preferences_update", title: "Update own booking mail preference", scope: "dial:write", readOnly: false,
       description: "Set the authenticated native owner's booking-mail mute preference. Applies to that owner's booking notices and reminders at send time.",
       input: z.object({ bookingMailMuted: z.boolean() }).strict(), outputSchema: objectOutput, classes: ["standard"], clauses: ["NOTIFY-008"],
       async classify(_args, ctx) { await services.deliveryPreferences.get(ctx.person.id); return standard(); },

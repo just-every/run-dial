@@ -10,7 +10,7 @@ export function bookingCalendarTools(services: AppServices): ToolDefinition[] {
   const revision = bookingRevision(services);
   return [
     nativeTool({
-      name: "dial.bookings.calendar-conflict-restore", title: "Restore canonical calendar event", scope: "dial:write", readOnly: false,
+      name: "dial.bookings.calendar_conflict_restore", title: "Restore canonical calendar event", scope: "dial:write", readOnly: false,
       description: "Queue restoration of an open conflict for the current occurrence to Dial's canonical time and location. Restored records the queued command, not provider success.",
       input: bookingId.extend({ conflictId: z.string().length(26) }), outputSchema: objectOutput,
       classes: ["standard", "external", "live"], clauses: ["CAL-008", "CAL-004", "CAL-005", "AGENT-004"], untrusted: true,
@@ -33,14 +33,14 @@ export function bookingCalendarTools(services: AppServices): ToolDefinition[] {
       },
     }),
     nativeTool({
-      name: "dial.bookings.calendar-deletion-status", title: "Read calendar deletion reconciliation", scope: "dial:read", readOnly: true,
+      name: "dial.bookings.calendar_deletion_status", title: "Read calendar deletion reconciliation", scope: "dial:read", readOnly: true,
       description: "Read recorded native deletion-inspection attempts, pending/failed state and exact resolution. No provider event content is returned.",
       input: bookingId, outputSchema: objectOutput, classes: ["sensitive"], clauses: ["CAL-008", "CAL-005", "AGENT-004"],
       classify: () => bookingReadClass(),
       async run({ id }) { return { result: { probes: required(await services.bookings.calendarDeletionStatus(id)) } }; },
     }),
     nativeTool({
-      name: "dial.bookings.calendar-deletion-retry", title: "Retry failed calendar deletion inspection", scope: "dial:write", readOnly: false,
+      name: "dial.bookings.calendar_deletion_retry", title: "Retry failed calendar deletion inspection", scope: "dial:write", readOnly: false,
       description: "Retry a failed native deletion probe. A fresh affirmative deletion cancels the booking, sends notices and requests its host refund; an unresolved inspection stays pending or failed.",
       input: bookingId.extend({ providerEventId: z.string().min(1).max(1024) }), outputSchema: objectOutput,
       classes: ["standard", "external", "live", "money"], clauses: ["CAL-008", "CAL-005", "PAY-003", "NOTIFY-004", "AGENT-004"], untrusted: true,
@@ -63,7 +63,7 @@ export function bookingCalendarTools(services: AppServices): ToolDefinition[] {
       },
     }),
     nativeTool({
-      name: "dial.bookings.manage-link-rotate", title: "Rotate booking manage capability", scope: "dial:write", readOnly: false,
+      name: "dial.bookings.manage_link_rotate", title: "Rotate booking manage capability", scope: "dial:write", readOnly: false,
       description: "Replace the native booking manage capability and invalidate earlier links. Returns status and expiry only; this native command does not send a replacement email.",
       input: bookingId, outputSchema: objectOutput, classes: ["standard", "access"], clauses: ["BOOK-006"],
       classify: () => [...standard(), { class: "access", facts: { measure: 1, direction: "narrows" } }],

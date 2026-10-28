@@ -55,7 +55,7 @@ export function bookingLifecycleTools(services: AppServices): ToolDefinition[] {
       },
     }),
     nativeTool({
-      name: "dial.bookings.request-new-time", title: "Ask invitee to pick a new time", scope: "dial:write", readOnly: false,
+      name: "dial.bookings.request_new_time", title: "Ask invitee to pick a new time", scope: "dial:write", readOnly: false,
       description: "Send the native new-time request with optional reminder. Releasing the original time may later cancel and refund if the request expires; preserving it expires no later than the original start.",
       input: newTimeRequest, outputSchema: objectOutput, classes: ["standard", "external", "live", "money"],
       clauses: ["BOOK-014", "BOOK-010", "PAY-003", "NOTIFY-009"], untrusted: true,
