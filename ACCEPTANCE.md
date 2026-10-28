@@ -8,10 +8,10 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 9 | 130 | 71 | 210 |
+| Core | 8 | 131 | 71 | 210 |
 | Agent surface | 0 | 0 | 13 | 13 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 9 | 130 | 84 | 223 |
+| Full target | 8 | 131 | 84 | 223 |
 
 Judged from the code and tests at commit `5b1566c093dd06610c98d534c685f9390aba9ff1` (27 October 2026). Field proof register: 43 rows; 0 passed, 0 failed, 43 not run.
 
@@ -90,7 +90,7 @@ Core · published · **partial** · Cites BASE-MAIL-001
 
 #### AUTH-006 — First-owner admission
 
-Core · published · **done** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001
+Core · published · **done** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-INPUT-001
 
 **Requirement.** On an empty native authentication store, a local CLI install accepts its setup token through native first-owner admission.
 
@@ -164,7 +164,7 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002
 
 #### OPER-010 — Destructive operator removal
 
-Core · published · **done** · From OPER-002 · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-003, BASE-MAIL-001, BASE-ACCESS-004
+Core · published · **partial** · From OPER-002 · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-003, BASE-MAIL-001, BASE-ACCESS-004
 
 **Requirement.** Removal revokes access and erases the removed native identity, sessions, link tokens, external identity bindings, local mail and email-scoped rate records.
 
@@ -175,9 +175,10 @@ Core · published · **done** · From OPER-002 · Cites BASE-ROLE-001, BASE-ACCE
 4. Identity overlap with invitee records requires explicitly erasing those records through the aggregate email confirmation or their detail pages before operator removal.
 5. Self-removal and removal of the protected setup/bootstrap owner return an explicit hold; an owner-transfer workflow is required before that identity can be erased.
 6. A shared domain policy retains its original creator ID as an inactive anonymous native reference whose authority cannot be reactivated.
+7. Removal of the last owner is refused; self-removal and removal of the protected setup owner stay held until the required owner transfer.
 
 **Evidence.** `tests/operator-management.test.mjs` — "native destructive management preserves authorship and protects self and setup owner"
-**Gap.** None.
+**Gap.** Missing a complete owner-transfer and last-owner-removal journey; the cited native journey proves destructive removal, protected/setup and self holds, revocation and preserved author references.
 
 #### OPER-003 — Booking workspace
 
@@ -224,7 +225,7 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002
 
 #### OPER-005 — First-run checklist
 
-Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-INSTALL-001 · Register R-43
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-INSTALL-001, BASE-INPUT-001 · Register R-43
 
 **Requirement.** On a local development checkout, `rer setup --owner-email <owner address>` followed by `rer dev` prints the signed-in owner identity and a private local entry URL; opening that URL uses Base's development sign-in to establish the owner's native session and sends a fresh owner to private the documented route, without reading a mailbox.
 
@@ -290,7 +291,7 @@ Core · published · **partial** · Cites BASE-PUBLIC-001
 
 #### PROFILE-003 — Avatar asset
 
-Core · published · **done** · Cites BASE-PUBLIC-001
+Core · published · **done** · Cites BASE-PUBLIC-001, BASE-INPUT-003
 
 **Requirement.** Supersedes `BASE-INPUT-003` for the the documented route prefix only.
 
@@ -304,7 +305,7 @@ Core · published · **done** · Cites BASE-PUBLIC-001
 
 #### EVENT-001 — Event type lifecycle
 
-Core · published · **partial** · Cites BASE-AUDIT-001, BASE-PUBLIC-001
+Core · published · **partial** · Cites BASE-AUDIT-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** Operators create, edit, publish, disable, and delete event types.
 
@@ -334,7 +335,7 @@ Core · published · **partial** · Cites BASE-MAIL-001
 
 #### EVENT-003 — Invitee questions
 
-Core · published · **partial** · Cites BASE-MAIL-001
+Core · published · **partial** · Cites BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** Each event type has ordered booking questions of type text, textarea, phone number, single choice, dropdown, multiple choice, or checkbox, each required or optional, within the question and option counts in the documented capacity limits.
 
@@ -350,7 +351,7 @@ Core · published · **partial** · Cites BASE-MAIL-001
 
 #### EVENT-004 — Locations
 
-Core · published · **partial** · Cites BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001 · Register R-1
+Core · published · **partial** · Cites BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001 · Register R-1
 
 **Requirement.** An event type offers one or more locations, and when it offers several the invitee chooses one before confirming: a Google Meet, Zoom, Microsoft Teams, Webex or GoTo Meeting conference provisioned per booking under the host's own account (`CAL-003`, `MEET-001` to `MEET-003`); a fixed link the operator supplies; a host phone number the invitee calls; the invitee's phone number, which the host calls; an in-person address; a place the invitee supplies ("Ask invitee"), where the booking page asks the invitee for the meeting address, phone number or link as a required field with the operator's prompt, available on one-on-one, round-robin and collective events alike; or a custom instruction.
 
@@ -398,7 +399,7 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-PUB
 
 #### HOME-001 — Installed Lobby
 
-Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-PUBLIC-001, BASE-INSTALL-001
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-DATA-005
 
 **Requirement.** An installed deployment's root `/` is the sessionless installed Lobby.
 
@@ -406,14 +407,14 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-P
 1. An installed deployment's root `/` is the sessionless installed Lobby.
 2. Before setup completion is recorded it says the installation is waiting for its owner and offers a **Finish setup** action to the documented route; after completion it names the deployment, offers a **Sign in** action and credits Dial with a link to its run site.
 3. A saved host profile alone never changes that state.
-4. The Lobby reads only the setup state, has one top-level heading.
+4. The Lobby reads only the setup state and has one top-level heading. After interaction it continues to set no cookies, write nothing to browser storage and run no analytics.
 
 **Evidence.** `tests/booking-axe.test.mjs` ("public booking, operator and public-site accessibility sweep at desktop and mobile"), `tests/booking-axe/public-site.mjs`, `tests/runtime.test.mjs`
 **Gap.** Missing the installed Lobby’s complete setup-state transition with saved-profile-only and no-storage assertions in one cited journey; public-site and runtime checks cover the initial public projections.
 
 #### HOME-002 — Product run site
 
-Core · published · **partial** · From HOME-001 · Cites BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001
+Core · published · **partial** · From HOME-001 · Cites BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-DATA-005
 
 **Requirement.** The product landing for Dial itself is the separate run site at `run-dial.com`, built independently of the installed deployment.
 
@@ -421,7 +422,7 @@ Core · published · **partial** · From HOME-001 · Cites BASE-MAIL-001, BASE-P
 1. The product landing for Dial itself is the separate run site at `run-dial.com`, built independently of the installed deployment.
 2. It presents, in order, a hero with the product's headline, a description, directly beneath it in small text the single line "100% free, open source alternative to Calendly, Acuity Scheduling and SavvyCal" (the three company names in bold, the words of a name joined by a non-breaking space, the line wrapped evenly; repeated in plain text at the start of the page's meta description, with no email- or phone-shaped text and no comparative claim), then a **Run Dial** action to the documented route and a **Read the docs** action to the documented route; sections for invitees, for the host, the booking essentials, alternative requests and self-hosting; and a closing section repeating both actions.
 3. Its header links home, to the documented route and to the source repository, and its footer repeats those links as plain text links beside a small wordmark and single-line description; neither links an installation route (the documented route, the documented route, the documented route, the documented route, the documented route).
-4. The site reads no installation data, its typeface self-hosted and every drawing inline and decorative.
+4. The site reads no installation data. After interaction it continues to set no cookies, write nothing to browser storage, run no analytics or tracking and load only same-origin resources; its typeface is self-hosted and every drawing is inline and decorative.
 5. It has one top-level heading, is readable without script, renders its final state with reduced motion (its only motion is a one-shot hero sequence), and keeps a fixed light palette regardless of the browser's color scheme.
 
 **Evidence.** `tests/booking-axe.test.mjs` ("public booking, operator and public-site accessibility sweep at desktop and mobile"), `tests/booking-axe/public-site.mjs`, `tests/runtime.test.mjs`
@@ -441,7 +442,7 @@ Core · published · **partial** · From HOME-001 · Cites BASE-ROLE-001, BASE-P
 
 #### DOCS-001 — Public documentation
 
-Core · published · **partial** · Cites BASE-ACCESS-002, BASE-PUBLIC-001 · Register R-39, R-40
+Core · published · **partial** · Cites BASE-ACCESS-002, BASE-PUBLIC-001, BASE-DATA-005 · Register R-39, R-40
 
 **Requirement.** The public paths the documented route and the documented route serve Dial's first-party documentation: the Markdown files that `docs/site.json` lists as published, in the sections and order it gives, which is the only navigation.
 
@@ -450,7 +451,7 @@ Core · published · **partial** · Cites BASE-ACCESS-002, BASE-PUBLIC-001 · Re
 2. The documentation Markdown is rendered to HTML at build time: a Vite plugin renders each page when Vite loads it, in a build and in development, and never in the Worker or the browser, so the emitted Worker and client bundles contain no Markdown or syntax-highlighting code, and each page is its own lazily loaded chunk that the Worker renders per request inside the public site's shared header and footer.
 3. A page has its title as its one top-level heading (the header's wordmark is not a heading on a documentation page), a section menu, an on-this-page list, previous and next links, tables in labeled scrollable regions and an Edit-on-GitHub link.
 4. Every Markdown file at the repository root and under `docs/` is either published or listed in the manifest as GitHub-only with a reason, and an unlisted file, a broken link or anchor, raw HTML, an image outside `docs/media/` or an absolute build-machine path fails verification or the build.
-5. The documentation is served by `GET` only, reads no booking, invitee, host-profile or operator record or session.
+5. The documentation is served by GET only and reads no booking, invitee, host-profile or operator record or session. After interaction it continues to set no cookies, run no analytics or tracking and load only same-origin resources.
 6. An unknown, miscased or nested slug answers the existing `404` page, and the documented route shares the public admission budget of the other sessionless public paths.
 
 **Evidence.** `tests/booking-axe.test.mjs` ("public booking, operator and public-site accessibility sweep at desktop and mobile"), `src/core/features/public-site/docs/build/manifest.ts`
@@ -475,7 +476,7 @@ Core · published · **partial** · Cites BASE-PUBLIC-001
 
 #### PUBLIC-002 — Invitee-first flow
 
-Core · published · **partial** · Cites BASE-MAIL-001
+Core · published · **partial** · Cites BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** An invitee views availability and completes a booking without an account and without signing in.
 
@@ -682,7 +683,7 @@ Core · published · **partial** · Cites BASE-MAIL-001
 
 #### BOOK-001 — Final validation
 
-Core · published · **partial** · Cites BASE-MAIL-001 · Register R-6
+Core · published · **partial** · Cites BASE-MAIL-001, BASE-INPUT-001 · Register R-6
 
 **Requirement.** Confirming a booking revalidates every answer against the event type's current questions and rechecks the selected slot under `AVAIL-002` against persisted Dial bookings and, when connected, a fresh conflict-calendar read.
 
@@ -748,7 +749,7 @@ Core · published · **partial**
 
 #### BOOK-006 — Manage link
 
-Core · published · **partial** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-PUBLIC-001
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** Every confirmed booking has a manage link whose token carries at least 256 bits from a cryptographically secure random source and grants view and change access to that one booking, without creating an invitee account.
 
@@ -764,7 +765,7 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-PUB
 
 #### BOOK-007 — Invitee rescheduling
 
-Core · published · **partial**
+Core · published · **partial** · Cites BASE-INPUT-001
 
 **Requirement.** The holder of a booking's manage link can move it to another slot on the same event type.
 
@@ -926,7 +927,7 @@ Core · published · **partial**
 
 #### CAL-006 — Connection health
 
-Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-PUBLIC-001 · Register R-10
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-PUBLIC-001, BASE-INPUT-001 · Register R-10
 
 **Requirement.** Revoked credentials, a refused token refresh, an invalid sync cursor, a push channel that cannot be renewed, or exhausted provider quota puts the connection in an unhealthy state that operators see in settings by name and that raises `calendar.connection-health-changed.v1` as a durable transition fact (from state, to state, named reason and time), shown in Settings and preserved by owner archive export and restore.
 
@@ -1160,7 +1161,7 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-PUB
 
 #### DATA-001 — Archive contents and exclusions
 
-Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-DATA-001, BASE-MAIL-001, BASE-INSTALL-001
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-DATA-001, BASE-MAIL-001, BASE-INSTALL-001, BASE-INPUT-001
 
 **Requirement.** Supersedes `BASE-DATA-001` for credential and live-authority exclusions and documented canonicalization. `pnpm run export -- --output FILE` writes an owner-only archive outside tracked source; `pnpm run import -- --input FILE --yes` restores it only into a fully migrated empty install.
 
@@ -1176,7 +1177,7 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-A
 
 #### DATA-009 — Restore without live authority
 
-Core · published · **partial** · From DATA-001 · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-INSTALL-001
+Core · published · **partial** · From DATA-001 · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-INSTALL-001, BASE-INPUT-001
 
 **Requirement.** Imported active operators sign in through new magic links; first-owner setup cannot be claimed again.
 
@@ -1256,7 +1257,7 @@ Core · published · **partial** · From DATA-002 · Cites BASE-ROLE-001, BASE-A
 
 #### DATA-003 — Saved-file review and import
 
-Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-INSTALL-001 · Register R-34
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-INSTALL-001, BASE-INPUT-001 · Register R-34
 
 **Requirement.** Owners and admins preview saved scheduling responses without database writes, review per-kind losses and rejected overlaps at the preview upload instant (not file-selection time), download a schema-valid report, and acknowledge the reviewed fingerprint before a bounded, resumable import.
 
@@ -1354,7 +1355,7 @@ Core · published · **partial** · From DATA-003 · Cites BASE-PUBLIC-001 · Re
 
 #### CUSTOM-001 — Operator annotations
 
-Core · published · **partial** · Cites BASE-ROLE-001
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-INPUT-001
 
 **Requirement.** Owners and admins define, rename and delete the workspace's private field definitions for event types, bookings and availability requests in Settings (deleting one deletes its values under `CUSTOM-002`).
 
@@ -1373,7 +1374,7 @@ Core · published · **partial** · Cites BASE-ROLE-001
 
 #### CUSTOM-002 — Annotation privacy and portability
 
-Core · published · **done** · Cites BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001
+Core · published · **done** · Cites BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-INPUT-001
 
 **Requirement.** Custom definitions and values require a current operator session.
 
@@ -1425,7 +1426,7 @@ Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA
 
 #### OPER-006 — Editing a member's availability and event types
 
-Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** Owners and admins can switch to any member and edit, as that member's editor, everything that decides the member's offered times: their named schedules and weekly hours (`AVAIL-001`, `AVAIL-011`), date-specific hours and overrides, time off and US-holiday choices, which schedule each of the member's event types uses, copying hours from one schedule or event type to another, and the member's personal event types with every setting of `EVENT-001` to `EVENT-011` (durations, questions, locations, buffers, notice, horizon and limits).
 
@@ -1568,7 +1569,7 @@ Core · target · **partial** · Cites BASE-DATA-003, BASE-MAIL-001
 
 #### EVENT-010 — Recurring bookings
 
-Core · target · **missing**
+Core · target · **missing** · Cites BASE-INPUT-001
 
 **Requirement.** An event type may let invitees book a recurring series (weekly, every two weeks or monthly for a set count up to 24 occurrences).
 
@@ -1582,7 +1583,7 @@ Core · target · **missing**
 
 #### EVENT-011 — Invitee-selectable durations
 
-Core · target · **partial** · Cites BASE-MAIL-001, BASE-PUBLIC-001
+Core · target · **partial** · Cites BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** An event type may offer up to four durations (for example 15, 30 and 60 minutes), one of them the default.
 
@@ -1611,7 +1612,7 @@ Core · target · **done**
 
 #### LINK-002 — Host-offered specific times
 
-Core · target · **partial** · Cites BASE-MAIL-001
+Core · target · **partial** · Cites BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** A host picks specific times from their live availability and sends them as a link or pastes them into an email; the recipient books one and the others are released.
 
@@ -1712,7 +1713,7 @@ Core · target · **missing**
 
 #### TEAM-005 — Collective events
 
-Core · target · **missing** · Cites BASE-ROLE-001, BASE-MAIL-001
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** A collective event type requires every selected host (or a required subset plus at least N optional hosts) to be free for the invitee's chosen duration (`EVENT-011`) under each host's own rules, calendars and buffers.
 
@@ -1727,7 +1728,7 @@ Core · target · **missing** · Cites BASE-ROLE-001, BASE-MAIL-001
 
 #### TEAM-006 — Managed event templates
 
-Core · target · **missing** · Cites BASE-ROLE-001, BASE-AUDIT-001
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-AUDIT-001, BASE-INPUT-001
 
 **Requirement.** Admins and team managers publish an event template to selected members or whole teams; each member receives their own event type from it, copied as `EVENT-001` copies an event type (every setting, question, location, schedule binding and template, with no bookings or history).
 
@@ -1740,7 +1741,7 @@ Core · target · **missing** · Cites BASE-ROLE-001, BASE-AUDIT-001
 
 #### TEAM-007 — Reassignment, absence and delegation
 
-Core · target · **missing** · Cites BASE-MAIL-001
+Core · target · **missing** · Cites BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** Admins and team managers reassign a booking to another eligible host, which revalidates that host, moves the calendar event and conference under the new host's accounts, and notifies the invitee and both hosts once.
 
@@ -1757,7 +1758,7 @@ Core · target · **missing** · Cites BASE-MAIL-001
 
 #### ROUTE-001 — Routing forms
 
-Core · target · **missing** · Cites BASE-MAIL-001, BASE-PUBLIC-001
+Core · target · **missing** · Cites BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** Admins build routing forms with ordered questions (text, email, phone, number, single and multiple choice, dropdown, company size, country and US state), required rules and hidden fields fed by URL parameters.
 
@@ -2314,7 +2315,7 @@ Core · target · **partial** · From NOTIFY-008 · Cites BASE-ROLE-001 · Regis
 
 #### NOTIFY-009 — Event and locale message templates
 
-Core · target · **partial** · Cites BASE-MAIL-001 · Register R-24
+Core · target · **partial** · Cites BASE-MAIL-001, BASE-INPUT-001 · Register R-24
 
 **Requirement.** Each event type, and each managed team template under `TEAM-006`, has editable templates for the managed calendar event's title and description (`CAL-003`, `CAL-010`, `CAL-011`) and for the subject and body of the invitee's confirmation, reschedule, cancellation and reminder emails (`NOTIFY-001`, `NOTIFY-003`, `NOTIFY-004`) and of the reschedule-request email and its reminder (`BOOK-014`), which add the sender's message as a variable.
 
@@ -2565,7 +2566,7 @@ Core · target · **missing** · Cites BASE-ROLE-001, BASE-DATA-001, BASE-MAIL-0
 
 #### API-001 — Public REST API
 
-Core · target · **missing** · Cites BASE-ROLE-001, BASE-PUBLIC-001
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** A versioned REST API under the documented route with `AUTH-008` credentials covers event types, availability (free slots for an event type and range), bookings (create, read, list, reschedule, cancel, mark attendance), hosts, teams, routing forms and submissions, polls, workflows and webhook subscriptions.
 
@@ -2593,7 +2594,7 @@ Core · target · **missing**
 
 #### API-003 — Machine-credential booking
 
-Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-SIGNIN-001 · Register R-29
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-SIGNIN-001, BASE-INPUT-001 · Register R-29
 
 **Requirement.** Another product (for example Handset) books, reschedules and cancels through Dial with a scoped bearer credential and no operator session.
 
@@ -2654,7 +2655,7 @@ Core · target · **missing** · From API-003 · Cites BASE-ROLE-001, BASE-PUBLI
 
 #### API-007 — Machine command retries and limits
 
-Core · target · **missing** · From API-003 · Cites BASE-ROLE-001, BASE-MAIL-001 · Register R-29
+Core · target · **missing** · From API-003 · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-INPUT-001 · Register R-29
 
 **Requirement.** Every POST that creates or changes a booking requires an `Idempotency-Key` of 16 to 128 characters, scoped to the credential and kept 24 hours.
 
@@ -2722,7 +2723,7 @@ Core · target · **missing** · Register R-30
 
 #### INTEG-002 — HubSpot
 
-Core · target · **missing** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-SIGNIN-001
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-SIGNIN-001, BASE-INPUT-001
 
 **Requirement.** A connected HubSpot portal receives, per booking, a contact (matched by email, created if absent), a meeting engagement associated with the contact and owner, and updates on reschedule, cancel and no-show; routing answers map to chosen contact properties.
 
@@ -2738,7 +2739,7 @@ Core · target · **missing** · Cites BASE-ROLE-001, BASE-MAIL-001, BASE-SIGNIN
 
 #### INTEG-003 — Salesforce
 
-Core · target · **missing** · Cites BASE-ROLE-001
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-INPUT-001
 
 **Requirement.** A connected Salesforce org receives Event records linked to the matched Lead or Contact (and Account), creates Leads for unknown invitees when the admin chooses, updates Events on change, and writes routing answers to mapped fields; routing can read account and lead owners.
 
@@ -2753,7 +2754,7 @@ Core · target · **missing** · Cites BASE-ROLE-001
 
 #### INTEG-004 — Orbit and Pipedrive
 
-Core · target · **missing**
+Core · target · **missing** · Cites BASE-INPUT-001
 
 **Requirement.** Bookings, attendance and routing answers hand off to Orbit, Dial's sibling CRM, as meeting activities on the matched person and company, and to Pipedrive as activities on the matched person and deal.
 
@@ -2806,7 +2807,7 @@ Core · target · **missing** · Cites BASE-MAIL-001 · Register R-32
 
 #### INTEG-008 — Microsoft Dynamics 365 Sales
 
-Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002 · Register R-33
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-INPUT-001 · Register R-33
 
 **Requirement.** A connected Dynamics 365 Sales environment (Dataverse Web API, OAuth through Microsoft Entra ID) receives an appointment activity per booking regarding the matched contact or lead (an unknown invitee becomes a lead when the admin chooses), updated on reschedule, cancellation and no-show, with routing answers written to mapped fields; routing reads contact and account owners (`ROUTE-003`).
 
@@ -2886,7 +2887,7 @@ Core · target · **missing** · Cites BASE-DATA-003
 
 #### MIGRATE-001 — Calendly connected move-in
 
-Core · target · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-PUBLIC-001 · Register R-35
+Core · target · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-PUBLIC-001, BASE-INPUT-001 · Register R-35
 
 **Requirement.** Besides the saved-file import of `DATA-003`, an owner or admin connects a Calendly organization through Calendly's public API (OAuth) and previews, then imports, everything that API publishes: organization members as hosts, event types with their name, slug, durations including every duration option (`EVENT-011`), locations, questions, round-robin or collective kind and hosts, each member's availability schedules (the documented route) as `AVAIL-011` named schedules, the schedule each event type uses, routing forms with their questions and past submissions, contacts with their custom field definitions, every past and future scheduled event with its invitees and answers, invitee no-shows and meeting recaps, without notifying invitees or creating calendar events again.
 
@@ -2941,7 +2942,7 @@ Core · target · **missing** · Cites BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA
 
 #### MIGRATE-003 — Microsoft Bookings move-in
 
-Core · target · **missing** · Cites BASE-ROLE-001 · Register R-37
+Core · target · **missing** · Cites BASE-ROLE-001, BASE-INPUT-001 · Register R-37
 
 **Requirement.** An owner or admin connects Microsoft 365 and imports a Bookings business: staff as hosts, services as event types (duration, buffers, price display, custom questions, Teams setting), business hours and staff availability, customers as clients, and future appointments, with the same preview and silence rules and the owner-and-admin restriction of `DATA-003` (`OPER-001`).
 

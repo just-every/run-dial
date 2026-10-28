@@ -221,10 +221,19 @@
     {
       "file": "CONTRACT.md",
       "line": 37,
-      "text": "Base remains the access authority and protects the last owner.",
+      "text": "Base remains the access authority ",
       "to": "base",
       "ids": [
         "BASE-ACCESS-004"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 37,
+      "text": "and protects the last owner.",
+      "to": "clause",
+      "ids": [
+        "OPER-010"
       ]
     },
     {
@@ -407,9 +416,9 @@
       "file": "CONTRACT.md",
       "line": 63,
       "text": "sets no cookie, writes nothing to browser storage, runs no analytics and ",
-      "to": "base",
+      "to": "clause",
       "ids": [
-        "BASE-PUBLIC-001"
+        "HOME-001"
       ]
     },
     {
@@ -427,9 +436,9 @@
       "file": "CONTRACT.md",
       "line": 63,
       "text": "sets no cookie, writes nothing to browser storage, runs no analytics or tracking, and loads only same-origin resources, with ",
-      "to": "base",
+      "to": "clause",
       "ids": [
-        "BASE-PUBLIC-001"
+        "HOME-002"
       ]
     },
     {
@@ -456,9 +465,9 @@
       "file": "CONTRACT.md",
       "line": 64,
       "text": "sets no cookie, runs no analytics or tracking and loads only same-origin resources",
-      "to": "base",
+      "to": "clause",
       "ids": [
-        "BASE-PUBLIC-001"
+        "DOCS-001"
       ]
     },
     {

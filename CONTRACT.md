@@ -26,20 +26,20 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 | Base duty | Duty | Delta clauses | Base journey |
 | --- | --- | --- | --- |
 | BASE-ACCESS-001 | Sign-in | none | not run |
-| BASE-ACCESS-002 | Sessions | AUTH-001, AUTH-002, AUTH-004, AUTH-006, OPER-001, OPER-002, EDITOR-001, OPER-005, HOME-001, DOCS-001, PUBLIC-003, CAL-001, CAL-006, DATA-001, DATA-003, CUSTOM-002, AUTH-008, OPER-006, OPER-007, ADMIN-001, ADMIN-002, EVENT-007, EMBED-002, EMBED-003, EMBED-004, MEET-001, PAY-001, PAY-004, API-003, INTEG-005, INTEG-008, MIGRATE-001, MIGRATE-002, OPER-010, DATA-009, DATA-012, PAY-008, API-004 | not run |
+| BASE-ACCESS-002 | Sessions | AUTH-001, AUTH-002, AUTH-004, AUTH-006, OPER-001, OPER-002, OPER-010, EDITOR-001, OPER-005, HOME-001, DOCS-001, PUBLIC-003, CAL-001, CAL-006, DATA-001, DATA-009, DATA-012, DATA-003, CUSTOM-002, AUTH-008, OPER-006, OPER-007, ADMIN-001, ADMIN-002, EVENT-007, EMBED-002, EMBED-003, EMBED-004, MEET-001, PAY-001, PAY-008, PAY-004, API-003, API-004, INTEG-005, INTEG-008, MIGRATE-001, MIGRATE-002 | not run |
 | BASE-ACCESS-003 | Public endpoints | none | not run |
 | BASE-ACCESS-004 | Server-side authorisation | OPER-010 | not run |
-| BASE-INPUT-001 | Validation | none | not run |
+| BASE-INPUT-001 | Validation | AUTH-006, OPER-005, EVENT-001, EVENT-003, EVENT-004, PUBLIC-002, BOOK-001, BOOK-006, BOOK-007, CAL-006, DATA-001, DATA-009, DATA-003, CUSTOM-001, CUSTOM-002, OPER-006, EVENT-010, EVENT-011, LINK-002, TEAM-005, TEAM-006, TEAM-007, ROUTE-001, NOTIFY-009, API-001, API-003, API-007, INTEG-002, INTEG-003, INTEG-004, INTEG-008, MIGRATE-001, MIGRATE-003 | not run |
 | BASE-INPUT-002 | HTML | none | not run |
-| BASE-INPUT-003 | Uploads | none | not run |
+| BASE-INPUT-003 | Uploads | PROFILE-003 | not run |
 | BASE-SECRET-001 | No leakage | PAY-001 | not run |
 | BASE-SECRET-002 | Startup | none | not run |
-| BASE-DATA-001 | Export and import | OPER-001, BOOK-011, CAL-001, CAL-006, DATA-001, DATA-003, CUSTOM-002, AUTH-008, ADMIN-002, PAY-004, PAY-006, REPORT-003, DATA-004, DATA-005, MIGRATE-002, OPER-011, DATA-009, DATA-010, DATA-011, DATA-016, BOOK-016, PAY-008, API-010 | not run |
+| BASE-DATA-001 | Export and import | OPER-001, OPER-011, BOOK-011, CAL-001, CAL-006, DATA-001, DATA-009, DATA-010, DATA-011, DATA-003, DATA-016, CUSTOM-002, AUTH-008, ADMIN-002, BOOK-016, PAY-008, PAY-004, PAY-006, REPORT-003, API-010, DATA-004, DATA-005, MIGRATE-002 | not run |
 | BASE-DATA-002 | Retention | none | not run |
-| BASE-DATA-003 | Erasure | AUTH-002, OPER-001, EVENT-004, EVENT-005, PUBLIC-006, CAL-003, DATA-002, CUSTOM-002, AUTH-007, AUTH-008, ADMIN-002, EVENT-009, DATA-004, DATA-006, DATA-007, DATA-008, OPER-010, DATA-009, DATA-010, DATA-011, DATA-012, DATA-014, DATA-016, API-008, API-009 | not run |
+| BASE-DATA-003 | Erasure | AUTH-002, OPER-001, OPER-010, EVENT-004, EVENT-005, PUBLIC-006, CAL-003, DATA-009, DATA-010, DATA-002, DATA-011, DATA-012, DATA-014, DATA-016, CUSTOM-002, AUTH-007, AUTH-008, ADMIN-002, EVENT-009, API-008, API-009, DATA-004, DATA-006, DATA-007, DATA-008 | not run |
 | BASE-DATA-004 | Outbound flows | none | not run |
-| BASE-DATA-005 | Independence | none | not run |
-| BASE-PUBLIC-001 | Privacy | AUTH-001, AUTH-002, AUTH-003, AUTH-006, OPER-001, PROFILE-001, PROFILE-002, PROFILE-003, EVENT-001, EVENT-004, EVENT-005, EVENT-006, HOME-001, DOCS-001, PUBLIC-001, PUBLIC-003, PUBLIC-004, PUBLIC-005, PUBLIC-006, AVAIL-005, BOOK-006, CAL-006, NOTIFY-007, CUSTOM-002, AUTH-007, AUTH-008, OPER-006, ADMIN-002, EVENT-011, LINK-003, BRAND-001, LOCALE-001, ROUTE-001, ROUTE-004, EMBED-001, EMBED-002, MOBILE-001, AVAIL-012, BOOK-013, MEET-003, API-001, API-003, INTEG-005, INTEG-006, MIGRATE-001, MIGRATE-005, HOME-002, HOME-003, DATA-013, DATA-017, PAY-008, API-006, API-009 | not run |
+| BASE-DATA-005 | Independence | HOME-001, HOME-002, DOCS-001 | not run |
+| BASE-PUBLIC-001 | Privacy | AUTH-001, AUTH-002, AUTH-003, AUTH-006, OPER-001, PROFILE-001, PROFILE-002, PROFILE-003, EVENT-001, EVENT-004, EVENT-005, EVENT-006, HOME-001, HOME-002, HOME-003, DOCS-001, PUBLIC-001, PUBLIC-003, PUBLIC-004, PUBLIC-005, PUBLIC-006, AVAIL-005, BOOK-006, CAL-006, NOTIFY-007, DATA-013, DATA-017, CUSTOM-002, AUTH-007, AUTH-008, OPER-006, ADMIN-002, EVENT-011, LINK-003, BRAND-001, LOCALE-001, ROUTE-001, ROUTE-004, EMBED-001, EMBED-002, MOBILE-001, AVAIL-012, BOOK-013, MEET-003, PAY-008, API-001, API-003, API-006, API-009, INTEG-005, INTEG-006, MIGRATE-001, MIGRATE-005 | not run |
 | BASE-PUBLIC-002 | Origins | none | not run |
 | BASE-PUBLIC-003 | Accessibility | none | not run |
 | BASE-OPS-001 | Health | none | not run |
@@ -47,23 +47,23 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 | BASE-OPS-003 | Idempotency | none | not run |
 | BASE-OPS-004 | Failure is visible | none | not run |
 | BASE-OPS-005 | Audit | none | not run |
-| BASE-ROLE-001 | Roles through every door | AUTH-001, AUTH-002, AUTH-003, AUTH-004, AUTH-006, OPER-001, OPER-002, OPER-003, EDITOR-001, OPER-005, EVENT-006, HOME-001, PUBLIC-006, BOOK-006, BOOK-009, BOOK-011, BOOK-012, CAL-006, REQUEST-003, NOTIFY-007, DATA-001, DATA-002, DATA-003, CUSTOM-001, AUTH-007, AUTH-008, OPER-006, OPER-007, TEAM-001, TEAM-002, ADMIN-001, ADMIN-002, EVENT-007, TEAM-005, TEAM-006, ROUTE-003, EMBED-002, EMBED-003, EMBED-004, MOBILE-002, AVAIL-011, BOOK-014, MEET-001, PAY-004, NOTIFY-008, NOTIFY-010, CLIENT-001, REPORT-001, REPORT-003, API-001, API-003, INTEG-002, INTEG-003, INTEG-006, INTEG-008, DATA-004, DATA-005, MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004, MIGRATE-005, AGENT-001, AGENT-003, AGENT-007, AGENT-008, AGENT-009, AGENT-011, OPER-008, OPER-009, OPER-010, OPER-011, HOME-003, DATA-009, DATA-010, DATA-012, NOTIFY-012, NOTIFY-015, FLOW-007, API-004, API-005, API-006, API-007, API-008, API-009, API-010, MIGRATE-007 | not run |
-| BASE-AUDIT-001 | Searchable, durable audit | OPER-001, OPER-004, EVENT-001, EVENT-005, CAL-001, DATA-001, DATA-002, OPER-007, TEAM-006, AVAIL-011, PAY-004, CLIENT-001, MIGRATE-001, DATA-013, DATA-016, NOTIFY-013, API-009 | not run |
+| BASE-ROLE-001 | Roles through every door | AUTH-001, AUTH-002, AUTH-003, AUTH-004, AUTH-006, OPER-001, OPER-008, OPER-009, OPER-002, OPER-010, OPER-003, EDITOR-001, OPER-005, OPER-011, EVENT-006, HOME-001, HOME-003, PUBLIC-006, BOOK-006, BOOK-009, BOOK-011, BOOK-012, CAL-006, REQUEST-003, NOTIFY-007, DATA-001, DATA-009, DATA-010, DATA-002, DATA-012, DATA-003, CUSTOM-001, AUTH-007, AUTH-008, OPER-006, OPER-007, TEAM-001, TEAM-002, ADMIN-001, ADMIN-002, EVENT-007, TEAM-005, TEAM-006, ROUTE-003, EMBED-002, EMBED-003, EMBED-004, MOBILE-002, AVAIL-011, BOOK-014, MEET-001, PAY-004, NOTIFY-008, NOTIFY-012, NOTIFY-010, NOTIFY-015, FLOW-007, CLIENT-001, REPORT-001, REPORT-003, API-001, API-003, API-004, API-005, API-006, API-007, API-008, API-009, API-010, INTEG-002, INTEG-003, INTEG-006, INTEG-008, DATA-004, DATA-005, MIGRATE-001, MIGRATE-007, MIGRATE-002, MIGRATE-003, MIGRATE-004, MIGRATE-005, AGENT-001, AGENT-003, AGENT-007, AGENT-008, AGENT-009, AGENT-011 | not run |
+| BASE-AUDIT-001 | Searchable, durable audit | OPER-001, OPER-004, EVENT-001, EVENT-005, CAL-001, DATA-001, DATA-002, DATA-013, DATA-016, OPER-007, TEAM-006, AVAIL-011, PAY-004, NOTIFY-013, CLIENT-001, API-009, MIGRATE-001 | not run |
 | BASE-BACKUP-001 | Independent backup, restore and rollback | none | not run |
 | BASE-DATA-006 | Erasure respects retention and legal hold | none | not run |
-| BASE-SIGNIN-001 | Standards-based SSO and lifecycle | OPER-001, DATA-002, OPER-007, TEAM-001, ADMIN-001, PAY-002, PAY-003, PAY-006, PAY-007, API-003, INTEG-002, DATA-004, DATA-005, DATA-007, DATA-012 | not run |
+| BASE-SIGNIN-001 | Standards-based SSO and lifecycle | OPER-001, DATA-002, DATA-012, OPER-007, TEAM-001, ADMIN-001, PAY-002, PAY-003, PAY-006, PAY-007, API-003, INTEG-002, DATA-004, DATA-005, DATA-007 | not run |
 | BASE-SIGNIN-002 | Native multi-factor authentication | none | not run |
-| BASE-INSTALL-001 | Free self-host and removal | AUTH-006, OPER-001, OPER-003, OPER-005, HOME-001, AVAIL-008, REQUEST-004, NOTIFY-007, DATA-001, DATA-002, DATA-003, CUSTOM-002, AUTH-007, OPER-007, EMBED-001, EMBED-003, EMBED-004, MOBILE-002, REPORT-003, INTEG-005, OPER-011, HOME-002, HOME-003, DATA-009, DATA-016, NOTIFY-011, API-010 | not run |
-| BASE-MAIL-001 | Truthful mail outcomes | AUTH-003, AUTH-005, AUTH-006, OPER-001, OPER-003, OPER-004, OPER-005, EVENT-002, EVENT-003, EVENT-004, EVENT-006, PUBLIC-002, PUBLIC-006, AVAIL-002, AVAIL-009, BOOK-001, BOOK-003, BOOK-004, BOOK-006, BOOK-009, BOOK-012, CAL-003, CAL-008, REQUEST-001, REQUEST-002, REQUEST-004, REQUEST-005, NOTIFY-001, NOTIFY-002, NOTIFY-004, NOTIFY-005, NOTIFY-006, NOTIFY-007, DATA-001, DATA-002, CUSTOM-002, AUTH-007, OPER-006, OPER-007, ADMIN-001, EVENT-008, EVENT-009, EVENT-011, LINK-002, LINK-003, BRAND-001, LOCALE-001, TEAM-005, TEAM-007, ROUTE-001, ROUTE-003, ROUTE-005, EMBED-002, EMBED-003, EMBED-004, AVAIL-012, BOOK-013, BOOK-014, BOOK-015, CAL-011, MEET-004, PAY-003, PAY-004, PAY-005, PAY-007, NOTIFY-008, NOTIFY-009, NOTIFY-010, FLOW-001, FLOW-002, FLOW-004, FLOW-005, CLIENT-001, REPORT-003, API-003, INTEG-002, INTEG-006, INTEG-007, MIGRATE-005, AGENT-003, AGENT-004, AGENT-007, AGENT-009, AGENT-011, OPER-008, OPER-010, HOME-002, DATA-009, DATA-012, DATA-013, DATA-016, BOOK-016, BOOK-017, PAY-008, NOTIFY-011, NOTIFY-013, NOTIFY-015, FLOW-007, FLOW-008, API-004, API-005, API-007, API-008, API-009, MIGRATE-007 | not run |
+| BASE-INSTALL-001 | Free self-host and removal | AUTH-006, OPER-001, OPER-003, OPER-005, OPER-011, HOME-001, HOME-002, HOME-003, AVAIL-008, REQUEST-004, NOTIFY-007, DATA-001, DATA-009, DATA-002, DATA-003, DATA-016, CUSTOM-002, AUTH-007, OPER-007, EMBED-001, EMBED-003, EMBED-004, MOBILE-002, NOTIFY-011, REPORT-003, API-010, INTEG-005 | not run |
+| BASE-MAIL-001 | Truthful mail outcomes | AUTH-003, AUTH-005, AUTH-006, OPER-001, OPER-008, OPER-010, OPER-003, OPER-004, OPER-005, EVENT-002, EVENT-003, EVENT-004, EVENT-006, HOME-002, PUBLIC-002, PUBLIC-006, AVAIL-002, AVAIL-009, BOOK-001, BOOK-003, BOOK-004, BOOK-006, BOOK-009, BOOK-012, CAL-003, CAL-008, REQUEST-001, REQUEST-002, REQUEST-004, REQUEST-005, NOTIFY-001, NOTIFY-002, NOTIFY-004, NOTIFY-005, NOTIFY-006, NOTIFY-007, DATA-001, DATA-009, DATA-002, DATA-012, DATA-013, DATA-016, CUSTOM-002, AUTH-007, OPER-006, OPER-007, ADMIN-001, EVENT-008, EVENT-009, EVENT-011, LINK-002, LINK-003, BRAND-001, LOCALE-001, TEAM-005, TEAM-007, ROUTE-001, ROUTE-003, ROUTE-005, EMBED-002, EMBED-003, EMBED-004, AVAIL-012, BOOK-013, BOOK-014, BOOK-016, BOOK-017, BOOK-015, CAL-011, MEET-004, PAY-008, PAY-003, PAY-004, PAY-005, PAY-007, NOTIFY-008, NOTIFY-011, NOTIFY-009, NOTIFY-013, NOTIFY-010, NOTIFY-015, FLOW-001, FLOW-002, FLOW-004, FLOW-005, FLOW-007, FLOW-008, CLIENT-001, REPORT-003, API-003, API-004, API-005, API-007, API-008, API-009, INTEG-002, INTEG-006, INTEG-007, MIGRATE-007, MIGRATE-005, AGENT-003, AGENT-004, AGENT-007, AGENT-009, AGENT-011 | not run |
 | BASE-ACCESSIBILITY-001 | One accessibility bar | none | not run |
 | BASE-DOCS-001 | On-site docs from one contract | none | not run |
 | BASE-AGENT-001 | One MCP door per seed | none | not run |
-| BASE-AGENT-002 | The seed's jobs are tools, through the UI's own actions | AGENT-001, AGENT-002, AGENT-003, AGENT-004, AGENT-005, AGENT-006, AGENT-007, AGENT-008, AGENT-009, AGENT-010, AGENT-011, SURFACE-001 | not run |
+| BASE-AGENT-002 | The seed's jobs are tools, through the UI's own actions | SURFACE-001, AGENT-001, AGENT-002, AGENT-003, AGENT-004, AGENT-005, AGENT-006, AGENT-007, AGENT-008, AGENT-009, AGENT-010, AGENT-011 | not run |
 | BASE-AGENT-003 | Records are resources | SURFACE-007 | not run |
 | BASE-AGENT-004 | Business identity and short-lived, audience-bound tokens | none | not run |
 | BASE-AGENT-005 | An agent acts as a person in a role, never more | SURFACE-004 | not run |
-| BASE-AGENT-006 | Every action declares its risk class | AGENT-001, AGENT-002, AGENT-003, AGENT-004, AGENT-005, AGENT-006, AGENT-007, AGENT-008, AGENT-009, AGENT-010, AGENT-011, SURFACE-001, SURFACE-002, SURFACE-003, SURFACE-004, SURFACE-005, SURFACE-006 | not run |
-| BASE-AGENT-007 | The company's policy decides, at one chokepoint | AGENT-001, AGENT-002, AGENT-003, AGENT-004, AGENT-005, AGENT-006, AGENT-007, AGENT-008, AGENT-009, AGENT-010, AGENT-011, SURFACE-011 | not run |
+| BASE-AGENT-006 | Every action declares its risk class | SURFACE-001, SURFACE-002, SURFACE-003, SURFACE-004, SURFACE-005, SURFACE-006, AGENT-001, AGENT-002, AGENT-003, AGENT-004, AGENT-005, AGENT-006, AGENT-007, AGENT-008, AGENT-009, AGENT-010, AGENT-011 | not run |
+| BASE-AGENT-007 | The company's policy decides, at one chokepoint | SURFACE-011, AGENT-001, AGENT-002, AGENT-003, AGENT-004, AGENT-005, AGENT-006, AGENT-007, AGENT-008, AGENT-009, AGENT-010, AGENT-011 | not run |
 | BASE-AGENT-008 | Truthful attribution | SURFACE-005 | not run |
 | BASE-AGENT-009 | Every agent action is audited with its class and decision | none | not run |
 | BASE-AGENT-010 | Agents can follow changes | SURFACE-008 | not run |
@@ -78,7 +78,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 - `AUTH-003`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-PUBLIC-001
 - `AUTH-004`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002
 - `AUTH-005`: *Tier:* Core · *Cites:* BASE-MAIL-001
-- `AUTH-006`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001
+- `AUTH-006`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-INPUT-001
 - `OPER-001`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001, BASE-SIGNIN-001, BASE-INSTALL-001
 - `OPER-008`: *Tier:* Core · *From:* OPER-001 · *Cites:* BASE-ROLE-001, BASE-MAIL-001
 - `OPER-009`: *Tier:* Core · *From:* OPER-001 · *Cites:* BASE-ROLE-001
@@ -87,23 +87,23 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 - `OPER-003`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-INSTALL-001
 - `OPER-004`: *Tier:* Core · *Cites:* BASE-AUDIT-001, BASE-MAIL-001
 - `EDITOR-001`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002
-- `OPER-005`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-INSTALL-001 · *Register:* R-43
+- `OPER-005`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-INSTALL-001, BASE-INPUT-001 · *Register:* R-43
 - `OPER-011`: *Tier:* Core · *From:* OPER-005 · *Cites:* BASE-ROLE-001, BASE-DATA-001, BASE-INSTALL-001
 - `PROFILE-001`: *Tier:* Core · *Cites:* BASE-PUBLIC-001
 - `PROFILE-002`: *Tier:* Core · *Cites:* BASE-PUBLIC-001
-- `PROFILE-003`: *Tier:* Core · *Cites:* BASE-PUBLIC-001
-- `EVENT-001`: *Tier:* Core · *Cites:* BASE-AUDIT-001, BASE-PUBLIC-001
+- `PROFILE-003`: *Tier:* Core · *Cites:* BASE-PUBLIC-001, BASE-INPUT-003
+- `EVENT-001`: *Tier:* Core · *Cites:* BASE-AUDIT-001, BASE-PUBLIC-001, BASE-INPUT-001
 - `EVENT-002`: *Tier:* Core · *Cites:* BASE-MAIL-001
-- `EVENT-003`: *Tier:* Core · *Cites:* BASE-MAIL-001
-- `EVENT-004`: *Tier:* Core · *Cites:* BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001 · *Register:* R-1
+- `EVENT-003`: *Tier:* Core · *Cites:* BASE-MAIL-001, BASE-INPUT-001
+- `EVENT-004`: *Tier:* Core · *Cites:* BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001 · *Register:* R-1
 - `EVENT-005`: *Tier:* Core · *Cites:* BASE-AUDIT-001, BASE-DATA-003, BASE-PUBLIC-001
 - `EVENT-006`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-PUBLIC-001
-- `HOME-001`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-PUBLIC-001, BASE-INSTALL-001
-- `HOME-002`: *Tier:* Core · *From:* HOME-001 · *Cites:* BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001
+- `HOME-001`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-DATA-005
+- `HOME-002`: *Tier:* Core · *From:* HOME-001 · *Cites:* BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-DATA-005
 - `HOME-003`: *Tier:* Core · *From:* HOME-001 · *Cites:* BASE-ROLE-001, BASE-PUBLIC-001, BASE-INSTALL-001
-- `DOCS-001`: *Tier:* Core · *Cites:* BASE-ACCESS-002, BASE-PUBLIC-001 · *Register:* R-39, R-40
+- `DOCS-001`: *Tier:* Core · *Cites:* BASE-ACCESS-002, BASE-PUBLIC-001, BASE-DATA-005 · *Register:* R-39, R-40
 - `PUBLIC-001`: *Tier:* Core · *Cites:* BASE-PUBLIC-001
-- `PUBLIC-002`: *Tier:* Core · *Cites:* BASE-MAIL-001
+- `PUBLIC-002`: *Tier:* Core · *Cites:* BASE-MAIL-001, BASE-INPUT-001
 - `PUBLIC-003`: *Tier:* Core · *Cites:* BASE-ACCESS-002, BASE-PUBLIC-001
 - `PUBLIC-004`: *Tier:* Core · *Cites:* BASE-PUBLIC-001
 - `PUBLIC-005`: *Tier:* Core · *Cites:* BASE-PUBLIC-001
@@ -117,13 +117,13 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 - `AVAIL-007`: *Tier:* Core
 - `AVAIL-008`: *Tier:* Core · *Cites:* BASE-INSTALL-001
 - `AVAIL-009`: *Tier:* Core · *Cites:* BASE-MAIL-001
-- `BOOK-001`: *Tier:* Core · *Cites:* BASE-MAIL-001 · *Register:* R-6
+- `BOOK-001`: *Tier:* Core · *Cites:* BASE-MAIL-001, BASE-INPUT-001 · *Register:* R-6
 - `BOOK-002`: *Tier:* Core
 - `BOOK-003`: *Tier:* Core · *Cites:* BASE-MAIL-001
 - `BOOK-004`: *Tier:* Core · *Cites:* BASE-MAIL-001
 - `BOOK-005`: *Tier:* Core
-- `BOOK-006`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-PUBLIC-001
-- `BOOK-007`: *Tier:* Core
+- `BOOK-006`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
+- `BOOK-007`: *Tier:* Core · *Cites:* BASE-INPUT-001
 - `BOOK-008`: *Tier:* Core
 - `BOOK-009`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001
 - `BOOK-010`: *Tier:* Core
@@ -134,7 +134,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 - `CAL-003`: *Tier:* Core · *Cites:* BASE-DATA-003, BASE-MAIL-001 · *Register:* R-9
 - `CAL-004`: *Tier:* Core
 - `CAL-005`: *Tier:* Core
-- `CAL-006`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-PUBLIC-001 · *Register:* R-10
+- `CAL-006`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-PUBLIC-001, BASE-INPUT-001 · *Register:* R-10
 - `CAL-007`: *Tier:* Core · *Register:* R-11
 - `CAL-008`: *Tier:* Core · *Cites:* BASE-MAIL-001 · *Register:* R-12
 - `CAL-009`: *Tier:* Core
@@ -150,20 +150,20 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 - `NOTIFY-005`: *Tier:* Core · *Cites:* BASE-MAIL-001 · *Register:* R-21
 - `NOTIFY-006`: *Tier:* Core · *Cites:* BASE-MAIL-001
 - `NOTIFY-007`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001 · *Register:* R-22
-- `DATA-001`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-DATA-001, BASE-MAIL-001, BASE-INSTALL-001
-- `DATA-009`: *Tier:* Core · *From:* DATA-001 · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-INSTALL-001
+- `DATA-001`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-DATA-001, BASE-MAIL-001, BASE-INSTALL-001, BASE-INPUT-001
+- `DATA-009`: *Tier:* Core · *From:* DATA-001 · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-INSTALL-001, BASE-INPUT-001
 - `DATA-010`: *Tier:* Core · *From:* DATA-001 · *Cites:* BASE-ROLE-001, BASE-DATA-001, BASE-DATA-003
 - `DATA-002`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-AUDIT-001, BASE-DATA-003, BASE-MAIL-001, BASE-SIGNIN-001, BASE-INSTALL-001
 - `DATA-011`: *Tier:* Core · *From:* DATA-002 · *Cites:* BASE-DATA-001, BASE-DATA-003
 - `DATA-012`: *Tier:* Core · *From:* DATA-002 · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-003, BASE-MAIL-001, BASE-SIGNIN-001
-- `DATA-003`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-INSTALL-001 · *Register:* R-34
+- `DATA-003`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-DATA-001, BASE-INSTALL-001, BASE-INPUT-001 · *Register:* R-34
 - `DATA-013`: *Tier:* Core · *From:* DATA-003 · *Cites:* BASE-AUDIT-001, BASE-MAIL-001, BASE-PUBLIC-001 · *Register:* R-34
 - `DATA-014`: *Tier:* Core · *From:* DATA-003 · *Cites:* BASE-DATA-003 · *Register:* R-34
 - `DATA-015`: *Tier:* Core · *From:* DATA-003 · *Register:* R-34
 - `DATA-016`: *Tier:* Core · *From:* DATA-003 · *Cites:* BASE-AUDIT-001, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-INSTALL-001 · *Register:* R-34
 - `DATA-017`: *Tier:* Core · *From:* DATA-003 · *Cites:* BASE-PUBLIC-001 · *Register:* R-34
-- `CUSTOM-001`: *Tier:* Core · *Cites:* BASE-ROLE-001
-- `CUSTOM-002`: *Tier:* Core · *Cites:* BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001
+- `CUSTOM-001`: *Tier:* Core · *Cites:* BASE-ROLE-001, BASE-INPUT-001
+- `CUSTOM-002`: *Tier:* Core · *Cites:* BASE-ACCESS-002, BASE-DATA-001, BASE-DATA-003, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INSTALL-001, BASE-INPUT-001
 
 ### Authorization
 
@@ -271,6 +271,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 4. Identity overlap with invitee records requires explicitly erasing those records through the aggregate email confirmation or their detail pages before operator removal.
 5. Self-removal and removal of the protected setup/bootstrap owner return an explicit hold; an owner-transfer workflow is required before that identity can be erased.
 6. A shared domain policy retains its original creator ID as an inactive anonymous native reference whose authority cannot be reactivated.
+7. Removal of the last owner is refused; self-removal and removal of the protected setup owner stay held until the required owner transfer.
 
 #### OPER-003 — Booking workspace
 
@@ -427,7 +428,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 1. An installed deployment's root `/` is the sessionless installed Lobby.
 2. Before setup completion is recorded it says the installation is waiting for its owner and offers a **Finish setup** action to the documented route; after completion it names the deployment, offers a **Sign in** action and credits Dial with a link to its run site.
 3. A saved host profile alone never changes that state.
-4. The Lobby reads only the setup state, has one top-level heading.
+4. The Lobby reads only the setup state and has one top-level heading. After interaction it continues to set no cookies, write nothing to browser storage and run no analytics.
 
 #### HOME-002 — Product run site
 
@@ -437,7 +438,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 1. The product landing for Dial itself is the separate run site at `run-dial.com`, built independently of the installed deployment.
 2. It presents, in order, a hero with the product's headline, a description, directly beneath it in small text the single line "100% free, open source alternative to Calendly, Acuity Scheduling and SavvyCal" (the three company names in bold, the words of a name joined by a non-breaking space, the line wrapped evenly; repeated in plain text at the start of the page's meta description, with no email- or phone-shaped text and no comparative claim), then a **Run Dial** action to the documented route and a **Read the docs** action to the documented route; sections for invitees, for the host, the booking essentials, alternative requests and self-hosting; and a closing section repeating both actions.
 3. Its header links home, to the documented route and to the source repository, and its footer repeats those links as plain text links beside a small wordmark and single-line description; neither links an installation route (the documented route, the documented route, the documented route, the documented route, the documented route).
-4. The site reads no installation data, its typeface self-hosted and every drawing inline and decorative.
+4. The site reads no installation data. After interaction it continues to set no cookies, write nothing to browser storage, run no analytics or tracking and load only same-origin resources; its typeface is self-hosted and every drawing is inline and decorative.
 5. It has one top-level heading, is readable without script, renders its final state with reduced motion (its only motion is a one-shot hero sequence), and keeps a fixed light palette regardless of the browser's color scheme.
 
 #### HOME-003 — Installed public chrome
@@ -456,7 +457,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 2. The documentation Markdown is rendered to HTML at build time: a Vite plugin renders each page when Vite loads it, in a build and in development, and never in the Worker or the browser, so the emitted Worker and client bundles contain no Markdown or syntax-highlighting code, and each page is its own lazily loaded chunk that the Worker renders per request inside the public site's shared header and footer.
 3. A page has its title as its one top-level heading (the header's wordmark is not a heading on a documentation page), a section menu, an on-this-page list, previous and next links, tables in labeled scrollable regions and an Edit-on-GitHub link.
 4. Every Markdown file at the repository root and under `docs/` is either published or listed in the manifest as GitHub-only with a reason, and an unlisted file, a broken link or anchor, raw HTML, an image outside `docs/media/` or an absolute build-machine path fails verification or the build.
-5. The documentation is served by `GET` only, reads no booking, invitee, host-profile or operator record or session.
+5. The documentation is served by GET only and reads no booking, invitee, host-profile or operator record or session. After interaction it continues to set no cookies, run no analytics or tracking and load only same-origin resources.
 6. An unknown, miscased or nested slug answers the existing `404` page, and the documented route shares the public admission budget of the other sessionless public paths.
 
 ### Public booking surfaces
@@ -1114,7 +1115,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### OPER-006 — Editing a member's availability and event types
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** Owners and admins can switch to any member and edit, as that member's editor, everything that decides the member's offered times: their named schedules and weekly hours (`AVAIL-001`, `AVAIL-011`), date-specific hours and overrides, time off and US-holiday choices, which schedule each of the member's event types uses, copying hours from one schedule or event type to another, and the member's personal event types with every setting of `EVENT-001` to `EVENT-011` (durations, questions, locations, buffers, notice, horizon and limits).
 
@@ -1230,7 +1231,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### EVENT-010 — Recurring bookings
 
-*Tier:* Core
+*Tier:* Core · *Cites:* BASE-INPUT-001
 
 **Requirement.** An event type may let invitees book a recurring series (weekly, every two weeks or monthly for a set count up to 24 occurrences).
 
@@ -1241,7 +1242,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### EVENT-011 — Invitee-selectable durations
 
-*Tier:* Core · *Cites:* BASE-MAIL-001, BASE-PUBLIC-001
+*Tier:* Core · *Cites:* BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** An event type may offer up to four durations (for example 15, 30 and 60 minutes), one of them the default.
 
@@ -1264,7 +1265,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### LINK-002 — Host-offered specific times
 
-*Tier:* Core · *Cites:* BASE-MAIL-001
+*Tier:* Core · *Cites:* BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** A host picks specific times from their live availability and sends them as a link or pastes them into an email; the recipient books one and the others are released.
 
@@ -1344,7 +1345,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### TEAM-005 — Collective events
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** A collective event type requires every selected host (or a required subset plus at least N optional hosts) to be free for the invitee's chosen duration (`EVENT-011`) under each host's own rules, calendars and buffers.
 
@@ -1356,7 +1357,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### TEAM-006 — Managed event templates
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-AUDIT-001
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-AUDIT-001, BASE-INPUT-001
 
 **Requirement.** Admins and team managers publish an event template to selected members or whole teams; each member receives their own event type from it, copied as `EVENT-001` copies an event type (every setting, question, location, schedule binding and template, with no bookings or history).
 
@@ -1366,7 +1367,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### TEAM-007 — Reassignment, absence and delegation
 
-*Tier:* Core · *Cites:* BASE-MAIL-001
+*Tier:* Core · *Cites:* BASE-MAIL-001, BASE-INPUT-001
 
 **Requirement.** Admins and team managers reassign a booking to another eligible host, which revalidates that host, moves the calendar event and conference under the new host's accounts, and notifies the invitee and both hosts once.
 
@@ -1380,7 +1381,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### ROUTE-001 — Routing forms
 
-*Tier:* Core · *Cites:* BASE-MAIL-001, BASE-PUBLIC-001
+*Tier:* Core · *Cites:* BASE-MAIL-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** Admins build routing forms with ordered questions (text, email, phone, number, single and multiple choice, dropdown, company size, country and US state), required rules and hidden fields fed by URL parameters.
 
@@ -1826,7 +1827,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### NOTIFY-009 — Event and locale message templates
 
-*Tier:* Core · *Cites:* BASE-MAIL-001 · *Register:* R-24
+*Tier:* Core · *Cites:* BASE-MAIL-001, BASE-INPUT-001 · *Register:* R-24
 
 **Requirement.** Each event type, and each managed team template under `TEAM-006`, has editable templates for the managed calendar event's title and description (`CAL-003`, `CAL-010`, `CAL-011`) and for the subject and body of the invitee's confirmation, reschedule, cancellation and reminder emails (`NOTIFY-001`, `NOTIFY-003`, `NOTIFY-004`) and of the reschedule-request email and its reminder (`BOOK-014`), which add the sender's message as a variable.
 
@@ -2026,7 +2027,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### API-001 — Public REST API
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-PUBLIC-001
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-PUBLIC-001, BASE-INPUT-001
 
 **Requirement.** A versioned REST API under the documented route with `AUTH-008` credentials covers event types, availability (free slots for an event type and range), bookings (create, read, list, reschedule, cancel, mark attendance), hosts, teams, routing forms and submissions, polls, workflows and webhook subscriptions.
 
@@ -2048,7 +2049,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### API-003 — Machine-credential booking
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-SIGNIN-001 · *Register:* R-29
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-MAIL-001, BASE-PUBLIC-001, BASE-SIGNIN-001, BASE-INPUT-001 · *Register:* R-29
 
 **Requirement.** Another product (for example Handset) books, reschedules and cancels through Dial with a scoped bearer credential and no operator session.
 
@@ -2097,7 +2098,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### API-007 — Machine command retries and limits
 
-*Tier:* Core · *From:* API-003 · *Cites:* BASE-ROLE-001, BASE-MAIL-001 · *Register:* R-29
+*Tier:* Core · *From:* API-003 · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-INPUT-001 · *Register:* R-29
 
 **Requirement.** Every POST that creates or changes a booking requires an `Idempotency-Key` of 16 to 128 characters, scoped to the credential and kept 24 hours.
 
@@ -2150,7 +2151,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### INTEG-002 — HubSpot
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-SIGNIN-001
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-MAIL-001, BASE-SIGNIN-001, BASE-INPUT-001
 
 **Requirement.** A connected HubSpot portal receives, per booking, a contact (matched by email, created if absent), a meeting engagement associated with the contact and owner, and updates on reschedule, cancel and no-show; routing answers map to chosen contact properties.
 
@@ -2163,7 +2164,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### INTEG-003 — Salesforce
 
-*Tier:* Core · *Cites:* BASE-ROLE-001
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-INPUT-001
 
 **Requirement.** A connected Salesforce org receives Event records linked to the matched Lead or Contact (and Account), creates Leads for unknown invitees when the admin chooses, updates Events on change, and writes routing answers to mapped fields; routing can read account and lead owners.
 
@@ -2175,7 +2176,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### INTEG-004 — Orbit and Pipedrive
 
-*Tier:* Core
+*Tier:* Core · *Cites:* BASE-INPUT-001
 
 **Requirement.** Bookings, attendance and routing answers hand off to Orbit, Dial's sibling CRM, as meeting activities on the matched person and company, and to Pipedrive as activities on the matched person and deal.
 
@@ -2216,7 +2217,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### INTEG-008 — Microsoft Dynamics 365 Sales
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002 · *Register:* R-33
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-INPUT-001 · *Register:* R-33
 
 **Requirement.** A connected Dynamics 365 Sales environment (Dataverse Web API, OAuth through Microsoft Entra ID) receives an appointment activity per booking regarding the matched contact or lead (an unknown invitee becomes a lead when the admin chooses), updated on reschedule, cancellation and no-show, with routing answers written to mapped fields; routing reads contact and account owners (`ROUTE-003`).
 
@@ -2278,7 +2279,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### MIGRATE-001 — Calendly connected move-in
 
-*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-PUBLIC-001 · *Register:* R-35
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-ACCESS-002, BASE-AUDIT-001, BASE-PUBLIC-001, BASE-INPUT-001 · *Register:* R-35
 
 **Requirement.** Besides the saved-file import of `DATA-003`, an owner or admin connects a Calendly organization through Calendly's public API (OAuth) and previews, then imports, everything that API publishes: organization members as hosts, event types with their name, slug, durations including every duration option (`EVENT-011`), locations, questions, round-robin or collective kind and hosts, each member's availability schedules (the documented route) as `AVAIL-011` named schedules, the schedule each event type uses, routing forms with their questions and past submissions, contacts with their custom field definitions, every past and future scheduled event with its invitees and answers, invitee no-shows and meeting recaps, without notifying invitees or creating calendar events again.
 
@@ -2321,7 +2322,7 @@ The primary journey: A host moves in their scheduling data, connects calendars, 
 
 #### MIGRATE-003 — Microsoft Bookings move-in
 
-*Tier:* Core · *Cites:* BASE-ROLE-001 · *Register:* R-37
+*Tier:* Core · *Cites:* BASE-ROLE-001, BASE-INPUT-001 · *Register:* R-37
 
 **Requirement.** An owner or admin connects Microsoft 365 and imports a Bookings business: staff as hosts, services as event types (duration, buffers, price display, custom questions, Teams setting), business hours and staff availability, customers as clients, and future appointments, with the same preview and silence rules and the owner-and-admin restriction of `DATA-003` (`OPER-001`).
 
@@ -2773,9 +2774,9 @@ Judged from the code and tests at commit `5b1566c093dd06610c98d534c685f9390aba9f
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 7 | 84 | 0 | 91 |
+| Published | 6 | 85 | 0 | 91 |
 | Target and push further | 2 | 46 | 84 | 132 |
-| All | 9 | 130 | 84 | 223 |
+| All | 8 | 131 | 84 | 223 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2789,7 +2790,7 @@ Judged from the code and tests at commit `5b1566c093dd06610c98d534c685f9390aba9f
 | `OPER-008` | Role-scoped booking mail | published | partial | `tests/operator-management.test.mjs`, `tests/local-setup-journey.test.mjs`, `src/core/features/operators/service.ts` | The cited paths cover part of the clause; the rest is still to build. |
 | `OPER-009` | Role-scoped reporting | published | partial | `tests/operator-management.test.mjs`, `tests/local-setup-journey.test.mjs`, `src/core/features/operators/service.ts` | The cited paths cover part of the clause; the rest is still to build. |
 | `OPER-002` | Operator invitations and roles | published | partial | `tests/operator-management.test.mjs`, `tests/operator-removal-mail.test.mjs`, `tests/operator-access-migration.test.mjs` | Missing owner/admin/team-manager/member/viewer invitation and role-change journeys; the cited native journeys cover equal-owner invitation and removal only. |
-| `OPER-010` | Destructive operator removal | published | done | `tests/operator-management.test.mjs` — "native destructive management preserves authorship and protects self and setup owner" |  |
+| `OPER-010` | Destructive operator removal | published | partial | `tests/operator-management.test.mjs` — "native destructive management preserves authorship and protects self and setup owner" | Missing a complete owner-transfer and last-owner-removal journey; the cited native journey proves destructive removal, protected/setup and self holds, revocation and preserved author references. |
 | `OPER-003` | Booking workspace | published | partial | `tests/bookings-filters.test.mjs`, `tests/bookings-search-upgrade.test.mjs` | Single-host 100,000-booking fixture; capacity fixture missing. |
 | `OPER-004` | Booking record | published | done | `tests/booking-axe/acceptance-records.mjs` — "bookingRecordDeliveryJourney" |  |
 | `EDITOR-001` | Owner editor | published | partial | `scripts/verify-managed-editor.mjs` | Missing one complete role-scoped editor journey with grant refusal, application restart, conflict and owner customization read-back; the cited managed-editor runner exercises its current owner path. |
