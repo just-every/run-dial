@@ -6,7 +6,8 @@ import { validateContractStatus } from './contract-status.mjs';
 // Regenerate only the named clause views; always recount the whole source.
 const root=process.cwd(),[command,...args]=process.argv.slice(2);
 if(!['write','check'].includes(command)||args.length&&args[0]!=='--clauses')throw new Error('Use contract-docs.mjs write or check, optionally --clauses followed by clause IDs.');
-const ids=args.slice(1),contract=await readFile('CONTRACT.md','utf8');
+const ids=args.slice(1),originalContract=await readFile('CONTRACT.md','utf8');
+let contract=originalContract;
 const rows=contract.split('\n').filter(line=>/^\| `[A-Z][A-Z-]*-\d{3}` \|/u.test(line)).map(line=>line.split('|').slice(1,-1).map(cell=>cell.trim()));
 const clauses=[...contract.matchAll(/^- \*\*([A-Z][A-Z-]*-\d{3}) — ([\s\S]*?)(?=\n- \*\*|\n##|$)/gmu)];
 let acceptance=await readFile('ACCEPTANCE.md','utf8'),claims=await readFile('docs/CLAIMS.md','utf8');
@@ -19,9 +20,14 @@ for(const id of ids){
  const lines=claims.split('\n'),index=lines.findIndex(line=>line.startsWith(`${id} is `));if(index<0)lines.push('',claim);else lines[index]=claim;claims=lines.join('\n');
 }
 const counts=['done','partial','missing'].map(status=>rows.filter(row=>row[3]===status).length);
+for(const [label,selected]of [['Published',rows.filter(row=>row[2]==='published')],['Target and push further',rows.filter(row=>row[2]!=='published')],['All',rows]]){
+ const values=['done','partial','missing'].map(status=>selected.filter(row=>row[3]===status).length);
+ const pattern=new RegExp(`^\\| ${label} \\|.*$`,'mu');assert.match(contract,pattern,`Missing summary ${label}`);
+ contract=contract.replace(pattern,`| ${label} | ${values.join(' | ')} | ${selected.length} |`);
+}
 acceptance=acceptance.replace(/Counts: \d+ clauses — \d+ done, \d+ partial, \d+ missing\./u,`Counts: ${rows.length} clauses — ${counts[0]} done, ${counts[1]} partial, ${counts[2]} missing.`);
 claims=claims.replace(/The contract census is \d+ done \/ \d+ partial \/ \d+ missing \(\d+ clauses\)/u,`The contract census is ${counts[0]} done / ${counts[1]} partial / ${counts[2]} missing (${rows.length} clauses)`);
-if(command==='write')await Promise.all([writeFile('ACCEPTANCE.md',acceptance),writeFile('docs/CLAIMS.md',claims)]);
-else{assert.equal(await readFile('ACCEPTANCE.md','utf8'),acceptance,'Regenerate acceptance');assert.equal(await readFile('docs/CLAIMS.md','utf8'),claims,'Regenerate claims');}
+if(command==='write')await Promise.all([writeFile('CONTRACT.md',contract),writeFile('ACCEPTANCE.md',acceptance),writeFile('docs/CLAIMS.md',claims)]);
+else{assert.equal(originalContract,contract,'Regenerate contract summary');assert.equal(await readFile('ACCEPTANCE.md','utf8'),acceptance,'Regenerate acceptance');assert.equal(await readFile('docs/CLAIMS.md','utf8'),claims,'Regenerate claims');}
 await validateContractStatus(root,contract,rows.map(row=>row[0].replaceAll('`','')));
 console.log(`Contract views ${command}: ${rows.length} clauses, ${counts.join(', ')}.`);
