@@ -13,13 +13,14 @@ export const embedBootstrap = String.raw`(() => {
     const scripts = current ? [current] : Array.from(document.querySelectorAll('script[data-dial-embed][src*="/embed/dial.js"]'));
     scripts.forEach(script => {
       if (script.dataset.dialMounted) return;
-      const handle = script.dataset.dialHandle, slug = script.dataset.dialEmbed, mode = script.dataset.dialMode || 'inline';
-      if (!handle || !slug || !['inline', 'modal'].includes(mode)) return;
+      const handle = script.dataset.dialHandle, slug = script.dataset.dialEmbed, mode = script.dataset.dialMode || 'inline', routing = script.dataset.dialRouting === 'true';
+      if ((!routing && !handle) || !slug || !['inline', 'modal'].includes(mode)) return;
       script.dataset.dialMounted = 'true';
       const scriptUrl = new URL(script.src, window.location.href), source = scriptUrl.origin;
       const query = new URLSearchParams(), answerKeys = new Map();
       const limits = { name: 160, email: 320, utm_source: 500, utm_medium: 500, utm_campaign: 500, utm_term: 500, utm_content: 500, source: 500 };
       for (const [key, value] of scriptUrl.searchParams) {
+        if (routing && /^[A-Za-z0-9_-]{1,80}$/.test(key) && value.length <= 4000 && query.size < 50 && !query.has(key)) query.set(key, value);
         if (Object.hasOwn(limits, key) && value.length <= limits[key] && !query.has(key)) query.set(key, value);
         if (!/^answer\.[A-Za-z0-9_-]{1,100}$/.test(key) || value.length > 4000) continue;
         if (!answerKeys.has(key) && answerKeys.size >= 25) continue;
@@ -42,9 +43,9 @@ export const embedBootstrap = String.raw`(() => {
       });
       const frame = () => {
         const f = document.createElement('iframe'), parent = window.location.origin;
-        const url = new URL('/embed/' + encodeURIComponent(handle) + '/' + encodeURIComponent(slug), source);
+        const url = new URL('/embed/' + (routing ? 'route' : encodeURIComponent(handle)) + '/' + encodeURIComponent(slug) + (routing ? '/form' : ''), source);
         url.search = query.toString(); url.searchParams.set('parent', parent); url.hash = 'dial-parent=' + encodeURIComponent(parent);
-        f.src = url.href; f.referrerPolicy = 'no-referrer'; f.title = 'Book ' + slug; f.loading = 'lazy';
+        f.src = url.href; f.referrerPolicy = 'no-referrer'; f.title = (routing ? 'Complete ' : 'Book ') + slug; f.loading = 'lazy';
         f.style.cssText = 'width:100%;min-height:680px;border:0;background:transparent';
         frames.add(f); return f;
       };

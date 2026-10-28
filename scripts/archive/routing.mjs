@@ -5,6 +5,8 @@ const routingAnswerSchema = z.array(z.object({
   key: identifier, label: z.string().min(1).max(500), kind: z.enum(questionKinds),
   value: z.union([z.string().max(4000), z.array(z.string().max(4000)).max(100)]), private: z.boolean().optional(),
 }).strict()).max(50).refine(answers => new Set(answers.map(answer => answer.key)).size === answers.length);
+// Event targets are soft references: a removed event leaves its form visible for repair.
+// Public submission still resolves a published event and refuses a missing target.
 export function validateRouting(name, row) {
   if (name === 'routing_forms') {
     const parsed = routingFormInput.safeParse(JSON.parse(row.configuration_json));

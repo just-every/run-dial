@@ -10,7 +10,7 @@ CREATE TABLE routing_submission_tokens (
 );
 CREATE TABLE routing_submissions (
  id TEXT PRIMARY KEY, form_id TEXT NOT NULL REFERENCES routing_forms(id),
- capability_id TEXT UNIQUE REFERENCES routing_submission_tokens(id),
+ capability_id TEXT UNIQUE,
  form_title TEXT NOT NULL, rule_id TEXT, rule_label TEXT NOT NULL,
  answers_json TEXT NOT NULL, attribution_json TEXT NOT NULL, invitee_email TEXT,
  booking_id TEXT REFERENCES bookings(id), created_at TEXT NOT NULL, updated_at TEXT NOT NULL

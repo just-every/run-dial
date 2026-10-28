@@ -90,12 +90,6 @@ export function validateRows(archive, model) {
   try {
     for (const statement of restoreStatements(archive.tables, triggers)) model.db.prepare(statement.sql).run(...statement.params);
     validateCustomFields(model.db);
-    for (const form of model.db.prepare("SELECT configuration_json FROM routing_forms").all()) {
-      const configuration = JSON.parse(form.configuration_json);
-      for (const outcome of [...configuration.rules.map(rule => rule.outcome), configuration.fallback]) {
-        if (outcome.kind === 'event' && !model.db.prepare("SELECT 1 FROM event_types WHERE id=?").get(outcome.eventTypeId)) throw new Error('archive-invalid-routing-reference');
-      }
-    }
     validateAvailabilityReferences(model.db);
     if (model.db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('archive-invalid-references');
     for (const { name, rows } of archive.tables) {

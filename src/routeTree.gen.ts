@@ -41,7 +41,6 @@ import { Route as AppSettingsRoutingRouteImport } from './routes/app.settings_.r
 import { Route as BookHandleSlugRouteImport } from './routes/book.$handle_.$slug'
 import { Route as EmbedHandleSlugRouteImport } from './routes/embed.$handle.$slug'
 import { Route as EmbedManageTokenRouteImport } from './routes/embed.manage.$token'
-import { Route as EmbedRouteSlugRouteImport } from './routes/embed.route.$slug'
 import { Route as ManageBalanceTokenRouteImport } from './routes/manage.balance.$token'
 import { Route as ManageInviteTokenRouteImport } from './routes/manage.invite.$token'
 import { Route as SetupEventTypesIdRouteImport } from './routes/setup.event-types_.$id'
@@ -57,6 +56,7 @@ import { Route as BookHandleSlugRequestRouteImport } from './routes/book.$handle
 import { Route as EmbedHandleSlugConfirmedRouteImport } from './routes/embed.$handle.$slug_.confirmed'
 import { Route as EmbedHandleSlugDetailsRouteImport } from './routes/embed.$handle.$slug_.details'
 import { Route as EmbedHandleSlugRequestRouteImport } from './routes/embed.$handle.$slug_.request'
+import { Route as EmbedRouteSlugFormRouteImport } from './routes/embed.route.$slug_.form'
 import { Route as SetupEventTypesIdAdvancedRouteImport } from './routes/setup.event-types_.$id.advanced'
 import { Route as SetupEventTypesIdHoursRouteImport } from './routes/setup.event-types_.$id.hours'
 import { Route as SetupEventTypesIdAvailabilityRouteImport } from './routes/setup.event-types_.$id_.availability'
@@ -221,11 +221,6 @@ const EmbedManageTokenRoute = EmbedManageTokenRouteImport.update({
   path: '/embed/manage/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmbedRouteSlugRoute = EmbedRouteSlugRouteImport.update({
-  id: '/embed/route/$slug',
-  path: '/embed/route/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ManageBalanceTokenRoute = ManageBalanceTokenRouteImport.update({
   id: '/manage/balance/$token',
   path: '/manage/balance/$token',
@@ -303,6 +298,11 @@ const EmbedHandleSlugRequestRoute = EmbedHandleSlugRequestRouteImport.update({
   path: '/embed/$handle/$slug/request',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmbedRouteSlugFormRoute = EmbedRouteSlugFormRouteImport.update({
+  id: '/embed/route/$slug_/form',
+  path: '/embed/route/$slug/form',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupEventTypesIdAdvancedRoute =
   SetupEventTypesIdAdvancedRouteImport.update({
     id: '/advanced',
@@ -344,7 +344,6 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
-  '/embed/route/$slug': typeof EmbedRouteSlugRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
   '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
@@ -359,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRouteWithChildren
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
+  '/embed/route/$slug/form': typeof EmbedRouteSlugFormRoute
   '/app/event-types/$id/advanced': typeof AppEventTypesIdAdvancedRoute
   '/app/event-types/$id/hours': typeof AppEventTypesIdHoursRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
@@ -395,7 +395,6 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/docs': typeof DocsIndexRoute
   '/setup': typeof SetupIndexRoute
-  '/embed/route/$slug': typeof EmbedRouteSlugRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
   '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
@@ -410,6 +409,7 @@ export interface FileRoutesByTo {
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types/$id': typeof SetupEventTypesIdRouteWithChildren
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
+  '/embed/route/$slug/form': typeof EmbedRouteSlugFormRoute
   '/app/event-types/$id/advanced': typeof AppEventTypesIdAdvancedRoute
   '/app/event-types/$id/hours': typeof AppEventTypesIdHoursRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
@@ -449,7 +449,6 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
-  '/embed/route/$slug': typeof EmbedRouteSlugRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings_/new': typeof AppBookingsNewRoute
   '/app/event-types_/$id': typeof AppEventTypesIdRouteWithChildren
@@ -464,6 +463,7 @@ export interface FileRoutesById {
   '/manage/invite/$token': typeof ManageInviteTokenRoute
   '/setup/event-types_/$id': typeof SetupEventTypesIdRouteWithChildren
   '/setup/event-types_/new': typeof SetupEventTypesNewRoute
+  '/embed/route/$slug_/form': typeof EmbedRouteSlugFormRoute
   '/app/event-types_/$id/advanced': typeof AppEventTypesIdAdvancedRoute
   '/app/event-types_/$id/hours': typeof AppEventTypesIdHoursRoute
   '/app/event-types_/$id_/availability': typeof AppEventTypesIdAvailabilityRoute
@@ -504,7 +504,6 @@ export interface FileRouteTypes {
     | '/app/'
     | '/docs/'
     | '/setup/'
-    | '/embed/route/$slug'
     | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
@@ -519,6 +518,7 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
+    | '/embed/route/$slug/form'
     | '/app/event-types/$id/advanced'
     | '/app/event-types/$id/hours'
     | '/app/event-types/$id/availability'
@@ -555,7 +555,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/docs'
     | '/setup'
-    | '/embed/route/$slug'
     | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
@@ -570,6 +569,7 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
+    | '/embed/route/$slug/form'
     | '/app/event-types/$id/advanced'
     | '/app/event-types/$id/hours'
     | '/app/event-types/$id/availability'
@@ -608,7 +608,6 @@ export interface FileRouteTypes {
     | '/app/'
     | '/docs/'
     | '/setup/'
-    | '/embed/route/$slug'
     | '/app/bookings/$id'
     | '/app/bookings_/new'
     | '/app/event-types_/$id'
@@ -623,6 +622,7 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types_/$id'
     | '/setup/event-types_/new'
+    | '/embed/route/$slug_/form'
     | '/app/event-types_/$id/advanced'
     | '/app/event-types_/$id/hours'
     | '/app/event-types_/$id_/availability'
@@ -651,12 +651,12 @@ export interface RootRouteChildren {
   PollIdRoute: typeof PollIdRoute
   RouteSlugRoute: typeof RouteSlugRoute
   DocsIndexRoute: typeof DocsIndexRoute
-  EmbedRouteSlugRoute: typeof EmbedRouteSlugRoute
   BookHandleSlugRoute: typeof BookHandleSlugRoute
   EmbedHandleSlugRoute: typeof EmbedHandleSlugRoute
   EmbedManageTokenRoute: typeof EmbedManageTokenRoute
   ManageBalanceTokenRoute: typeof ManageBalanceTokenRoute
   ManageInviteTokenRoute: typeof ManageInviteTokenRoute
+  EmbedRouteSlugFormRoute: typeof EmbedRouteSlugFormRoute
   BookHandleSlugConfirmedRoute: typeof BookHandleSlugConfirmedRoute
   BookHandleSlugDetailsRoute: typeof BookHandleSlugDetailsRoute
   BookHandleSlugPaidRoute: typeof BookHandleSlugPaidRoute
@@ -892,13 +892,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedManageTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/embed/route/$slug': {
-      id: '/embed/route/$slug'
-      path: '/embed/route/$slug'
-      fullPath: '/embed/route/$slug'
-      preLoaderRoute: typeof EmbedRouteSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/manage/balance/$token': {
       id: '/manage/balance/$token'
       path: '/manage/balance/$token'
@@ -1002,6 +995,13 @@ declare module '@tanstack/react-router' {
       path: '/embed/$handle/$slug/request'
       fullPath: '/embed/$handle/$slug/request'
       preLoaderRoute: typeof EmbedHandleSlugRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/route/$slug_/form': {
+      id: '/embed/route/$slug_/form'
+      path: '/embed/route/$slug/form'
+      fullPath: '/embed/route/$slug/form'
+      preLoaderRoute: typeof EmbedRouteSlugFormRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/setup/event-types_/$id/advanced': {
@@ -1149,12 +1149,12 @@ const rootRouteChildren: RootRouteChildren = {
   PollIdRoute: PollIdRoute,
   RouteSlugRoute: RouteSlugRoute,
   DocsIndexRoute: DocsIndexRoute,
-  EmbedRouteSlugRoute: EmbedRouteSlugRoute,
   BookHandleSlugRoute: BookHandleSlugRoute,
   EmbedHandleSlugRoute: EmbedHandleSlugRoute,
   EmbedManageTokenRoute: EmbedManageTokenRoute,
   ManageBalanceTokenRoute: ManageBalanceTokenRoute,
   ManageInviteTokenRoute: ManageInviteTokenRoute,
+  EmbedRouteSlugFormRoute: EmbedRouteSlugFormRoute,
   BookHandleSlugConfirmedRoute: BookHandleSlugConfirmedRoute,
   BookHandleSlugDetailsRoute: BookHandleSlugDetailsRoute,
   BookHandleSlugPaidRoute: BookHandleSlugPaidRoute,
@@ -1166,12 +1166,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

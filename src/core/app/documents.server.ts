@@ -52,7 +52,7 @@ export async function readPublicDocument(path: string): Promise<{ status: number
   const pieces = url.pathname.split("/").filter(Boolean);
   let endpoint: string | undefined;
   if (url.pathname === "/") endpoint = "/api/public/home/profile";
-  else if ((pieces[0] === "route" && pieces.length === 2) || (pieces[0] === "embed" && pieces[1] === "route" && pieces.length === 3)) endpoint = `/api/public/routing/${encodeURIComponent(pieces.at(-1)!)}?${url.searchParams}`;
+  else if ((pieces[0] === "route" && pieces.length === 2) || (pieces[0] === "embed" && pieces[1] === "route" && pieces.length === 4 && pieces[3] === "form")) endpoint = `/api/public/routing/${encodeURIComponent(pieces[0] === "route" ? pieces[1] : pieces[2])}?${url.searchParams}`;
   else if (["book", "embed"].includes(pieces[0]) && pieces.length >= 2 && pieces.length <= 4) {
     const [, handle, slug, step] = pieces;
     if (pieces[0] === "embed" && handle === "manage" && !step) endpoint = `/api/public/manage/${encodeURIComponent(slug)}`;

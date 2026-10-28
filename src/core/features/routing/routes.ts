@@ -18,7 +18,7 @@ export const routingRoutes=new Hono<AppEnvironment>()
   return value?c.json(value,201):apiError(c,400,"invalid_route","Choose an existing event for each booking route.");
  })
  .put("/api/app/routing-forms/:id",validate("param",id),validate("json",routingFormInput),async c=>{
-  await c.get("services").operators.requireMutation(c.req.raw);const formId=c.req.valid("param").id;
+  await c.get("services").operators.requireMutation(c.req.raw,"PUT");const formId=c.req.valid("param").id;
   if(!await c.get("services").routing.repository.get(formId))return apiError(c,404,"routing_unavailable","This routing form is unavailable.");
   const value=await c.get("services").routing.save(c.req.valid("json"),formId);return value?c.json(value):apiError(c,400,"invalid_route","Choose an existing event for each booking route.");
  })
@@ -40,7 +40,7 @@ export const routingRoutes=new Hono<AppEnvironment>()
   c.header("Cache-Control","no-store");c.header("Referrer-Policy","no-referrer");
   return c.get("services").spaSurface.serve(c.req.raw,await c.get("services").routing.repository.publicForm(c.req.valid("param").slug)?200:404,{blockFraming:true});
  })
- .get("/embed/route/:slug",validate("param",slug),async c=>{
+ .get("/embed/route/:slug/form",validate("param",slug),async c=>{
   c.header("Cache-Control","no-store");c.header("Referrer-Policy","no-referrer");
   const parents=c.req.queries("parent")??[],parent=parents.length===1?normaliseEmbedOrigin(parents[0]):undefined;
   const allowed=parent&&await c.get("services").embeds.isOriginAllowed(parent)&&await c.get("services").routing.repository.publicForm(c.req.valid("param").slug);

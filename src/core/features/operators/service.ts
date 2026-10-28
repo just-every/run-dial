@@ -72,9 +72,9 @@ export class OperatorsService {
     return value ? { id: value.operator.id, email: value.operator.email, sessionId: value.id, expiresAt: new Date(value.expiresAt).toISOString() } : undefined;
   }
 
-  async requireMutation(request: Request) {
+  async requireMutation(request: Request, expectedMethod: "POST" | "PUT" = "POST") {
     const origin = new URL(this.runtime.APP_URL).origin;
-    if (request.method !== "POST" || request.headers.get("origin") !== origin || request.headers.get("sec-fetch-site") === "cross-site") throw new AuthError("invalid_origin", 403);
+    if (request.method !== expectedMethod || request.headers.get("origin") !== origin || request.headers.get("sec-fetch-site") === "cross-site") throw new AuthError("invalid_origin", 403);
     const session = await this.auth.getSession(request);
     if (!session) throw new AuthError("unauthenticated", 401);
     return session;

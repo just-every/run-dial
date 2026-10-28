@@ -1,3 +1,4 @@
+import { routingEmbeds } from "./routing-embed.mjs";
 import { authorRoutingForm } from "./routing-authoring.mjs";
 import assert from 'node:assert/strict';
 import AxeBuilder from '@axe-core/playwright';
@@ -7,7 +8,7 @@ export async function routingScreens(browser,owner,origin) {
  const headers={Origin:origin};
  const data=async(path,body,expected=200,method=body===undefined?'GET':'POST')=>{const response=await owner.request.fetch(origin+path,{method,headers,...(body===undefined?{}:{data:body})});assert.equal(response.status(),expected,await response.text());return response.json();};
  const event=await routingEvent(data,'routing-browser'),input=routingInput(event.id,'routing-browser'),form=await data('/api/app/routing-forms',input,201),errors=[];
- await data('/api/app/embed-settings',{allowedOrigins:['https://studio.example.test']},200,'PUT');
+ await data('/api/app/embed-settings',{allowedOrigins:['https://studio.example.test','http://localhost:15752']},200,'PUT');
  for(const width of [1440,390]){
   const page=await owner.newPage();page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width,height:960});
   try{
@@ -31,10 +32,10 @@ export async function routingScreens(browser,owner,origin) {
     await visitor.route('https://studio.example.test/**',async route=>{landed=new URL(route.request().url());await route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html lang="en"><title>Consultation received</title><main><h1>Thank you for booking</h1></main></html>'});});
     await visitor.getByRole('button',{name:'Confirm booking',exact:true}).click();await visitor.getByRole('heading',{name:'Thank you for booking'}).waitFor();assert.ok(landed);assert.equal(landed.searchParams.get('name'),'Taylor Morgan');assert.equal(landed.searchParams.get('utm_source'),'website');assert.equal(landed.searchParams.get('event'),event.title);assert.ok(landed.searchParams.get('start_time'));assert.equal(landed.searchParams.has('token'),false);assert.equal(landed.searchParams.has('routeToken'),false);assert.equal(landed.searchParams.has('answer.confidential'),false);
     await visitor.goto(`${origin}/route/${form.slug}?utm_source=guide`);await fill(visitor,{...routingAnswers(width+1),budget:'50'});await visitor.getByRole('button',{name:'Continue',exact:true}).click();await visitor.getByRole('status').getByText(input.rules[1].outcome.message).waitFor();await capture(visitor,width,'routing-message');
-    await visitor.goto(`${origin}/embed/route/${form.slug}?parent=https%3A%2F%2Fstudio.example.test&utm_source=inline`);await visitor.getByLabel('Your name',{exact:false}).waitFor();await fill(visitor,routingAnswers(width+2));await capture(visitor,width,'routing-inline');await visitor.getByRole('button',{name:'Continue',exact:true}).click();await visitor.waitForURL(url=>url.pathname===`/embed/dial-host/${event.slug}`);assert.equal(new URL(visitor.url()).searchParams.get('parent'),'https://studio.example.test');
+    await routingEmbeds({browser,settings:page,origin,form:{...form,title:`Growth consultation ${width}`},event,width,fill});
     await page.getByRole('button',{name:'Refresh submissions',exact:true}).click();await page.getByRole('row').filter({hasText:'website'}).getByRole('button',{name:'Growth consultation',exact:true}).waitFor();await page.getByRole('row').filter({hasText:'website'}).getByRole('button',{name:'Growth consultation',exact:true}).click();assert.ok(await page.getByRole('link',{name:/^Booking /}).count());await page.getByRole('heading',{name:'Submissions and conversion',exact:true}).scrollIntoViewIfNeeded();await capture(page,width,'routing-conversion');
    }finally{await publicContext.close();}
-  }finally{await page.close();}
+  }catch(error){console.log('ROUTING_BROWSER_STATE '+JSON.stringify({errors,url:page.url(),text:await page.locator('main').innerText()}));await page.screenshot({path:evidencePath(`routing-failure-${width}.png`)});throw error;}finally{await page.close();}
  }
  assert.deepEqual(errors,[]);
 }

@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RoutingPage } from "../core/features/routing/client";
-export const Route=createFileRoute("/embed/route/$slug")({component:Page});
+export const Route=createFileRoute("/embed/route/$slug_/form")({component:Page});
 function Page(){const {slug}=Route.useParams();return <RoutingPage slug={slug} embedded/>;}
