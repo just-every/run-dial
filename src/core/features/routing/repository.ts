@@ -3,6 +3,10 @@ import type { FormRow, RoutingForm, SubmissionResult } from "./types";
 
 export class RoutingRepository {
  constructor(private readonly db:D1Database) {}
+ async list() {
+  const rows=(await this.db.prepare("SELECT id,title,host_id AS hostId,config_json AS configJson,created_at AS createdAt,updated_at AS updatedAt FROM routing_forms ORDER BY created_at,id").all<FormRow & {createdAt:string;updatedAt:string}>()).results;
+  return rows.map(({configJson,...row})=>({...row,...JSON.parse(configJson) as RoutingForm}));
+ }
  async get(id:string) {
   return await this.db.prepare("SELECT id,title,host_id AS hostId,config_json AS configJson FROM routing_forms WHERE id=?").bind(id).first<FormRow>();
  }

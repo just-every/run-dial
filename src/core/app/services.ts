@@ -1,3 +1,5 @@
+import { TeamsRepository } from "../features/teams";
+import { RoutingRepository } from "../features/routing";
 import { WebhookSubscriptions } from "../features/webhooks/subscriptions";
 import { WebhookDelivery } from "../features/webhooks/delivery";
 import type { OperatorNotificationCommand } from "../platform/operator-notification-boundary";
@@ -81,6 +83,8 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     clients: new ClientsRepository(binding),
     rememberedDetails: new RememberedDetails(binding,runtime.SESSION_SECRET,runtime.APP_URL,bookings),
     notices,
+    teams: new TeamsRepository(binding),
+    routing: new RoutingRepository(binding),
     webhooks: { subscriptions: new WebhookSubscriptions(binding, runtime.SESSION_SECRET, adapters.webhookTransport ?? fetch), delivery: new WebhookDelivery(binding, runtime.SESSION_SECRET, adapters.webhookTransport ?? fetch) },
     invitationManage: new InvitationManageService(binding, runtime),
     correspondence: new EventCorrespondenceRepository(binding),

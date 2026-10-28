@@ -66,7 +66,7 @@ INSERT OR IGNORE INTO webhook_deliveries(id,subscription_id,event_id,event_type,
  NEW.occurred_at,strftime('%Y-%m-%dT%H:%M:%fZ',NEW.occurred_at,'+24 hours'),NEW.occurred_at,NEW.occurred_at
  FROM webhook_subscriptions s
  WHERE s.enabled=1 AND s.secret_ciphertext IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(s.events_json) WHERE value=NEW.event_type)
- AND (s.scope='workspace' OR (s.scope='host' AND s.scope_id=(SELECT id FROM host_profiles WHERE singleton_key='default')) OR (s.scope='team' AND (s.scope_id=NULL OR EXISTS(SELECT 1 FROM team_event_types te WHERE te.team_id=s.scope_id AND te.event_type_id=NULL))))
+ AND (s.scope='workspace' OR (s.scope='host' AND s.scope_id=(SELECT id FROM host_profiles WHERE singleton_key='default')) OR (s.scope='team' AND EXISTS(SELECT 1 FROM teams t WHERE t.id=s.scope_id AND t.host_id=(SELECT id FROM host_profiles WHERE singleton_key='default'))))
  AND (1);
 END;
 

@@ -6,7 +6,7 @@ Dial sends selected durable events to an HTTPS receiver you control. Configure s
 
 Enter a public HTTPS endpoint, choose events and a scope, then authorize sending the selected event data to that endpoint. Choose **Create webhook and send events**. Dial validates the endpoint again before each attempt. Private addresses, credentials in URLs and URL fragments are refused; redirects do not receive the signed event body.
 
-The scope can be the workspace, the current real host, or an existing team. Host scope uses the actual host profile ID. Team scope uses an existing team ID and its event membership, rather than an arbitrary label. With no teams, Settings disables team scope and explains how to proceed. Calendar connection health events have no event-type membership and therefore do not match team scope. Routing submissions without a matching team or team event likewise do not match that team.
+The scope can be the workspace, the current real host, or an existing team. Host scope uses the actual host profile ID. Team scope uses an existing team ID and its event membership, rather than an arbitrary label. With no teams, Settings disables team scope and explains how to proceed. Calendar connection health events match teams belonging to the affected host. Routing submissions without a matching team or team event likewise do not match that team.
 
 GET `/api/app/webhooks` returns `subscriptions`, the newest 100 `deliveries`, `eventTypes`, `hostId`, and `teams` containing each team's `id` and `name`. Use the returned event identifiers rather than inventing them. The current events cover booking creation, rescheduling, reschedule requests, cancellation, no-shows, attendance and payments; poll creation, voting and closing; routing submissions; and calendar connection health changes.
 
@@ -27,7 +27,7 @@ The creation response is the only opportunity to retrieve the signing secret. Se
 
 ## Verify each request
 
-Dial sends a JSON POST with `Content-Type: application/json`, `Dial-Event-Id`, and `Dial-Signature`. The signature header contains `t` as a Unix timestamp in seconds and `v1` as a lowercase hexadecimal HMAC-SHA256 signature.
+Dial sends a JSON POST with a JSON content type, `Dial-Event-Id`, and `Dial-Signature`. The signature header contains `t` as a Unix timestamp in seconds and `v1` as a lowercase hexadecimal HMAC-SHA256 signature.
 
 At the receiver:
 

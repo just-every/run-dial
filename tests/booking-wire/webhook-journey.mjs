@@ -25,7 +25,7 @@ export async function webhookJourney(h) {
     const team = await data("/api/app/teams", { name: "Planning", eventTypeIds: [event.id] }, 201);
     const otherTeam = await data("/api/app/teams", { name: "Unrelated", eventTypeIds: [] }, 201);
     const teamSub = await subscribe("/team", ["booking.created.v1", "routing.submitted.v1"], "team", team.id);
-    await subscribe("/unrelated-team", settings.eventTypes, "team", otherTeam.id);
+    const unrelatedSub = await subscribe("/unrelated-team", settings.eventTypes, "team", otherTeam.id);
     const dispatch = (now, id) => data("/__fixtures/webhooks/process", { ...(now ? { now } : {}), ...(id ? { id } : {}) });
     const base = `/api/public/book/dial-host/${event.slug}`;
     let number = 1401;
@@ -83,11 +83,19 @@ export async function webhookJourney(h) {
     const teamRouting = receiver.captures.filter(row => row.path === "/team" && JSON.parse(row.body).type === "routing.submitted.v1"); assert.equal(teamRouting.length, 1);
     assert.equal(teamRouting[0] && JSON.parse(teamRouting[0].body).id, routed.submissionId);
     const unrelated = receiver.captures.filter(row => row.path === "/unrelated-team" && JSON.parse(row.body).type !== "calendar.connection-health-changed.v1"); assert.equal(unrelated.length, 0);
-    for (const capture of receiver.captures) receiver.verify(capture, capture.path === "/workspace" ? workspace.secret : capture.path === "/host" ? host.secret : teamSub.secret);
+    assert.equal(receiver.captures.filter(row => row.path === "/unrelated-team" && JSON.parse(row.body).type === "calendar.connection-health-changed.v1").length, 1, "team receives its actual host calendar health");
+    for (const capture of receiver.captures) receiver.verify(capture, capture.path === "/workspace" ? workspace.secret : capture.path === "/host" ? host.secret : capture.path === "/unrelated-team" ? unrelatedSub.secret : teamSub.secret);
     const listed = await data("/api/app/webhooks");
     assert.ok(!JSON.stringify(listed).includes(workspace.secret));
     assert.ok(listed.deliveries.every(row => row.state === "delivered" && row.responseCode === 204));
     await webhookRetries({ ...h, receiver, subscribe, process: dispatch, book, workspace, first });
+    const beforeRevocation = (await state()).webhook_subscriptions;
+    await call("/auth/signout", {}, 204);
+    await call("/api/app/webhooks", undefined, 401);
+    await call("/api/app/webhooks", { endpoint: "https://receiver.synthetic.test/revoked", events: ["booking.created.v1"], scope: "workspace", scopeId: null }, 401);
+    await call(`/api/app/webhooks/${workspace.id}`, undefined, 401, "DELETE");
+    await call("/api/app/webhook-deliveries/synthetic-dial-1499/redeliver", {}, 401);
+    assert.deepEqual((await state()).webhook_subscriptions, beforeRevocation, "a revoked session cannot regain webhook authority");
     checks.push("API-002: all native facts, scoped subscriptions, independently verified HMAC, UTM and source, duration, retry, manual replay, deletion and erasure");
   } finally { await receiver.close(); }
 }

@@ -4,23 +4,21 @@ import { apiError } from "../../shared/http";
 import { validate } from "../../shared/validation";
 import { createId } from "../../shared/ids";
 import { createOpaqueToken, hashToken } from "../../platform/auth/tokens";
-import { RoutingRepository } from "./repository";
 import { formParams, formSchema, submissionSchema, type RoutingForm, type SubmissionResult } from "./types";
 
 export const routingRoutes = new Hono<AppEnvironment>()
  .get("/api/app/routing-forms",async context=>{
-  const rows=(await context.env.DB.prepare("SELECT id,title,host_id AS hostId,config_json AS configJson,created_at AS createdAt,updated_at AS updatedAt FROM routing_forms ORDER BY created_at,id").all<{id:string;title:string;hostId:string;configJson:string;createdAt:string;updatedAt:string}>()).results;
-  return context.json({forms:rows.map(({configJson,...row})=>({...row,...JSON.parse(configJson) as RoutingForm}))});
+  return context.json({forms:await context.get("services").routing.list()});
  })
  .post("/api/app/routing-forms",validate("json",formSchema),async context=>{
   const profile=await context.get("services").hostProfile.getProfile();
   if(!profile)return apiError(context,409,"profile_required","Configure your host profile first.");
-  const input=context.req.valid("json"),repository=new RoutingRepository(context.env.DB);
+  const input=context.req.valid("json"),repository=context.get("services").routing;
   for(const rule of input.rules)if(!await repository.target(rule.eventTypeId,rule.teamId))return apiError(context,400,"routing_target_unavailable","Choose a published event belonging to the selected team.",[rule.id]);
   return context.json(await repository.create(input,profile.id),201);
  })
  .get("/api/public/routing/:id",validate("param",formParams),async context=>{
-  const repository=new RoutingRepository(context.env.DB),form=await repository.get(context.req.valid("param").id);
+  const repository=context.get("services").routing,form=await repository.get(context.req.valid("param").id);
   if(!form)return apiError(context,404,"routing_form_not_found","This routing form is not available.");
   const input=JSON.parse(form.configJson) as RoutingForm,nonce=createOpaqueToken(),expiresAt=new Date(Date.now()+15*60000).toISOString();
   await repository.issue(form.id,await hashToken(nonce,context.get("runtime").SESSION_SECRET),expiresAt);
@@ -29,7 +27,7 @@ export const routingRoutes = new Hono<AppEnvironment>()
  })
  .post("/api/public/routing/:id/submit",validate("param",formParams),validate("json",submissionSchema),async context=>{
   context.header("Cache-Control","no-store");
-  const repository=new RoutingRepository(context.env.DB),form=await repository.get(context.req.valid("param").id);
+  const repository=context.get("services").routing,form=await repository.get(context.req.valid("param").id);
   if(!form)return apiError(context,404,"routing_form_not_found","This routing form is not available.");
   const input=context.req.valid("json"),secret=context.get("runtime").SESSION_SECRET,hash=await hashToken(input.nonce,secret);
   const capability=await repository.capability(form.id,hash);
