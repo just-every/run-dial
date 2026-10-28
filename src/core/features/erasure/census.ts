@@ -1,6 +1,8 @@
 // Exhaustive migrated application census; unknown tables stop erasure before writes.
 export const applicationTables = [
   "dial_portability_admission",
+  "teams", "team_event_types", "routing_forms", "routing_submissions", "routing_capabilities",
+  "webhook_subscriptions", "webhook_deliveries",
   "anonymized_audit",
   "availability_date_override_windows",
   "availability_date_overrides",

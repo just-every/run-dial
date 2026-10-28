@@ -338,8 +338,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 70 | 6 | 0 | 76 |
-| Target and push further | 17 | 22 | 61 | 100 |
-| All | 87 | 28 | 61 | 176 |
+| Target and push further | 17 | 23 | 60 | 100 |
+| All | 87 | 29 | 60 | 176 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -483,7 +483,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `REPORT-002` | Host calendar view and booking workspace | target | partial | `src/core/features/bookings/ui/calendar-workspace.tsx`, `src/core/features/bookings/ui/calendar-grid.tsx`, `tests/bookings-filters.test.mjs`, `tests/booking-axe/calendar.mjs` | Day, week and month share the list query, filters and paginated identity set in the viewer profile zone. Attendance filters are applied before count and pagination; the real single host is shown. Native and browser journeys cover the March spring-forward and February/March/April edges, imported placement, keyboard record opening and a real reschedule moving the calendar entry; month is an agenda at mobile width. Open: payment-state filtering, repeated-hour display proof, team filters, member columns and multi-host role scope. The complete mixed-subject acceptance sentence remains intact under ct’s conditional verbatim-carve form. |
 | `REPORT-003` | Exports and scheduled reports | target | missing |  | Filtered reporting CSVs and scheduled member reports are absent; the owner archive is DATA-001, not this reporting flow. |
 | `API-001` | Public REST API | target | missing |  | No versioned credential-authorized public API, cursor pagination, per-credential limits or OpenAPI document ships; existing page-internal and invitee-capability JSON routes are not this API. |
-| `API-002` | Webhooks | target | missing |  | Owns subscriber and webhook dispatch of CAL-006’s natively recorded `calendar.connection-health-changed.v1` transition facts, including their event IDs, states, reasons and times. Delivery is not implemented. |
+| `API-002` | Webhooks | target | partial | `src/core/features/webhooks/routes.ts`, `src/core/features/webhooks/delivery.ts`, `migrations/core/0086_webhooks.sql` | Implementation in progress; native proof pending for every named event, HMAC, scheduled retry, manual redelivery, UTM and source, chosen duration, deleted subscription, scope refusal, erasure and inert restore. |
 | `API-003` | Machine-credential booking API | target | missing |  | No machine credential, scoped bearer door, per-event-type or per-calendar scope, rotation, machine actor in history, notices or audit, scoped webhook subscription or replay, or archive handling of credentials ships; AUTH-008, API-001 and API-002 are themselves unbuilt, so this clause builds on them and proves its door only once those exist. |
 | `INTEG-001` | Zapier, Make and Crank | target | missing |  | No implementing code yet. |
 | `INTEG-002` | HubSpot | target | missing |  | No implementing code yet. The phone question's normalized E.164 value maps to the CRM phone field (`EVENT-003`). |

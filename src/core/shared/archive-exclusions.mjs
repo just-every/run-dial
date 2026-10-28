@@ -42,6 +42,7 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  routing_capabilities: "One-use routing submission authority and hashes remain installation-local",
   payment_products: "Payment entitlement catalog is not portable yet; export refuses populated entitlement data",
   payment_entitlements: "Purchaser identity, redemption code hashes and live Stripe purchase authority never travel; export refuses populated entitlement data",
   payment_redemptions: "Live entitlement balances and booking redemption history are not portable yet; export refuses populated entitlement data",

@@ -1,3 +1,6 @@
+import { webhookRoutes } from "../features/webhooks/routes";
+import { teamRoutes } from "../features/teams";
+import { routingRoutes } from "../features/routing";
 import { pollRoutes } from "../features/polls";
 import { clientRoutes, rememberRoutes } from "../features/clients";
 import { noticeRoutes } from '../features/workspace-notices';
@@ -59,7 +62,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       await next();
       if (context.req.path === "/app" || context.req.path.startsWith("/app/")) context.res = editorDocument(context.res, runtime);
       if (["POST", "PUT", "PATCH", "DELETE"].includes(context.req.method) && context.res.status < 400 && !context.req.path.startsWith("/api/app/move-in/") && !context.get("inertMutation")) {
-        context.executionCtx.waitUntil(services.delivery.enqueueDue(context.env.JOBS));
+        context.executionCtx.waitUntil(Promise.all([services.delivery.enqueueDue(context.env.JOBS), services.webhooks.delivery.enqueue(context.env.JOBS)]));
       }
     })
     .all("/auth/*", async (context) => (await context.get("services").operators.handle(context.req.raw)) ?? context.notFound())
@@ -110,6 +113,9 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", invitationManageRoutes)
     .route("/", paymentRoutes)
     .route("/", accountingRoutes)
+    .route("/", webhookRoutes)
+    .route("/", teamRoutes)
+    .route("/", routingRoutes)
     .route("/", noticeRoutes)
     .route("/", reportRoutes)
     .route("/", publicBookingRoutes)

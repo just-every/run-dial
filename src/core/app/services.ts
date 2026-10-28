@@ -1,3 +1,5 @@
+import { WebhookSubscriptions } from "../features/webhooks/subscriptions";
+import { WebhookDelivery } from "../features/webhooks/delivery";
 import type { OperatorNotificationCommand } from "../platform/operator-notification-boundary";
 import { PollsService } from "../features/polls";
 import { ClientsRepository, RememberedDetails } from "../features/clients";
@@ -49,7 +51,7 @@ import { suppressesMail } from "../platform/mail/development";
 import { BaseMailSender, mailConfiguration } from "../platform/mail/base-mail";
 import type { RuntimeEnvironment } from "../shared/runtime-env";
 
-export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { operatorNotifications?: OperatorNotificationCommand; files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsClock?:()=>Promise<Date>; paymentsTransport?: typeof fetch } = {}) {
+export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { operatorNotifications?: OperatorNotificationCommand; files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsClock?:()=>Promise<Date>; paymentsTransport?: typeof fetch; webhookTransport?: typeof fetch } = {}) {
   const noticeTransport=adapters.paymentsTransport??fetch;
   const notices={destinations:new NoticeDestinations(binding,runtime,noticeTransport),delivery:new NoticeDelivery(binding,runtime,noticeTransport),erasure:new NoticeErasure(binding,runtime,noticeTransport)};
   const hostProfile = new HostProfileService(new HostProfileRepository(binding));
@@ -79,6 +81,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     clients: new ClientsRepository(binding),
     rememberedDetails: new RememberedDetails(binding,runtime.SESSION_SECRET,runtime.APP_URL,bookings),
     notices,
+    webhooks: { subscriptions: new WebhookSubscriptions(binding, runtime.SESSION_SECRET, adapters.webhookTransport ?? fetch), delivery: new WebhookDelivery(binding, runtime.SESSION_SECRET, adapters.webhookTransport ?? fetch) },
     invitationManage: new InvitationManageService(binding, runtime),
     correspondence: new EventCorrespondenceRepository(binding),
     bookingPolicies: new EventBookingPolicyRepository(binding),

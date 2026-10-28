@@ -20,7 +20,7 @@ REPORT-001 is partial on the single-host surface: Bookings has a scheduling repo
 
 Evidence: `tests/scheduling-report.test.mjs` with its seeded month in `tests/review/report-month.ts`, and the 1440 and 390 screen proof `scripts/verify-report-screens.mjs`.
 
-The contract census is 87 done / 28 partial / 61 missing (176 clauses). DATA-004 is done for the classification gate and current record kinds; DATA-005–DATA-008 carry the target kinds, personal rows and external deletion requests. Other claims and their evidence remain in the CONTRACT.md Status table.
+The contract census is 87 done / 29 partial / 60 missing (176 clauses). DATA-004 is done for the classification gate and current record kinds; DATA-005–DATA-008 carry the target kinds, personal rows and external deletion requests. Other claims and their evidence remain in the CONTRACT.md Status table.
 
 EVENT-009 is done on the native single-host surface: a host allows a configured number of guests, the invitee adds and removes them from the booking and manage steps, and guests receive calendar invitations and Dial confirmation and change notices without the invitee's manage link. Removing a guest sends one cancellation; guest erasure removes their entries and notices while preserving the invitee booking. Calendar and mail providers are synthetic at the HTTP edge. `tests/booking-wire/guest-journey.mjs`, `tests/export-base-adoption.test.mjs` and `scripts/verify-guest-screens.mjs` carry the native, archive, prior-schema and 1440/390 screen proof.
 
@@ -41,3 +41,10 @@ PAY-006 is partial: the authenticated Settings payments view and booking record 
 FLOW-005 is partial: workspace owners connect a Slack channel or their own DM through signed, session-bound single-use OAuth, and a Teams channel through a sealed Workflows URL. Atomic booking commands enqueue reference-only notices; durable jobs send name, event, host time, duration and a Bookings link without private answers, email, phone or manage capability. Revocation stops the destination and queues one operator alert; 429 retries within the delivery window, while ambiguous sends never replay automatically. Person erasure deletes known Slack messages and reports Teams cleanup as pending. Evidence: `tests/booking-wire/notice-journey.mjs`, `tests/booking-axe/notice-settings.mjs`, `scripts/verify-booking-record.mjs`, `tests/export-base-adoption.test.mjs`. Default ADOPTED: owner-configured workspace notices; Teams uses a sealed Workflows URL. Routed-unbooked notices wait for ROUTE-001 and team scope waits for TEAM-002. Ambiguous remote sends are recorded outcome unknown and never automatically replayed. Teams Workflows supplies no deletion authority or downstream message receipt; person erasure reports pending manual cleanup. No real provider call or consent was used; live Slack/Teams posts and deployed webhook delivery are unobserved.
 
 REPORT-002 remains partial. The Bookings calendar uses the list’s operator query and URL filters, including attendance, and retrieves every page in the visible civil-date period. Day, week and month use the viewer profile zone; month becomes an agenda at mobile width. Keyboard day navigation opens the existing booking record, and rescheduling moves the entry. Evidence: `tests/bookings-filters.test.mjs`, `tests/booking-axe/calendar.mjs` in the existing booking-record browser. Payment-state filtering, team filters, member columns and role scoping remain unbuilt; repeated-hour calendar rendering remains unproved.
+
+
+<!-- generated-clause:API-002 -->
+API-002 is partial. Implementation in progress; native proof pending for every named event, HMAC, scheduled retry, manual redelivery, UTM and source, chosen duration, deleted subscription, scope refusal, erasure and inert restore.
+
+Evidence: `src/core/features/webhooks/routes.ts`, `src/core/features/webhooks/delivery.ts`, `migrations/core/0086_webhooks.sql`
+<!-- end-generated-clause:API-002 -->

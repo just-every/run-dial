@@ -7,6 +7,7 @@ export { scrub, collectSecrets } from './redaction.mjs';
 // operator_setup_identity retains its durable first-run timestamp, including NULL.
 export const exported = [
   ...importExported,
+  "teams", "team_event_types", "routing_forms", "routing_submissions", "webhook_subscriptions", "webhook_deliveries",
   'rer_erasure_operations', 'person_erasure_receipts', 'processor_erasure_requests', 'operator_erasure_subjects',
   'ext_custom_field_definitions', 'ext_custom_field_values',
   'avatar_object_deletions', 'operators', 'host_profiles', 'host_link_copy_reports', 'profile_focus_areas', 'social_proof_entries', 'event_types',
@@ -52,6 +53,8 @@ export function assertCoverage(names) {
 }
 export function canonicalRow(name, source, secrets = []) {
   const row = Object.fromEntries(Object.entries(source).map(([key, value]) => [key, scrub(value, secrets, name === 'delivery_outbox' && key === 'payload_json')]));
+  if (name === 'webhook_subscriptions') { row.secret_ciphertext = null; row.enabled = 0; }
+  if (name === 'webhook_deliveries') { row.state = 'failed'; row.last_error = 'restored_historical_command'; row.lease_id = null; row.lease_until = null; }
   if (name === 'meeting_polls') row.state = 'closed';
   if (name === 'bookings') {
     row.invitee_name_folded = foldBookingSearch(row.invitee_name);

@@ -1,3 +1,4 @@
+import { isWebhookJob } from "../features/webhooks/delivery";
 import type { AppBindings } from "./bindings";
 import type { AppServices } from "./services";
 import { parseRuntimeEnvironment } from "../shared/runtime-env";
@@ -12,6 +13,7 @@ export async function consumeJobs(batch: MessageBatch<unknown>, env: AppBindings
       message.ack();
       return;
     }
+    if (isWebhookJob(message.body)) { await services.webhooks.delivery.process(message.body.deliveryId); message.ack(); return; }
     await processCoordinatedDelivery(message.body, env, () => services.delivery.processUnknown(message.body));
     message.ack();
   }));
@@ -30,6 +32,7 @@ export async function runScheduledWork(env: AppBindings, services: AppServices) 
   await processDueCalendarDeletionProbes(env);
   await services.delivery.renewCalendarChannels();
   await services.delivery.enqueueDue(env.JOBS);
+  await services.webhooks.delivery.enqueue(env.JOBS);
   // Admission-state cleanup cannot prevent the independent booking recovery work above.
   await new PublicAdmissionGate(env.DB, parseRuntimeEnvironment(env)).expire();
 }

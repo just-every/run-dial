@@ -178,3 +178,7 @@ filter, consumer-guide replacement or publish command exists. If the distributio
 ships AGENTS.consumer.md as AGENTS.md, check the emitted guide against actual
 paths, commands and readiness. Preserve the author repository and owner forks.
 Commit, tag, publish and deploy only within session authority.
+
+## Lander-Regenerate
+
+After changing a Status row, run `node scripts/contract-docs.mjs write API-002` with every touched clause ID, then `node scripts/contract-docs.mjs check API-002`. The generator preserves existing acceptance prose for untouched clauses and refreshes their census from CONTRACT.md. Regenerate the edition lock last with `node scripts/edition-authoring/cli.mjs lock`, then run its `check`.
