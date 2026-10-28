@@ -1,5 +1,5 @@
 export type CalendarBooking={fields:Record<string,string>;parameters:Record<string,Record<string,string>>};
-const unescape=(value:string)=>value.replace(/\\[nN]/gu,'\n').replace(/\\([,;\\])/gu,'$1');
+const unescape=(value:string)=>value.replace(/\\([nN,;\\])/gu,(_,character:string)=>character==='n'||character==='N'?'\n':character);
 /** The documented template uses explicit UTC instants and one invitee. */
 export function calendarBookings(text:string):CalendarBooking[]{
  const lines=text.replace(/\r\n[ \t]|\n[ \t]/gu,'').split(/\r?\n/u),bookings:CalendarBooking[]=[];
