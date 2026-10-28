@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 87 done / 29 partial / 60 missing (176 clauses).
+The contract census is 88 done / 28 partial / 60 missing (176 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -888,11 +888,11 @@ Evidence: None.
 
 Gap: No implementing code yet.
 
-INTEG-006 is partial: Analytics and conversion tracking.
+INTEG-006 is done: Analytics and conversion tracking.
 
-Evidence: `src/core/features/analytics/`, `src/core/features/public-booking/ui/analytics.ts`, migration `migrations/core/0085_analytics.sql`
+Evidence: `tests/booking-wire.test.mjs` — "booking analytics emits configured events once and stays silent without tags at desktop and mobile", `tests/booking-axe/analytics.mjs` (GA4 events once, unconfigured silence, tag controls, privacy notice and sandboxed vendor context at 1440 and 390); `tests/booking-wire.test.mjs` — "configured booking analytics uploads click-only conversions once and honors revoked or erased authority", `tests/booking-wire/analytics-journey.mjs` (Google and LinkedIn click IDs without answers, retries and replay, disconnect and erasure); `tests/export-base-adoption.test.mjs` — "the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused" (credentials require reconnect and restored conversions stay historical); `tests/archive-prior-release.test.mjs` — "a backup made by the listed release restores through rer import with every archived value and file, under either migration ledger"; `RULINGS.md` RL-1 records future routing-form inheritance.
 
-Gap: Owner tag settings, conditional booking scripts and durable click-only conversions implemented. Proof pending: GA4 events exactly once, no third-party requests when unconfigured, both advertising API payloads and retried jobs without duplicates; routing-form surface remains with the unbuilt `ROUTE-001`. No live advertising account or attribution claim.
+Gap: None.
 
 INTEG-007 is missing: Intercom.
 
