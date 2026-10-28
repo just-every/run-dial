@@ -8,9 +8,6 @@ import { equalOperatorReplay } from './move-in/equal-operators.mjs';
 import { endedFiles, endedAsOf } from './move-in/ended.mjs';
 import { assertImportedHistory, assertFreshReimport } from './move-in/history.mjs';
 import { assertLocationChoice, locationChoices } from './move-in/locations.mjs';
-import { schedulerImports, schedulerConnections } from './move-in/scheduler-journey.mjs';
-contract('MIGRATE-004','scheduler captures and CSV or calendar templates preview losses, import silently, undo and fence erased or revoked replays',schedulerImports);
-contract('MIGRATE-004','scheduler API connection uses native authority and refuses member captures and CSV previews without writes',schedulerConnections);
 async function result(response,expected=200){assert.equal(response.status,expected,'Native move-in response has unexpected status');return response.json();}
 async function complete(rt,current){for(let n=0;!['completed','undone'].includes(current.job.state)&&n<60;n++)current=await result(await rt.api(`/api/app/move-in/jobs/${current.job.id}/resume`,{method:'POST'}));assert.ok(['completed','undone'].includes(current.job.state));return current;}
 async function native(rt){return Object.fromEntries(await Promise.all(['host_profiles','event_types','event_questions','recurring_availability_windows','availability_date_overrides','bookings','booking_occurrences','booking_answers','booking_manage_tokens','delivery_outbox','delivery_attempts','base_mail_dispatch','rer_mail_development_outbox','ik_jobs','ik_provenance','ik_originals'].map(async table=>[table,(await rt.db.prepare(`SELECT count(*) AS n FROM ${table}`).first()).n])));}

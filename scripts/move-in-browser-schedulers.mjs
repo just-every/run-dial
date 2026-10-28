@@ -39,4 +39,7 @@ export async function schedulerJourney({page,context,origin,audit}){
   await expect(card.getByRole('status').filter({hasText:'undone:'})).toHaveCount(1);await audit(calendar?'calendar-undone':'csv-undone');
   assert.deepEqual(await(await context.request.get(origin+'/api/app/bookings')).json(),[]);
  }
+ for(const slug of ['importing','importing-schedulers','importing-templates']){
+  await page.goto(`${origin}/docs/${slug}`);await page.getByRole('heading',{level:1}).waitFor();await audit(`guide-${slug}`);
+ }
 }

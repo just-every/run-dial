@@ -1,6 +1,6 @@
 import type { SourceData } from '../source.ts';
 import type { SourceLoss } from '../external-source.ts';
-import { ApiRecord, canonical, instant, sourceUrl } from './api-record.ts';
+import { ApiRecord, canonical, instant } from './api-record.ts';
 
 export function savvyBooking(value: unknown, data: SourceData, losses: SourceLoss[], accountEmail: string) {
  const row = new ApiRecord(value), uri = canonical('savvycal', 'events', row.id('id'));
@@ -25,12 +25,11 @@ export function savvyBooking(value: unknown, data: SourceData, losses: SourceLos
  if (!location.join_url && typeof row.raw.location === 'string') { location.type = 'custom'; location.location = row.text('location'); }
  const before = row.number('buffer_before'), after = row.number('buffer_after');
  if (![before, after].every(n => Number.isInteger(n) && n >= 0 && n <= 1440)) throw new Error('Invalid SavvyCal booking buffer.');
- const publicUrl = sourceUrl(row, 'url');
  data.scheduled_events.push({ uri, event_type: event, name: row.text('summary'), status: state === 'confirmed' ? 'active' : 'canceled',
   start_time: start, end_time: end, created_at: created, location,
   invitees_counter: { active: invitees.length, total: invitees.length, limit: invitees.length },
   event_memberships: own ? [{ user: data.user[0].uri, buffered_start_time: new Date(Date.parse(start) - before * 60000).toISOString(), buffered_end_time: new Date(Date.parse(end) + after * 60000).toISOString() }] : [],
-  event_guests: unsupported ? [true] : [], source_account: data.user[0].uri, ...(publicUrl ? { source_url: publicUrl } : {}) });
+  event_guests: unsupported ? [true] : [], source_account: data.user[0].uri });
  for (const attendee of invitees) {
   const answers = attendee.rows('fields').flatMap((field, position) => {
    if (typeof field.raw.value !== 'string') return [];

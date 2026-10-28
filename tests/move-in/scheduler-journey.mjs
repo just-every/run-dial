@@ -15,7 +15,7 @@ async function noEffects(rt){
  assert.deepEqual(rt.calls,[]);
  const tables=(await rt.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results.map(r=>r.name).filter(name=>/delivery|outbox|reminder|calendar|meeting|mail_dispatch/u.test(name));
  for(const name of tables)assert.equal((await rt.db.prepare(`SELECT count(*) AS n FROM "${name}"`).first()).n,0,`${name} stays silent`);
- assert.equal(await result(await rt.api('/__fixtures/queue-count')),0);
+ assert.equal((await result(await rt.api('/__fixtures/queue-count'))).queueCalls,0);
 }
 export async function schedulerImports(){
  const cases=schedulerCases();assert.deepEqual(cases.map(source=>source.name),['Cal.com','SavvyCal','CSV','calendar']);

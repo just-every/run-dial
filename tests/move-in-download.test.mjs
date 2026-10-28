@@ -6,6 +6,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { contract } from './contract.mjs';
 import { download } from '../scripts/move-in/download.mjs';
+import { schedulerImports, schedulerConnections } from './move-in/scheduler-journey.mjs';
+contract('MIGRATE-004','scheduler captures and CSV or calendar templates preview losses, import silently, undo and fence erased or revoked replays',schedulerImports);
+contract('MIGRATE-004','scheduler API connection uses native authority and refuses member captures and CSV previews without writes',schedulerConnections);
 const fixture=new URL('./move-in/fixtures/edges/',import.meta.url);
 contract('DATA-003','local GET-only downloader retains exact paged bytes and fails closed without disclosing credentials',async()=>{
  const root=await mkdtemp(join(tmpdir(),'dial-download-'));const planted='synthetic-download-secret-EXAMPLE';let mode='ok',attempt=0;const calls=[];

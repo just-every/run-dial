@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "007a3c7f802e5cee4ca14bf26bcedd4400f3c1285716001b262314be11f558c1",
+      "sha256": "556b7938ec79f1e086362575c7b9cc6587288c72423e1febaed2ab359691b4bb",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "c0891e732f3a1fe506e80b74f08c0305e18aec8d5d54121fefc90ec235c1900c",
+      "sha256": "60d106927767fb916206e37be9711ac3a59c881072474568b7702b5d9a0e6e72",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -4368,7 +4368,7 @@
       "executable": false
     },
     "scripts/move-in-browser-schedulers.mjs": {
-      "sha256": "d353bc0bfabbdd924c95b844274ae4330c63495f7ed81d0a08c91c98dc622e44",
+      "sha256": "84a82529d46898dd9e29b1f065bf67880a10a8eb7e71d0c80a6e4c8fec1c9287",
       "executable": false
     },
     "scripts/move-in/download-calendly.mjs": {
@@ -4652,7 +4652,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "8fcc50ef8015b880b1cc83e6c0a2f10a547aad9c339e989d2f2c9048acb21b69",
+      "sha256": "762587b43dcf31ca48fb888f4139cbbcbeb16cf50b9b1369f35efd1aebfa907a",
       "executable": false
     },
     "src/base/contract-filter.ts": {
@@ -6152,7 +6152,7 @@
       "executable": false
     },
     "src/core/features/move-in/providers/api-savvycal-bookings.ts": {
-      "sha256": "2d76c8d4a6ef3b5c67ae724ee95db12ff319937dc689668d66e7199da9a86be5",
+      "sha256": "ae8824b656dccd399d1ee9671e1582014db0abd329adcd3d04916ec8ff978402",
       "executable": false
     },
     "src/core/features/move-in/providers/api-savvycal.ts": {
@@ -8940,7 +8940,7 @@
       "executable": false
     },
     "tests/move-in-download.test.mjs": {
-      "sha256": "6c33cf522f9de51c29ba3c65818ae9db800d887cba7811eaaf2978b66ffc72dd",
+      "sha256": "2d76299ebc510d262b5cad1948ad69e5e946315349cba47b315e1e60edd31a59",
       "executable": false
     },
     "tests/move-in-portability.test.mjs": {
@@ -8948,7 +8948,7 @@
       "executable": false
     },
     "tests/move-in-runtime.test.mjs": {
-      "sha256": "36d83f57b4c47150388c84d7551338056eed083345ed0737fb6ac8feb9208cbb",
+      "sha256": "7befcc556aeb3b9c401e61dc7b2094c36d0b5158a7b1c2bd58b7e26617aefa53",
       "executable": false
     },
     "tests/move-in/booking-runtime.mjs": {
@@ -9312,11 +9312,11 @@
       "executable": false
     },
     "tests/move-in/scheduler-fixtures.mjs": {
-      "sha256": "7d02713a43dc61d43c63ed066b38da72dbcf9236a106660c8aa7a0d27e52f1fa",
+      "sha256": "749113ba77bf6afc8c872b47bf4f0c1fefa5d2acf1019ba08d7a63c25a090717",
       "executable": false
     },
     "tests/move-in/scheduler-journey.mjs": {
-      "sha256": "4a27b699c394f360fb7ed123fb716f149e32e3d98cce8e354fc2b4b7c5403b38",
+      "sha256": "f3bb9fad9e87016faad0e974f6df5ea74c402fdb8b5ff937a31ab3f5ba6ba171",
       "executable": false
     },
     "tests/move-in/upload.mjs": {
