@@ -8324,7 +8324,7 @@
       "executable": false
     },
     "tests/booking-axe/routing-embed.mjs": {
-      "sha256": "38c388dcb80296cfd7161090fd8649c843487be581d295913b4a57a47184e338",
+      "sha256": "0e69d885af84de2502192e27ed77b6469c92911c3cdcbe9c9fffad8f1b5847fa",
       "executable": false
     },
     "tests/booking-axe/routing-tracking.mjs": {
