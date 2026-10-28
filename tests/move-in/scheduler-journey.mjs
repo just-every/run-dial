@@ -86,7 +86,10 @@ export async function schedulerConnections(){
   assert.equal(rt.calls.length,calls,'Member cannot contact a provider');assert.deepEqual(await snapshot(rt),before,'Refusals write nothing');
   await rt.db.prepare("UPDATE oa_operators SET role='admin' WHERE id='synthetic-dial-701'").run();
   const adminCookie=await signIn(),admin=(path,init={})=>rt.api(path,{...init,headers:{cookie:adminCookie,...init.headers}});
-  assert.equal((await savedUploader(admin,instant)('preview',genericFiles())).status,200,'Native admin can preview');
+  const adminUpload=savedUploader(admin,instant),adminFiles=genericFiles(),review=await result(await adminUpload('preview',adminFiles));
+  const adminApplied=await complete({api:admin},await result(await adminUpload('apply',adminFiles,{fingerprint:review.report.fingerprint,acknowledged:true})));
+  assert.equal((await result(await admin('/api/app/move-in/jobs'))).jobs.length,1,'Native admin owns the completed import');
+  await complete({api:admin},await result(await admin(`/api/app/move-in/jobs/${adminApplied.job.id}/undo`,{method:'POST'})),'undone');
   await rt.db.prepare("UPDATE oa_operators SET role='member' WHERE id='synthetic-dial-701'").run();
   assert.equal((await savedUploader(admin,instant)('preview',genericFiles())).status,401,'Role change invalidates prior native authority');
  }finally{await rt.close();}

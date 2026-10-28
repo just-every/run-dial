@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "40f7cb4bca6bbe9a0515082a862b95d6b941943586cd19f51a4376551b9cd770",
+      "sha256": "d9ea17b9218c3256041fe2b63173f3fb2ce051ff0d3a351a23d2a64612fdf312",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "bd63aa7f055e33965a45922aca9fb6580a74ebc959f1b4e37c597b791a039fd7",
+      "sha256": "007a3c7f802e5cee4ca14bf26bcedd4400f3c1285716001b262314be11f558c1",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "299432c8354bfc58963c2c1f98fc0df44d34e1ffc9ab11d1f39e06e7e821f5ad",
+      "sha256": "c0891e732f3a1fe506e80b74f08c0305e18aec8d5d54121fefc90ec235c1900c",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -6212,7 +6212,7 @@
       "executable": false
     },
     "src/core/features/move-in/ui/scheduler-source.tsx": {
-      "sha256": "d615e8a012ed113ea5f267fffcb04e109b329b9a4e835fb93facd3c9569050c7",
+      "sha256": "9e7f2aa48dde0d74c566fc5f11d0c9786c2597d7b2dca16fd461d954dc81141f",
       "executable": false
     },
     "src/core/features/move-in/ui/switch-over-card.tsx": {
@@ -9316,7 +9316,7 @@
       "executable": false
     },
     "tests/move-in/scheduler-journey.mjs": {
-      "sha256": "f9e1bfd05be677c60fb2735f371af86168c833c5571dea6d402e581ff38990d4",
+      "sha256": "b016f8dae38dbb960368b740a0605047ce528c5c48ff532c6137b1ddcdf9d12b",
       "executable": false
     },
     "tests/move-in/upload.mjs": {

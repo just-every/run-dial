@@ -504,7 +504,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `MIGRATE-001` | Calendly move-in, connected | target | partial | `src/core/features/move-in/service.ts`, `src/core/features/move-in/map-events.ts`, `scripts/move-in/download-calendly.mjs`, `tests/move-in-runtime.test.mjs`, `tests/move-in-catch-up.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `MIGRATE-002` | Acuity Scheduling move-in | target | missing |  | No implementing code yet. |
 | `MIGRATE-003` | Microsoft Bookings move-in | target | missing |  | No implementing code yet. |
-| `MIGRATE-004` | Cal.com, SavvyCal, Doodle and generic move-in | target | missing |  | No implementing code yet. |
+| `MIGRATE-004` | Cal.com, SavvyCal, Doodle and generic move-in | target | partial | `src/core/features/move-in/`, `tests/move-in-runtime.test.mjs`, `scripts/move-in-browser-schedulers.mjs`, `docs/importing-schedulers.md`, `docs/importing-templates.md` | Readers, native connection and role boundary implemented. Passing proof pending for silent Cal.com and CSV or calendar imports with complete field losses, member connection and preview refusals, inherited undo and erasure, and the 1440 and 390 browser journey. |
 | `MIGRATE-005` | Cutover and old links | target | partial | `src/core/features/move-in/switch-over.ts`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `CUSTOM-001` | Operator annotations | published | done | `tests/custom-fields.test.mjs` | Role refusals carried by `OPER-001`. |
 | `CUSTOM-002` | Annotation privacy and portability | published | done | `tests/custom-fields.test.mjs` |  |
