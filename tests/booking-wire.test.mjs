@@ -24,12 +24,13 @@ async function wireJourney(t, feature) {
   const [port, inspector, receiver] = feature === "webhooks" ? await webhookPorts() : [15754, 15755, 15756];
   const origin = `http://127.0.0.1:${port}`, config = "tests/booking-wire/worker.wrangler.toml";
   const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin, DIAL_WEBHOOK_RECEIVER_PORT: String(receiver) };
-  let server, output = "";
+  let server, nativeRuntime, output = "";
   let cleaned = false;
   const cleanup = async () => {
     if (cleaned) return;
     cleaned = true;
     if (server?.exitCode === null) { const stopped = new Promise(done => server.once("exit", done)); try { process.kill(-server.pid, "SIGTERM"); } catch { server.kill("SIGTERM"); } await stopped; }
+    await nativeRuntime?.dispose();
     // C.1 keeps captured Worker evidence free of generated manage capability URLs.
     await writeFile(evidencePath("booking-wire-worker.log"), output.replace(/\/manage\/(?:invite\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]")); await rm(state, { recursive: true, force: true });
   };
@@ -39,12 +40,16 @@ async function wireJourney(t, feature) {
     child.stdout.on("data", chunk => { log += chunk; }); child.stderr.on("data", chunk => { log += chunk; });
     child.on("error", reject); child.on("exit", code => code === 0 ? done(log) : reject(new Error(log)));
   });
-  await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
+  if (feature !== "webhooks") await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
   const microsoft = feature === "microsoft" ? ["--var", "CALENDAR_PROVIDER:microsoft", "--var", "MICROSOFT_OAUTH_CLIENT_ID:synthetic-dial-801-client", "--var", "MICROSOFT_OAUTH_CLIENT_SECRET:synthetic-dial-802-secret"] : [];
-  const webhookRuntime = feature === "webhooks" ? ["--var", `APP_URL:${origin}`, "--var", `WEBHOOK_RECEIVER_ORIGIN:http://127.0.0.1:${receiver}`] : [];
-  server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", String(port), "--inspector-port", String(inspector), ...microsoft, ...webhookRuntime], { env, stdio: "pipe", detached: true });
+  if (feature === "webhooks") {
+    const { startWebhookRuntime } = await import("./booking-wire/webhook-runtime.mjs");
+    nativeRuntime = await startWebhookRuntime({ state, port, origin, receiver });
+  } else {
+  server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", String(port), "--inspector-port", String(inspector), ...microsoft], { env, stdio: "pipe", detached: true });
   server.stdout.on("data", chunk => { output += chunk; }); server.stderr.on("data", chunk => { output += chunk; });
-  for (let attempt = 0; ; attempt++) { if (server.exitCode !== null || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
+  }
+  for (let attempt = 0; ; attempt++) { if ((server && server.exitCode !== null) || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
   assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
   console.log((await run(feature === "microsoft" ? ["node", "tests/booking-wire/microsoft-journey.mjs"] : feature ? ["node", "tests/booking-wire/feature-journey.mjs", feature] : ["node", "tests/booking-wire/journey.mjs"])).trim());
   await cleanup();

@@ -1,0 +1,35 @@
+import { createRequire } from "node:module";
+import { readFile, readdir } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
+import { build } from "esbuild";
+import { unstable_getMiniflareWorkerOptions, unstable_splitSqlQuery as splitSqlQuery } from "wrangler";
+
+const require = createRequire(import.meta.resolve("wrangler"));
+const { Miniflare, convertV4MiniflareOptions } = await import(pathToFileURL(require.resolve("miniflare")));
+
+export async function startWebhookRuntime({ state, port, origin, receiver }) {
+  const { workerOptions } = unstable_getMiniflareWorkerOptions("tests/booking-wire/worker.wrangler.toml");
+  const compiled = await build({ entryPoints: ["tests/booking-wire/worker.ts"], bundle: true, format: "esm", platform: "browser", external: ["node:*", "cloudflare:workers"], write: false });
+  const runtime = new Miniflare(convertV4MiniflareOptions({ host: "127.0.0.1", port, cf: false, workers: [{
+    ...workerOptions, modules: true, script: compiled.outputFiles[0].text,
+    bindings: { ...workerOptions.bindings, APP_URL: origin, WEBHOOK_DEFAULT_TRANSPORT: "1" },
+    // Native Worker fetch reaches this network edge before any receiver routing.
+    outboundService: async request => {
+      const url = new URL(request.url);
+      const path = url.hostname === "cloudflare-dns.com" ? "/__dns" : url.hostname === "receiver.synthetic.test" ? url.pathname : undefined;
+      if (!path) throw new Error("Unexpected webhook egress");
+      return fetch(`http://127.0.0.1:${receiver}${path}${url.search}`, {
+        method: request.method, headers: request.headers, redirect: "manual",
+        ...(!["GET", "HEAD"].includes(request.method) ? { body: await request.arrayBuffer() } : {}),
+      });
+    },
+  }] }));
+  try {
+    const db = await runtime.getD1Database("DB");
+    const folder = new URL("../../migrations/core/", import.meta.url);
+    for (const name of (await readdir(folder)).filter(name => name.endsWith(".sql")).sort()) {
+      await db.batch(splitSqlQuery(await readFile(new URL(name, folder), "utf8")).map(sql => db.prepare(sql)));
+    }
+    return runtime;
+  } catch (error) { await runtime.dispose(); throw error; }
+}
