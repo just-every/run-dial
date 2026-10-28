@@ -18,7 +18,7 @@ async function wireJourney(t, feature) {
     cleaned = true;
     if (server?.exitCode === null) { const stopped = new Promise(done => server.once("exit", done)); try { process.kill(-server.pid, "SIGTERM"); } catch { server.kill("SIGTERM"); } await stopped; }
     // C.1 keeps captured Worker evidence free of generated manage capability URLs.
-    await writeFile(evidencePath("booking-wire-worker.log"), output.replace(/\/manage\/(?:invite\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]")); await rm(state, { recursive: true, force: true });
+    await writeFile(evidencePath(`booking-wire-${feature ?? "google"}-worker.log`), output.replace(/\/manage\/(?:invite\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]")); await rm(state, { recursive: true, force: true });
   };
   t.after(cleanup);
   const run = args => new Promise((done, reject) => {

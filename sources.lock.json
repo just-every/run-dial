@@ -8368,7 +8368,7 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "610a7922f843f6787493534e7e9ff52c3c551fc2f2d9bf3c78069a76a5378f49",
+      "sha256": "47538d0006cc1d0905208e5d1ac372bb653c675c2c254ae40654cc9af2565faf",
       "executable": false
     },
     "tests/booking-wire/accounting-wire.ts": {
