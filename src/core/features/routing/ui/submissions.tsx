@@ -37,7 +37,7 @@ export function Submissions({id,events,submissions,report}:{id:string;events:{id
  }
  const currentReport=data.report;
  const visible=selection?data.submissions.filter(submission=>selection.ids.includes(submission.id)):data.submissions;
- return <section className="grid min-w-0 gap-4 border-t border-line pt-5 text-[15px]">
+ return <section className="grid min-w-0 gap-4 rounded-xl border border-line p-5 text-[15px]">
   <h3 className="text-lg font-semibold">Submissions and conversion</h3>
   <ReportPeriodFields filters={filters} onChange={setFilters} events={events} working={working} onApply={()=>void apply()}/>
   {error?<div role="alert" className="grid gap-2"><p>{error}</p><Button type="button" variant="quiet" disabled={working} onClick={()=>void apply()}>Retry report</Button></div>:null}
@@ -47,7 +47,7 @@ export function Submissions({id,events,submissions,report}:{id:string;events:{id
    <p className="text-soft">{currentReport.definition}</p>
    <div className="overflow-x-auto"><table className="w-full text-left text-[13px]">
     <thead><tr><th className="p-2">Route</th><th className="p-2">Source</th><th className="p-2">Submissions</th><th className="p-2">Bookings</th><th className="p-2">Conversion</th></tr></thead>
-    <tbody>{currentReport.groups.map((group,index)=><tr className="border-t border-line" key={index}>
+    <tbody>{currentReport.groups.map((group,index)=><tr className="odd:bg-wash" key={index}>
      <td className="p-2"><button type="button" className="underline" onClick={()=>setSelection({ids:group.submissionIds,bookings:group.bookingIds,label:`${group.ruleLabel||'Fallback'} · ${group.source||'Direct'}`})}>{group.ruleLabel||'Fallback'}</button></td>
      <td className="p-2">{group.source||'Direct'}</td><td className="p-2">{group.submissions}</td><td className="p-2">{group.bookings}</td><td className="p-2">{new Intl.NumberFormat('en',{style:'percent',maximumFractionDigits:1}).format(group.conversion)}</td>
     </tr>)}</tbody>

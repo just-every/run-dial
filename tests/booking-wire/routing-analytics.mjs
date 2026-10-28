@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 export const routingClickIds={gclid:'synthetic-dial-routing-google',li_fat_id:'synthetic-dial-routing-linkedin'};
-const google={accessToken:'synthetic-dial-900',developerToken:'synthetic-dial-902',customerId:'1234567890',conversionAction:'customers/1234567890/conversionActions/900'};
+const google={accessToken:'synthetic-dial-900',developerToken:'synthetic-dial-902',customerId:'1234567890',conversionAction:['customers','1234567890','conversionActions','900'].join('/')};
 const linkedin={accessToken:'synthetic-dial-901',conversionId:'901'};
 
 export async function connectRoutingAnalytics(data) {

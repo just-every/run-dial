@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 export async function authorRoutingForm(page,width,data){
  await page.getByLabel('New form title',{exact:true}).fill(`Contact our team ${width}`);
  await page.getByLabel('New form slug',{exact:true}).fill(`contact-team-${width}`);
- await page.getByRole('button',{name:'Create routing form',exact:true}).click();
+ const created=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/app/routing-forms'&&response.request().method()==='POST');await page.getByRole('button',{name:'Create routing form',exact:true}).click();assert.equal((await created).status(),201);
  await page.getByRole('button',{name:'Add question',exact:true}).click();
  const first=page.getByRole('group',{name:'Question 1',exact:true});
  await first.getByLabel('Label',{exact:true}).fill('What would you like to discuss?');

@@ -5,7 +5,7 @@ import { routingEmbedSnippet } from '../../embeds/client';
 export function FormEmbed({ publicOrigin, slug }: { publicOrigin: string; slug: string }) {
   const [mode, setMode] = useState<'inline' | 'modal'>('inline');
   const snippet = routingEmbedSnippet(publicOrigin, slug, mode);
-  return <section className="grid min-w-0 gap-4 border-t border-line pt-5 text-[15px]">
+  return <section className="grid min-w-0 gap-4 rounded-xl border border-line p-5 text-[15px]">
     <h3 className="text-lg font-semibold">Embed this routing form</h3>
     <p className="text-soft">Add the code to your website. First allow your website’s origin in <a href="/app/settings" className="underline">embed settings</a>.</p>
     <label className="grid gap-2">Embed style

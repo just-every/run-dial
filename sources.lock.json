@@ -7140,7 +7140,7 @@
       "executable": false
     },
     "src/core/features/routing/ui/embed.tsx": {
-      "sha256": "038d342c54225725985c56e21fbf20097343be01b78f879209b37a1b11623b25",
+      "sha256": "4251ace661afb894140f0011a9874c970659af0f75ab04363c5984b5316b48e0",
       "executable": false
     },
     "src/core/features/routing/ui/model.ts": {
@@ -7152,11 +7152,11 @@
       "executable": false
     },
     "src/core/features/routing/ui/preview.tsx": {
-      "sha256": "be21c6cdb85a6fae3c7a95b14f670d8bf5ce6e7b8368fc3ef979b1f401831a9d",
+      "sha256": "4b0c4c7746e38ae401d49580b9c1fb56f0de160d1db9617a9893c9ad5eb57917",
       "executable": false
     },
     "src/core/features/routing/ui/public.tsx": {
-      "sha256": "56b07e3eb3605ff39f8743177a2c1eecbef869bc41967e43e381734377d397de",
+      "sha256": "48681aa86bd4d9a9bbfb8d00196e7a84f479f0b874aa86a3aa50580e0ea94f7a",
       "executable": false
     },
     "src/core/features/routing/ui/questions.tsx": {
@@ -7168,11 +7168,11 @@
       "executable": false
     },
     "src/core/features/routing/ui/settings.tsx": {
-      "sha256": "c0553b4bfa1b4be89e076637a4d273b85571e5a1c4c01c4a0c4da854da9d17ae",
+      "sha256": "ef23afcc743565ae9d825782d3f4bfd6b79b2e082e1777a0ab79726844775a07",
       "executable": false
     },
     "src/core/features/routing/ui/submissions.tsx": {
-      "sha256": "2384d105cb4348e1c9ab3b9e75eccdd78d51ce9cd827ab2c29654912c40bca1f",
+      "sha256": "868adad3ed7fa27a994e3a214f2ef305a932ad0b39e2f558b70a5929f28c56c5",
       "executable": false
     },
     "src/core/features/routing/ui/transport.ts": {
@@ -8320,7 +8320,7 @@
       "executable": false
     },
     "tests/booking-axe/routing-authoring.mjs": {
-      "sha256": "f56c808b07850c41cfc8f86c84288c556d62fcf37d9ad74826adef2d6ced5627",
+      "sha256": "7fffd25683eabb559882280652d522034167aaace8870414411982299bd2bd38",
       "executable": false
     },
     "tests/booking-axe/routing-embed.mjs": {
@@ -8572,7 +8572,7 @@
       "executable": false
     },
     "tests/booking-wire/routing-analytics.mjs": {
-      "sha256": "0c6b18d6f1e003f704ac1e0a5fda53d7eb0f74059a0654cf3824dfaddbbec2bd",
+      "sha256": "e9fee4a84c14cdae3cb70b74a52aa94bc444e930fc2479e0b226f3c44a092b03",
       "executable": false
     },
     "tests/booking-wire/routing-journey.mjs": {
