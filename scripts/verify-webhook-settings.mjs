@@ -36,7 +36,7 @@ try {
       };
       const form = section.getByRole("form", { name: "Create webhook" }); await form.waitFor(); await capture("new");
       await form.getByLabel("HTTPS endpoint", { exact: true }).fill(`https://receiver.synthetic.test/screen-${width}`);
-      await form.getByLabel("Send events from").selectOption("team"); await form.getByLabel("Team", { exact: true }).selectOption({ label: "Planning" });
+      await form.getByLabel("Send events from").selectOption("team"); await form.getByRole("combobox", { name: /^Team/ }).selectOption({ label: "Planning" });
       await form.getByLabel("Booking created", { exact: true }).check(); await form.getByLabel(/I authorize Dial/).check();
       const saved = page.waitForResponse(response => new URL(response.url()).pathname === "/api/app/webhooks" && response.request().method() === "POST");
       await form.getByRole("button", { name: "Create webhook and send events" }).click(); assert.equal((await saved).status(), 201);

@@ -4636,7 +4636,7 @@
       "executable": false
     },
     "scripts/verify-webhook-settings.mjs": {
-      "sha256": "57f16195b1b3660b9ec6ae586bd6df0e59edeb138727560b9b9c67da10dd5145",
+      "sha256": "2d9c73ed302936208050c4944da7760d04db40972240a6b24256a1389e7101f1",
       "executable": false
     },
     "scripts/verify.mjs": {
