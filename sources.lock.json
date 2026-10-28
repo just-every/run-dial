@@ -952,7 +952,7 @@
       "executable": false
     },
     "docs/contract/COVERAGE.json": {
-      "sha256": "4e5e50a84f79b2747a8d392ef63ea19e31f13d7beddf14287db3d5f7aa2329ff",
+      "sha256": "f2168107ee446f5a319b1c03383cbf7c844a404e3a7d55945e3e9826120e070e",
       "executable": false
     },
     "docs/contract/DONE-AUDIT.md": {
@@ -9368,7 +9368,7 @@
       "executable": false
     },
     "tests/operator-management/runtime.mjs": {
-      "sha256": "e4f9f8259f16b548ca6f06471fc6eb1dc6f7e3ada2f6c914868ffc85c04dc78f",
+      "sha256": "038ec8a3f013c9f977a7d2c963e19a05c42ad23fb6e4b920e8e4897bb8b55e8b",
       "executable": false
     },
     "tests/operator-management/worker.ts": {
