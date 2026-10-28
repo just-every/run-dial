@@ -7,6 +7,7 @@ import { assertReport } from '../tests/move-in/report-validator.mjs';
 import { evidencePath } from './evidence-path.mjs';
 import { assertNativeImportedHistory } from './move-in-browser-history.mjs';
 import { catchUpJourney, switchOverJourney } from './move-in-browser-catch-up.mjs';
+import { schedulerJourney } from './move-in-browser-schedulers.mjs';
 const origin=process.env.DIAL_REVIEW_ORIGIN??'http://127.0.0.1:15754',width=Number(process.env.DIAL_MOVE_IN_WIDTH??1440);
 // Move exercises an established workspace. A native first-owner claim starts
 // unfinished, so complete the real setup protocol before clearing product data.
@@ -79,5 +80,6 @@ try{
  await selectFiles('edges');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByText('Overlapping confirmed Dial or earlier imported booking.',{exact:false}).first().waitFor();await audit('edge-losses');
  await page.getByLabel('Adopt source schedule timezone (leave blank to keep host zone)').fill('Europe/London');await page.getByLabel('Location value (HTTPS link, host phone or address)').first().fill('https://meet.example.test/chosen');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByText(/Host zone Europe\/London/u).waitFor();await audit('owner-choices');
  await switchOverJourney({page,context,origin,width,audit,selectFiles});
+ await schedulerJourney({page,context,origin,width,audit});
  assert.deepEqual(errors,[]);await context.close();
 }finally{await writeFile(evidencePath(`move-in-${width}-axe.json`),JSON.stringify({scans,errors},null,2));await browser.close();}

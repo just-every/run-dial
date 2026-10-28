@@ -19,7 +19,7 @@ export function importContext(db:D1Database,session:SessionRecord):D1ImportConte
  return {destination:'dial',namespace:'saved-schedule',mappingVersion:'1',storage:{database:db,targets:importTargets},batchSize:2,maxBatches:1,reversalPolicy:'preserve-conflicts',
  // D1 permits 1000 queries per paid invocation; kit accounts all SQL; two source entities bound native statement expansion.
  // https://developers.cloudflare.com/d1/platform/limits/
- authorization:{principalId:session.id,predicate:()=>({sql:"EXISTS(SELECT 1 FROM oa_sessions s JOIN oa_operators o ON o.id=s.operator_id WHERE s.id=? AND o.id=? AND o.status='active' AND s.operator_version=o.version AND s.revoked_at IS NULL AND s.expires_at>CAST(unixepoch('subsec')*1000 AS INTEGER))",params:[session.sessionId,session.id]})}};
+ authorization:{principalId:session.id,predicate:()=>({sql:"EXISTS(SELECT 1 FROM oa_sessions s JOIN oa_operators o ON o.id=s.operator_id WHERE s.id=? AND o.id=? AND o.status='active' AND o.role IN ('owner','admin') AND s.operator_version=o.version AND s.revoked_at IS NULL AND s.expires_at>CAST(unixepoch('subsec')*1000 AS INTEGER))",params:[session.sessionId,session.id]})}};
 }
 export class MoveInService{
  constructor(private readonly db:D1Database,private readonly secret:string){}

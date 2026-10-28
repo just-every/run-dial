@@ -1,5 +1,8 @@
 # Move in from saved scheduling data
 
+For Cal.com or SavvyCal, use the [scheduler API capture guide](importing-schedulers.md).
+For Doodle and other schedulers, use the [CSV and calendar templates](importing-templates.md).
+
 Dial reads saved Calendly API responses. **Synthetic-only validation:** examples
 written from public documentation have been checked; no real account export has
 been supplied. Dial's Worker never receives your source token.

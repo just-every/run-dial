@@ -151,6 +151,12 @@ find-or-create behavior and preservation of existing resources before claiming i
 
 ## Commands and verification
 
+Lander-Regenerate: `node scripts/contract-docs.mjs write --clauses MIGRATE-004`;
+then `node scripts/contract-docs.mjs check --clauses MIGRATE-004`. Supply the
+IDs of the clauses changed by the landing. The legacy document layout stays
+until ct rewrites it. Regenerate the edition source lock last with
+`node scripts/edition-authoring/cli.mjs lock`, then run its `check` command.
+
 Use README.md, OPERATIONS.md and `SEED-COMMAND-CONTRACT.md` for the current RER
 command path and actual package aliases. Do not infer provisioning from a
 command name, deployment from a push, previews from a PR, or account-free

@@ -884,7 +884,7 @@
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "3d34de54fc747af2416700fa4d1eedc42aed51c83721eb1dbc3d313be0de3877",
+      "sha256": "6411bb29b6b537da34771eb60b1b5395614a17e96dcaf0b3cb6322e462f15fbd",
       "executable": false
     },
     "base-copies.json": {
@@ -955,8 +955,16 @@
       "sha256": "b887488ba4ee7d6c43e79b93bd71b25a1250761e79e2b4870ccc3fba1586b957",
       "executable": false
     },
+    "docs/importing-schedulers.md": {
+      "sha256": "73cb87dd967c650a9124f672a84128437619d8a70e517cbb522487047e29c410",
+      "executable": false
+    },
+    "docs/importing-templates.md": {
+      "sha256": "c75498994f0f970e2931a7323acc177f04236c511a858f821230a794191f0584",
+      "executable": false
+    },
     "docs/importing.md": {
-      "sha256": "190a726aa42d2fa87752c99d58234b081f2559e3324ffe218e29aba06529d761",
+      "sha256": "faf83b1826f63731dbf18cadabfb7cbaf706564e9ac7407244b3330903116818",
       "executable": false
     },
     "docs/install.md": {
@@ -1989,6 +1997,10 @@
     },
     "migrations/core/0084_microsoft_calendar.sql": {
       "sha256": "20ae7a8f9fab04a4ae3ea8b2edf854ba815b33886feaa17220986beef38c33f1",
+      "executable": false
+    },
+    "migrations/core/0085_import_role_boundary.sql": {
+      "sha256": "d59abfc8b07be858df22449582ae7aef08bf490d0ecfca55a3ea32441455ea5f",
       "executable": false
     },
     "modules/d1-transport/index.d.mts": {
@@ -4051,6 +4063,10 @@
       "sha256": "50851a5e013bab1424d792f631d12ad26320656014488c65fae2378dd05967e9",
       "executable": false
     },
+    "scripts/contract-docs.mjs": {
+      "sha256": "8ee3f52ea432cd17053df3e032b540b4617e5b52b5b7481049b32702b9d41694",
+      "executable": false
+    },
     "scripts/contract-status.mjs": {
       "sha256": "0febe865c61f3f5eac23338e2f87f5ccd1e775fb32e2279e6cb7030cad00e2ae",
       "executable": false
@@ -4351,8 +4367,16 @@
       "sha256": "49a0b4268ce58d1be37025a1076052327c5e0e457406fd4a2aa7ecdc87c0a381",
       "executable": false
     },
+    "scripts/move-in-browser-schedulers.mjs": {
+      "sha256": "d353bc0bfabbdd924c95b844274ae4330c63495f7ed81d0a08c91c98dc622e44",
+      "executable": false
+    },
     "scripts/move-in/download-calendly.mjs": {
       "sha256": "33fdacb818c393c24dd4aa5910e84b73e695fdbfb18572096938e281b4842d36",
+      "executable": false
+    },
+    "scripts/move-in/download-scheduler.mjs": {
+      "sha256": "5f637f6846c6d654a8567a0fe22182b2cf6aa502240b02fc5c03c3faa5859443",
       "executable": false
     },
     "scripts/move-in/download.mjs": {
@@ -4556,7 +4580,7 @@
       "executable": false
     },
     "scripts/verify-move-in-browser.mjs": {
-      "sha256": "3b90f3dd2e93038309353bf232d4c40fc10cee3e5163ab904e0cc2a39fa0c791",
+      "sha256": "5b146783e88345841eb7794f0006df6ac0bb1178da26d784cf785e7939e8bd16",
       "executable": false
     },
     "scripts/verify-operator-change.mjs": {
@@ -4780,7 +4804,7 @@
       "executable": false
     },
     "src/core/app/hono.ts": {
-      "sha256": "ad3fa9168eb4bf4b36579bcf09f3693305f761c674f9c3aa4e9d5c54d2e5b5fa",
+      "sha256": "bc88169773e143bfd533105cebf601a2001cec5a7115d9b09be634aff376335e",
       "executable": false
     },
     "src/core/app/loaders.ts": {
@@ -6039,6 +6063,10 @@
       "sha256": "f8e514f1cc81209303dc14112dbacceadc182ceb861b5999ac5047ab1df34026",
       "executable": false
     },
+    "src/core/features/move-in/calendly-source.ts": {
+      "sha256": "6c4088bb644fbd4b36cf819d24c244fb1ad039809ba4f1f7b1fcbaba50473d80",
+      "executable": false
+    },
     "src/core/features/move-in/catch-up.ts": {
       "sha256": "59e7382b79275da4e7e30b8a08d77dc3257b4d4b7327943e64616a7dfe94b2be",
       "executable": false
@@ -6061,6 +6089,10 @@
     },
     "src/core/features/move-in/erasure.ts": {
       "sha256": "846559ec2f74da602e12980a9a5bdc86dd12431c65c2d9f2c291542b9280ea40",
+      "executable": false
+    },
+    "src/core/features/move-in/external-source.ts": {
+      "sha256": "2b7cdc923ef12367d5a503d2331542a729ae2f967b9051ac49e5f68e06a5693a",
       "executable": false
     },
     "src/core/features/move-in/facts.ts": {
@@ -6096,7 +6128,47 @@
       "executable": false
     },
     "src/core/features/move-in/planning.ts": {
-      "sha256": "dfa2905e110f6b5f2cf7ea12351f5e6de93fb2628eb70e27b50514d6bb3b97a7",
+      "sha256": "511d9f01e335349800cc3117b54957c226695287dde9a60c757160b9345cc4ed",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/api-calcom-bookings.ts": {
+      "sha256": "1752ab60fe3fccea68ca1c15f62b4521ed074edb72669c9a7b6a391e30f8429c",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/api-calcom.ts": {
+      "sha256": "0c4b07d3e1e8886fcf137355c9b1908f6b57beb279b8b2616f08a29e0e314c99",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/api-capture.ts": {
+      "sha256": "e8a39d7642bafef79807e413f750551dde627de1941f52481021af152543c76c",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/api-download.ts": {
+      "sha256": "edad209b8aebcb3afa3e86d510789c579df5f10b949969289afe5435c4aa9233",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/api-record.ts": {
+      "sha256": "7e8234be97fdec20844f3f283fd4f87c269589bf6d50535a5d4665161dd1b269",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/api-savvycal-bookings.ts": {
+      "sha256": "2d76c8d4a6ef3b5c67ae724ee95db12ff319937dc689668d66e7199da9a86be5",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/api-savvycal.ts": {
+      "sha256": "af0b278e979833139afe4741f06edd041501399437bb55ce12f4cb782a384a0d",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/csv.ts": {
+      "sha256": "7ef6d626f7b45529bfe4834f247691b0d7e81f2e900ad4957e58dae856675568",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/generic.ts": {
+      "sha256": "eaa05ab3656c5f9eb51a1807002d15937c07d0c2d496088ab9f67238bad09651",
+      "executable": false
+    },
+    "src/core/features/move-in/providers/ics.ts": {
+      "sha256": "073369119b212b2b18d0f0858226044c71af8961de177f4b77721534850693e8",
       "executable": false
     },
     "src/core/features/move-in/report-schema.ts": {
@@ -6104,11 +6176,11 @@
       "executable": false
     },
     "src/core/features/move-in/routes.ts": {
-      "sha256": "fc7f419fe60bd0d02892223d0b3a487e367203e34387a38d57f82121e5004861",
+      "sha256": "74f13808af23a9e049c6aa8f50a348608e470f02731b166cdaddba3beb63618e",
       "executable": false
     },
     "src/core/features/move-in/service.ts": {
-      "sha256": "4a498c5c3361953f33c37581a0a946aed83499959f97d70c60528b05012d2e5c",
+      "sha256": "de6649625158b6195e5b9d3eb1097832d34661caa3e46531d8e8695e02f9c3e5",
       "executable": false
     },
     "src/core/features/move-in/source-claims.ts": {
@@ -6116,7 +6188,7 @@
       "executable": false
     },
     "src/core/features/move-in/source.ts": {
-      "sha256": "b1e1b59e9cba02fe792013c87347f9e60f81df932bd0b83d09eae62126ca221a",
+      "sha256": "3ed1d50991b5086100ddfad070492a08e2a5a5be8c76d2fa8e993b823d97e73e",
       "executable": false
     },
     "src/core/features/move-in/switch-over.ts": {
@@ -6136,7 +6208,11 @@
       "executable": false
     },
     "src/core/features/move-in/ui/move-in-card.tsx": {
-      "sha256": "0ce3b10140cda948d3bc255377176b8f5b57e9d9ab4b3285699168400242d301",
+      "sha256": "b27c369aac0a2cddc7f1386e70d8e5c40b73314088b448fe9f1403306b06529c",
+      "executable": false
+    },
+    "src/core/features/move-in/ui/scheduler-source.tsx": {
+      "sha256": "d615e8a012ed113ea5f267fffcb04e109b329b9a4e835fb93facd3c9569050c7",
       "executable": false
     },
     "src/core/features/move-in/ui/switch-over-card.tsx": {
@@ -8872,7 +8948,7 @@
       "executable": false
     },
     "tests/move-in-runtime.test.mjs": {
-      "sha256": "7befcc556aeb3b9c401e61dc7b2094c36d0b5158a7b1c2bd58b7e26617aefa53",
+      "sha256": "36d83f57b4c47150388c84d7551338056eed083345ed0737fb6ac8feb9208cbb",
       "executable": false
     },
     "tests/move-in/booking-runtime.mjs": {
@@ -9232,7 +9308,15 @@
       "executable": false
     },
     "tests/move-in/runtime.mjs": {
-      "sha256": "0d25c3735dc8c411e51f05ffe119e442188c85f2c5d647cf5f92dc3fea9d48b5",
+      "sha256": "9d0678fd3d9d2564fbcb36aa73af931a66e12faacfd57e4357ac19e6d3bdbb66",
+      "executable": false
+    },
+    "tests/move-in/scheduler-fixtures.mjs": {
+      "sha256": "7d02713a43dc61d43c63ed066b38da72dbcf9236a106660c8aa7a0d27e52f1fa",
+      "executable": false
+    },
+    "tests/move-in/scheduler-journey.mjs": {
+      "sha256": "f9e1bfd05be677c60fb2735f371af86168c833c5571dea6d402e581ff38990d4",
       "executable": false
     },
     "tests/move-in/upload.mjs": {
