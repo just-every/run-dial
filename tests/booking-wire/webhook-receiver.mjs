@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { createServer } from "node:http";
+import { writeFile } from "node:fs/promises";
+import { evidencePath } from "../../scripts/evidence-path.mjs";
 
 export async function webhookReceiver() {
   const captures = [], failures = new Map();
@@ -32,10 +34,13 @@ export async function webhookReceiver() {
       assert.ok(match, "timestamped HMAC header");
       const expected = createHmac("sha256", secret).update(`${match[1]}.${capture.body}`).digest("hex");
       assert.equal(match[2], expected, "receiver independently verifies the unchanged raw bytes");
+      assert.ok(Math.abs(Date.now() / 1000 - Number(match[1])) <= 300, "signature timestamp within five minutes");
       assert.equal(capture.headers["dial-event-id"], JSON.parse(capture.body).id);
       assert.ok(!capture.body.includes("/manage/"), "no booking manage capability");
+      capture.signatureVerified = true;
     },
-    close: () => {
+    close: async () => {
+      await writeFile(evidencePath("webhook-receiver.json"), JSON.stringify(captures, null, 2));
       paused = false; heldDns.splice(0).forEach(reply => reply());
       const closed = new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
       server.closeAllConnections();

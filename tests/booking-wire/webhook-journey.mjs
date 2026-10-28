@@ -47,6 +47,7 @@ export async function webhookJourney(h) {
     }
     const first = await book(); await dispatch(); await dispatch();
     const created = receiver.captures.filter(row => JSON.parse(row.body).type === "booking.created.v1");
+    console.log("WEBHOOK_INITIAL " + JSON.stringify({ door: "native Worker default fetch", received: created.length, deliveries: (await state()).webhook_deliveries.map(row => ({ state: row.state, error: row.last_error, responseCode: row.response_code })) }));
     assert.deepEqual(created.map(row => row.path).sort(), ["/host", "/team", "/workspace"]);
     const createdBody = JSON.parse(created.find(row => row.path === "/workspace").body);
     assert.deepEqual(createdBody.data.attribution, { utm_source: "newsletter", utm_medium: "email", utm_campaign: "planning", utm_term: "consultation", utm_content: "october", source: "calendar-card" });
