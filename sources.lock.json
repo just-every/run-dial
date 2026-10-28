@@ -2008,7 +2008,7 @@
       "executable": false
     },
     "migrations/core/0086_import_role_boundary.sql": {
-      "sha256": "d59abfc8b07be858df22449582ae7aef08bf490d0ecfca55a3ea32441455ea5f",
+      "sha256": "fd620aae506573a82bab9ef617bdfd1344f6fdbf993a8f23d1e64c44b7e020b0",
       "executable": false
     },
     "modules/d1-transport/index.d.mts": {
@@ -3968,7 +3968,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "88a3c4f25c9dad895016c06cfacae64b78f5659a8095f8beb87f06fcbe27eab4",
+      "sha256": "9c111f1e87e76d7dff960e55c41045db8f89ad23068c20b1308e5efc6aa5744f",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
