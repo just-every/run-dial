@@ -52,6 +52,8 @@ Choose **Delete webhook**, or DELETE `/api/app/webhooks/:id` using the subscript
 
 Archive restore leaves webhook subscriptions disabled with no signing secret and restored deliveries failed as historical commands. Restore does not resume outbound delivery or enable manual replay of those commands. Create new subscriptions deliberately after restoration.
 
+Erasure cannot recall a payload the receiver already accepted. Manage that receiver's retention separately; Dial removes its stored booking payloads and prevents future dispatch and replay.
+
 ## Team setup and routing event sources
 
 The current team foundation associates event types with the installation's one actual host. It does not implement a full multi-host team scheduling product or a team management interface. Configure the host profile first. GET `/api/app/teams` lists teams with `hostId` and `eventTypeIds`. POST `/api/app/teams` creates a team with a name and existing event-type IDs:

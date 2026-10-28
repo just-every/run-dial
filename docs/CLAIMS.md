@@ -20,7 +20,7 @@ REPORT-001 is partial on the single-host surface: Bookings has a scheduling repo
 
 Evidence: `tests/scheduling-report.test.mjs` with its seeded month in `tests/review/report-month.ts`, and the 1440 and 390 screen proof `scripts/verify-report-screens.mjs`.
 
-The contract census is 87 done / 29 partial / 60 missing (176 clauses). DATA-004 is done for the classification gate and current record kinds; DATA-005–DATA-008 carry the target kinds, personal rows and external deletion requests. Other claims and their evidence remain in the CONTRACT.md Status table.
+The contract census is 88 done / 28 partial / 60 missing (176 clauses). DATA-004 is done for the classification gate and current record kinds; DATA-005–DATA-008 carry the target kinds, personal rows and external deletion requests. Other claims and their evidence remain in the CONTRACT.md Status table.
 
 EVENT-009 is done on the native single-host surface: a host allows a configured number of guests, the invitee adds and removes them from the booking and manage steps, and guests receive calendar invitations and Dial confirmation and change notices without the invitee's manage link. Removing a guest sends one cancellation; guest erasure removes their entries and notices while preserving the invitee booking. Calendar and mail providers are synthetic at the HTTP edge. `tests/booking-wire/guest-journey.mjs`, `tests/export-base-adoption.test.mjs` and `scripts/verify-guest-screens.mjs` carry the native, archive, prior-schema and 1440/390 screen proof.
 
@@ -44,7 +44,7 @@ REPORT-002 remains partial. The Bookings calendar uses the list’s operator que
 
 
 <!-- generated-clause:API-002 -->
-API-002 is partial. Implementation in progress; native proof pending for every named event, HMAC, scheduled retry, manual redelivery, UTM and source, chosen duration, deleted subscription, scope refusal, erasure and inert restore.
+API-002 is done. Each acceptance point is covered by the named native journeys.
 
-Evidence: `src/core/features/webhooks/routes.ts`, `src/core/features/webhooks/delivery.ts`, `migrations/core/0086_webhooks.sql`
+Evidence: `tests/booking-wire.test.mjs` — signed webhooks deliver native facts once, retry for 24 hours and stop after deletion or erasure; `tests/booking-wire/webhook-journey.mjs` — every event and CAL-006 fact, HMAC, UTM and source, chosen duration and scope; `tests/booking-wire/webhook-retries.mjs` — scheduled 500 retry, same-ID manual redelivery, deleted subscriptions and erased replay; `tests/webhook-settings.test.mjs` — webhook Settings creates and deletes subscriptions and shows signed delivery status at desktop and phone widths; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused (secretless disabled restore)
 <!-- end-generated-clause:API-002 -->

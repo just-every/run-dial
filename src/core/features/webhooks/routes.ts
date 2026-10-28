@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
 import { apiError } from "../../shared/http";
@@ -6,7 +6,14 @@ import { validate } from "../../shared/validation";
 
 const subscription = z.object({ endpoint: z.string().url().max(2048), events: z.array(z.string().max(100)).min(1).max(20), scope: z.enum(["workspace", "host", "team"]), scopeId: z.string().max(128).nullable() }).strict();
 const id = z.object({ id: z.string().min(1).max(128) });
+const privateResponse: MiddlewareHandler<AppEnvironment> = async (context, next) => {
+  context.header("Cache-Control", "no-store");
+  await next();
+};
 export const webhookRoutes = new Hono<AppEnvironment>()
+  .use("/api/app/webhooks", privateResponse)
+  .use("/api/app/webhooks/:id", privateResponse)
+  .use("/api/app/webhook-deliveries/:id/redeliver", privateResponse)
   .get("/api/app/webhooks", async c => c.json(await c.get("services").webhooks.subscriptions.status()))
   .post("/api/app/webhooks", validate("json", subscription), async c => {
     try {

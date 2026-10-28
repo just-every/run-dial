@@ -872,7 +872,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "4598f129522fabc7eb3c539e829b5c49089f67076a0684fa2dfd2ac2a0214355",
+      "sha256": "f03dd4ae265d737e549001c864bc7f788c9b1f1cc0f8a6990c19501344e34279",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "646a2a8da97d6b0dfc84b6e0a3a7fe01f62c8c22cb28b3c9245a5d05c40e289f",
+      "sha256": "2ca9e27ac53fdbdeaeeaae4f2dc8e4546ace83f40ca77c9ea943b2afbded1e88",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "5e7c9dac657c78c32056c843facde09555020dae93fbca53813aa2ed09737031",
+      "sha256": "2147377190c8c53947ce7484311156fe36f985ac1167feadbe916cd83449357a",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -968,7 +968,7 @@
       "executable": false
     },
     "docs/site.json": {
-      "sha256": "caa1223919b86dfbdfdb81ba706f6c1310f8c8ed381e557729cc845b4d1d3301",
+      "sha256": "a3bb4be009d2e7c3579cc4087823f243a2e7f793012d14ee4859b6c93107e9d9",
       "executable": false
     },
     "docs/updating.md": {
@@ -976,7 +976,7 @@
       "executable": false
     },
     "docs/WEBHOOKS.md": {
-      "sha256": "1bfe3b8d4f48a98f0056f9bac25f6bc393f91eebd4db83ef2cf5fef8be6ff801",
+      "sha256": "11a7b86b700f455d8d81eef1941617d3ec10c94a029ccd049fba8aaaa4c68a23",
       "executable": false
     },
     "edition.json": {
@@ -7116,7 +7116,7 @@
       "executable": false
     },
     "src/core/features/webhooks/routes.ts": {
-      "sha256": "e7d0ec94392d22648d9925ca90b0238e8395c8042b83fbe157efdc7b2e3c9255",
+      "sha256": "19140bfb85c176cda84da93d95e0977d8694640a4777a19cbac328b049aed9a3",
       "executable": false
     },
     "src/core/features/webhooks/subscriptions.ts": {
@@ -8448,7 +8448,7 @@
       "executable": false
     },
     "tests/booking-wire/webhook-journey.mjs": {
-      "sha256": "97ddd45b7d25dc10734262482b88ea10ea5098a8f313487aadd3ac6ba64c6fed",
+      "sha256": "eff6106ad861f4f70e74d115c01a40006a9a7b2811b5598675f24112cb0a8573",
       "executable": false
     },
     "tests/booking-wire/webhook-receiver.mjs": {

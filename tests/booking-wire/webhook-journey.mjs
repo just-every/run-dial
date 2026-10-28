@@ -9,6 +9,7 @@ export async function webhookJourney(h) {
   const receiver = await webhookReceiver();
   try {
     const settings = await data("/api/app/webhooks");
+    assert.equal((await call("/api/app/webhooks")).headers.get("cache-control"), "no-store", "private endpoint metadata cannot be cached");
     assert.deepEqual(settings.subscriptions, []);
     const anonymous = await fetch(process.env.DIAL_REVIEW_ORIGIN + "/api/app/webhooks");
     assert.equal(anonymous.status, 401);
@@ -16,7 +17,11 @@ export async function webhookJourney(h) {
     const denied = await fetch(origin + "/api/app/webhooks", { method: "POST", headers: { Origin: origin, "content-type": "application/json" }, body: JSON.stringify({ endpoint: "https://receiver.synthetic.test/anonymous", events: settings.eventTypes, scope: "workspace", scopeId: null }) });
     assert.equal(denied.status, 401);
     assert.equal((await data("/api/app/webhooks")).subscriptions.length, 0);
-    const subscribe = (path, events = settings.eventTypes, scope = "workspace", scopeId = null) => data("/api/app/webhooks", { endpoint: `https://receiver.synthetic.test${path}`, events, scope, scopeId }, 201);
+    const subscribe = async (path, events = settings.eventTypes, scope = "workspace", scopeId = null) => {
+      const response = await call("/api/app/webhooks", { endpoint: `https://receiver.synthetic.test${path}`, events, scope, scopeId }, 201);
+      assert.equal(response.headers.get("cache-control"), "no-store", "one-time signing secret cannot be cached");
+      return response.json();
+    };
     for (const endpoint of ["http://receiver.synthetic.test/refused", "https://127.0.0.1/refused", "https://169.254.169.254/refused", "https://private.synthetic.test/refused"]) await call("/api/app/webhooks", { endpoint, events: settings.eventTypes, scope: "workspace", scopeId: null }, 400);
     await call("/api/app/webhooks", { endpoint: "https://receiver.synthetic.test/refused", events: settings.eventTypes, scope: "host", scopeId: "foreign-host" }, 400);
     const workspace = await subscribe("/workspace"), host = await subscribe("/host", ["booking.created.v1"], "host", settings.hostId);

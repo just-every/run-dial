@@ -14,6 +14,7 @@
     ]}
   ],
   "githubOnly": [
+    { "source": "docs/WEBHOOKS.md", "reason": "Webhook receiver protocol and native source API details for integration developers" },
     { "source": "ACCEPTANCE.md", "reason": "Release evidence gates for the product requirements, for maintainers" },
     { "source": "ADAPTERS.md", "reason": "Calendar and mail adapter contracts, for developers extending Dial" },
     { "source": "AGENTS.consumer.md", "reason": "Instructions for coding agents working in an owner's copy of the source" },
