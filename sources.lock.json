@@ -8328,7 +8328,7 @@
       "executable": false
     },
     "tests/booking-axe/routing-embed.mjs": {
-      "sha256": "0e69d885af84de2502192e27ed77b6469c92911c3cdcbe9c9fffad8f1b5847fa",
+      "sha256": "eec3272cafcb37b1f502985742eb73f2955bd193bdbbb27d6c70b99dfdc5d077",
       "executable": false
     },
     "tests/booking-axe/routing-tracking.mjs": {
@@ -8336,7 +8336,7 @@
       "executable": false
     },
     "tests/booking-axe/routing.mjs": {
-      "sha256": "b8d026379b7847a6dcbebda0c4960eaafc6da94170c67858e5f710836fce69f7",
+      "sha256": "825ad2583d8de53f5641f41bec3be6b79cd8587c0e504a656cabe0722f8851a3",
       "executable": false
     },
     "tests/booking-axe/run-axe.mjs": {

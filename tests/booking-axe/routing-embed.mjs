@@ -3,7 +3,7 @@ import { evidencePath } from '../../scripts/evidence-path.mjs';
 import { routingAnswers } from '../booking-wire/routing-journey.mjs';
 
 export async function routingEmbeds({browser,settings,origin,form,event,width,fill}){
- const parent='http://localhost:15752',context=await browser.newContext({viewport:{width,height:960}}),page=await context.newPage();
+ const parent='http://localhost:15752',context=await browser.newContext({viewport:{width,height:960},extraHTTPHeaders:{'CF-Connecting-IP':width===390?'192.0.2.193':'192.0.2.194'}}),page=await context.newPage();
  await context.grantPermissions(['local-network-access'],{origin:parent});
  await page.addInitScript(()=>{globalThis.routingEvents=[];globalThis.addEventListener('dial:routing-viewed',event=>globalThis.routingEvents.push({type:event.type,...event.detail}));globalThis.addEventListener('dial:routing-submitted',event=>globalThis.routingEvents.push({type:event.type,...event.detail}));});
  const diagnostics=[];page.on('pageerror',error=>diagnostics.push(error.message));page.on('console',message=>{if(message.type()==='error')diagnostics.push(message.text());});page.on('requestfailed',request=>diagnostics.push(request.url()+' '+request.failure()?.errorText));
