@@ -32,7 +32,7 @@ export default {
   async fetch(request: Request, env: WireBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
-    const webhookFixture = await webhookFixtures(request, servicesFor(env));
+    const webhookFixture = await webhookFixtures(request, servicesFor(env), env);
     if (webhookFixture) return webhookFixture;
     if (url.pathname === "/__test/mail") return capturedMail(env.DB);
     if (url.pathname === "/wire/init") { await initializeWire(providerDb(env)); return Response.json({ ok: true }); }

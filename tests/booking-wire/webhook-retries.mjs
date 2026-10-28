@@ -19,9 +19,10 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   assert.ok(Date.parse(delivery.nextAttemptAt) > clock.getTime(), "retry is scheduled in the future");
   await process(new Date(Date.parse(delivery.nextAttemptAt) - 1).toISOString(), delivery.id);
   assert.equal(receiver.captures.filter(row => row.path === "/retry").length, 1, "not retried before due");
-  await process(delivery.nextAttemptAt, delivery.id); await process(delivery.nextAttemptAt, delivery.id);
+  await data("/__fixtures/webhooks/scheduled", { now: delivery.nextAttemptAt });
   delivery = (await data("/api/app/webhooks")).deliveries.find(row => row.id === delivery.id);
   assert.deepEqual([delivery.state, delivery.responseCode, delivery.attempts], ["delivered", 204, 2]);
+  await process(delivery.nextAttemptAt, delivery.id);
   const attempts = receiver.captures.filter(row => row.path === "/retry");
   assert.equal(attempts.filter(row => row.status === 204).length, 1);
   assert.equal(attempts[0].body, attempts[1].body);

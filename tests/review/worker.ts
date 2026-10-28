@@ -21,7 +21,7 @@ export default {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
     if (!url.pathname.startsWith("/__fixtures/")) return production.fetch(request, env, context);
-    const webhookFixture = await webhookFixtures(request, servicesFor(env));
+    const webhookFixture = await webhookFixtures(request, servicesFor(env), env);
     return webhookFixture ?? handleFixtures(request, env, servicesFor);
   },
 };
