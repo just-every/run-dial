@@ -4,6 +4,7 @@ import { routingAnswers } from '../booking-wire/routing-journey.mjs';
 
 export async function routingEmbeds({browser,settings,origin,form,event,width,fill}){
  const parent='http://localhost:15752',context=await browser.newContext({viewport:{width,height:960}}),page=await context.newPage();
+ await context.grantPermissions(['local-network-access'],{origin:parent});
  const diagnostics=[];page.on('pageerror',error=>diagnostics.push(error.message));page.on('console',message=>{if(message.type()==='error')diagnostics.push(message.text());});page.on('requestfailed',request=>diagnostics.push(request.url()+' '+request.failure()?.errorText));
  const thirdParty=[];context.on('request',request=>{if(['www.googletagmanager.com','www.google-analytics.com','connect.facebook.net','snap.licdn.com'].includes(new URL(request.url()).hostname))thirdParty.push(request.url());});
  try{
