@@ -47,7 +47,7 @@ export function pollTools(services: AppServices): ToolDefinition[] {
         const poll = await host(args.id);
         return Boolean(poll.showTally) === args.show ? standard(0) : [...standard(), { class: "access", facts: { measure: poll.participants.length, direction: args.show ? "widens" : "narrows" } }];
       },
-      authority: async args => ({ subject: `poll-participants:${args.id}`, widens: args.show && !Boolean((await host(args.id)).showTally) }),
+      authority: async args => ({ subject: `poll-participants:${args.id}`, widens: args.show && !(await host(args.id)).showTally }),
       revisionType: "string", revision: async args => stateDigest(await host(args.id)),
       summary: async args => ({ target: { id: args.id, name: (await host(args.id)).title }, items: [args.show ? "Show vote tally to this poll's participants" : "Hide vote tally from this poll's participants"] }),
       async run(args, ctx) {
