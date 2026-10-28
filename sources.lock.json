@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "437af75c34440ce7c9c842a225efd0cacfd12b7c23f59a1b889a8ecea9082cb7",
+      "sha256": "535f94549ebf2a498c1f744c9a9f8e7b61db0a1df8ac7d83729600c3becf3b4a",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "3a9e1344624ff4c051aad2a7a03b6c2925e6e0eb1f688f95dc27dde57e13acf1",
+      "sha256": "66ef02354f6ecd09a36a8835df90b31cb6aa623a9b4a963f19b977149be55506",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -1660,7 +1660,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "3eda16e8c7f65b6edd7344227b972b24acbbcfabb8e841ee5bf37174682fef7c",
+      "sha256": "e40d09f417ef337c9599b1a509d77390899a354ad0d187f9fd21c3766379cf48",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
