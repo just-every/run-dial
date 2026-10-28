@@ -6,11 +6,10 @@ migration, signed Business-person binding, queued-consent handoff or MCP claim.
 No contract clause is marked complete by these adapters.
 
 The copied Base runtime is recorded at
-`7ce44fa5b70b68b21d270ba54760dae28b4a37a7`. That combined head still rejects
-MCP `2025-03-26` with HTTP 400 and JSON-RPC `-32022`; its `wire.ts` advertises
-only `2026-07-28` and `2025-11-25`. The brief requires the older protocol, and
-copied Base transport is not patched here. Base must supply a descendant with
-the promised G3 support before native mounting and conformance can proceed.
+`e1b4265eb0d839a67dae3c36a04f83fa48c9d480`. MCP supports `2026-07-28` and
+`2025-11-25`. Initializing `2025-03-26` correctly returns HTTP 400 and JSON-RPC
+`UnsupportedProtocolVersion` (`-32022`); March's batched transport and legacy
+result schema are not supported. The copied transport remains unchanged.
 
 `tools.ts` collects adapters for the real profile, event, availability, calendar,
 booking, alternative-request, delivery, report, client, poll, booking-link,
@@ -28,11 +27,21 @@ Delivery payloads, mail bodies, payment capabilities and provider credentials
 are excluded. History-only clients without a native profile ID are not invented
 as records; payment resources use the native `booking_payments.id`.
 
-Before mounting, connect signed settings to the native setup-owner ID and
-existing native team IDs. Preserve Dial's current admission: owners can use the
+The prepared `people.ts` and `business.ts` adapters bind signed Business owner
+IDs through the native setup-owner record. They remain unmounted. Business team
+rows report conflicts: the applied native schema permits only equal-owner
+operators, and cannot provision admin/member accounts. Preserve admission: owners can use the
 operator APIs, admins have a move-in exception, and members have no operator
 product access. Business identity must never select authority by token email or
 create equal-owner accounts for a team admin/member.
+
+Mounting mutations also requires Base to support several native continuation
+items under one originating admission. Dial creates both 24-hour and one-hour
+reminders for each recipient in one booking transaction. The current continuation
+claim is keyed by operation, tool and original public key; distinct items sent
+through one dispatch tool collide with `idempotency_conflict`. Do not remove the
+originating operation ID, merge future reminders into an early dispatch, or skip
+the final consent check to evade that limitation.
 
 The integration must preserve booking Durable Object serialization, carry
 originating consent, sponsor, scopes, client and agent attribution atomically
@@ -49,8 +58,9 @@ at the connector door; link creation needs a secure person handoff for its
 one-time capability; destructive erasure needs the real native-session proof;
 operator invitations need their native request/coordination boundary. Taxed
 invoice classification needs a native quote before approval, and money recovery
-must account for all effects it would dispatch. Security settings without an
-authority subject need Base's G14 contract. Do not fabricate an escalation,
+must account for all effects it would dispatch. The pin now provides record-only
+security effects and per-surface escalation declarations; native adapters and
+their full journey still need integration. Do not fabricate an escalation,
 discard a required native verb or claim these paths are finished. No provider
 `cost` or spend enforcement is registered.
 

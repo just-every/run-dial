@@ -14,7 +14,7 @@ type Definition<T extends z.ZodType> = Omit<ToolDefinition, "inputSchema" | "run
   classify(args: z.output<T>, ctx: ToolContext): ReturnType<ToolDefinition["classify"]>;
   summary?: (args: z.output<T>, ctx: ToolContext) => ReturnType<NonNullable<ToolDefinition["summary"]>>;
   revision?: (args: z.output<T>, ctx: ToolContext) => ReturnType<NonNullable<ToolDefinition["revision"]>>;
-  authority?: (args: z.output<T>, ctx: ToolContext) => ReturnType<NonNullable<ToolDefinition["authority"]>>;
+  authority?: "none" | ((args: z.output<T>, ctx: ToolContext) => ReturnType<Exclude<ToolDefinition["authority"], string | undefined>>);
 };
 
 export function nativeTool<T extends z.ZodType>(definition: Definition<T>): ToolDefinition {
@@ -36,7 +36,7 @@ export function nativeTool<T extends z.ZodType>(definition: Definition<T>): Tool
     async run(args, ctx) { await check(ctx); return run(parsed(args), ctx); },
     ...(summary ? { summary: async (args: Record<string, unknown>, ctx: ToolContext) => { await check(ctx); return summary(parsed(args), ctx); } } : {}),
     ...(revision ? { revision: async (args: Record<string, unknown>, ctx: ToolContext) => { await check(ctx); return revision(parsed(args), ctx); } } : {}),
-    ...(authority ? { authority: async (args: Record<string, unknown>, ctx: ToolContext) => { await check(ctx); return authority(parsed(args), ctx); } } : {}),
+    ...(authority === "none" ? { authority } : authority ? { authority: async (args: Record<string, unknown>, ctx: ToolContext) => { await check(ctx); return authority(parsed(args), ctx); } } : {}),
   };
 }
 
