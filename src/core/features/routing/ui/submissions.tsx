@@ -1,3 +1,4 @@
+import {OverflowRegion} from './overflow-region';
 import {useEffect,useRef,useState} from 'react';
 import {Button} from '../../../app/ui/primitives';
 import {formPath,routingRequest} from './transport';
@@ -45,13 +46,13 @@ export function Submissions({id,events,submissions,report}:{id:string;events:{id
   {currentReport?<>
    <p className="text-soft">Showing {currentReport.period.fromDate} through {currentReport.period.throughDate}, inclusive, in {currentReport.period.timezone}. {currentReport.period.eventTypeId?`Event: ${events.find(event=>event.id===currentReport.period.eventTypeId)?.title??currentReport.period.eventTypeId}.`:'All event types.'}</p>
    <p className="text-soft">{currentReport.definition}</p>
-   <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Routing conversion figures"><table className="w-full text-left text-[13px]">
+   <OverflowRegion label="Routing conversion figures"><table className="w-full text-left text-[13px]">
     <thead><tr><th className="p-2">Route</th><th className="p-2">Source</th><th className="p-2">Submissions</th><th className="p-2">Bookings</th><th className="p-2">Conversion</th></tr></thead>
     <tbody>{currentReport.groups.map((group,index)=><tr className="odd:bg-wash" key={index}>
      <td className="p-2"><button type="button" className="underline" onClick={()=>setSelection({ids:group.submissionIds,bookings:group.bookingIds,label:`${group.ruleLabel||'Fallback'} · ${group.source||'Direct'}`})}>{group.ruleLabel||'Fallback'}</button></td>
      <td className="p-2">{group.source||'Direct'}</td><td className="p-2">{group.submissions}</td><td className="p-2">{group.bookings}</td><td className="p-2">{new Intl.NumberFormat('en',{style:'percent',maximumFractionDigits:1}).format(group.conversion)}</td>
     </tr>)}</tbody>
-   </table></div>
+   </table></OverflowRegion>
   </>:null}
   {selection?<div className="grid gap-2"><strong>{selection.label}</strong><Button variant="quiet" type="button" onClick={()=>setSelection(undefined)}>Show all submissions in this period</Button>{selection.bookings.map(bookingId=><a key={bookingId} className="break-all underline" href={`/app/bookings?record=${encodeURIComponent(bookingId)}`}>Booking {bookingId}</a>)}</div>:null}
   {visible.map(submission=><details key={submission.id} className="rounded-xl border border-line p-4">
