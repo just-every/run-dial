@@ -5,7 +5,7 @@ export type JsonSchema = boolean | { [key: string]: unknown }
 export interface JsonSchemaObject { type: 'object'; properties?: Record<string, JsonSchema>; required?: string[]; [key: string]: unknown }
 export interface Person { id: string; email: string; name: string; role: string; active: boolean }
 export interface Agent { id: string; name: string; specialist?: string | null }
-export interface Principal { person: Person; agent: Agent; scopes: string[]; consent?: string }
+export interface Principal { person: Person; agent: Agent; scopes: string[]; clientId?: string; consent?: string; nativeProof?: { kind: string; reference: string } }
 export interface PeopleAdapter {
   sponsor(claims: { sub: string }): Promise<Person | null>
   person(id: string): Promise<Person | null>
@@ -19,7 +19,7 @@ export interface PreparedBy { agent: { id: string; name: string }; for: { id: st
 export type EventActor = ({ kind: 'agent' } & PreparedBy) | { kind: 'person'; person: { id: string; name: string } } | { kind: 'business' }
 export interface AgentEvent { id: string; type: string; uri: string; actor: EventActor; at: string; [key: string]: unknown }
 export interface ToolContext {
-  db: D1Database; person: Person; agent: Agent; actor: PreparedBy; seed: string; origin: string
+  db: D1Database; person: Person; agent: Agent; consent?: string; scopes: string[]; clientId?: string; nativeProof?: { kind: string; reference: string }; actor: PreparedBy; seed: string; origin: string
   now(): number; door: 'mcp' | 'embedded'; approvers: Array<{ id: string; name: string }>
   emit(type: string, uri: string, data?: Record<string, unknown>): void
 }
@@ -38,16 +38,20 @@ export interface ToolDefinition {
   inputSchema: JsonSchemaObject; outputSchema: JsonSchema; classes: ClassId[]; clauses: string[]
   classify(args: Record<string, unknown>, ctx: ToolContext): ClassAndFacts[] | Promise<ClassAndFacts[]>
   run(args: Record<string, unknown>, ctx: ToolContext): Promise<{ result: unknown; resources?: Array<{ uri: string; name: string }>; undo?: unknown }>
-  revision?(args: Record<string, unknown>, ctx: ToolContext): Promise<number | null>
+  revisionType?: 'integer' | 'number' | 'string'
+  revision?(args: Record<string, unknown>, ctx: ToolContext): Promise<string | number | null>
   summary?(args: Record<string, unknown>, ctx: ToolContext): ApprovalSummary | Promise<ApprovalSummary>
   undo?(saved: unknown, ctx: UndoContext): Promise<void>
   authority?(args: Record<string, unknown>, ctx: ToolContext): Promise<{ subject: string; widens: boolean } | null>
+  proof?: 'native'; proofKind?: string
+  widens?: false; narrowing?: { effect: 'revoke' | 'narrow'; target: string }
   untrusted?: boolean
 }
+export type ResourceContext = Principal & { db: D1Database }
 export interface ResourceDefinition {
   uriTemplate: string; name: string; description?: string; mimeType?: string; scope?: string; classes: ClassId[]
-  classify(record: { json?: unknown; text?: string }, ctx: { person: Person; db: D1Database }): ClassAndFacts[] | Promise<ClassAndFacts[]>
-  read(uri: string, ctx: { person: Person; db: D1Database }): Promise<{ json?: unknown; text?: string; untrusted?: boolean } | null>
+  classify(record: { json?: unknown; text?: string }, ctx: ResourceContext): ClassAndFacts[] | Promise<ClassAndFacts[]>
+  read(uri: string, ctx: ResourceContext): Promise<{ json?: unknown; text?: string; untrusted?: boolean } | null>
 }
 export interface AgentDoorOptions {
   seed: string; name: string; specialist: string; version?: string; db: D1Database; origin: string; trust: Trust | null
@@ -55,7 +59,12 @@ export interface AgentDoorOptions {
   prompts?: Array<{ name: string; title?: string; description: string; clauses?: string[]; messages(args: Record<string, string>): unknown[] }>
   notTools?: Array<{ clauses: string[]; reason: 'device' | 'screen' | 'connector' | 'import-door' | 'installation' }>
   people: PeopleAdapter
-  localCredentials?(request: Request): Promise<{ sponsor: { id: string }; agent: Agent; scopes: string[] } | null>
+  localCredentials?(request: Request): Promise<{ sponsor: { id: string }; agent: Agent; scopes: string[]; clientId?: string } | null>
+  nativeProof?: {
+    handoff(input: { kind: string; tool: string; principal: Principal }): string | Promise<string>
+    verify(input: { kind: string; tool: string; args: Record<string, unknown>; principal: Principal; reference: string }): Promise<boolean>
+  }
+  currentScopes?(principal: Principal): Promise<string[]>
   paths?: string[]; limits?: { requestsPerMinute?: number; maxBodyBytes?: number }
   onEvent?(event: AgentEvent): void | Promise<void>; now?(): number
 }
@@ -67,7 +76,7 @@ export interface CallResult {
 }
 export interface AgentDoor {
   handle(request: Request): Promise<Response | null>
-  invoke(name: string, args: Record<string, unknown>, who: { person: Person; agent: Agent }): Promise<CallResult>
+  invoke(name: string, args: Record<string, unknown>, who: { person: Pick<Person, 'id'>; agent: Agent; scopes: string[]; clientId?: string; consent?: string }, proofReference?: string): Promise<CallResult>
   emit(event: { type: string; uri: string; person: Person; data?: Record<string, unknown> }): Promise<void>
 }
 export interface PolicyState {

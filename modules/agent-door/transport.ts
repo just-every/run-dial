@@ -1,6 +1,7 @@
 import type { Principal, Runtime } from './types.ts'
 import { revoked } from './execution.ts'
 import { authenticate } from './credentials.ts'
+import { narrowPrincipal } from './principal.ts'
 import { admit } from './admission.ts'
 import { policyRefusal, policyState } from './policy-store.ts'
 import { answered } from './policy/document.ts'
@@ -23,8 +24,9 @@ export async function mcp(rt: Runtime, request: Request): Promise<Response> {
   if (rpc instanceof Response) return rpc
   if (!methods.includes(rpc.method) && !rpc.method.startsWith('notifications/')) return rpcError(rpc.id, -32601, 'Method not found', 404)
   if (rpc.method === 'server/discover') return rpcResult(rpc, discovery(rt))
-  if (rpc.method === 'initialize') return rpcResult(rpc, { protocolVersion: '2025-11-25', capabilities, serverInfo: { name: rt.options.name, version: rt.options.version ?? '1' }, instructions: discovery(rt).instructions })
-  const state = await policyState(rt), principal = await authenticate(rt.options, request, state.business)
+  if (rpc.method === 'initialize') return rpcResult(rpc, { protocolVersion: request.headers.get('mcp-protocol-version') ?? rpc.params?.protocolVersion, capabilities, serverInfo: { name: rt.options.name, version: rt.options.version ?? '1' }, instructions: discovery(rt).instructions })
+  const state = await policyState(rt), authenticated = await authenticate(rt.options, request, state.business)
+  const principal = authenticated && await narrowPrincipal(rt, authenticated)
   if (!principal || revoked(state, principal)) return rpcError(rpc.id, -32001, 'Unauthorized', 401, undefined, challenge(rt))
   const capacity = await admit(rt, principal)
   if (capacity === 'revoked') return rpcError(rpc.id, -32001, 'Unauthorized', 401, undefined, challenge(rt))
@@ -32,7 +34,7 @@ export async function mcp(rt: Runtime, request: Request): Promise<Response> {
   if (rpc.id === undefined) return new Response(null, { status: 202 })
   const params = rpc.params ?? {}, meta = metaOf(rpc)
   if (rpc.method === 'tools/call') {
-    const answer = await callTool(rt, String(params.name ?? ''), params.arguments, principal, 'mcp', meta.traceparent, undefined, params.requestState)
+    const answer = await callTool(rt, String(params.name ?? ''), params.arguments, principal, 'mcp', meta.traceparent, undefined, params.requestState, meta['com.runeditrun/native-proof'])
     if (answer.status === 500) return rpcError(rpc.id, -32603, 'Tool execution failed', 500, { code: answer.result.code })
     if (answer.result.code === 'tool_not_found') return rpcError(rpc.id, -32602, 'Unknown tool', 400)
     if (answer.status === 403) return rpcError(rpc.id, -32000, 'Insufficient scope', 403, { code: 'insufficient_scope' }, challenge(rt, answer.scope))

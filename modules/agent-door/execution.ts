@@ -6,10 +6,12 @@ import { preparedBy } from './people.ts'
 import { classDefinition } from './policy/catalogue.ts'
 import { removeUsage } from './counting.ts'
 import { policyState } from './policy-store.ts'
+import { nativeProof } from './native-proof.ts'
+import { narrowPrincipal } from './principal.ts'
 
 export interface Effect { type: string; uri: string; data?: Record<string, unknown> }
 export function context(rt: Runtime, principal: Principal, door: ToolContext['door'], effects: Effect[], approvers: ToolContext['approvers'] = []): ToolContext {
-  return { db: rt.options.db, person: principal.person, agent: principal.agent, actor: preparedBy(principal), seed: rt.options.seed, origin: rt.options.origin, now: rt.now, door, approvers,
+  return { db: rt.options.db, person: principal.person, agent: principal.agent, consent: principal.consent, scopes: [...principal.scopes], clientId: principal.clientId, nativeProof: principal.nativeProof, actor: preparedBy(principal), seed: rt.options.seed, origin: rt.options.origin, now: rt.now, door, approvers,
     emit(type, uri, data) { effects.push({ type, uri, data }) } }
 }
 export async function classify(tool: ToolDefinition, args: Record<string, unknown>, ctx: ToolContext): Promise<ClassAndFacts[]> {
@@ -24,11 +26,14 @@ export async function livePrincipal(rt: Runtime, saved: Principal): Promise<Prin
   const agent = await rt.options.db.prepare('SELECT revoked FROM agent_door_agents WHERE id=?').bind(saved.agent.id).first<{ revoked: number }>()
   const state = await policyState(rt)
   if (revoked(state, saved)) return null
-  return person?.active && person.id === saved.person.id && !agent?.revoked ? { ...saved, person } : null
+  return person?.active && person.id === saved.person.id && !agent?.revoked ? narrowPrincipal(rt, { ...saved, person }) : null
 }
 export async function runTool(rt: Runtime, tool: ToolDefinition, args: Record<string, unknown>, principal: Principal, result: CallResult, door: ToolContext['door'], approvers: ToolContext['approvers'] = [], usageId = result.decision!.id): Promise<{ result: CallResult; effects: Effect[]; undo?: unknown }> {
   const effects: Effect[] = []
   try {
+    principal = await narrowPrincipal(rt, principal)
+    if (tool.scope && !principal.scopes.includes(tool.scope)) throw new ToolRefusal('insufficient_scope')
+    principal = await nativeProof(rt, tool, args, principal, principal.nativeProof?.reference)
     const value = await tool.run(args, context(rt, principal, door, effects, approvers))
     if (!validateSchema(tool.outputSchema, value.result)) return { result: { ...result, outcome: 'refused', code: 'output_invalid' }, effects, undo: value.undo }
     return { result: { ...result, outcome: 'done', result: value.result, resources: value.resources, untrusted: tool.untrusted }, effects, undo: value.undo }

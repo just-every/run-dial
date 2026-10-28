@@ -22,7 +22,9 @@ export async function executeApproval(rt: Runtime, id: string, saved: SavedAppro
   try {
     const principal = await livePrincipal(rt, saved.principal), state = await policyState(rt), tool = savedTool(rt, saved.tool, saved.args)
     const refusal = policyRefusal(rt, state, tool?.classes)
-    if (!principal || !tool) result = { ...result, outcome: 'refused', code: 'sponsor_unavailable' }
+    if (saved.principal.consent && state.revoked.consents.includes(saved.principal.consent)) result = { ...result, outcome: 'refused', code: 'consent_revoked' }
+    else if (!principal || !tool) result = { ...result, outcome: 'refused', code: 'sponsor_unavailable' }
+    else if (tool.scope && !principal.scopes.includes(tool.scope)) result = { ...result, outcome: 'refused', code: 'insufficient_scope' }
     else if (refusal) result = { ...result, outcome: 'refused', ...refusal }
     else if (state.revision !== saved.revision) result = { ...result, outcome: 'refused', code: 'approval_evidence_changed' }
     else {
@@ -33,8 +35,10 @@ export async function executeApproval(rt: Runtime, id: string, saved: SavedAppro
       }
       const ctx = context(rt, principal, saved.door, [], approvers)
       const authority = await tool.authority?.(saved.args, ctx)
-      if (selfEscalation(authority, principal)) result = { ...result, outcome: 'refused', code: 'self_escalation' }
-      else if (tool.revision && saved.expected_revision !== undefined && await tool.revision(saved.args, ctx) !== saved.expected_revision) result = { ...result, outcome: 'refused', code: 'approval_evidence_changed' }
+      const currentRevision = tool.revision && saved.expected_revision !== undefined ? await tool.revision(saved.args, ctx) : undefined
+      if (tool.widens === false && authority?.widens) result = { ...result, outcome: 'refused', code: 'narrowing_contract_violation' }
+      else if (selfEscalation(authority, principal)) result = { ...result, outcome: 'refused', code: 'self_escalation' }
+      else if (tool.revision && saved.expected_revision !== undefined && currentRevision !== saved.expected_revision) result = { ...result, outcome: 'refused', code: 'revision_conflict', fields: { current_revision: currentRevision } }
       else {
         const classes = await classify(tool, saved.args, ctx)
         row.classes = classes
@@ -47,14 +51,14 @@ export async function executeApproval(rt: Runtime, id: string, saved: SavedAppro
         recordDecision(row, result.decision)
         if (!sameFacts(saved.classes, classes) || await digest(await summary(tool, saved.args, ctx)) !== saved.summary_sha256 || canonical(fresh.classes) !== canonical(saved.evidence.rules)) throw new Error('approval_evidence_changed')
         row.approval = { id, by }
-        if (!await startExecution(rt, row, principal, classes, state, evidence)) throw new Error('decision_busy')
+        if (!await startExecution(rt, row, principal, classes, state, evidence)) throw new Error(principal.consent && (await policyState(rt)).revoked.consents.includes(principal.consent) ? 'consent_revoked' : 'decision_busy')
         await releaseDecision(rt, row.id); locked = false
         const run = await runTool(rt, tool, saved.args, principal, result, saved.door, approvers, row.id)
         result = run.result; effects = run.effects
       }
     }
   } catch (cause) {
-    result = { ...result, outcome: 'refused', code: cause instanceof Error && ['decision_busy', 'approval_evidence_changed'].includes(cause.message) ? cause.message : 'execution_failed' }
+    result = { ...result, outcome: 'refused', code: cause instanceof Error && ['decision_busy', 'approval_evidence_changed', 'consent_revoked'].includes(cause.message) ? cause.message : 'execution_failed' }
   } finally { if (locked) await releaseDecision(rt, row.id) }
   if (result.outcome === 'done') result.receipt = { id: crypto.randomUUID(), decision_id: saved.decision_id, approval_id: id, prepared_by: preparedBy(saved.principal), approved_by: by }
   result.execution_id = row.id
