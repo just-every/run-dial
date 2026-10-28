@@ -64,7 +64,7 @@ INSERT OR IGNORE INTO webhook_deliveries(id,subscription_id,event_id,event_type,
  SELECT lower(hex(randomblob(16))),s.id,NEW.id,NEW.event_type,NULL,
  json_object('id',NEW.id,'type',NEW.event_type,'occurredAt',NEW.occurred_at,'data',json(json_object('fromState',NEW.from_state,'toState',NEW.to_state,'reason',NEW.reason,'occurredAt',NEW.occurred_at))),
  NEW.occurred_at,strftime('%Y-%m-%dT%H:%M:%fZ',NEW.occurred_at,'+24 hours'),NEW.occurred_at,NEW.occurred_at
- FROM webhook_subscriptions s 
+ FROM webhook_subscriptions s
  WHERE s.enabled=1 AND s.secret_ciphertext IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(s.events_json) WHERE value=NEW.event_type)
  AND (s.scope='workspace' OR (s.scope='host' AND s.scope_id=(SELECT id FROM host_profiles WHERE singleton_key='default')) OR (s.scope='team' AND (s.scope_id=NULL OR EXISTS(SELECT 1 FROM team_event_types te WHERE te.team_id=s.scope_id AND te.event_type_id=NULL))))
  AND (1);
@@ -75,7 +75,7 @@ INSERT OR IGNORE INTO webhook_deliveries(id,subscription_id,event_id,event_type,
  SELECT lower(hex(randomblob(16))),s.id,'poll:' || NEW.id || ':created','poll.created.v1',NULL,
  json_object('id','poll:' || NEW.id || ':created','type','poll.created.v1','occurredAt',NEW.created_at,'data',json(json_object('pollId',NEW.id,'eventTypeId',NEW.event_type_id))),
  NEW.created_at,strftime('%Y-%m-%dT%H:%M:%fZ',NEW.created_at,'+24 hours'),NEW.created_at,NEW.created_at
- FROM webhook_subscriptions s 
+ FROM webhook_subscriptions s
  WHERE s.enabled=1 AND s.secret_ciphertext IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(s.events_json) WHERE value='poll.created.v1')
  AND (s.scope='workspace' OR (s.scope='host' AND s.scope_id=(SELECT id FROM host_profiles WHERE singleton_key='default')) OR (s.scope='team' AND (s.scope_id=NULL OR EXISTS(SELECT 1 FROM team_event_types te WHERE te.team_id=s.scope_id AND te.event_type_id=NEW.event_type_id))))
  AND (1);
@@ -86,7 +86,7 @@ INSERT OR IGNORE INTO webhook_deliveries(id,subscription_id,event_id,event_type,
  SELECT lower(hex(randomblob(16))),s.id,'poll:' || NEW.id || ':closed','poll.closed.v1',NULL,
  json_object('id','poll:' || NEW.id || ':closed','type','poll.closed.v1','occurredAt',NEW.updated_at,'data',json(json_object('pollId',NEW.id,'eventTypeId',NEW.event_type_id))),
  NEW.updated_at,strftime('%Y-%m-%dT%H:%M:%fZ',NEW.updated_at,'+24 hours'),NEW.updated_at,NEW.updated_at
- FROM webhook_subscriptions s 
+ FROM webhook_subscriptions s
  WHERE s.enabled=1 AND s.secret_ciphertext IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(s.events_json) WHERE value='poll.closed.v1')
  AND (s.scope='workspace' OR (s.scope='host' AND s.scope_id=(SELECT id FROM host_profiles WHERE singleton_key='default')) OR (s.scope='team' AND (s.scope_id=NULL OR EXISTS(SELECT 1 FROM team_event_types te WHERE te.team_id=s.scope_id AND te.event_type_id=NEW.event_type_id))))
  AND (1);
@@ -108,7 +108,7 @@ INSERT OR IGNORE INTO webhook_deliveries(id,subscription_id,event_id,event_type,
  SELECT lower(hex(randomblob(16))),s.id,NEW.id,'routing.submitted.v1',NULL,
  json_object('id',NEW.id,'type','routing.submitted.v1','occurredAt',NEW.created_at,'data',json(json_object('submissionId',NEW.id,'formId',NEW.form_id,'ruleId',NEW.rule_id,'eventTypeId',NEW.event_type_id,'state',NEW.state))),
  NEW.created_at,strftime('%Y-%m-%dT%H:%M:%fZ',NEW.created_at,'+24 hours'),NEW.created_at,NEW.created_at
- FROM webhook_subscriptions s 
+ FROM webhook_subscriptions s
  WHERE s.enabled=1 AND s.secret_ciphertext IS NOT NULL AND EXISTS(SELECT 1 FROM json_each(s.events_json) WHERE value='routing.submitted.v1')
  AND (s.scope='workspace' OR (s.scope='host' AND s.scope_id=(SELECT id FROM host_profiles WHERE singleton_key='default')) OR (s.scope='team' AND (s.scope_id=NEW.team_id OR EXISTS(SELECT 1 FROM team_event_types te WHERE te.team_id=s.scope_id AND te.event_type_id=NEW.event_type_id))))
  AND (1);

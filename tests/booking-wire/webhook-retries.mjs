@@ -1,0 +1,56 @@
+import assert from "node:assert/strict";
+
+export async function webhookRetries({ data, call, state, receiver, subscribe, process, book, workspace, first }) {
+  const original = (await data("/api/app/webhooks")).deliveries.find(row => row.subscriptionId === workspace.id && row.eventType === "booking.created.v1");
+  const before = receiver.captures.filter(row => row.path === "/workspace" && JSON.parse(row.body).id === original.eventId);
+  const at = new Date(Date.now() + 10000).toISOString();
+  await data(`/api/app/webhook-deliveries/${original.id}/redeliver`, {}); await process(at, original.id); await process(at, original.id);
+  const replayed = receiver.captures.filter(row => row.path === "/workspace" && JSON.parse(row.body).id === original.eventId);
+  assert.equal(replayed.length, before.length + 1);
+  assert.equal(replayed.at(-1).body, before[0].body);
+  assert.notEqual(replayed.at(-1).headers["dial-signature"], before[0].headers["dial-signature"]);
+  receiver.verify(replayed.at(-1), workspace.secret);
+  const retry = await subscribe("/retry", ["booking.created.v1"]);
+  receiver.fail("/retry", 1); await book();
+  const clock = new Date(Date.now() + 1000), started = clock.toISOString();
+  await process(started);
+  let delivery = (await data("/api/app/webhooks")).deliveries.find(row => row.subscriptionId === retry.id);
+  assert.deepEqual([delivery.state, delivery.responseCode, delivery.attempts], ["pending", 500, 1]);
+  assert.ok(Date.parse(delivery.nextAttemptAt) > clock.getTime(), "retry is scheduled in the future");
+  await process(new Date(Date.parse(delivery.nextAttemptAt) - 1).toISOString(), delivery.id);
+  assert.equal(receiver.captures.filter(row => row.path === "/retry").length, 1, "not retried before due");
+  await process(delivery.nextAttemptAt, delivery.id); await process(delivery.nextAttemptAt, delivery.id);
+  delivery = (await data("/api/app/webhooks")).deliveries.find(row => row.id === delivery.id);
+  assert.deepEqual([delivery.state, delivery.responseCode, delivery.attempts], ["delivered", 204, 2]);
+  const attempts = receiver.captures.filter(row => row.path === "/retry");
+  assert.equal(attempts.filter(row => row.status === 204).length, 1);
+  assert.equal(attempts[0].body, attempts[1].body);
+  attempts.forEach(row => receiver.verify(row, retry.secret));
+  const doomed = await subscribe("/exhausted", ["booking.created.v1"]); receiver.fail("/exhausted", 1000); await book();
+  const doomedRow = (await state()).webhook_deliveries.find(row => row.subscription_id === doomed.id);
+  assert.equal(Date.parse(doomedRow.retry_until) - Date.parse(doomedRow.created_at), 24 * 3600000);
+  let now = new Date(Date.now() + 1000).toISOString(), priorDelay = 0, rounds = 0;
+  while (true) {
+    await process(now, doomedRow.id);
+    const row = (await data("/api/app/webhooks")).deliveries.find(row => row.id === doomedRow.id);
+    if (row.state === "failed") break;
+    assert.equal(row.state, "pending");
+    const delay = Date.parse(row.nextAttemptAt) - Date.parse(now);
+    if (rounds < 3) { assert.ok(delay > priorDelay, "backoff grows after successive failures"); priorDelay = delay; }
+    assert.ok(Date.parse(row.nextAttemptAt) <= Date.parse(doomedRow.retry_until));
+    now = row.nextAttemptAt; assert.ok(++rounds < 40, "bounded retry schedule");
+  }
+  assert.equal(now, doomedRow.retry_until, "failed at the 24 hour deadline");
+  const deleted = await subscribe("/deleted", ["booking.created.v1"]); await book();
+  const deletedDelivery = (await state()).webhook_deliveries.find(row => row.subscription_id === deleted.id);
+  await call(`/api/app/webhooks/${deleted.id}`, undefined, 200, "DELETE");
+  await process(undefined, deletedDelivery.id); await book(); await process();
+  assert.equal(receiver.captures.filter(row => row.path === "/deleted").length, 0);
+  await call(`/api/app/webhook-deliveries/${deletedDelivery.id}/redeliver`, {}, 404);
+  const eraseId = (await state()).webhook_deliveries.find(row => row.booking_id === first.booking.id).id;
+  const preview = await data("/api/app/privacy/preview", { email: first.payload.email });
+  await data("/api/app/privacy/erase", { email: first.payload.email, confirmation: preview.confirmation, expiresAt: preview.expiresAt });
+  assert.ok((await state()).webhook_deliveries.every(row => row.booking_id !== first.booking.id));
+  await call(`/api/app/webhook-deliveries/${eraseId}/redeliver`, {}, 404);
+  const total = receiver.captures.length; await process(undefined, eraseId); assert.equal(receiver.captures.length, total);
+}

@@ -27,6 +27,10 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  webhook_subscriptions: {endpoint:'https://receiver.synthetic.test/archive',events_json:'["booking.created.v1"]',scope:'workspace',scope_id:null,secret_ciphertext:secret+'_HOOK',enabled:1},
+  webhook_deliveries: {event_type:'booking.created.v1',body_json:'{"id":"synthetic-dial-1501","type":"booking.created.v1","data":{"bookingId":"bookings-1"}}',state:'pending',lease_id:null,lease_until:null,response_code:null,last_error:null,retry_until:end},
+  routing_forms: {config_json:'{"title":"Planning route","questions":[],"rules":[],"defaultMessage":"Contact the host"}'},
+  routing_submissions: {state:'matched',result_json:'{"submissionId":"routing_submissions-1","eventTypeId":"event_types-1","bookingPath":"/book/host/event"}'},
   meeting_polls:{state:'open',title:'Project planning',closes_at:end,show_tally:0},
   poll_participants:{name:'Alex Rivera',email:'invitee@example.test'},
   poll_votes:{choice:'yes'},

@@ -63,6 +63,13 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-payment-entitlements-not-portable/);
     source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
     const archive = await createArchive(testPlatform(source.db));
+    assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
+    const webhookSubscription = archive.tables.find(table => table.name === 'webhook_subscriptions').rows[0];
+    assert.equal(webhookSubscription.secret_ciphertext, null, 'signing authority is absent from the archive');
+    assert.equal(webhookSubscription.enabled, 0, 'restored subscriptions require a fresh secret');
+    const webhookDelivery = archive.tables.find(table => table.name === 'webhook_deliveries').rows[0];
+    assert.equal(webhookDelivery.state, 'failed');
+    assert.equal(webhookDelivery.last_error, 'restored_historical_command');
     assert.ok(!archive.tables.some(table=>['payment_products','payment_entitlements','payment_redemptions','payment_entitlement_events'].includes(table.name)),'live entitlement and redemption authority never leave an archive');
     assert.equal(archive.tables.some(table=>table.name==='client_remember_links'),false);
     assert.equal(archive.tables.some(table=>table.name==='poll_vote_tokens'),false);
@@ -89,6 +96,9 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
     await restoreArchive(destination, archive);
+    assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_subscriptions WHERE enabled=1 OR secret_ciphertext IS NOT NULL").get().n, 0, 'restore never enables outbound authority');
+    assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_deliveries WHERE state IN ('pending','sending')").get().n, 0, 'restore never resumes historical webhook commands');
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM routing_capabilities').get().n, 0);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM client_remember_links').get().n,0,'restoring never recreates saved-details authority');
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_invitation_cancellations').all(), ledger);
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());
