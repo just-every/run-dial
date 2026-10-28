@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 88 done / 30 partial / 58 missing (176 clauses).
+The contract census is 90 done / 28 partial / 58 missing (176 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -276,17 +276,17 @@ Evidence: None.
 
 Gap: No implementing code yet.
 
-ROUTE-001 is partial: Routing forms.
+ROUTE-001 is done: Routing forms.
 
-Evidence: `tests/booking-wire/routing-journey.mjs` routingJourney; `tests/booking-axe/routing.mjs` routingScreens; `tests/export-base-adoption.test.mjs` archive roundtrip
+Evidence: Required fields, hidden URL values, single-use capability refusals, answer snapshots, period and event-filtered conversion drilldown, erasure and click-only conversion uploads: `tests/booking-wire/routing-journey.mjs` "routingJourney". Authoring, standalone forms, inline and modal embeds, configured analytics and 1440 and 390 screens: `tests/booking-axe/routing.mjs` "routingScreens", `tests/booking-axe/routing-embed.mjs` "routingEmbeds". Historical forms and answers restore without live authority: `tests/export-base-adoption.test.mjs` "the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused". Owner and revoked-session boundary: `tests/operator-auth-boundary.test.mjs` "direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail".
 
-Gap: Required-field refusal, single recorded submission on replay, booking answer handoff, capability refusals, conversion drilldown and browser proof are implemented; passing native and browser journeys on the candidate remain pending.
+Gap: None.
 
-ROUTE-002 is partial: Routing rules and outcomes.
+ROUTE-002 is done: Routing rules and outcomes.
 
-Evidence: `tests/booking-wire/routing-journey.mjs` routingJourney; `tests/booking-axe/routing.mjs` routingScreens
+Evidence: Three draft previews and matching public outcomes, fallback, matched rule, no booking for a message, editable prefill, selected committed redirect fields and preserved confirmation mail: `tests/booking-wire/routing-journey.mjs` "routingJourney". Real time-picker booking, external destination and configured post-booking landing, inline and modal flows at 1440 and 390: `tests/booking-axe/routing.mjs` "routingScreens", `tests/booking-axe/routing-embed.mjs` "routingEmbeds".
 
-Gap: Ordered preview and public outcomes, matched-rule records and per-route safe redirects are implemented; passing native and browser journeys on the candidate remain pending. Specific-host pool routing is inherited by `TEAM-003`, which names the duty.
+Gap: None.
 
 ROUTE-003 is missing: CRM-owner routing and lookup.
 
@@ -826,7 +826,7 @@ REPORT-001 is partial: Scheduling analytics.
 
 Evidence: `tests/scheduling-report.test.mjs`, `tests/review/report-month.ts`, `src/core/features/reports/`, `src/core/features/bookings/ui/scheduling-report.tsx`, `scripts/verify-report-screens.mjs`
 
-Gap: Built for today's single-host install and proved on a seeded month: bookings created, rescheduled and canceled with reasons, no-show and attendance rates, lead time, popular days and hours in the host's zone across a daylight-saving change, bookings by the UTM and source values of `LINK-003` and by chosen duration (`EVENT-011`), and revenue, fees and refunds, each figure stating its definition and drilling through to exactly the bookings it counts; imported move-in bookings count by their source creation time and start and are shown separately. Open: choosing a host or a team (one host and no teams until `TEAM-001` and `TEAM-002`); routing-form submissions and conversion by route and UTM source (`ROUTE-001`); round-robin distribution (`TEAM-004`); a member seeing only their own figures (every operator is an owner until `OPER-001`, so that step is not claimed). Revenue, fees, refunds and net read `PAY-001` payments and `PAY-003` money movements.
+Gap: Built for today's single-host install and proved on a seeded month: bookings created, rescheduled and canceled with reasons, no-show and attendance rates, lead time, popular days and hours in the host's zone across a daylight-saving change, bookings by the UTM and source values of `LINK-003` and by chosen duration (`EVENT-011`), and revenue, fees and refunds, each figure stating its definition and drilling through to exactly the bookings it counts; imported move-in bookings count by their source creation time and start and are shown separately. Open: choosing a host or a team (one host and no teams until `TEAM-001` and `TEAM-002`); round-robin distribution (`TEAM-004`); a member seeing only their own figures (every operator is an owner until `OPER-001`, so that step is not claimed). Routing-form submission cohorts and conversion by matched route and UTM source, chosen period and event type, with exact submission and booking drilldown, are proved by `tests/booking-wire/routing-journey.mjs` "routingJourney" and `tests/booking-axe/routing.mjs` "routingScreens" under `ROUTE-001`. Revenue, fees, refunds and net read `PAY-001` payments and `PAY-003` money movements.
 
 REPORT-002 is partial: Host calendar view and booking workspace.
 
