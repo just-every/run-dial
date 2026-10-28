@@ -2216,6 +2216,17 @@
       }
     },
     {
+      "path": "src/base/contract-docs.mjs",
+      "originPath": "foundation/runtime/contract-docs.mjs",
+      "revision": "0fe27af9a5cb1bd9dc5e41da024784082e609010",
+      "files": {
+        "src/base/contract-docs.mjs": "d98e14f489c57f60446c2cc68310db09f298f7974d77026dbaa2c62868cc4838"
+      },
+      "modes": {
+        "src/base/contract-docs.mjs": "100644"
+      }
+    },
+    {
       "path": "src/base/contract-filter.ts",
       "originPath": "foundation/runtime/contract-filter.ts",
       "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
