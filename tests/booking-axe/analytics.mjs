@@ -16,7 +16,7 @@ async function intercept(context) {
       await route.fulfill({contentType:"application/javascript",body:`(() => { const q=window.dataLayer; const send = values => { const [kind,name,params]=Array.from(values); if(kind!=='event')return; const url=new URL('https://www.google-analytics.com/g/collect'); url.searchParams.set('en',name); url.searchParams.set('dl',params.page_location); url.searchParams.set('id',params.event_id); fetch(url,{method:'POST',body:JSON.stringify({send_to:params.send_to,transaction_id:params.transaction_id})}).then(()=>params.event_callback?.()); }; q.forEach(send); const push=q.push.bind(q); q.push=(...values)=>{values.forEach(send);return push(...values);}; })();`});return;
     }
     if(url.hostname==="www.google-analytics.com") { await route.fulfill({status:204});return; }
-    if(["www.googletagmanager.com","connect.facebook.net","snap.licdn.com"].includes(url.hostname)) {await route.fulfill({contentType:"application/javascript",body:"/* synthetic advertising SDK at its network edge */"});return;}
+    if(["www.googletagmanager.com","connect.facebook.net","snap.licdn.com"].includes(url.hostname)) {await route.fulfill({contentType:"application/javascript",body:"try { window.parent.document.body; throw new Error('Vendor reached booking DOM'); } catch (error) { if (error.message === 'Vendor reached booking DOM') throw error; } if (location.search || document.referrer) throw new Error('Vendor received booking query or referrer');"});return;}
     throw new Error(`Unexpected third-party hostname ${url.hostname}`);
   });
 }
@@ -42,7 +42,7 @@ try {
   await page.waitForLoadState("networkidle");assert.deepEqual(external,[],"an unconfigured booking page makes no third-party request");await unconfigured.close();
   const settings=await owner.newPage();await settings.goto(origin+"/app/settings");
   const card=settings.locator("#analytics-settings");await card.getByLabel("GA4 measurement ID").waitFor();
-  async function set(label,value) {const field=card.getByLabel(label,{exact:true});await field.fill(value);const saved=settings.waitForResponse(response=>new URL(response.url()).pathname==="/api/app/analytics"&&response.request().method()==="PUT");await field.blur();assert.equal((await saved).status(),200);}
+  async function set(label,value) {const field=card.getByLabel(label,{exact:true});await field.fill(value);const saved=settings.waitForResponse(response=>new URL(response.url()).pathname==="/api/app/analytics"&&response.request().method()==="PUT"&&JSON.stringify(response.request().postDataJSON()).includes(JSON.stringify(value)));await field.blur();assert.equal((await saved).status(),200);}
   await set("GA4 measurement ID","G-SYNTHETIC920");
   await settings.reload();assert.equal(await card.getByLabel("GA4 measurement ID").inputValue(),"G-SYNTHETIC920");
   await shot(settings,"settings",card);
@@ -96,8 +96,9 @@ try {
     assert.equal(await form.getByLabel(`${label} access token`,{exact:true}).inputValue(),"");
   }
   await shot(settings,"connections",card);
-  const allTags=await browser.newContext();await intercept(allTags);const all=await allTags.newPage();await all.goto(origin+link);await all.getByRole("heading",{name:"Choose a day and time."}).waitFor();
+  const allTags=await browser.newContext();await intercept(allTags);const all=await allTags.newPage(),allErrors=[];all.on("pageerror",error=>allErrors.push(error.message));await all.goto(origin+link);await all.getByRole("heading",{name:"Choose a day and time."}).waitFor();
   await assertEventually(()=>["www.googletagmanager.com","connect.facebook.net","snap.licdn.com"].every(host=>external.some(item=>item.host===host)));
+  await all.waitForLoadState("networkidle");assert.deepEqual(allErrors,[],"vendor scripts cannot inspect parent booking DOM, queries or referrers");
   assert.ok(external.some(item=>item.path==="/gtm.js"));await allTags.close();
   await json(await owner.request.put(origin+"/api/app/analytics",{headers,data:{}}));
   const before=external.length,disabled=await browser.newContext();await intercept(disabled);const blank=await disabled.newPage();await blank.goto(origin+link);await blank.getByRole("heading",{name:"Choose a day and time."}).waitFor();await blank.waitForLoadState("networkidle");assert.equal(external.length,before,"removing all tags stops vendor scripts");await disabled.close();

@@ -4931,6 +4931,10 @@
       "sha256": "f9fae883254d0aa6d299332c68268f6d97eb30693b1d4830829db1b97c099f63",
       "executable": false
     },
+    "src/core/features/analytics/frame.ts": {
+      "sha256": "fb33db0fdf85c9f73c9e821ef093be58ad8f328b5f10ef50b3790f7143ac0313",
+      "executable": false
+    },
     "src/core/features/analytics/index.ts": {
       "sha256": "3f4512834a01678c6f44a549ca7211091c1abc34ee3619e4943fa38a67a1b5e9",
       "executable": false
@@ -4940,7 +4944,7 @@
       "executable": false
     },
     "src/core/features/analytics/routes.ts": {
-      "sha256": "a6a775676e046a5375ca7cd2fc0b12c5cbe397dc354e569db9473648555c3cc4",
+      "sha256": "7e9cd93380ef55c8a41c8a460b0268a76d298bfb6a665849aa4a6c0bb56d745d",
       "executable": false
     },
     "src/core/features/analytics/settings.ts": {
@@ -6540,7 +6544,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/analytics.ts": {
-      "sha256": "27173d89938da8c37075eae1cbb673f3a9c6b08ec61381a857b3ff8c4e0d9dff",
+      "sha256": "e62cda42252852e9b036c3c8f8808754ecd7a4cfe4230e3d44d815a7450267ac",
       "executable": false
     },
     "src/core/features/public-booking/ui/answer-retention.ts": {
@@ -8064,7 +8068,7 @@
       "executable": false
     },
     "tests/booking-axe/analytics.mjs": {
-      "sha256": "a5043f40ce536a1061cadc2a97de6d261b5589c03722f75c416eedefa6691e06",
+      "sha256": "8ab29a5bf53982914fc82984cd052d8599ddf405b7de4fd050de014515a1a9fd",
       "executable": false
     },
     "tests/booking-axe/audit.mjs": {

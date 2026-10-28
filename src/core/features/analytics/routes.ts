@@ -1,3 +1,4 @@
+import { analyticsFrame } from "./frame";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
@@ -6,6 +7,11 @@ import { validate } from "../../shared/validation";
 import { providerSchema,tagsSchema,googleConnectionSchema,linkedinConnectionSchema } from "./types";
 
 export const analyticsRoutes=new Hono<AppEnvironment>()
+  .get('/api/public/analytics/frame',async c=>{
+    c.header('cache-control','no-store');c.header('referrer-policy','no-referrer');
+    c.header('content-security-policy',"default-src 'none'; script-src https: 'unsafe-inline'; connect-src https:; img-src https: data:; frame-ancestors 'self'; sandbox allow-scripts");
+    return c.html(analyticsFrame(await c.get('services').analytics.settings.tags()));
+  })
   .get('/api/public/analytics',async c=>{c.header('cache-control','no-store');return c.json(await c.get('services').analytics.settings.tags());})
   .use('/api/app/analytics*',async(c,next)=>{
     const session=await c.get('services').operators.auth.getSession(c.req.raw);
