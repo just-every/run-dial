@@ -45,7 +45,7 @@ export function Submissions({id,events,submissions,report}:{id:string;events:{id
   {currentReport?<>
    <p className="text-soft">Showing {currentReport.period.fromDate} through {currentReport.period.throughDate}, inclusive, in {currentReport.period.timezone}. {currentReport.period.eventTypeId?`Event: ${events.find(event=>event.id===currentReport.period.eventTypeId)?.title??currentReport.period.eventTypeId}.`:'All event types.'}</p>
    <p className="text-soft">{currentReport.definition}</p>
-   <div className="overflow-x-auto"><table className="w-full text-left text-[13px]">
+   <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Routing conversion figures"><table className="w-full text-left text-[13px]">
     <thead><tr><th className="p-2">Route</th><th className="p-2">Source</th><th className="p-2">Submissions</th><th className="p-2">Bookings</th><th className="p-2">Conversion</th></tr></thead>
     <tbody>{currentReport.groups.map((group,index)=><tr className="odd:bg-wash" key={index}>
      <td className="p-2"><button type="button" className="underline" onClick={()=>setSelection({ids:group.submissionIds,bookings:group.bookingIds,label:`${group.ruleLabel||'Fallback'} · ${group.source||'Direct'}`})}>{group.ruleLabel||'Fallback'}</button></td>
