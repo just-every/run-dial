@@ -8,7 +8,7 @@ export async function routingEmbeds({browser,settings,origin,form,event,width,fi
  try{
   for(const mode of ['inline','modal']){
    await settings.getByLabel(/^Embed style/).selectOption(mode);
-   const snippet=(await settings.getByLabel('Website embed code',{exact:true}).inputValue()).replace('/embed/dial.js','/embed/dial.js?utm_source='+mode);
+   const snippet=(await settings.getByLabel(/^Website embed code/).inputValue()).replace('/embed/dial.js','/embed/dial.js?utm_source='+mode);
    const url=`${parent}/routing-${mode}`;await page.addInitScript(()=>{globalThis.routingEvents=[];globalThis.addEventListener('dial:routing-viewed',event=>globalThis.routingEvents.push({type:event.type,...event.detail}));globalThis.addEventListener('dial:routing-submitted',event=>globalThis.routingEvents.push({type:event.type,...event.detail}));});
    await page.route(url,route=>route.fulfill({status:200,contentType:'text/html',body:`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Growth studio</title></head><body style="margin:0"><main><h1>Find your next step</h1>${snippet}</main></body></html>`}));
    await page.goto(url);await page.waitForFunction(()=>globalThis.document.querySelector('script[data-dial-routing]')?.dataset.dialMounted==='true');

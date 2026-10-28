@@ -1656,7 +1656,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "6f78ae778eed57d18a2e67e85edc670547403339018f9b9a9c12160014ccc2fd",
+      "sha256": "1cfa14a6ec083f36701b3b62d17f7b261853300941affc19b3bfdcda22d33697",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -8324,7 +8324,7 @@
       "executable": false
     },
     "tests/booking-axe/routing-embed.mjs": {
-      "sha256": "59bf8b75fdd9a12e08922ff168cd81cc89756395daf2833b812c654488b59dc6",
+      "sha256": "ba46ac741ecfa4d0578399823bb273265622b72b7e2dcab831b2579cf48fb94b",
       "executable": false
     },
     "tests/booking-axe/routing-tracking.mjs": {
