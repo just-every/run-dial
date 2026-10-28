@@ -956,7 +956,7 @@
       "executable": false
     },
     "docs/importing-schedulers.md": {
-      "sha256": "73cb87dd967c650a9124f672a84128437619d8a70e517cbb522487047e29c410",
+      "sha256": "cd5e51afd17fff453c26ee3fdb09a7980c62d045f2835bbcc0299cb06ccf7252",
       "executable": false
     },
     "docs/importing-templates.md": {
@@ -4368,7 +4368,7 @@
       "executable": false
     },
     "scripts/move-in-browser-schedulers.mjs": {
-      "sha256": "84a82529d46898dd9e29b1f065bf67880a10a8eb7e71d0c80a6e4c8fec1c9287",
+      "sha256": "3fbb91e91e484fcd9b2353e09d09a17021734e2a13de0e0d9d963e925d64ba60",
       "executable": false
     },
     "scripts/move-in/download-calendly.mjs": {
@@ -4376,7 +4376,7 @@
       "executable": false
     },
     "scripts/move-in/download-scheduler.mjs": {
-      "sha256": "5f637f6846c6d654a8567a0fe22182b2cf6aa502240b02fc5c03c3faa5859443",
+      "sha256": "60a002182c18338586c261bd7ba88e3377cb52a4c7a57f020595e3c8adfb26ac",
       "executable": false
     },
     "scripts/move-in/download.mjs": {
@@ -4580,7 +4580,7 @@
       "executable": false
     },
     "scripts/verify-move-in-browser.mjs": {
-      "sha256": "5b146783e88345841eb7794f0006df6ac0bb1178da26d784cf785e7939e8bd16",
+      "sha256": "a10505fff4b75a7e5b2e77f0a9360ed6688d4f352c87eece9a2ec97d5b3fd5cf",
       "executable": false
     },
     "scripts/verify-operator-change.mjs": {

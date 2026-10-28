@@ -14,7 +14,9 @@ export async function schedulerJourney({page,context,origin,audit}){
   if(calendar){assert.equal((await context.request.post(origin+'/__fixtures/import-empty')).status(),200);await page.reload();}
   const files=genericFiles(calendar),input=card.getByLabel('Saved response files');await expect(input).toBeEnabled();
   await input.setInputFiles(files.map(file=>({name:file.name,mimeType:file.name.endsWith('.json')?'application/json':file.name.endsWith('.ics')?'text/calendar':'text/csv',buffer:file.bytes})));
+  const response=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/app/move-in/preview'&&response.request().method()==='POST');
   await card.getByRole('button',{name:'Preview saved data',exact:true}).click();
+  const preview=await response,payload=await preview.json();assert.equal(preview.status(),200,payload.error?.message??'Source preview must succeed.');
   await card.getByRole('button',{name:'Download JSON report',exact:true}).waitFor();
   await expect(card.getByText(calendar?'X-OLD-REMINDER':'sms_rule',{exact:true})).toBeVisible();
   await expect(card.getByText('payment_rule',{exact:true})).toBeVisible();

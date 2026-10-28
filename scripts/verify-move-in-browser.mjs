@@ -60,6 +60,7 @@ try{
  async function audit(name){const report=await new AxeBuilder({page}).analyze();assert.deepEqual(report.violations.filter(v=>['serious','critical'].includes(v.impact)),[]);assert.ok(await page.evaluate(()=>globalThis.document.documentElement.scrollWidth<=globalThis.innerWidth));await page.screenshot({path:evidencePath(`move-in-${width}-${name}.png`),fullPage:true,caret:'initial'});scans.push({name,width,violations:report.violations});}
  const fixture=async name=>Promise.all((await readdir(`tests/move-in/fixtures/${name}`)).filter(n=>n.endsWith('.json')).map(n=>resolve(`tests/move-in/fixtures/${name}`,n)));
  async function selectFiles(name){const input=page.getByLabel('Saved response files');await expect(input).toBeEnabled();await input.setInputFiles(await fixture(name));}
+ await schedulerJourney({page,context,origin,width,audit});
  await page.goto(origin+'/app/settings#move-in');await selectFiles('solo');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByRole('button',{name:'Download JSON report'}).waitFor();await audit('preview');
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Download JSON report'}).click();const file=await download;await file.saveAs(evidencePath(`move-in-${width}-report.json`));const report=JSON.parse(await readFile(evidencePath(`move-in-${width}-report.json`),'utf8'));assertReport(report);assert.equal(report.counts.bookings.imported,10);
  await page.getByLabel('I acknowledge all listed losses, rejected overlaps and changed values.').check();await page.getByRole('button',{name:'Apply reviewed import'}).click();await page.getByRole('button',{name:'Continue import'}).waitFor();await audit('progress');
@@ -80,6 +81,5 @@ try{
  await selectFiles('edges');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByText('Overlapping confirmed Dial or earlier imported booking.',{exact:false}).first().waitFor();await audit('edge-losses');
  await page.getByLabel('Adopt source schedule timezone (leave blank to keep host zone)').fill('Europe/London');await page.getByLabel('Location value (HTTPS link, host phone or address)').first().fill('https://meet.example.test/chosen');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByText(/Host zone Europe\/London/u).waitFor();await audit('owner-choices');
  await switchOverJourney({page,context,origin,width,audit,selectFiles});
- await schedulerJourney({page,context,origin,width,audit});
  assert.deepEqual(errors,[]);await context.close();
 }finally{await writeFile(evidencePath(`move-in-${width}-axe.json`),JSON.stringify({scans,errors},null,2));await browser.close();}

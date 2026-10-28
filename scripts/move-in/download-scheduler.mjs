@@ -5,7 +5,7 @@ import { captureScheduler } from '../../src/core/features/move-in/providers/api-
 
 const args = process.argv.slice(2);
 try {
- if (args.length !== 4 || args[0] !== '--provider' || !['calcom', 'savvycal'].includes(args[1]) || args[2] !== '--output' || !args[3]) throw new Error('Usage: node --experimental-strip-types ./scripts/move-in/download-scheduler.mjs --provider calcom --output ./private-capture');
+ if (args.length !== 4 || args[0] !== '--provider' || !['calcom', 'savvycal'].includes(args[1]) || args[2] !== '--output' || !args[3]) throw new Error('Usage: node --experimental-strip-types ./scripts/move-in/download-scheduler.mjs --provider calcom --output ./exports/scheduler-capture');
  const provider = args[1];
  const tokenName = provider === 'calcom' ? 'CALCOM_TOKEN' : 'SAVVYCAL_TOKEN';
  const token = process.env[tokenName];

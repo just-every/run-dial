@@ -5,8 +5,8 @@ Use **Move in → Cal.com** or **Move in → SavvyCal** with a personal API toke
 The terminal command reads the token from `CALCOM_TOKEN` or `SAVVYCAL_TOKEN`. Set that variable privately using your shell or secret manager. Do not put tokens in command arguments, capture files or source control.
 
 ```sh
-node --experimental-strip-types ./scripts/move-in/download-scheduler.mjs --provider calcom --output ./private-capture
-node --experimental-strip-types ./scripts/move-in/download-scheduler.mjs --provider savvycal --output ./private-capture
+node --experimental-strip-types ./scripts/move-in/download-scheduler.mjs --provider calcom --output ./exports/scheduler-capture
+node --experimental-strip-types ./scripts/move-in/download-scheduler.mjs --provider savvycal --output ./exports/scheduler-capture
 ```
 
 Each command writes one new JSON file with private filesystem permissions. The file contains personal scheduling data: keep it private and erase it when it is no longer needed. The command prints no provider responses or credentials. Capture refuses redirects, repeated cursors, duplicate identifiers, more than 30 requests, over 8 MiB of responses, more than 100 event types, or more than 500 bookings. It fails instead of saving an incomplete capture.
