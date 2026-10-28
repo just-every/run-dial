@@ -8224,7 +8224,7 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "723543196293738ec73b66d85a0fc9220e13ae2f34f776be2bdcbb06e6314025",
+      "sha256": "6f6fff84b9cc1e4de7833ce4fdfb930482f5cbeb01b9a784e2028cf060384bca",
       "executable": false
     },
     "tests/booking-wire/accounting-wire.ts": {
@@ -8452,7 +8452,7 @@
       "executable": false
     },
     "tests/booking-wire/webhook-receiver.mjs": {
-      "sha256": "8931b89045f2e5c6d53c1fccdba4c6d6626cbae53fe0b9693d6a9d658268b7c1",
+      "sha256": "52ba9441331ca0114c34c8a9c0cca195036de8f63b0512558f75a5b457412e44",
       "executable": false
     },
     "tests/booking-wire/webhook-retries.mjs": {
@@ -8460,11 +8460,11 @@
       "executable": false
     },
     "tests/booking-wire/webhook-wire.ts": {
-      "sha256": "1bdadee331cfa4ac95a50a7a09e80d3e19a95ddb15d04e283469f5865b08fd23",
+      "sha256": "96290dd086be1ce5cb1748388ececc01477d6cbc85e9b389771639104c0b5142",
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "4fac045fc239d880c3e8b7db60a3bf0038bc7481bb43dd63d692a1e928331c07",
+      "sha256": "42b59c79e828982fd84d6584f2ab3d4809761b601c4699019a548a6317102393",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {

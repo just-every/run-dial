@@ -5,11 +5,24 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { evidencePath } from "../scripts/evidence-path.mjs";
+import { createServer } from "node:net";
+
+async function webhookPorts() {
+  const reservations = await Promise.all(Array.from({ length: 3 }, async () => {
+    const server = createServer();
+    await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+    return server;
+  }));
+  const ports = reservations.map(server => server.address().port);
+  await Promise.all(reservations.map(server => new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()))));
+  return ports;
+}
 
 async function wireJourney(t, feature) {
   const state = await mkdtemp(resolve(tmpdir(), "dial-booking-wire-"));
-  const origin = "http://127.0.0.1:15754", config = "tests/booking-wire/worker.wrangler.toml";
-  const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin };
+  const [port, inspector, receiver] = feature === "webhooks" ? await webhookPorts() : [15754, 15755, 15756];
+  const origin = `http://127.0.0.1:${port}`, config = "tests/booking-wire/worker.wrangler.toml";
+  const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin, DIAL_WEBHOOK_RECEIVER_PORT: String(receiver) };
   let server, output = "";
   let cleaned = false;
   const cleanup = async () => {
@@ -27,7 +40,8 @@ async function wireJourney(t, feature) {
   });
   await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
   const microsoft = feature === "microsoft" ? ["--var", "CALENDAR_PROVIDER:microsoft", "--var", "MICROSOFT_OAUTH_CLIENT_ID:synthetic-dial-801-client", "--var", "MICROSOFT_OAUTH_CLIENT_SECRET:synthetic-dial-802-secret"] : [];
-  server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", "15754", "--inspector-port", "15755", ...microsoft], { env, stdio: "pipe", detached: true });
+  const webhookRuntime = feature === "webhooks" ? ["--var", `APP_URL:${origin}`, "--var", `WEBHOOK_RECEIVER_ORIGIN:http://127.0.0.1:${receiver}`] : [];
+  server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", String(port), "--inspector-port", String(inspector), ...microsoft, ...webhookRuntime], { env, stdio: "pipe", detached: true });
   server.stdout.on("data", chunk => { output += chunk; }); server.stderr.on("data", chunk => { output += chunk; });
   for (let attempt = 0; ; attempt++) { if (server.exitCode !== null || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
   assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);

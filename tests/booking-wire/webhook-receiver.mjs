@@ -22,7 +22,7 @@ export async function webhookReceiver() {
     captures.push({ path: request.url, body, headers: request.headers, status });
     response.writeHead(status); response.end();
   });
-  await new Promise((resolve, reject) => { server.once("error", reject); server.listen(15756, "127.0.0.1", resolve); });
+  await new Promise((resolve, reject) => { server.once("error", reject); server.listen(Number(process.env.DIAL_WEBHOOK_RECEIVER_PORT ?? 15756), "127.0.0.1", resolve); });
   return {
     captures, fail: (path, count) => failures.set(path, count),
     pauseDns() { paused = true; return new Promise(resolve => { dnsStarted = resolve; }); },
