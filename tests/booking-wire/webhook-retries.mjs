@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
 
+async function within(promise, label) {
+  let timer;
+  try { return await Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label} did not complete`)), 10000); })]); }
+  finally { clearTimeout(timer); }
+}
+
 export async function webhookRetries({ data, call, state, receiver, subscribe, process, book, workspace, first }) {
   const original = (await data("/api/app/webhooks")).deliveries.find(row => row.subscriptionId === workspace.id && row.eventType === "booking.created.v1");
   const before = receiver.captures.filter(row => row.path === "/workspace" && JSON.parse(row.body).id === original.eventId);
@@ -51,8 +57,8 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   const resolving = await subscribe("/deleted-during-dns", ["booking.created.v1"]); await book();
   const resolvingDelivery = (await state()).webhook_deliveries.find(row => row.subscription_id === resolving.id);
   const dnsStarted = receiver.pauseDns(), inFlight = process(undefined, resolvingDelivery.id);
-  await dnsStarted;
-  await call(`/api/app/webhooks/${resolving.id}`, undefined, 200, "DELETE");
+  await within(Promise.race([dnsStarted, inFlight.then(result => { throw new Error(`Delivery ended before the DNS barrier: ${JSON.stringify(result)}`); })]), "DNS barrier");
+  await within(call(`/api/app/webhooks/${resolving.id}`, undefined, 200, "DELETE"), "Deletion while DNS is pending");
   receiver.resumeDns(); assert.deepEqual((await inFlight).results, ["unavailable"]);
   assert.equal(receiver.captures.filter(row => row.path === "/deleted-during-dns").length, 0, "deletion during DNS stops the not-yet-started send");
   const eraseId = (await state()).webhook_deliveries.find(row => row.booking_id === first.booking.id).id;
@@ -63,9 +69,9 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   const total = receiver.captures.length; await process(undefined, eraseId); assert.equal(receiver.captures.length, total);
   const personal = await book(), pending = (await state()).webhook_deliveries.find(row => row.booking_id === personal.booking.id && row.subscription_id === workspace.id);
   const erasingDns = receiver.pauseDns(), erasingSend = process(undefined, pending.id);
-  await erasingDns;
+  await within(Promise.race([erasingDns, erasingSend.then(result => { throw new Error(`Delivery ended before the erasure barrier: ${JSON.stringify(result)}`); })]), "Erasure DNS barrier");
   const personalPreview = await data("/api/app/privacy/preview", { email: personal.payload.email });
-  await data("/api/app/privacy/erase", { email: personal.payload.email, confirmation: personalPreview.confirmation, expiresAt: personalPreview.expiresAt });
+  await within(data("/api/app/privacy/erase", { email: personal.payload.email, confirmation: personalPreview.confirmation, expiresAt: personalPreview.expiresAt }), "Erasure while DNS is pending");
   receiver.resumeDns(); assert.deepEqual((await erasingSend).results, ["unavailable"]);
   assert.equal(receiver.captures.filter(row => JSON.parse(row.body).data.bookingId === personal.booking.id).length, 0, "erasure while DNS resolves cannot expose a copied payload");
 }

@@ -8456,7 +8456,7 @@
       "executable": false
     },
     "tests/booking-wire/webhook-retries.mjs": {
-      "sha256": "e73ca308cb95b01c25164585eabdbba3500d3a1b8f2940f57ddbe034c1a9a7e4",
+      "sha256": "56c1efc009dbf0fe8229093fa8185c98dd209420801e596193e3b664695ea529",
       "executable": false
     },
     "tests/booking-wire/webhook-wire.ts": {
