@@ -25,7 +25,7 @@ export function customTools(services: AppServices): ToolDefinition[] {
       async run(args, ctx) {
         const created = await fields.create(args);
         if (!created) throw new ToolRefusal("field_limit");
-        ctx.emit("dial.custom-field.created", `dial://custom-fields/${created.id}`, { actorLabel: ctx.actor.label });
+        ctx.emit("dial.custom_field.created", `dial://custom-fields/${created.id}`, { actorLabel: ctx.actor.label });
         return { result: created };
       },
     }),
@@ -45,7 +45,7 @@ export function customTools(services: AppServices): ToolDefinition[] {
       summary: async args => { const definition = await field(args.fieldId); return { target: { id: definition.id, name: definition.label }, items: [`Delete ${definition.entity} field definition and every saved value`] }; },
       async run(args, ctx) {
         if (!await fields.remove(args.fieldId)) throw new ToolRefusal("field_not_found");
-        ctx.emit("dial.custom-field.removed", `dial://custom-fields/${args.fieldId}`, { actorLabel: ctx.actor.label });
+        ctx.emit("dial.custom_field.removed", `dial://custom-fields/${args.fieldId}`, { actorLabel: ctx.actor.label });
         return { result: { removed: true } };
       },
     }),
@@ -70,7 +70,7 @@ export function customTools(services: AppServices): ToolDefinition[] {
       async run(args, ctx) {
         const outcome = await fields.set(args.entity, args.id, args.fieldId, args.value);
         if (outcome !== "saved") throw new ToolRefusal(outcome === "missing" ? "field_not_found" : "invalid_field_value");
-        ctx.emit("dial.custom-field.value-saved", `dial://custom-fields/${args.fieldId}`, { entity: args.entity, id: args.id, actorLabel: ctx.actor.label });
+        ctx.emit("dial.custom_field.value_saved", `dial://custom-fields/${args.fieldId}`, { entity: args.entity, id: args.id, actorLabel: ctx.actor.label });
         return { result: { saved: true } };
       },
     }),

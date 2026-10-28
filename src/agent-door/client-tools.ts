@@ -52,7 +52,7 @@ export function clientTools(services: AppServices): ToolDefinition[] {
       async run(args, ctx) {
         const id = await records.add(args.email, { body: args.body, operatorId: ctx.person.id });
         if (!id) throw new ToolRefusal("client_not_found");
-        ctx.emit("dial.client.note-added", uri(args.email), { id, actorLabel: ctx.actor.label });
+        ctx.emit("dial.client.note_added", uri(args.email), { id, actorLabel: ctx.actor.label });
         return { result: { id } };
       },
     }),
@@ -64,7 +64,7 @@ export function clientTools(services: AppServices): ToolDefinition[] {
       async run(args, ctx) {
         const id = await records.add(args.email, { label: args.label, value: args.value });
         if (!id) throw new ToolRefusal("client_field_refused");
-        ctx.emit("dial.client.field-added", uri(args.email), { id, actorLabel: ctx.actor.label });
+        ctx.emit("dial.client.field_added", uri(args.email), { id, actorLabel: ctx.actor.label });
         return { result: { id } };
       },
     }),

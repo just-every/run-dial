@@ -37,7 +37,7 @@ export function brandTools(services: AppServices): ToolDefinition[] {
       summary: async args => ({ target: { name: "Public booking page branding" }, items: [`Fetch website and apply its native look: ${args.url}`, "Keep the owner's individual overrides and existing plain-look choice"] }),
       async run(args, ctx) {
         const result = await nativeResult(() => services.siteLook.read(args.url));
-        ctx.emit("dial.site-look.read-applied", "dial://site-look", { actorLabel: ctx.actor.label });
+        ctx.emit("dial.site_look.read_applied", "dial://site-look", { actorLabel: ctx.actor.label });
         return { result };
       },
     }),
@@ -48,7 +48,7 @@ export function brandTools(services: AppServices): ToolDefinition[] {
       summary: async args => ({ target: { name: "Public booking page branding" }, items: Object.entries(args).map(([key, value]) => `${key}: ${value === null ? "restore site value" : value}`) }),
       async run(args, ctx) {
         const result = await nativeResult(() => services.siteLook.change(args));
-        ctx.emit("dial.site-look.changed", "dial://site-look", { actorLabel: ctx.actor.label });
+        ctx.emit("dial.site_look.changed", "dial://site-look", { actorLabel: ctx.actor.label });
         return { result };
       },
     }),
@@ -66,7 +66,7 @@ export function brandTools(services: AppServices): ToolDefinition[] {
       },
       async run(_args, ctx) {
         const result = await nativeResult(() => services.siteLook.clear());
-        ctx.emit("dial.site-look.cleared", "dial://site-look", { actorLabel: ctx.actor.label });
+        ctx.emit("dial.site_look.cleared", "dial://site-look", { actorLabel: ctx.actor.label });
         return { result };
       },
     }),

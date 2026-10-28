@@ -31,7 +31,7 @@ export function linkTools(services: AppServices): ToolDefinition[] {
       },
       async run(args, ctx) {
         if (!await services.bookingLinks.revoke(args.id)) throw new ToolRefusal("link_not_found");
-        ctx.emit("dial.booking-link.revoked", uri(args.id), { actorLabel: ctx.actor.label });
+        ctx.emit("dial.booking_link.revoked", uri(args.id), { actorLabel: ctx.actor.label });
         return { result: { revoked: true } };
       },
     }),

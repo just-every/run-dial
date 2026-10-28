@@ -30,7 +30,7 @@ export function reportingTools(services: AppServices): ToolDefinition[] {
       },
     }),
     nativeTool({
-      name: "dial.reports.drill-through", title: "Read report tile bookings", scope: "dial:read", readOnly: true,
+      name: "dial.reports.drill_through", title: "Read report tile bookings", scope: "dial:read", readOnly: true,
       description: "Use the native report member set to page exactly the bookings counted by one tile or returned bucket key. Supply the report's original host-date period. Up to 500 records per page, default 100.",
       input: period.extend({ fromDate: hostDateSchema, throughDate: hostDateSchema, tile: z.enum(reportTileKeys), bucket: z.string().max(200).optional(),
         limit: z.number().int().min(1).max(500).default(100), offset: z.number().int().min(0).max(1_000_000).default(0) }),

@@ -52,7 +52,7 @@ export function pollTools(services: AppServices): ToolDefinition[] {
       summary: async args => ({ target: { id: args.id, name: (await host(args.id)).title }, items: [args.show ? "Show vote tally to this poll's participants" : "Hide vote tally from this poll's participants"] }),
       async run(args, ctx) {
         if (!await services.polls.repository.settings(args.id, args.show)) throw new ToolRefusal("poll_unavailable");
-        ctx.emit("dial.poll.tally-changed", uri(args.id), { show: args.show, actorLabel: ctx.actor.label });
+        ctx.emit("dial.poll.tally_changed", uri(args.id), { show: args.show, actorLabel: ctx.actor.label });
         return { result: { updated: true } };
       },
     }),
