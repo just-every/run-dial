@@ -1,3 +1,6 @@
+import { narrowingContract } from './narrowing.mjs';
+import { validToolName } from './tool-name.mjs';
+
 export const AGENT_CLASSES = Object.freeze(['standard', 'external', 'money', 'commitment', 'accounts', 'gated', 'access', 'security', 'destructive', 'sensitive', 'live']);
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const hasClause = (contract, clause) => typeof clause === 'string' && contract.split(/[^A-Za-z0-9_.-]+/).includes(clause);
@@ -20,13 +23,15 @@ export function validateAgentSurface(surface, { contract } = {}) {
  const tools = new Map(), steps = new Set(), coverage = new Map();
  for (const [i, tool] of (Array.isArray(surface.tools) ? surface.tools : []).entries()) {
   const name = tool?.name, label = text(name) ? name : `tools[${i}]`;
-  add(`${label}.name`, text(name) && /^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*$/.test(name) && name.split('.')[0] === surface.seed && !tools.has(name), `Malformed, duplicate or foreign-seed tool ${JSON.stringify(name)}.`);
+  add(`${label}.name`, validToolName(name, surface.seed) && !tools.has(name), `Malformed, duplicate or foreign-seed tool ${JSON.stringify(name)}.`);
   add(`${label}.scope`, text(tool?.scope), `${label} must declare its scope.`);
   add(`${label}.readOnly`, typeof tool?.readOnly === 'boolean', `${label} must declare readOnly.`);
   add(`${label}.classes`, Array.isArray(tool?.classes) && tool.classes.length > 0 && new Set(tool.classes).size === tool.classes.length && tool.classes.every(cls => AGENT_CLASSES.includes(cls)), `${label} has an empty, duplicate or uncatalogued class: ${JSON.stringify(tool?.classes)}.`);
   const clauses = Array.isArray(tool?.clauses) ? tool.clauses : [];
   add(`${label}.clauses`, clauses.length > 0 && clauses.every(text), `${label} must name its contract clauses.`);
   if (contract !== undefined) for (const clause of clauses) add(`${label}.clause.${clause}`, hasClause(contract, clause), `${label} names clause ${clause}, absent from CONTRACT.md.`);
+  if (tool?.proof !== undefined || tool?.proofKind !== undefined) add(`${label}.proof`, tool.proof === 'native' && typeof tool.proofKind === 'string' && /^[a-z][a-z0-9_]{0,63}$/.test(tool.proofKind), `${label} must declare proof native and its named proofKind.`);
+  if (tool?.widens !== undefined || tool?.narrowing !== undefined) escalation(`${label}.narrowing-contract`, tool.widens === false && tool.readOnly === false && tool.classes?.some(cls => ['access', 'security'].includes(cls)) && narrowingContract(tool), `${label} narrowing requires revoke/narrow and a closed target-only string schema.`);
   tools.set(name, tool); coverage.set(name, new Set());
  }
  for (const [i, item] of (Array.isArray(surface.notTools) ? surface.notTools : []).entries()) {
@@ -60,7 +65,14 @@ export function validateAgentSurface(surface, { contract } = {}) {
   checkReferences(step?.args, `escalations.${id}`, steps, escalation);
   escalationIds.add(step?.id); escalationTools.add(step?.tool);
  }
- for (const [name, tool] of tools) if (Array.isArray(tool?.classes) && tool.classes.some(cls => ['access', 'security'].includes(cls))) escalation(`${name}.coverage`, escalationTools.has(name), `${name} has no sponsor escalation fixture.`);
+ const narrowingTools = new Set();
+ for (const [i, fixture] of (Array.isArray(surface.narrowings) ? surface.narrowings : []).entries()) {
+  const tool = tools.get(fixture?.tool), witness = fixture?.witness;
+  escalation(`narrowing.${i}`, tool?.widens === false && !narrowingTools.has(fixture.tool) && steps.has(fixture.step) && surface.journey.some(step => step.id === fixture.step && step.tool === fixture.tool) && tools.get(witness?.tool)?.readOnly === true && object(witness?.args) && Object.hasOwn(witness.args, tool.narrowing?.target) && typeof witness?.pointer === 'string' && (witness.pointer === '' || witness.pointer.startsWith('/')), 'Narrowing fixture must name its journey step and a native target grant-set witness.');
+  checkReferences(witness?.args, `narrowing.${i}.witness`, steps, escalation);
+  narrowingTools.add(fixture?.tool);
+ }
+ for (const [name, tool] of tools) if (Array.isArray(tool?.classes) && tool.classes.some(cls => ['access', 'security'].includes(cls))) escalation(`${name}.coverage`, tool.widens === false ? narrowingTools.has(name) : escalationTools.has(name), `${name} has no ${tool.widens === false ? 'narrowing check' : 'sponsor escalation fixture'}.`);
  for (const [name, tool] of tools) for (const cls of Array.isArray(tool?.classes) ? tool.classes : []) add(`${name}.coverage.${cls}`, coverage.get(name).has(cls), `${name} has no journey fixture for declared class ${cls}.`);
  add('events', tools.has(`${surface.seed}.events.list`), `Declare built-in ${surface.seed}.events.list in the Agent surface.`);
  add('witness', object(surface.witness) && tools.get(surface.witness.tool)?.readOnly === true && object(surface.witness.args), 'witness must name a declared readOnly tool and arguments.');

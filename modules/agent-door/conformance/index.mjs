@@ -4,18 +4,19 @@ import { createProtocol } from './protocol.mjs';
 import { autonomousPolicy, heldPolicy } from './crypto.mjs';
 import { discoverDoor, listedDoor } from './discovery.mjs';
 import { runJourney } from './journey.mjs';
-import { unsetPolicy, removalPhase, blockedPhases, pausePhase } from './policy-phases.mjs';
+import { unsetPolicy, removalPhase, blockedPhases, pausePhase, consentRevocationPhase } from './policy-phases.mjs';
 import { negativePhase } from './negative.mjs';
 import { auditPhase } from './audit.mjs';
+import { invocationPhase } from './invocation.mjs';
 
 export { validateAgentSurface } from './surface.mjs';
 
 /** Run against a fresh, real installation using its HTTP and person doors. */
-export async function runAgentDoorConformance({ fetch, origin, surface, signer, person, business = 'rer-agent-conformance', consent = randomUUID(), now }) {
+export async function runAgentDoorConformance({ fetch, invoke, origin, surface, signer, person, business = 'rer-agent-conformance', consent = randomUUID(), now, prove, nativeJourney }) {
  const validation = validateAgentSurface(surface), points = [...validation.points];
  if (!validation.ok) return { ok: false, points };
  if (typeof fetch !== 'function' || !signer?.privateKey || !signer.issuer || !signer.installationId || !signer.kid || !person?.email || !person.cookie || typeof person.sub !== 'string' || !person.sub.trim() || typeof consent !== 'string' || !consent.trim() || new URL(origin).origin !== origin) throw new TypeError('Conformance requires fetch, canonical origin, signer, consent and signed-in person {email,cookie,sub}');
- const c = createProtocol({ fetch, origin, surface, signer, person, business, consent, now, points, agentId: `rer-conformance-${randomUUID()}`, seq: 0, revision: 0, listed: new Map() });
+ const c = createProtocol({ fetch, origin, surface, signer, person, business, consent, now, prove, points, agentId: `rer-conformance-${randomUUID()}`, seq: 0, revision: 0, listed: new Map() });
  await c.phase('BASE-AGENT-001.transport', () => discoverDoor(c));
  await c.phase('BASE-AGENT-007.phase0', () => unsetPolicy(c, true));
  await c.phase('BASE-AGENT-007.phase1', () => removalPhase(c));
@@ -24,6 +25,9 @@ export async function runAgentDoorConformance({ fetch, origin, surface, signer, 
  await c.phase('BASE-AGENT-007.phase4', () => blockedPhases(c));
  await c.phase('BASE-AGENT-011.phase5', () => pausePhase(c));
  await c.phase('BASE-AGENT-004.phase6', () => negativePhase(c));
+ await c.phase('BASE-AGENT-004.consent', () => consentRevocationPhase(c));
+ if (invoke) await c.phase('BASE-AGENT-012.invocation', () => invocationPhase(c, invoke));
+ if (nativeJourney) await c.phase('BASE-AGENT-013.native-journey', async () => { await nativeJourney({ tool: c.tool }); c.add('BASE-AGENT-013.native-journey', true); });
  await c.phase('BASE-AGENT-009.phase7', () => auditPhase(c));
  return { ok: points.every(point => point.ok), points };
 }

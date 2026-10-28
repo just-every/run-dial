@@ -114,3 +114,35 @@ test('execution audit survives a final-write fault, resource reads obey policy, 
   assert.equal((await local.person('/agents/api/state')).body.policy.revision,null)
  } finally {await local.close()}
 })
+
+
+test('embedded calls retain and enforce originating consent with complete audit', async t => {
+ const r = await runtime()
+ try {
+  await r.adopt()
+  const schedule = (value: string) => JSON.stringify({ consent: r.c.consent, scopes: ['records:write'], args: args(value) })
+  const run = async (saved: string) => {
+   const response = await r.post('/__embedded', JSON.parse(saved), { cookie: r.c.person.cookie })
+   return response.json()
+  }
+  assert.equal((await run(schedule('before-revocation'))).outcome, 'done')
+  const before = await r.db.prepare('SELECT * FROM test_records WHERE id=?').bind('synthetic-base-record').first()
+  assert.equal(before.value, 'before-revocation')
+  await r.adopt(autonomousPolicy(), { revoked: { agents: [], consents: [r.c.consent] } })
+  const refused = await run(schedule('after-revocation'))
+  assert.equal(refused.outcome, 'refused'); assert.equal(refused.code, 'consent_revoked')
+  assert.deepEqual(await r.db.prepare('SELECT * FROM test_records WHERE id=?').bind('synthetic-base-record').first(), before)
+  const rows = (await r.person('/agents/api/audit?agent=synthetic-base-embedded')).body.rows
+  assert.equal(rows.length, 2)
+  for (const row of rows) {
+   assert.equal(row.consent, r.c.consent); assert.equal(row.door, 'embedded')
+   assert.equal(row.agent.id, 'synthetic-base-embedded'); assert.ok(row.sponsor.id)
+   assert.ok(row.id && row.at && row.tool && row.idempotency_key)
+  }
+  assert.equal(rows[0].outcome, 'done'); assert.equal(rows[1].outcome, 'refused'); assert.equal(rows[1].code, 'consent_revoked')
+  const running = await r.db.prepare("SELECT audit,consent FROM test_contexts WHERE kind='run' ORDER BY rowid DESC LIMIT 1").first()
+  assert.equal(running.consent, r.c.consent)
+  assert.equal(JSON.parse(JSON.parse(running.audit).row).consent, r.c.consent)
+  t.diagnostic('Durable invocation: one native write, two consent-attributed audit rows; revoked job refused consent_revoked with no further effect.')
+ } finally { await r.close() }
+})

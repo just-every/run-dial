@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { classIds } from './protocol.mjs';
 import { AGENT_CLASSES } from './surface.mjs';
 
-async function auditRows(c) {
+export async function auditRows(c) {
  const rows = []; let cursor = null, differs = 0;
  for (let page = 0; page < 100; page++) {
   const result = await c.personJson(`/agents/api/audit?agent=${encodeURIComponent(c.agentId)}${cursor ? `&after=${encodeURIComponent(cursor)}` : ''}`);
@@ -19,8 +19,9 @@ export async function auditPhase(c) {
  c.add('BASE-AGENT-009.1.unique', new Set(rows.map(row => row.id)).size === rows.length, 'Every tool call, resource read and approval execution must have its own audit ID.');
  for (const [index, call] of expected.entries()) {
   const row = rows[index], decision = call.decision;
-  c.add(`BASE-AGENT-009.1.call.${index}`, Boolean(row) && row.tool === call.name && row.agent?.id === c.agentId && row.agent?.specialist === c.surface.specialist && row.sponsor?.id === c.sponsor.id && typeof row.label === 'string' && row.label.includes(' for ') && Number.isFinite(Date.parse(row.at)) && row.door === 'mcp', `${call.name} lacks its complete ordered audit row.`);
+  c.add(`BASE-AGENT-009.1.call.${index}`, Boolean(row) && row.tool === call.name && row.consent === c.consent && row.agent?.id === c.agentId && row.agent?.specialist === c.surface.specialist && row.sponsor?.id === c.sponsor.id && typeof row.label === 'string' && row.label.includes(' for ') && Number.isFinite(Date.parse(row.at)) && row.door === (call.kind === 'embedded' ? 'embedded' : 'mcp'), `${call.name} lacks its complete ordered audit row.`);
   if (!row) continue;
+  if (call.code === 'native_proof_required') c.add(`BASE-AGENT-004.native-proof.audit.${index}`, row.outcome === 'refused' && row.code === call.code, `${call.name} native proof challenge must retain its refused audit outcome.`);
   c.add(`BASE-AGENT-009.1.resource.${index}`, row.resource === (call.kind === 'resources/read' ? call.args.uri : null), `${call.name} audit resource must identify exactly the requested URI, or be null for a tool.`);
   c.add(`BASE-AGENT-009.2.link.${index}`, call.kind === 'approval/execute' ? row.id !== decision?.id && row.decision_id === decision?.id : row.decision_id === null, `${call.name} must ${call.kind === 'approval/execute' ? 'link its own execution row to the pending decision' : 'have its own call row without an approval execution link'}.`);
   const validClasses = Array.isArray(row.classes) && new Set(classIds(row.classes)).size === row.classes.length && row.classes.every(item => AGENT_CLASSES.includes(item.class) && item.facts && typeof item.facts === 'object');
@@ -50,7 +51,7 @@ export async function auditPhase(c) {
   if (applicable) c.add(`BASE-AGENT-010.6.${type}`, events.some(event => event.type === type), `Missing ${type} event.`);
  }
  const writeTools = new Set(rows.filter(row => row.tool !== 'resources/read' && ['done', 'replayed'].includes(row.outcome) && c.surface.tools.find(tool => tool.name === row.tool)?.readOnly === false).map(row => row.tool));
- c.add('BASE-AGENT-010.1.effects', !writeTools.size || events.some(event => event.actor?.kind === 'agent' && !['policy.decision', 'approval.pending', 'approval.decided'].includes(event.type)), 'Completed writes must produce record-change events attributed to the agent.');
+ c.add('BASE-AGENT-010.1.effects', !writeTools.size || [...events, ...c.effectEvents ?? []].some(event => event.actor?.kind === 'agent' && !['policy.decision', 'approval.pending', 'approval.decided'].includes(event.type)), 'Completed writes must produce record-change events attributed to the agent while their native resources are readable.');
  if (events.length > 1) {
   const cursor = events[0].id;
   const replay1 = await c.tool(`${c.surface.seed}.events.list`, { after: cursor, limit: 200 });

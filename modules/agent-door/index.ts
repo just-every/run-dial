@@ -42,14 +42,14 @@ export function createAgentDoor(options: AgentDoorOptions): AgentDoor {
       }
       return null
     },
-    async invoke(name, args, who) {
+    async invoke(name, args, who, proofReference) {
       const person = await options.people.person(who.person.id)
       if (!person?.active || person.id !== who.person.id) return { outcome: 'refused', code: 'unauthenticated', decision: null }
-      const principal = { person, agent: who.agent, scopes: [...new Set(rt.tools.map(tool => tool.scope))] }
-      if (revoked(await policyState(rt), principal)) return { outcome: 'refused', code: 'unauthenticated', decision: null }
+      const principal = { person, agent: who.agent, consent: who.consent, scopes: [...who.scopes], clientId: who.clientId }
+      if (revoked(await policyState(rt), { agent: principal.agent })) return { outcome: 'refused', code: 'unauthenticated', decision: null }
       const capacity = await admit(rt, principal)
       if (capacity !== null) return { outcome: 'refused', code: capacity === 'revoked' ? 'unauthenticated' : 'rate_limited', decision: null }
-      return (await callTool(rt, name, args, principal, 'embedded')).result
+      return (await callTool(rt, name, args, principal, 'embedded', undefined, undefined, undefined, proofReference)).result
     },
     async emit(event) {
       await appendEvents(rt, [{ type: event.type, uri: event.uri, actor: { kind: 'person', person: { id: event.person.id, name: event.person.name } }, data: event.data }])
