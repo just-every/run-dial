@@ -14,6 +14,11 @@ export const moveInRoutes=new Hono<AppEnvironment>()
   return c.json({error:{code:'move_in_refused',message:error.message.length<350?error.message:'The import was refused. Review the saved files and current session.'}},400);
  })
  .use('/api/app/move-in/*',async(c,next)=>{c.header('Cache-Control','no-store');await next();})
+ .use('/api/app/move-in/*',async(c,next)=>{
+  const operator=await c.env.DB.prepare('SELECT role FROM oa_operators WHERE id=?').bind(c.get('session').id).first<{role:string}>();
+  if(!operator||!['owner','admin'].includes(operator.role))return c.json({error:{code:'role_forbidden',message:'Only workspace owners and admins can move data in.'}},403);
+  await next();
+ })
  .post('/api/app/move-in/connections/:provider',async c=>{
   const provider=z.enum(['calcom','savvycal']).parse(c.req.param('provider'));
   const {token}=z.object({token:z.string().min(1).max(2048)}).strict().parse(await c.req.json());

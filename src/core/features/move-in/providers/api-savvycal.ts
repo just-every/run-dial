@@ -26,7 +26,7 @@ export function savvyEvent(value: unknown, data: SourceData, losses: SourceLoss[
  data.event_types.push({ uri, name: row.text('name'), slug: row.text('slug'), duration: row.number('default_duration'), color: '#2563eb',
   active: row.text('state') === 'active', secret: false, kind: 'solo', type: 'StandardEventType', pooling_type: null,
   description_plain: plain, custom_questions: questions, locations: [], duration_options: row.numbers('durations'),
-  source_account: data.user[0].uri, ...(explicit ? { source_url: explicit } : {}) });
+  source_account: data.user[0].uri, ...(explicit ? { scheduling_url: explicit } : {}) });
  for (const field of ['availability', 'locations', 'hostTopology']) losses.push({ resource: 'event_types', sourceId: uri, field,
   reason: 'The documented SavvyCal link response does not expose this configuration. Review and configure this draft in Dial.' });
  losses.push({ resource: 'event_types', sourceId: uri, field: 'color', reason: 'SavvyCal does not expose link colour; Dial uses its default.' });

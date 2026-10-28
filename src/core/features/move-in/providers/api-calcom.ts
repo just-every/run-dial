@@ -68,7 +68,7 @@ export function calEvent(value: unknown, data: SourceData, losses: SourceLoss[])
   active: true, secret: row.bool('hidden', false), kind: unsupported ? 'group' : 'solo', type: 'StandardEventType', pooling_type: null,
   description_plain: row.text('description'), custom_questions: questions, locations: row.rows('locations').map(location),
   duration_options: row.raw.lengthInMinutesOptions === undefined ? null : row.numbers('lengthInMinutesOptions'),
-  source_account: data.user[0].uri, ...(bookingUrl ? { source_url: bookingUrl } : {}) });
+  source_account: data.user[0].uri, ...(bookingUrl ? { scheduling_url: bookingUrl } : {}) });
  const scheduleId = row.raw.scheduleId;
  const schedule = scheduleId == null ? data.schedules.find(s => s.default) : data.schedules.find(s => s.uri === canonical('calcom', 'schedules', scheduleId));
  if (schedule) { if (scheduleId != null) row.id('scheduleId'); data.event_availability.push({ event_type: uri, availability_rule: { uri: schedule.uri, timezone: schedule.timezone } }); }
