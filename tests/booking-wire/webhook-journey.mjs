@@ -26,7 +26,7 @@ export async function webhookJourney(h) {
     const otherTeam = await data("/api/app/teams", { name: "Unrelated", eventTypeIds: [] }, 201);
     const teamSub = await subscribe("/team", ["booking.created.v1", "routing.submitted.v1"], "team", team.id);
     await subscribe("/unrelated-team", settings.eventTypes, "team", otherTeam.id);
-    const process = (now, id) => data("/__fixtures/webhooks/process", { ...(now ? { now } : {}), ...(id ? { id } : {}) });
+    const dispatch = (now, id) => data("/__fixtures/webhooks/process", { ...(now ? { now } : {}), ...(id ? { id } : {}) });
     const base = `/api/public/book/dial-host/${event.slug}`;
     let number = 1401;
     async function book() {
@@ -39,7 +39,7 @@ export async function webhookJourney(h) {
       const booking = (await state()).bookings.find(row => row.invitee_email === email);
       return { receipt, booking, payload, token: new URL(receipt.manageUrl).pathname.split("/").at(-1) };
     }
-    const first = await book(); await process(); await process();
+    const first = await book(); await dispatch(); await dispatch();
     const created = receiver.captures.filter(row => JSON.parse(row.body).type === "booking.created.v1");
     assert.deepEqual(created.map(row => row.path).sort(), ["/host", "/team", "/workspace"]);
     const createdBody = JSON.parse(created.find(row => row.path === "/workspace").body);
@@ -72,7 +72,7 @@ export async function webhookJourney(h) {
     const priced = await paid.makeEvent("synthetic-dial-1411", { price: 5000 });
     await paid.capture(await paid.authorize(await paid.hold(priced, { email: ["synthetic-dial-1412", "example.test"].join("@") })));
     await call("/__fixtures/calendar-health", { healthy: false }, 204); await call("/__fixtures/calendar-health", { healthy: false }, 204);
-    await process(); await process();
+    await dispatch(); await dispatch();
     const workspaceCaptures = receiver.captures.filter(row => row.path === "/workspace"), eventTypes = workspaceCaptures.map(row => JSON.parse(row.body).type);
     assert.deepEqual([...new Set(eventTypes)].sort(), ["booking.created.v1", "booking.rescheduled.v1", "booking.reschedule-requested.v1", "booking.canceled.v1", "booking.no-show.v1", "booking.attendance.v1", "booking.payment.v1", "routing.submitted.v1", "poll.created.v1", "poll.voted.v1", "poll.closed.v1", "calendar.connection-health-changed.v1"].sort());
     for (const type of settings.eventTypes.filter(type => type !== "booking.created.v1")) assert.equal(eventTypes.filter(value => value === type).length, 1, `${type} one delivery despite replay`);
@@ -87,7 +87,7 @@ export async function webhookJourney(h) {
     const listed = await data("/api/app/webhooks");
     assert.ok(!JSON.stringify(listed).includes(workspace.secret));
     assert.ok(listed.deliveries.every(row => row.state === "delivered" && row.responseCode === 204));
-    await webhookRetries({ ...h, receiver, subscribe, process, book, workspace, first });
+    await webhookRetries({ ...h, receiver, subscribe, process: dispatch, book, workspace, first });
     checks.push("API-002: all native facts, scoped subscriptions, independently verified HMAC, UTM and source, duration, retry, manual replay, deletion and erasure");
   } finally { await receiver.close(); }
 }

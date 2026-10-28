@@ -975,6 +975,10 @@
       "sha256": "c801b1e819dea474312ac39b118ff2eeba782ab17eba795ac05ca19a0dc3c1aa",
       "executable": false
     },
+    "docs/WEBHOOKS.md": {
+      "sha256": "b8bf3ca7dff96a20f0a9255c28b08ad2714a7a96580490cb30fe9e384f59ec56",
+      "executable": false
+    },
     "edition.json": {
       "sha256": "e32fbdd6e6c8160bd09b761673f645974ca17a82f10b3a47a7766ac45d881edf",
       "executable": false
@@ -7972,7 +7976,7 @@
       "executable": false
     },
     "tests/archive/poll-upgrade.mjs": {
-      "sha256": "f1a70b670fbf0dcd479c3cbd973769e38b089ad147f888d910dad66462735fc0",
+      "sha256": "42c959cd424fbfd40472fca4d56d26652332ef211253ce54639fa7320a42dc11",
       "executable": false
     },
     "tests/archive/status-fixture.mjs": {
@@ -8440,7 +8444,7 @@
       "executable": false
     },
     "tests/booking-wire/webhook-journey.mjs": {
-      "sha256": "754670ccc65af4411ae16570a9257ed88a837b24e360d696a1fad3f61f9d6edd",
+      "sha256": "9cd36eeddc1e4c83227b2428fe5feacade7509cd675f8807678d4ba48a2b09eb",
       "executable": false
     },
     "tests/booking-wire/webhook-receiver.mjs": {
