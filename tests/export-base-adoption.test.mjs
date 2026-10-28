@@ -116,6 +116,10 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.ok(!archive.tables.some(table => table.name === 'payment_link_tokens'), 'PAY-003 balance-link capabilities never travel');
     for(const table of ['payment_processor_facts','accounting_exports'])assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(),source.db.prepare(`SELECT * FROM ${table}`).all(),`${table} round trips`);
     const notices=target.db.prepare("SELECT * FROM workspace_notice_destinations").get();assert.equal(notices.status,"needs_reconnect");assert.equal(notices.credential_ciphertext,null);assert.ok(target.db.prepare("SELECT state FROM workspace_notice_deliveries").all().every(r=>r.state==="failed"));assert.ok(target.db.prepare("SELECT archive_historical FROM notice_erasure_requests").all().every(r=>r.archive_historical===1));assert.ok(!archive.tables.some(t=>t.name==="notice_oauth_states"));
+    const analytics=target.db.prepare('SELECT * FROM analytics_connections').all();
+    assert.equal(analytics.length,1);assert.equal(analytics[0].status,'needs_reconnect');assert.equal(analytics[0].credential_ciphertext,null,'advertising credentials never restore');
+    const conversions=target.db.prepare('SELECT * FROM analytics_deliveries').all();assert.equal(conversions.length,1);
+    assert.equal(conversions[0].state,'failed');assert.equal(conversions[0].archive_historical,1,'restored conversion commands cannot upload again');
     const accounting=target.db.prepare('SELECT * FROM accounting_connections').get();
     assert.equal(accounting.status,'unhealthy');assert.equal(accounting.access_token_ciphertext,null);assert.equal(accounting.refresh_token_ciphertext,null);
     const approvals=archive.tables.find(table=>table.name==='booking_approval_requests');

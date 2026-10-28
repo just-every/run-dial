@@ -234,6 +234,10 @@ export class EventTypesRepository {
       this.binding.prepare(`DELETE FROM provider_webhook_events WHERE delivery_id IN (${deliveryIds})`).bind(id),
       this.binding.prepare(`DELETE FROM base_mail_dispatch WHERE delivery_id IN (${deliveryIds})`).bind(id),
       this.binding.prepare(`DELETE FROM delivery_outbox WHERE ${invitations}`).bind(id),
+      // Retain routing history without a live destination. Pending webhook
+      // bodies for the removed event lose dispatch and manual replay authority.
+      this.binding.prepare("UPDATE routing_submissions SET event_type_id=NULL,updated_at=? WHERE event_type_id=?").bind(nowIso(), id),
+      this.binding.prepare("DELETE FROM webhook_deliveries WHERE json_extract(body_json,'$.data.eventTypeId')=?").bind(id),
       this.binding.prepare("DELETE FROM meeting_polls WHERE event_type_id=?").bind(id),
       this.binding.prepare("DELETE FROM event_types WHERE id=?").bind(id),
     ]);

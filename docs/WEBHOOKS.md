@@ -52,6 +52,8 @@ Choose **Delete webhook**, or DELETE `/api/app/webhooks/:id` using the subscript
 
 Archive restore leaves webhook subscriptions disabled with no signing secret and restored deliveries failed as historical commands. Restore does not resume outbound delivery or enable manual replay of those commands. Create new subscriptions deliberately after restoration.
 
+Deleting an event type keeps its historical routing submissions with no live destination reference and removes its stored webhook delivery bodies. A queued attempt that has not started its HTTP request cannot send or be replayed after deletion. A form still targeting that event refuses a new matched submission without recording it.
+
 Erasure cannot recall a payload the receiver already accepted. Manage that receiver's retention separately; Dial removes its stored booking payloads and prevents future dispatch and replay.
 
 ## Team setup and routing event sources
@@ -71,4 +73,4 @@ Native routing APIs provide a real `routing.submitted.v1` event source. GET `/ap
 
 GET `/api/public/routing/:id` returns the form's questions and a submission capability with `nonce` and `expiresAt`. POST `/api/public/routing/:id/submit` accepts that nonce and an `answers` object keyed by the configured question keys. The capability expires after 15 minutes. The first exact matching rule yields a booking path; no matching rule yields the configured message. Required answers and unknown question keys are checked. Repeating the same answers with the same capability returns the stored result without creating another submission; changing those answers is refused. Each newly persisted submission records the routing event for matching webhook subscriptions. These native API flows do not imply that a complete routing product interface is available.
 
-Implementation references: ./src/core/features/webhooks/routes.ts, ./src/core/features/webhooks/subscriptions.ts, ./src/core/features/webhooks/delivery.ts, ./src/core/features/webhooks/endpoint.ts, ./src/core/features/webhooks/ui/settings-card.tsx, ./src/core/features/teams/routes.ts, ./src/core/features/routing/routes.ts, ./src/core/features/routing/types.ts, ./src/core/features/routing/repository.ts, ./migrations/core/0086_webhooks.sql and ./scripts/archive/policy.mjs.
+Implementation references: ./src/core/features/webhooks/routes.ts, ./src/core/features/webhooks/subscriptions.ts, ./src/core/features/webhooks/delivery.ts, ./src/core/features/webhooks/endpoint.ts, ./src/core/features/webhooks/ui/settings-card.tsx, ./src/core/features/teams/routes.ts, ./src/core/features/routing/routes.ts, ./src/core/features/routing/types.ts, ./src/core/features/routing/repository.ts, ./migrations/core/0087_webhooks.sql and ./scripts/archive/policy.mjs.

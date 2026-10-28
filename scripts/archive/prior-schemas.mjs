@@ -12,8 +12,10 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
-  'core/0085_webhook_sources.sql': (_table,row) => row,
-  'core/0086_webhooks.sql': (_table,row) => row,
+  'core/0086_webhook_sources.sql': (_table,row) => row,
+  'core/0087_webhooks.sql': (_table,row) => row,
+  // Analytics tables are additive and start empty in earlier archives.
+  'core/0085_analytics.sql': (_table, row) => row,
   // CAL-010 widens the supported provider constraint while preserving existing connection values.
   'core/0084_microsoft_calendar.sql': (_table,row) => row,
   // PAY-004 adds new empty catalog, purchaser balance, redemption and replay tables.

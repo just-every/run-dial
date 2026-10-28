@@ -1,3 +1,4 @@
+import { rememberPendingAnalytics, useBookingAnalytics } from "./analytics";
 import { GuestFields, guestEmails } from "./guest-fields";
 import { RememberDetails } from "../../clients/client";
 import { PayStepNotice } from "./pay-step";
@@ -34,6 +35,7 @@ export function BookingDetailsPage({ handle, slug, capability, embedded = false 
   return <BookingDetailsContent key={`${handle}/${slug}/${capability.nonce}/${capability.startAt}/${capability.inviteeTimezone}`} handle={handle} slug={slug} capability={capability} embedded={embedded} />;
 }
 function BookingDetailsContent({ handle, slug, capability, embedded }: { handle: string; slug: string; capability: BookingDetailsCapability; embedded: boolean }) {
+  useBookingAnalytics(embedded, false, true);
   const hydrated = useHydrated();
   const browserTimezone = useBrowserTimezone();
   const order = useRef(new RequestOrder()), attempt = useRef(new ConfirmationAttempt()), submissions = useRef(new RequestOrder()), submitting = useRef(false);
@@ -108,7 +110,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
     }
     submitting.current = true; order.current.invalidate();
     const currentSubmission = submissions.current.begin();
-    const input = attempt.current.begin({ ...(currentSelection.guestLimit ? {guests:guestEmails(guests)} : {}), nonce: currentSelection.nonce, startAt: currentSelection.selection.startAt, inviteeTimezone: currentSelection.selection.inviteeTimezone, name, email, answers, ...(chosenLocationId ? { locationId: chosenLocationId } : {}), ...(locationInput ? { locationInput } : {}), ...(link ? { link } : {}), ...(Object.keys(linkContext.attribution).length ? { attribution: linkContext.attribution } : {}), ...(currentSelection.payment?.consent ? { cardConsent: { accepted: consented, version: currentSelection.payment.consent.version } } : {}), ...(currentSelection.approval && currentSelection.payment?.mode === "payment" ? { shownPriceCents:currentSelection.payment.priceCents, shownPaymentCents: tax.quote?.dueNowTotalCents ?? currentSelection.payment.amountCents } : {}), ...(currentSelection.payment?.taxRequired && tax.address && tax.quote ? { billingAddress: tax.address, shownTaxCents: tax.quote.dueNowTaxCents } : {}) });
+    const input = attempt.current.begin({ clickIds: linkContext.clickIds, embedded, ...(currentSelection.guestLimit ? {guests:guestEmails(guests)} : {}), nonce: currentSelection.nonce, startAt: currentSelection.selection.startAt, inviteeTimezone: currentSelection.selection.inviteeTimezone, name, email, answers, ...(chosenLocationId ? { locationId: chosenLocationId } : {}), ...(locationInput ? { locationInput } : {}), ...(link ? { link } : {}), ...(Object.keys(linkContext.attribution).length ? { attribution: linkContext.attribution } : {}), ...(currentSelection.payment?.consent ? { cardConsent: { accepted: consented, version: currentSelection.payment.consent.version } } : {}), ...(currentSelection.approval && currentSelection.payment?.mode === "payment" ? { shownPriceCents:currentSelection.payment.priceCents, shownPaymentCents: tax.quote?.dueNowTotalCents ?? currentSelection.payment.amountCents } : {}), ...(currentSelection.payment?.taxRequired && tax.address && tax.quote ? { billingAddress: tax.address, shownTaxCents: tax.quote.dueNowTaxCents } : {}) });
     setPending(true); setSaving(true); setNotice("");
     try {
       const response = await publicApi.api.public.book[":handle"][":slug"].confirm.$post({
@@ -153,15 +155,16 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
         const step = await response.json() as unknown as { payment?: { checkoutUrl: string }; approvalRequired?: boolean; approval?: {url:string} };
         if (!currentSubmission()) return;
         forgetRecoveryDraft(handle, slug);
-        if(step.approvalRequired&&step.approval){window.location.assign(step.approval.url);return;}
+        if(step.approvalRequired&&step.approval){if (!embedded) rememberPendingAnalytics(step.approval.url);window.location.assign(step.approval.url);return;}
         if(!step.payment)throw new Error("Confirmation result is missing its next step");
+        if (!embedded) rememberPendingAnalytics(`/book/${handle}/${slug}/confirmed`);
         window.location.assign(step.payment.checkoutUrl);
         return;
       }
       const confirmation = await response.json() as CommittedConfirmation;
       if (!currentSubmission()) return;
       forgetRecoveryDraft(handle, slug);
-      if (completeBooking(confirmation, embedded, search)) return;
+      if (await completeBooking(confirmation, embedded, search)) return;
       const token = manageToken(confirmation.manageUrl);
       if (!token) { setNotice("Your booking was recorded, but its receipt could not be opened. Check your confirmation email."); return; }
       window.location.assign(bookingPath(handle, slug, "/confirmed", embedded, { token }, search));

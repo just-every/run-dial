@@ -509,6 +509,27 @@
         "Destination hostnames for public DNS resolution"
       ],
       "adapters": []
+    },
+    {
+      "id": "booking-browser-analytics",
+      "required": false,
+      "why": "INTEG-006: owner-configured booking measurement only; unconfigured pages and embeds do not load these providers. The invitee privacy notice names Google Analytics, Google Tag Manager, Meta, Google Ads and LinkedIn.",
+      "data": [
+        "sanitized booking page URL",
+        "page view, slot selection and booking conversion events"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "booking-ad-conversions",
+      "required": false,
+      "why": "INTEG-006: explicitly connected Google Ads and LinkedIn accounts receive confirmed booking conversions. HTTP-edge synthetic acceptance only; provider attribution and account eligibility are not claimed.",
+      "data": [
+        "matching advertising click ID",
+        "stable anonymous booking conversion reference",
+        "conversion time and configured destination"
+      ],
+      "adapters": []
     }
   ],
   "env": [

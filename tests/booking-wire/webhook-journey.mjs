@@ -25,7 +25,8 @@ export async function webhookJourney(h) {
     for (const endpoint of ["http://receiver.synthetic.test/refused", "https://127.0.0.1/refused", "https://169.254.169.254/refused", "https://private.synthetic.test/refused"]) await call("/api/app/webhooks", { endpoint, events: settings.eventTypes, scope: "workspace", scopeId: null }, 400);
     await call("/api/app/webhooks", { endpoint: "https://receiver.synthetic.test/refused", events: settings.eventTypes, scope: "host", scopeId: "foreign-host" }, 400);
     const workspace = await subscribe("/workspace"), host = await subscribe("/host", ["booking.created.v1"], "host", settings.hostId);
-    const event = await data("/api/app/event-types", { slug: "synthetic-dial-1400", title: "Planning consultation", description: "A planning session.", durationMinutes: 30, durationOptionsMinutes: [30, 60], color: "#176b5a", locationType: "fixed_link", locationLabel: "Meeting room", locationValue: "https://meet.example.test/planning", listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 })) }, 201);
+    const eventInput = { slug: "synthetic-dial-1400", title: "Planning consultation", description: "A planning session.", durationMinutes: 30, durationOptionsMinutes: [30, 60], color: "#176b5a", locationType: "fixed_link", locationLabel: "Meeting room", locationValue: "https://meet.example.test/planning", listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 })) };
+    const event = await data("/api/app/event-types", eventInput, 201);
     await data(`/api/app/event-types/${event.id}/publish`, {});
     const team = await data("/api/app/teams", { name: "Planning", eventTypeIds: [event.id] }, 201);
     const otherTeam = await data("/api/app/teams", { name: "Unrelated", eventTypeIds: [] }, 201);
@@ -93,7 +94,7 @@ export async function webhookJourney(h) {
     const listed = await data("/api/app/webhooks");
     assert.ok(!JSON.stringify(listed).includes(workspace.secret));
     assert.ok(listed.deliveries.every(row => row.state === "delivered" && row.responseCode === 204));
-    await webhookRetries({ ...h, receiver, subscribe, process: dispatch, book, workspace, first });
+    await webhookRetries({ ...h, receiver, subscribe, process: dispatch, book, workspace, first, eventInput });
     const beforeRevocation = (await state()).webhook_subscriptions;
     await call("/auth/signout", {}, 204);
     await call("/api/app/webhooks", undefined, 401);

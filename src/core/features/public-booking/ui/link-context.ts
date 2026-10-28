@@ -3,7 +3,7 @@ import type { PublicEvent } from "./types";
 
 export const attributionKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "source"] as const;
 export type Attribution = Partial<Record<typeof attributionKeys[number], string>>;
-export type LinkContext = { name?: string; email?: string; answers: Record<string, string[]>; attribution: Attribution };
+export type LinkContext = { name?: string; email?: string; answers: Record<string, string[]>; attribution: Attribution; clickIds: { gclid?: string; li_fat_id?: string } };
 
 /** Untrusted, editable suggestions only. No link value supplies identity or booking authority. */
 export function readLinkContext(search: string): LinkContext {
@@ -21,7 +21,7 @@ export function readLinkContext(search: string): LinkContext {
     if (values.length < 50 && !values.includes(value)) values.push(value);
     answers.set(key.slice(7), values);
   }
-  return { name: bounded(query.get("name"), 160), email: bounded(query.get("email"), 320), answers: Object.fromEntries(answers), attribution };
+  return { name: bounded(query.get("name"), 160), email: bounded(query.get("email"), 320), answers: Object.fromEntries(answers), attribution, clickIds: Object.fromEntries(["gclid", "li_fat_id"].flatMap(key => { const value = query.get(key); return value && /^[A-Za-z0-9_.~-]{1,500}$/.test(value) ? [[key, value]] : []; })) };
 }
 
 export function prefilledAnswers(questions: PublicEvent["questions"], context: LinkContext): Answers {
@@ -41,6 +41,7 @@ export function appendLinkContext(target: URLSearchParams, search: string) {
   if (remembered && /^[A-Za-z0-9_-]{43}$/.test(remembered)) target.set("remember",remembered);
   const context = readLinkContext(search);
   for (const key of ["name", "email"] as const) if (context[key] !== undefined && !target.has(key)) target.set(key, context[key]);
+  for (const [key, value] of Object.entries(context.clickIds)) if (!target.has(key)) target.set(key, value);
   for (const [key, value] of Object.entries(context.attribution)) if (!target.has(key)) target.set(key, value);
   for (const [key, values] of Object.entries(context.answers)) {
     if (!target.has(`answer.${key}`)) for (const value of values) target.append(`answer.${key}`, value);

@@ -32,6 +32,7 @@
     { "source": "README.md", "reason": "The repository front page, with developer commands; the docs home is Overview" },
     { "source": "RELEASE.md", "reason": "Release and publication procedure for maintainers" },
     { "source": "RENDERING.md", "reason": "Rendering and routing architecture notes for developers" },
+    { "source": "RULINGS.md", "reason": "Recorded contract interpretations for maintainers" },
     { "source": "RUN-LOCALLY.md", "reason": "The full local command reference, with every flag and exit code; Install walks through the same first run" },
     { "source": "SEED-COMMAND-CONTRACT.md", "reason": "The shared command contract behind every setup, run, export and deploy command, for maintainers" }
   ]
