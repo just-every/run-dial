@@ -51,6 +51,7 @@ export async function analyticsJourney({data,call,deliver,future,checks}) {
   assert.equal(linkedinUpload.conversion,`urn:lla:llaPartnerConversion:${linkedin.conversionId}`);
   assert.deepEqual(linkedinUpload.user.userIds,[{idType:"LINKEDIN_FIRST_PARTY_ADS_TRACKING_UUID",idValue:first.payload.clickIds.li_fat_id}]);
   assert.ok(linkedinUpload.eventId);assert.ok(linkedinUpload.conversionHappenedAt);
+  assert.ok(snap.requests.length>=2,"both provider request captures are present");
   for(const row of snap.requests) {
     const value=JSON.stringify(row);
     for(const excluded of [first.payload.name,first.payload.email,first.payload.answers.q_0000000900,first.payload.nonce,"answers","invitee"]) assert.ok(!value.includes(excluded),"advertising request excludes invitee data and answers");
@@ -71,14 +72,14 @@ export async function analyticsJourney({data,call,deliver,future,checks}) {
   assert.equal((await data("/api/app/analytics/connections")).google_ads.connected,false,"provider revocation disables the credential");
   await connect();await control("google_ads-failure","429");await control("linkedin-failure","429");
   const pending=await book(914);await deliver();snap=await snapshot();
-  const pendingJobs=snap.analytics_deliveries.filter(row=>row.booking_id===pending.confirmed.bookingReference);
+  const pendingJobs=snap.analytics_deliveries.filter(row=>row.booking_id===pending.confirmed.bookingReference);assert.equal(pendingJobs.length,2);
   const beforeDisconnect=snap.requests.length;
   await call("/api/app/analytics/connections/google_ads",undefined,200,"DELETE");await call("/api/app/analytics/connections/linkedin",undefined,200,"DELETE");
   for(const job of pendingJobs) await data("/__fixtures/deliver",{id:job.id,channel:"analytics"});
   assert.equal((await snapshot()).requests.length,beforeDisconnect,"disconnected queued jobs cannot use removed credentials");
   await connect();await control("google_ads-failure","429");await control("linkedin-failure","429");
   const erased=await book(915);await deliver();snap=await snapshot();
-  const erasedJobs=snap.analytics_deliveries.filter(row=>row.booking_id===erased.confirmed.bookingReference);
+  const erasedJobs=snap.analytics_deliveries.filter(row=>row.booking_id===erased.confirmed.bookingReference);assert.equal(erasedJobs.length,2);
   const preview=await data("/api/app/privacy/preview",{email:erased.payload.email});
   await data("/api/app/privacy/erase",{email:erased.payload.email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});
   const afterErase=await snapshot();assert.ok(afterErase.analytics_deliveries.every(row=>row.booking_id!==erased.confirmed.bookingReference));
