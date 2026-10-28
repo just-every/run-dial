@@ -5196,7 +5196,7 @@
       "executable": false
     },
     "src/agent-door/README.md": {
-      "sha256": "ce08c3a7d78dcc67bfe2af488f4d7bec2f575df5afdd23f6b755b4ddb457940f",
+      "sha256": "79c164605c8ec0c59b823aa6f27b2d8f08a91bf1b8ec2c6a7030f193468df955",
       "executable": false
     },
     "src/agent-door/reporting-tools.ts": {
