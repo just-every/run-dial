@@ -976,7 +976,7 @@ MIGRATE-004 is partial: Cal.com, SavvyCal, Doodle and generic move-in.
 
 Evidence: `tests/move-in-download.test.mjs`: "scheduler captures and CSV or calendar templates preview losses, import silently, undo and fence erased or revoked replays" proves Cal.com, SavvyCal, CSV and calendar imports, every declared loss, silent effects, undo, erasure and revoked-session refusal; "scheduler API connection uses native authority and refuses member captures and CSV previews without writes" proves read-only API captures, owner and admin import, member 403 refusals and no writes. `tests/move-in-browser.test.mjs` with `scripts/move-in-browser-schedulers.mjs` proves source settings, CSV and calendar preview, apply, booking, undo and guides at 1440 and 390. `tests/move-in-runtime.test.mjs` proves the inherited DATA-003 custody and reversal rules.
 
-Gap: All four native outcomes, same-source silence, undo, erasure and authority journeys pass before the merge. Main integration changes require refreshed native, browser, typecheck and first-party proof on this merged candidate. The full-history publication scan returned INCOMPLETE with exit 2 on d93bf3b29842e8b43e07b8024a9b0672a0cb8531; complete scan and exact-candidate Verify remain unproved.
+Gap: All four native outcomes, same-source silence, undo, erasure and authority journeys pass before the merge. Main integration changes require refreshed native, browser, typecheck and first-party proof on this merged candidate. The full-history publication scan returned INCOMPLETE with exit 2 on d93bf3b29842e8b43e07b8024a9b0672a0cb8531; deployment spec regeneration from a real Worker build, complete scan and exact-candidate Verify remain unproved.
 
 MIGRATE-005 is partial: Cutover and old links.
 
