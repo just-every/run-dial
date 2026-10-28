@@ -1655,6 +1655,10 @@
       "sha256": "98ed4a167216d614cad1dd32055dfe17b62bd0fc2536761e38cdc044fdaa3f0e",
       "executable": false
     },
+    "evidence/sd-dial-c-f1/LANDING-NOTE.md": {
+      "sha256": "676192de43e3e98ae68d2a7cc6d3cc49b1f83a4557d621c6d2f201a57f6a8a7d",
+      "executable": false
+    },
     "HANDOVER.md": {
       "sha256": "7abe7868535ea74a523b2672eccca78987b81b2483d50a9f4e870456bf9cf20a",
       "executable": false
