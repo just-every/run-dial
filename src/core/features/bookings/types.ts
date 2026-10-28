@@ -172,7 +172,7 @@ export type BookingEmail = {
 };
 
 export type BookingClaim = {
-  routing?: import("../routing/booking").RoutingClaim;
+  routing?: import("../routing").RoutingClaim;
   entitlement?: import("../payments/entitlement-repository").Redemption;
   /** PAY-003: the terms snapshot, card consent and balance-link salt a payment hold carries until confirmation. */
   money?: import("../payments").PendingMoney;

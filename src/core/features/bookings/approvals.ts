@@ -1,4 +1,4 @@
-import { routingReservation } from "../routing/booking";
+import { routingReservation } from "../routing";
 import { createId, nowIso } from "../../shared/ids";
 import { foldBookingSearch } from "./search/case-fold.mjs";
 import { slotClaimGuard, nonceAdmission } from "./claim-guard";

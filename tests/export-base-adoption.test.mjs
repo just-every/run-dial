@@ -1,3 +1,4 @@
+import { routingAuthority } from "./archive/routing-fixture.mjs";
 import { pollUpgrade } from './archive/poll-upgrade.mjs';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
@@ -22,6 +23,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await processorErasureUpgrade(source.db);
     const remembered=await clientUpgrade(source.db);
     const poll=await pollUpgrade(source.db);
+    const routing=routingAuthority(source.db);
     source.db.exec("UPDATE payment_movements SET stripe_customer_id='synthetic-dial-customer-1',stripe_customer_observed=1; UPDATE person_erasure_receipts SET stripe_sessions_retained=1; UPDATE anonymized_audit SET reason='Person erasure before payment confirmation'");
     source.db.exec("UPDATE event_types SET booking_horizon_mode='fixed_range', booking_start_date='2026-10-07', booking_end_date='2026-10-31', slot_increment_minutes=45");
     const names = source.db.prepare(tableQuery).all().map(row => row.name);
@@ -90,6 +92,11 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec('DELETE FROM operator_erasure_subjects');
     await restoreArchive(destination, archive);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM client_remember_links').get().n,0,'restoring never recreates saved-details authority');
+    for(const table of ['routing_submission_tokens','routing_handoffs'])assert.equal(target.db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0,'restoring cannot reopen a routing capability');
+    assert.equal(target.db.prepare('SELECT capability_id FROM routing_submissions').get().capability_id,null);
+    assert.deepEqual(target.db.prepare('SELECT configuration_json FROM routing_forms').get(),source.db.prepare('SELECT configuration_json FROM routing_forms').get());
+    assert.deepEqual(target.db.prepare('SELECT answers_json,booking_id FROM routing_submissions').get(),source.db.prepare('SELECT answers_json,booking_id FROM routing_submissions').get());
+    assert.ok(!JSON.stringify(archive).includes(routing.token)&&!JSON.stringify(archive).includes(routing.hash),'archive strips routing authority from rows and copied links');
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_invitation_cancellations').all(), ledger);
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM oa_step_up_challenges').get().n, 0);

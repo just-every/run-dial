@@ -3,8 +3,8 @@ import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
 import { validate } from "../../shared/validation";
 import { apiError } from "../../shared/http";
-import { normaliseEmbedOrigin } from "../embeds/service";
-import { attributionSchema } from "../bookings/link-context";
+import { normaliseEmbedOrigin } from "../embeds";
+import { attributionSchema } from "../bookings";
 import { routingFormInput } from "./validation.mjs";
 
 const id=z.object({id:z.string().regex(/^[0-9A-Z]{26}$/)}),slug=z.object({slug:z.string().regex(/^[a-z0-9-]{1,80}$/)});

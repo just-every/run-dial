@@ -20,7 +20,7 @@ REPORT-001 is partial on the single-host surface: Bookings has a scheduling repo
 
 Evidence: `tests/scheduling-report.test.mjs` with its seeded month in `tests/review/report-month.ts`, and the 1440 and 390 screen proof `scripts/verify-report-screens.mjs`.
 
-The contract census is 87 done / 28 partial / 61 missing (176 clauses). DATA-004 is done for the classification gate and current record kinds; DATA-005–DATA-008 carry the target kinds, personal rows and external deletion requests. Other claims and their evidence remain in the CONTRACT.md Status table.
+The contract census is 87 done / 30 partial / 59 missing (176 clauses). DATA-004 is done for the classification gate and current record kinds; DATA-005–DATA-008 carry the target kinds, personal rows and external deletion requests. Other claims and their evidence remain in the CONTRACT.md Status table.
 
 EVENT-009 is done on the native single-host surface: a host allows a configured number of guests, the invitee adds and removes them from the booking and manage steps, and guests receive calendar invitations and Dial confirmation and change notices without the invitee's manage link. Removing a guest sends one cancellation; guest erasure removes their entries and notices while preserving the invitee booking. Calendar and mail providers are synthetic at the HTTP edge. `tests/booking-wire/guest-journey.mjs`, `tests/export-base-adoption.test.mjs` and `scripts/verify-guest-screens.mjs` carry the native, archive, prior-schema and 1440/390 screen proof.
 

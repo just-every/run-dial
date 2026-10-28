@@ -1,5 +1,5 @@
-import type { BookingClaim } from "../bookings/types";
-import type { RoutingAnswer, RoutingRepository } from "./repository";
+import type { BookingClaim } from "../bookings";
+import type { RoutingAnswer } from "./repository";
 export type RoutingClaim={submissionId:string;tokenHash:string;answers:RoutingAnswer[]};
 
 export function routingGuard(input:RoutingClaim,eventId:string,bookingId:string){return {sql:`EXISTS(SELECT 1 FROM routing_handoffs h JOIN routing_submissions s ON s.id=h.submission_id JOIN routing_forms f ON f.id=s.form_id WHERE s.id=? AND h.token_hash=? AND h.event_type_id=? AND (h.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now') OR h.booking_claim_id=?) AND (h.booking_claim_id IS NULL OR h.booking_claim_id=?) AND s.booking_id IS NULL AND f.published=1 AND NOT EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=s.invitee_email OR email IN(SELECT lower(trim(atom)) FROM json_tree(s.answers_json) WHERE type='text')))`,params:[input.submissionId,input.tokenHash,eventId,bookingId,bookingId]};}
@@ -12,4 +12,3 @@ export function routingClaimStatements(db:D1Database,input:BookingClaim){
   db.prepare("DELETE FROM routing_handoffs WHERE submission_id=? AND EXISTS(SELECT 1 FROM bookings WHERE id=?)").bind(route.submissionId,input.bookingId),
  ];
 }
-export async function resolveRouting(repository:RoutingRepository,token:string,eventId:string){return repository.handoff(token,eventId);}

@@ -1,6 +1,6 @@
 import type { EventTypesService } from "../event-types";
 import type { HostProfileService } from "../host-profile";
-import { cleanAttribution, type BookingAttribution } from "../bookings/link-context";
+import { cleanAttribution, type BookingAttribution } from "../bookings";
 import { RoutingRepository } from "./repository";
 import { validateRoutingAnswers } from "./validation.mjs";
 import { matchRoute } from "./rules";

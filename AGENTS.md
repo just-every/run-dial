@@ -178,3 +178,7 @@ filter, consumer-guide replacement or publish command exists. If the distributio
 ships AGENTS.consumer.md as AGENTS.md, check the emitted guide against actual
 paths, commands and readiness. Preserve the author repository and owner forks.
 Commit, tag, publish and deploy only within session authority.
+
+Lander-Regenerate: node scripts/contract-docs.mjs write --touched ROUTE-001 ROUTE-002
+Lander-Regenerate: node scripts/edition-authoring/cli.mjs lock
+Contract views check: node scripts/contract-docs.mjs check --touched ROUTE-001 ROUTE-002

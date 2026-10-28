@@ -1,4 +1,4 @@
-import { routingClaimStatements, routingReservation } from "../routing/booking";
+import { routingClaimStatements, routingReservation } from "../routing";
 import { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "../payments";
 import { ApprovalsRepository } from "./approvals";
 import { GuestsRepository } from "./guests";

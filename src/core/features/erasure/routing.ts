@@ -1,5 +1,6 @@
 import { emailFoldSql, foldEmail } from "./identity";
 import type { PortabilityFence } from "../../../modules/erasure/index.mjs";
+import { toD1Sql } from "../../../modules/erasure/index.mjs";
 import type { ErasureStatement } from "./booking-statements";
 
 /** Match whole email leaves, including multi-choice answers; never substrings. */
@@ -24,13 +25,19 @@ export function routingScopeGuard(db: D1Database, emails: string[], expected: st
 
 type DeleteRows = (db: D1Database, fence: PortabilityFence, table: string, where: string, params: unknown[]) => Promise<ErasureStatement[]>;
 /** Anonymous unused tokens contain no personal value and retain no submission link. */
-export async function routingRemainders(db: D1Database, fence: PortabilityFence, emails: string[], deleteRows: DeleteRows) {
+export async function routingRemainders(db: D1Database, fence: PortabilityFence & {redactionStatements():Promise<D1PreparedStatement[]>}, emails: string[], deleteRows: DeleteRows) {
   const scope = await routingScope(db, emails);
-  const rows = JSON.parse(scope) as {id:string;capability_id:string|null}[];
+  const rows = JSON.parse(scope) as {id:string;capability_id:string|null;booking_id:string|null}[];
   const ids = JSON.stringify(rows.map(row => row.id));
   const tokens = JSON.stringify(rows.flatMap(row => row.capability_id ? [row.capability_id] : []));
+  const bookingIds=JSON.stringify(rows.flatMap(row=>row.booking_id?[row.booking_id]:[]));
   return [
+    ...(rows.some(row=>row.booking_id)?(await fence.redactionStatements()).map(toD1Sql):[]),
+    ...await deleteRows(db,fence,"booking_answers","booking_id IN(SELECT value FROM json_each(?)) AND question_key LIKE 'routing.%'",[bookingIds]),
+    ...await deleteRows(db,fence,"booking_nonces","result_booking_id IN(SELECT value FROM json_each(?))",[bookingIds]),
+    {sql:"UPDATE bookings SET post_booking_redirect_url=NULL WHERE id IN(SELECT value FROM json_each(?))",params:[bookingIds]},
     { sql: `SELECT CASE WHEN (${scopeSql})=? THEN 1 ELSE abs(-9223372036854775808) END`, params: [JSON.stringify(emails.map(foldEmail)), JSON.stringify(emails.map(foldEmail)), scope] },
+    ...["payment_holds","booking_approval_requests"].map(table=>({sql:`UPDATE ${table} SET claim_json=json_set(claim_json,'$.routing.answers',json('[]'),'$.routing.attribution',json('{}'),'$.postBookingRedirectUrl',NULL) WHERE json_extract(claim_json,'$.routing.submissionId') IN(SELECT value FROM json_each(?))`,params:[ids]})),
     ...await deleteRows(db, fence, "routing_handoffs", "submission_id IN(SELECT value FROM json_each(?))", [ids]),
     ...await deleteRows(db, fence, "routing_submissions", "id IN(SELECT value FROM json_each(?))", [ids]),
     ...await deleteRows(db, fence, "routing_submission_tokens", "id IN(SELECT value FROM json_each(?))", [tokens]),

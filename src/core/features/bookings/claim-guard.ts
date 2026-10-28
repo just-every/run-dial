@@ -1,4 +1,4 @@
-import { routingGuard } from "../routing/booking";
+import { routingGuard } from "../routing";
 import { offeredHoldPredicate } from "../booking-links";
 import { BookingLimits, approvalHoldPredicate } from "../availability";
 import { blockedAddressSql, blockedAddressValues } from "../public-abuse";

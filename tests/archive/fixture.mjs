@@ -1,3 +1,4 @@
+import { routingOverrides } from "./routing-fixture.mjs";
 import { foldBookingSearch } from '../../src/core/features/bookings/search/case-fold.mjs';
 import { schemaModel, quote } from '../../scripts/archive/schema.mjs';
 import { chunks } from '../../scripts/archive/streams.mjs';
@@ -27,6 +28,7 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  ...routingOverrides,
   meeting_polls:{state:'open',title:'Project planning',closes_at:end,show_tally:0},
   poll_participants:{name:'Alex Rivera',email:'invitee@example.test'},
   poll_votes:{choice:'yes'},

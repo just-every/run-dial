@@ -1,4 +1,4 @@
-import type { RoutingRepository } from "../routing/repository";
+import type { RoutingRepository } from "../routing";
 import { ApprovalService } from "./approval-service";
 import type { ApprovalSettings } from "./approvals";
 import { guestNotice, normalizedGuests } from "./guests";

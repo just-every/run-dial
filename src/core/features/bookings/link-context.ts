@@ -12,7 +12,7 @@ export function cleanAttribution(input: BookingAttribution = {}): BookingAttribu
 }
 
 /** Construct once, before the atomic claim. Replays read this committed projection. */
-export function bookingRedirect(input: { event: EventTypeRecord; selection: BookingSelection; invitee: ValidatedInvitee; hostName: string; bookingId: string; attribution: BookingAttribution; routingAnswers?: import("../routing/repository").RoutingAnswer[] }): string | null {
+export function bookingRedirect(input: { event: EventTypeRecord; selection: BookingSelection; invitee: ValidatedInvitee; hostName: string; bookingId: string; attribution: BookingAttribution; routingAnswers?: import("../routing").RoutingAnswer[] }): string | null {
   const configuration = input.event.postBookingRedirect;
   if (!configuration) return null;
   const url = new URL(configuration.url);

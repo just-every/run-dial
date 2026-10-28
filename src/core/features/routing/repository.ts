@@ -1,6 +1,6 @@
 import { createId, nowIso } from "../../shared/ids";
 import { createOpaqueToken, hashToken } from "../../platform/auth/tokens";
-import type { BookingAttribution } from "../bookings/link-context";
+import type { BookingAttribution } from "../bookings";
 import type { RoutingFormInput, RoutingAnswers } from "./types";
 import type { matchRoute } from "./rules";
 
@@ -13,7 +13,10 @@ export class RoutingRepository {
  async publicForm(slug:string) { const row=await this.db.prepare("SELECT id FROM routing_forms WHERE slug=? AND published=1").bind(slug).first<{id:string}>();return row?this.get(row.id):undefined; }
  async save(input:RoutingFormInput,id=createId()) {
   const now=nowIso();
-  await this.db.prepare("INSERT INTO routing_forms(id,slug,title,configuration_json,published,revision,created_at,updated_at) VALUES(?,?,?,?,?,1,?,?) ON CONFLICT(id) DO UPDATE SET slug=excluded.slug,title=excluded.title,configuration_json=excluded.configuration_json,published=excluded.published,revision=revision+1,updated_at=excluded.updated_at").bind(id,input.slug,input.title,JSON.stringify(input),input.published?1:0,now,now).run();
+  await this.db.batch([this.db.prepare("INSERT INTO routing_forms(id,slug,title,configuration_json,published,revision,created_at,updated_at) VALUES(?,?,?,?,?,1,?,?) ON CONFLICT(id) DO UPDATE SET slug=excluded.slug,title=excluded.title,configuration_json=excluded.configuration_json,published=excluded.published,revision=revision+1,updated_at=excluded.updated_at").bind(id,input.slug,input.title,JSON.stringify(input),input.published?1:0,now,now),
+   this.db.prepare("UPDATE routing_submission_tokens SET expires_at=? WHERE form_id=? AND EXISTS(SELECT 1 FROM routing_forms WHERE id=? AND published=0)").bind(now,id,id),
+   this.db.prepare("DELETE FROM routing_handoffs WHERE submission_id IN(SELECT id FROM routing_submissions WHERE form_id=?) AND EXISTS(SELECT 1 FROM routing_forms WHERE id=? AND published=0)").bind(id,id),
+  ]);
   return this.get(id);
  }
  async issue(formId:string) {

@@ -10,6 +10,8 @@ export type { BookingClaim, BookingEmail } from "./types";
 export type { BookingAttendance, BookingCalendarConflict, BookingConfirmation, BookingDelivery, BookingHistoryEntry, BookingNonce, BookingRecord, BookingSelection, InviteeAnswers } from "./types";
 export { foldBookingSearch } from "./search/case-fold.mjs";
 
-export { attributionSchema } from "./link-context";
+export { cleanAttribution, attributionSchema } from "./link-context";
 
 export { invitationManageUrl } from "./invitation-capability";
+
+export type { BookingAttribution } from "./link-context";
