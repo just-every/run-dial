@@ -3,7 +3,7 @@ import { routingInput,routingAnswers } from '../booking-wire/routing-journey.mjs
 const form=routingInput('event_types-1','routing-archive'),answers=routingAnswers(1301);
 export const routingOverrides={
  routing_forms:{title:form.title,slug:form.slug,configuration_json:JSON.stringify(form),published:1,revision:1},
- routing_submissions:{capability_id:null,form_title:form.title,rule_id:'qualified',rule_label:form.rules[0].label,answers_json:JSON.stringify(form.questions.map(q=>({key:q.key,label:q.label,kind:q.kind,value:answers[q.key],private:q.private??false}))),attribution_json:JSON.stringify({utm_source:'ads'}),invitee_email:answers.email},
+ routing_submissions:{capability_id:null,event_type_id:"event_types-1",form_title:form.title,rule_id:'qualified',rule_label:form.rules[0].label,answers_json:JSON.stringify(form.questions.map(q=>({key:q.key,label:q.label,kind:q.kind,value:answers[q.key],private:q.private??false}))),attribution_json:JSON.stringify({utm_source:'ads'}),invitee_email:answers.email},
 };
 export function routingAuthority(db){
  const token=randomBytes(32).toString('base64url'),hash=randomBytes(32).toString('base64url'),instant='2026-10-07T00:00:00.000Z';

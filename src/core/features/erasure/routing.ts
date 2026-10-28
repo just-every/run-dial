@@ -7,7 +7,7 @@ import type { ErasureStatement } from "./booking-statements";
 const emailMatch = `${emailFoldSql("s.invitee_email")} IN(SELECT value FROM json_each(?)) OR EXISTS(
   SELECT 1 FROM json_tree(s.answers_json) answer
   WHERE answer.type='text' AND lower(trim(answer.atom)) IN(SELECT value FROM json_each(?)))`;
-const columns = ["id", "form_id", "capability_id", "form_title", "rule_id", "rule_label", "answers_json", "attribution_json", "invitee_email", "booking_id", "created_at", "updated_at"];
+const columns = ["id", "form_id", "capability_id", "form_title", "rule_id", "rule_label", "answers_json", "attribution_json", "invitee_email", "event_type_id", "booking_id", "created_at", "updated_at"];
 const snapshot = `json_object(${columns.flatMap(column => [`'${column}'`, `s.${column}`]).join(",")},
   'handoff', (SELECT json_object('token_hash',h.token_hash,'event_type_id',h.event_type_id,'expires_at',h.expires_at,'created_at',h.created_at,'booking_claim_id',h.booking_claim_id) FROM routing_handoffs h WHERE h.submission_id=s.id),
   'capability', (SELECT json_object('form_id',t.form_id,'token_hash',t.token_hash,'expires_at',t.expires_at,'consumed_at',t.consumed_at,'created_at',t.created_at) FROM routing_submission_tokens t WHERE t.id=s.capability_id))`;

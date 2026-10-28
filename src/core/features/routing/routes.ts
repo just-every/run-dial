@@ -2,17 +2,27 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
 import { validate } from "../../shared/validation";
+import { hostDateSchema } from "../../shared/scheduling";
 import { apiError } from "../../shared/http";
 import { normaliseEmbedOrigin } from "../embeds";
 import { attributionSchema } from "../bookings";
 import { routingFormInput } from "./validation.mjs";
 
 const id=z.object({id:z.string().regex(/^[0-9A-Z]{26}$/)}),slug=z.object({slug:z.string().regex(/^[a-z0-9-]{1,80}$/)});
+const period=z.object({fromDate:hostDateSchema.optional(),throughDate:hostDateSchema.optional(),eventTypeId:z.string().regex(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/).optional()}).strict();
 const answers=z.record(z.string().max(100),z.union([z.string().max(4000),z.array(z.string().max(500)).max(50)]));
 export const routingRoutes=new Hono<AppEnvironment>()
  .use("/api/app/routing-forms*",async(c,next)=>{c.header("Cache-Control","private, no-store");await next();})
  .get("/api/app/routing-forms",async c=>c.json(await c.get("services").routing.repository.list()))
- .get("/api/app/routing-forms/:id",validate("param",id),async c=>{const value=await c.get("services").routing.detail(c.req.valid("param").id);return value?c.json(value):apiError(c,404,"routing_unavailable","This routing form is unavailable.");})
+ .get("/api/app/routing-forms/:id",validate("param",id),validate("query",period),async c=>{
+  const value=await c.get("services").routing.detail(c.req.valid("param").id,c.req.valid("query"));
+  if(!value)return apiError(c,404,"routing_unavailable","This routing form is unavailable.");
+  if("kind" in value){
+   if(value.kind==="host_profile_required")return apiError(c,409,value.kind,"Set up the host profile before running the routing report.");
+   return apiError(c,400,value.kind,value.kind==="invalid_period"?"The end of the period must not precede its start.":"Choose a period of at most 366 days.");
+  }
+  return c.json(value);
+ })
  .post("/api/app/routing-forms",validate("json",routingFormInput),async c=>{
   await c.get("services").operators.requireMutation(c.req.raw);const value=await c.get("services").routing.save(c.req.valid("json"));
   return value?c.json(value,201):apiError(c,400,"invalid_route","Choose an existing event for each booking route.");

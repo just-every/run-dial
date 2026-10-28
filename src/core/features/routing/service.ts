@@ -1,6 +1,7 @@
 import type { EventTypesService } from "../event-types";
 import type { HostProfileService } from "../host-profile";
 import { cleanAttribution, type BookingAttribution } from "../bookings";
+import { resolveRoutingPeriod, type RoutingReportPeriod } from "./report";
 import { RoutingRepository } from "./repository";
 import { validateRoutingAnswers } from "./validation.mjs";
 import { matchRoute } from "./rules";
@@ -35,13 +36,14 @@ export class RoutingService {
   for(const [key,value] of Object.entries(source))if(value)url.searchParams.set(key,value);
   return {kind:"event" as const,url:url.toString()};
  }
- async detail(id:string) {
+ async detail(id:string,period:RoutingReportPeriod={}) {
   const form=await this.repository.get(id);if(!form)return undefined;
-  const submissions=await this.repository.submissions(id),groups=new Map<string,{ruleId:string|null;ruleLabel:string;source:string;submissions:number;bookings:number;conversion:number;submissionIds:string[];bookingIds:string[]}>();
+  const resolved=await resolveRoutingPeriod(this.profiles,period);if(resolved.kind!=="resolved")return resolved;
+  const submissions=await this.repository.submissions(id,resolved.filter),groups=new Map<string,{ruleId:string|null;ruleLabel:string;source:string;submissions:number;bookings:number;conversion:number;submissionIds:string[];bookingIds:string[]}>();
   for(const row of submissions){const source=row.attribution.utm_source??row.attribution.source??"Direct",key=JSON.stringify([row.ruleId,source]);
    const group=groups.get(key)??{ruleId:row.ruleId,ruleLabel:row.ruleLabel,source,submissions:0,bookings:0,conversion:0,submissionIds:[],bookingIds:[]};
    group.submissions++;group.submissionIds.push(row.id);if(row.bookingId){group.bookings++;group.bookingIds.push(row.bookingId);}group.conversion=group.bookings/group.submissions;groups.set(key,group);
   }
-  return {form,submissions,report:{definition:"Submissions count accepted forms once. Bookings count submissions with a committed booking. Conversion is bookings divided by submissions, grouped by matched route and UTM source (or custom source, then Direct).",groups:[...groups.values()]}};
+  return {form,submissions,report:{period:resolved.period,definition:"The cohort counts accepted submissions created within the selected host dates, filtered by the event selected when each submission was accepted. Bookings count cohort submissions with a committed booking, including bookings committed after the period. Conversion is cohort bookings divided by cohort submissions, grouped by matched route and UTM source (or custom source, then Direct).",groups:[...groups.values()]}};
  }
 }

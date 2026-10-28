@@ -1992,7 +1992,7 @@
       "executable": false
     },
     "migrations/core/0085_routing_forms.sql": {
-      "sha256": "88bda998147ceecfcb0151e77d142c66103da9678b3356b0e347aeea35a69285",
+      "sha256": "919aea0a7c77e9a34df518995bdce945985e7a47449d759461ef1746ae9ed8d2",
       "executable": false
     },
     "modules/d1-transport/index.d.mts": {
@@ -5712,7 +5712,7 @@
       "executable": false
     },
     "src/core/features/erasure/routing.ts": {
-      "sha256": "c4added8aaeb9af8f209a6f594f667855b403cc94869b38c77d5f6ef27e1b528",
+      "sha256": "24a3726dda0f80e7095b1313f2c89ddb8ada32e3d258017d77123601f91337f5",
       "executable": false
     },
     "src/core/features/erasure/ui/person-erasure.tsx": {
@@ -7055,12 +7055,16 @@
       "sha256": "bbf6e5db5d989fe029bc416f468a3d7d14627fc8a8a6671ddc6b39609a72a1cc",
       "executable": false
     },
+    "src/core/features/routing/report.ts": {
+      "sha256": "afc7b320d2662a253d2b43ef5a82a5903514a0398e0840e72be618adc4e49b82",
+      "executable": false
+    },
     "src/core/features/routing/repository.ts": {
-      "sha256": "81cefcb9c2b8deb4906ebc46cb770041a0593b9289398b2544eb52b2a1ce5ccc",
+      "sha256": "a4f8f9a5bdfe6879f619f4a1c432440ff87a8001842930335fca52df0d51b036",
       "executable": false
     },
     "src/core/features/routing/routes.ts": {
-      "sha256": "37299e00ea7a0601e1f62fdd0c482f0fd1040544ca8b1f0b8a9aa15307991a7a",
+      "sha256": "446d7d5da9ef2b0acc86fdd7c28e023b9d31aedec9292cfbc517f7f5c85bfb4b",
       "executable": false
     },
     "src/core/features/routing/rules.ts": {
@@ -7068,7 +7072,7 @@
       "executable": false
     },
     "src/core/features/routing/service.ts": {
-      "sha256": "9dd79fbeac0cc5eb1594785875b02d76d0c6af7cf1ec172f75479a235b9fc067",
+      "sha256": "722d2bf3877ce72ad73f2a04ff36574fcc279227e184f5401f36299c58e13fcc",
       "executable": false
     },
     "src/core/features/routing/types.ts": {
@@ -7084,7 +7088,7 @@
       "executable": false
     },
     "src/core/features/routing/ui/editor.tsx": {
-      "sha256": "4a785404b917e84bff997f491d713fa4c603930c4858a4f9b4aebc4a06f0ee02",
+      "sha256": "1542a1165d9300b78ac6316f608d8b4fa99fb743aa728c5d36a3130c34ae73d5",
       "executable": false
     },
     "src/core/features/routing/ui/embed.tsx": {
@@ -7111,12 +7115,16 @@
       "sha256": "9e46a9f43aa4b1091d02dbf2506a905f15a0e25de407339b49e5049f8bf8f634",
       "executable": false
     },
+    "src/core/features/routing/ui/report-period.tsx": {
+      "sha256": "01d4e94e919be02e0067b451837f2c3084f9de4c81b49ebd1c8635f577010ce9",
+      "executable": false
+    },
     "src/core/features/routing/ui/settings.tsx": {
       "sha256": "c0553b4bfa1b4be89e076637a4d273b85571e5a1c4c01c4a0c4da854da9d17ae",
       "executable": false
     },
     "src/core/features/routing/ui/submissions.tsx": {
-      "sha256": "ea0b2943afdd661f5a435bab3bf151185e92dc57a560157ba048f17d0fb3c442",
+      "sha256": "2384d105cb4348e1c9ab3b9e75eccdd78d51ce9cd827ab2c29654912c40bca1f",
       "executable": false
     },
     "src/core/features/routing/ui/transport.ts": {
@@ -7960,7 +7968,7 @@
       "executable": false
     },
     "src/routeTree.gen.ts": {
-      "sha256": "7e3f531e68e9e0d3fbc83c8e0ca31c44328d165a6d6fd2b4001baabff907b361",
+      "sha256": "13450247bfa5d0d4e72c1c8ae984c1f86e95853d01f0227b43a55ec9b38d8ca0",
       "executable": false
     },
     "src/server.dev.ts": {
@@ -8048,7 +8056,7 @@
       "executable": false
     },
     "tests/archive/routing-fixture.mjs": {
-      "sha256": "13e955c05bd29dc7c048e02489652eefaff3be6193fbe5fcda09d9e0db063a80",
+      "sha256": "b0971c741098cfd6a327c441c5902f80555a6015515f1e5220ac32e04df3d844",
       "executable": false
     },
     "tests/archive/status-fixture.mjs": {
@@ -8268,7 +8276,7 @@
       "executable": false
     },
     "tests/booking-axe/routing.mjs": {
-      "sha256": "1201a863be0bc7b8f89de15b52fef466aae47a73c33c870320e84e1713f216a0",
+      "sha256": "032f628229a7ff06920291982e42a3195ec5a74a6999d416d5751f3f57265300",
       "executable": false
     },
     "tests/booking-axe/run-axe.mjs": {
@@ -8500,7 +8508,7 @@
       "executable": false
     },
     "tests/booking-wire/routing-journey.mjs": {
-      "sha256": "11854c8d3ae842c6f17bf26a89ca5b2af9fb11348045d5337d7789a991a8c34e",
+      "sha256": "160a6c54110909e9ee815b4d86c6ffd6356545321159f888a313fdbf0e31ec70",
       "executable": false
     },
     "tests/booking-wire/stripe-approval-setup.ts": {
@@ -8528,7 +8536,7 @@
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "c202c170d2d50ea673b85908261aa7fec13218b249262c8c7837df756e35bd65",
+      "sha256": "a8284585e3c509c5adc76a5ae3612192441531294575898e5fac476edb58a380",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {

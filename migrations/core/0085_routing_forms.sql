@@ -12,7 +12,7 @@ CREATE TABLE routing_submissions (
  id TEXT PRIMARY KEY, form_id TEXT NOT NULL REFERENCES routing_forms(id),
  capability_id TEXT UNIQUE,
  form_title TEXT NOT NULL, rule_id TEXT, rule_label TEXT NOT NULL,
- answers_json TEXT NOT NULL, attribution_json TEXT NOT NULL, invitee_email TEXT,
+ answers_json TEXT NOT NULL, attribution_json TEXT NOT NULL, invitee_email TEXT, event_type_id TEXT,
  booking_id TEXT REFERENCES bookings(id), created_at TEXT NOT NULL, updated_at TEXT NOT NULL
 );
 CREATE INDEX routing_submissions_form ON routing_submissions(form_id,created_at);

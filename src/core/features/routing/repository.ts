@@ -2,6 +2,7 @@ import { createId, nowIso } from "../../shared/ids";
 import { createOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import type { BookingAttribution } from "../bookings";
 import type { RoutingFormInput, RoutingAnswers } from "./types";
+import type { RoutingSubmissionFilter } from "./report";
 import type { matchRoute } from "./rules";
 
 export type RoutingForm = RoutingFormInput & { id:string; revision:number };
@@ -34,16 +35,16 @@ export class RoutingRepository {
   const email=stored.find(q=>q.kind==="email" && typeof q.value==="string")?.value;
   const emailValue=typeof email==="string"?email.trim().toLowerCase():null;
   const result=await this.db.batch([
-   this.db.prepare(`INSERT INTO routing_submissions(id,form_id,capability_id,form_title,rule_id,rule_label,answers_json,attribution_json,invitee_email,created_at,updated_at)
-    SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM routing_submission_tokens t JOIN routing_forms f ON f.id=t.form_id WHERE t.id=? AND t.form_id=? AND t.consumed_at IS NULL AND t.expires_at>? AND f.published=1 AND f.revision=?)
-    AND NOT EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=? OR email IN(SELECT lower(trim(atom)) FROM json_tree(?) WHERE type='text'))`).bind(id,form.id,capabilityId,form.title,route.ruleId,route.ruleLabel,JSON.stringify(stored),JSON.stringify(attribution),emailValue,now,now,capabilityId,form.id,now,form.revision,emailValue,JSON.stringify(stored)),
+   this.db.prepare(`INSERT INTO routing_submissions(id,form_id,capability_id,form_title,rule_id,rule_label,answers_json,attribution_json,invitee_email,event_type_id,created_at,updated_at)
+    SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM routing_submission_tokens t JOIN routing_forms f ON f.id=t.form_id WHERE t.id=? AND t.form_id=? AND t.consumed_at IS NULL AND t.expires_at>? AND f.published=1 AND f.revision=?)
+    AND NOT EXISTS(SELECT 1 FROM person_erasure_locks WHERE email=? OR email IN(SELECT lower(trim(atom)) FROM json_tree(?) WHERE type='text'))`).bind(id,form.id,capabilityId,form.title,route.ruleId,route.ruleLabel,JSON.stringify(stored),JSON.stringify(attribution),emailValue,route.outcome.kind==="event"?route.outcome.eventTypeId:null,now,now,capabilityId,form.id,now,form.revision,emailValue,JSON.stringify(stored)),
    this.db.prepare("UPDATE routing_submission_tokens SET consumed_at=? WHERE id=? AND EXISTS(SELECT 1 FROM routing_submissions WHERE id=?)").bind(now,capabilityId,id),
    ...(route.outcome.kind==="event"?[this.db.prepare("INSERT INTO routing_handoffs(submission_id,token_hash,event_type_id,expires_at,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM routing_submissions WHERE id=?)").bind(id,handoffHash,route.outcome.eventTypeId,new Date(Date.now()+30*60_000).toISOString(),now,id)]:[]),
   ]);
   return result[0].meta.changes===1?{id,handoff}:undefined;
  }
- async submissions(formId:string) {
-  return (await this.db.prepare("SELECT id,rule_id AS ruleId,rule_label AS ruleLabel,answers_json,attribution_json,booking_id AS bookingId,created_at AS createdAt FROM routing_submissions WHERE form_id=? ORDER BY created_at DESC").bind(formId).all<{id:string;ruleId:string|null;ruleLabel:string;answers_json:string;attribution_json:string;bookingId:string|null;createdAt:string}>()).results.map(({answers_json,attribution_json,...row})=>({...row,answers:JSON.parse(answers_json) as RoutingAnswer[],attribution:JSON.parse(attribution_json) as BookingAttribution}));
+ async submissions(formId:string,filter:RoutingSubmissionFilter) {
+  return (await this.db.prepare("SELECT id,rule_id AS ruleId,rule_label AS ruleLabel,answers_json,attribution_json,event_type_id AS eventTypeId,booking_id AS bookingId,created_at AS createdAt FROM routing_submissions WHERE form_id=? AND created_at>=? AND created_at<=? AND (? IS NULL OR event_type_id=?) ORDER BY created_at DESC,id DESC").bind(formId,filter.from,filter.to,filter.eventTypeId??null,filter.eventTypeId??null).all<{id:string;ruleId:string|null;ruleLabel:string;answers_json:string;attribution_json:string;eventTypeId:string|null;bookingId:string|null;createdAt:string}>()).results.map(({answers_json,attribution_json,...row})=>({...row,answers:JSON.parse(answers_json) as RoutingAnswer[],attribution:JSON.parse(attribution_json) as BookingAttribution}));
  }
  async handoff(token:string,eventId:string) {
   const tokenHash=await hashToken(token,this.secret);
