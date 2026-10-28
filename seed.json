@@ -494,6 +494,21 @@
         "Destination hostnames for public DNS resolution"
       ],
       "adapters": []
+    },
+    {
+      "id": "operator-webhook-receivers",
+      "required": false,
+      "why": "API-002: only an owner-created subscription sends selected native facts to its public HTTPS receiver. Private destinations and redirects are refused. Receiver retention is controlled by the operator; local erasure stops future delivery but cannot recall a payload already accepted. Public DNS-over-HTTPS at cloudflare-dns.com checks endpoint hostnames before each attempt.",
+      "data": [
+        "Stable event identifiers and timestamps",
+        "Booking identifiers, state, time, chosen duration and attribution",
+        "Payment amount, currency and status",
+        "Calendar connection health states and named reasons",
+        "Routing form, matched rule and destination identifiers",
+        "Poll identifiers and vote revision",
+        "Destination hostnames for public DNS resolution"
+      ],
+      "adapters": []
     }
   ],
   "env": [
