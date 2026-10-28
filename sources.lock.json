@@ -8032,7 +8032,7 @@
       "executable": false
     },
     "tests/archive/poll-upgrade.mjs": {
-      "sha256": "42c959cd424fbfd40472fca4d56d26652332ef211253ce54639fa7320a42dc11",
+      "sha256": "9b067d5c5c39e992870b6f1a1067e38f7d577c8cbe2ab7526311354e706de92b",
       "executable": false
     },
     "tests/archive/status-fixture.mjs": {
