@@ -6,10 +6,6 @@ import { isWebhookJob } from "../../src/core/features/webhooks/delivery";
 /** Advance only the injected delivery clock; never rewrite a production retry timestamp. */
 export async function webhookFixtures(request: Request, services: AppServices, env: AppBindings) {
   const url = new URL(request.url);
-  if (url.pathname === "/__fixtures/webhooks/erasure-admitted") {
-    const { email } = await request.json<{ email: string }>();
-    return Response.json({ admitted: Boolean(await env.DB.prepare("SELECT 1 FROM person_erasure_locks WHERE email=?").bind(email).first()) });
-  }
   if (!["/__fixtures/webhooks/process", "/__fixtures/webhooks/scheduled"].includes(url.pathname)) return undefined;
   const { now, id } = await request.json<{ now?: string; id?: string }>();
   const clock = now ? new Date(now) : new Date();

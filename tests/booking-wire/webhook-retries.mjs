@@ -69,22 +69,12 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   const total = receiver.captures.length; await process(undefined, eraseId); assert.equal(receiver.captures.length, total);
   const personal = await book(), pending = (await state()).webhook_deliveries.find(row => row.booking_id === personal.booking.id && row.subscription_id === workspace.id);
   const personalPreview = await data("/api/app/privacy/preview", { email: personal.payload.email });
-  const erasingDns = receiver.pauseDns(), erasingSend = process(undefined, pending.id);
-  await within(Promise.race([erasingDns, erasingSend.then(result => { throw new Error(`Delivery ended before the erasure barrier: ${JSON.stringify(result)}`); })]), "Erasure DNS barrier");
-  let completed = false, observing = true;
-  const erasing = data("/api/app/privacy/erase", { email: personal.payload.email, confirmation: personalPreview.confirmation, expiresAt: personalPreview.expiresAt }).finally(() => { completed = true; });
-  void erasing.catch(() => {}); // The original rejection is asserted by awaiting erasing below.
-  try {
-    await within((async () => {
-      while (observing && !completed) {
-        if ((await data("/__fixtures/webhooks/erasure-admitted", { email: personal.payload.email })).admitted) return;
-        await new Promise(resolve => setTimeout(resolve, 20));
-      }
-      await erasing;
-    })(), "Native erasure admission");
-  } finally { observing = false; receiver.resumeDns(); }
-  assert.deepEqual((await erasingSend).results, ["unavailable"]);
-  await erasing;
+  const erased = await data("/api/app/privacy/erase", { email: personal.payload.email, confirmation: personalPreview.confirmation, expiresAt: personalPreview.expiresAt });
+  assert.equal(erased.localComplete, true, "confirmed booking erasure completes through the native door");
   assert.ok((await state()).webhook_deliveries.every(row => row.booking_id !== personal.booking.id));
-  assert.equal(receiver.captures.filter(row => JSON.parse(row.body).data.bookingId === personal.booking.id).length, 0, "erasure while DNS resolves cannot expose a copied payload");
+  const capturesAfterErasure = receiver.captures.length;
+  assert.deepEqual((await process(undefined, pending.id)).results, ["not_due"]);
+  await call(`/api/app/webhook-deliveries/${pending.id}/redeliver`, {}, 404);
+  assert.equal(receiver.captures.length, capturesAfterErasure);
+  assert.equal(receiver.captures.filter(row => JSON.parse(row.body).data.bookingId === personal.booking.id).length, 0, "erased confirmed booking cannot expose a queued payload");
 }

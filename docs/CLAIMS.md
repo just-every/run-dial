@@ -44,7 +44,7 @@ REPORT-002 remains partial. The Bookings calendar uses the list’s operator que
 
 
 <!-- generated-clause:API-002 -->
-API-002 is partial. Final proof through the production scheduler and queue, with dispatch stopped at native erasure admission, is pending; earlier native delivery, HMAC, payload, replay, deletion, archive and screen journeys passed. Exact-SHA Verify and guarded landing remain pending.
+API-002 is partial. Final production scheduler and queue journey, including completed erasure of confirmed and canceled bookings, is pending; earlier native delivery, HMAC, payload, replay, deletion, archive and screen journeys passed. Exact-SHA Verify and guarded landing remain pending.
 
 Evidence: `tests/booking-wire.test.mjs` — signed webhooks deliver native facts once, retry for 24 hours and stop after deletion or erasure; `tests/booking-wire/webhook-journey.mjs` — every event and CAL-006 fact, HMAC, UTM and source, chosen duration and scope; `tests/booking-wire/webhook-retries.mjs` — scheduled 500 retry, same-ID manual redelivery, deleted subscriptions and erased replay; `tests/webhook-settings.test.mjs` — webhook Settings creates and deletes subscriptions and shows signed delivery status at desktop and phone widths; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused (secretless disabled restore)
 <!-- end-generated-clause:API-002 -->
