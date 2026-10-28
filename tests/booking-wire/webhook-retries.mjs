@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { pollInput, pollLinks } from "../polls/fixture.mjs";
 
 async function within(promise, label) {
   let timer;
@@ -6,7 +7,7 @@ async function within(promise, label) {
   finally { clearTimeout(timer); }
 }
 
-export async function webhookRetries({ data, call, state, receiver, subscribe, process, book, workspace, first, eventInput }) {
+export async function webhookRetries({ data, call, state, receiver, subscribe, process, book, workspace, first, eventInput, future }) {
   const original = (await data("/api/app/webhooks")).deliveries.find(row => row.subscriptionId === workspace.id && row.eventType === "booking.created.v1");
   const before = receiver.captures.filter(row => row.path === "/workspace" && JSON.parse(row.body).id === original.eventId);
   const at = new Date(Date.now() + 10000).toISOString();
@@ -66,12 +67,18 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   const removedEvent = await data("/api/app/event-types", { ...eventInput, slug: "synthetic-dial-1451" }, 201);
   await data(`/api/app/event-types/${removedEvent.id}/publish`, {});
   const removedTeam = await data("/api/app/teams", { name: "Retired planning", eventTypeIds: [removedEvent.id] }, 201);
-  const removedSub = await subscribe("/deleted-event", ["routing.submitted.v1"], "team", removedTeam.id);
+  const removedSub = await subscribe("/deleted-event", ["routing.submitted.v1", "poll.created.v1", "poll.voted.v1"], "team", removedTeam.id);
   const removedForm = await data("/api/app/routing-forms", { title: "Retired route", questions: [{ key: "purpose", label: "Purpose", required: true }], rules: [{ id: "planning", questionKey: "purpose", equals: "planning", eventTypeId: removedEvent.id, teamId: removedTeam.id }], defaultMessage: "Contact the host" }, 201);
   const removedDoor = `/api/public/routing/${removedForm.id}`;
   const routed = await data(removedDoor + "/submit", { nonce: (await data(removedDoor)).capability.nonce, answers: { purpose: "planning" } }, 201);
   assert.equal(routed.eventTypeId, removedEvent.id);
-  const queued = (await state()).webhook_deliveries.find(row => row.subscription_id === removedSub.id);
+  const removedSlots = (await data(`/api/public/book/dial-host/${removedEvent.slug}/availability?week=${future}`)).slots;
+  const removedPoll = await data("/api/app/polls", pollInput(removedEvent, removedSlots, [{ name: "Retired planning participant", email: ["synthetic-dial-1452", "example.test"].join("@") }]), 201);
+  const removedPollHost = await data(`/api/app/polls/${removedPoll.id}`), removedPollLink = pollLinks((await state()).delivery_outbox, removedPoll.id)[0];
+  await data(`/api/public/polls/${removedPoll.id}/votes`, { token: removedPollLink.token, votes: removedPollHost.candidates.map(row => ({ candidateId: row.id, choice: "yes" })) });
+  const queued = (await state()).webhook_deliveries.find(row => row.subscription_id === removedSub.id && row.event_type === "routing.submitted.v1");
+  const queuedVote = (await state()).webhook_deliveries.find(row => row.subscription_id === removedSub.id && row.event_type === "poll.voted.v1");
+  assert.ok(queuedVote, "a real poll vote queues a delivery identified by its poll");
   assert.ok(queued, "the supported destination records a real subscriber delivery");
   const resolvingEvent = receiver.pauseDns(), eventInFlight = process(undefined, queued.id);
   await within(Promise.race([resolvingEvent, eventInFlight.then(() => { throw new Error("Event delivery ended before DNS barrier"); })]), "Event DNS barrier");
@@ -88,9 +95,11 @@ export async function webhookRetries({ data, call, state, receiver, subscribe, p
   const removedState = await state();
   assert.equal(removedState.routing_submissions.find(row => row.id === routed.submissionId).event_type_id, null, "routing history retains no live event reference");
   assert.ok(removedState.team_event_types.every(row => row.event_type_id !== removedEvent.id));
-  assert.ok(removedState.webhook_deliveries.every(row => JSON.parse(row.body_json).data.eventTypeId !== removedEvent.id));
+  assert.ok(removedState.webhook_deliveries.every(row => JSON.parse(row.body_json).data.eventTypeId !== removedEvent.id && JSON.parse(row.body_json).data.pollId !== removedPoll.id), "event deletion removes both event references and poll references");
   assert.deepEqual((await process(undefined, queued.id)).results, ["not_due"]);
   await call(`/api/app/webhook-deliveries/${queued.id}/redeliver`, {}, 404);
+  assert.deepEqual((await process(undefined, queuedVote.id)).results, ["not_due"]);
+  await call(`/api/app/webhook-deliveries/${queuedVote.id}/redeliver`, {}, 404);
   const beforeSubmission = removedState.routing_submissions;
   await call(removedDoor + "/submit", { nonce: (await data(removedDoor)).capability.nonce, answers: { purpose: "planning" } }, 409);
   assert.deepEqual((await state()).routing_submissions, beforeSubmission, "a removed routing destination creates nothing");
