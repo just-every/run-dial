@@ -8932,7 +8932,7 @@
       "executable": false
     },
     "tests/move-in-browser.test.mjs": {
-      "sha256": "71de70f617fe3519f6329ac5f30ee9784322369c490e76048a726a0d3ae832df",
+      "sha256": "e02a44b907e63d84560b94fabe11a67a409f0467351eb6ee532f5ecfaceb860c",
       "executable": false
     },
     "tests/move-in-catch-up.test.mjs": {
@@ -9316,7 +9316,7 @@
       "executable": false
     },
     "tests/move-in/scheduler-journey.mjs": {
-      "sha256": "b016f8dae38dbb960368b740a0605047ce528c5c48ff532c6137b1ddcdf9d12b",
+      "sha256": "4a27b699c394f360fb7ed123fb716f149e32e3d98cce8e354fc2b4b7c5403b38",
       "executable": false
     },
     "tests/move-in/upload.mjs": {

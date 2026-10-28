@@ -18,7 +18,8 @@ async function noEffects(rt){
  assert.equal(await result(await rt.api('/__fixtures/queue-count')),0);
 }
 export async function schedulerImports(){
- for(const source of schedulerCases()){
+ const cases=schedulerCases();assert.deepEqual(cases.map(source=>source.name),['Cal.com','SavvyCal','CSV','calendar']);
+ for(const source of cases){
   const rt=await runtime();try{
    const before=await snapshot(rt),review=await result(await rt.upload('preview',source.files));assertReport(review.report);
    assert.deepEqual(await snapshot(rt),before,`${source.name} preview writes nothing`);
