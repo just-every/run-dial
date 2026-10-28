@@ -13,9 +13,11 @@ const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConf
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
   // Relationship cleanup triggers do not change any existing archived row.
-  'core/0088_event_type_webhook_cleanup.sql': (_table, row) => row,
-  'core/0086_webhook_sources.sql': (_table,row) => row,
-  'core/0087_webhooks.sql': (_table,row) => row,
+  'core/0089_event_type_webhook_cleanup.sql': (_table, row) => row,
+  'core/0087_webhook_sources.sql': (_table,row) => row,
+  'core/0088_webhooks.sql': (_table,row) => row,
+  // The role boundary changes triggers only; existing archived rows are unchanged.
+  'core/0086_import_role_boundary.sql': (_table, row) => row,
   // Analytics tables are additive and start empty in earlier archives.
   'core/0085_analytics.sql': (_table, row) => row,
   // CAL-010 widens the supported provider constraint while preserving existing connection values.

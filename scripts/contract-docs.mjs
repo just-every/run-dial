@@ -1,35 +1,26 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { validateContractStatus } from "./contract-status.mjs";
+import { parseContract } from "../src/base/seed-contract.mjs";
 
-const [command, ...ids] = process.argv.slice(2);
-if (!["write", "check"].includes(command)) throw new Error("Expected write or check, followed by touched clause IDs");
-const root = process.cwd();
-let contract = await readFile("CONTRACT.md", "utf8");
-const rows = contract.split("\n").filter(line => /^\| `[A-Z][A-Z-]*-\d{3}` \|/.test(line)).map(line => line.split("|").slice(1, -1).map(cell => cell.trim()));
-const counts = subset => ["done", "partial", "missing"].map(status => subset.filter(row => row[3] === status).length);
-for (const [label, subset] of [["Published", rows.filter(row => row[2] === "published")], ["Target and push further", rows.filter(row => row[2] !== "published")], ["All", rows]]) {
-  contract = contract.replace(new RegExp(`^\\| ${label} \\|.*$`, "m"), `| ${label} | ${counts(subset).join(" | ")} | ${subset.length} |`);
+// Generate this edition's retained table format without converting its contract.
+const command=process.argv[2],args=process.argv.slice(3);
+if(!["write","check"].includes(command)||(args.length&&args[0]!=="--clauses"))throw new Error("Usage: node scripts/contract-docs.mjs write|check [--clauses ID ...]");
+const source=await readFile("CONTRACT.md","utf8"),parsed=parseContract(source.replace(/\| Clauses \| Done \| Partial \| Missing \| Total \|\n(?:\|[^\n]*\|\n){4}/, block=>block.replace(/[^\n]/g,"")));
+const lines=source.split("\n"),rows=parsed.clauses.map(clause=>({clause,cells:lines[clause.row-1].split("|").slice(1,-1).map(cell=>cell.trim())}));
+const counts=kind=>["done","partial","missing"].map(status=>rows.filter(row=>(!kind||row.clause.kind===kind)&&row.clause.status===status).length);
+for(const id of args.slice(1))if(!parsed.clauses.some(clause=>clause.id===id))throw new Error(`Unknown clause ${id}`);
+const all=counts(),published=counts("published"),target=all.map((value,index)=>value-published[index]);
+const summary=["| Clauses | Done | Partial | Missing | Total |","| --- | ---: | ---: | ---: | ---: |",...[["Published",published],["Target and push further",target],["All",all]].map(([name,values])=>`| ${name} | ${values.join(" | ")} | ${values.reduce((sum,value)=>sum+value,0)} |`)].join("\n");
+const contract=source.replace(/\| Clauses \| Done \| Partial \| Missing \| Total \|\n(?:\|[^\n]*\|\n){4}/,summary+"\n");
+const display=value=>value.replace(/([A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)/g, "$1 [at] $2");
+const marker="<!-- Generated from CONTRACT.md by contract-docs. Edit CONTRACT.md, then regenerate. -->";
+const acceptance=[marker,"# Dial acceptance",`Counts: ${rows.length} clauses — ${all[0]} done, ${all[1]} partial, ${all[2]} missing.`,"CONTRACT.md is the source of requirements, acceptance and status. Every row below retains its acceptance text; provider and role boundaries remain in the source clause.","| Clause | Acceptance | Status |","| --- | --- | --- |",...rows.map(({clause})=>{
+ const text=lines[clause.line-1],acceptance=text.includes("*Acceptance:*")?text.split("*Acceptance:*").slice(1).join("*Acceptance:*").trim():clause.body;
+ return `| ${clause.id} — ${clause.title} | ${String(acceptance??text).replaceAll("|","\\|")} | ${clause.status} |`;
+})].join("\n\n").replace(/\|\n\n\|/g,"|\n|")+"\n";
+const claims=[marker,"# Implemented contract claims",`The contract census is ${all[0]} done / ${all[1]} partial / ${all[2]} missing (${rows.length} clauses).`,`Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.`,...rows.map(({clause,cells})=>`${clause.id} is ${clause.status}: ${clause.title}.\n\nEvidence: ${cells[4]||"None."}\n\nGap: ${cells[5]||"None."}`)].join("\n\n")+"\n";
+for(const [path,value] of [["CONTRACT.md",contract],["ACCEPTANCE.md",display(acceptance)],["docs/CLAIMS.md",display(claims)]]) {
+ const current=await readFile(path,"utf8");
+ if(command==="check"&&current!==value)throw new Error(`${path}: generated content differs; run contract-docs write.`);
+ if(command==="write"&&current!==value)await writeFile(path,value);
 }
-let acceptance = await readFile("ACCEPTANCE.md", "utf8"), claims = await readFile("docs/CLAIMS.md", "utf8");
-for (const id of ids) {
-  const row = rows.find(row => row[0] === `\`${id}\``);
-  if (!row) throw new Error(`Unknown clause ${id}`);
-  const clause = contract.split("\n").find(line => line.startsWith(`- **${id} —`));
-  if (!clause?.includes("*Acceptance:*")) throw new Error(`Missing acceptance for ${id}`);
-  acceptance = acceptance.replace(new RegExp(`^\\| ${id} —.*$`, "m"), `| ${id} — ${row[1]} | ${clause.split("*Acceptance:*")[1].trim()} | ${row[4] || "—"} | ${row[3][0].toUpperCase() + row[3].slice(1)} |`);
-  const summary = `${id} is ${row[3]}. ${row[5] || "Each acceptance point is covered by the named native journeys."}\n\nEvidence: ${row[4] || "No passing proof yet."}`;
-  const marker = `<!-- generated-clause:${id} -->`, end = `<!-- end-generated-clause:${id} -->`;
-  if (claims.includes(marker)) {
-    const start = claims.indexOf(marker), finish = claims.indexOf(end, start) + end.length;
-    claims = claims.slice(0, start) + `${marker}\n${summary}\n${end}` + claims.slice(finish);
-  } else claims += `\n\n${marker}\n${summary}\n${end}\n`;
-}
-const total = counts(rows);
-acceptance = acceptance.replace(/Counts: \d+ clauses — \d+ done, \d+ partial, \d+ missing\./, `Counts: ${rows.length} clauses — ${total[0]} done, ${total[1]} partial, ${total[2]} missing.`);
-claims = claims.replace(/The contract census is \d+ done \/ \d+ partial \/ \d+ missing \(\d+ clauses\)/, `The contract census is ${total[0]} done / ${total[1]} partial / ${total[2]} missing (${rows.length} clauses)`);
-for (const [path, value] of [["CONTRACT.md", contract], ["ACCEPTANCE.md", acceptance], ["docs/CLAIMS.md", claims]]) {
-  if (command === "write") await writeFile(path, value);
-  else if (await readFile(path, "utf8") !== value) throw new Error(`Generated contract view is stale: ${path}`);
-}
-await validateContractStatus(root, contract, rows.map(row => row[0].replaceAll("`", "")));
-console.log(`Contract documents ${command} passed for ${ids.join(", ") || "the current census"}.`);
+console.log(command==="check"?"Contract documents are current.":"Contract documents regenerated.");

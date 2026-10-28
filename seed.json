@@ -530,6 +530,26 @@
         "conversion time and configured destination"
       ],
       "adapters": []
+    },
+    {
+      "id": "calcom-move-in",
+      "required": false,
+      "why": "MIGRATE-004: only an owner or admin can request a read-only Cal.com API capture with an explicitly supplied access token. The token is used for that request and is never saved. Preview, apply and undo use the saved capture without contacting the source. No provider mutation or live account validation is claimed.",
+      "data": [
+        "Operator-supplied provider credential in an authorization header",
+        "Inbound source account, event configuration and booking records"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "savvycal-move-in",
+      "required": false,
+      "why": "MIGRATE-004: only an owner or admin can request a read-only SavvyCal API capture with an explicitly supplied access token. The token is used for that request and is never saved. Preview, apply and undo use the saved capture without contacting the source. No provider mutation or live account validation is claimed.",
+      "data": [
+        "Operator-supplied provider credential in an authorization header",
+        "Inbound source account, event configuration and booking records"
+      ],
+      "adapters": []
     }
   ],
   "env": [

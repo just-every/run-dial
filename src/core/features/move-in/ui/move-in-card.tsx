@@ -6,6 +6,7 @@ import { moveInChanged } from './switch-over-card';
 import { Button, Card, Input, Select } from '../../../app/ui/primitives';
 import { SectionHeading } from '../../../app/ui/page-header';
 import { useHydrated } from '../../../app/use-hydrated';
+import { SchedulerSource } from './scheduler-source';
 import type { Choices } from '../model';
 import type { reportFromPlan } from '../planning';
 type Report=ReturnType<typeof reportFromPlan>;
@@ -23,9 +24,12 @@ export function MoveInCard(){
  function update(next:Choices){setChoices(next);setAck(false);}
  function download(){if(!result)return;const url=URL.createObjectURL(new Blob([JSON.stringify(result.report,null,2)+'\n'],{type:'application/json'}));const anchor=document.createElement('a');anchor.href=url;anchor.download='dial-move-in-report.json';anchor.click();URL.revokeObjectURL(url);}
  const job=result?.job;
+ function selectFiles(next:File[]){setFiles(next);setUpload(undefined);setResult(undefined);setAck(false);}
  return <Card id="move-in" className="min-w-0 space-y-5 p-5 sm:p-6">
-  <div><SectionHeading icon="download" title="Move in" /><p className="mt-3 text-sm leading-6 text-soft">Bring saved Calendly API responses into Dial. Checked against synthetic samples from public documentation; a real account export has not been supplied.</p><p className="mt-2 text-sm leading-6 text-soft">Use the local download command in the importing guide, then select manifest.json and every response file together. Preview saves nothing. Imported bookings send no mail or reminders and keep their original calendar entry.</p></div>
-  <label className="block text-sm font-[650]">Saved response files<input className="mt-2 block w-full min-w-0 text-sm" type="file" accept=".json" multiple disabled={!hydrated||busy} onChange={e=>{setFiles(Array.from(e.target.files??[]));setUpload(undefined);setResult(undefined);setAck(false);}} /></label>
+  <div><SectionHeading icon="download" title="Move in" /><p className="mt-3 text-sm leading-6 text-soft">Bring saved Calendly, Cal.com or SavvyCal data, or use the CSV and calendar templates for Doodle and other schedulers. Checked against synthetic samples from public documentation; a real account export has not been supplied.</p><p className="mt-2 text-sm leading-6 text-soft">Choose the files described in the importing guide. Preview saves nothing. Imported bookings send no mail or reminders and keep their original calendar entry.</p><p className="mt-2 text-sm"><a className="underline" href="https://github.com/just-every/run-dial/blob/main/docs/importing-templates.md" target="_blank" rel="noreferrer">CSV and calendar templates</a> · <a className="underline" href="https://github.com/just-every/run-dial/blob/main/docs/importing-schedulers.md" target="_blank" rel="noreferrer">Scheduler capture guide</a></p></div>
+  <SchedulerSource disabled={!hydrated||busy} onCapture={file=>selectFiles([file])}/>
+  <label className="block text-sm font-[650]">Saved response files<input className="mt-2 block w-full min-w-0 text-sm" type="file" accept=".json,.csv,.ics" multiple disabled={!hydrated||busy} onChange={e=>selectFiles(Array.from(e.target.files??[]))} /></label>
+  {files.length?<p className="break-words text-sm" role="status">Selected: {files.map(file=>file.name).join(', ')}</p>:null}
   <label className="block text-sm font-[650]">Adopt source schedule timezone (leave blank to keep host zone)<Input className="mt-2 block" placeholder="America/New_York" value={choices.zone??''} onChange={e=>update({...choices,zone:e.target.value||undefined})} /></label>
   <p className="text-sm">After changing an owner choice, preview again to review the new counts at the same upload time. Selecting files starts a new upload review.</p><Button type="button" disabled={!files.length||busy} onClick={()=>void preview()}>Preview saved data</Button>
   {error?<p role="alert" className="break-words rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{error}</p>:null}

@@ -19,6 +19,9 @@ export async function readPrivateShell(setup = false, path = "/app") {
   const request = getRequest();
   const nativeSession = await nativeRequestSession(request, services.operators.auth);
   if (!nativeSession) throw redirect({ to: "/signin" });
+  // Scoped workspace documents ship with OPER-001. Lower roles must not receive
+  // direct service reads while their native import API permission is available.
+  if(nativeSession.operator.role!=='owner')throw new Response(JSON.stringify({error:{code:'role_forbidden'}}),{status:403,headers:{'content-type':'application/json','cache-control':'no-store'}});
   const session = { id: nativeSession.operator.id, email: nativeSession.operator.email, sessionId: nativeSession.id, expiresAt: new Date(nativeSession.expiresAt).toISOString() };
   const eventId = !setup && /^\/app\/event-types\/([0-9A-Z]{26})$/.exec(new URL(path, runtime.APP_URL).pathname)?.[1];
   // An authenticated, independent event read can overlap the setup query.

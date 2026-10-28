@@ -169,6 +169,12 @@ async function requireSession(context: Context<AppEnvironment>, next: Next) {
     await discardRequestBody(context.req.raw);
     return apiError(context, 401, "session_required", "A valid operator session is required.");
   }
+  const authority=await context.env.DB.prepare('SELECT role FROM oa_operators WHERE id=?').bind(session.id).first<{role:string}>();
+  const importing=context.req.path.startsWith('/api/app/move-in/');
+  if(authority?.role!=='owner'&&!(importing&&authority?.role==='admin')){
+    await discardRequestBody(context.req.raw);
+    return apiError(context,403,'role_forbidden',`This role cannot perform ${importing?'move-in':context.req.path}.`);
+  }
   if (document) {
     const completed = await context.get("services").hostSetup.completion();
     const setup = /^\/setup(\/|$)/.test(context.req.path);

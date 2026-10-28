@@ -28,6 +28,7 @@ export async function runtime(options={}){
     manifest:{mainModule:'worker.mjs',modulesRoot:state,modules:{'worker.mjs':{type:'esm',contents:compiled.outputFiles[0].text}}}},
    dev:{outboundService:{type:'fetcher',handler:async request=>{
     calls.push({url:request.url,method:request.method});
+    const handled=await options.onRequest?.(request);if(handled)return handled;
     if(request.url==='https://api.sendgrid.com/v3/mail/send'){await options.onMail?.(await request.clone().json());return new Response(null,{status:202,headers:{'x-message-id':'example-receipt'}});}
     return new Response('Unexpected external request',{status:500});
    }}}

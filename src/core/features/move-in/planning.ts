@@ -18,7 +18,7 @@ export type CatchUp={known:Set<string>;imported:ImportedBooking[]};
 export const captureIdentity=(artifacts:Array<{name:string;sha256:string;size:number}>)=>sha256(canonicalJson(artifacts.map(a=>({name:a.name,sha256:a.sha256,size:a.size})).sort((a,b)=>a.name.localeCompare(b.name))));
 export async function planMoveIn(files:SavedFile[],choices:Choices,asOf:string,snapshot:Snapshot,context:D1ImportContext,secret:string,nonces:string[],catchUp?:CatchUp){
  if(!Number.isFinite(Date.parse(asOf)))throw new Error('Invalid as-of instant.');
- const {bundle,data,origins,capturedAt}=await readSavedFiles(files);const user=data.user[0];
+ const {bundle,data,origins,capturedAt,losses}=await readSavedFiles(files);const user=data.user[0];
  const zone=choices.zone??String(snapshot.profile?.timezone??user.timezone);if(!validZone(zone))throw new Error('Choose a valid IANA host timezone.');
  const effects=new Map<string,TargetEffect>();
  const artifact=bundle.artifacts[0],capture=captureIdentity(bundle.artifacts);
@@ -26,6 +26,10 @@ export async function planMoveIn(files:SavedFile[],choices:Choices,asOf:string,s
  const known=(kind:'profile'|'event'|'booking',sourceId:string)=>catchUp?.known.has(identityOf(kind,sourceId))??false;
  const alreadyHere={profile:0,eventTypes:0,bookings:0};
  function record(kind:string,sourceId:string,payload:unknown,accounting:Accounting[],value?:NativeValue){
+  const related=new Set([sourceId]);
+  if(kind==='booking')for(const invitee of data.invitees.filter(i=>i.event===sourceId))related.add(invitee.uri);
+  if(kind==='event')for(const association of data.event_availability.filter(a=>a.event_type===sourceId))if(association.availability_rule.uri)related.add(association.availability_rule.uri);
+  accounting=[...accounting,...losses.filter(loss=>related.has(loss.sourceId)).map(loss=>({kind:'settings' as const,sourceId,name:loss.field,outcome:'skipped' as const,reason:loss.reason}))];
   const origin=origins.get(`${({profile:'user',event:'event_types',booking:'scheduled_events'} as Record<string,string>)[kind]}:${sourceId}`)??artifact;
   const input=json({raw:payload,accounting});if(value)effects.set(sourceId,{targetKind:kind,targetId:stableId(sourceId),value:json(value)});
   if(catchUp){pending.push({kind,sourceId,input});return;}

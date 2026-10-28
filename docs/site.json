@@ -10,6 +10,8 @@
       { "slug": "calendar-and-email", "source": "docs/calendar-and-email.md", "label": "Calendar and email" },
       { "slug": "backups", "source": "docs/backups.md", "label": "Backups and export" },
       { "slug": "importing", "source": "docs/importing.md", "label": "Moving in" },
+      { "slug": "importing-schedulers", "source": "docs/importing-schedulers.md", "label": "Capture a scheduler" },
+      { "slug": "importing-templates", "source": "docs/importing-templates.md", "label": "Import templates" },
       { "slug": "updating", "source": "docs/updating.md", "label": "Updating" }
     ]}
   ],
