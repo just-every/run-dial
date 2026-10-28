@@ -522,6 +522,12 @@
       "name": "0085_analytics.sql",
       "sha256": "70052a4d5c9af7aa3619264d6c20ea4e8eb77de9993f4dc8f0b08fde4ab734d6",
       "sql": "CREATE TABLE analytics_settings (\n  id TEXT PRIMARY KEY NOT NULL CHECK (id='default'),\n  tags_json TEXT NOT NULL CHECK (json_valid(tags_json)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE analytics_connections (\n  provider TEXT PRIMARY KEY NOT NULL CHECK (provider IN ('google_ads','linkedin')),\n  generation INTEGER NOT NULL CHECK (generation>0),\n  status TEXT NOT NULL CHECK (status IN ('connected','disconnected','needs_reconnect')),\n  credential_ciphertext TEXT,\n  destination_json TEXT NOT NULL CHECK (json_valid(destination_json)),\n  reason TEXT,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL\n);\nCREATE TABLE analytics_deliveries (\n  id TEXT PRIMARY KEY NOT NULL,\n  booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n  provider TEXT NOT NULL CHECK (provider IN ('google_ads','linkedin')),\n  generation INTEGER NOT NULL,\n  event_id TEXT NOT NULL UNIQUE,\n  click_id TEXT NOT NULL,\n  destination_json TEXT NOT NULL CHECK (json_valid(destination_json)),\n  confirmed_at TEXT NOT NULL,\n  state TEXT NOT NULL CHECK (state IN ('pending','processing','succeeded','failed')),\n  attempts INTEGER NOT NULL DEFAULT 0,\n  next_attempt_at TEXT NOT NULL,\n  reason TEXT,\n  archive_historical INTEGER NOT NULL DEFAULT 0 CHECK (archive_historical IN (0,1)),\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  UNIQUE(booking_id,provider)\n);\nCREATE INDEX analytics_deliveries_due ON analytics_deliveries(state,next_attempt_at);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0086_import_role_boundary.sql",
+      "sha256": "fd620aae506573a82bab9ef617bdfd1344f6fdbf993a8f23d1e64c44b7e020b0",
+      "sql": "-- Native roles can be represented before the full workspace role UI ships.\n-- Public invitations remain equal owners; private doors deny lower roles until\n-- their own scoped permission is implemented. Move-in admits owner and admin.\n-- Existing owners retain equal authority while scoped role management is absent.\nDROP TRIGGER dial_equal_operator_role_insert;\nDROP TRIGGER dial_equal_operator_role_update;\nCREATE TRIGGER dial_equal_operator_role_update BEFORE UPDATE OF role ON oa_operators\n WHEN OLD.role = 'owner' AND NEW.role != 'owner'\n BEGIN SELECT RAISE(ABORT,'dial_equal_operators'); END;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

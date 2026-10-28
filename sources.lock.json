@@ -1668,7 +1668,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "6f78ae778eed57d18a2e67e85edc670547403339018f9b9a9c12160014ccc2fd",
+      "sha256": "cd59bcbe9ed38cf89c64f9e1646417185d016063d70a8aa424bd459e19d2212b",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
