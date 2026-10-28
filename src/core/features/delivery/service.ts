@@ -1,3 +1,4 @@
+import type { AnalyticsDelivery } from "../analytics";
 import { templatedCalendar, templatedMail } from "./correspondence";
 import { reminderMessage } from "./reminders";
 import type { CalendarConnectionService } from "../calendar-connection";
@@ -18,7 +19,7 @@ import { hashToken } from "../../platform/auth/tokens";
 
 const retryDelaysMs = [60_000, 3 * 60_000, 8 * 60_000, 18 * 60_000, 30 * 60_000];
 
-export const deliveryJobSchema = z.object({ outboxId: z.string().min(1).max(256), channel:z.literal("notice").optional() });
+export const deliveryJobSchema = z.object({ outboxId: z.string().min(1).max(256), channel:z.enum(["notice","analytics"]).optional() });
 export type DeliveryJob = z.infer<typeof deliveryJobSchema>;
 /** Queue implementations acknowledge with provider metadata which delivery does not need. */
 export type DeliveryJobDispatcher = { send(job: DeliveryJob): Promise<unknown> };
@@ -33,6 +34,7 @@ export class ProviderDeliveryService {
     private readonly runtime: import("../../shared/runtime-env").RuntimeEnvironment,
     private readonly notices: import("../workspace-notices").NoticeDelivery,
     private readonly operatorNotification?: OperatorNotificationCommand,
+    private readonly analytics?: AnalyticsDelivery,
   ) {}
 
   async processDue(limit = 25, now = new Date()) {
@@ -46,7 +48,9 @@ export class ProviderDeliveryService {
     await Promise.all(ids.map((outboxId) => dispatcher.send({ outboxId })));
     const noticeIds=await this.notices.dueIds(now.toISOString(),limit);
     await Promise.all(noticeIds.map(outboxId=>dispatcher.send({outboxId,channel:"notice"})));
-    return { enqueued: ids.length+noticeIds.length };
+    const analyticsIds = this.analytics ? await this.analytics.dueIds(now.toISOString(),limit) : [];
+    await Promise.all(analyticsIds.map(outboxId=>dispatcher.send({outboxId,channel:"analytics"})));
+    return { enqueued: ids.length+noticeIds.length+analyticsIds.length };
   }
 
   async processUnknown(job: unknown, now = new Date()) {
@@ -57,6 +61,7 @@ export class ProviderDeliveryService {
 
   async process(job: DeliveryJob, now = new Date()): Promise<"succeeded" | "retrying" | "failed" | "not_due"> {
     if(job.channel==="notice")return this.notices.process(job.outboxId,now);
+    if(job.channel==="analytics") { if(!this.analytics)throw new Error("Analytics delivery is not configured"); return this.analytics.process(job.outboxId,now); }
     const record = await this.repository.claim(job.outboxId, now.toISOString());
     if (!record) return "not_due";
     try {

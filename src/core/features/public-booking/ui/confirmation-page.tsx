@@ -1,3 +1,4 @@
+import { completePendingAnalytics } from "./analytics";
 import { BookingChangeTerms } from "./booking-change-terms";
 import { PaymentSummary } from "./pay-step";
 import { LockedBookingTime, LockedTimezoneNotice, useBrowserTimezone } from "./locked-timezone";
@@ -16,6 +17,7 @@ export function BookingConfirmationPage({ token, embedded = false }: { token: st
   const browserTimezone = useBrowserTimezone();
   const search = useRouterState({ select: (state) => state.location.searchStr });
   const [booking, setBooking] = useState<Confirmation | undefined>(useDocumentData<Confirmation>());
+  useEffect(() => { if (booking) void completePendingAnalytics(booking, embedded); }, [booking, embedded]);
   const [unavailable, setUnavailable] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
   const refreshReceipt = useCallback(async () => {

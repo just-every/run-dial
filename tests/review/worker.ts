@@ -1,3 +1,4 @@
+import { analyticsHosts, analyticsWire } from "../booking-wire/analytics-wire";
 import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
 import { stripeTransport } from "../booking-wire/stripe-wire";
 import start from "@tanstack/react-start/server-entry";
@@ -10,7 +11,7 @@ import type { AppBindings } from "../../src/core/app/bindings";
 import { fixtureProviders } from "./providers";
 import { handleFixtures } from "./fixture-routes";
 
-const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...fixtureProviders((env as AppBindings & { PROVIDER_DB?: D1Database }).PROVIDER_DB ?? env.DB), paymentsTransport: stripeTransport((env as AppBindings & { PROVIDER_DB?: D1Database }).PROVIDER_DB ?? env.DB), files: env.FILES, calendarChanges: coordinatedCalendarChanges(env) });
+const servicesFor = (env: AppBindings) => createServices(env.DB, parseRuntimeEnvironment(env), { fetch: (request: Request) => start.fetch(request) } as Fetcher, { operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), ...fixtureProviders((env as AppBindings & { PROVIDER_DB?: D1Database }).PROVIDER_DB ?? env.DB), paymentsTransport: (input, init = {}) => { const url = new URL(String(input)); const db = (env as AppBindings & { PROVIDER_DB?: D1Database }).PROVIDER_DB ?? env.DB; return analyticsHosts.includes(url.hostname) ? analyticsWire(db, url, init) : stripeTransport(db)(input, init); }, files: env.FILES, calendarChanges: coordinatedCalendarChanges(env) });
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: AppBindings) { return servicesFor(env); } }
 const production = createWorker(servicesFor);
 export default {

@@ -1,3 +1,4 @@
+import { bookingAnalyticsEvent, useBookingAnalytics } from "./analytics";
 import { formatDay } from "./invitee-time";
 import { formatUsd, priceForDuration } from "../../../shared/event-price";
 import { BookingChangeTerms } from "./booking-change-terms";
@@ -24,6 +25,7 @@ import { DayTimePicker } from "./day-time-picker";
 import { shiftHostDate, dateInZone, type PickerSlot as Slot, type PickerAvailability as Availability } from "./day-picker-model";
 
 export function ChooseTime({ data, embedded = false, preview = false }: { data: PublicEventPayload; embedded?: boolean; preview?: boolean }) {
+  useBookingAnalytics(embedded, preview, true);
   const reads = useRef(new RequestOrder()), selectionReads = useRef(new RequestOrder()), selectingNow = useRef(false);
   const search = useRouterState({ select: (state) => state.location.searchStr });
   const link = new URLSearchParams(search).get("link") ?? undefined;
@@ -96,6 +98,7 @@ export function ChooseTime({ data, embedded = false, preview = false }: { data: 
       const selected = await response.json() as PublicSelection;
       if (!currentSelection()) return;
       rememberSelection(data.profile.handle, data.eventType.slug, selected);
+      if (!embedded && !preview) await bookingAnalyticsEvent("slot_selected", selected.nonce).catch(() => console.warn("Booking analytics could not be delivered."));
       window.location.assign(bookingPath(data.profile.handle, data.eventType.slug, "/details", embedded, { nonce: selected.nonce, startAt: selected.selection.startAt, inviteeTimezone: selected.selection.inviteeTimezone, durationMinutes: String(durationMinutes), day: dateInZone(slot.startAt, displayTimezone), timezone: displayTimezone, ...(availability?.state === "available" ? { week: availability.week } : {}) }, window.location.search));
     } catch { if (currentSelection()) setNotice("That time could not be checked. Please retry."); }
     finally { selectingNow.current = false; setSelecting(undefined); }
