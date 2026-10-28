@@ -2,7 +2,8 @@
 
 This directory is source preparation, not a shipped agent door. The production
 Worker does not import it. There is no `agent-surface.json`, applied agent-door
-migration, signed Business-person binding, queued-consent handoff or MCP claim.
+migration, production Business receiver, queued-consent handoff or MCP claim.
+The 116 tool declarations and ten resource readers are not production registries.
 No contract clause is marked complete by these adapters.
 
 The copied Base runtime is recorded at
@@ -35,6 +36,14 @@ operator APIs, admins have a move-in exception, and members have no operator
 product access. Business identity must never select authority by token email or
 create equal-owner accounts for a team admin/member.
 
+Additive migrations `0090_business_settings.sql` and `0091_business_people.sql`
+prepare the signed settings store and durable Business IDs. The native setup-owner
+record remains authoritative. Unknown subjects, inactive or allow-list-excluded
+owners cannot sponsor calls. Business settings, native bindings and invitation
+authority stay installation-local during archive transfer; the destination must
+pair again. Override and logo storage are also local while the receiver is
+unmounted; portable branding requires its own native custody integration.
+
 Mounting mutations also requires Base to support several native continuation
 items under one originating admission. Dial creates both 24-hour and one-hour
 reminders for each recipient in one booking transaction. The current continuation
@@ -42,6 +51,12 @@ claim is keyed by operation, tool and original public key; distinct items sent
 through one dispatch tool collide with `idempotency_conflict`. Do not remove the
 originating operation ID, merge future reminders into an early dispatch, or skip
 the final consent check to evade that limitation.
+
+The existing narrowing-only calendar disconnect declaration is retained. Its full
+conformance journey must prepare a real native OAuth connection for every pass;
+a provider-edge response alone cannot restore native connection authority after
+disconnect. Stripe disconnect also needs a native read-only grant witness before
+its narrowing coverage can be declared.
 
 The integration must preserve booking Durable Object serialization, carry
 originating consent, sponsor, scopes, client and agent attribution atomically
