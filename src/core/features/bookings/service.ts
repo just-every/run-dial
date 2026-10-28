@@ -1,3 +1,4 @@
+import { clickIdsSchema, type ClickIds } from "../analytics";
 import { ApprovalService } from "./approval-service";
 import type { ApprovalSettings } from "./approvals";
 import { guestNotice, normalizedGuests } from "./guests";
@@ -152,7 +153,7 @@ export class BookingsService {
     };
   }
 
-  async confirmPublic(input: { redemption?:{code?:string}; handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number; shownPriceCents?:number; shownPaymentCents?:number }): Promise<BookingConfirmationResult> {
+  async confirmPublic(input: { clickIds?: ClickIds; embedded?: boolean; redemption?:{code?:string}; handle: string; slug: string; nonce: string; startAt: string; inviteeTimezone: string; name: string; email: string; answers: unknown; guests?: string[]; durationMinutes?: number; attribution?: BookingAttribution; link?: string; locationId?: string; locationInput?: string; cardConsent?: { accepted: boolean; version: string }; billingAddress?: BillingAddress; shownTaxCents?: number; shownPriceCents?:number; shownPaymentCents?:number }): Promise<BookingConfirmationResult> {
     if (!isIsoInstant(input.startAt) || !isCanonicalIanaTimeZone(input.inviteeTimezone)) return { kind: "invalid_answers" };
     const nonceHash = await hashToken(input.nonce, this.runtime.SESSION_SECRET);
     const nonce = await this.repository.getNonce(nonceHash);
@@ -160,7 +161,10 @@ export class BookingsService {
     if (!nonce) return { kind: "invalid_nonce" };
     if (nonce.expiresAt <= now && !nonce.consumedAt) return { kind: "expired_nonce" };
     const attribution = cleanAttribution(input.attribution);
-    const payloadHash = await hashPayload({ ...(input.redemption?{redemption:input.redemption}:{}), ...(input.shownPriceCents===undefined?{}:{shownPriceCents:input.shownPriceCents}), ...(input.shownPaymentCents===undefined?{}:{shownPaymentCents:input.shownPaymentCents}), ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
+    const clicks = clickIdsSchema.safeParse(input.clickIds ?? {});
+    if (!clicks.success) return { kind: "invalid_answers" };
+    const clickIds = clicks.data;
+    const payloadHash = await hashPayload({ ...(Object.keys(clickIds).length ? {clickIds} : {}), ...(input.embedded ? {embedded:true} : {}), ...(input.redemption?{redemption:input.redemption}:{}), ...(input.shownPriceCents===undefined?{}:{shownPriceCents:input.shownPriceCents}), ...(input.shownPaymentCents===undefined?{}:{shownPaymentCents:input.shownPaymentCents}), ...(input.guests === undefined ? {} : { guests: input.guests }), startAt: input.startAt, inviteeTimezone: input.inviteeTimezone, name: input.name.trim(), email: input.email.trim().toLowerCase(), answers: input.answers, ...(Object.keys(attribution).length ? { attribution } : {}), ...(input.durationMinutes === undefined ? {} : { durationMinutes: input.durationMinutes }), ...(input.locationId === undefined ? {} : { locationId: input.locationId }), ...(input.locationInput === undefined ? {} : { locationInput: input.locationInput }), ...(input.cardConsent === undefined ? {} : { cardConsent: input.cardConsent }), ...(input.billingAddress === undefined ? {} : { billingAddress: input.billingAddress, shownTaxCents: input.shownTaxCents }) });
     const profile = await this.profiles.getPublicProfile(input.handle);
     if (!profile) return { kind: "invalid_nonce" };
     const offer = this.bookingLinks ? await this.bookingLinks.resolve(input.slug, input.link) : undefined;
@@ -206,6 +210,7 @@ export class BookingsService {
     const hostDate = hostDateForInstant(selection.slot.startAt, profile.timezone);
     const expiresAt = new Date(Date.parse(selection.slot.startAt) + manageTokenLifetimeMs).toISOString();
     const claimBase = {
+      clickIds, embedded: input.embedded ?? false,
       attribution,
       postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution }),
       bookingId, occurrenceId, nonceId: nonce.id, nonceHash, payloadHash, manageTokenId, manageTokenExpiresAt: expiresAt, event, invitee,
@@ -241,6 +246,7 @@ export class BookingsService {
     const manageTokenHash = await hashToken(manageToken, this.runtime.SESSION_SECRET);
     const emails = await this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired });
     const claimInput: BookingClaim = {
+      clickIds, embedded: input.embedded ?? false,
       entitlement,
       attribution,
       postBookingRedirectUrl: bookingRedirect({ event, selection: { startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone }, invitee, hostName: profile.name, bookingId, attribution }),

@@ -1,3 +1,4 @@
+import { runAxe } from "./booking-axe/run-axe.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -39,3 +40,6 @@ test("Native Google and Microsoft calendar lifecycles and Base SendGrid outbox p
 test("EVENT-009/POLL-001 invitee guests receive invitations and changes without booking authority", t => wireJourney(t, "guests"));
 test("EVENT-008/PAY-007 approval requests authorize shown terms and confirm only after host approval and signed capture", t => wireJourney(t, "approval"));
 test("an approved request link stops opening the booking once its manage link is replaced or expires", t => wireJourney(t, "approval-access"));
+
+test("configured booking analytics uploads click-only conversions once and honors revoked or erased authority", t => wireJourney(t, "analytics"));
+test("booking analytics emits configured events once and stays silent without tags at desktop and mobile", t => runAxe(t, "tests/booking-axe/analytics.mjs"));

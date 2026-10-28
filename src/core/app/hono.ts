@@ -1,3 +1,4 @@
+import { analyticsRoutes } from "../features/analytics";
 import { pollRoutes } from "../features/polls";
 import { clientRoutes, rememberRoutes } from "../features/clients";
 import { noticeRoutes } from '../features/workspace-notices';
@@ -81,6 +82,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       const health = await checkPlatformBindings({ database: context.env.DB, files: context.env.FILES, jobs: context.env.JOBS });
       return context.json({ ...health, checkedAt: new Date().toISOString() });
     })
+    .route("/", analyticsRoutes)
     .route("/", extensionRoutes)
     .route("/", operatorRoutes)
     .route("/", operatorManagementRoutes)
