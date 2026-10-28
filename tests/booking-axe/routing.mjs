@@ -1,3 +1,4 @@
+import { authorRoutingForm } from "./routing-authoring.mjs";
 import assert from 'node:assert/strict';
 import AxeBuilder from '@axe-core/playwright';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
@@ -11,6 +12,7 @@ export async function routingScreens(browser,owner,origin) {
   const page=await owner.newPage();page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width,height:960});
   try{
    await page.goto(origin+'/app/settings/routing');await page.getByRole('heading',{name:'Routing forms',exact:true}).waitFor();
+   await authorRoutingForm(page,width,data);await capture(page,width,'routing-create');
    await page.getByLabel(/^Edit a routing form/).selectOption(form.id,{timeout:10000}).catch(async error=>{console.log('ROUTING_BROWSER_STATE '+JSON.stringify({errors,text:await page.locator('main').innerText(),forms:await data('/api/app/routing-forms')}));await page.screenshot({path:evidencePath(`routing-failure-${width}.png`)});throw error;});
    await page.getByLabel('Form title',{exact:true}).fill(`Growth consultation ${width}`);await page.getByLabel('Form title',{exact:true}).blur();await page.getByRole('status').filter({hasText:'All changes saved'}).waitFor();
    assert.equal((await data(`/api/app/routing-forms/${form.id}`)).form.title,`Growth consultation ${width}`,'operator edits persist through the Settings public door');

@@ -1992,7 +1992,7 @@
       "executable": false
     },
     "migrations/core/0085_routing_forms.sql": {
-      "sha256": "86029fe8fab11f7b01f714c68c77cd6cb10a73185618ca97f5b0db1d093d747b",
+      "sha256": "54b480858f5cc8fe748a9ffffabc7ca301d0390fe7d2364a1b9648846ca05a3b",
       "executable": false
     },
     "modules/d1-transport/index.d.mts": {
@@ -7040,7 +7040,7 @@
       "executable": false
     },
     "src/core/features/routing/booking.ts": {
-      "sha256": "4ad90d6e9694d5b1323f05ee464ce3c7fbc338ae440bcb4a4606a61c0abd8275",
+      "sha256": "7fd5fc51ca242229a08dc6f224322d59bb0419ca52627bd614c8656137260314",
       "executable": false
     },
     "src/core/features/routing/client.ts": {
@@ -7052,7 +7052,7 @@
       "executable": false
     },
     "src/core/features/routing/repository.ts": {
-      "sha256": "ded4d2ed5ca2399b1c6b670c8997f52e6abfe38faac917010a428684481cc3a8",
+      "sha256": "81cefcb9c2b8deb4906ebc46cb770041a0593b9289398b2544eb52b2a1ce5ccc",
       "executable": false
     },
     "src/core/features/routing/routes.ts": {
@@ -7952,7 +7952,7 @@
       "executable": false
     },
     "src/routeTree.gen.ts": {
-      "sha256": "c580a01e26f9177b28cefdce4c61123f21bfa3e25420a3b66673658559829b5f",
+      "sha256": "a59517ef93f7e8803bfcdf0d2156044a5acf203cacb8c046011e08c79e933d83",
       "executable": false
     },
     "src/server.dev.ts": {
@@ -8251,8 +8251,12 @@
       "sha256": "588006363df0a7beb4e0c069601bd3371153b7f1ff29a6b468e255b1ba5e986f",
       "executable": false
     },
+    "tests/booking-axe/routing-authoring.mjs": {
+      "sha256": "f56c808b07850c41cfc8f86c84288c556d62fcf37d9ad74826adef2d6ced5627",
+      "executable": false
+    },
     "tests/booking-axe/routing.mjs": {
-      "sha256": "c14189f615551ab27cae138ffba45a3e8322943a47d1b060a043b9fbafbe7f96",
+      "sha256": "b23ace073144e299681288963ae9db3fa1dcec35e5865c7456a4e0e7b67fc1e0",
       "executable": false
     },
     "tests/booking-axe/run-axe.mjs": {
@@ -8484,7 +8488,7 @@
       "executable": false
     },
     "tests/booking-wire/routing-journey.mjs": {
-      "sha256": "e4dc43de66e34057002dbd2c6f94164c728ae8c7c35939c0b572a58a645fe9d9",
+      "sha256": "11854c8d3ae842c6f17bf26a89ca5b2af9fb11348045d5337d7789a991a8c34e",
       "executable": false
     },
     "tests/booking-wire/stripe-approval-setup.ts": {
@@ -9412,7 +9416,7 @@
       "executable": false
     },
     "tests/operator-auth-boundary.test.mjs": {
-      "sha256": "18d75072ccf49fcc7f11df6616b69ac59cc2d953b9014185b6b8cf1cf8baa635",
+      "sha256": "9a4c99fc4678bc007869cdcedebb002b49f0d95b3183deacfc880abb4652ca49",
       "executable": false
     },
     "tests/operator-change.test.mjs": {

@@ -45,6 +45,7 @@ contract("AUTH-001", "direct Base administrative aliases cannot mutate authority
     ('pending-invitee','mail_send','pending-invitee','{"to":"${email}","recipientRole":"invitee"}','pending',0,'2000','2000','2000')`);
   const mailState = () => runtime.query("SELECT id,state,last_error_code,json_extract(payload_json,'$.operatorAccessRevoked') AS revoked FROM delivery_outbox WHERE id LIKE 'pending-%' ORDER BY id");
   const queued = await mailState();
+  for(const method of ["GET","POST"]){const response=await fetch(origin+"/api/app/routing-forms",{method,headers:{Origin:origin,"content-type":"application/json"},...(method==="POST"?{body:JSON.stringify({})}:{})});assert.equal(response.status,401,"routing configuration requires a current native session");}
   const before = JSON.stringify(await authority());
   for (const [path, body] of [
     ["/auth/invite/cancel", { operatorId: target }],
@@ -70,6 +71,7 @@ contract("AUTH-001", "direct Base administrative aliases cannot mutate authority
   assert.deepEqual(await erasedAuthority(), [], "ordinary removal erases native identity, capabilities and cancellation ledger");
   assert.deepEqual(await runtime.query(`SELECT id FROM rer_mail_development_outbox WHERE EXISTS (SELECT 1 FROM json_each(message,'$.to') WHERE value='${email}')`), [], "local native auth captures are erased");
   assert.equal((await call("/api/app/session", undefined, oldCookie)).status, 401);
+  assert.equal((await call("/api/app/routing-forms", {}, oldCookie)).status,401,"a revoked session cannot create a routing form");
   assert.equal((await confirmAuthLink(link)).status, 400);
   assert.equal((await confirmAuthLink(invitationLink)).status, 400);
   assert.equal(await capture(email, cookie), undefined, "removed recipient cannot retrieve its old capture");

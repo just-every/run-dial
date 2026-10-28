@@ -1,3 +1,4 @@
+import { createId } from "../../shared/ids";
 import type { BookingClaim } from "../bookings";
 import type { RoutingAnswer } from "./repository";
 export type RoutingClaim={submissionId:string;tokenHash:string;answers:RoutingAnswer[]};
@@ -8,7 +9,7 @@ export function routingClaimStatements(db:D1Database,input:BookingClaim){
  const route=input.routing;if(!route)return [];
  return [
   db.prepare("UPDATE routing_submissions SET booking_id=?,updated_at=? WHERE id=? AND booking_id IS NULL AND EXISTS(SELECT 1 FROM bookings WHERE id=?)").bind(input.bookingId,input.now,route.submissionId,input.bookingId),
-  ...route.answers.map(answer=>db.prepare("INSERT INTO booking_answers(id,booking_id,question_key,question_label,question_kind,value_json,created_at) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM bookings WHERE id=?)").bind(crypto.randomUUID(),input.bookingId,`routing.${answer.key}`,answer.label,answer.kind,JSON.stringify(answer.value),input.now,input.bookingId)),
+  ...route.answers.map(answer=>db.prepare("INSERT INTO booking_answers(id,booking_id,question_key,question_label,question_kind,value_json,created_at) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM bookings WHERE id=?)").bind(createId(),input.bookingId,`routing.${answer.key}`,answer.label,answer.kind,JSON.stringify(answer.value),input.now,input.bookingId)),
   db.prepare("DELETE FROM routing_handoffs WHERE submission_id=? AND EXISTS(SELECT 1 FROM bookings WHERE id=?)").bind(route.submissionId,input.bookingId),
  ];
 }

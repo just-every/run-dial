@@ -54,6 +54,6 @@ export class RoutingRepository {
   const form=await this.get(row.form_id);if(!form)return undefined;
   const outcome=row.rule_id?form.rules.find(rule=>rule.id===row.rule_id)?.outcome:form.fallback;
   if(outcome?.kind!=="event"||outcome.eventTypeId!==eventId)return undefined;
-  return {submissionId:row.id,tokenHash,answers:JSON.parse(row.answers_json) as RoutingAnswer[],attribution:JSON.parse(row.attribution_json) as BookingAttribution,redirect:outcome.redirect};
+  return {submissionId:row.id,tokenHash,answers:(JSON.parse(row.answers_json) as RoutingAnswer[]).map(answer=>({...answer,private:Boolean(answer.private||!form.questions.some(question=>question.key===answer.key&&!question.private))})),attribution:JSON.parse(row.attribution_json) as BookingAttribution,redirect:outcome.redirect};
  }
 }

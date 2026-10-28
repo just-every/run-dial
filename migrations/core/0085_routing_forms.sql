@@ -20,6 +20,6 @@ CREATE INDEX routing_submissions_booking ON routing_submissions(booking_id);
 CREATE INDEX routing_submissions_email ON routing_submissions(invitee_email);
 CREATE TABLE routing_handoffs (
  submission_id TEXT PRIMARY KEY REFERENCES routing_submissions(id),
- token_hash TEXT NOT NULL UNIQUE, event_type_id TEXT NOT NULL REFERENCES event_types(id),
+ token_hash TEXT NOT NULL UNIQUE, event_type_id TEXT NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,
  expires_at TEXT NOT NULL, created_at TEXT NOT NULL, booking_claim_id TEXT
 );
