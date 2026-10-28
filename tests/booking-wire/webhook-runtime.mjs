@@ -20,10 +20,10 @@ export async function startWebhookRuntime({ state, port, origin, receiver }) {
       const url = new URL(request.url);
       const path = url.hostname === "cloudflare-dns.com" ? "/__dns" : url.hostname === "receiver.synthetic.test" ? url.pathname : undefined;
       if (!path) throw new Error("Unexpected webhook egress");
-      return fetch(`http://127.0.0.1:${receiver}${path}${url.search}`, {
+      try { return await fetch(`http://127.0.0.1:${receiver}${path}${url.search}`, {
         method: request.method, headers: request.headers, redirect: "manual", signal: request.signal,
         ...(!["GET", "HEAD"].includes(request.method) ? { body: await request.arrayBuffer() } : {}),
-      });
+      }); } catch (error) { console.error("WEBHOOK_EGRESS_ERROR", request.method, url.hostname, String(error), String(error.cause)); throw error; }
     },
   }] }));
   try {

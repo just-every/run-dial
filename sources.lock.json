@@ -8600,7 +8600,7 @@
       "executable": false
     },
     "tests/booking-wire/webhook-runtime.mjs": {
-      "sha256": "30e9bea447e28e0929bcc5e070ec910f5f25117c1ce149065467fd20e6e7d739",
+      "sha256": "91c215135a441e61a92f6a785ffe58f637af23fa7054ff335e666cfcd0da4a5a",
       "executable": false
     },
     "tests/booking-wire/webhook-wire.ts": {
