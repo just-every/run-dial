@@ -4619,6 +4619,10 @@
       "sha256": "8ec1dea9bccf61dfbc55b915bd260f8d71f90626b82feee67b1f8f2c471f57c8",
       "executable": false
     },
+    "scripts/verify-routing-screens.mjs": {
+      "sha256": "09742a653f0d13a568db503d3f2ef3ca9180527139485113c9b73f48918cc57f",
+      "executable": false
+    },
     "scripts/verify-selection-refresh.mjs": {
       "sha256": "bb7634ddad65da06fed1ea7e07fff184caae6ffa81f416fe2d2aad64aed4cc37",
       "executable": false
@@ -7060,7 +7064,7 @@
       "executable": false
     },
     "src/core/features/routing/ui/answer-fields.tsx": {
-      "sha256": "92bea6ea2ddd6ffc85bf6ab5e0267eb765afd3b285f7f7ad03a8b647b2b378cc",
+      "sha256": "ce91418901541fa9b079c5770266381fe3604dd65570c0fab0bf5275fe07a0e4",
       "executable": false
     },
     "src/core/features/routing/ui/conditions.tsx": {
@@ -7072,7 +7076,7 @@
       "executable": false
     },
     "src/core/features/routing/ui/model.ts": {
-      "sha256": "7baaa151b4112f338aa040653c6b8177c7623a280ddd42cde3fc62f1b75cf9c4",
+      "sha256": "37fffc748b29e0965ce2107e33f90ce7d908018b5dc4ee14f60458ae5b6f283e",
       "executable": false
     },
     "src/core/features/routing/ui/outcome.tsx": {
@@ -7088,7 +7092,7 @@
       "executable": false
     },
     "src/core/features/routing/ui/questions.tsx": {
-      "sha256": "ee5885032d4be9c769bdbb252702105e8b1930bf7a4b46432d792f37077c1f82",
+      "sha256": "cc966df9a91d61679007d1c972a36c62cf01a821b9cc9428956f927d49aa41f3",
       "executable": false
     },
     "src/core/features/routing/ui/settings.tsx": {
@@ -7108,7 +7112,7 @@
       "executable": false
     },
     "src/core/features/routing/validation.mjs": {
-      "sha256": "b7e2d9aca284c824bbbcd9ec08907c537465eed6277dc48c8263866ac0844920",
+      "sha256": "9a3aa9ace272b7724eb0e853c4d023c64f5318c19ae8e460c9bdc40ac35d7c8f",
       "executable": false
     },
     "src/core/features/site-look/brand-file-routes.ts": {
@@ -8235,6 +8239,10 @@
       "sha256": "588006363df0a7beb4e0c069601bd3371153b7f1ff29a6b468e255b1ba5e986f",
       "executable": false
     },
+    "tests/booking-axe/routing.mjs": {
+      "sha256": "e588d83c6832d2e4c97ab9b5330679e52f13a1f3d21c8e24d57f2478b6496bfd",
+      "executable": false
+    },
     "tests/booking-axe/run-axe.mjs": {
       "sha256": "6e3c0539708fd93ee8b52c471bdc95cfa360eea00fc12b8f09536bf758efc6d8",
       "executable": false
@@ -8264,11 +8272,11 @@
       "executable": false
     },
     "tests/booking-record.test.mjs": {
-      "sha256": "1151402581fdb5cc25b280f2e8cd2331699c7f4498e5068904725d508911557a",
+      "sha256": "78077a7d4a704e23d7c8bde31224def23f7a9e04d810ddba44bf3b9a95934213",
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "5dd7cfabc38d5854a8f0d95fccd406ae5dd7bcf02e7b9f512d973cb3ff48f729",
+      "sha256": "417aac83fd441f6db221506b15e3ba58f5cfe14c6e54305d3923bfdeb20b9f5e",
       "executable": false
     },
     "tests/booking-wire/accounting-wire.ts": {
@@ -8304,7 +8312,7 @@
       "executable": false
     },
     "tests/booking-wire/feature-journey.mjs": {
-      "sha256": "14290dec8ca9d2e4dcf762a17819552d3a1f0827d5aaaca26551fdfaa83be93d",
+      "sha256": "3d95444e1a406011802d385e5a6142d7712fa2e92879a55967abefb8aefdb4d9",
       "executable": false
     },
     "tests/booking-wire/guest-journey.mjs": {
@@ -8463,6 +8471,10 @@
       "sha256": "6237882ac4a805a2685f2bf6e86111ea9badfa0433fc9bb5373ab3ddf99d5f41",
       "executable": false
     },
+    "tests/booking-wire/routing-journey.mjs": {
+      "sha256": "9964d14c79a0419062cd26adf7125423495e9885cb6afe1169645da8231d9b60",
+      "executable": false
+    },
     "tests/booking-wire/stripe-approval-setup.ts": {
       "sha256": "09d807f55d41b358ed28831f37a5f99cdd241a8ad276b80771d193228cada48f",
       "executable": false
@@ -8488,7 +8500,7 @@
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "e552921684c2071c30a08e6dfdbb38d0b13affc0a6b399cd726bc357957cfa03",
+      "sha256": "d8d8dbc7ce9a754f6b6756121653a9e436c22221a5bf7f196d46d90ce56856b5",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {

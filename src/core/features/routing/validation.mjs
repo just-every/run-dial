@@ -1,3 +1,4 @@
+import { redirectUrlIssue } from "../event-types/redirect-policy.mjs";
 /* global URL */
 import { z } from "zod";
 import { validateRoutingAnswers } from "./answer-validation.mjs";
@@ -33,7 +34,7 @@ const httpsUrl = z.string().max(4096).refine(value => {
         return false;
     try {
         const url = new URL(value);
-        return url.protocol === "https:" && !!url.hostname && !url.username && !url.password;
+        return url.protocol === "https:" && !!url.hostname && !url.username && !url.password && !redirectUrlIssue(value);
     }
     catch {
         return false;

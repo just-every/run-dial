@@ -1,0 +1,55 @@
+import assert from 'node:assert/strict';
+const mailbox=index=>`synthetic-dial-${index}`+'@'+'example.test';
+export const routingQuestions=[
+ {key:'name',label:'Your name',kind:'text',required:true},
+ {key:'email',label:'Work email',kind:'email',required:true},
+ {key:'phone',label:'Phone number',kind:'phone',required:true},
+ {key:'employees',label:'Company size',kind:'company_size',required:true},
+ {key:'budget',label:'Budget',kind:'number',required:true},
+ {key:'service',label:'Service',kind:'single_choice',required:true,options:['Consulting','Partner']},
+ {key:'interests',label:'Interests',kind:'multiple_choice',required:true,options:['Growth','Operations']},
+ {key:'stage',label:'Stage',kind:'dropdown',required:true,options:['Planning','Expanding']},
+ {key:'country',label:'Country',kind:'country',required:true},
+ {key:'state',label:'US state',kind:'us_state',required:true},
+ {key:'q_project_goal_2026',label:'Project goal',kind:'text',required:true},
+ {key:'confidential',label:'Private context',kind:'text',required:false,private:true},
+ {key:'campaign',label:'Campaign source',kind:'hidden',parameter:'utm_source',required:true},
+];
+export function routingInput(eventId,slug='growth-routing') {return {title:'Find the right growth consultation',slug,published:true,questions:routingQuestions,rules:[
+ {id:'qualified',label:'Growth consultation',when:{mode:'and',conditions:[{question:'service',operator:'in',value:['Consulting']},{question:'budget',operator:'greater_than',value:100},{question:'employees',operator:'range',value:10,max:500},{question:'interests',operator:'contains',value:'Growth'},{mode:'or',conditions:[{question:'country',operator:'equals',value:'US'},{question:'q_project_goal_2026',operator:'contains',value:'expand'}]}]},outcome:{kind:'event',eventTypeId:eventId,redirect:{url:'https://studio.example.test/thanks',fields:['event','start_time','end_time','name','utm_source','answer.q_project_goal_2026']}}},
+ {id:'small',label:'Not ready for consulting',when:{question:'budget',operator:'range',value:0,max:100},outcome:{kind:'message',message:'Our self-guided planning guide is the right next step.'}},
+ {id:'partner',label:'Partner team',when:{question:'service',operator:'equals',value:'Partner'},outcome:{kind:'url',url:'https://studio.example.test/partners'}},
+ ],fallback:{kind:'message',message:'Please contact our team to find the right next step.'}};}
+export const routingAnswers=(index=1201)=>({name:'Taylor Chen',email:mailbox(index),phone:'202-555-0142',employees:'50',budget:'200',service:'Consulting',interests:['Growth','Operations'],stage:'Expanding',country:'United States',state:'California',q_project_goal_2026:'Plan expansion',confidential:'Private planning details',campaign:'ads'});
+export async function routingEvent(data,slug='routing-consultation') {
+ const event=await data('/api/app/event-types',{slug,title:'Growth consultation',description:'Plan your next stage.',durationMinutes:30,color:'#176b5a',locationType:'fixed_link',locationLabel:'Video room',locationValue:'https://meet.example.test/growth',listed:true,alternativeRequestsEnabled:false,slotIncrementMinutes:30,minimumNoticeMinutes:0,bookingHorizonDays:90,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,questions:[{kind:'text',key:'q_project_goal_2026',label:'Project goal',required:true,options:[]}],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:600,endMinute:1200}))},201);
+ await data(`/api/app/event-types/${event.id}/publish`,{});return event;
+}
+export async function routingJourney({data,call,state,deliver,future,checks}) {
+ const event=await routingEvent(data),input=routingInput(event.id),form=await data('/api/app/routing-forms',input,201),base=`/api/public/routing/${form.slug}`;
+ const domain=async()=>{const snap=await state();return Object.fromEntries(['routing_submissions','routing_handoffs','bookings','booking_answers'].map(key=>[key,snap[key]]));};
+ const issued=await data(base),answers=routingAnswers(),empty={...answers};delete empty.q_project_goal_2026;
+ const before=await domain(),missing=await data(base,{token:issued.token,answers:empty},400);assert.ok(missing.error.details.includes('Project goal'));assert.deepEqual(await domain(),before);
+ const foreign=await data('/api/app/routing-forms',{...input,slug:'other-routing'},201);
+ for(const token of [undefined,'synthetic-dial-unknown',issued.token.slice(0,-1)+(issued.token.endsWith('a')?'b':'a')]){await call(base,{token,answers},404);assert.deepEqual(await domain(),before);}
+ await call(`/api/public/routing/${foreign.slug}`,{token:issued.token,answers},404);assert.deepEqual(await domain(),before);
+ await data('/__fixtures/routing-expiry',{formId:foreign.id});const expired=await data(`/api/public/routing/${foreign.slug}`);await data('/__fixtures/routing-expiry',{formId:foreign.id});await call(`/api/public/routing/${foreign.slug}`,{token:expired.token,answers},404);assert.deepEqual(await domain(),before);
+ const cases=[{answers,rule:'qualified',kind:'event'},{answers:{...answers,budget:'50'},rule:'small',kind:'message'},{answers:{...answers,service:'Partner'},rule:'partner',kind:'url'}];
+ let routed;
+ for(const item of cases){const preview=await data(`/api/app/routing-forms/${form.id}/preview`,{answers:item.answers});assert.equal(preview.ruleId,item.rule);const capability=await data(base),result=await data(base,{token:capability.token,answers:item.answers},201);assert.equal(result.kind,item.kind);if(item.kind==='event')routed=result;else assert.deepEqual(result,preview.outcome);const once=await domain();await call(base,{token:capability.token,answers:item.answers},404);assert.deepEqual(await domain(),once);}
+ assert.equal((await domain()).bookings.length,0,'messages and external destinations book nothing');
+ const detail=await data(`/api/app/routing-forms/${form.id}`);assert.deepEqual(detail.submissions.map(s=>s.ruleId).sort(),['partner','qualified','small']);
+ const url=new URL(routed.url),routeToken=url.searchParams.get('routeToken');assert.equal(url.searchParams.get('email'),answers.email);assert.equal(url.searchParams.get('answer.q_project_goal_2026'),answers.q_project_goal_2026);assert.equal(url.searchParams.get('utm_source'),'ads');assert.equal(url.searchParams.has('answer.confidential'),false);
+ const eventBase=`/api/public/book/dial-host/${event.slug}`,slot=(await data(`${eventBase}/availability?week=${future}`)).slots[0];
+ const selection=await data(`${eventBase}/selection`,{startAt:slot.startAt,inviteeTimezone:'UTC'},201),payload={...selection.selection,nonce:selection.nonce,routeToken,name:'Edited invitee',email:mailbox(1202),answers:{q_project_goal_2026:'Edited project goal'}};delete payload.endAt;
+ await call(`${eventBase}/confirm`,{...payload,routeToken:'synthetic-dial-forged'},404);const receipt=await data(`${eventBase}/confirm`,payload,201);assert.equal((await data(`${eventBase}/confirm`,payload)).bookingReference,receipt.bookingReference);
+ const record=await data(`/api/app/bookings/${receipt.bookingReference}`);assert.equal(record.inviteeEmail,payload.email);assert.equal(record.answers.find(a=>a.key==='q_project_goal_2026').value,'Edited project goal');assert.equal(record.answers.find(a=>a.key==='routing.phone').value,'+12025550142');assert.equal(record.answers.find(a=>a.key==='routing.confidential').value,answers.confidential);assert.equal(record.answers.find(a=>a.key==='routing.campaign').value,'ads');
+ const redirect=new URL(receipt.postBookingRedirectUrl);assert.equal(redirect.pathname,'/thanks');assert.equal(redirect.searchParams.get('name'),'Edited invitee');assert.equal(redirect.searchParams.get('utm_source'),'ads');assert.equal(redirect.searchParams.get('answer.q_project_goal_2026'),'Edited project goal');assert.equal(Date.parse(redirect.searchParams.get('start_time')),Date.parse(slot.startAt));assert.ok(!receipt.postBookingRedirectUrl.includes(routeToken)&&!receipt.postBookingRedirectUrl.includes(selection.nonce)&&!receipt.postBookingRedirectUrl.includes(answers.confidential));
+ const nextSlot=(await data(`${eventBase}/availability?week=${future}`)).slots[0],next=await data(`${eventBase}/selection`,{startAt:nextSlot.startAt,inviteeTimezone:'UTC'},201);const committed=await domain();await call(`${eventBase}/confirm`,{...payload,nonce:next.nonce,startAt:nextSlot.startAt},404);assert.deepEqual(await domain(),committed);
+ const report=(await data(`/api/app/routing-forms/${form.id}`)).report;assert.equal(report.groups.reduce((n,g)=>n+g.submissions,0),3);const converted=report.groups.find(g=>g.ruleId==='qualified');assert.equal(converted.bookings,1);assert.deepEqual(converted.bookingIds,[receipt.bookingReference]);assert.equal(converted.source,'ads');assert.equal(converted.conversion,1);
+ await deliver();const sent=(await state()).delivery_outbox.filter(row=>row.booking_id===receipt.bookingReference&&row.kind==='mail_send');assert.ok(sent.some(row=>JSON.parse(row.payload_json).to===payload.email&&JSON.parse(row.payload_json).text.includes(receipt.manageUrl)));
+ const unbooked=await data(base),unbookedResult=await data(base,{token:unbooked.token,answers:routingAnswers(1203)},201),erasureToken=new URL(unbookedResult.url).searchParams.get('routeToken');
+ const preview=await data('/api/app/privacy/preview',{email:mailbox(1203)});const erased=await data('/api/app/privacy/erase',{email:mailbox(1203),confirmation:preview.confirmation,expiresAt:preview.expiresAt});assert.equal(erased.localComplete,true);assert.ok(!(await data(`/api/app/routing-forms/${form.id}`)).submissions.some(s=>JSON.stringify(s.answers).includes(mailbox(1203))));
+ await call(`${eventBase}/confirm`,{...payload,nonce:next.nonce,startAt:nextSlot.startAt,routeToken:erasureToken},404);await call(base,{token:unbooked.token,answers:routingAnswers(1203)},404);
+ checks.push('Routing form validation, every question kind, ordered rule preview, three destinations and fallback, once-only submission capabilities, immutable answer snapshots on editable booking details, committed safe redirect, conversion drilldown and unbooked erasure.');
+}

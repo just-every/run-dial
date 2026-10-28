@@ -39,3 +39,5 @@ test("Native Google and Microsoft calendar lifecycles and Base SendGrid outbox p
 test("EVENT-009/POLL-001 invitee guests receive invitations and changes without booking authority", t => wireJourney(t, "guests"));
 test("EVENT-008/PAY-007 approval requests authorize shown terms and confirm only after host approval and signed capture", t => wireJourney(t, "approval"));
 test("an approved request link stops opening the booking once its manage link is replaced or expires", t => wireJourney(t, "approval-access"));
+
+test("Routing forms guide qualified visitors through once-only submission, booking and erasure", t => wireJourney(t, "routing"));
