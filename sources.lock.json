@@ -4368,7 +4368,7 @@
       "executable": false
     },
     "scripts/move-in-browser-schedulers.mjs": {
-      "sha256": "3fbb91e91e484fcd9b2353e09d09a17021734e2a13de0e0d9d963e925d64ba60",
+      "sha256": "879668bb2ebc657f0b5d04c4619168041420e72521028441de19572ffb0f83d9",
       "executable": false
     },
     "scripts/move-in/download-calendly.mjs": {
@@ -6164,7 +6164,7 @@
       "executable": false
     },
     "src/core/features/move-in/providers/generic.ts": {
-      "sha256": "eaa05ab3656c5f9eb51a1807002d15937c07d0c2d496088ab9f67238bad09651",
+      "sha256": "b814baf1753f596084a8e9d3bc1271e4f1de42bdebc2602966e47b00acb8e5e6",
       "executable": false
     },
     "src/core/features/move-in/providers/ics.ts": {
@@ -6272,7 +6272,7 @@
       "executable": false
     },
     "src/core/features/operators/service.ts": {
-      "sha256": "47f1d1246ada3fee92b6e1baa060de723110cf72d1c087514a9011645a753dc5",
+      "sha256": "862cf05895fc31175185ea9995e49a25ed0764931a8a43566eac86aff2255ead",
       "executable": false
     },
     "src/core/features/operators/signin-options.ts": {
@@ -9312,11 +9312,11 @@
       "executable": false
     },
     "tests/move-in/scheduler-fixtures.mjs": {
-      "sha256": "749113ba77bf6afc8c872b47bf4f0c1fefa5d2acf1019ba08d7a63c25a090717",
+      "sha256": "3dbe65ff5ac4896a9fe7dd851de59fdc78a14352f89f7d48d6a6f60a90ca0f30",
       "executable": false
     },
     "tests/move-in/scheduler-journey.mjs": {
-      "sha256": "f3bb9fad9e87016faad0e974f6df5ea74c402fdb8b5ff937a31ab3f5ba6ba171",
+      "sha256": "ecfe7da285347edc324bddd3ff8ea34b8db35e47b095dd00e897335b2e18f399",
       "executable": false
     },
     "tests/move-in/upload.mjs": {

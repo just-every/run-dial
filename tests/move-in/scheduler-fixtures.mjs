@@ -4,7 +4,7 @@ const capturedAt='2027-01-01T00:00:00.000Z';
 const csv=rows=>rows.map(row=>row.map(value=>`"${String(value).replaceAll('"','""')}"`).join(',')).join('\r\n')+'\r\n';
 const file=(name,value)=>({name,bytes:Buffer.from(typeof value==='string'?value:JSON.stringify(value))});
 export function genericFiles(calendar=false){
- const answers=JSON.stringify([{question:'Project goal',answer:'A new, useful\nworkspace',position:0}]);
+ const answers=JSON.stringify([{question:'Project goal',answer:'A new, useful\nworkspace',position:0,legacy_rule:{priority:'old-provider-only'}}]);
  const files=[file('source.json',{version:1,accountId:'synthetic-dial-600',name:'Example workspace',handle:'example-workspace',timezone:'UTC',capturedAt,legacy_brand:'old-theme'}),
  file('event-types.csv',csv([['id','title','slug','description','duration','color','listed','location_type','location_value','payment_rule'],['consultation','Project consultation','consultation','A project, with detail',30,'#176b5a','true','in_person','Main office','old-provider-only']])),
  file('availability.csv',csv([['event_type_id','kind','day','start','end','priority'],['consultation','weekly','tuesday','09:00','17:00','old-provider-only']]))];
@@ -31,6 +31,6 @@ export const captureFiles=capture=>[file(`${capture.provider}-capture.json`,capt
 export const schedulerCases=()=>[
  {name:'Cal.com',files:captureFiles(calCapture()),losses:['theme.dark','availability[0].priority','color.darkThemeHex','payment.amount','attendees[0].phoneNumber','bookingFieldsResponses.privateExtra','sms.reminder']},
  {name:'SavvyCal',files:captureFiles(savvyCapture()),losses:['avatar.url','private_name','attendees[1].phone_number','payment.amount_total','url','availability','locations','hostTopology']},
- {name:'CSV',files:genericFiles(),losses:['legacy_brand','payment_rule','availability.priority','sms_rule']},
- {name:'calendar',files:genericFiles(true),losses:['legacy_brand','payment_rule','availability.priority','X-OLD-REMINDER']},
+ {name:'CSV',files:genericFiles(),losses:['legacy_brand','payment_rule','availability.priority','sms_rule','answers[0].legacy_rule.priority']},
+ {name:'calendar',files:genericFiles(true),losses:['legacy_brand','payment_rule','availability.priority','X-OLD-REMINDER','answers[0].legacy_rule.priority']},
 ];

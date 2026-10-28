@@ -12,7 +12,10 @@ export function readGenericSource(files:SavedFile[]):ExternalSource{
  const meta=metadata.parse(JSON.parse(decode(source))),base=`https://schedule.invalid/${encodeURIComponent(meta.accountId)}`;
  const data:SourceData={user:[{uri:`${base}/user`,name:meta.name,slug:meta.handle,timezone:meta.timezone}],event_types:[],schedules:[],event_availability:[],scheduled_events:[],invitees:[]},losses:SourceLoss[]=[];
  function loss(resource:SourceLoss['resource'],id:string,field:string){losses.push({resource,sourceId:id,field,reason:'Not carried into Dial. Re-enter this field manually if it is still needed.'});}
- function dropped(value:Record<string,unknown>,kept:string[],resource:SourceLoss['resource'],id:string,prefix=''){for(const key of Object.keys(value))if(!kept.includes(key))loss(resource,id,`${prefix}${key}`);}
+ function dropped(value:Record<string,unknown>,kept:string[],resource:SourceLoss['resource'],id:string,prefix=''){
+  const visit=(value:unknown,field:string)=>{if(value&&typeof value==='object'&&Object.keys(value).length)for(const [key,child]of Object.entries(value))visit(child,Array.isArray(value)?`${field}[${key}]`:`${field}.${key}`);else loss(resource,id,field);};
+  for(const key of Object.keys(value))if(!kept.includes(key))visit(value[key],`${prefix}${key}`);
+ }
  dropped(meta,['version','accountId','name','handle','timezone','capturedAt'],'user',data.user[0].uri);
  const rows=(name:string)=>{const file=files.find(f=>f.name===name);if(!file)throw new Error(`Choose ${name} from the documented templates.`);return csvRecords(decode(file));};
  const required=(row:Record<string,string>,key:string)=>{if(!row[key])throw new Error(`Missing ${key} in a template row.`);return row[key];};
@@ -43,7 +46,10 @@ export function readGenericSource(files:SavedFile[]):ExternalSource{
   const sourceLocation=location(required(row,'location_type'),required(row,'location_value'));
   const active=row.status==='confirmed',created=required(row,'created_at');
   data.scheduled_events.push({uri,event_type:`${base}/event-types/${encodeURIComponent(event)}`,name:required(row,'title'),status:active?'active':'canceled',start_time:required(row,'start'),end_time:required(row,'end'),created_at:created,location:{type:sourceLocation.kind,...sourceLocation},invitees_counter:{active:active?1:0,total:1,limit:1},event_memberships:[{user:data.user[0].uri}],event_guests:[]});
-  const answers=row.answers?z.array(z.object({question:z.string(),answer:z.string(),position:z.number().int()})).parse(JSON.parse(row.answers)):[];
+  const answers=(row.answers?z.array(z.object({question:z.string(),answer:z.string(),position:z.number().int()}).passthrough()).parse(JSON.parse(row.answers)):[]).map((answer,index)=>{
+   dropped(answer,['question','answer','position'],'scheduled_events',uri,`answers[${index}].`);
+   return {question:answer.question,answer:answer.answer,position:answer.position};
+  });
   data.invitees.push({uri:`${uri}/invitee`,event:uri,name:required(row,'name'),email:required(row,'email'),timezone:required(row,'timezone'),status:active?'active':'canceled',created_at:created,questions_and_answers:answers});
   dropped(row,['id','event_type_id','title','start','end','created_at','name','email','timezone','location_type','location_value','status','answers',...extra],'scheduled_events',uri);
   return uri;

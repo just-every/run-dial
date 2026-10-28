@@ -74,6 +74,7 @@ export async function schedulerConnections(){
    assert.equal((await rt.upload('preview',captureFiles(capture))).status,200,'Captured network responses can be reviewed');
   }
   assert.ok(!JSON.stringify(await snapshot(rt)).includes('synthetic-dial-700'),'Provider credential is not persisted');
+  assert.equal((await rt.api('/auth/operators')).status,200,'Owner account management remains available');
   const email=['synthetic-dial-701','example.test'].join('@');
   await rt.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,version,created_at) VALUES('synthetic-dial-701',?,'Member','member','active',1,?)").bind(email,Date.now()).run();
   const signIn=async()=>{
@@ -84,6 +85,7 @@ export async function schedulerConnections(){
   const before=await snapshot(rt),calls=rt.calls.length;
   const denied=await result(await api('/api/app/move-in/connections/calcom',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:'synthetic-dial-700'})}),403);assert.equal(denied.error.code,'role_forbidden');
   const preview=await result(await upload('preview',genericFiles()),403);assert.equal(preview.error.code,'role_forbidden');assert.equal(preview.uploadIdentity,undefined);
+  for(const path of ['/auth/operators','/api/app/bookings','/api/editor/config','/app'])assert.equal((await api(path)).status,403,'Import role foundation grants no other workspace authority');
   assert.equal(rt.calls.length,calls,'Member cannot contact a provider');assert.deepEqual(await snapshot(rt),before,'Refusals write nothing');
   await rt.db.prepare("UPDATE oa_operators SET role='admin' WHERE id='synthetic-dial-701'").run();
   const adminCookie=await signIn(),admin=(path,init={})=>rt.api(path,{...init,headers:{cookie:adminCookie,...init.headers}});

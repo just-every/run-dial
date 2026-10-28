@@ -30,7 +30,9 @@ export async function schedulerJourney({page,context,origin,audit}){
   }
   await card.getByRole('button',{name:'Undo import',exact:true}).waitFor();
   await audit(calendar?'calendar-applied':'csv-applied');
-  await page.goto(origin+'/app/bookings');await page.getByText('Ada Example',{exact:true}).first().waitFor();await page.getByText('Imported',{exact:true}).first().waitFor();await audit(calendar?'calendar-booking':'csv-booking');
+  const menu=page.getByRole('button',{name:'Menu',exact:true});if(await menu.isVisible())await menu.click();
+  await page.getByRole('navigation',{name:'Operator navigation'}).getByRole('link',{name:'Bookings',exact:true}).click();
+  await page.getByText('Ada Example',{exact:true}).first().waitFor();await page.getByText('Imported',{exact:true}).first().waitFor();await audit(calendar?'calendar-booking':'csv-booking');
   const status=await(await context.request.get(origin+'/__fixtures/import-status')).json();assert.equal(status.delivery_outbox.length,0);assert.equal(status.fixture_mail.length,0);assert.equal(status.fixture_events.length,0);
   await page.goto(origin+'/app/settings#move-in');
   await card.getByRole('button',{name:/completed ·/u}).first().click();
