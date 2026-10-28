@@ -8444,7 +8444,7 @@
       "executable": false
     },
     "tests/booking-wire/webhook-fixtures.ts": {
-      "sha256": "ae1d67824942bf58234fa291e8489be5a6df1b0dd17fccb5098c38d7f143487e",
+      "sha256": "d8e483bfc1033ae0bcdc7834b709be9b3993a4e7d2d7473a6a5da04f89b13654",
       "executable": false
     },
     "tests/booking-wire/webhook-journey.mjs": {
@@ -8452,11 +8452,11 @@
       "executable": false
     },
     "tests/booking-wire/webhook-receiver.mjs": {
-      "sha256": "52ba9441331ca0114c34c8a9c0cca195036de8f63b0512558f75a5b457412e44",
+      "sha256": "d0c96baeee38d133c48138ed4f2d2d5127be1f0aeeedc49db086235111e97cd5",
       "executable": false
     },
     "tests/booking-wire/webhook-retries.mjs": {
-      "sha256": "56c1efc009dbf0fe8229093fa8185c98dd209420801e596193e3b664695ea529",
+      "sha256": "6c0a7ddd2339d27b55df32ff94b90129c67d64f0e1fd0f42d56418f2bf0dca65",
       "executable": false
     },
     "tests/booking-wire/webhook-wire.ts": {

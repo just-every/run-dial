@@ -35,6 +35,11 @@ export async function webhookReceiver() {
       assert.equal(capture.headers["dial-event-id"], JSON.parse(capture.body).id);
       assert.ok(!capture.body.includes("/manage/"), "no booking manage capability");
     },
-    close: () => { paused = false; heldDns.splice(0).forEach(reply => reply()); return new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); },
+    close: () => {
+      paused = false; heldDns.splice(0).forEach(reply => reply());
+      const closed = new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+      server.closeAllConnections();
+      return closed;
+    },
   };
 }
