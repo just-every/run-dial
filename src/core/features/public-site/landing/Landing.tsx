@@ -10,7 +10,7 @@ import type { SiteVariant } from "../chrome/context";
 import "./styles";
 
 /**
- * HOME-001 adoption. The run site's approved marketing page, with public navigation and no installation data.
+ * HOME-002 adoption. The run site's approved marketing page, with public navigation and no installation data.
  * Resources stay same-origin; every drawing is inline and decorative, and the page reads the same without script or motion.
  */
 export function Landing({ variant = "site" }: { variant?: SiteVariant }) {

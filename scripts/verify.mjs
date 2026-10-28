@@ -18,7 +18,7 @@ async function hashes() {
 const before = await hashes();
 let failure;
 try {
-  for (const step of ["lint", "boundaries", "validate", "typecheck", "test", "migration:check", "build", "verify:build-output", "deployment-spec:check", "check", "verify:copies", "verify:delivery", "verify:managed-editor", "integrations:check"]) {
+  for (const step of ["contract:check", "lint", "boundaries", "validate", "typecheck", "test", "migration:check", "build", "verify:build-output", "deployment-spec:check", "check", "verify:copies", "verify:delivery", "verify:managed-editor", "integrations:check"]) {
     await new Promise((done, reject) => {
       const child = spawn("pnpm", ["run", step], { stdio: "inherit", env: process.env });
       child.on("error", reject); child.on("exit", code => code === 0 ? done() : reject(new Error(`${step}-failed:${code}`)));

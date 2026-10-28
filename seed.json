@@ -18,7 +18,9 @@
     {
       "id": "public-home",
       "clauses": [
-        "HOME-001"
+        "HOME-001",
+        "HOME-002",
+        "HOME-003"
       ]
     },
     {
@@ -48,10 +50,14 @@
       "id": "operator-workspace",
       "clauses": [
         "OPER-001",
+        "OPER-008",
+        "OPER-009",
         "OPER-002",
+        "OPER-010",
         "OPER-003",
         "OPER-004",
         "OPER-005",
+        "OPER-011",
         "OPER-006",
         "OPER-007"
       ]
@@ -117,6 +123,8 @@
         "BOOK-012",
         "BOOK-013",
         "BOOK-014",
+        "BOOK-016",
+        "BOOK-017",
         "BOOK-015"
       ]
     },
@@ -155,21 +163,35 @@
         "NOTIFY-006",
         "NOTIFY-007",
         "NOTIFY-008",
+        "NOTIFY-011",
+        "NOTIFY-012",
         "NOTIFY-009",
-        "NOTIFY-010"
+        "NOTIFY-013",
+        "NOTIFY-014",
+        "NOTIFY-010",
+        "NOTIFY-015"
       ]
     },
     {
       "id": "data-portability",
       "clauses": [
         "DATA-001",
-        "DATA-002"
+        "DATA-009",
+        "DATA-010",
+        "DATA-002",
+        "DATA-011",
+        "DATA-012"
       ]
     },
     {
       "id": "move-in",
       "clauses": [
-        "DATA-003"
+        "DATA-003",
+        "DATA-013",
+        "DATA-014",
+        "DATA-015",
+        "DATA-016",
+        "DATA-017"
       ]
     },
     {
@@ -266,6 +288,7 @@
       "id": "payments",
       "clauses": [
         "PAY-001",
+        "PAY-008",
         "PAY-002",
         "PAY-003",
         "PAY-004",
@@ -282,7 +305,9 @@
         "FLOW-003",
         "FLOW-004",
         "FLOW-005",
-        "FLOW-006"
+        "FLOW-006",
+        "FLOW-007",
+        "FLOW-008"
       ]
     },
     {
@@ -300,6 +325,13 @@
         "API-001",
         "API-002",
         "API-003",
+        "API-004",
+        "API-005",
+        "API-006",
+        "API-007",
+        "API-008",
+        "API-009",
+        "API-010",
         "INTEG-001",
         "INTEG-002",
         "INTEG-003",
@@ -324,6 +356,8 @@
       "id": "migration",
       "clauses": [
         "MIGRATE-001",
+        "MIGRATE-006",
+        "MIGRATE-007",
         "MIGRATE-002",
         "MIGRATE-003",
         "MIGRATE-004",
@@ -344,6 +378,25 @@
         "AGENT-009",
         "AGENT-010",
         "AGENT-011"
+      ]
+    },
+    {
+      "id": "agent-surface",
+      "name": "Scheduling specialist MCP surface",
+      "clauses": [
+        "SURFACE-001",
+        "SURFACE-002",
+        "SURFACE-003",
+        "SURFACE-004",
+        "SURFACE-005",
+        "SURFACE-006",
+        "SURFACE-007",
+        "SURFACE-008",
+        "SURFACE-009",
+        "SURFACE-010",
+        "SURFACE-011",
+        "SURFACE-012",
+        "SURFACE-013"
       ]
     }
   ],

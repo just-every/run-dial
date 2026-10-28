@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseContract } from "../src/base/seed-contract.mjs";
 import { validateContractStatus } from "./contract-status.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -11,7 +12,7 @@ const [contract, baseline, manifestText] = await Promise.all([
   readFile(resolve(root, "seed.json"), "utf8"),
 ]);
 const manifest = JSON.parse(manifestText);
-const clauseIds = matches(contract, /\*\*([A-Z][A-Z-]*-\d{3})\s+—/g);
+const clauseIds = parseContract(contract).clauses.map(clause => clause.id);
 await validateContractStatus(root, contract, clauseIds);
 const mappedIds = manifest.capabilities.flatMap((capability) => capability.clauses);
 
@@ -27,9 +28,11 @@ for (const id of new Set(matches(contract, /Supersedes `(BASE-[A-Z]+-\d{3})`/g))
   assert.match(baseline, new RegExp(`\\*\\*${id}\\s+—`), `superseded baseline clause ${id} must exist`);
 }
 
-const policies = [...new Set(matches(contract, /Policy: `([^`]+)`/g))].sort();
+const mechanism = await readFile(resolve(root, "docs/contract/MECHANISM.md"), "utf8");
+const extensionDescription = contract + "\n" + mechanism;
+const policies = [...new Set(matches(extensionDescription, /Policy: `([^`]+)`/g))].sort();
 assert.deepEqual([...manifest.extensionPoints.policies].sort(), policies, "policy IDs must match the contract");
-const adapters = [...new Set(matches(contract, /`(calendar\.provider\.v[1-9]\d*|mail\.sender\.v[1-9]\d*)`/g))].sort();
+const adapters = [...new Set(matches(extensionDescription, /`(calendar\.provider\.v[1-9]\d*|mail\.sender\.v[1-9]\d*)`/g))].sort();
 assert.deepEqual([...manifest.extensionPoints.adapters].sort(), adapters, "adapter IDs must match the contract");
 for (const [kind, ids] of Object.entries(manifest.extensionPoints)) {
   assert.ok(Array.isArray(ids), `${kind} extension points must be an array`);

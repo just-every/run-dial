@@ -16,7 +16,7 @@ async function assertRejectedConfirmations(responses) {
   }
 }
 
-contract("OPER-002", "native destructive management preserves authorship and protects self and setup owner", async (context) => {
+contract("OPER-010", "native destructive management preserves authorship and protects self and setup owner", async (context) => {
   const runtime = await startRuntime(context, { now: boundary - 1 });
   const call = (path, { method = "GET", body, cookie, headers = {} } = {}) => fetch(origin + path, { method, redirect: "manual", headers: { Origin: origin, "CF-Connecting-IP": "198.18.0.2", ...(body ? { "content-type": "application/json" } : {}), ...(cookie ? { cookie } : {}), ...headers }, ...(body ? { body: JSON.stringify(body) } : {}) });
   let owner;

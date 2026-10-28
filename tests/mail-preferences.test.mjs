@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { contract } from "./contract.mjs";
 
-contract(["NOTIFY-001", "NOTIFY-008"], "per-operator booking mail respects saved delivery preferences and recipient scope across restart", preferencesJourney);
+contract(["NOTIFY-001", "NOTIFY-011"], "per-operator booking mail respects saved delivery preferences and recipient scope across restart", preferencesJourney);
 
 async function preferencesJourney(context) {
   const persist = await mkdtemp(resolve(tmpdir(), "dial-mail-preferences-"));

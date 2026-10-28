@@ -51,15 +51,18 @@
       ]
     },
     "OPER-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "OPER-001"
+        "OPER-001",
+        "OPER-008",
+        "OPER-009"
       ]
     },
     "OPER-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "OPER-002"
+        "OPER-002",
+        "OPER-010"
       ]
     },
     "OPER-003": {
@@ -81,9 +84,10 @@
       ]
     },
     "OPER-005": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "OPER-005"
+        "OPER-005",
+        "OPER-011"
       ]
     },
     "OPER-006": {
@@ -303,9 +307,11 @@
       ]
     },
     "HOME-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "HOME-001"
+        "HOME-001",
+        "HOME-002",
+        "HOME-003"
       ]
     },
     "DOCS-001": {
@@ -537,9 +543,11 @@
       ]
     },
     "BOOK-014": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "BOOK-014"
+        "BOOK-014",
+        "BOOK-016",
+        "BOOK-017"
       ]
     },
     "BOOK-015": {
@@ -645,9 +653,10 @@
       ]
     },
     "PAY-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "PAY-001"
+        "PAY-001",
+        "PAY-008"
       ]
     },
     "PAY-002": {
@@ -759,21 +768,26 @@
       ]
     },
     "NOTIFY-008": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "NOTIFY-008"
+        "NOTIFY-008",
+        "NOTIFY-011",
+        "NOTIFY-012"
       ]
     },
     "NOTIFY-009": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "NOTIFY-009"
+        "NOTIFY-009",
+        "NOTIFY-013",
+        "NOTIFY-014"
       ]
     },
     "NOTIFY-010": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "NOTIFY-010"
+        "NOTIFY-010",
+        "NOTIFY-015"
       ]
     },
     "FLOW-001": {
@@ -807,9 +821,11 @@
       ]
     },
     "FLOW-006": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "FLOW-006"
+        "FLOW-006",
+        "FLOW-007",
+        "FLOW-008"
       ]
     },
     "CLIENT-001": {
@@ -849,9 +865,16 @@
       ]
     },
     "API-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "API-003"
+        "API-003",
+        "API-004",
+        "API-005",
+        "API-006",
+        "API-007",
+        "API-008",
+        "API-009",
+        "API-010"
       ]
     },
     "INTEG-001": {
@@ -903,21 +926,30 @@
       ]
     },
     "DATA-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DATA-001"
+        "DATA-001",
+        "DATA-009",
+        "DATA-010"
       ]
     },
     "DATA-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DATA-002"
+        "DATA-002",
+        "DATA-011",
+        "DATA-012"
       ]
     },
     "DATA-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DATA-003"
+        "DATA-003",
+        "DATA-013",
+        "DATA-014",
+        "DATA-015",
+        "DATA-016",
+        "DATA-017"
       ]
     },
     "DATA-004": {
@@ -951,9 +983,11 @@
       ]
     },
     "MIGRATE-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-001"
+        "MIGRATE-001",
+        "MIGRATE-006",
+        "MIGRATE-007"
       ]
     },
     "MIGRATE-002": {

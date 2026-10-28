@@ -8,7 +8,7 @@ import { testPartitions } from "./ci-test-files.mjs";
 // CI partitions the same checks as scripts/verify.mjs. Local pnpm verify keeps
 // the complete ordered command, including both slow journeys, unchanged.
 const groups = {
-  static: ["lint", "boundaries", "validate", "typecheck", "migration:check", "verify:copies", "integrations:check"],
+  static: ["contract:check", "lint", "boundaries", "validate", "typecheck", "migration:check", "verify:copies", "integrations:check"],
   build: ["build", "verify:build-output", "deployment-spec:check", "check", "verify:delivery"],
   editor: ["verify:managed-editor"],
 };

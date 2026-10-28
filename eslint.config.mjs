@@ -29,7 +29,7 @@ export default tseslint.config(
   { files: ["scripts/edition-authoring/cli.mjs"], rules: { "@typescript-eslint/no-unused-vars": "off" } },
   { files: ["scripts/edition-authoring/files.mjs"], rules: { "no-control-regex": "off" } },
   {
-    files: ["scripts/**/*.mjs", "tests/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "tests/**/*.mjs", "src/base/contract-docs.mjs"],
     languageOptions: { globals: globals.node },
   },
 );

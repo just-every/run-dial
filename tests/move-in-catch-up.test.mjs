@@ -22,7 +22,7 @@ async function catchUpRuntime() {
   return { rt, rows, count, effects, snapshot, complete, submit, importFirst, bookingFor };
 }
 
-contract('DATA-003', 'a newer capture of the same account catches up: repeats untouched, edits kept, new records silent, source differences listed, undo limited to the catch-up', async () => {
+contract('DATA-015', 'a newer capture of the same account catches up: repeats untouched, edits kept, new records silent, source differences listed, undo limited to the catch-up', async () => {
   const { rt, rows, count, effects, snapshot, complete, submit, importFirst, bookingFor } = await catchUpRuntime();
   try {
     const original = await importFirst();
@@ -97,7 +97,7 @@ contract('DATA-003', 'a newer capture of the same account catches up: repeats un
   } finally { await rt.close(); }
 });
 
-contract('DATA-003', 'release this time frees the slot and sends nothing; the ordinary cancel still sends one email; keep records a decision; erasing a person removes their difference', async () => {
+contract('DATA-016', 'release this time frees the slot and sends nothing; the ordinary cancel still sends one email; keep records a decision; erasing a person removes their difference', async () => {
   const { rt, rows, count, effects, complete, importFirst, bookingFor } = await catchUpRuntime();
   try {
     await importFirst();
@@ -150,7 +150,7 @@ contract('DATA-003', 'release this time frees the slot and sends nothing; the or
   } finally { await rt.close(); }
 });
 
-contract('DATA-003', 'the switch-over checklist states links, the safe close date, open differences, provider health and capture age from live data', async () => {
+contract('DATA-017', 'the switch-over checklist states links, the safe close date, open differences, provider health and capture age from live data', async () => {
   const { rt, rows, complete, importFirst, bookingFor } = await catchUpRuntime();
   try {
     await importFirst();

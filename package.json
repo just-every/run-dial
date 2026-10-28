@@ -47,7 +47,8 @@
     "verify:managed-editor": "node scripts/verify-managed-editor.mjs",
     "delivery:artifact": "node scripts/build-delivery-artifact.mjs",
     "integrations:check": "node scripts/projects/integrations.mjs check",
-    "move-in:download-calendly": "node --experimental-strip-types scripts/move-in/download-calendly.mjs"
+    "move-in:download-calendly": "node --experimental-strip-types scripts/move-in/download-calendly.mjs",
+    "contract:check": "node src/base/contract-docs.mjs check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
