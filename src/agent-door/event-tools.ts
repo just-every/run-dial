@@ -2,11 +2,11 @@ import { z } from "zod";
 import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
-import { eventDetailsInputSchema, eventTypeCreationSchema, eventTypeInputSchema } from "../core/features/event-types/event-input";
+import { eventDetailsInputSchema,eventTypeCreationSchema,eventTypeInputSchema } from "../core/features/event-types/event-input";
 import { eventConfigurationTools } from "./event-configuration-tools";
 import { eventHoursTools } from "./event-hours-tools";
-import { eventIdInput, eventRecord, eventWrite, validateEventQuestions } from "./event-tool-support";
-import { arrayOutput, nativeTool, objectOutput, required, standard } from "./native-tool";
+import { eventIdInput,eventRecord,eventWrite,validateEventQuestions } from "./event-tool-support";
+import { arrayOutput,nativeTool,objectOutput,required,standard } from "./native-tool";
 
 export function eventTools(services: AppServices): ToolDefinition[] {
   const read = { scope: "dial:read", readOnly: true, classes: ["standard"] as ["standard"], classify: () => standard() };

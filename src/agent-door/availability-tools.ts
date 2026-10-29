@@ -5,8 +5,8 @@ import type { AppServices } from "../core/app/services";
 import { bookingLimitsSchema } from "../core/features/availability/booking-limits";
 import { hasSupportedInstantPrecision } from "../core/shared/instants";
 import { availabilityScheduleTools } from "./availability-schedule-tools";
-import { eventChangeClasses, eventIdInput, eventRecord, eventWrite } from "./event-tool-support";
-import { nativeTool, objectOutput, required, standard } from "./native-tool";
+import { eventChangeClasses,eventIdInput,eventRecord,eventWrite } from "./event-tool-support";
+import { nativeTool,objectOutput,required,standard } from "./native-tool";
 
 const scopeInput = z.object({ scope: z.union([z.literal("host"), z.string().length(26)]) }).strict();
 const hoursChoice = z.union([

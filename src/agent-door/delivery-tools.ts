@@ -1,10 +1,10 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
-import { ToolRefusal } from "../../modules/agent-door/errors.ts";
+
 import type { AppServices } from "../core/app/services";
 import { bookingId } from "./booking-schemas";
 import { bookingReadClass, stateDigest } from "./booking-native-state";
-import { external, live, nativeTool, objectOutput, required, standard } from "./native-tool";
+import { live, nativeTool, objectOutput, standard } from "./native-tool";
 
 type Delivery = Awaited<ReturnType<AppServices["deliveryRecovery"]["list"]>>[number];
 /** Keep recipient and retry metadata, never message subjects, bodies or payloads. */
@@ -15,7 +15,6 @@ function safeDelivery(delivery: Delivery) {
 }
 
 export function deliveryTools(services: AppServices): ToolDefinition[] {
-  const retryInput = bookingId.extend({ deliveryId: z.string().length(26) });
   return [
     nativeTool({
       name: "dial.delivery.list", title: "List safe delivery status", scope: "dial:read", readOnly: true,
@@ -23,33 +22,6 @@ export function deliveryTools(services: AppServices): ToolDefinition[] {
       input: bookingId, outputSchema: objectOutput, classes: ["sensitive"], clauses: ["NOTIFY-005", "CAL-005"],
       classify: () => bookingReadClass(),
       async run({ id }) { return { result: { deliveries: (await services.deliveryRecovery.list(id)).map(safeDelivery) } }; },
-    }),
-    nativeTool({
-      name: "dial.delivery.retry", title: "Retry failed delivery", scope: "dial:write", readOnly: false,
-      description: "Use the native safe-retry command for a booking or erasure delivery. Refuses stale or ambiguous sends under native rules; an existing retry returns its exact state. Queued is not provider success.",
-      input: retryInput, outputSchema: objectOutput, classes: ["standard", "external", "live"], clauses: ["NOTIFY-005", "CAL-004", "CAL-005"],
-      async classify({ id, deliveryId }) {
-        const delivery = required((await services.deliveryRecovery.list(id)).find(row => row.id === deliveryId));
-        if (delivery.retryId) return standard();
-        return [...standard(), ...(delivery.kind === "mail_send" || delivery.kind === "reminder"
-          ? [external(1), live("transactional_mail")] : [external(1), live("calendar")])];
-      },
-      revisionType: "string", async revision({ id, deliveryId }, ctx) {
-        const delivery = required((await services.deliveryRecovery.list(id)).find(row => row.id === deliveryId));
-        const row = await ctx.db.prepare("SELECT updated_at AS updatedAt FROM delivery_outbox WHERE id=? AND booking_id=?").bind(deliveryId, id).first();
-        return stateDigest({ delivery, row, booking: await services.bookings.getForOperator(id) });
-      },
-      async summary({ id, deliveryId }, ctx) {
-        const delivery = required((await services.deliveryRecovery.list(id)).find(row => row.id === deliveryId));
-        return { target: { id: deliveryId, name: delivery.kind }, ...(delivery.recipient ? { recipients: [delivery.recipient] } : {}),
-          items: [`Retry the native ${delivery.state} delivery for ${id}.`,
-            "Preserve native provider identity and current-record eligibility; do not reopen completed or ambiguous work.", `Prepared by ${ctx.actor.label}.`] };
-      },
-      async run({ id, deliveryId }, ctx) {
-        const result = await services.deliveryRecovery.retry(id, deliveryId);
-        if (!result) throw new ToolRefusal("delivery_not_retryable");
-        return { result: { ...result, preparedBy: ctx.actor } };
-      },
     }),
     nativeTool({
       name: "dial.delivery.preferences_read", title: "Read own booking mail preference", scope: "dial:read", readOnly: true,

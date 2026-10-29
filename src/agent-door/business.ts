@@ -1,6 +1,6 @@
-import { createBusinessSettings } from "../../modules/business-settings/index.ts";
-import { SettingsError, type BusinessManifest, type ManagedMember, type TeamAdapter } from "../../modules/business-settings/types.ts";
 import type { Trust } from "../../modules/agent-door/types.ts";
+import { createBusinessSettings } from "../../modules/business-settings/index.ts";
+import { SettingsError,type BusinessManifest,type ManagedMember,type TeamAdapter } from "../../modules/business-settings/types.ts";
 import type { RuntimeEnvironment } from "../core/shared/runtime-env";
 
 export const dialBusinessManifest: BusinessManifest = {
