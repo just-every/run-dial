@@ -3557,7 +3557,11 @@
         "GOOGLE_OAUTH_CLIENT_ID": "installationId",
         "GOOGLE_OAUTH_CLIENT_SECRET": "token",
         "CALENDAR_WEBHOOK_SECRET": "token",
-        "MAIL_API_KEY": "token"
+        "MAIL_API_KEY": "token",
+        "MICROSOFT_OAUTH_CLIENT_ID": "installationId",
+        "MICROSOFT_OAUTH_CLIENT_SECRET": "token",
+        "RESEND_API_KEY": "token",
+        "MAIL_WEBHOOK_KEY": "token"
       }
     },
     "network": {
@@ -3567,7 +3571,10 @@
         "https://www.googleapis.com",
         "https://api.sendgrid.com",
         "https://cloudflare-dns.com",
-        "https://synthetic-dial-site.example"
+        "https://synthetic-dial-site.example",
+        "https://login.microsoftonline.com",
+        "https://graph.microsoft.com",
+        "https://api.resend.com"
       ]
     },
     "journey": "tests/agent-door/core-journey.mjs",
