@@ -2,7 +2,7 @@
 
 # Dial acceptance
 
-Counts: 176 clauses — 90 done, 28 partial, 58 missing.
+Counts: 189 clauses — 90 done, 40 partial, 59 missing.
 
 CONTRACT.md is the source of requirements, acceptance and status. Every row below retains its acceptance text; provider and role boundaries remain in the source clause.
 
@@ -173,14 +173,27 @@ CONTRACT.md is the source of requirements, acceptance and status. Every row belo
 | MIGRATE-005 — Cutover and old links | Operator journey: the checklist lists every imported link with its Dial replacement, the redirect map downloads, and a test page still carrying an old embed is flagged; with one unacknowledged manual step and one SMS workflow lacking a ready sender the source-closing date stays unset, and marking the step done and waiving the SMS item sets it; a member's waive returns 403 and the date stays unset. Today the one-account checklist is proven by `tests/move-in-catch-up.test.mjs`. | partial |
 | CUSTOM-001 — Operator annotations | `tests/custom-fields.test.mjs`: definitions, typed values, ownership and limits through the private routes. Target, carried by `OPER-001`: in the `OPER-001` role-scope journey a member's and a viewer's definition create returns 403 with no definition added; the member sets a value on their own booking; the member's value write on another host's booking and every viewer value write return 403. | done |
 | CUSTOM-002 — Annotation privacy and portability | `tests/custom-fields.test.mjs`: values absent from public documents and mail, archive round-trip and deletion rules. | done |
-| AGENT-001 — Agent authority, limits and audit | Native test: an agent without a grant proposes but sends nothing; an expired grant stops the next action; pausing stops queued sends within one scheduled pass; every action appears in the admin audit log (`ADMIN-002`) with its approver. | missing |
+| AGENT-001 — Agent authority, limits and audit | Native test: an agent without a grant proposes but sends nothing; an expired grant stops the next action; pausing stops queued sends within one scheduled pass; every action appears in the admin audit log (`ADMIN-002`) with its approver. | partial |
 | AGENT-002 — Exception negotiator | Native test on a seeded host: an alternative request outside hours yields three proposals that each satisfy every constraint, the host approves two, the invitee receives exactly those two, accepting one books it and releases the other. | missing |
-| AGENT-003 — Unanswered-thread follow-up | Native test: an unanswered offer gets one follow-up after 2 days and a final one after 5, booking in between cancels the rest, a decline closes the thread with one note to the host, and the contact limit is never exceeded. | missing |
+| AGENT-003 — Unanswered-thread follow-up | Native test: an unanswered offer gets one follow-up after 2 days and a final one after 5, booking in between cancels the rest, a decline closes the thread with one note to the host, and the contact limit is never exceeded. | partial |
 | AGENT-004 — Calendar drift reconciler | Native test with provider fixtures: a duplicate created by a lost response is removed, a missing Zoom meeting is re-created with one link-ready email, an external time edit yields a proposal and adopting it after approval sends one change notice. Today `CAL-008` sync conflicts and `CAL-004` idempotent reconciliation are proven by `tests/booking-wire.test.mjs`. | partial |
-| AGENT-005 — Meeting happened check | Native test: a Zoom report with the invitee present proposes attended, an empty report proposes no-show with the evidence listed, and only the host's confirmation writes `BOOK-011`. Today hosts mark attendance by hand under `BOOK-011`. | missing |
+| AGENT-005 — Meeting happened check | Native test: a Zoom report with the invitee present proposes attended, an empty report proposes no-show with the evidence listed, and only the host's confirmation writes `BOOK-011`. Today hosts mark attendance by hand under `BOOK-011`. | partial |
 | AGENT-006 — No-show recovery | Native test: a no-show produces one approved message with valid times, a rebooking closes the recovery, an opt-out prevents any message, and no fee is charged without the host's confirmation. | missing |
-| AGENT-007 — Meeting follow-through | Native test on a fixture transcript: every proposed action item links to a transcript span, an uncited claim is refused by the checker, the host's edits are what is sent, and the agreed next meeting is offered as times the invitee books. | missing |
+| AGENT-007 — Meeting follow-through | Native test on a fixture transcript: every proposed action item links to a transcript span, an uncited claim is refused by the checker, the host's edits are what is sent, and the agreed next meeting is offered as times the invitee books. | partial |
 | AGENT-008 — Pre-meeting brief | Native test: the brief cites each fact to its source record, omits sources the grant excludes, and a missing required document triggers one approved request to the invitee. | missing |
-| AGENT-009 — Scheduling assistant in email threads | Native test with an inbound-mail fixture: a CC'd thread receives three valid times after host approval, a counter-proposal inside availability books directly, and a thread from an unknown sender is ignored. | missing |
-| AGENT-010 — Flexible holds and availability tuning | Native test: a priority booking moves one flexible block within its range and re-places it, a non-flexible event is never moved, and a monthly proposal changes nothing until accepted. | missing |
-| AGENT-011 — Voice booking through a contracted provider | Integration test with the voice provider's webhooks synthetic: a call transcript requesting Tuesday at 3 p.m. books a valid slot once, an unavailable time is answered with alternatives, and an outbound reminder call is not placed without recorded consent. | missing |
+| AGENT-009 — Scheduling assistant in email threads | Native test with an inbound-mail fixture: a CC'd thread receives three valid times after host approval, a counter-proposal inside availability books directly, and a thread from an unknown sender is ignored. | partial |
+| AGENT-010 — Flexible holds and availability tuning | Native test: a priority booking moves one flexible block within its range and re-places it, a non-flexible event is never moved, and a monthly proposal changes nothing until accepted. | partial |
+| AGENT-011 — Voice booking through a contracted provider | Integration test with the voice provider's webhooks synthetic: a call transcript requesting Tuesday at 3 p.m. books a valid slot once, an unavailable time is answered with alternatives, and an outbound reminder call is not placed without recorded consent. | partial |
+| BASE-AGENT-001 — One MCP door per seed | #### BASE-AGENT-001 — One MCP door per seed | missing |
+| BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions | #### BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions | missing |
+| BASE-AGENT-003 — Records are resources | #### BASE-AGENT-003 — Records are resources | partial |
+| BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens | #### BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens | missing |
+| BASE-AGENT-005 — An agent acts as a person in a role, never more | #### BASE-AGENT-005 — An agent acts as a person in a role, never more | missing |
+| BASE-AGENT-006 — Every action declares its risk class | #### BASE-AGENT-006 — Every action declares its risk class | missing |
+| BASE-AGENT-007 — The company's policy decides, at one chokepoint | #### BASE-AGENT-007 — The company's policy decides, at one chokepoint | missing |
+| BASE-AGENT-008 — Truthful attribution | #### BASE-AGENT-008 — Truthful attribution | missing |
+| BASE-AGENT-009 — Every agent action is audited with its class and decision | #### BASE-AGENT-009 — Every agent action is audited with its class and decision | missing |
+| BASE-AGENT-010 — Agents can follow changes | #### BASE-AGENT-010 — Agents can follow changes | partial |
+| BASE-AGENT-011 — Limits are policy, and Pause stops everything | #### BASE-AGENT-011 — Limits are policy, and Pause stops everything | partial |
+| BASE-AGENT-012 — Writes are idempotent and conflict-safe | #### BASE-AGENT-012 — Writes are idempotent and conflict-safe | partial |
+| BASE-AGENT-013 — Manifest, docs and the conformance journey | #### BASE-AGENT-013 — Manifest, docs and the conformance journey | partial |
