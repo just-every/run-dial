@@ -50,11 +50,13 @@ try {
       // pinned CLI implementations and its actual adapter declarations here.
       const { resolveProject } = await import("@runeditrun/rer/internal/cli/project.mjs");
       const { checkHostedOutput } = await import("@runeditrun/rer/internal/cli/hosted-output.mjs");
+      const { checkAgentDoor } = await import("@runeditrun/rer/internal/cli/agent-door.mjs");
       const { checkHydration } = await import("@runeditrun/rer/internal/cli/hydration/check.mjs");
       const { adapter } = await resolveProject(process.cwd());
       const declaration = adapter.deployDeclaration ?? adapter.deploy?.declaration;
       console.log(await checkHostedOutput(process.cwd(), { declaration }));
       await checkHydration(process.cwd(), { pages: adapter.publicPages, declaration, report: lines => lines.forEach(line => console.log(line)) });
+      await checkAgentDoor(process.cwd(), { declaration, owner: adapter.hooks?.owner });
     }
   }
 } catch (error) { failure = error; }

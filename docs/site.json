@@ -14,6 +14,7 @@
       { "slug": "importing-templates", "source": "docs/importing-templates.md", "label": "Import templates" },
       { "slug": "updating", "source": "docs/updating.md", "label": "Updating" }
     ]}
+    ,{ "title": "Agents", "pages": [{ "slug": "agents", "label": "Agents", "source": "docs/AGENTS.md" }] }
   ],
   "githubOnly": [
     { "source": "docs/WEBHOOKS.md", "reason": "Webhook receiver protocol and native source API details for integration developers" },

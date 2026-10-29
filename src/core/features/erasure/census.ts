@@ -1,5 +1,11 @@
 // Exhaustive migrated application census; unknown tables stop erasure before writes.
 export const applicationTables = [
+  // Installation-local signed authority and retained decisions. The declared agent
+  // registry writes no client records, and its sponsor is the protected setup owner.
+  "bs_settings", "bs_overrides", "bs_logo", "bs_team", "bs_audit", "bs_assert",
+  "agent_door_state", "agent_door_agents", "agent_door_audit", "agent_door_calls",
+  "agent_door_approvals", "agent_door_reviews", "agent_door_events", "agent_door_usage",
+  "agent_native_activity",
   "workflow_rules", "workflow_dispatches",
   "api_credentials", "api_oauth_applications", "api_request_keys", "api_rate_windows",
   "analytics_settings", "analytics_connections", "analytics_deliveries",

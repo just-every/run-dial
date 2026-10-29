@@ -21,6 +21,12 @@ export default tseslint.config(
       "react-hooks/use-memo": "off",
     },
   },
+  // Exact Base copies use Web APIs in ESM and intentionally discard private fields.
+  { files: ["src/base/modules/**/*.{mjs,ts,mts}"], languageOptions: { globals: { ...globals.worker, ...globals.browser } }, rules: {
+    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
+    "no-control-regex": "off", "no-empty": ["error", { allowEmptyCatch: true }],
+  } },
+  { files: ["src/base/modules/**/conformance/*.mjs"], languageOptions: { globals: { ...globals.node, ...globals.worker } } },
   // Adopted erasure runtime executes inside the Worker; keep all lint rules active.
   { files: ["src/modules/erasure/*.mjs"], languageOptions: { globals: globals.worker } },
   // Exact Base producer runtime rejects control characters in trust-boundary inputs.

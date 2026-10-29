@@ -1,3 +1,4 @@
+import { agentPath, agentResponse } from "./agent-door/index.server";
 import { operatorNotificationCommand } from "../platform/operator-notification-boundary";
 import { withPrivateRequest, privateRequestServices, nativeRequestSession, privateReadTasks, deferPrivateRead } from "./private-request.server";
 // Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
@@ -68,6 +69,11 @@ return {
    if (isPrivateLocalPath(url.pathname)) return new Response("Not found", { status: 404 });
    const runtime = parseRuntimeEnvironment(env);
    if (url.host !== new URL(runtime.APP_URL).host || (request.headers.has("host") && request.headers.get("host") !== new URL(runtime.APP_URL).host)) return new Response("Not found", { status: 404 });
+   if (agentPath(url.pathname)) {
+    await admit();
+    const response = await agentResponse(request, env, servicesFor(env));
+    if (response) return response;
+   }
    if (url.pathname.startsWith("/api/portability/")) return hostedExport(request, env, servicesFor(env).operators);
    const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
    const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };

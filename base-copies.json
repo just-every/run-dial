@@ -1925,255 +1925,338 @@
     {
       "path": "scripts/delivery/base/artifact.mjs",
       "originPath": "modules/delivery-producer/artifact.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/artifact.mjs": "129f210f1556e816ba94ffe74359ac553cd26466aaf8c6c299765e9cea29aa07"
       },
       "modes": {
         "scripts/delivery/base/artifact.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/artifact.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/bindings.mjs",
       "originPath": "modules/delivery-producer/bindings.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/bindings.mjs": "5548f71b7bb32c6e6c75442f0e6cf0af9da3226aebcaf964c7702ea549e48392"
       },
       "modes": {
         "scripts/delivery/base/bindings.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/bindings.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/capabilities.mjs",
       "originPath": "modules/delivery-producer/capabilities.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/capabilities.mjs": "5e4db1f4428f107c91b51be3c9c18e7757d7e23574dd977a872f6944abd32a1d"
       },
       "modes": {
         "scripts/delivery/base/capabilities.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/capabilities.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/cli.mjs",
       "originPath": "modules/delivery-producer/cli.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
-        "scripts/delivery/base/cli.mjs": "5d60954f6b03216613d17ec0d19464c339ce3a8a441c7972bf3f80ceea4f7ad5"
+        "scripts/delivery/base/cli.mjs": "85cd5d5fb7f9a002f5dd44ace279702834823794cbd4a24ed9f1bdb5d1ad0f23"
       },
       "modes": {
         "scripts/delivery/base/cli.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/cli.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/declarations.mjs",
       "originPath": "modules/delivery-producer/declarations.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/declarations.mjs": "bf63076ba1c203c948fe57f41f28fe6ad06ec1e057eecf2b55aab5aeee7c5e2c"
       },
       "modes": {
         "scripts/delivery/base/declarations.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/declarations.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/export.mjs",
       "originPath": "modules/delivery-producer/export.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
-        "scripts/delivery/base/export.mjs": "0e36cf60c02ff737528018c5f027b96970e9154dd9464d3de08c19c3a3a5f5a5"
+        "scripts/delivery/base/export.mjs": "fbf9c22198f3fb07015f486cf80d0fbaefe087b60b628a50e6c6d74c687890b2"
       },
       "modes": {
         "scripts/delivery/base/export.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/export.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/generators/integration.mjs",
       "originPath": "modules/delivery-producer/generators/integration.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/generators/integration.mjs": "ec9689f03b339466ee20c4a77da5227ba39789cc3de52d33687127148d4889f3"
       },
       "modes": {
         "scripts/delivery/base/generators/integration.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/generators/integration.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/generators/managed.mjs",
       "originPath": "modules/delivery-producer/generators/managed.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/generators/managed.mjs": "275131025f7b1810b7757053caa7439f9cd8119bfec94512c4fa4cf1ee1a5c60"
       },
       "modes": {
         "scripts/delivery/base/generators/managed.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/generators/managed.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/generators/project.mjs",
       "originPath": "modules/delivery-producer/generators/project.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/generators/project.mjs": "29540e3e2d9ef0529a07c04ed70eb3e7fe0f73906fe826e53c55678ad8a364de"
       },
       "modes": {
         "scripts/delivery/base/generators/project.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/generators/project.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/generators/validation.mjs",
       "originPath": "modules/delivery-producer/generators/validation.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/generators/validation.mjs": "ec5e0cdd38e4143530fd1366930b9e8e0e081a0729687926ed13a256834519a9"
       },
       "modes": {
         "scripts/delivery/base/generators/validation.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/generators/validation.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/mail.mjs",
       "originPath": "modules/delivery-producer/mail.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
-        "scripts/delivery/base/mail.mjs": "2323205c7cbc1aea81ec85509d597df2e486abfc9443981ceaee04950db913a4"
+        "scripts/delivery/base/mail.mjs": "fbe18b3678e88db8f98d760d72d39f4a94552c4685e3b8ce27e15d761ed6a981"
       },
       "modes": {
         "scripts/delivery/base/mail.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/mail.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/migrations.mjs",
       "originPath": "modules/delivery-producer/migrations.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/migrations.mjs": "41650d5f2c22c0dbf8c4d8640bc89d872907828b558df4af89c4f70059d4878f"
       },
       "modes": {
         "scripts/delivery/base/migrations.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/migrations.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/native-export.mjs",
       "originPath": "modules/delivery-producer/native-export.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/native-export.mjs": "5c0f90e688f5242dbc2f62416259cbb3074647298df8daa431a7022aa10d1a41"
       },
       "modes": {
         "scripts/delivery/base/native-export.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/native-export.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/package.mjs",
       "originPath": "modules/delivery-producer/package.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/package.mjs": "5a32dec3274b66474e12d5141e973542248ceeecf0f8464f6e9da87d60228cb4"
       },
       "modes": {
         "scripts/delivery/base/package.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/package.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/paths.mjs",
       "originPath": "modules/delivery-producer/paths.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/paths.mjs": "32af2ee0d6e8ce048d04978e2d70f476bdc2a690b1a270d580056641f87a1731"
       },
       "modes": {
         "scripts/delivery/base/paths.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/paths.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/payloads.mjs",
       "originPath": "modules/delivery-producer/payloads.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/payloads.mjs": "da3a9d09860c33bdd0b287bca9abc6210b12d13439e569d178a5b31fec563ee5"
       },
       "modes": {
         "scripts/delivery/base/payloads.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/payloads.mjs"
+      ]
+    },
+    {
+      "path": "scripts/delivery/base/schema/business-field-inputs.mjs",
+      "originPath": "schema/business-field-inputs.mjs",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
+      "files": {
+        "scripts/delivery/base/schema/business-field-inputs.mjs": "b028b576bc85758c4ed400d059d4aae4fdda7a29eeb290fd1032ea15aaf957d1"
+      },
+      "modes": {
+        "scripts/delivery/base/schema/business-field-inputs.mjs": "100644"
+      },
+      "originFiles": [
+        "schema/business-field-inputs.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/schema/dependencies.mjs",
       "originPath": "schema/dependencies.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/schema/dependencies.mjs": "4bfc30fa75029db2727a9d1fb095d4969dc756c5317ac55ce768202bb869e2b7"
       },
       "modes": {
         "scripts/delivery/base/schema/dependencies.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "schema/dependencies.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/schema/json-schema.mjs",
       "originPath": "schema/json-schema.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
-        "scripts/delivery/base/schema/json-schema.mjs": "ed601a8f68d25769ff3706a90f69f1a9e18dd6eb4b3b5f81a18b7cd0dcfc8fa3"
+        "scripts/delivery/base/schema/json-schema.mjs": "f964a1f8bab23bfad0c8b6552d8e717091619fa438e0d6e65a9801e1d97782bc"
       },
       "modes": {
         "scripts/delivery/base/schema/json-schema.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "schema/json-schema.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/schema/setup-validation.mjs",
       "originPath": "schema/setup-validation.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
-        "scripts/delivery/base/schema/setup-validation.mjs": "7ee1a46a742570cd5d3df605732c0777473f419f7b63b6c5ad1c238406a1625f"
+        "scripts/delivery/base/schema/setup-validation.mjs": "89327f524f2e7cfcaf9c750e9a5aa7249c91199a9afd0c14afe9efcf444ad14a"
       },
       "modes": {
         "scripts/delivery/base/schema/setup-validation.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "schema/setup-validation.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/schema/SETUP.schema.json",
       "originPath": "schema/SETUP.schema.json",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
-        "scripts/delivery/base/schema/SETUP.schema.json": "946adc2e484ace3dfee960a58a6215fa55a600079aa7e2cf52264704ece74998"
+        "scripts/delivery/base/schema/SETUP.schema.json": "ac52bac39e7e7e4dace1c22dce370f76df52e7f5bb167730ecfd96b0b7961c86"
       },
       "modes": {
         "scripts/delivery/base/schema/SETUP.schema.json": "100644"
-      }
+      },
+      "originFiles": [
+        "schema/SETUP.schema.json"
+      ]
     },
     {
       "path": "scripts/delivery/base/sign-in.mjs",
       "originPath": "modules/delivery-producer/sign-in.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/sign-in.mjs": "951aada2c00131ab7c808974827654b0fda20bcaeed1f2f97194b25441c03aff"
       },
       "modes": {
         "scripts/delivery/base/sign-in.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/sign-in.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/spec.mjs",
       "originPath": "modules/delivery-producer/spec.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
-        "scripts/delivery/base/spec.mjs": "65179ca5222485513260e8d58aaae6740ae6fe1b27065e96f0d95d197fc6d3f0"
+        "scripts/delivery/base/spec.mjs": "8096a77005cfbed5c620ab52a5eb6fe77f579927c5e2a867387e9063553fbcd2"
       },
       "modes": {
         "scripts/delivery/base/spec.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/spec.mjs"
+      ]
     },
     {
       "path": "scripts/delivery/base/sql-statements.mjs",
       "originPath": "modules/delivery-producer/sql-statements.mjs",
-      "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
       "files": {
         "scripts/delivery/base/sql-statements.mjs": "8819f7f91b7781905796ea35b01dd1a55e08ed3893ff6d8aafaf03d2f35c1c9a"
       },
       "modes": {
         "scripts/delivery/base/sql-statements.mjs": "100644"
-      }
+      },
+      "originFiles": [
+        "modules/delivery-producer/sql-statements.mjs"
+      ]
     },
     {
       "path": "scripts/edition-authoring",
@@ -2293,6 +2376,34 @@
       }
     },
     {
+      "path": "src/base/foundation/runtime/icon-head.ts",
+      "originPath": "foundation/runtime/icon-head.ts",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
+      "files": {
+        "src/base/foundation/runtime/icon-head.ts": "ce4fa9ca48534d926469829abd372d1c81c6de31fb18cb4df567bc84a598e86f"
+      },
+      "modes": {
+        "src/base/foundation/runtime/icon-head.ts": "100644"
+      },
+      "originFiles": [
+        "foundation/runtime/icon-head.ts"
+      ]
+    },
+    {
+      "path": "src/base/foundation/runtime/theme-frame.ts",
+      "originPath": "foundation/runtime/theme-frame.ts",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
+      "files": {
+        "src/base/foundation/runtime/theme-frame.ts": "70d2024eae2a29772e577924dc2542e33685ef25b4f99d32aa12b6f8540dce0b"
+      },
+      "modes": {
+        "src/base/foundation/runtime/theme-frame.ts": "100644"
+      },
+      "originFiles": [
+        "foundation/runtime/theme-frame.ts"
+      ]
+    },
+    {
       "path": "src/base/hydration/intro-guard.ts",
       "originPath": "foundation/runtime/hydration/intro-guard.ts",
       "revision": "6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c",
@@ -2346,6 +2457,323 @@
       "modes": {
         "src/base/icon-head.ts": "100644"
       }
+    },
+    {
+      "path": "src/base/modules/agent-door",
+      "originPath": "modules/agent-door",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
+      "files": {
+        "src/base/modules/agent-door/admission.ts": "c67ee28a1ae61b963619ffc64807baaa37b618aec41d6a2d90f1852f5beebf9e",
+        "src/base/modules/agent-door/ADOPTING.md": "d42162ddfe66be6212df5ed7d7b06bb79c86a94219b6e8ca039fb6bd52b3fc4b",
+        "src/base/modules/agent-door/approval-execution.ts": "184b7fd7f016fb58121746873f4bf8fab621c4d09a1a00e61cf53eedad2fc3b3",
+        "src/base/modules/agent-door/approvals.ts": "45757936fac519de054ca754fd45ea3e6def75f18f1e71cb6a651e6451bf767c",
+        "src/base/modules/agent-door/audit.ts": "cb45fb29821cfa9fd544198154dde76efb0d3c2800e264a318282fdb622e7725",
+        "src/base/modules/agent-door/capabilities.d.mts": "af9a1d9f81a15df8caef2ab257c24b031dab60690984df557b9b82022888f339",
+        "src/base/modules/agent-door/capabilities.mjs": "91b2e22470c325bf5ecf0aa8ef9c4e36f05069407101207ca0e5f0c2fa083695",
+        "src/base/modules/agent-door/CLAUSES.md": "0568321ca8cc6c5ff5056d3e12868795aadfedd17c51aa693dd4517450a9e867",
+        "src/base/modules/agent-door/conformance/audit-pages.mjs": "87ea913c66198c17ad1154b513c1d3cf8a95026b833f8c0de6cc87178c71369c",
+        "src/base/modules/agent-door/conformance/audit-rows.mjs": "37b13e58447f9651a1399824be1a20ec05b6492761594e197e912df47798f5f1",
+        "src/base/modules/agent-door/conformance/audit.mjs": "77d720ebb0c8d2fdc8ef60f59cb24b36dc378e34f11ed0c5de0527235d1a8061",
+        "src/base/modules/agent-door/conformance/authority.d.mts": "8c6807239646015bdac4aefe0afe9714aa9baf6527f1d86fe401b420f62f836f",
+        "src/base/modules/agent-door/conformance/authority.mjs": "5a65a157a288507bb884105abbab65a0876b066f742a8474b33528333c9c0a73",
+        "src/base/modules/agent-door/conformance/crypto.mjs": "4a073f879668dd3ee3e31bb74d8cbdf48c5fdd7e7a7303b7bab2b998258d341e",
+        "src/base/modules/agent-door/conformance/discovery.mjs": "717c388ae1a8888659ac75fd4569fcabfe47d11419110cc5d14694281a42d484",
+        "src/base/modules/agent-door/conformance/fixtures.mjs": "72c80b537f070be9ddddeee743c1c586e98fff3a58cf5ae66a6bd877fec04b54",
+        "src/base/modules/agent-door/conformance/index.mjs": "88d622c1ae17bcfc457dc62302ace87f61565a828322f588e592ce5678843aaf",
+        "src/base/modules/agent-door/conformance/injection.mjs": "677874564cd7e3d6a6f083cffd358c22a05f28cd129b4f22bdb4743186d0b472",
+        "src/base/modules/agent-door/conformance/invocation.mjs": "64449afe0ab3238f635d48f213131b635d19fcd4c08a3b6765c841c13df50025",
+        "src/base/modules/agent-door/conformance/journey.mjs": "8f1150f23271d0dc2acaf03b7737932ed8ab04473fee1fd534ef1dd07da34b1c",
+        "src/base/modules/agent-door/conformance/narrowing.d.mts": "682cfd551854aa5ecaa3db981ab99b98aa8950b9e5dc38a60ab4259c2bbcba12",
+        "src/base/modules/agent-door/conformance/narrowing.mjs": "77c5158dc2f9727e1dc7afe2d566c6996b1caaf045af84cc7a33dc069fa305db",
+        "src/base/modules/agent-door/conformance/negative.mjs": "bdfae9b94852a1ad573e9168fa15aefd973775879d567e9535dc38b24f752f86",
+        "src/base/modules/agent-door/conformance/network-modules.mjs": "ce846475439ffc595440a8bed77bf23a257376b323c3f9b41703f13d27dbdedc",
+        "src/base/modules/agent-door/conformance/network-runtime.mjs": "8478493f22c364c6030f9f205f98919267f7df7080d520463af4a749ae69bcfa",
+        "src/base/modules/agent-door/conformance/policy-phases.mjs": "3669235039bf900138d11d65e1a209ff1052fc9bbcf49efae71cb77c846dc9c2",
+        "src/base/modules/agent-door/conformance/protocol.mjs": "a29c9bba2ec7d35cb46cc146ab3ea8997076a2ce0a290b4e93080b86d367bc37",
+        "src/base/modules/agent-door/conformance/replay.mjs": "407a6b7cc91574588617868317346abc3f0e2c286e73b08da6c1d7f1c8a220ff",
+        "src/base/modules/agent-door/conformance/schema.mjs": "1a5c75ec466435f8c37ceab89a1d912f38dca9c3c81d30c9cd55b04797197cb2",
+        "src/base/modules/agent-door/conformance/security.mjs": "b15ab92d64031a3b102b8ee0f27ac21399dcf16c705c78e45ee7bd09c1a6638e",
+        "src/base/modules/agent-door/conformance/sponsors.mjs": "ce249903bfc98a3b53dc07fc85ad7669cf3133cb942c11ee9ff271b10c20da31",
+        "src/base/modules/agent-door/conformance/step-hooks.mjs": "562f05b26b2cbfe977ec2d2a8c4afb82f401425fc534f46f44d07d626c3cd602",
+        "src/base/modules/agent-door/conformance/subscription.mjs": "5bf894c5681083b3a5b0913235a185fdc94182f61159cf6e2dbe1779be6cb687",
+        "src/base/modules/agent-door/conformance/subset.mjs": "fe1b050ba8fe402bf16291d2fcbbfc3d4032995d477e3123fc7e3788b535f608",
+        "src/base/modules/agent-door/conformance/surface.mjs": "4270b3714052d863998bfa8b081370b0a80c93c2f007172b32567b12914607fc",
+        "src/base/modules/agent-door/conformance/target.mjs": "50b4c58c922d7a07fdedfab45f5f531fe6e46f0fd0c7dd3e7aa572804762ba0e",
+        "src/base/modules/agent-door/conformance/tool-name.d.mts": "1decc30a4b3ad7eeb46248114ef01a4967fea47129c00f25794d75c9912f505a",
+        "src/base/modules/agent-door/conformance/tool-name.mjs": "2bedd64a69b1e2a7dc02f7218cdda66e541a955b1a0cfc289d15d96630e616e8",
+        "src/base/modules/agent-door/conformance/webhooks.mjs": "0ab018eacc5568b8f4e9c6302ed1ca28c01221cad943723136ff96544bf2a7ee",
+        "src/base/modules/agent-door/counting.ts": "cdd87d7b14b898985239a22cbde707c6b6e6c9d5f3d474b335aca2d478d4b57a",
+        "src/base/modules/agent-door/credentials.ts": "a3e4fdd6bb00c2b2ef6049a3dc1c1c69bc38922b5eafe8186fb3de5b4ebba501",
+        "src/base/modules/agent-door/errors.ts": "eddb4f4e05a028fb91ecf33cec78568424bf2bb329c6ca3c9b45abbcc84a56fd",
+        "src/base/modules/agent-door/events.ts": "c5e911d9b692551224ae02e564232cfef2c6462dbe91a5d7e07ea0571a85cab9",
+        "src/base/modules/agent-door/execution.ts": "472e879863060e8d832bd926955f7b5d068c3b723f96fecd723d48e5d4a9d2d2",
+        "src/base/modules/agent-door/index.ts": "b8bb1a0622747b9c5d9ea8bd4897dd29498b60ac0bc631985e61c346cfcf3dd8",
+        "src/base/modules/agent-door/json-schema.ts": "65870e0cf79242318ec88ccb791d58062c1c7b417eb2cedabbfe26d8295755c9",
+        "src/base/modules/agent-door/native-proof.ts": "fcc9beacaf4afaeb629fb6a06d22b2f0f534d6cf6b37e0cc9f198dd51f24d57e",
+        "src/base/modules/agent-door/operation.ts": "564b7fda0d9d1d0bfe460eafdb2f6899bff86c0c1d1db3eed1ab5a9d8312b5b9",
+        "src/base/modules/agent-door/operator-people.ts": "394e4ecc816dad9b110f15c6b313c3f0a28617fe2a24f51a19e2c1829acd17a6",
+        "src/base/modules/agent-door/page-style.ts": "7cb531ab768ff8f216cf72b606c1af560f22b2eae5a1144d8dfdef27e88fbdd1",
+        "src/base/modules/agent-door/page-words.ts": "74ea381fb309e077771b5614cc491badfe54012b027e8148e9368778be7b280b",
+        "src/base/modules/agent-door/pages.ts": "187ddadb79a7cebdfdcaa62929dba75a3f755f4465153b219292975e766b4e46",
+        "src/base/modules/agent-door/people.ts": "b9aeb6c3190be3b4ca1f38345a55634cc7e34eda671f0467839b005406e4ac9e",
+        "src/base/modules/agent-door/person-doors.ts": "ae6ca4f854809578d3b3402a9779a0dc4def0ff1a887d9dc3b8ec924e644b190",
+        "src/base/modules/agent-door/pipeline.ts": "c1a1072f3f1fec84f33c365719c61fa4cdfdba384155385f6ad300da964e8eed",
+        "src/base/modules/agent-door/policy-store.ts": "79caa78b1afd31e960aafe7a3eaf848ab17ca7c18116a3deea253d8c022304c9",
+        "src/base/modules/agent-door/policy/catalogue.ts": "7c15685b0f2a308da0cc6645f066dd8e64948c1da582550b387f69c230f8d179",
+        "src/base/modules/agent-door/policy/decide.ts": "b88c4b049a3000b5a823178ea400b9d097fcdb45a54c3f3a2c0b2ff7bbbc864d",
+        "src/base/modules/agent-door/policy/document.ts": "6b8c3a47aa12443372f77cfa5f6e4211087a548ff382e8e3e45af3020c7507e9",
+        "src/base/modules/agent-door/policy/PROVENANCE.md": "474be9db57db97b0ac2b3f7237564c542b69cc3562f07b6a6d4cbfa15adccb04",
+        "src/base/modules/agent-door/policy/SHA256SUMS": "ac4707ec9d11acf6dd3c71b31b6ef61f845f737224a22b2f70106a3c9dd4d6d9",
+        "src/base/modules/agent-door/policy/vectors.json": "033f0681932e76f7d2787563e0e72fa36bd201bccaf3cd733085a11137cdc9ad",
+        "src/base/modules/agent-door/principal.ts": "5c08991834a175c8dcf68b8a41f7a2fc278e0708ff65216db0e95836e9b4d41a",
+        "src/base/modules/agent-door/README.md": "3e75f0b4df0d76821cae6528718eb7d7f39f5da67db824f711db012a3905d642",
+        "src/base/modules/agent-door/registry.ts": "2759ba22b30528c322a5d4605ed41c690fc0bf33f86c3e0a57c252bff20cef24",
+        "src/base/modules/agent-door/resource-tool.ts": "6d70880fc5d58cfdb1c3ad10a5085eac684ed85639bbbf4a7ee4be307e538e5d",
+        "src/base/modules/agent-door/reviews.ts": "9884027e619179eba540fc8d9ffce871facc898c77d78479e0e16a9c37922f9b",
+        "src/base/modules/agent-door/schema/agent-door.sql": "016d8a98b964385f5c4a13447361c3c783910a76aaf4606b0e0081482bc819cc",
+        "src/base/modules/agent-door/subscriptions.ts": "c837a9ade38b349969458c022ce7ea2ff06045ac2dab2804a1b60ef0ebc50c16",
+        "src/base/modules/agent-door/target.ts": "4a0de4958e58b45fc0f5069df9b3cfd43e5fb519472cac64eca182621e7823b5",
+        "src/base/modules/agent-door/transport.ts": "03ff14a4a24406d40428cec0cb38e9b12674cba73852d5599a1c9437052092f7",
+        "src/base/modules/agent-door/types.ts": "4fec6765ad72c5ec287b07518d11cf911f03668659eaf5efea780b65d5363878",
+        "src/base/modules/agent-door/wire.ts": "29b000c60300a20e5feb3c90d6bd0dde7af562b43c99b4aa27260c983997163f"
+      },
+      "modes": {
+        "src/base/modules/agent-door/admission.ts": "100644",
+        "src/base/modules/agent-door/ADOPTING.md": "100644",
+        "src/base/modules/agent-door/approval-execution.ts": "100644",
+        "src/base/modules/agent-door/approvals.ts": "100644",
+        "src/base/modules/agent-door/audit.ts": "100644",
+        "src/base/modules/agent-door/capabilities.d.mts": "100644",
+        "src/base/modules/agent-door/capabilities.mjs": "100644",
+        "src/base/modules/agent-door/CLAUSES.md": "100644",
+        "src/base/modules/agent-door/conformance/audit-pages.mjs": "100644",
+        "src/base/modules/agent-door/conformance/audit-rows.mjs": "100644",
+        "src/base/modules/agent-door/conformance/audit.mjs": "100644",
+        "src/base/modules/agent-door/conformance/authority.d.mts": "100644",
+        "src/base/modules/agent-door/conformance/authority.mjs": "100644",
+        "src/base/modules/agent-door/conformance/crypto.mjs": "100644",
+        "src/base/modules/agent-door/conformance/discovery.mjs": "100644",
+        "src/base/modules/agent-door/conformance/fixtures.mjs": "100644",
+        "src/base/modules/agent-door/conformance/index.mjs": "100644",
+        "src/base/modules/agent-door/conformance/injection.mjs": "100644",
+        "src/base/modules/agent-door/conformance/invocation.mjs": "100644",
+        "src/base/modules/agent-door/conformance/journey.mjs": "100644",
+        "src/base/modules/agent-door/conformance/narrowing.d.mts": "100644",
+        "src/base/modules/agent-door/conformance/narrowing.mjs": "100644",
+        "src/base/modules/agent-door/conformance/negative.mjs": "100644",
+        "src/base/modules/agent-door/conformance/network-modules.mjs": "100644",
+        "src/base/modules/agent-door/conformance/network-runtime.mjs": "100644",
+        "src/base/modules/agent-door/conformance/policy-phases.mjs": "100644",
+        "src/base/modules/agent-door/conformance/protocol.mjs": "100644",
+        "src/base/modules/agent-door/conformance/replay.mjs": "100644",
+        "src/base/modules/agent-door/conformance/schema.mjs": "100644",
+        "src/base/modules/agent-door/conformance/security.mjs": "100644",
+        "src/base/modules/agent-door/conformance/sponsors.mjs": "100644",
+        "src/base/modules/agent-door/conformance/step-hooks.mjs": "100644",
+        "src/base/modules/agent-door/conformance/subscription.mjs": "100644",
+        "src/base/modules/agent-door/conformance/subset.mjs": "100644",
+        "src/base/modules/agent-door/conformance/surface.mjs": "100644",
+        "src/base/modules/agent-door/conformance/target.mjs": "100644",
+        "src/base/modules/agent-door/conformance/tool-name.d.mts": "100644",
+        "src/base/modules/agent-door/conformance/tool-name.mjs": "100644",
+        "src/base/modules/agent-door/conformance/webhooks.mjs": "100644",
+        "src/base/modules/agent-door/counting.ts": "100644",
+        "src/base/modules/agent-door/credentials.ts": "100644",
+        "src/base/modules/agent-door/errors.ts": "100644",
+        "src/base/modules/agent-door/events.ts": "100644",
+        "src/base/modules/agent-door/execution.ts": "100644",
+        "src/base/modules/agent-door/index.ts": "100644",
+        "src/base/modules/agent-door/json-schema.ts": "100644",
+        "src/base/modules/agent-door/native-proof.ts": "100644",
+        "src/base/modules/agent-door/operation.ts": "100644",
+        "src/base/modules/agent-door/operator-people.ts": "100644",
+        "src/base/modules/agent-door/page-style.ts": "100644",
+        "src/base/modules/agent-door/page-words.ts": "100644",
+        "src/base/modules/agent-door/pages.ts": "100644",
+        "src/base/modules/agent-door/people.ts": "100644",
+        "src/base/modules/agent-door/person-doors.ts": "100644",
+        "src/base/modules/agent-door/pipeline.ts": "100644",
+        "src/base/modules/agent-door/policy-store.ts": "100644",
+        "src/base/modules/agent-door/policy/catalogue.ts": "100644",
+        "src/base/modules/agent-door/policy/decide.ts": "100644",
+        "src/base/modules/agent-door/policy/document.ts": "100644",
+        "src/base/modules/agent-door/policy/PROVENANCE.md": "100644",
+        "src/base/modules/agent-door/policy/SHA256SUMS": "100644",
+        "src/base/modules/agent-door/policy/vectors.json": "100644",
+        "src/base/modules/agent-door/principal.ts": "100644",
+        "src/base/modules/agent-door/README.md": "100644",
+        "src/base/modules/agent-door/registry.ts": "100644",
+        "src/base/modules/agent-door/resource-tool.ts": "100644",
+        "src/base/modules/agent-door/reviews.ts": "100644",
+        "src/base/modules/agent-door/schema/agent-door.sql": "100644",
+        "src/base/modules/agent-door/subscriptions.ts": "100644",
+        "src/base/modules/agent-door/target.ts": "100644",
+        "src/base/modules/agent-door/transport.ts": "100644",
+        "src/base/modules/agent-door/types.ts": "100644",
+        "src/base/modules/agent-door/wire.ts": "100644"
+      },
+      "originFiles": [
+        "modules/agent-door/ADOPTING.md",
+        "modules/agent-door/CLAUSES.md",
+        "modules/agent-door/README.md",
+        "modules/agent-door/admission.ts",
+        "modules/agent-door/approval-execution.ts",
+        "modules/agent-door/approvals.ts",
+        "modules/agent-door/audit.ts",
+        "modules/agent-door/capabilities.d.mts",
+        "modules/agent-door/capabilities.mjs",
+        "modules/agent-door/conformance/audit-pages.mjs",
+        "modules/agent-door/conformance/audit-rows.mjs",
+        "modules/agent-door/conformance/audit.mjs",
+        "modules/agent-door/conformance/authority.d.mts",
+        "modules/agent-door/conformance/authority.mjs",
+        "modules/agent-door/conformance/crypto.mjs",
+        "modules/agent-door/conformance/discovery.mjs",
+        "modules/agent-door/conformance/fixtures.mjs",
+        "modules/agent-door/conformance/index.mjs",
+        "modules/agent-door/conformance/injection.mjs",
+        "modules/agent-door/conformance/invocation.mjs",
+        "modules/agent-door/conformance/journey.mjs",
+        "modules/agent-door/conformance/narrowing.d.mts",
+        "modules/agent-door/conformance/narrowing.mjs",
+        "modules/agent-door/conformance/negative.mjs",
+        "modules/agent-door/conformance/network-modules.mjs",
+        "modules/agent-door/conformance/network-runtime.mjs",
+        "modules/agent-door/conformance/policy-phases.mjs",
+        "modules/agent-door/conformance/protocol.mjs",
+        "modules/agent-door/conformance/replay.mjs",
+        "modules/agent-door/conformance/schema.mjs",
+        "modules/agent-door/conformance/security.mjs",
+        "modules/agent-door/conformance/sponsors.mjs",
+        "modules/agent-door/conformance/step-hooks.mjs",
+        "modules/agent-door/conformance/subscription.mjs",
+        "modules/agent-door/conformance/subset.mjs",
+        "modules/agent-door/conformance/surface.mjs",
+        "modules/agent-door/conformance/target.mjs",
+        "modules/agent-door/conformance/tool-name.d.mts",
+        "modules/agent-door/conformance/tool-name.mjs",
+        "modules/agent-door/conformance/webhooks.mjs",
+        "modules/agent-door/counting.ts",
+        "modules/agent-door/credentials.ts",
+        "modules/agent-door/errors.ts",
+        "modules/agent-door/events.ts",
+        "modules/agent-door/execution.ts",
+        "modules/agent-door/index.ts",
+        "modules/agent-door/json-schema.ts",
+        "modules/agent-door/native-proof.ts",
+        "modules/agent-door/operation.ts",
+        "modules/agent-door/operator-people.ts",
+        "modules/agent-door/page-style.ts",
+        "modules/agent-door/page-words.ts",
+        "modules/agent-door/pages.ts",
+        "modules/agent-door/people.ts",
+        "modules/agent-door/person-doors.ts",
+        "modules/agent-door/pipeline.ts",
+        "modules/agent-door/policy-store.ts",
+        "modules/agent-door/policy/PROVENANCE.md",
+        "modules/agent-door/policy/SHA256SUMS",
+        "modules/agent-door/policy/catalogue.ts",
+        "modules/agent-door/policy/decide.ts",
+        "modules/agent-door/policy/document.ts",
+        "modules/agent-door/policy/vectors.json",
+        "modules/agent-door/principal.ts",
+        "modules/agent-door/registry.ts",
+        "modules/agent-door/resource-tool.ts",
+        "modules/agent-door/reviews.ts",
+        "modules/agent-door/schema/agent-door.sql",
+        "modules/agent-door/subscriptions.ts",
+        "modules/agent-door/target.ts",
+        "modules/agent-door/tests/adoption-gaps.test.ts",
+        "modules/agent-door/tests/door.test.ts",
+        "modules/agent-door/tests/execution.test.ts",
+        "modules/agent-door/tests/identity.test.ts",
+        "modules/agent-door/tests/mutation-replay.test.ts",
+        "modules/agent-door/tests/mutation-tools.ts",
+        "modules/agent-door/tests/principal.test.ts",
+        "modules/agent-door/tests/queued-context.test.ts",
+        "modules/agent-door/tests/read-replay.test.ts",
+        "modules/agent-door/tests/resource-snapshot.test.ts",
+        "modules/agent-door/tests/revision-probes.fixture.mjs",
+        "modules/agent-door/tests/runtime.mjs",
+        "modules/agent-door/tests/schema.test.ts",
+        "modules/agent-door/tests/seed.ts",
+        "modules/agent-door/tests/sponsor-surface.fixture.mjs",
+        "modules/agent-door/tests/sponsor-surface.test.ts",
+        "modules/agent-door/tests/sponsor-tools.ts",
+        "modules/agent-door/tests/target.fixture.mjs",
+        "modules/agent-door/tests/target.test.ts",
+        "modules/agent-door/tests/types.check.mts",
+        "modules/agent-door/transport.ts",
+        "modules/agent-door/types.ts",
+        "modules/agent-door/wire.ts"
+      ],
+      "adapted": {
+        "src/base/modules/agent-door/operator-people.ts": "2135c394939f4a737adabdc8003b0e667b31ac5a"
+      },
+      "acknowledged": {
+        "src/base/modules/agent-door/operator-people.ts": {
+          "sha256": "30438f07ebcec2be4fa52668c511460a045dcbfae1f979808c5ee0c0d6fc5935",
+          "mode": "100644"
+        }
+      }
+    },
+    {
+      "path": "src/base/modules/business-settings",
+      "originPath": "modules/business-settings",
+      "revision": "2135c394939f4a737adabdc8003b0e667b31ac5a",
+      "files": {
+        "src/base/modules/business-settings/ADOPTING.md": "5d7383182eb0ca92ce53b51d93f0199412366873ba7281cc0610857f76e77884",
+        "src/base/modules/business-settings/apply.ts": "037784c7d783c36577d351c9a6bddab5780393e192883ec08616a4d480e9df48",
+        "src/base/modules/business-settings/index.ts": "159975e2cd97f17ecfb577ea69052d4788500ca09cbe40707392355f924b658d",
+        "src/base/modules/business-settings/json.ts": "884dd25549f8d425e66b5d2e4d32952c5670104fe9e27a04def54394ed7cd5fd",
+        "src/base/modules/business-settings/logo.ts": "068b78c31efcd95452147f312a5a18bcc8ba99d88a952979d4e90b7c7b9d38b0",
+        "src/base/modules/business-settings/README.md": "310477dd951860bb2b5ee6215fb836f407d9d6657543ff794af96f810affd36f",
+        "src/base/modules/business-settings/role-domain.d.mts": "4e318e9b1b6fccb9eb7c17e7dbcbd1c3e0d51267dd9de3fbdf0531f48980f091",
+        "src/base/modules/business-settings/role-domain.mjs": "0ea6ac07a8b6c7197327cec34ab7b1b47a09996c3fd77ff175d0def6c06d1b71",
+        "src/base/modules/business-settings/schema/0001_business_settings.sql": "a16f736a781aa3fe02a2e090c993f8c360c904f9fb6d86126acdab6e1f24e773",
+        "src/base/modules/business-settings/schema/0002_business_people.sql": "51aa39622d866b987d71b6e37c9a8300e7f24c54a55611edaab669ed051b01cd",
+        "src/base/modules/business-settings/store.ts": "3645f9e9f282f2aa5fc5f189188ddd7a139de6361ad1966bf50dfad83cee29d5",
+        "src/base/modules/business-settings/team.ts": "95ced6e343f16a4c92c8d26ada90c7d5790e86c4b82e87f978f4f8a4a33dfd06",
+        "src/base/modules/business-settings/types.ts": "4ada2afb8c4108a42ac8cecb33b231e25f20c05b5843662bda2cc354d995cf31",
+        "src/base/modules/business-settings/validation.ts": "610a85823641c2a7b87e7bad819ba2d13f309d3a4e3922d356c4be6a7b5cf8a8",
+        "src/base/modules/business-settings/verify.ts": "021a40087050c4ef1189f80052ef3274e4826be13f21d203021ed138267ad80f"
+      },
+      "modes": {
+        "src/base/modules/business-settings/ADOPTING.md": "100644",
+        "src/base/modules/business-settings/apply.ts": "100644",
+        "src/base/modules/business-settings/index.ts": "100644",
+        "src/base/modules/business-settings/json.ts": "100644",
+        "src/base/modules/business-settings/logo.ts": "100644",
+        "src/base/modules/business-settings/README.md": "100644",
+        "src/base/modules/business-settings/role-domain.d.mts": "100644",
+        "src/base/modules/business-settings/role-domain.mjs": "100644",
+        "src/base/modules/business-settings/schema/0001_business_settings.sql": "100644",
+        "src/base/modules/business-settings/schema/0002_business_people.sql": "100644",
+        "src/base/modules/business-settings/store.ts": "100644",
+        "src/base/modules/business-settings/team.ts": "100644",
+        "src/base/modules/business-settings/types.ts": "100644",
+        "src/base/modules/business-settings/validation.ts": "100644",
+        "src/base/modules/business-settings/verify.ts": "100644"
+      },
+      "originFiles": [
+        "modules/business-settings/ADOPTING.md",
+        "modules/business-settings/README.md",
+        "modules/business-settings/apply.ts",
+        "modules/business-settings/index.ts",
+        "modules/business-settings/json.ts",
+        "modules/business-settings/logo.ts",
+        "modules/business-settings/role-domain.d.mts",
+        "modules/business-settings/role-domain.mjs",
+        "modules/business-settings/schema/0001_business_settings.sql",
+        "modules/business-settings/schema/0002_business_people.sql",
+        "modules/business-settings/store.ts",
+        "modules/business-settings/team.ts",
+        "modules/business-settings/testing/fixtures/keys.json",
+        "modules/business-settings/testing/index.mjs",
+        "modules/business-settings/types.ts",
+        "modules/business-settings/validation.ts",
+        "modules/business-settings/verify.ts"
+      ]
     },
     {
       "path": "src/base/page-style.ts",

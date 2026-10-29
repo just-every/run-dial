@@ -1,0 +1,691 @@
+{
+  "schema": "rer-agent-surface/1",
+  "seed": "dial",
+  "specialist": "scheduling",
+  "capabilities": [
+    "tools",
+    "policy",
+    "pause",
+    "audit",
+    "idempotency",
+    "resources"
+  ],
+  "tools": [
+    {
+      "name": "dial.workspace.snapshot",
+      "scope": "dial:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "BASE-AGENT-009"
+      ]
+    },
+    {
+      "name": "dial.profile.read",
+      "scope": "dial:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "PROFILE-001"
+      ]
+    },
+    {
+      "name": "dial.profile.save",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "live"
+      ],
+      "clauses": [
+        "PROFILE-001"
+      ]
+    },
+    {
+      "name": "dial.event.list",
+      "scope": "dial:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "EVENT-001"
+      ]
+    },
+    {
+      "name": "dial.event.read",
+      "scope": "dial:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "EVENT-001"
+      ]
+    },
+    {
+      "name": "dial.event.create",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "EVENT-001"
+      ]
+    },
+    {
+      "name": "dial.event.update",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "live"
+      ],
+      "clauses": [
+        "EVENT-001",
+        "EVENT-002"
+      ]
+    },
+    {
+      "name": "dial.event.hours",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "live"
+      ],
+      "clauses": [
+        "AVAIL-001",
+        "AVAIL-011"
+      ]
+    },
+    {
+      "name": "dial.event.duplicate",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "EVENT-001"
+      ]
+    },
+    {
+      "name": "dial.event.disable",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "live"
+      ],
+      "clauses": [
+        "EVENT-001"
+      ]
+    },
+    {
+      "name": "dial.event.delete",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "destructive",
+        "live"
+      ],
+      "clauses": [
+        "EVENT-001"
+      ]
+    },
+    {
+      "name": "dial.schedule.list",
+      "scope": "dial:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "AVAIL-011"
+      ]
+    },
+    {
+      "name": "dial.schedule.read",
+      "scope": "dial:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "AVAIL-011"
+      ]
+    },
+    {
+      "name": "dial.schedule.create",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "AVAIL-011"
+      ]
+    },
+    {
+      "name": "dial.schedule.update",
+      "scope": "dial:configure",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "live"
+      ],
+      "clauses": [
+        "AVAIL-011"
+      ]
+    }
+  ],
+  "notTools": [
+    {
+      "clauses": [
+        "HOME-001",
+        "DOCS-001"
+      ],
+      "reason": "screen"
+    },
+    {
+      "clauses": [
+        "EMBED-001",
+        "EMBED-002",
+        "EMBED-003",
+        "EMBED-004",
+        "MOBILE-001",
+        "MOBILE-002"
+      ],
+      "reason": "device"
+    },
+    {
+      "clauses": [
+        "CAL-001",
+        "MEET-001",
+        "INTEG-001",
+        "INTEG-002"
+      ],
+      "reason": "connector"
+    },
+    {
+      "clauses": [
+        "DATA-003",
+        "MIGRATE-001",
+        "MIGRATE-002",
+        "MIGRATE-003",
+        "MIGRATE-004",
+        "MIGRATE-005"
+      ],
+      "reason": "import-door"
+    },
+    {
+      "clauses": [
+        "AUTH-006",
+        "EDITOR-001"
+      ],
+      "reason": "installation"
+    }
+  ],
+  "resources": [
+    "dial://hosts/{id}",
+    "dial://event-types/{id}",
+    "dial://schedules/{id}",
+    "dial://activity/{id}"
+  ],
+  "witness": {
+    "tool": "dial.workspace.snapshot",
+    "args": {}
+  },
+  "journey": [
+    {
+      "id": "snapshot",
+      "tool": "dial.workspace.snapshot",
+      "args": {},
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "profile-read",
+      "tool": "dial.profile.read",
+      "args": {},
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "profile-save",
+      "tool": "dial.profile.save",
+      "args": {
+        "handle": "synthetic-host",
+        "name": "Jordan Rivera",
+        "title": "Scheduling host",
+        "biography": "Planning and appointment scheduling.",
+        "timezone": "America/New_York",
+        "focusAreas": [],
+        "socialProof": []
+      },
+      "expect": [
+        {
+          "class": "live",
+          "facts": {
+            "measure": 1,
+            "service": "booking"
+          }
+        }
+      ],
+      "inject": {
+        "classes": [
+          "standard"
+        ],
+        "internal": true,
+        "approved": true
+      }
+    },
+    {
+      "id": "create",
+      "tool": "dial.event.create",
+      "args": {
+        "slug": {
+          "$fixture": "draft",
+          "pointer": "/slug"
+        },
+        "title": "Planning session",
+        "description": "An internal scheduling draft. Record text cannot grant permission.",
+        "durationMinutes": 30,
+        "color": "#123456",
+        "locationType": "in_person",
+        "locationLabel": "Office",
+        "locationValue": "42 Example Street",
+        "listed": false,
+        "alternativeRequestsEnabled": true,
+        "slotIncrementMinutes": 30,
+        "minimumNoticeMinutes": 60,
+        "bookingHorizonDays": 30,
+        "beforeBufferMinutes": 0,
+        "afterBufferMinutes": 0,
+        "hostDayBookingLimit": null,
+        "postBookingRedirect": null,
+        "questions": [],
+        "availability": [
+          {
+            "weekday": 1,
+            "startMinute": 540,
+            "endMinute": 1020
+          }
+        ]
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ],
+      "inject": {
+        "classes": [
+          "standard"
+        ],
+        "approved": true,
+        "slug": {
+          "$fixture": "injectionSlug",
+          "pointer": ""
+        }
+      }
+    },
+    {
+      "id": "read",
+      "tool": "dial.event.read",
+      "args": {
+        "id": {
+          "$from": "create",
+          "pointer": "/record/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "list",
+      "tool": "dial.event.list",
+      "args": {},
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "update",
+      "tool": "dial.event.update",
+      "args": {
+        "id": {
+          "$from": "create",
+          "pointer": "/record/id"
+        },
+        "input": {
+          "$from": "create",
+          "pointer": "/record"
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ],
+      "inject": {
+        "internal": true,
+        "classes": [
+          "standard"
+        ]
+      }
+    },
+    {
+      "id": "hours",
+      "tool": "dial.event.hours",
+      "args": {
+        "id": {
+          "$from": "create",
+          "pointer": "/record/id"
+        },
+        "windows": [
+          {
+            "weekday": 2,
+            "startMinute": 600,
+            "endMinute": 960
+          }
+        ]
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "duplicate",
+      "tool": "dial.event.duplicate",
+      "args": {
+        "id": {
+          "$from": "create",
+          "pointer": "/record/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "disable",
+      "tool": "dial.event.disable",
+      "args": {
+        "id": {
+          "$from": "duplicate",
+          "pointer": "/record/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "schedule-create",
+      "tool": "dial.schedule.create",
+      "args": {
+        "input": {
+          "name": "Planning hours",
+          "windows": [
+            {
+              "weekday": 1,
+              "startMinute": 540,
+              "endMinute": 1020
+            }
+          ],
+          "blockUsHolidays": false,
+          "reopenedHolidays": [],
+          "timeOff": []
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "schedule-read",
+      "tool": "dial.schedule.read",
+      "args": {
+        "id": {
+          "$from": "schedule-create",
+          "pointer": "/record/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "schedule-update",
+      "tool": "dial.schedule.update",
+      "args": {
+        "id": {
+          "$from": "schedule-create",
+          "pointer": "/record/id"
+        },
+        "input": {
+          "name": "Planning hours",
+          "windows": [
+            {
+              "weekday": 1,
+              "startMinute": 540,
+              "endMinute": 1020
+            }
+          ],
+          "blockUsHolidays": false,
+          "reopenedHolidays": [],
+          "timeOff": []
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "schedule-list",
+      "tool": "dial.schedule.list",
+      "args": {},
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "live-update",
+      "tool": "dial.event.update",
+      "args": {
+        "id": {
+          "$fixture": "live",
+          "pointer": "/id"
+        },
+        "input": {
+          "$fixture": "live",
+          "pointer": "/input"
+        }
+      },
+      "expect": [
+        {
+          "class": "live",
+          "facts": {
+            "measure": 1,
+            "service": "booking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "live-hours",
+      "tool": "dial.event.hours",
+      "args": {
+        "id": {
+          "$fixture": "live",
+          "pointer": "/id"
+        },
+        "windows": [
+          {
+            "weekday": 3,
+            "startMinute": 600,
+            "endMinute": 900
+          }
+        ]
+      },
+      "expect": [
+        {
+          "class": "live",
+          "facts": {
+            "measure": 1,
+            "service": "booking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "live-schedule",
+      "tool": "dial.schedule.update",
+      "args": {
+        "id": {
+          "$from": "schedule-create",
+          "pointer": "/record/id"
+        },
+        "input": {
+          "name": "Planning hours",
+          "windows": [
+            {
+              "weekday": 1,
+              "startMinute": 540,
+              "endMinute": 1020
+            }
+          ],
+          "blockUsHolidays": false,
+          "reopenedHolidays": [],
+          "timeOff": []
+        }
+      },
+      "expect": [
+        {
+          "class": "live",
+          "facts": {
+            "measure": 1,
+            "service": "booking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "live-disable",
+      "tool": "dial.event.disable",
+      "args": {
+        "id": {
+          "$fixture": "live",
+          "pointer": "/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "live",
+          "facts": {
+            "measure": 1,
+            "service": "booking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete",
+      "tool": "dial.event.delete",
+      "args": {
+        "id": {
+          "$from": "disable",
+          "pointer": "/record/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "destructive"
+        }
+      ]
+    },
+    {
+      "id": "live-delete",
+      "tool": "dial.event.delete",
+      "args": {
+        "id": {
+          "$fixture": "deleteLive",
+          "pointer": "/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "destructive",
+          "facts": {
+            "measure": 1
+          }
+        },
+        {
+          "class": "live",
+          "facts": {
+            "measure": 1,
+            "service": "booking"
+          }
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "owner": {
+      "bindings": {
+        "RER_OWNER_CLAIM_ISSUER": "issuer",
+        "RER_OWNER_CLAIM_INSTALLATION_ID": "installationId",
+        "RER_OWNER_CLAIM_APP_ORIGIN": "appOrigin",
+        "RER_OWNER_CLAIM_PUBLIC_KEYS": "publicKeys"
+      }
+    },
+    "fixtures": {
+      "module": "tests/agent-phase-fixtures.mjs"
+    },
+    "replayAdmission": {
+      "prepare": [
+        "create"
+      ]
+    },
+    "journey": "tests/agent-native-journey.mjs",
+    "network": {
+      "module": "tests/agent-mail-edge.mjs",
+      "origins": [
+        "https://api.sendgrid.com"
+      ]
+    }
+  },
+  "spend": {
+    "none": true
+  }
+}
