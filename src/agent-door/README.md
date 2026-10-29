@@ -103,3 +103,22 @@ evidence stays retained; erasure never invents a person's approval or an Undo.
 
 The public Run site and demo navigation records retain their existing 6d38b54a
 pin and bytes. Mounting the agent door does not refresh those public records.
+
+Known upstream completion limits remain visible. The 0.2.86 harness reuses native
+fixture state across autonomous, held and blocked passes, so a revoked OAuth
+connection, merged client or revoked link is not prepared afresh between passes
+(`conformance/index.mjs:27-29`). Native adapters must retain their real refusals.
+The runtime also resolves targets before replay lookup (`pipeline.ts:71`) and
+reclassifies before returning an approved result (`pipeline.ts:104-121`). A
+completed deletion can therefore return `not_found` on its receipt retry, and a
+completed disable/clear can return `review_required` after its native risk has
+fallen to standard. Preserve the once-only native effect and its truthful current
+classes; do not fabricate a record, replay an outside effect or freeze a risk
+class to hide these upstream receipt limitations.
+
+Legacy archive compatibility also needs an upstream change at this pin. The
+listed-release version 2 archive has no schema-object inventory. Base 0.2.86
+`modules/portability/import.mjs:39` refuses its older destination identity before
+Dial's exact prior schema proof and declared row upgrades can run. Native restore
+stays empty on refusal. No unverified-schema acknowledgment is added, no archive
+is altered, and the native DATA-001 requirement is retained.
