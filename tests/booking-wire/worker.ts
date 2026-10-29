@@ -1,3 +1,4 @@
+import { runWorkflows } from "../../src/core/features/workflows";
 import { webhookFixtures } from "./webhook-fixtures";
 import { webhookWire } from "./webhook-wire";
 import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
@@ -34,6 +35,13 @@ export default {
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
     const webhookFixture = await webhookFixtures(request, servicesFor(env), env);
     if (webhookFixture) return webhookFixture;
+    if (url.pathname === "/__fixtures/workflows-run" && request.method === "POST") {
+      const {now,deliver}=await request.json<{now:string;deliver?:boolean}>(),clock=new Date(now);
+      const result=await runWorkflows(env.DB,parseRuntimeEnvironment(env),clock);
+      if(deliver){const services=servicesFor(env);const ids=(await env.DB.prepare("SELECT id FROM delivery_outbox WHERE json_extract(payload_json,'$.messageKind')='workflow' AND state='pending' AND next_attempt_at<=?").bind(clock.toISOString()).all<{id:string}>()).results;
+        for(const {id} of ids)await services.delivery.process({outboxId:id},clock);}
+      return Response.json(result);
+    }
     if (url.pathname === "/__test/mail") return capturedMail(env.DB);
     if (url.pathname === "/wire/init") { await initializeWire(providerDb(env)); return Response.json({ ok: true }); }
     if (url.pathname === "/wire/state") {

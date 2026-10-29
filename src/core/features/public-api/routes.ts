@@ -7,6 +7,7 @@ import { bookingAllowed, bookingView, eventAllowed, hostAllowed, idempotent, rat
 import { workflowRoutes } from "../workflows";
 import { resourceRoutes } from "./resources";
 import { openApiDocument } from "./spec";
+import { pendingBooking, pendingConfirmation } from "./booking-continuation";
 import { apiAvailabilityQuerySchema as availability, apiBookingCreateSchema as create, apiCancellationSchema as cancellation, apiRescheduleSchema as reschedule, apiAttendanceSchema as attendance } from "./request-schemas";
 
 const error=(code:string,message="This request cannot be completed.")=>({error:{code,message,request_id:createId()}});
@@ -40,15 +41,20 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
     const credential=c.get("apiCredential"),limit=Number(c.req.query("limit")??"50");let after="";
     if(!Number.isInteger(limit)||limit<1||limit>100)return refusal(c,400,"invalid_pagination","Choose a limit from 1 to 100.");
     try{if(c.req.query("cursor")){after=atob(c.req.query("cursor")!);if(!/^[0-9A-Z]{26}$/.test(after))throw new Error();}}catch{return refusal(c,400,"invalid_cursor","This cursor is invalid.");}
-    const ids=(await c.get("apiDatabase").prepare(`SELECT id FROM bookings b WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
+    const ids=(await c.get("apiDatabase").prepare(`SELECT id FROM (
+      SELECT id,event_type_id FROM bookings
+      UNION SELECT booking_id,event_type_id FROM booking_approval_requests WHERE state='pending'
+      UNION SELECT json_extract(claim_json,'$.bookingId'),event_type_id FROM payment_holds WHERE state IN ('held','processing') AND claim_json IS NOT NULL
+    ) b WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
       .bind(after,credential.teamId,credential.teamId,limit+1).all<{id:string}>()).results;
     const data=[];
-    for(const row of ids.slice(0,limit)){const booking=await bookingAllowed(c,credential,row.id);if(booking)data.push(bookingView(booking));}
+    for(const row of ids.slice(0,limit)){const booking=await bookingAllowed(c,credential,row.id),pending=booking?undefined:await pendingBooking(c,row.id);if(booking)data.push(bookingView(booking));else if(pending)data.push(pending);}
     return c.json({data,nextCursor:ids.length>limit?btoa(ids[limit-1].id):null});
   })
   .get("/api/v1/bookings/:id",async c=>{
     const booking=await bookingAllowed(c,c.get("apiCredential"),c.req.param("id"));
-    return booking?c.json(bookingView(booking)):refusal(c,404,"not_found","This booking does not exist.");
+    const pending=booking?undefined:await pendingBooking(c,c.req.param("id"));
+    return booking?c.json(bookingView(booking)):pending?c.json(pending):refusal(c,404,"not_found","This booking does not exist.");
   })
   .post("/api/v1/bookings",validate("json",create),async c=>{
     const body=c.req.valid("json"),credential=c.get("apiCredential"),services=c.get("services");
@@ -57,13 +63,23 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
     return idempotent(c,body,async()=>{
       const selected=await services.bookings.issuePublicSelection(profile.handle,event.slug,body.startAt,body.inviteeTimezone,body.durationMinutes);
       if(selected.kind!=="issued")return {status:selected.kind==="calendar_unavailable"?503:422,body:error(selected.kind)};
-      const result=await services.bookings.confirmPublic({...body,handle:profile.handle,slug:event.slug,nonce:selected.nonce.nonce});
+      const selectionInput={handle:profile.handle,slug:event.slug,nonce:selected.nonce.nonce,startAt:body.startAt,inviteeTimezone:body.inviteeTimezone};
+      const selection=await services.bookings.getPublicSelection(selectionInput);
+      if(selection.kind!=="found")return {status:422,body:error(selection.kind)};
+      const payment=selection.selection.payment;
+      let shownTaxCents:number|undefined,shownPaymentCents=payment?.amountCents;
+      if(payment?.taxRequired&&body.billingAddress){
+        const quote=await services.bookings.taxQuote({...selectionInput,address:body.billingAddress});
+        if(quote.kind!=="found")return {status:422,body:error(quote.kind)};
+        shownTaxCents=quote.tax.dueNowTaxCents;shownPaymentCents=quote.tax.dueNowTotalCents;
+      }
+      const result=await services.bookings.confirmPublic({...body,...selectionInput,shownTaxCents,shownPriceCents:payment?.priceCents,shownPaymentCents});
       if(result.kind==="created"||result.kind==="replayed"){
         const booking=result.booking.bookingReference?await services.bookings.getForOperator(result.booking.bookingReference):undefined;
         if(!booking)throw new Error("api_booking_missing");
         return {status:201,body:bookingView(booking),bookingId:booking.id};
       }
-      if(result.kind==="approval_required"||result.kind==="payment_required")return {status:202,body:{state:result.kind}};
+      if(result.kind==="approval_required"||result.kind==="payment_required")return pendingConfirmation(c,selected.nonce.nonce,result);
       return {status:result.kind==="calendar_unavailable"||result.kind==="payments_unavailable"?503:422,body:error(result.kind)};
     });
   })

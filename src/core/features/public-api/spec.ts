@@ -18,7 +18,7 @@ function operation(summary:string,options:Options={}){
  const success={description:options.list?"A cursor page of scoped resources.":"The requested resource.",headers:responseHeaders,content:json(options.list?reference("CursorPage"):{type:"object"})};
  return {summary,description:options.description,security:[{bearerAuth:[]}],"x-required-scopes":options.scopes??["bookings:read"],
   ...(parameters.length?{parameters}:{}),...(options.input?{requestBody:{required:true,content:json(reference(options.input))}}:{}),
-  responses:{"200":success,...(options.write?{"201":success,"202":{...success,description:"The ordinary booking flow requires payment or approval before confirmation."}}:{}),"400":error,"401":error,"403":error,"404":error,"409":error,"410":error,"422":error,"429":{...error,description:"The credential limit was reached. Retry-After states the wait in seconds.",headers:{...responseHeaders,"Retry-After":{schema:{type:"integer",minimum:1}}}},"503":error}};
+  responses:{"200":success,...(options.write?{"201":success,"202":{...success,description:"A pending booking resource. Payment-required responses include the hosted checkoutUrl, amount, currency and expiry. No booking confirms before the ordinary signed processor callback and host approval where required."}}:{}),"400":error,"401":error,"403":error,"404":error,"409":error,"410":error,"422":error,"429":{...error,description:"The credential limit was reached. Retry-After states the wait in seconds.",headers:{...responseHeaders,"Retry-After":{schema:{type:"integer",minimum:1}}}},"503":error}};
 }
 const bookingWrites={write:true,scopes:["bookings:write"]};
 const eventWrites={write:true,scopes:["event-types:manage"]};
@@ -42,7 +42,7 @@ export const openApiDocument={openapi:"3.1.0",info:{title:"Dial public API",vers
  "/event-types/{id}/disable":{post:operation("Disable an event type",eventWrites)},
  "/event-types/{id}/publish":{post:operation("Publish after ordinary readiness checks",eventWrites)},
  "/availability":{get:operation("Read the public booking slots",{query:availabilityQuery,description:"The eventTypeId, week, inviteeTimezone and optional duration select the same slots as the public booking page."})},
- "/bookings":{get:operation("List bookings",{list:true}),post:operation("Book using the ordinary public claim and side effects",{...bookingWrites,input:"BookingInput"})},
+ "/bookings":{get:operation("List bookings",{list:true}),post:operation("Book using the ordinary public claim and side effects",{...bookingWrites,input:"BookingInput",description:"A free booking confirms once. Approval requests return pending_approval; paid or saved-card requests return payment_required with the hosted checkout step. The id can be polled at the booking resource. Prices and tax come from the public selection, never caller overrides. Fee consent must use the current public disclosure version. Only the operator can approve; only a signed processor event can mark a payment complete."})},
  "/bookings/{id}":{get:operation("Read a scoped booking")},
  "/bookings/{id}/cancel":{post:operation("Cancel under the ordinary invitee policy",{...bookingWrites,input:"CancelInput"})},
  "/bookings/{id}/reschedule":{post:operation("Move under ordinary availability and change policies",{...bookingWrites,input:"RescheduleInput"})},
@@ -52,8 +52,9 @@ export const openApiDocument={openapi:"3.1.0",info:{title:"Dial public API",vers
  "/routing-submissions":{get:operation("List scoped routing submissions",{...routingRead,list:true}),post:operation("Submit answers through the ordinary routing rules",{...routingWrites,input:"RoutingSubmissionInput",description:"The form and selected destination must be in the credential's host or team scope. The server issues and consumes one routing capability; repeating the key returns the stored submission."})},
  "/polls":{get:operation("List meeting polls",{list:true}),post:operation("Create a meeting poll",{...eventWrites,input:"PollInput"})},
  "/polls/{id}":{get:operation("Read a meeting poll")},"/polls/{id}/close":{post:operation("Close a meeting poll",eventWrites)},
- "/workflows":{get:operation("List granted booking-created workflows",{list:true,scopes:["workflows:manage"]}),post:operation("Create an explicitly enabled or disabled workflow",{write:true,input:"WorkflowInput",scopes:["workflows:manage"]})},
+ "/workflows":{get:operation("List granted native workflows",{list:true,scopes:["workflows:manage"]}),post:operation("Create an explicitly enabled or disabled workflow",{write:true,input:"WorkflowInput",scopes:["workflows:manage"]})},
  "/workflows/{id}":{get:operation("Read a scoped workflow",{scopes:["workflows:manage"]}),patch:operation("Change workflow settings and invalidate prior queued authority",{write:true,input:"WorkflowPatch",scopes:["workflows:manage"]}),delete:operation("Remove a workflow and stop unsent messages",{write:true,scopes:["workflows:manage"]})},
+ "/workflows/{id}/runs":{get:operation("Read durable workflow delivery outcomes",{list:true,scopes:["workflows:manage"]})},
  "/webhook-subscriptions":{get:operation("List scoped webhook subscriptions",{...webhookRead,list:true}),post:operation("Create a scoped webhook subscription",{...webhookWrites,input:"WebhookSubscriptionInput",description:"The subscription inherits the credential scope. The signing secret is returned once; a replay returns its id and secretShown: false."})},
  "/webhook-subscriptions/{id}":{delete:operation("Delete a scoped webhook subscription",webhookWrites)},
 }};

@@ -47,7 +47,7 @@ export function bookingView(booking: BookingRecord) {
   return {id:booking.id,eventTypeId:booking.eventTypeId,eventTitle:booking.eventTitle,state:booking.state,
     inviteeName:booking.inviteeName,inviteeEmail:booking.inviteeEmail,inviteeTimezone:booking.inviteeTimezone,
     durationMinutes:booking.durationMinutes,occurrence:{startAt:booking.occurrence.startAt,endAt:booking.occurrence.endAt},
-    attendance:booking.attendance,createdAt:booking.createdAt,updatedAt:booking.updatedAt,cancelledAt:booking.cancelledAt};
+    attendance:booking.attendance,...(booking.payment?{payment:{state:"paid",amountCents:booking.payment.amountCents,currency:booking.payment.currency}}:{}),createdAt:booking.createdAt,updatedAt:booking.updatedAt,cancelledAt:booking.cancelledAt};
 }
 
 type Receipt = { state:"pending"|"completed"|"erased"; requestHash:string|null; responseJson:string|null;responseStatus:number|null;bookingId:string|null };

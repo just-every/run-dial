@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { createServer } from "node:net";
 import { createServer as httpServer } from "node:http";
 import { resourceJourney } from "./resources.mjs";
+import { continuationJourney } from "./continuations.mjs";
 import { workflowJourney } from "./workflows.mjs";
 import { startWebhookRuntime } from "../booking-wire/webhook-runtime.mjs";
 
@@ -107,6 +108,7 @@ export async function machineCredentialJourney(context) {
   const afterRevoke=await call("/api/v1/bookings",{body:{...body,startAt:apiSlots.slots[2].startAt},secret:writer.secret,key:"synthetic-dial-after-revoke"});assert.equal(afterRevoke.status,401);assert.equal((await afterRevoke.json()).error.code,"credential_revoked");assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true);
   await resourceJourney({call,json,issue,fixture,week,profile,db});
   await workflowJourney({call,json,issue,fixture,week,db});
+  await continuationJourney({call,json,issue,week,db,origin});
   const app=await json("/api/app/oauth-applications",{session:true,body:{name:"Synthetic Dial application",scopes:["bookings:read"],expiresAt}},201);
   const grant=await fetch(origin+"/api/oauth/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:app.application.id,client_secret:app.clientSecret})});
   assert.equal(grant.status,200);const access=await grant.json();assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,200);

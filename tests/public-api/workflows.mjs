@@ -1,3 +1,4 @@
+import { lifecycleWorkflows } from "./workflow-lifecycle.mjs";
 import assert from "node:assert/strict";
 
 export async function workflowJourney({call,json,issue,fixture,week,db}) {
@@ -35,4 +36,5 @@ export async function workflowJourney({call,json,issue,fixture,week,db}) {
   assert.equal((await json(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:"synthetic-dial-remove-workflow"})).removed,true);
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,options)).status,404);
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:"synthetic-dial-remove-workflow"})).headers.get("Idempotent-Replay"),"true");
+  await lifecycleWorkflows({call,json,issue,fixture,week,db,options,tick,slots,event});
 }

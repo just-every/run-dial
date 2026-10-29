@@ -842,9 +842,9 @@ Gap: Filtered reporting CSVs and scheduled member reports are absent; the owner 
 
 API-001 is partial: Public REST API.
 
-Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney.
+Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/public-api/continuations.mjs` — continuationJourney; `tests/public-api/workflow-lifecycle.mjs` — lifecycleWorkflows.
 
-Gap: Current native resource families, routing submissions, booking lifecycle, cursor pages, durable write replay, credential limits and an OpenAPI document are qualified. Workflows currently provide explicitly enabled booking-created invitee email only; broader triggers and actions, paid and approval continuation, and native multi-host qualification remain. The owner-only machine grant and explicit workflow scope retain the conservative standing policy pending judgment.
+Gap: Native resource families, routing submissions, booking lifecycle, cursor pages, durable write replay, credential limits and OpenAPI are qualified. Paid and approval requests now expose safe pending resource IDs and hosted checkout, preserve ordinary signed-payment and host-decision authority, apply deposit cancellation policy once and erase pending replay authority. Enabled native lifecycle and timed invitee or host email workflows have durable outcomes and refuse foreign scope. Remaining: workflow SMS, webhook and CRM actions, routing-without-booking triggers, template preview and native multi-host qualification. The owner-only machine grant and explicit workflow scope retain the conservative standing policy pending judgment.
 
 API-002 is done: Webhooks.
 
