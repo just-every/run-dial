@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {profile} from './native-owner.mjs';
+import {profile,mergeAudits} from './native-owner.mjs';
 import {errorCode as code} from '../../modules/agent-door/conformance/protocol.mjs';
+export async function afterStep({step,result,phase}) {
+ if(step.tool!=='dial.clients.merge'||result?.merged!==true)return;
+ const audits=await mergeAudits(),audit=audits.at(-1);
+ assert.equal(audit?.actor_type,'agent','native merge audit must not turn agent preparation into a person action');
+ const attribution=JSON.parse(audit.reason);
+ assert.ok(audit.actor_id&&attribution.sponsor&&attribution.preparedBy.includes(' for '));
+ assert.notEqual(audit.actor_id,attribution.sponsor);
+ assert.equal(attribution.approvers.length,phase==='held'?1:0,'only a real held-policy decision supplies an approver');
+}
 export default async function coreJourney({request,origin,cookie,tool}) {
  const headers={Origin:origin,Cookie:cookie,'Content-Type':'application/json'};
  const witness=async()=>{const r=await request(origin+'/api/app/profile',{headers});assert.equal(r.status,200);return r.json();};

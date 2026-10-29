@@ -69,13 +69,15 @@ export function clientTools(services: AppServices): ToolDefinition[] {
       },
     }),
     nativeTool({
-      name: "dial.clients.merge", title: "Merge clients", description: "Merge two existing client records, retaining booking rows, aliases, notes and text fields and removing the source profile. The native audit records the current owner.",
+      name: "dial.clients.merge", title: "Merge clients", description: "Merge two existing client records, retaining booking rows, aliases, notes and text fields and removing the source profile. The native audit names the agent as preparer, its sponsoring owner and any real approvers.",
       scope: "dial:write", readOnly: false, input: z.object({ source: email, target: email }).strict(), outputSchema: objectOutput, classes: ["standard", "destructive"], clauses: ["CLIENT-001"],
       classify: () => [...standard(), { class: "destructive", facts: { measure: 1 } }], revisionType: "string",
       revision: async args => stateDigest(await Promise.all([records.profile(args.source), records.profile(args.target)])),
       summary: async args => ({ target: { email: (await known(args.target)).email }, items: [`Merge ${(await known(args.source)).email} into this client; keep its aliases and scheduling history`] }),
       async run(args, ctx) {
-        const outcome = await records.merge(args.source, args.target, ctx.person.id);
+        const outcome = await records.merge(args.source, args.target, ctx.person.id, {
+          id: ctx.agent.id, label: ctx.actor.label, approvers: ctx.approvers,
+        });
         if (outcome !== "merged") throw new ToolRefusal(outcome === "missing" ? "client_not_found" : "client_identical");
         ctx.emit("dial.client.merged", uri(args.target), { actorLabel: ctx.actor.label });
         return { result: { merged: true } };
