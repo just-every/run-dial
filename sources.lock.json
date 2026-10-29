@@ -6672,7 +6672,7 @@
       "executable": false
     },
     "src/core/features/public-api/routes.ts": {
-      "sha256": "3161dbae557fbf3f3a3c9dd8a654867dcf41967ab3438e389c753e38a63b134c",
+      "sha256": "cf3c7df00dafe5ec44872a0b258ecbd9644a15de43df936bcb5e1143bb11e17c",
       "executable": false
     },
     "src/core/features/public-api/spec.ts": {
@@ -9764,7 +9764,7 @@
       "executable": false
     },
     "tests/public-api/journey.mjs": {
-      "sha256": "0a0e29857110fe9ee03ad6de3505f7d04c4ed55b96316bfd6ffd18a835029354",
+      "sha256": "17b9d85832076af6bb302eecc882d9e298e341eeabb7fab25c2dc67ddd509377",
       "executable": false
     },
     "tests/public-api/resources.mjs": {

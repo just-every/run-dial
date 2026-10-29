@@ -48,6 +48,8 @@ export async function machineCredentialJourney(context) {
   const week=new Date(Date.now()+10*86400000).toISOString().slice(0,10);
   const publicSlots=await json(`/api/public/book/dial-host/intro/availability?week=${week}&inviteeTimezone=UTC`);
   const apiSlots=await json(`/api/v1/availability?eventTypeId=${fixture.eventId}&week=${week}&inviteeTimezone=UTC`,{secret:reader.secret});
+  const unknown=await call("/api/v1/unavailable-resource",{secret:reader.secret});
+  assert.equal(unknown.status,404);assert.equal((await unknown.json()).error.code,"not_found","unknown API routes retain a documented JSON refusal");
   assert.deepEqual(apiSlots.slots,publicSlots.slots,"machine availability equals the public page's slots");assert.ok(apiSlots.slots.length>2);
   const body={eventTypeId:fixture.eventId,startAt:apiSlots.slots[0].startAt,inviteeTimezone:"UTC",name:"Synthetic Dial invitee",email:address("synthetic-dial-901"),answers:{[event.questions[0].key]:"Synthetic scheduling"}};
   const writes=async()=>({bookings:(await db.prepare("SELECT id,state,current_occurrence_id FROM bookings ORDER BY id").all()).results,commands:(await db.prepare("SELECT id,kind,payload_json FROM delivery_outbox ORDER BY id").all()).results});

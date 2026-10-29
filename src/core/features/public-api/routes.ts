@@ -107,7 +107,8 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
     });
   })
   .route("/",resourceRoutes)
-  .route("/",workflowRoutes);
+  .route("/",workflowRoutes)
+  .all("/api/v1/*",c=>refusal(c,404,"not_found","This API route does not exist."));
 
 async function manageToken(c:Parameters<typeof hostAllowed>[0],id:string){
   const url=await new BookingsRepository(c.get("apiDatabase")).storedManageUrl(id);
