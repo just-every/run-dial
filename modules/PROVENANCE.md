@@ -88,3 +88,10 @@ with the captured provider fence. This request-latency adaptation remains outsid
 the byte-exact Base copy claims and does not change the upstream revision.
 
 The 18 October 2026 LINK-002 round pins the published CLI package to rer 0.2.50 and reruns its frozen install. Recorded vendored Base copies retain their existing source revisions and bytes; the CLI package pin is separate from those copy claims.
+
+The agent-door and business-settings source modules, with their theme/icon
+helpers, are recorded at Base `d555e789cffb744a9f83d76ebe42a2e3bdd7a055`.
+They are retained source for native adoption; the Worker does not yet mount
+them, and no door or Business-person SQL is applied by this source copy.
+The CLI remains the separately pinned published package. Applied migrations
+and existing native authority are unchanged.
