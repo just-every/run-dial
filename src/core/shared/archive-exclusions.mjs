@@ -42,6 +42,21 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  agent_door_state: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+  agent_door_agents: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+  agent_door_audit: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+  agent_door_calls: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+  agent_door_approvals: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+  agent_door_reviews: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+  agent_door_events: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+  agent_door_usage: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
+
+  bs_settings: "Signed Business document, sequence and owner binding are installation-local; the destination must pair again",
+  bs_team: "Business person bindings and invitation authority require fresh native admission at the destination",
+  bs_overrides: "Business overrides remain installation-local; the destination must pair again",
+  bs_logo: "Business logo state remains installation-local; the destination must pair again",
+  bs_audit: "Installation-local Business admission audit; never restore source pairing authority",
+  bs_assert: "Transient atomic Business settings assertions",
   routing_capabilities: "One-use routing submission authority and hashes remain installation-local",
   payment_products: "Payment entitlement catalog is not portable yet; export refuses populated entitlement data",
   payment_entitlements: "Purchaser identity, redemption code hashes and live Stripe purchase authority never travel; export refuses populated entitlement data",

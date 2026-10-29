@@ -345,6 +345,24 @@
         "AGENT-010",
         "AGENT-011"
       ]
+    },
+    {
+      "id": "agent-door",
+      "clauses": [
+        "BASE-AGENT-001",
+        "BASE-AGENT-002",
+        "BASE-AGENT-003",
+        "BASE-AGENT-004",
+        "BASE-AGENT-005",
+        "BASE-AGENT-006",
+        "BASE-AGENT-007",
+        "BASE-AGENT-008",
+        "BASE-AGENT-009",
+        "BASE-AGENT-010",
+        "BASE-AGENT-011",
+        "BASE-AGENT-012",
+        "BASE-AGENT-013"
+      ]
     }
   ],
   "nonGoals": [
@@ -737,7 +755,14 @@
       "/api/payments/stripe/oauth/callback",
       "/api/payments/accounting/oauth/callback",
       "/health",
-      "/api/notices/slack/oauth/callback"
+      "/api/notices/slack/oauth/callback",
+      "/mcp",
+      "/.well-known/oauth-protected-resource",
+      "/.well-known/oauth-protected-resource/mcp",
+      "/api/rer/agent-policy",
+      "/api/rer/business-settings",
+      "/agents",
+      "/agents/"
     ]
   },
   "customFields": [

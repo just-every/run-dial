@@ -1,5 +1,21 @@
 // Exhaustive migrated application census; unknown tables stop erasure before writes.
 export const applicationTables = [
+  // Installation-local Business/agent stores; native person erasure scrubs retained client payloads.
+  "bs_settings",
+  "bs_team",
+  "bs_overrides",
+  "bs_logo",
+  "bs_audit",
+  "bs_assert",
+  "agent_door_state",
+  "agent_door_agents",
+  "agent_door_audit",
+  "agent_door_calls",
+  "agent_door_approvals",
+  "agent_door_reviews",
+  "agent_door_events",
+  "agent_door_usage",
+
   "analytics_settings", "analytics_connections", "analytics_deliveries",
   "dial_portability_admission",
   "teams", "team_event_types", "routing_forms", "routing_submissions", "routing_capabilities",
