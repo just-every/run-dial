@@ -5233,7 +5233,11 @@
       "executable": false
     },
     "src/agent-door/README.md": {
-      "sha256": "0ddfcbdfaca0c8bcd24be2010b04a84db7d265fca8469c0fb47525181323a369",
+      "sha256": "e97a4af9f73977ad86edff76ea196b44ef597ed25835adca616d388446855b43",
+      "executable": false
+    },
+    "src/agent-door/registry.md": {
+      "sha256": "1468706f1462d1911e40ad0e496353ddc020c387ad77754b32b912aae3a052cb",
       "executable": false
     },
     "src/agent-door/reporting-tools.ts": {
