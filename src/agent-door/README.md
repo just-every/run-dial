@@ -1,5 +1,8 @@
 # Dial's company agent door
 
+[Native tool and prepared resource reference](registry.md) lists every declared
+verb with its scope, possible classes and contract clauses.
+
 Dial mounts one copied `createAgentDoor` in the production Worker, inside native
 archive admission and ahead of application authentication and setup redirects.
 The runtime and CLI pin is `rer-v0.2.87`, Base commit
