@@ -546,6 +546,18 @@
       "name": "0089_event_type_webhook_cleanup.sql",
       "sha256": "95edda4f557830838e645257a7a664c890f08deef4c35024fab6bd6bceddccce",
       "sql": "-- The relationships are retired atomically with their owning records. Older\n-- schemas keep their deletion path until these webhook tables are installed.\nCREATE TRIGGER webhook_event_type_delete BEFORE DELETE ON event_types BEGIN\n UPDATE routing_submissions SET event_type_id=NULL,\n  updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE event_type_id=OLD.id;\n DELETE FROM webhook_deliveries WHERE json_extract(body_json,'$.data.eventTypeId')=OLD.id;\nEND;\n\n-- Vote facts identify their poll, without repeating its event-type identifier.\nCREATE TRIGGER webhook_poll_delete BEFORE DELETE ON meeting_polls BEGIN\n DELETE FROM webhook_deliveries WHERE json_extract(body_json,'$.data.pollId')=OLD.id;\nEND;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0090_api_credentials.sql",
+      "sha256": "84d9958a08d32ced0ec6d250c4bdcbf8e621ba2c411f275b7641db8ed40872a0",
+      "sql": "CREATE TABLE api_oauth_applications (\n id TEXT PRIMARY KEY NOT NULL,\n name TEXT NOT NULL,\n operator_id TEXT NOT NULL,\n workspace_id TEXT NOT NULL DEFAULT 'default',\n host_id TEXT,\n team_id TEXT,\n scopes_json TEXT NOT NULL,\n client_secret_hash TEXT UNIQUE,\n expires_at TEXT NOT NULL,\n revoked_at TEXT,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL,\n CHECK (host_id IS NULL OR team_id IS NULL)\n);\nCREATE INDEX api_oauth_applications_owner ON api_oauth_applications(operator_id);\n\nCREATE TABLE api_credentials (\n id TEXT PRIMARY KEY NOT NULL,\n name TEXT NOT NULL,\n operator_id TEXT NOT NULL,\n workspace_id TEXT NOT NULL DEFAULT 'default',\n host_id TEXT,\n team_id TEXT,\n scopes_json TEXT NOT NULL,\n secret_hash TEXT UNIQUE,\n expires_at TEXT NOT NULL,\n last_used_at TEXT,\n revoked_at TEXT,\n oauth_application_id TEXT REFERENCES api_oauth_applications(id),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL,\n CHECK (host_id IS NULL OR team_id IS NULL)\n);\nCREATE INDEX api_credentials_owner ON api_credentials(operator_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0091_public_api.sql",
+      "sha256": "201f3156e90ddb9146541a6eaddf20563a56855515848fae0cfb8381992e4942",
+      "sql": "CREATE TABLE api_request_keys (\n  id TEXT NOT NULL UNIQUE,\n  credential_id TEXT NOT NULL,\n  key_hash TEXT NOT NULL,\n  request_hash TEXT,\n  state TEXT NOT NULL CHECK(state IN ('pending','completed','erased')),\n  response_json TEXT,\n  response_status INTEGER,\n  booking_id TEXT,\n  created_at TEXT NOT NULL,\n  expires_at TEXT NOT NULL,\n  PRIMARY KEY(credential_id,key_hash)\n);\nCREATE INDEX api_request_keys_booking_idx ON api_request_keys(booking_id);\nCREATE TABLE api_rate_windows (\n  id TEXT NOT NULL UNIQUE,\n  credential_id TEXT NOT NULL,\n  window_started_at TEXT NOT NULL,\n  request_count INTEGER NOT NULL,\n  expires_at TEXT NOT NULL,\n  PRIMARY KEY(credential_id,window_started_at)\n);\nCREATE TRIGGER api_booking_erasure BEFORE DELETE ON bookings BEGIN\n  UPDATE api_request_keys SET state='erased',request_hash=NULL,response_json=NULL,response_status=410,booking_id=NULL WHERE booking_id=OLD.id;\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

@@ -42,6 +42,8 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  api_request_keys: "Credential-bound write replay records and private response bodies never travel",
+  api_rate_windows: "Ephemeral per-credential rate counters remain installation-local",
   routing_capabilities: "One-use routing submission authority and hashes remain installation-local",
   payment_products: "Payment entitlement catalog is not portable yet; export refuses populated entitlement data",
   payment_entitlements: "Purchaser identity, redemption code hashes and live Stripe purchase authority never travel; export refuses populated entitlement data",

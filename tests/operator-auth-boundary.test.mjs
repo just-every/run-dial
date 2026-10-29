@@ -1,9 +1,10 @@
+import { machineCredentialJourney } from "./public-api/journey.mjs";
 import assert from "node:assert/strict";
 import { contract } from "./contract.mjs";
 import { confirmAuthLink } from "./auth-client.mjs";
 import { origin, startRuntime } from "./operator-management/runtime.mjs";
 
-contract("AUTH-001", "direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail", async context => {
+contract(["AUTH-001", "AUTH-008", "API-001"], "direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail", async context => {
   const runtime = await startRuntime(context);
   const call = (path, body, cookie) => fetch(origin + path, {
     method: body === undefined ? "GET" : "POST", redirect: "manual",
@@ -59,6 +60,9 @@ contract("AUTH-001", "direct Base administrative aliases cannot mutate authority
   }
   assert.deepEqual(await mailState(), queued, "denied aliases leave queued work unchanged");
   assert.equal((await fetch(link, { redirect: "manual" })).status, 200, "denied cancellation leaves its capability live");
+  const credentialResponse = await call("/api/app/api-credentials", { name: "Synthetic Dial removed owner", scopes: ["bookings:read"], expiresAt: new Date(Date.now() + 86400000).toISOString() }, oldCookie);
+  assert.equal(credentialResponse.status, 201);
+  const removedCredential = await credentialResponse.json();
   const removePath = `/api/app/operators/${target}/remove`;
   assert.equal((await call(removePath, {}, cookie)).status, 204);
   assert.deepEqual(await mailState(), [], "operator erasure deletes old operator and invitee queued mail at the address");
@@ -68,6 +72,8 @@ contract("AUTH-001", "direct Base administrative aliases cannot mutate authority
     UNION ALL SELECT 'external',operator_id FROM oa_external_identities WHERE operator_id='${target}'
     UNION ALL SELECT 'cancellation',operator_id FROM oa_invitation_cancellations WHERE operator_id='${target}'`);
   assert.deepEqual(await erasedAuthority(), [], "ordinary removal erases native identity, capabilities and cancellation ledger");
+  assert.equal((await fetch(origin + "/api/v1/bookings", { headers: { Authorization: `Bearer ${removedCredential.secret}` } })).status, 401, "ordinary owner removal revokes machine authority");
+  assert.deepEqual(await runtime.query(`SELECT id FROM api_credentials WHERE operator_id='${target}'`), [], "owner removal erases machine credentials");
   assert.deepEqual(await runtime.query(`SELECT id FROM rer_mail_development_outbox WHERE EXISTS (SELECT 1 FROM json_each(message,'$.to') WHERE value='${email}')`), [], "local native auth captures are erased");
   assert.equal((await call("/api/app/session", undefined, oldCookie)).status, 401);
   assert.equal((await confirmAuthLink(link)).status, 400);
@@ -103,5 +109,8 @@ contract("AUTH-001", "direct Base administrative aliases cannot mutate authority
   const replacementCookie = reenrolled.headers.get("set-cookie").split(";")[0];
   assert.equal((await (await call("/api/app/session", undefined, replacementCookie)).json()).operator.id, replacement, "only the newly issued capability authenticates the replacement identity");
   assert.deepEqual(await erasedAuthority(), []);
+  assert.equal((await fetch(origin + "/api/v1/bookings", { headers: { Authorization: `Bearer ${removedCredential.secret}` } })).status, 401, "ordinary owner removal revokes machine authority");
+  assert.deepEqual(await runtime.query(`SELECT id FROM api_credentials WHERE operator_id='${target}'`), [], "owner removal erases machine credentials");
   assert.deepEqual(await runtime.query("SELECT operator_id FROM oa_invitation_cancellations"), []);
+  await machineCredentialJourney(context);
 });

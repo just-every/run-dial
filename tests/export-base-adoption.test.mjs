@@ -64,6 +64,16 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
     const archive = await createArchive(testPlatform(source.db));
     assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
+    for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
+      const original = source.db.prepare(`SELECT * FROM ${table}`).get();
+      const archived = archive.tables.find(entry => entry.name === table).rows[0];
+      assert.equal(archived[hashColumn], null, 'machine authority never enters the archive');
+      assert.ok(archived.revoked_at, 'restored machine metadata carries no active authority');
+      assert.equal(archived.name, original.name);
+      assert.equal(archived.scopes_json, original.scopes_json);
+      assert.equal(JSON.stringify(archive).includes(original[hashColumn]), false, 'a stored machine secret hash is absent from every archived field');
+    }
+    assert.equal(archive.tables.some(table => ['api_request_keys', 'api_rate_windows'].includes(table.name)), false, 'private API response replays and rate counters stay local');
     const webhookSubscription = archive.tables.find(table => table.name === 'webhook_subscriptions').rows[0];
     assert.equal(webhookSubscription.secret_ciphertext, null, 'signing authority is absent from the archive');
     assert.equal(webhookSubscription.enabled, 0, 'restored subscriptions require a fresh secret');
@@ -96,6 +106,12 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
     await restoreArchive(destination, archive);
+    for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
+      const restored = target.db.prepare(`SELECT * FROM ${table}`).get();
+      assert.equal(restored[hashColumn], null);
+      assert.ok(restored.revoked_at, 'an imported machine identity has no live credential');
+      assert.equal(restored.name, source.db.prepare(`SELECT name FROM ${table}`).get().name);
+    }
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_subscriptions WHERE enabled=1 OR secret_ciphertext IS NOT NULL").get().n, 0, 'restore never enables outbound authority');
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_deliveries WHERE state IN ('pending','sending')").get().n, 0, 'restore never resumes historical webhook commands');
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM routing_capabilities').get().n, 0);

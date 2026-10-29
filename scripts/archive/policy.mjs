@@ -7,6 +7,7 @@ export { scrub, collectSecrets } from './redaction.mjs';
 // operator_setup_identity retains its durable first-run timestamp, including NULL.
 export const exported = [
   ...importExported,
+  "api_credentials", "api_oauth_applications",
   "teams", "team_event_types", "routing_forms", "routing_submissions", "webhook_subscriptions", "webhook_deliveries",
   "analytics_settings", "analytics_connections", "analytics_deliveries",
   'rer_erasure_operations', 'person_erasure_receipts', 'processor_erasure_requests', 'operator_erasure_subjects',
@@ -54,6 +55,8 @@ export function assertCoverage(names) {
 }
 export function canonicalRow(name, source, secrets = []) {
   const row = Object.fromEntries(Object.entries(source).map(([key, value]) => [key, scrub(value, secrets, name === 'delivery_outbox' && key === 'payload_json')]));
+  if (name === 'api_credentials') { row.secret_hash = null; row.revoked_at ??= row.updated_at; }
+  if (name === 'api_oauth_applications') { row.client_secret_hash = null; row.revoked_at ??= row.updated_at; }
   if (name === 'webhook_subscriptions') { row.secret_ciphertext = null; row.enabled = 0; }
   if (name === 'webhook_deliveries') { row.state = 'failed'; row.last_error = 'restored_historical_command'; row.lease_id = null; row.lease_until = null; }
   if (name === 'analytics_connections') { row.credential_ciphertext=null; row.status='needs_reconnect'; row.reason='reauthorization_required'; }
