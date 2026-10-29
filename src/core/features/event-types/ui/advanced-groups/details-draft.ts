@@ -4,13 +4,13 @@ import { useAutosave, type Write } from "../../../../app/ui/autosave/use-autosav
 import { offeredLocations } from "../../locations";
 import { eventDetailsInputSchema } from "../../event-input";
 import type { EventDetailsInput } from "../../repository";
+import { plainProblem } from "./details-problems";
 
 type Field = keyof EventDetailsInput;
 type Draft = Partial<EventDetailsInput>;
-const stagedFields: Field[] = ["title", "locations", "questions", "postBookingRedirect"];
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-/** Keep incomplete items on screen, while complete neighbours can save independently. */
+/** Keep incomplete fields and items on screen, while complete neighbours can save independently. */
 function completeDetails(values: EventDetailsInput, saved: EventDetailsInput) {
   const next = { ...values };
   for (let attempt = 0; attempt <= Object.keys(next).length; attempt++) {
@@ -27,28 +27,34 @@ function completeDetails(values: EventDetailsInput, saved: EventDetailsInput) {
         const bad = new Set(result.error.issues.filter(entry => entry.path[0] === field).map(entry => entry.path[1]));
         if (field === "locations") next.locations = values.locations?.flatMap((item, position) => !bad.has(position) ? [item] : saved.locations?.filter(old => old.id === item.id) ?? []);
         else next.questions = values.questions.flatMap((item, position) => !bad.has(position) ? [item] : saved.questions.filter(old => old.key === item.key));
-      } else if (stagedFields.includes(field)) Object.assign(next, { [field]: saved[field] });
+      } else if (typeof field === "string" && field in saved) Object.assign(next, { [field]: saved[field] });
     }
     if (before === JSON.stringify(next)) break;
   }
-  // Other invalid fields remain here for the full schema check in the writer.
+  // What no saved value can repair (a rule between two fields) stays here for the writer to name.
   return next;
 }
 
-function missing(values: EventDetailsInput, field: Field) {
+function failing(values: EventDetailsInput) {
   const parsed = eventDetailsInputSchema.safeParse(values);
-  if (parsed.success) return undefined;
-  const issue = parsed.error.issues.find(entry => entry.path[0] === field);
-  if (!issue) return undefined;
+  return parsed.success ? [] : parsed.error.issues;
+}
+
+function missing(values: EventDetailsInput, field: Field) {
+  const issue = failing(values).find(entry => entry.path[0] === field);
+  return issue ? describe(values, field, issue) : undefined;
+}
+
+function describe(values: EventDetailsInput, field: Field, issue: ReturnType<typeof failing>[number]) {
   if (field === "title") return "Give the event a name.";
-  if (field === "questions") return values.questions.some(question => !question.label.trim()) ? "Write the question." : issue.message;
+  if (field === "questions") return values.questions.some(question => !question.label.trim()) ? "Write the question." : plainProblem(field, issue);
   if (field === "postBookingRedirect") return "Add the page to send invitees to.";
   if (field === "locations") {
     const location = values.locations?.[Number(issue.path[1])];
     if (!location?.label.trim()) return "Add the public label.";
     return location.type === "fixed_link" ? "Add the meeting link." : location.type === "phone" ? "Add the phone number." : location.type === "ask_invitee" ? "Add the invitee prompt." : location.type === "custom" ? "Add the instruction." : "Add the address.";
   }
-  return issue.message;
+  return plainProblem(field, issue);
 }
 
 export function useDetailsDraft(key: string, initial: EventDetailsInput, write: Write<EventDetailsInput>, asks: Field[]) {
@@ -59,7 +65,10 @@ export function useDetailsDraft(key: string, initial: EventDetailsInput, write: 
   const setDraft = (pending: Draft) => setLocal(previous => ({ ...previous, draft: pending }));
   const [left, setLeft] = useState<Set<Field>>(new Set());
   const save = useAutosave(key, initial, async (next, init) => {
-    const parsed = eventDetailsInputSchema.parse(completeDetails({ ...next, ...draftRef.current }, saved.current)) as EventDetailsInput;
+    const complete = completeDetails({ ...next, ...draftRef.current }, saved.current);
+    const issue = failing(complete)[0];
+    if (issue) throw new Error(describe(complete, issue.path[0] as Field, issue));
+    const parsed = eventDetailsInputSchema.parse(complete) as EventDetailsInput;
     await write(parsed, init);
     saved.current = parsed;
     setLocal(previous => ({ ...previous, savedValues: parsed }));
@@ -79,8 +88,9 @@ export function useDetailsDraft(key: string, initial: EventDetailsInput, write: 
     const raw = { ...save.values, ...current.current.draft, [field]: value };
     const complete = completeDetails(raw, saved.current);
     const pending = { ...current.current.draft };
-    for (const name of stagedFields) {
-      if (missing(raw, name)) Object.assign(pending, { [name]: raw[name] });
+    const incomplete = new Set(failing(raw).map(issue => issue.path[0]));
+    for (const name of Object.keys(raw) as Field[]) {
+      if (incomplete.has(name)) Object.assign(pending, { [name]: raw[name] });
       else delete pending[name];
     }
     current.current = { values: raw, draft: pending };
