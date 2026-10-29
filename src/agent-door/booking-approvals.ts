@@ -24,7 +24,7 @@ export function bookingApprovalTools(services: AppServices): ToolDefinition[] {
   };
   const decision = z.object({ id: z.string().length(26), decision: z.enum(["approve", "decline"]), reason: z.string().trim().max(500).optional() }).strict();
   const mutation = (cancel: boolean): ToolDefinition => nativeTool({
-    name: cancel ? "dial.bookings.approval-cancel" : "dial.bookings.approval-decision",
+    name: cancel ? "dial.bookings.approval_cancel" : "dial.bookings.approval_decision",
     title: cancel ? "Cancel booking approval request" : "Decide booking approval request", scope: "dial:write", readOnly: false,
     description: "Apply the native approval decision. Paid approval may capture the frozen authorization; decline/cancel may void, detach or refund. Native capture_pending/void_pending is not completed payment or confirmed booking.",
     input: cancel ? bookingId.extend({ reason: z.string().trim().max(500).optional() }) : decision,
@@ -63,7 +63,7 @@ export function bookingApprovalTools(services: AppServices): ToolDefinition[] {
   });
   return [
     nativeTool({
-      name: "dial.bookings.approvals-list", title: "List pending booking approvals", scope: "dial:read", readOnly: true,
+      name: "dial.bookings.approvals_list", title: "List pending booking approvals", scope: "dial:read", readOnly: true,
       description: "List the first 100 native pending approval requests, including public payment state and frozen amounts without authorization secrets.",
       input: z.object({}).strict(), outputSchema: objectOutput, classes: ["sensitive"], clauses: ["BOOK-002", "PAY-007"], untrusted: true,
       classify: () => bookingReadClass(100),
