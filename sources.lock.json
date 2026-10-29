@@ -5804,7 +5804,7 @@
       "executable": false
     },
     "src/core/app/agent-door/native.ts": {
-      "sha256": "5052f2b06862aedf7f852c5d82d740e4674458a84a6747acad6096c0628310a8",
+      "sha256": "6eb87eeb59d6830ea554c27b182df0d0f5faf90b206c0cbe061049acb00d71f6",
       "executable": false
     },
     "src/core/app/agent-door/people.ts": {
@@ -5819,6 +5819,10 @@
       "sha256": "eb66d48854022c74c6a9f764a8c26510d56595fd77edd58941b87eaed762f81c",
       "executable": false
     },
+    "src/core/app/agent-door/risk-witness.ts": {
+      "sha256": "db59339449983c17d4b700051defc68ba72f567cc5073d55da913be4d5b0e5c4",
+      "executable": false
+    },
     "src/core/app/agent-door/schedule-tools.ts": {
       "sha256": "26c3dad829a85a9f78236f64f9634cdf6b98d0ba9ad88bc2fa2a9a915fa87411",
       "executable": false
@@ -5828,7 +5832,7 @@
       "executable": false
     },
     "src/core/app/agent-door/tool-context.ts": {
-      "sha256": "41c894e94f5673fd25669210c1bd98f3ca051786dc0140014d364577c601b075",
+      "sha256": "61c899d923fdbb11fb25c02c6b4e23c42615a47e7b4969389839b9d0f37c2791",
       "executable": false
     },
     "src/core/app/agent-door/tools.ts": {
@@ -9156,7 +9160,7 @@
       "executable": false
     },
     "tests/agent-native-journey.mjs": {
-      "sha256": "7981080839c0aaa63a6309b4d246df80a40b515b77ac8d782cb87f2f7cbbd68b",
+      "sha256": "84546da12688d0c1879bcc2bb6b1fc7ae83729a45fe0661a882126014d967ee2",
       "executable": false
     },
     "tests/agent-phase-fixtures.mjs": {

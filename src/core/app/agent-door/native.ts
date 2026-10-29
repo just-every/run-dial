@@ -4,6 +4,8 @@ import {
   type NativeTarget,
 } from "../../../base/modules/agent-door/index.ts";
 
+import { riskWitnessSql } from "./risk-witness";
+
 export async function authorize(ctx: Pick<ToolContext, "db" | "person">) {
   const row = await ctx.db
     .prepare(
@@ -26,9 +28,17 @@ export function effectDatabase(
     id: string;
     value: string;
   },
+  initialWitness?: string,
 ) {
+  if (!initialWitness) throw new ToolRefusal("revision_conflict");
+  let witness = initialWitness;
   const mutations = new WeakSet<D1PreparedStatement>();
   const guards = () => [
+    db
+      .prepare(
+        `SELECT CASE WHEN (${riskWitnessSql})=? THEN 1 ELSE abs(-9223372036854775808) END`,
+      )
+      .bind(witness),
     db
       .prepare(
         `SELECT CASE WHEN EXISTS(SELECT 1 FROM oa_operators a LEFT JOIN operators p ON p.id=a.id
@@ -66,7 +76,20 @@ export function effectDatabase(
     if (!statements.some((statement) => mutations.has(statement)))
       return db.batch(statements);
     const before = guards();
-    const results = await db.batch([...before, ...statements, activity()]);
+    let results;
+    try {
+      results = await db.batch([
+        ...before,
+        ...statements,
+        activity(),
+        db.prepare(riskWitnessSql),
+      ]);
+    } catch (error) {
+      if (error instanceof Error && /integer overflow/.test(error.message))
+        throw new ToolRefusal("revision_conflict");
+      throw error;
+    }
+    witness = (results.at(-1)!.results[0] as { value: string }).value;
     return results.slice(before.length, before.length + statements.length);
   };
   return new Proxy(db, {

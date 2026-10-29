@@ -8,6 +8,7 @@ import { createServices, type AppServices } from "../services";
 import type { AppBindings } from "../bindings";
 import { parseRuntimeEnvironment } from "../../shared/runtime-env";
 import { authorize, effectDatabase } from "./native";
+import { riskWitness } from "./risk-witness";
 import { idInput, outputSchema } from "./schemas";
 export const standard: ClassAndFacts[] = [
   { class: "standard", facts: { measure: 1 } },
@@ -22,6 +23,7 @@ export const resource = (kind: string, record: { id: string }) => [
   { uri: `dial://${kind}/${record.id}`, name: kind },
 ];
 export function nativeToolContext(env: AppBindings, services: AppServices) {
+  const classified = new Map<string, string>();
   const forEffect = (
     ctx: ToolContext,
     tool: string,
@@ -33,7 +35,14 @@ export function nativeToolContext(env: AppBindings, services: AppServices) {
     },
   ) =>
     createServices(
-      effectDatabase(env.DB, ctx, tool, target, revision),
+      effectDatabase(
+        env.DB,
+        ctx,
+        tool,
+        target,
+        revision,
+        classified.get(ctx.operationId),
+      ),
       parseRuntimeEnvironment(env),
       env.ASSETS,
     );
@@ -67,6 +76,24 @@ export function nativeToolContext(env: AppBindings, services: AppServices) {
       outputSchema,
       untrusted: true,
       ...options,
+      ...(!options.readOnly
+        ? {
+            async classify(
+              args: Record<string, unknown>,
+              ctx: ToolContext,
+              completed?: readonly ClassAndFacts[],
+            ) {
+              await authorize(ctx);
+              if (completed) return options.classify(args, ctx, completed);
+              const before = await riskWitness(env.DB);
+              const classes = await options.classify(args, ctx);
+              const after = await riskWitness(env.DB);
+              if (before !== after) throw new ToolRefusal("revision_conflict");
+              classified.set(ctx.operationId, after);
+              return classes;
+            },
+          }
+        : {}),
     });
   return { env, services, forEffect, event, schedule, tools, add };
 }
