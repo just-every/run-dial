@@ -31,7 +31,7 @@ export function nativeTool<T extends z.ZodType>(definition: Definition<T>): Tool
   const inputSchema = z.toJSONSchema(input, { io: "input", unrepresentable: "any" }) as JsonSchemaObject;
   delete inputSchema.$schema;
   return {
-    ...rest, inputSchema,
+    ...rest, inputSchema, untrusted: true,
     async classify(args, ctx) { await check(ctx); return classify(parsed(args), ctx); },
     async run(args, ctx) { await check(ctx); return run(parsed(args), ctx); },
     ...(summary ? { summary: async (args: Record<string, unknown>, ctx: ToolContext) => { await check(ctx); return summary(parsed(args), ctx); } } : {}),

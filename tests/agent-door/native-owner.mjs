@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+export const profile = {handle:'synthetic-dial-owner',name:'Avery Chen',title:'Scheduling coordinator',biography:'Meet with Avery to plan the next project.',timezone:'UTC',focusAreas:[],socialProof:[]};
+export const eventInput = (slug='synthetic-dial-meeting') => ({slug,title:'Project planning',description:'Plan the next project together.',durationMinutes:30,color:'#dcab3c',locationType:'fixed_link',locationLabel:'Meeting link',locationValue:'https://meet.example.invalid/planning',listed:true,alternativeRequestsEnabled:true,slotIncrementMinutes:30,minimumNoticeMinutes:0,bookingHorizonDays:60,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,postBookingRedirect:null,questions:[],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:0,endMinute:1440}))});
+export default async function initialize({request,origin,token,claim,fixtures}) {
+ const post=(path,body,headers={})=>request(new URL(path,origin).href,{method:'POST',redirect:'manual',headers:{Origin:origin,'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
+ const raw=await post(claim.path,{token,displayName:'Avery Chen'}); assert.equal(raw.status,403,'signed endpoint refuses raw setup token');
+ const owner=await post(claim.path,{token:claim.token,displayName:'Avery Chen',returnTo:'/app'}); assert.equal(owner.status,303,'signed owner claim opens native session');
+ const replay=await post(claim.path,{token:claim.token,displayName:'Avery Chen',returnTo:'/app'}); assert.equal(replay.status,409,'signed claim replay refuses');
+ const cookie=owner.headers.getSetCookie().map(value=>value.split(';',1)[0]).join('; ');
+ const headers={Origin:origin,Cookie:cookie,'Content-Type':'application/json'};
+ const data=async(path,body,method=body===undefined?'GET':'POST')=>{const response=await request(new URL(path,origin).href,{method,redirect:'manual',headers,...(body===undefined?{}:{body:JSON.stringify(body)})});assert.ok(response.ok,`${method} ${path.split('?')[0]} HTTP ${response.status}`);return response.status===204?null:response.json();};
+ await fixtures.set('https://api.sendgrid.com',{accessToken:token});
+ await fixtures.set('https://cloudflare-dns.com',{});
+ await fixtures.set('https://synthetic-dial-site.example',{});
+ await data('/api/app/profile',profile,'PATCH');
+ const auth=await request(new URL('/api/app/calendar/oauth/start',origin).href,{headers,redirect:'manual'}); assert.equal(auth.status,302);
+ const authorize=new URL(auth.headers.get('location')), code=randomUUID(), accessToken=randomUUID(), refreshToken=randomUUID();
+ await fixtures.set('https://oauth2.googleapis.com',{clientId:authorize.searchParams.get('client_id'),secret:token,code,redirectUri:new URL('/api/calendar/oauth/callback',origin).href,accessToken,refreshToken});
+ await fixtures.set('https://www.googleapis.com',{accessToken,origin,webhookSecret:token});
+ const callback=await request(new URL(`/api/calendar/oauth/callback?state=${encodeURIComponent(authorize.searchParams.get('state'))}&code=${code}`,origin).href,{headers,redirect:'manual'});assert.equal(callback.status,302,'native OAuth callback accepts exact session-bound state');
+ await data('/api/app/calendar/selection',{destinationCalendarId:'synthetic-dial-calendar',conflictCalendarIds:['synthetic-dial-calendar']},'PUT');
+ await data('/api/app/calendar/check',{});
+ const event=await data('/api/app/event-types',eventInput());
+ await data(`/api/app/event-types/${event.id}/publish`,{});
+ // A person creates native fixture work; no agent admission or delayed agent effect is invented.
+ const date=new Date(Date.now()+3*86400000);date.setUTCHours(12,0,0,0);
+ const selection={startAt:date.toISOString(),inviteeTimezone:'UTC'};
+ const selected=await data(`/api/public/book/${profile.handle}/${event.slug}/selection`,selection);
+ await data(`/api/public/book/${profile.handle}/${event.slug}/confirm`,{...selection,nonce:selected.nonce,name:'Jordan Rivera',email:'synthetic-dial-1@example.invalid',answers:{}});
+ const later=new Date(date.getTime()+3600000).toISOString();
+ const selected2=await data(`/api/public/book/${profile.handle}/${event.slug}/selection`,{...selection,startAt:later});
+ await data(`/api/public/book/${profile.handle}/${event.slug}/confirm`,{...selection,startAt:later,nonce:selected2.nonce,name:'Morgan Ellis',email:'synthetic-dial-2@example.invalid',answers:{}});
+ await data('/api/app/booking-links',{eventTypeId:event.id,kind:'single_use',expiresAt:new Date(Date.now()+86400000).toISOString(),offeredStarts:[new Date(date.getTime()+7200000).toISOString()],holdHours:12});
+ await data('/api/app/polls',{eventTypeId:event.id,title:'Planning alternatives',participants:[{name:'Sam Patel',email:'synthetic-dial-3@example.invalid'}],starts:[new Date(date.getTime()+10800000).toISOString(),new Date(date.getTime()+14400000).toISOString()],closesAt:new Date(Date.now()+86400000).toISOString(),hold:true,showTally:false});
+ const requestBody={inviteeName:'Taylor Brooks',inviteeEmail:'synthetic-dial-4@example.invalid',inviteeTimezone:'UTC',note:'Please find another time.',windows:[{date:date.toISOString().slice(0,10),startMinute:1020,endMinute:1080}]};
+ const review=await data(`/api/public/events/${profile.handle}/${event.slug}/request/review`,requestBody);
+ await data(`/api/public/events/${profile.handle}/${event.slug}/request?nonce=${encodeURIComponent(review.nonce)}`,requestBody);
+ return owner;
+}
