@@ -4,7 +4,11 @@ import { authorize } from "./native";
 
 /** Catalogue and reads use native records; no bearer, cookie or provider data enters this registry. */
 export function nativeResources(services: AppServices): ResourceDefinition[] {
-  return ["hosts", "event-types", "schedules"].map((kind) => ({
+  const resources: ResourceDefinition[] = [
+    "hosts",
+    "event-types",
+    "schedules",
+  ].map((kind) => ({
     uriTemplate: `dial://${kind}/{id}`,
     name: kind,
     scope: "dial:read",
@@ -61,4 +65,40 @@ export function nativeResources(services: AppServices): ResourceDefinition[] {
       return { json: value, untrusted: true };
     },
   }));
+  resources.push({
+    uriTemplate: "dial://activity/{id}",
+    name: "Native action receipt",
+    scope: "dial:read",
+    classes: ["standard"],
+    classify(record) {
+      return [{ class: "standard", facts: { measure: record.json ? 1 : 0 } }];
+    },
+    async read(uri, ctx) {
+      try {
+        await authorize(ctx);
+      } catch {
+        return null;
+      }
+      const match = /^dial:\/\/activity\/([a-f0-9-]{36})$/.exec(uri);
+      if (!match) return null;
+      const row = await ctx.db
+        .prepare(
+          "SELECT operation_id AS operationId,tool,target_kind AS targetKind,target_id AS targetId,prepared_by AS preparedBy,approvers,happened_at AS at FROM agent_native_activity WHERE operation_id=?",
+        )
+        .bind(match[1])
+        .first<{
+          operationId: string;
+          tool: string;
+          targetKind: string | null;
+          targetId: string | null;
+          preparedBy: string;
+          approvers: string;
+          at: string;
+        }>();
+      return row
+        ? { json: { ...row, approvers: JSON.parse(row.approvers) } }
+        : null;
+    },
+  });
+  return resources;
 }

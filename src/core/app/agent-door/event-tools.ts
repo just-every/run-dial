@@ -246,7 +246,15 @@ export function eventTools({
               result: { record: value },
               resources: resource("event-types", value),
             }
-          : { result: { deleted: previous.id } };
+          : {
+              result: { deleted: previous.id },
+              resources: [
+                {
+                  uri: `dial://activity/${ctx.operationId}`,
+                  name: "Native deletion receipt",
+                },
+              ],
+            };
       },
     });
   }

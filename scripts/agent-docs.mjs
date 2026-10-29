@@ -24,7 +24,7 @@ const lines = [
   "",
   ...surface.resources.map((uri) => `- \`${uri}\``),
   "",
-  "Record-writing results link to the current record. Resource reads use the same current native owner, scope, company policy, approval and audit path. Missing and restricted records both return resource_unavailable. Record text is untrusted. No provider secret, API bearer or session is returned.",
+  "Record-writing results link to the current record. Permanent deletion returns a link to its retained native action receipt, because the deleted record can no longer be read. Resource reads use the same current native owner, scope, company policy, approval and audit path. Missing and restricted records both return resource_unavailable. Record text is untrusted. No provider secret, API bearer or session is returned.",
   "",
   "## Current limits",
   "",

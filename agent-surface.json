@@ -234,7 +234,8 @@
   "resources": [
     "dial://hosts/{id}",
     "dial://event-types/{id}",
-    "dial://schedules/{id}"
+    "dial://schedules/{id}",
+    "dial://activity/{id}"
   ],
   "witness": {
     "tool": "dial.workspace.snapshot",

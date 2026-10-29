@@ -880,7 +880,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "f52c18af94179daa37dd3903b332c8a8554e927965b12bea9757d47a885fa3fb",
+      "sha256": "8d891087a5e552372c40c6c91287165baffdd034924ce75f968b99298732a1d7",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -940,7 +940,7 @@
       "executable": false
     },
     "docs/AGENTS.md": {
-      "sha256": "e3427996d378c04606e9a763f15591cf5adc15c148f945a54f410b85f90d0a50",
+      "sha256": "a80b487571c9a9539086911f5a687e3e1affa05dd42b14dfd571426615cd9ead",
       "executable": false
     },
     "docs/backups.md": {
@@ -3952,7 +3952,7 @@
       "executable": false
     },
     "scripts/agent-docs.mjs": {
-      "sha256": "43e746d96d12682464481109b091bffed7643ab2cb38114710bfd0a296047758",
+      "sha256": "b4d70131ea764a12ae804eb23d121b461b0d1f03693fc1066cf70dcee5ba8c67",
       "executable": false
     },
     "scripts/archive/availability-config.mjs": {
@@ -5796,7 +5796,7 @@
       "executable": false
     },
     "src/core/app/agent-door/event-tools.ts": {
-      "sha256": "eaa013340680b72433ecfc0e7c895ff9cd1cddf02b29558bb7d8c802e6d51d3f",
+      "sha256": "b9bd6485e22841517fc88fadfb22ddecc6d472a26e8607befd0971847e533d06",
       "executable": false
     },
     "src/core/app/agent-door/index.server.ts": {
@@ -5816,7 +5816,7 @@
       "executable": false
     },
     "src/core/app/agent-door/resources.ts": {
-      "sha256": "eb66d48854022c74c6a9f764a8c26510d56595fd77edd58941b87eaed762f81c",
+      "sha256": "fc1732117785628b4636262a942e48a892de72850dae81167c8ed1235a61c54c",
       "executable": false
     },
     "src/core/app/agent-door/risk-witness.ts": {
