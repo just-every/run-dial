@@ -4,7 +4,6 @@ import type { AppServices } from "../core/app/services";
 import { hostDateFilterBounds } from "../core/features/bookings/operator-date-filters";
 import { bookingApprovalTools } from "./booking-approvals";
 import { bookingCalendarTools } from "./booking-calendar";
-import { bookingLifecycleTools } from "./booking-lifecycle";
 import { bookingReadClass,bookingResult } from "./booking-native-state";
 import { bookingId,bookingList } from "./booking-schemas";
 import { deliveryTools } from "./delivery-tools";
@@ -37,7 +36,7 @@ export function bookingTools(services: AppServices): ToolDefinition[] {
         return { result: bookingResult(required(await services.bookings.getForOperator(id))) };
       },
     }),
-    ...bookingLifecycleTools(services), ...bookingApprovalTools(services), ...bookingCalendarTools(services),
+    ...bookingApprovalTools(services), ...bookingCalendarTools(services),
     ...requestTools(services), ...reportingTools(services), ...deliveryTools(services),
   ];
 }

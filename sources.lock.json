@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "parent": null,
   "edition": "just-every/dial",
-  "manifest": "e32fbdd6e6c8160bd09b761673f645974ca17a82f10b3a47a7766ac45d881edf",
+  "manifest": "534792f7f1f0ebf13333b2617d3d5cdd006735021709a1a21489720b94170bf0",
   "toolchain": {
     "id": "runeditrun/edition-authoring",
     "version": "1.1.0",
@@ -34,7 +34,8 @@
           "scripts/verify-managed-editor.mjs",
           "rer-project.json",
           ".github/workflows/rer-managed.yml",
-          "scripts/operations.mjs"
+          "scripts/operations.mjs",
+          "agent-surface.json"
         ]
       },
       "baseline": null
@@ -872,11 +873,15 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "f7d0ed80a7134b829a6fab9ee23646ff00df55c15cc033dc13a3c89e97656b50",
+      "sha256": "e5a4e9a96bd7c3103a3f44e0e5612475f0ed61ab9f190e2e98f6d10842e545ee",
       "executable": false
     },
     "ADAPTERS.md": {
       "sha256": "22bbef6d6c2cfde7ee884d1f3a9c831fe11a018386ab8ec61391d136b3ef9b17",
+      "executable": false
+    },
+    "agent-surface.json": {
+      "sha256": "0039e6f26a1f4544a05d7f72067328b74f601d555df7723974ae1b2031882e8e",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -904,7 +909,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d6fc0e800d3643ecbdc2ee0bddc32a3bf610b71484284979b03abb4d1b3552a2",
+      "sha256": "b8a99148f9ef7461f7e5d5cd96b57ca32e854bdf0de4a800d8fd8827182c0729",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +953,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "ebff66fea97faf2be8bfb8ebc27094d6a30674df47a818142a16331178b3a9a5",
+      "sha256": "b5fbf58bba0322124693b0a487b839b8f16383e1af23b5a5b52008649bce3b6a",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -988,7 +993,7 @@
       "executable": false
     },
     "edition.json": {
-      "sha256": "e32fbdd6e6c8160bd09b761673f645974ca17a82f10b3a47a7766ac45d881edf",
+      "sha256": "534792f7f1f0ebf13333b2617d3d5cdd006735021709a1a21489720b94170bf0",
       "executable": false
     },
     "ERASURE.md": {
@@ -5100,7 +5105,7 @@
       "executable": false
     },
     "src/agent-door/accounting-tools.ts": {
-      "sha256": "1b2d8850e4984fc8f88bf6de6a5ce7f117375f1539db0c8472d549dbdc86fefb",
+      "sha256": "a406519d57b7183bfcccb9dad142658f387da0eb79824fb4bbf29191472e27eb",
       "executable": false
     },
     "src/agent-door/availability-schedule-tools.ts": {
@@ -5119,10 +5124,6 @@
       "sha256": "a9fdd13b81c2ee86a2f5c19aba8b56c1998c769f38bd7c1781bb3ebd00e65ad6",
       "executable": false
     },
-    "src/agent-door/booking-lifecycle.ts": {
-      "sha256": "f421742f1f45273c191646798b0f1873a85fded100d980109e15b8e6e2591ada",
-      "executable": false
-    },
     "src/agent-door/booking-native-state.ts": {
       "sha256": "94c79734c12fd2ce2ec69a882399c0eccd20c80688950d31fb54341fcf882353",
       "executable": false
@@ -5132,11 +5133,11 @@
       "executable": false
     },
     "src/agent-door/booking-tools.ts": {
-      "sha256": "fdb3eb3f4dd454dc9626c39efc7454f72f918744c97b5b9b2695f054a6e8e7cf",
+      "sha256": "581217df80618d4008dae161eb7b7a70f811ddb25fd7466ff20e600293fc5535",
       "executable": false
     },
     "src/agent-door/brand-tools.ts": {
-      "sha256": "90b1f4b32ab6703694ace55a223e352ecf50fd9df493d9628b80de81f2462d15",
+      "sha256": "71dd66f7ddf7bc36050776e5829462c3f957c37193b630a710d8c0110765bfad",
       "executable": false
     },
     "src/agent-door/business.ts": {
@@ -5160,7 +5161,7 @@
       "executable": false
     },
     "src/agent-door/entitlement-tools.ts": {
-      "sha256": "32c3a2082e2bb7c68e26326ecdc8911eaf05b723e50e71d9a16d9a7c9b26f025",
+      "sha256": "1f5b92084d49cb3cacc0e6852b2b01725e8672b40f588175435773ceba01b06e",
       "executable": false
     },
     "src/agent-door/erasure.ts": {
@@ -5176,7 +5177,7 @@
       "executable": false
     },
     "src/agent-door/event-tool-support.ts": {
-      "sha256": "da82c6f9ac0a7c2408f7685e553ce681c0ce1b61816df536b53dbc62cc41756b",
+      "sha256": "5ec2816e39e1c6207bea36863bbccfaf97b15da32d49d0af4cbfcf6be1e842cc",
       "executable": false
     },
     "src/agent-door/event-tools.ts": {
@@ -5184,7 +5185,7 @@
       "executable": false
     },
     "src/agent-door/index.server.ts": {
-      "sha256": "b5d2381c7ad87e904950fa8296ead2ce585d441bc73cc23192bd12752c349a57",
+      "sha256": "edbe05ed97e0ca67fb6e316de3ca776ca6732cf74acc9a5179c3b789ec61a305",
       "executable": false
     },
     "src/agent-door/link-tools.ts": {
@@ -5192,7 +5193,7 @@
       "executable": false
     },
     "src/agent-door/native-tool.ts": {
-      "sha256": "00bd8d9477ef18b2881114077b95625f147633783c43513e866e4f50e39fb34b",
+      "sha256": "328e645253dd8353bdb22845de418a7899d09a1a3011a341cf90108dc25c0d8c",
       "executable": false
     },
     "src/agent-door/notice-tools.ts": {
@@ -5208,7 +5209,7 @@
       "executable": false
     },
     "src/agent-door/payment-tools.ts": {
-      "sha256": "77162648c4cf6b124a7483ed165e44db46f2bab2fb70137e08f815e2c15423a0",
+      "sha256": "11319841f414e15da4bee938e28d813402a774e57e9b180bc8ecb0d1f7d5199e",
       "executable": false
     },
     "src/agent-door/people.ts": {
@@ -5220,7 +5221,7 @@
       "executable": false
     },
     "src/agent-door/README.md": {
-      "sha256": "c3a99fdc2d1e1e5b8832402c67264e4b09e248c5e4465e635c7c1a8a9e214864",
+      "sha256": "df5103b5a60179caf8a5e82ac556389d7d01fd63ce216a9d7380ea7e8417f87a",
       "executable": false
     },
     "src/agent-door/reporting-tools.ts": {
@@ -8685,6 +8686,14 @@
     },
     "src/site/run.ts": {
       "sha256": "ef1e5801d05a7c682ed6532c6bcc3acd19b0661875c4c9f81b6c266da6ea4514",
+      "executable": false
+    },
+    "tests/agent-door/native-owner.mjs": {
+      "sha256": "e8dd6103fbfc887650c46e46cd15326c067987db8fc9d7a54227a0721d6a3748",
+      "executable": false
+    },
+    "tests/agent-door/provider-edge.mjs": {
+      "sha256": "97d7192f8222f1272cda45cec9719c0145de1c7c6ff62e8393962e82d6eb40eb",
       "executable": false
     },
     "tests/api-worker.ts": {

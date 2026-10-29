@@ -1,3 +1,4 @@
+import { eventChangeClasses } from "./event-tool-support";
 import { z } from "zod";
 import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
@@ -5,7 +6,7 @@ import type { AppServices } from "../core/app/services";
 import { eventPriceInputSchema } from "../core/features/payments/pricing";
 import { paymentTermsInputSchema } from "../core/features/payments/terms";
 import { nativeTool, required, standard, live, objectOutput } from "./native-tool";
-import { financial, usdAmount } from "./payment-facts";
+import { usdAmount } from "./payment-facts";
 import { paymentMoneyTools } from "./payment-money-tools";
 import { accountingTools } from "./accounting-tools";
 import { entitlementTools } from "./entitlement-tools";
@@ -23,23 +24,6 @@ export function paymentTools(services: AppServices): ToolDefinition[] {
   };
   return [
     nativeTool({
-      name: "dial.payments.stripe_status", title: "Read Stripe connection", description: "Read Stripe health, enabled payment methods and public setup endpoints without credentials.",
-      scope: "dial:read", readOnly: true, input: noInput, outputSchema: objectOutput,
-      classes: ["standard", "sensitive"], clauses: ["PAY-001"],
-      classify: async () => (await services.payments.connection.status()).accountId ? [financial(1)] : standard(),
-      run: async () => ({ result: await services.payments.connection.status() }),
-    }),
-    nativeTool({
-      name: "dial.payments.ach_set", title: "Set ACH payment method", description: "Enable or disable ACH for the currently connected Stripe account.",
-      scope: "dial:write", readOnly: false, input: z.object({ enabled: z.boolean() }).strict(), outputSchema: objectOutput,
-      classes: ["live"], clauses: ["PAY-001"], classify: () => [live("booking-payments")],
-      summary: args => ({ target: { id: "stripe", name: "Stripe payment methods" }, items: [args.enabled ? "Enable ACH" : "Disable ACH"] }),
-      run: async args => {
-        if (!await services.payments.setAch(args.enabled)) throw new ToolRefusal("stripe_not_connected");
-        return { result: await services.payments.connection.status() };
-      },
-    }),
-    nativeTool({
       name: "dial.payments.price_get", title: "Read event price", description: "Read an event's USD price and its duration-specific prices in cents.",
       scope: "dial:read", readOnly: true, input: eventInput, outputSchema: objectOutput, classes: ["standard"], clauses: ["PAY-001"],
       classify: async args => { await event(args.id); return standard(); },
@@ -48,7 +32,7 @@ export function paymentTools(services: AppServices): ToolDefinition[] {
     nativeTool({
       name: "dial.payments.price_set", title: "Set event price", description: "Set USD cents for the native event durations, preserving deposit compatibility. Does not charge anyone.",
       scope: "dial:write", readOnly: false, input: eventInput.extend({ price: eventPriceInputSchema }).strict(), outputSchema: objectOutput,
-      classes: ["standard"], clauses: ["PAY-001", "PAY-003"], classify: async args => { await event(args.id); return standard(); },
+      classes: ["standard", "live", "external"], clauses: ["PAY-001", "PAY-003"], classify: async args => eventChangeClasses([await event(args.id)]),
       revisionType: "string", revision: async args => JSON.stringify([(await event(args.id)).updatedAt, await services.payments.eventPrice(args.id), (await services.payments.eventTerms(args.id)).version]),
       summary: async args => ({ ...await eventSummary(args.id), ...(args.price.amountCents !== null ? { amount: usdAmount(args.price.amountCents) } : {}), items: args.price.durationPrices.map(price => `${price.durationMinutes} minutes: ${price.amountCents / 100} USD`) }),
       run: async args => {
@@ -66,7 +50,7 @@ export function paymentTools(services: AppServices): ToolDefinition[] {
     nativeTool({
       name: "dial.payments.terms_set", title: "Set event payment terms", description: "Save native deposit, balance and cancellation terms. Existing bookings retain the terms they accepted.",
       scope: "dial:write", readOnly: false, input: eventInput.extend({ terms: paymentTermsInputSchema }).strict(), outputSchema: objectOutput,
-      classes: ["standard"], clauses: ["PAY-003"], classify: async args => { await event(args.id); return standard(); },
+      classes: ["standard", "live", "external"], clauses: ["PAY-003"], classify: async args => eventChangeClasses([await event(args.id)]),
       revisionType: "integer", revision: async args => { await event(args.id); return (await services.payments.eventTerms(args.id)).version; },
       summary: async args => ({ ...await eventSummary(args.id), items: [
         args.terms.deposit.kind === "fixed" ? `Deposit: ${args.terms.deposit.amountCents / 100} USD` : args.terms.deposit.kind === "percent" ? `Deposit: ${args.terms.deposit.percent}%` : "No deposit",

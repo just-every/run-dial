@@ -1,3 +1,4 @@
+import { eventChangeClasses } from "./event-tool-support";
 import { z } from "zod";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
@@ -27,7 +28,7 @@ export function entitlementTools(services: AppServices): ToolDefinition[] {
     nativeTool({
       name: "dial.entitlements.product_define", title: "Define appointment product", description: "Define a native event package, membership or gift in USD cents. This definition creates no purchase, recurring charge or credit.",
       scope: "dial:write", readOnly: false, input: eventInput.extend({ product: productInput }).strict(), outputSchema: objectOutput,
-      classes: ["standard"], clauses: ["PAY-004"], classify: async args => { await event(args.id); return standard(); },
+      classes: ["standard", "live", "external"], clauses: ["PAY-004"], classify: async args => eventChangeClasses([await event(args.id)]),
       revisionType: "string", revision: async args => JSON.stringify([(await event(args.id)).updatedAt, await services.payments.entitlements.products(args.id)]),
       summary: async args => {
         const saved = await event(args.id);

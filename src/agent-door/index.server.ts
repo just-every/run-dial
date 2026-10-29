@@ -12,7 +12,7 @@ export const notTools: NonNullable<AgentDoorOptions["notTools"]> = [
   { clauses: ["CAL-001", "CAL-010", "PAY-001", "PAY-006", "FLOW-005"], reason: "connector" },
   { clauses: ["DATA-003", "MIGRATE-001"], reason: "import-door" },
   { clauses: ["OPER-001", "OPER-002"], reason: "installation" },
-  { clauses: ["PROFILE-002", "BRAND-001"], reason: "screen" },
+  { clauses: ["PROFILE-002", "BRAND-001", "BOOK-011", "AGENT-005"], reason: "screen" },
 ];
 
 /** One installation door. There is no SDK/device/session credential conversion. */

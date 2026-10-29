@@ -340,8 +340,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 70 | 6 | 0 | 76 |
-| Target and push further | 20 | 24 | 56 | 100 |
-| All | 90 | 30 | 56 | 176 |
+| Target and push further | 20 | 31 | 49 | 100 |
+| All | 90 | 37 | 49 | 176 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -510,14 +510,14 @@ Done means implemented with a test exercising the clause through its public or o
 | `MIGRATE-005` | Cutover and old links | target | partial | `src/core/features/move-in/switch-over.ts`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `CUSTOM-001` | Operator annotations | published | done | `tests/custom-fields.test.mjs` | Role refusals carried by `OPER-001`. |
 | `CUSTOM-002` | Annotation privacy and portability | published | done | `tests/custom-fields.test.mjs` |  |
-| `AGENT-001` | Agent authority, limits and audit | push-further | missing |  | No implementing code yet. |
+| `AGENT-001` | Agent authority, limits and audit | push-further | partial | `src/agent-door/index.server.ts`, `agent-surface.json`, `tests/agent-door/native-owner.mjs`; native specialist grants and delayed execution remain incomplete | No implementing code yet. 2026-10-29: queuedLifecycle; ownerNativeAdministration not declared in the door (core subset, 2026-10-29). |
 | `AGENT-002` | Exception negotiator | push-further | missing |  | No agent constraint solver, exception proposals or approval-to-offered-times flow ships; alternative requests are handled manually. |
-| `AGENT-003` | Unanswered-thread follow-up | push-further | missing |  | No implementing code yet. |
-| `AGENT-004` | Calendar drift reconciler | push-further | partial | `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
-| `AGENT-005` | Meeting happened check | push-further | missing |  | No agent evidence assembly, attendance proposals or host-confirmation flow ships; BOOK-011 supports manual attendance marks only. |
+| `AGENT-003` | Unanswered-thread follow-up | push-further | partial | `src/agent-door/README.md` (declared exclusion; no completed agent flow claimed) | No implementing code yet. 2026-10-29: queuedLifecycle; timedLifecycle; mailEdges not declared in the door (core subset, 2026-10-29). |
+| `AGENT-004` | Calendar drift reconciler | push-further | partial | `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. 2026-10-29: queuedLifecycle; resourceRefresh not declared in the door (core subset, 2026-10-29). |
+| `AGENT-005` | Meeting happened check | push-further | partial | `src/agent-door/README.md` (declared exclusion; no completed agent flow claimed) | No agent evidence assembly, attendance proposals or host-confirmation flow ships; BOOK-011 supports manual attendance marks only. 2026-10-29: ownerNativeAdministration not declared in the door (core subset, 2026-10-29). |
 | `AGENT-006` | No-show recovery | push-further | missing |  | No implementing code yet. |
-| `AGENT-007` | Meeting follow-through | push-further | missing |  | No implementing code yet. |
+| `AGENT-007` | Meeting follow-through | push-further | partial | `src/agent-door/README.md` (declared exclusion; no completed agent flow claimed) | No implementing code yet. 2026-10-29: queuedLifecycle; mailEdges not declared in the door (core subset, 2026-10-29). |
 | `AGENT-008` | Pre-meeting brief | push-further | missing |  | No implementing code yet. |
-| `AGENT-009` | Scheduling assistant in email threads | push-further | missing |  | No implementing code yet. |
-| `AGENT-010` | Flexible holds and availability tuning | push-further | missing |  | No implementing code yet. |
-| `AGENT-011` | Voice booking through a contracted provider | push-further | missing |  | No implementing code yet. |
+| `AGENT-009` | Scheduling assistant in email threads | push-further | partial | `src/agent-door/README.md` (declared exclusion; no completed agent flow claimed) | No implementing code yet. 2026-10-29: mailEdges; queuedLifecycle not declared in the door (core subset, 2026-10-29). |
+| `AGENT-010` | Flexible holds and availability tuning | push-further | partial | `src/agent-door/README.md` (declared exclusion; no completed agent flow claimed) | No implementing code yet. 2026-10-29: timedLifecycle; queuedLifecycle not declared in the door (core subset, 2026-10-29). |
+| `AGENT-011` | Voice booking through a contracted provider | push-further | partial | `src/agent-door/README.md` (declared exclusion; no completed agent flow claimed) | No implementing code yet. 2026-10-29: ownerNativeAdministration; queuedLifecycle not declared in the door (core subset, 2026-10-29). |
