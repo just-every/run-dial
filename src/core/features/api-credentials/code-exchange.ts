@@ -17,7 +17,7 @@ export async function exchangeCode(c:Context<AppEnvironment>,input:URLSearchPara
   WHERE code.code_hash=? AND code.challenge=? AND code.redirect_uri=? AND code.consumed_at IS NULL AND code.expires_at>?
   AND a.id=? AND a.client_secret_hash=? AND a.redirect_uri=code.redirect_uri AND a.grant_type='authorization_code'
   AND a.revoked_at IS NULL AND a.expires_at>? AND g.revoked_at IS NULL AND g.expires_at>?
-  AND issuer.status='active' AND issuer.role IN ('owner','admin') AND person.status='active' AND person.role IN ('owner','admin')`)
+  AND issuer.status='active' AND issuer.role IN ('owner','admin') AND person.status='active' AND person.role='owner'`)
   .bind(await hashSecret(code),challenge,input.get("redirect_uri")??"",now,input.get("client_id")??"",await hashSecret(secret),now,now)
   .first<{id:string;application_id:string;operator_id:string;host_id:string|null;team_id:string|null;scopes_json:string;expires_at:string;name:string}>();
  if(!grant)return invalid();

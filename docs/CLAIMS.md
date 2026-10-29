@@ -50,9 +50,9 @@ Gap: Routing, poll, payment-return and workflow-unsubscribe capabilities are car
 
 AUTH-008 is partial: API credentials and connected apps.
 
-Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
+Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/public-api/consent.mjs` — delegatedCredentialJourney; `scripts/verify-api-credentials.mjs` — one-time secret, last use, revocation and explicit app consent in Settings; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
 
-Gap: Owner-issued tokens and machine applications retain hashed secrets, scopes, expiry, last use and next-request revocation. Admin issuance, explicit delegated consent with PKCE and native host partitions are implemented; their public-door qualification is pending. Conservative default: only active owners and admins approve delegated grants, bounded by the registered scopes and host or team; broader delegated authority awaits ct approval under the standing scope policy. Public profiles and connected calendars remain shared pending `TEAM-001`.
+Gap: Personal and machine credentials, native admin issuance, two native host partitions, explicit owner consent with single-use PKCE codes, revocation, demotion and erasure are implemented and qualified through public doors. Conservative standing-policy floor: only an owner approves delegated access, bounded by the registered scopes and host or team; broader delegated host and team consent and provider boundaries await ct judgment. Public profiles and connected calendars remain shared under `TEAM-001`.
 
 OPER-001 is partial: Roles and permissions.
 

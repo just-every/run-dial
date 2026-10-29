@@ -4,7 +4,7 @@ import type { AppEnvironment } from "../../app/context";
 import { apiError } from "../../shared/http";
 import { createId, nowIso } from "../../shared/ids";
 import { validate } from "../../shared/validation";
-import { credentialAdministrator, auditCredential, hostExists } from "./authority";
+import { auditCredential, hostExists } from "./authority";
 import { credentialScopes, hashSecret, randomSecret, type CredentialScope } from "./store";
 
 const consentInput=z.object({client_id:z.string().length(26),redirect_uri:z.string().url().max(2000),response_type:z.literal("code"),
@@ -20,7 +20,7 @@ export async function activeApplication(db:D1Database,id:string) {
 async function review(db:D1Database,input:ConsentInput,operatorId:string) {
  const app=await activeApplication(db,input.client_id);
  if(!app||app.redirect_uri!==input.redirect_uri)return;
- if(!await credentialAdministrator(db,operatorId))return;
+ if(!await db.prepare("SELECT id FROM oa_operators WHERE id=? AND status='active' AND role='owner'").bind(operatorId).first())return;
  if(app.host_id&&!await hostExists(db,app.host_id))return;
  const scopes=[...new Set(input.scope.split(/\s+/).filter(Boolean))] as CredentialScope[];
  const allowed=JSON.parse(app.scopes_json) as CredentialScope[];
@@ -28,6 +28,10 @@ async function review(db:D1Database,input:ConsentInput,operatorId:string) {
  return {app,scopes};
 }
 export const consentRoutes=new Hono<AppEnvironment>()
+ .use("/api/app/oauth/authorize",async(c,next)=>{
+  if(!await c.get("apiDatabase").prepare("SELECT id FROM oa_operators WHERE id=? AND status='active' AND role='owner'").bind(c.get("session").id).first())return apiError(c,403,"role_forbidden","Only an owner can approve delegated app access.");
+  await next();
+ })
  .get("/api/app/oauth/authorize",validate("query",consentInput),async c=>{
   c.header("Cache-Control","no-store");c.header("Referrer-Policy","no-referrer");
   const value=await review(c.get("apiDatabase"),c.req.valid("query"),c.get("session").id);
