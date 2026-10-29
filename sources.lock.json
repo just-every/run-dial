@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4a7ec76be86bb085e3c78e4dde9f823cc88fd245aaf871b781d8be41541232d9",
+      "sha256": "e887b1dea6f4f445a932ca05991e83cb01b05a0c01273ee8f377351e926d7c47",
       "executable": false
     },
     "DEMO.md": {
@@ -952,7 +952,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "58319a29bfd25213f0fe319ef2883c22b0327ef29c73bf99a5e8e7a29cc5290c",
+      "sha256": "ef56dfb11c91cc31ea0421ca7c2c1793839366a65eebc559941967c3beab484c",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -992,7 +992,7 @@
       "executable": false
     },
     "docs/WORKFLOW-CRM.md": {
-      "sha256": "d729b0bfc34bf838ab9db33fffae3251592f6584e640d267802f7339e48f99bd",
+      "sha256": "c7a637275c848c9216080981199c57df3497001e838512bc32c4f656ae00eab7",
       "executable": false
     },
     "edition.json": {
@@ -1680,7 +1680,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "01d09ae77c38d8afc6ac56c3b8404af96fdd8b27bf32edc1cfc5b34f54deade8",
+      "sha256": "1a3e75b37b041773aef1ccb7c05c12a68572f2af4c8c9e2f36204b57b01ce532",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -2077,6 +2077,10 @@
     },
     "migrations/core/0097_workflow_crm.sql": {
       "sha256": "362585a9729d67f3838a203b0df0f624fc2d98c0cad20342c02abdd7cc222227",
+      "executable": false
+    },
+    "migrations/core/0098_workflow_authority_revocation.sql": {
+      "sha256": "f3fb6e1d1331b43638ca27fa8dc8ae695908be63eebb7b6d273e87cbea398df5",
       "executable": false
     },
     "modules/d1-transport/index.d.mts": {
@@ -4036,7 +4040,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "4c968d79bb0cce2824f9d492ddc351f11961b7f362299493eafa85d817d391be",
+      "sha256": "2982d7db245f4a09aafee733a7ec28c90be90cfe67c9cd255ba855ba7eade0de",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
@@ -7436,7 +7440,7 @@
       "executable": false
     },
     "src/core/features/workflows/routes.ts": {
-      "sha256": "17bc12a5c915fabe403859bcfb5493111f797a318f809438dd0c38f471a0c609",
+      "sha256": "8a071da77bb2728c102bcd89d4ca2f21e0a1873d0d78afba24ee4158c7959ba8",
       "executable": false
     },
     "src/core/features/workflows/runs.ts": {
@@ -7448,7 +7452,7 @@
       "executable": false
     },
     "src/core/features/workflows/types.ts": {
-      "sha256": "30dd9d4b4551aa336b110d9db5d04312985c8d32d9c182ae6bba1354c2d9d394",
+      "sha256": "abdd23d6462bf2de2e10990bf6d80bcbb4f4163dea2a928ffa34e631c03b49fd",
       "executable": false
     },
     "src/core/features/workflows/validation.ts": {
@@ -9892,7 +9896,7 @@
       "executable": false
     },
     "tests/public-api/consent.mjs": {
-      "sha256": "e769c937e3538ffd994b48d6cd154636886ac033d579e0154d380a97a7a30027",
+      "sha256": "262285ab96c089818931ac25f4a4ace4370cbae40d5d48309e212d041243c262",
       "executable": false
     },
     "tests/public-api/continuations.mjs": {
@@ -9916,7 +9920,7 @@
       "executable": false
     },
     "tests/public-api/workflow-lifecycle.mjs": {
-      "sha256": "7f0a5634994345b8cf53d9616703cfa13d380367b5fa0776b3ab4f0372ee372a",
+      "sha256": "47406a1f8ae64470b46dcca573c9a0da1894997018efcea8fb08c49d671e59cb",
       "executable": false
     },
     "tests/public-api/workflow-webhooks.mjs": {

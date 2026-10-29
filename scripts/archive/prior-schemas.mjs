@@ -12,6 +12,7 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  'core/0098_workflow_authority_revocation.sql': (table,row)=>table==='workflow_rules'?{...row,authority_revoked_at:null}:row,
   'core/0097_workflow_crm.sql': (table,row)=>table==='workflow_rules'?{...row,action_type:row.action_kind??row.action,crm_connection_id:null}:row,
   'core/0096_api_webhook_host_scope.sql': (_table,row)=>row,
   'core/0095_workflow_webhooks.sql': (table,row) => table==='workflow_rules'?{...row,action_kind:null,trigger_kind:null,routing_form_id:null,webhook_subscription_id:null}:table==='webhook_deliveries'?{...row,workflow_id:null,workflow_version:null,workflow_occurrence_id:null,workflow_booking_state:null,routing_submission_id:null}:row,

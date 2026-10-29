@@ -86,10 +86,15 @@ export async function lifecycleWorkflows({call,json,issue,fixture,db,options,tic
  const owner=await db.prepare("SELECT operator_id AS id FROM workflow_rules WHERE id=?").bind(revokedRule.id).first();
  const replacementCookie=replacementSession.headers.get("set-cookie").split(";")[0];
  const surviving=await json("/api/app/api-credentials",{session:true,operatorCookie:replacementCookie,body:{name:"Synthetic surviving owner",scopes:["workflows:manage","bookings:read"],expiresAt:new Date(Date.now()+86400000).toISOString()}},201);
+ const ownerConnection=await json("/api/app/workflow-crm-connections",{session:true,body:{name:"Synthetic deactivation grant",accessToken:"synthetic-dial-crm-801",consent:true}},201);
  await db.prepare("UPDATE oa_operators SET status='inactive' WHERE id=?").bind(owner.id).run();
  try{await json("/__fixtures/deliver",{body:{}});}finally{await db.prepare("UPDATE oa_operators SET status='active' WHERE id=?").bind(owner.id).run();}
  assert.equal((await call(`/api/v1/workflows/${revokedRule.id}/runs`,options)).status,401,"restoring the creator cannot revive their revoked machine credential");
  observer={secret:surviving.secret};
+ const revokedGrant=await json(`/api/v1/workflows/${revokedRule.id}`,observer);assert.equal(revokedGrant.enabled,false);assert.ok(revokedGrant.authorityRevokedAt,"restoring the owner cannot revive a revoked workflow grant");
+ const providerGrant=(await json("/api/app/workflow-crm-connections",{session:true,operatorCookie:replacementCookie})).connections.find(row=>row.id===ownerConnection.id);
+ assert.equal(providerGrant.status,"revoked");assert.equal(providerGrant.reason,"owner_authority_revoked");
+ assert.equal((await db.prepare("SELECT credential_ciphertext FROM workflow_crm_connections WHERE id=?").bind(ownerConnection.id).first()).credential_ciphertext,null,"role restoration cannot recover a removed provider credential");
  assert.ok((await runs(revokedRule)).some(row=>row.bookingId===revokedBooking.id&&row.outcome==="skipped"&&row.reason==="workflow_authority_revoked"),"removing the enabling owner's authority stops queued outbound mail");
  await tick();assert.equal((await runs(revokedRule)).filter(row=>row.bookingId===revokedBooking.id).length,1,"reactivation cannot replay a revoked delivery");
  for(const rule of rules)await json(`/api/v1/workflows/${rule.id}`,{...observer,method:"DELETE",key:`synthetic-dial-remove-${rule.trigger}`});

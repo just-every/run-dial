@@ -11,12 +11,12 @@ export const workflowPatch=z.object({trigger:trigger.optional(),action:action.op
 export type WorkflowRule={
  id:string;name:string;event_type_id:string;operator_id:string;enabled:number;enabled_at:string|null;
  trigger:z.infer<typeof trigger>;action:z.infer<typeof action>;offset_minutes:number;version:number;subject:string;text:string;removed_at:string|null;created_at:string;updated_at:string;
- action_type:z.infer<typeof action>;crm_connection_id:string|null;action_kind:"webhook"|null;trigger_kind:"routing-without-booking"|null;routing_form_id:string|null;webhook_subscription_id:string|null;
+ authority_revoked_at:string|null;action_type:z.infer<typeof action>;crm_connection_id:string|null;action_kind:"webhook"|null;trigger_kind:"routing-without-booking"|null;routing_form_id:string|null;webhook_subscription_id:string|null;
 };
 export const workflowAction=(row:WorkflowRule)=>row.action_type;
 export const workflowTrigger=(row:WorkflowRule)=>row.trigger_kind??row.trigger;
 export function workflowView(row:WorkflowRule){
  return {id:row.id,name:row.name,eventTypeId:row.event_type_id,createdBy:row.operator_id,
   trigger:workflowTrigger(row),action:workflowAction(row),crmConnectionId:row.crm_connection_id,routingFormId:row.routing_form_id,webhookSubscriptionId:row.webhook_subscription_id,offsetMinutes:row.offset_minutes,enabled:row.enabled===1,enabledAt:row.enabled_at,
-  version:row.version,subject:row.subject,text:row.text,createdAt:row.created_at,updatedAt:row.updated_at};
+  version:row.version,authorityRevokedAt:row.authority_revoked_at,subject:row.subject,text:row.text,createdAt:row.created_at,updatedAt:row.updated_at};
 }

@@ -71,8 +71,8 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
    const trigger=input.trigger??workflowTrigger(row),action=input.action??workflowAction(row);
    const result=await c.get("apiDatabase").prepare(`UPDATE workflow_rules SET name=?,subject=?,text=?,trigger=?,action=?,offset_minutes=?,enabled=?,
     enabled_at=CASE WHEN ?=0 THEN NULL WHEN enabled=0 THEN ? ELSE enabled_at END,version=version+1,updated_at=?
-    ,action_kind=?,trigger_kind=?,routing_form_id=?,webhook_subscription_id=?,action_type=?,crm_connection_id=? WHERE id=? AND removed_at IS NULL`)
-    .bind(input.name??row.name,input.subject??row.subject,input.text??row.text,trigger==="routing-without-booking"?"booking-created":trigger,action==="email-hosts"?"email-hosts":"email-invitee",input.offsetMinutes??row.offset_minutes,enabled?1:0,enabled?1:0,now,now,action==="webhook"?action:null,trigger==="routing-without-booking"?trigger:null,config.routingFormId,config.webhookSubscriptionId,action,config.crmConnectionId,id).run();
+    ,action_kind=?,trigger_kind=?,routing_form_id=?,webhook_subscription_id=?,action_type=?,crm_connection_id=?,authority_revoked_at=CASE WHEN ?=1 THEN NULL ELSE authority_revoked_at END WHERE id=? AND removed_at IS NULL`)
+    .bind(input.name??row.name,input.subject??row.subject,input.text??row.text,trigger==="routing-without-booking"?"booking-created":trigger,action==="email-hosts"?"email-hosts":"email-invitee",input.offsetMinutes??row.offset_minutes,enabled?1:0,enabled?1:0,now,now,action==="webhook"?action:null,trigger==="routing-without-booking"?trigger:null,config.routingFormId,config.webhookSubscriptionId,action,config.crmConnectionId,input.enabled===true?1:0,id).run();
    if(!result.meta.changes)return {status:404,body:missing};
    const updated=await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE id=?").bind(id).first<WorkflowRule>();
    if(!updated)throw new Error("workflow_update_missing");
