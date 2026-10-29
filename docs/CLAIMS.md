@@ -1120,7 +1120,7 @@ BASE-AGENT-010 is partial: Agents can follow changes.
 
 Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
 
-Gap: 2026-10-29: events/subscriptions not declared in the door (core subset, 2026-10-29).
+Gap: 2026-10-29: CORE `dial.events.list` declares the built-in retained-event reader; complete product change feeds, subscriptions and signed webhook delivery remain unproven.
 
 BASE-AGENT-011 is partial: Limits are policy, and Pause stops everything.
 
@@ -1138,4 +1138,4 @@ BASE-AGENT-013 is partial: Manifest, docs and the conformance journey.
 
 Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
 
-Gap: 2026-10-29: events/subscriptions; resources; multiSponsor; mailEdges; resourceRefresh; timedLifecycle; dualHost; ownerNativeAdministration; queuedLifecycle not declared in the door (core subset, 2026-10-29).
+Gap: 2026-10-29: CORE `dial.events.list` is declared; complete events/subscriptions; resources; multiSponsor; mailEdges; resourceRefresh; timedLifecycle; dualHost; ownerNativeAdministration; queuedLifecycle not declared in the door (core subset, 2026-10-29).

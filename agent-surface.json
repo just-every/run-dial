@@ -1218,6 +1218,53 @@
       "clauses": [
         "FLOW-005"
       ]
+    },
+    {
+      "name": "dial.events.list",
+      "scope": "events:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "BASE-AGENT-010"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "after": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "events",
+          "cursor"
+        ],
+        "additionalProperties": false
+      }
     }
   ],
   "notTools": [
@@ -1260,6 +1307,21 @@
   ],
   "resources": [],
   "journey": [
+    {
+      "id": "retained_events",
+      "tool": "dial.events.list",
+      "args": {
+        "limit": 1
+      },
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
     {
       "id": "profile",
       "tool": "dial.profile.get",

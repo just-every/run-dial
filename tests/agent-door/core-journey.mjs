@@ -3,6 +3,11 @@ import {randomUUID} from 'node:crypto';
 import {profile,mergeAudits} from './native-owner.mjs';
 import {errorCode as code} from '../../modules/agent-door/conformance/protocol.mjs';
 export async function afterStep({step,result,phase}) {
+ if(step.tool==='dial.events.list') {
+  assert.ok(Array.isArray(result.events));
+  assert.ok(result.events.length<=step.args.limit);
+  assert.ok(result.cursor===null||typeof result.cursor==='string');
+ }
  if(step.tool!=='dial.clients.merge'||result?.merged!==true)return;
  const audits=await mergeAudits(),audit=audits.at(-1);
  assert.equal(audit?.actor_type,'agent','native merge audit must not turn agent preparation into a person action');
@@ -13,6 +18,17 @@ export async function afterStep({step,result,phase}) {
 }
 export default async function coreJourney({request,origin,cookie,tool}) {
  const headers={Origin:origin,Cookie:cookie,'Content-Type':'application/json'};
+ // The pinned Base mounts this read-only tool even for the CORE subset.
+ // Its native store supplies stable policy facts, never invented product events.
+ const events=async args=>{const response=await tool('dial.events.list',args);assert.notEqual(response.result?.isError,true);return response.result.structuredContent;};
+ const firstPage=await events({limit:1});
+ assert.equal(firstPage.events.length,1,'native policy adoption supplies a visible retained fact');
+ assert.equal(firstPage.events[0].type,'policy.adopted');
+ assert.equal(firstPage.cursor,firstPage.events[0].id);
+ const replayPage=await events({limit:1});assert.deepEqual(replayPage,firstPage,'the same cursor position returns the same retained event');
+ const nextPage=await events({after:firstPage.cursor,limit:1});
+ assert.ok(nextPage.events.every(event=>event.id!==firstPage.cursor),'after advances past the retained event');
+ for(const limit of [0,201])assert.equal(code(await tool('dial.events.list',{limit})),'invalid_arguments');
  const witness=async()=>{const r=await request(origin+'/api/app/profile',{headers});assert.equal(r.status,200);return r.json();};
  const before=await witness(),key=randomUUID(),args={...profile,idempotency_key:key};
  const first=await tool('dial.profile.save',args),after=await witness();assert.notEqual(first.result?.isError,true);

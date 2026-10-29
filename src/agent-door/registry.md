@@ -2,10 +2,11 @@
 
 Dial declares synchronous native work under `tools`, `policy`, `pause`, `audit`, and `idempotency`. Every call requires the current sponsoring native owner's authority. Classes below are the possible server-computed classes; the proposed effect and current records determine the actual classes.
 
-Tools that prepare queued work, administer providers or require a native human act remain outside this registry. [The adoption guide](README.md) lists each excluded verb, native location, clauses and reason. No provider cost is registered.
+Tools that prepare queued work, administer providers or require a native human act remain outside this registry. [The adoption guide](README.md) lists each excluded verb, native location, clauses and reason. No provider cost is registered. The built-in `dial.events.list` uses Base's retained-event adapter (`modules/agent-door/events.ts`), its closed cursor/limit schema and access filtering. Complete product change feeds, subscriptions and webhook delivery remain undeclared.
 
 | Tool | Scope | Access | Possible classes | Clauses |
 | --- | --- | --- | --- | --- |
+| `dial.events.list` | `events:read` | read | standard | `BASE-AGENT-010` |
 | `dial.profile.get` | `dial:read` | read | standard | `PROFILE-001`, `PROFILE-002` |
 | `dial.profile.save` | `dial:write` | write | live, external | `PROFILE-001`, `PROFILE-002`, `AVAIL-005` |
 | `dial.event.list` | `dial:read` | read | standard | `EVENT-001` |

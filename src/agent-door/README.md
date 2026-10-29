@@ -14,9 +14,12 @@ The declared capabilities are `tools`, `policy`, `pause`, `audit`, `idempotency`
 in `agent-surface.json` and the options passed to `createAgentDoor`. Version
 0.2.87 accepts this field but does not scope optional families. Base #670 must
 supply that behavior before this adoption can be complete. In particular, the
-copied runtime always adds `dial.events.list`; Dial does not declare the events
-family or silently add it to its specialist contract to satisfy the old validator.
-The resulting registry and surface failures stay failing in normal verification.
+copied runtime always adds `dial.events.list`. Dial declares that built-in CORE
+read tool with its `events:read` scope, standard class, exact input/output schemas
+and a native journey. It reads Base's retained, access-filtered policy/approval
+facts through `modules/agent-door/events.ts`; no second adapter is registered.
+This bounded listing does not claim subscriptions, signed webhook delivery or
+events for every native product change.
 
 The scheduling coordinator reads native profiles, event configuration, hours,
 calendar health, bookings, requests, delivery status, reports, clients, polls,
@@ -71,8 +74,9 @@ The following families remain undeclared (core subset, 2026-10-29):
   copied `operation.ts` and `pipeline.ts` are unchanged from their recorded
   0.2.87 source. That release fixes G-op-fanout; queued lifecycle stays undeclared
   because Dial has not integrated or proven native continuation custody.
-- **events/subscriptions:** retained change feeds, subscriptions and delivery.
-  Version 0.2.87 exposes its built-in listing regardless of the declared subset.
+- **events/subscriptions:** complete native change feeds, subscriptions and
+  signed webhook delivery. The built-in CORE `dial.events.list` is declared;
+  the complete events family remains unproven.
 - **multiSponsor / ownerNativeAdministration:** Business team provisioning,
   operator invitations/roles, and native human confirmation of attendance stay
   with native people and screen doors. A company approval does not invent the
@@ -128,13 +132,14 @@ clear or disconnect can return a new review/refusal after the native effect.
 Preserve once-only native effects and truthful current classes; never fabricate a
 record, replay an outside effect or freeze risk to hide this receipt limitation.
 
-Legacy archive compatibility also needs an upstream change at this pin. The
-listed-release version 2 archive has no schema-object inventory. The published
-portability importer refuses it before Dial's exact prior schema proof and
-row upgrades can run. Native restore stays empty on refusal. No unverified-schema
-acknowledgment is added and the native DATA-001 requirement is retained.
+The listed-release archive is re-exported from the original 0061 installation
+with the pinned writer so it carries a complete schema-object inventory. Its
+archived rows, files and exact historical schema proof remain unchanged. See
+`tests/fixtures/archive/README.md` for the fixture update. Restore still verifies
+Dial's exact prior schema proof and row upgrades, with no unverified-schema
+acknowledgment or relaxation of unrelated schema or ledger mismatches.
 
-The 116 prepared verbs from round 2 become 92 declared verbs: these 26 stay
+The 116 prepared verbs from round 2 become 92 declared native verbs plus Base's built-in event listing: these 26 stay
 outside the registry, and two native grant readers are added. The following
 locations are relative to `src/core/features/`; no excluded verb is a mock tool.
 
