@@ -19,7 +19,7 @@ export const notTools: NonNullable<AgentDoorOptions["notTools"]> = [
 export function dialAgentDoor(env: AppBindings, runtime: RuntimeEnvironment, services: AppServices) {
   const trust = dialOwnerTrust(runtime);
   const business = dialBusinessSettings({ db: env.DB, trust });
-  // The extra field is retained unchanged by 0.2.86. Family scoping needs #670.
+  // The extra field is retained unchanged by 0.2.87. Family scoping needs #670.
   const options = {
     seed: "dial", name: "Dial", specialist, db: env.DB, origin: new URL(runtime.APP_URL).origin,
     trust, capabilities, tools: dialTools(services), resources: [], notTools,
