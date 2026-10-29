@@ -7,6 +7,8 @@ export { scrub, collectSecrets } from './redaction.mjs';
 // operator_setup_identity retains its durable first-run timestamp, including NULL.
 export const exported = [
   ...importExported,
+  // Durable agent attribution is history; agent execution and replay authority stay excluded.
+  "agent_door_audit",
   "api_credentials", "api_oauth_applications", "workflow_rules",
   "teams", "team_event_types", "routing_forms", "routing_submissions", "webhook_subscriptions", "webhook_deliveries",
   "analytics_settings", "analytics_connections", "analytics_deliveries",
