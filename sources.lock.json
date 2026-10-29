@@ -881,7 +881,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "6db80bd3a833734b08b7b54bb3d2eae1e0c87b572730570aff5cda661772095d",
+      "sha256": "c524c61e770db9b794d0f31d803dbc8b16339aa0ed6fa56257ba49b32df9a9fc",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -4393,11 +4393,11 @@
       "executable": false
     },
     "scripts/archive/guarded-bucket.d.mts": {
-      "sha256": "a5696a67e2ca7f42565ca9325cebcd42e24b8f43a752eee5f87b0bda8183dcfc",
+      "sha256": "9f02b02983a63a0cc79042048974ecc0cb65db97c8aa1869e50e4adb193f92a6",
       "executable": false
     },
     "scripts/archive/guarded-bucket.mjs": {
-      "sha256": "ce8b3e2803c618b78a7892ff30edd0590e7ba4db08cf2625b87aceb866d16e4f",
+      "sha256": "3b601048b6bce43be665b8b2a2ef49e309ec205fa386967ced0c45b91995573a",
       "executable": false
     },
     "scripts/archive/import-policy.mjs": {
@@ -4945,7 +4945,7 @@
       "executable": false
     },
     "scripts/render-wrangler.mjs": {
-      "sha256": "7e753d0eacd28a9d3ac44f8bccddfdccdcc7eecfdd349e2dd9b922768819e30b",
+      "sha256": "3587b291b35a94a1df6e91434437653c2635e0c04ccab05faffe4ed701355dcb",
       "executable": false
     },
     "scripts/review.mjs": {
@@ -7225,7 +7225,7 @@
       "executable": false
     },
     "src/core/features/portability/routes.ts": {
-      "sha256": "93d10039b84a3db15f670723e7f6cc736f90af1ef75753e670d0c0b6e0a31e3b",
+      "sha256": "6ea7ed5340b6626ac7532f80b590f60d3aee36efeb7a18f833a9a57547ea8528",
       "executable": false
     },
     "src/core/features/portability/schema.d.ts": {
@@ -8716,8 +8716,16 @@
       "sha256": "532961d46a9b6eee37913e8b0a875a4890bccdaaf92390654858f1a9fd11b1ef",
       "executable": false
     },
+    "tests/agent-door/native-calendar.mjs": {
+      "sha256": "b2258b5ec33409b0c9153ef82aebaf05dd3a990f7e997324e61400dc1ba506f9",
+      "executable": false
+    },
     "tests/agent-door/native-owner.mjs": {
-      "sha256": "228a897f4c0a08641ab1b53a4ff28fe9016bcd5ae09ca92de0f4bacb666698d7",
+      "sha256": "38d1711730f095835940317fa1bcdcb75956d1be37d8c81a87f81f2eb33d2e0d",
+      "executable": false
+    },
+    "tests/agent-door/phase-fixtures.mjs": {
+      "sha256": "fb9208eb0e03ebd5ee3dc7909b70bcc21f3255e440dc9e87eda604bd335b9174",
       "executable": false
     },
     "tests/agent-door/provider-edge.mjs": {
