@@ -1,10 +1,15 @@
 import type { Context } from "hono";
 import type { AppEnvironment } from "../../app/context";
-import { hostAllowed, refusal } from "../public-api/support";
+import { hostAllowed, refusal } from "../public-api";
 
-type Configuration={action:string;trigger:string;eventTypeId:string;webhookSubscriptionId?:string|null;routingFormId?:string|null};
+type Configuration={enabled?:boolean;crmConnectionId?:string|null;action:string;trigger:string;eventTypeId:string;webhookSubscriptionId?:string|null;routingFormId?:string|null};
 export async function workflowDestinationError(c:Context<AppEnvironment>,input:Configuration) {
  const credential=c.get("apiCredential");
+ if(input.action==="hubspot-contact-update"){
+  if(input.trigger==="routing-without-booking")return refusal(c,400,"invalid_workflow_source","A CRM update requires a booking with a known contact.");
+  const connection=input.crmConnectionId?await c.get("apiDatabase").prepare("SELECT id,status FROM workflow_crm_connections WHERE id=?").bind(input.crmConnectionId).first<{id:string;status:string}>():undefined;
+  if(!connection||input.enabled!==false&&connection.status!=="connected")return refusal(c,404,"not_found","Choose an owner-authorized, connected CRM account.");
+ }else if(input.crmConnectionId)return refusal(c,400,"invalid_workflow_destination","A CRM destination requires the CRM action.");
  if(input.trigger==="routing-without-booking"){
   if(!credential.scopes.includes("routing:manage"))return refusal(c,403,"scope_forbidden","Routing workflows require the routing grant.");
   const form=input.routingFormId?await c.get("services").routing.get(input.routingFormId):undefined;

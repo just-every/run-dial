@@ -1,3 +1,6 @@
+import { WorkflowCrmConnections } from "../features/workflows/crm-connections";
+import { WorkflowCrmDelivery } from "../features/workflows/crm-delivery";
+import { WorkflowCrmErasure } from "../features/workflows";
 import { TeamsRepository } from "../features/teams";
 import { RoutingRepository } from "../features/routing";
 import { WebhookSubscriptions } from "../features/webhooks/subscriptions";
@@ -56,6 +59,8 @@ import type { RuntimeEnvironment } from "../shared/runtime-env";
 
 export function createServices(binding: D1Database, runtime: RuntimeEnvironment, assets: Fetcher, adapters: { operatorNotifications?: OperatorNotificationCommand; files?: R2Bucket; calendar?: CalendarAdapter; mail?: MailSender; authMail?: import("../../../modules/operator-auth/index.mjs").MailSender; calendarChanges?: CalendarExternalChangeHandler; connectionWatch?: ConnectionWatchObservers; paymentsClock?:()=>Promise<Date>; paymentsTransport?: typeof fetch; webhookTransport?: typeof fetch } = {}) {
   const webhookTransport: typeof fetch = adapters.webhookTransport ?? ((input, init) => fetch(input, init));
+  const workflowTransport:typeof fetch=(input,init)=>fetch(input,init);
+  const workflowCrm={connections:new WorkflowCrmConnections(binding,runtime.SESSION_SECRET,workflowTransport),delivery:new WorkflowCrmDelivery(binding,runtime.SESSION_SECRET,workflowTransport)};
   const noticeTransport=adapters.paymentsTransport??fetch;
   const analytics={settings:new AnalyticsSettings(binding,runtime.SESSION_SECRET),delivery:new AnalyticsDelivery(binding,runtime.SESSION_SECRET,adapters.paymentsTransport??fetch)};
   const notices={destinations:new NoticeDestinations(binding,runtime,noticeTransport),delivery:new NoticeDelivery(binding,runtime,noticeTransport),erasure:new NoticeErasure(binding,runtime,noticeTransport)};
@@ -86,6 +91,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     clients: new ClientsRepository(binding),
     rememberedDetails: new RememberedDetails(binding,runtime.SESSION_SECRET,runtime.APP_URL,bookings),
     notices,
+    workflowCrm,
     teams: new TeamsRepository(binding),
     routing: new RoutingRepository(binding),
     webhooks: { subscriptions: new WebhookSubscriptions(binding, runtime.SESSION_SECRET, webhookTransport), delivery: new WebhookDelivery(binding, runtime.SESSION_SECRET, webhookTransport) },
@@ -101,7 +107,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     switchOver: new SwitchOverService(binding, eventTypes, hostProfile, installPublicOrigin(runtime.APP_URL)),
     eraseImportedBooking: (id: string, session: SessionRecord) => eraseImportedBooking(binding, id, session, runtime.SESSION_SECRET),
     erasure: new ErasureRepository(binding, runtime.SESSION_SECRET, id => payments.processorErasure.detachBooking(id, () => payments.money.detachSavedCard(id))),
-    personErasure: new PersonErasure(binding, runtime.SESSION_SECRET, {prepare:async(email,id,actor)=>{await payments.processorErasure.prepare(email,id,actor);await notices.erasure.prepare(email,id);},retry:async id=>{await payments.processorErasure.retry(id);await notices.erasure.retry(id);}}),
+    personErasure: new PersonErasure(binding, runtime.SESSION_SECRET, {prepare:async(email,id,actor)=>{await payments.processorErasure.prepare(email,id,actor);await notices.erasure.prepare(email,id);await WorkflowCrmErasure.prepare(binding,email,id);},retry:async id=>{await payments.processorErasure.retry(id);await notices.erasure.retry(id);}}),
     deliveryRecovery: new DeliveryRecovery(binding),
     deliveryPreferences: new DeliveryPreferencesRepository(binding),
     operatorManagement: new OperatorManagementRepository(binding, operators, runtime.SESSION_SECRET),
@@ -116,7 +122,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     calendar,
     mail,
     sendgridWebhook: new SendGridWebhookReceiver(binding, runtime.MAIL_WEBHOOK_KEY),
-    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime, notices.delivery, adapters.operatorNotifications, analytics.delivery),
+    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime, notices.delivery, adapters.operatorNotifications, analytics.delivery,workflowCrm.delivery),
     availability,
     bookings,
     payments,

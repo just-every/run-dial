@@ -18,7 +18,7 @@ export async function startWebhookRuntime({ state, port, origin, receiver }) {
     // Native Worker fetch reaches this network edge before any receiver routing.
     outboundService: async request => {
       const url = new URL(request.url);
-      const path = url.hostname === "cloudflare-dns.com" ? "/__dns" : url.hostname === "receiver.synthetic.test" ? url.pathname : undefined;
+      const path = url.hostname === "cloudflare-dns.com" ? "/__dns" : url.hostname === "receiver.synthetic.test" ? url.pathname : url.hostname === "api.hubapi.com" ? "/hubspot"+url.pathname : undefined;
       if (!path) throw new Error("Unexpected webhook egress");
       const headers = new Headers(request.headers);
       // Node computes HTTP framing from the forwarded raw bytes.

@@ -12,7 +12,7 @@ export async function pollUpgrade(source){const prior=new DatabaseSync(':memory:
  for(let changed=true;changed;){changed=false;
   const reference=new RegExp(`\\b(?:ON|REFERENCES|ALTER TABLE)\\s+(?:${tables.join('|')})\\b`,'i');
   for(const migration of migrations)if(migration!==added&&!dependent.includes(migration)&&reference.test(migration.sql)){
-   dependent.push(migration);tables.push(...[...migration.sql.matchAll(/\bCREATE TABLE\s+([a-z_]+)/gi)].map(match=>match[1]));changed=true;
+   dependent.push(migration);tables.push(...[...migration.sql.matchAll(/\b(?:CREATE TABLE|ALTER TABLE)\s+([a-z_]+)/gi)].map(match=>match[1]));changed=true;
   }
  }
  dependent.sort((a,b)=>migrations.indexOf(a)-migrations.indexOf(b));

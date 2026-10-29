@@ -1,3 +1,4 @@
+import { workflowCrmRoutes } from "../features/workflows";
 import { consentRoutes } from "../features/api-credentials/consent";
 import { credentialRoutes } from "../features/api-credentials/routes";
 import { credentialOAuthRoutes } from "../features/api-credentials/oauth";
@@ -94,6 +95,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", consentRoutes)
     .route("/", credentialOAuthRoutes)
     .route("/", publicApiRoutes)
+    .route("/", workflowCrmRoutes)
     .route("/", analyticsRoutes)
     .route("/", extensionRoutes)
     .route("/", operatorRoutes)

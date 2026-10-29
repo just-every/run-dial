@@ -10,6 +10,7 @@ import { createId, nowIso } from "../../shared/ids";
 import type { SessionRecord } from "../operators";
 import { assertErasureCensus, erasurePortability } from "./portability";
 import { addressRemainders, deleteRows } from "./address";
+import { WorkflowCrmErasure } from "../workflows";
 import { ProcessorRequestsRepository, processorReceiptItems } from "./processor-requests";
 import { erasePendingPayments, type CleanupPendingPayments } from "./pending-payments";
 // @ts-expect-error Maintained native authentication HMAC and constant comparison.
@@ -31,7 +32,7 @@ export class PersonErasure {
     const pending=Boolean(await this.db.prepare("SELECT 1 FROM person_erasure_locks WHERE email IN(SELECT value FROM json_each(?))").bind(JSON.stringify(records.emails)).first());
     const operatorIdentityRetained=await scopeOperatorOverlap(this.db,records.emails);
     return { bookings: records.bookings.length, requests: records.requests.length+records.approvals.length, payments: records.holds.length+records.entitlements.length, pending, operatorIdentityRetained, expiresAt,
-      externalRequests: [...processorReceiptItems((await Promise.all(records.emails.map(alias => new ProcessorRequestsRepository(this.db).preview(alias)))).flat()),...(await Promise.all(records.emails.map(alias=>NoticeErasure.preview(this.db,alias)))).flat()], confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
+      externalRequests: [...(await Promise.all(records.emails.map(alias=>WorkflowCrmErasure.preview(this.db,alias)))).flat(),...processorReceiptItems((await Promise.all(records.emails.map(alias => new ProcessorRequestsRepository(this.db).preview(alias)))).flat()),...(await Promise.all(records.emails.map(alias=>NoticeErasure.preview(this.db,alias)))).flat()], confirmation: await this.signature(email,records,session,expiresAt,operatorIdentityRetained) };
   }
   async erase(input: PersonConfirmation, session: SessionRecord, eraseEntity: EraseEntity, cleanupPending?: CleanupPendingPayments) {
     await assertErasureCensus(this.db);
@@ -92,6 +93,6 @@ export class PersonErasure {
     if(!row) return null;
     const targets=(await this.db.prepare("SELECT completed_at,last_error_code FROM erased_calendar_targets WHERE receipt_id=?").bind(id).all<{completed_at:string|null;last_error_code:string|null}>()).results;
     // D7: a receipt from before the count existed reads null (not counted), never zero.
-    return {...row,externalRequests:[...processorReceiptItems(await new ProcessorRequestsRepository(this.db).list(id)),...await NoticeErasure.items(this.db,id)],operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
+    return {...row,externalRequests:[...await WorkflowCrmErasure.items(this.db,id),...processorReceiptItems(await new ProcessorRequestsRepository(this.db).list(id)),...await NoticeErasure.items(this.db,id)],operatorIdentityRetained:Boolean(row.operatorIdentityRetained),localComplete:row.completedAt!==null,calendarCleanup:row.completedAt===null||targets.some(target=>!target.completed_at)?"pending":"completed",calendarFailures:targets.filter(target=>!target.completed_at&&target.last_error_code).map(target=>target.last_error_code)};
   }
 }

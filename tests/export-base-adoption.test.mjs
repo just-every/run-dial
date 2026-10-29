@@ -70,6 +70,11 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.equal(archivedWorkflow.enabled_at, null);
     assert.equal(archivedWorkflow.text, source.db.prepare('SELECT text FROM workflow_rules').get().text);
     assert.equal(archive.tables.some(table => table.name === 'workflow_dispatches'), false, 'old workflow execution receipts never replay on another installation');
+    const crmConnection=archive.tables.find(table=>table.name==='workflow_crm_connections').rows[0];
+    assert.equal(crmConnection.credential_ciphertext,null,'provider credentials never travel in a whole-install archive');
+    assert.equal(crmConnection.status,'unhealthy');
+    assert.equal(crmConnection.reason,'reauthorization_required');
+    assert.equal(archive.tables.some(table=>table.name==='workflow_crm_runs'),false,'saved CRM dispatch authority stays on its original installation');
     for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
       const original = source.db.prepare(`SELECT * FROM ${table}`).get();
       const archived = archive.tables.find(entry => entry.name === table).rows[0];
@@ -125,6 +130,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     }
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM workflow_rules WHERE enabled=1 OR enabled_at IS NOT NULL').get().n, 0, 'imported workflow configuration requires a fresh owner enable');
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM workflow_dispatches').get().n, 0);
+    assert.equal(target.db.prepare("SELECT count(*) AS n FROM workflow_crm_connections WHERE credential_ciphertext IS NOT NULL OR status='connected'").get().n,0);
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM workflow_crm_runs').get().n,0);
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_subscriptions WHERE enabled=1 OR secret_ciphertext IS NOT NULL").get().n, 0, 'restore never enables outbound authority');
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_deliveries WHERE state IN ('pending','sending')").get().n, 0, 'restore never resumes historical webhook commands');
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM routing_capabilities').get().n, 0);

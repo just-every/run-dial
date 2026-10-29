@@ -1,10 +1,10 @@
-import { apiHosts } from "../api-credentials/authority";
+import { apiHosts } from "../api-credentials";
 import { webhookDeliveryScope } from "./scope";
 import { createId, nowIso } from "../../shared/ids";
 import { createOpaqueToken } from "../../platform/auth/tokens";
 import { seal } from "../../platform/crypto/sealed";
 import { webhookEndpoint } from "./endpoint";
-import { workflowWebhookAuthority } from "../workflows/webhooks";
+import { workflowWebhookAuthority } from "../workflows";
 
 export const webhookEventTypes = ["booking.created.v1", "booking.rescheduled.v1", "booking.reschedule-requested.v1", "booking.canceled.v1", "booking.no-show.v1", "booking.attendance.v1", "booking.payment.v1", "routing.submitted.v1", "poll.created.v1", "poll.voted.v1", "poll.closed.v1", "calendar.connection-health-changed.v1", "workflow.action.v1"] as const;
 export type SubscriptionInput = { endpoint: string; events: string[]; scope: "workspace" | "host" | "team"; scopeId: string | null };

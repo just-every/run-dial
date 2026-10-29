@@ -550,6 +550,16 @@
         "Inbound source account, event configuration and booking records"
       ],
       "adapters": []
+    },
+    {
+      "id": "hubspot-workflow-contact",
+      "required": false,
+      "why": "Owner-authorized workflow updates to three documented text properties on an existing HubSpot contact. Unknown contacts are refused; local erasure stops queued effects and retains a manual provider cleanup reference. Synthetic HTTP-edge proof only.",
+      "data": [
+        "Invitee email for an exact existing-contact lookup",
+        "Booking reference, state and start instant"
+      ],
+      "adapters": []
     }
   ],
   "env": [

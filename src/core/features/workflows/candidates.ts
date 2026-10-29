@@ -26,6 +26,7 @@ export async function workflowCandidates(db:D1Database,rule:WorkflowRule,timesta
   WHERE happenedAt>=? AND happenedAt>=? AND happenedAt<=?
    AND NOT EXISTS(SELECT 1 FROM workflow_dispatches d WHERE d.workflow_id=? AND d.booking_id=bookingId AND d.event_key=eventKey)
   AND NOT EXISTS(SELECT 1 FROM workflow_webhook_runs run WHERE run.workflow_id=? AND run.event_key=bookingId || ':' || eventKey)
-  ORDER BY happenedAt,bookingId LIMIT 100`).bind(...projection,...params,rule.enabled_at,rule.created_at,timestamp,rule.id,rule.id).all<WorkflowCandidate>()).results;
+  AND NOT EXISTS(SELECT 1 FROM workflow_crm_runs run WHERE run.workflow_id=? AND run.booking_id=bookingId AND run.event_key=eventKey)
+  ORDER BY happenedAt,bookingId LIMIT 100`).bind(...projection,...params,rule.enabled_at,rule.created_at,timestamp,rule.id,rule.id,rule.id).all<WorkflowCandidate>()).results;
  return rows;
 }

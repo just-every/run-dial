@@ -2,7 +2,7 @@ import { webhookDeliveryScope } from "./scope";
 import { createId } from "../../shared/ids";
 import { unseal } from "../../platform/crypto/sealed";
 import { webhookEndpoint, webhookSignature } from "./endpoint";
-import { workflowWebhookAuthority } from "../workflows/webhooks";
+import { workflowWebhookAuthority } from "../workflows";
 
 type Delivery = { id: string; subscription_id: string; event_id: string; body_json: string; attempts: number; retry_until: string; endpoint: string; secret_ciphertext: string };
 export function isWebhookJob(value: unknown): value is { channel: "webhook"; deliveryId: string } {

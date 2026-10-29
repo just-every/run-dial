@@ -13,6 +13,7 @@ export function operatorGraph(retainNative: boolean) {
     {table:"api_oauth_codes",from:"api_oauth_grants",on:{grant_id:"id"}},
     {table:"api_credentials",from:"api_oauth_grants",on:{oauth_grant_id:"id"}},
     {table:"api_credential_audit",from:root,on:{actor_id:"id"}},
+    { table: "workflow_crm_runs", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "workflow_dispatches", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "workflow_webhook_runs", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "webhook_deliveries", from: "workflow_rules", on: { workflow_id: "id" } },
@@ -41,6 +42,7 @@ export function operatorGraph(retainNative: boolean) {
     ...rateEdges({ entity: "operator", root: { table: root, column: "id" }, counters: [{ table: "oa_limits", keyColumn: "key" }] }),
   ];
   return defineErasure({ entity: retainNative ? "operator-author" : "operator", root: { table: root }, edges,
+    redact:[{table:"workflow_crm_connections",from:root,on:{operator_id:"id"},set:{credential_ciphertext:null,status:"revoked",reason:"operator_removed"},reason:"Owner-issued provider authority is revoked; business configuration retains its anonymous author reference."}],
     retain: [
       {table:"api_hosts",reason:"Anonymous host partitions retain event ownership; operator identity is detached on erasure."},
       {table:"api_event_hosts",reason:"Event ownership must not fall back to another host after person erasure."},

@@ -27,7 +27,9 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
-  workflow_rules: {name:"Synthetic Dial booking workflow",operator_id:"owner",enabled:1,enabled_at:instant,subject:"Booking preparation",text:"Please review the agreed preparation."},
+  workflow_crm_connections:{name:"Synthetic HubSpot workflow",provider:"hubspot",operator_id:"owner",credential_ciphertext:secret+"_CRM",status:"connected"},
+  workflow_crm_erasure_requests:{source_run_id:"synthetic-dial-erased-crm-run",contact_id:"synthetic-dial-contact-801"},
+  workflow_rules: {action_type:"hubspot-contact-update",name:"Synthetic Dial booking workflow",operator_id:"owner",enabled:1,enabled_at:instant,subject:"Booking preparation",text:"Please review the agreed preparation."},
   api_oauth_grants: {operator_id:"owner",scopes_json:'["bookings:read"]',expires_at:end,revoked_at:null},
   api_credential_audit: {actor_id:"owner",action:"consent_approved",subject_id:"api_oauth_grants-1"},
   api_oauth_applications: {name:"Synthetic Dial connected app",operator_id:"owner",scopes_json:'["bookings:read"]',client_secret_hash:secret+"_API_CLIENT",expires_at:end,revoked_at:null},

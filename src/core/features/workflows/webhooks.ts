@@ -1,4 +1,4 @@
-import { webhookEventHost } from "../webhooks/scope";
+import { webhookEventHost } from "../webhooks";
 import { createId } from "../../shared/ids";
 import { workflowCandidates } from "./candidates";
 import { workflowTrigger, type WorkflowRule } from "./types";

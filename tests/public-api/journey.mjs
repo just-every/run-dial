@@ -16,8 +16,26 @@ export async function machineCredentialJourney(context) {
   const port=reservation.address().port;
   await new Promise(resolve=>reservation.close(resolve));
   const origin=`http://127.0.0.1:${port}`,state=await mkdtemp(join(tmpdir(),"dial-machine-authority-"));
+  const crmEdge={contacts:new Map(),writes:[],reject:false};
   const webhookEdge={requests:[],status:200};
   const receiver=httpServer(async(request,response)=>{
+    const path=new URL(request.url,"http://localhost").pathname;
+    if(path.startsWith("/hubspot/")){
+      response.setHeader("Content-Type","application"+"/json");
+      if(crmEdge.reject||request.headers.authorization!=="Bearer synthetic-dial-crm-801"){response.writeHead(401);response.end("{}");return;}
+      if(path==="/hubspot/crm/v3/properties/contacts"){response.end(JSON.stringify({results:["dial_last_booking_id","dial_last_booking_state","dial_last_booking_start_at"].map(name=>({name,type:"string"}))}));return;}
+      const id=decodeURIComponent(path.slice("/hubspot/crm/v3/objects/contacts/".length));
+      if(request.method==="GET"){
+        const contact=crmEdge.contacts.get(id);
+        if(!contact){response.writeHead(404);response.end("{}");return;}
+        response.end(JSON.stringify({id:contact.id,properties:{email:contact.email}}));return;
+      }
+      if(request.method==="PATCH"){
+        const chunks=[];for await(const chunk of request)chunks.push(chunk);
+        const body=JSON.parse(Buffer.concat(chunks).toString());crmEdge.writes.push({id,properties:body.properties});response.end(JSON.stringify({id,properties:body.properties}));return;
+      }
+      response.writeHead(400);response.end("{}");return;
+    }
     if(request.method==="POST"){
       const chunks=[];for await(const chunk of request)chunks.push(chunk);
       webhookEdge.requests.push({path:request.url,headers:request.headers,body:Buffer.concat(chunks).toString()});
@@ -115,7 +133,7 @@ export async function machineCredentialJourney(context) {
   assert.equal((await call(`/api/app/api-credentials/${writer.credential.id}/revoke`,{session:true,body:{}})).status,204);
   const afterRevoke=await call("/api/v1/bookings",{body:{...body,startAt:apiSlots.slots[2].startAt},secret:writer.secret,key:"synthetic-dial-after-revoke"});assert.equal(afterRevoke.status,401);assert.equal((await afterRevoke.json()).error.code,"credential_revoked");assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true);
   await resourceJourney({call,json,issue,fixture,week,profile,db});
-  const continuedSession=await workflowJourney({call,json,issue,fixture,week,db,webhookEdge});
+  const continuedSession=await workflowJourney({call,json,issue,fixture,week,db,webhookEdge,crmEdge});
   cookie=continuedSession.cookie;
   await continuationJourney({call,json,issue,week,db,origin});
   const app=await json("/api/app/oauth-applications",{session:true,body:{name:"Synthetic Dial application",scopes:["bookings:read"],expiresAt}},201);

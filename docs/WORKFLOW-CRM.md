@@ -1,0 +1,15 @@
+# HubSpot workflow contact updates
+
+An owner can authorize a HubSpot private app for native workflow updates. Give the app contact read and write access and contact-schema read access. In HubSpot, first create these three contact properties as single-line text: `dial_last_booking_id`, `dial_last_booking_state` and `dial_last_booking_start_at`.
+
+Under the native Settings API, POST `/api/app/workflow-crm-connections` with a name, the private app's `accessToken` and `consent` set to `true`. This endpoint requires an owner session. Dial checks the three provider properties before enabling the connection, seals the credential at rest and returns metadata without the secret. GET the same endpoint to inspect connection health and outstanding provider-cleanup references. DELETE `/api/app/workflow-crm-connections/:id` revokes the connection, clears its credential and stops queued effects.
+
+With an owner-issued credential carrying `workflows:manage`, create a workflow at `/api/v1/workflows`. Use `action` set to `hubspot-contact-update`, `crmConnectionId` set to the authorized connection ID, and `enabled` explicitly set to `true`. The ordinary booking lifecycle and timing triggers apply. The saved subject and text are descriptive notes for this action; the provider receives only the three scheduling properties above.
+
+For each action, Dial looks up the existing contact by the booking's email. An absent or changed contact produces a skipped outcome. An authorized action sets the current booking reference, state and start instant on that contact. It sends no booking answers or management capability. The stable captured property values can be set again after an interrupted Worker attempt; no contact, meeting activity or task is created by this action.
+
+GET `/api/v1/workflows/:id/runs` to inspect sent, skipped or failed outcomes. A provider authorization refusal marks the connection unhealthy and removes its credential. Reconnect deliberately with a fresh owner authorization and update the workflow before relying on future actions. Disabling or changing the workflow, revoking the connection and erasing a booking stop captures that have not begun their provider request. Re-enabling never replays an already captured action.
+
+A request already accepted by HubSpot can outlive local erasure. The aggregate privacy preview and receipt name its HubSpot contact reference as pending owner cleanup with `requested` set to `false`. A per-record erasure also records that cleanup reference for the Settings API. Review the three properties in the connected portal and its retention policy; Dial makes no provider-deletion claim or automatic destructive CRM request. Archive restore carries disabled workflow definitions and connection metadata with the credential removed; saved effect authority never resumes.
+
+This is native HTTP-edge-qualified contact updating. Full CRM meeting handoffs, other CRM providers and live-account qualification remain with the integration clauses in CONTRACT.md.

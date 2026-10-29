@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { createId, nowIso } from "../../shared/ids";
 import { discardRequestBody } from "../../shared/http";
 import { validate } from "../../shared/validation";
-import { bookingAllowed, eventAllowed, idempotent, page, refusal, type ApiEnvironment } from "../public-api";
+import { bookingAllowed, eventAllowed, idempotent, page, parsePage, pageResult, refusal, type ApiEnvironment } from "../public-api";
 import { requireScope } from "../api-credentials";
 import { BookingCorrespondenceRepository } from "../delivery";
 import { workflowMessage, workflowTemplateErrors } from "./templates";
@@ -39,7 +39,8 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
  .get("/api/v1/workflows/:id/runs",async c=>{
   const id=c.req.param("id"),db=c.get("apiDatabase"),rule=await db.prepare("SELECT * FROM workflow_rules WHERE id=? AND removed_at IS NULL").bind(id).first<WorkflowRule>();
   if(!rule||!await eventAllowed(c,c.get("apiCredential"),rule.event_type_id))return refusal(c,404,"not_found","This workflow does not exist.");
-  return page(c,await workflowRuns(db,id));
+  const bounds=parsePage(c);if(bounds instanceof Response)return bounds;
+  return pageResult(c,await workflowRuns(db,id,bounds.limit+1,bounds.after),bounds.limit);
  })
  .post("/api/v1/workflows",validate("json",workflowInput),async c=>{
   const input=c.req.valid("json"),credential=c.get("apiCredential");
@@ -50,8 +51,8 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
   if(invalid.length)return refusal(c,400,"invalid_template",`Unavailable workflow variable: ${invalid.join(", ")}`);
   return idempotent(c,input,async()=>{
    const id=createId(),now=nowIso();
-   await c.get("apiDatabase").prepare(`INSERT INTO workflow_rules(id,name,event_type_id,operator_id,enabled,enabled_at,subject,text,trigger,action,offset_minutes,created_at,updated_at,action_kind,trigger_kind,routing_form_id,webhook_subscription_id)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id,input.name,input.eventTypeId,credential.operatorId,input.enabled?1:0,input.enabled?now:null,input.subject,input.text,input.trigger==="routing-without-booking"?"booking-created":input.trigger,input.action==="webhook"?"email-invitee":input.action,input.offsetMinutes,now,now,input.action==="webhook"?input.action:null,input.trigger==="routing-without-booking"?input.trigger:null,input.routingFormId??null,input.webhookSubscriptionId??null).run();
+   await c.get("apiDatabase").prepare(`INSERT INTO workflow_rules(id,name,event_type_id,operator_id,enabled,enabled_at,subject,text,trigger,action,offset_minutes,created_at,updated_at,action_kind,trigger_kind,routing_form_id,webhook_subscription_id,action_type,crm_connection_id)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id,input.name,input.eventTypeId,credential.operatorId,input.enabled?1:0,input.enabled?now:null,input.subject,input.text,input.trigger==="routing-without-booking"?"booking-created":input.trigger,input.action==="email-hosts"?"email-hosts":"email-invitee",input.offsetMinutes,now,now,input.action==="webhook"?input.action:null,input.trigger==="routing-without-booking"?input.trigger:null,input.routingFormId??null,input.webhookSubscriptionId??null,input.action,input.crmConnectionId??null).run();
    const row=await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE id=?").bind(id).first<WorkflowRule>();
    if(!row)throw new Error("workflow_creation_missing");
    return {status:201,body:workflowView(row)};
@@ -70,8 +71,8 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
    const trigger=input.trigger??workflowTrigger(row),action=input.action??workflowAction(row);
    const result=await c.get("apiDatabase").prepare(`UPDATE workflow_rules SET name=?,subject=?,text=?,trigger=?,action=?,offset_minutes=?,enabled=?,
     enabled_at=CASE WHEN ?=0 THEN NULL WHEN enabled=0 THEN ? ELSE enabled_at END,version=version+1,updated_at=?
-    ,action_kind=?,trigger_kind=?,routing_form_id=?,webhook_subscription_id=? WHERE id=? AND removed_at IS NULL`)
-    .bind(input.name??row.name,input.subject??row.subject,input.text??row.text,trigger==="routing-without-booking"?"booking-created":trigger,action==="webhook"?"email-invitee":action,input.offsetMinutes??row.offset_minutes,enabled?1:0,enabled?1:0,now,now,action==="webhook"?action:null,trigger==="routing-without-booking"?trigger:null,config.routingFormId,config.webhookSubscriptionId,id).run();
+    ,action_kind=?,trigger_kind=?,routing_form_id=?,webhook_subscription_id=?,action_type=?,crm_connection_id=? WHERE id=? AND removed_at IS NULL`)
+    .bind(input.name??row.name,input.subject??row.subject,input.text??row.text,trigger==="routing-without-booking"?"booking-created":trigger,action==="email-hosts"?"email-hosts":"email-invitee",input.offsetMinutes??row.offset_minutes,enabled?1:0,enabled?1:0,now,now,action==="webhook"?action:null,trigger==="routing-without-booking"?trigger:null,config.routingFormId,config.webhookSubscriptionId,action,config.crmConnectionId,id).run();
    if(!result.meta.changes)return {status:404,body:missing};
    const updated=await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE id=?").bind(id).first<WorkflowRule>();
    if(!updated)throw new Error("workflow_update_missing");

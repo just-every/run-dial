@@ -1,5 +1,6 @@
 // Exhaustive migrated application census; unknown tables stop erasure before writes.
 export const applicationTables = [
+  "workflow_crm_connections", "workflow_crm_runs", "workflow_crm_erasure_requests",
   "workflow_rules", "workflow_dispatches", "workflow_webhook_runs",
   "api_hosts", "api_event_hosts", "api_credential_audit", "api_oauth_grants", "api_oauth_codes",
   "api_credentials", "api_oauth_applications", "api_request_keys", "api_rate_windows",
