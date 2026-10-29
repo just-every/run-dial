@@ -95,7 +95,7 @@ helpers, are refreshed through the installed 0.2.87 CLI to the immutable
 The authenticated source archive supplies the four selected records; all source
 bytes, modes and prior membership are retained by `base-copies.json`.
 The Worker mounts the native synchronous core door before app setup and session
-redirects. Additive migrations 0090–0092 establish Business identities and door
+redirects. Additive migrations 0093–0095 establish Business identities and door
 stores. Applied migration bytes are unchanged.
 
 The declared native tools live under `src/agent-door`; ten resource readers

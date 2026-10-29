@@ -95,7 +95,7 @@ control is test-only, never a production route. The surface journey records real
 native tool/class calls, narrowing witnesses and injection arguments. Base's
 normal verification exits remain unchanged and failures must be reported.
 
-Additive migrations 0090/0091 establish Business state; 0092 copies the door SQL.
+Additive migrations 0093/0094 establish Business state; 0095 copies the door SQL.
 Authority, replay, pending approvals, policy and audit stores never travel in an
 archive. Native person erasure scrubs matching retained client payloads and
 expires matching pending work under exclusive native admission. Policy audit
