@@ -33,7 +33,8 @@
           "scripts/verify-managed-editor.mjs",
           "rer-project.json",
           ".github/workflows/rer-managed.yml",
-          "scripts/operations.mjs"
+          "scripts/operations.mjs",
+          "agent-surface.json"
         ]
       }
     },
