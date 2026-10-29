@@ -47,7 +47,6 @@ export const excluded = {
   api_rate_windows: "Ephemeral per-credential rate counters remain installation-local",
   agent_door_state: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
   agent_door_agents: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
-  agent_door_audit: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
   agent_door_calls: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
   agent_door_approvals: "Installation-local agent authority and retained decisions; never restore execution or replay authority",
   agent_door_reviews: "Installation-local agent authority and retained decisions; never restore execution or replay authority",

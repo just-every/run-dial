@@ -4421,7 +4421,7 @@
       "executable": false
     },
     "scripts/archive/policy.mjs": {
-      "sha256": "d960576a9e5fef2e853aa1ccf8f050220acf4491b5fe06b5c8578dfa9345584c",
+      "sha256": "6bad9f6560437e5bfb3107b9aa9fe8844fcd10c0d4aed30046abfe60a48f087d",
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
@@ -8201,7 +8201,7 @@
       "executable": false
     },
     "src/core/shared/archive-exclusions.mjs": {
-      "sha256": "ec6de8c51a230a9ce2ccc71e82a066da6e75cf35cd5fcfdcef53f32d7568d586",
+      "sha256": "cb3712d085a0bdd287dce736ffb7a66b232e8ec03c0ea4edf132860d78677316",
       "executable": false
     },
     "src/core/shared/booking-horizon.ts": {
@@ -8746,6 +8746,10 @@
     },
     "tests/archive-prior-release.test.mjs": {
       "sha256": "f6e5605d62f8f96d18fb89be3b78cf830f2e5de4bb2279bc343056cf38d3cf6f",
+      "executable": false
+    },
+    "tests/archive/agent-audit.mjs": {
+      "sha256": "36c4e390681359a5bbeb7952129c3d6897efbad1b5febf62c135d9cf2b338831",
       "executable": false
     },
     "tests/archive/artifact.mjs": {
@@ -9497,7 +9501,7 @@
       "executable": false
     },
     "tests/export-base-adoption.test.mjs": {
-      "sha256": "5916a828fbc7820232311ebf1f33a6d32bf52e18b1493b9d41229fba9901cafe",
+      "sha256": "a690080a0c36bc9762fc75b0ca2ff35bfa45df6b401602cfade1d105d44b50d4",
       "executable": false
     },
     "tests/export-creation-guards.test.mjs": {
