@@ -447,7 +447,8 @@
           "scripts/delivery/base/native-export.mjs",
           "scripts/delivery/base/sign-in.mjs",
           "scripts/delivery/base/sql-statements.mjs",
-          "scripts/delivery/base/schema/dependencies.mjs"
+          "scripts/delivery/base/schema/dependencies.mjs",
+          "scripts/delivery/base/schema/business-field-inputs.mjs"
         ],
         "origin": {
           "repository": "git@github.com:runeditrun/base.git",

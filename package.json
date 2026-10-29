@@ -42,7 +42,7 @@
     "deployment-spec:generate": "node scripts/projects/deployment-spec.mjs generate",
     "deployment-spec:check": "node scripts/projects/deployment-spec.mjs check",
     "verify:app": "node scripts/verify.mjs",
-    "verify:copies": "node scripts/edition-authoring/cli.mjs verify-base --offline",
+    "verify:copies": "node node_modules/@runeditrun/rer/edition-authoring/cli.mjs verify-base --offline",
     "verify:delivery": "node scripts/verify-delivery-artifact.mjs",
     "verify:managed-editor": "node scripts/verify-managed-editor.mjs",
     "delivery:artifact": "node scripts/build-delivery-artifact.mjs",

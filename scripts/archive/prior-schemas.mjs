@@ -1,5 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { migrationReplay } from '@runeditrun/rer/modules/portability/migration-history';
+import { excludedTable } from '@runeditrun/rer/internal/modules/portability/catalogue.mjs';
+import { legacySchemaIdentities, rawSchemaIdentityOf } from '@runeditrun/rer/internal/modules/portability/schema-legacy.mjs';
 import { applicationCatalog, catalogQuery } from './catalog.mjs';
 import { migrationFiles } from './schema.mjs';
 import { exported } from './policy.mjs';
@@ -12,6 +14,13 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Installation-bound Business authority, door policy/replay/audit and native
+  // agent attribution are excluded from archives; these additive tables start
+  // empty when an older archive is restored. Existing product rows are unchanged.
+  'core/0093_business_settings.sql': (_table, row) => row,
+  'core/0094_business_people.sql': (_table, row) => row,
+  'core/0095_agent_door.sql': (_table, row) => row,
+  'core/0096_agent_native_activity.sql': (_table, row) => row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.
@@ -92,9 +101,20 @@ export async function priorSchemas(policy) {
     const proof = JSON.stringify({ migrations: earlier.map(({ file, sha256 }) => ({ file, sha256 })), catalog });
     const emptyTables = exported.filter(name => !catalog.some(entry => entry.type === 'table' && entry.name === name));
     const upgradeRow = (table, row) => later.reduce((value, upgrade) => upgrade(table, value), row);
-    const group = result.get(schema);
-    if (group) Object.assign(group, { proofs: [...group.proofs, proof], upgradeRow });
-    else result.set(schema, { identity: schema, proofs: [proof], upgradeRow, emptyTables });
+    // The maintained reader authenticates older wire checksums before native
+    // migration replay. Keep our declared row upgrades addressable by those
+    // historical checksums too: they describe this exact replayed schema, never
+    // an archive's supplied SQL. Base still verifies history, and consume() still
+    // requires the exact schema proof before any restored row is published.
+    const tables = catalog.filter(row => row.type === 'table' && !excludedTable(row.name, policy)).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+    const objects = catalog.filter(row => row.type !== 'table').map(({name, type, tbl_name, sql}) => ({name, type, table: tbl_name, sql})).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+    const visibleObjects = objects.filter(row => !excludedTable(row.table, policy));
+    const identities = new Set([schema, await rawSchemaIdentityOf(tables), ...await legacySchemaIdentities(tables, objects), ...await legacySchemaIdentities(tables, visibleObjects)]);
+    for (const identity of identities) {
+      const group = result.get(identity);
+      if (group) Object.assign(group, { proofs: [...group.proofs, proof], upgradeRow });
+      else result.set(identity, { identity, proofs: [proof], upgradeRow, emptyTables });
+    }
   }
   return [...result.values()];
 }

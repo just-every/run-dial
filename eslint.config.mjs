@@ -26,10 +26,7 @@ export default tseslint.config(
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
     "no-control-regex": "off", "no-empty": ["error", { allowEmptyCatch: true }],
   } },
-  { files: ["src/base/modules/**/conformance/*.mjs", "src/base/modules/demo/*.mjs"], languageOptions: { globals: { ...globals.node, ...globals.worker } } },
-  { files: ["src/base/modules/operator-auth/**/*.d.mts", "src/base/modules/operator-auth/accounts/store.mjs", "src/base/modules/operator-auth/accounts/provider-control.mjs", "src/base/modules/operator-auth/scheduled/index.mjs"], rules: { "@typescript-eslint/no-unused-vars": "off" } },
-  { files: ["src/base/modules/operator-auth/input.mjs", "src/base/modules/operator-auth/page.mjs", "src/base/modules/operator-auth/representation.mjs"], rules: { "no-useless-escape": "off" } },
-  { files: ["src/base/modules/operator-auth/icon-head.mjs"], languageOptions: { globals: { __RER_ICON_HEAD__: "readonly" } } },
+  { files: ["src/base/modules/**/conformance/*.mjs"], languageOptions: { globals: { ...globals.node, ...globals.worker } } },
   // Adopted erasure runtime executes inside the Worker; keep all lint rules active.
   { files: ["src/modules/erasure/*.mjs"], languageOptions: { globals: globals.worker } },
   // Exact Base producer runtime rejects control characters in trust-boundary inputs.

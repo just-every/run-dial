@@ -54,7 +54,8 @@ export async function hostedExport(request: Request, env: AppBindings, operators
    if (current?.id === session.id) nativeCookie = cookie.slice(cookie.indexOf("=") + 1);
   }
   const { policy, knownSecrets } = await exportPolicy(env.DB, { ...env, ARCHIVE_NATIVE_COOKIE_SECRET: nativeCookie }, JSON.stringify(schema));
-  const handle = await createPortabilityHandler({ db: env.DB, buckets: { FILES: guardedBucket(env.FILES, knownSecrets) }, policy, appOrigin: origin,
+  let bucketFailure: string | undefined;
+  const handle = await createPortabilityHandler({ db: env.DB, buckets: { FILES: guardedBucket(env.FILES, knownSecrets, (code: string) => { bucketFailure = code; }) }, policy, appOrigin: origin,
    authorize: async (authorizedRequest, operation) => {
     const current = await operators.auth.getSession(authorizedRequest);
     return operation.operation === "export" && current?.kind === "native" && current.operator.id === session.operator.id && current.operator.role === "owner" ? current.operator.id : null;
@@ -63,8 +64,10 @@ export async function hostedExport(request: Request, env: AppBindings, operators
   if (!response) return reply("not_found", 404);
   if (!response.ok) {
    if (creating) await releaseExport(env.DB, lease);
-   // Base catches typed bucket refusals inside handle(). Expose only our finite
-   // vocabulary to the client that deliberately ignores HTTP response bodies.
+   // rer 0.2.91 hides seed-specific typed codes. This request's real bucket
+   // boundary records only Dial's finite scanner/change vocabulary; preserve it
+   // without trusting arbitrary exception text or replaying a request.
+   if (bucketFailure && archiveFailures.has(bucketFailure)) return reply(bucketFailure, 409);
    const failure = await response.clone().json().catch(() => null) as { error?: unknown } | null;
    return typeof failure?.error === "string" && archiveFailures.has(failure.error) ? reply(failure.error, response.status) : response;
   }
