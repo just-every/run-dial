@@ -5,3 +5,4 @@ export { workflowInput, workflowPatch } from "./types";
 export { runWorkflows } from "./engine";
 export { workflowMessage } from "./templates";
 export { workflowWebhookAuthority } from "./webhooks";
+export { routingWorkflowMailAuthorized } from "./routing-mail";

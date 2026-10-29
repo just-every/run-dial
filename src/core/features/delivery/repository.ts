@@ -1,4 +1,4 @@
-import { routingWorkflowMailAuthorized } from "../workflows/routing-mail";
+import { routingWorkflowMailAuthorized } from "../workflows";
 import { ConfirmationDeliveryRepository } from "./confirmation-repository";
 import { BookingCorrespondenceRepository } from "./correspondence-repository";
 import { and, asc, eq, isNull, lte, sql } from "drizzle-orm";

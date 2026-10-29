@@ -1,4 +1,4 @@
-import { routingWorkflowMailAuthorized } from "../workflows/routing-mail";
+import { routingWorkflowMailAuthorized } from "../workflows";
 import { ProviderFailure } from "../../platform/calendar";
 import type { MailSender } from "../../platform/mail";
 import { nowIso } from "../../shared/ids";
