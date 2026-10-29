@@ -940,7 +940,7 @@
       "executable": false
     },
     "docs/AGENTS.md": {
-      "sha256": "6d1b56d615544e22d67d0c31d62d5f82f5d52b954fa69a10db7b8ab8c79b1e75",
+      "sha256": "e3427996d378c04606e9a763f15591cf5adc15c148f945a54f410b85f90d0a50",
       "executable": false
     },
     "docs/backups.md": {
@@ -3952,7 +3952,7 @@
       "executable": false
     },
     "scripts/agent-docs.mjs": {
-      "sha256": "ac8de2b0d74148d42799be03ad3683b1b026e0a969eea6269b2f1cc1975c2843",
+      "sha256": "43e746d96d12682464481109b091bffed7643ab2cb38114710bfd0a296047758",
       "executable": false
     },
     "scripts/archive/availability-config.mjs": {
@@ -4572,7 +4572,7 @@
       "executable": false
     },
     "scripts/validate-manifest-contract.mjs": {
-      "sha256": "97ddc670d063a00facbd31f0be8eb89a9047f8a3490835be6a4359bec3212da9",
+      "sha256": "035bbc53457d419babaeae1819af426185b08ccdeb7002822d7b758aebfb319f",
       "executable": false
     },
     "scripts/verify-acceptance-audit.mjs": {
@@ -6788,7 +6788,7 @@
       "executable": false
     },
     "src/core/features/erasure/census.ts": {
-      "sha256": "088f113213b961e38d7ceb3c7bdb6d833634087c80cbb306e00975693a618c4b",
+      "sha256": "603ac92c874e5ba9a2ca163d41f5f1d2c92172c777bd15ccece223c75299c898",
       "executable": false
     },
     "src/core/features/erasure/entitlements.ts": {

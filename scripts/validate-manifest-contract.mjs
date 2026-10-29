@@ -12,6 +12,9 @@ const [contract, baseline, manifestText] = await Promise.all([
   readFile(resolve(root, "seed.json"), "utf8"),
 ]);
 execFileSync(process.execPath, ["scripts/contract-docs.mjs", "check"], { cwd: root, stdio: "inherit" });
+// Delivered BASE-AGENT clauses may live in this retained contract, but their
+// requirements must still match the pinned canonical source byte for byte.
+execFileSync(process.execPath, ["node_modules/@runeditrun/rer/global/rer.mjs", "door", "clauses", "--check"], { cwd: root, stdio: "inherit" });
 const manifest = JSON.parse(manifestText);
 const clauseIds = [...matches(contract, /\*\*([A-Z][A-Z-]*-\d{3})\s+—/g), ...matches(contract, /^#### (BASE-AGENT-\d{3})\s+—/gm)];
 await validateContractStatus(root, contract, clauseIds);

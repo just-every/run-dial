@@ -40,4 +40,5 @@ const lines = [
   "",
   "The conformance journey is declared in agent-surface.json and runs against a disposable production build and its real migrations. Its only replacement is SendGrid’s paid network edge, including verified-sender readiness. No provider request leaves the verifier.",
 ];
+lines.push("", "The owner bootstrap uses signed `/auth/owner-claim` admission in managed installs, as declared in `rer-setup.json`. Unlinked local installations retain their native setup-token bootstrap. Neither MCP nor a company policy can create an owner or complete installation setup.");
 await writeFile("docs/AGENTS.md", lines.join("\n") + "\n");

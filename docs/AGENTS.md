@@ -49,3 +49,5 @@ Policy unset, unanswered, expired, blocked or Pause produces no native effect. I
 The additive Business and door tables hold installation-local authority and retained decisions. They are excluded from archives; restore never carries pending approval or replay authority. Client-custody erasure of retained agent data remains undeclared and must be resolved before client-writing tools ship.
 
 The conformance journey is declared in agent-surface.json and runs against a disposable production build and its real migrations. Its only replacement is SendGrid’s paid network edge, including verified-sender readiness. No provider request leaves the verifier.
+
+The owner bootstrap uses signed `/auth/owner-claim` admission in managed installs, as declared in `rer-setup.json`. Unlinked local installations retain their native setup-token bootstrap. Neither MCP nor a company policy can create an owner or complete installation setup.
