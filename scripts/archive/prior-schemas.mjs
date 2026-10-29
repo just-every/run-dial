@@ -12,6 +12,7 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  'core/0093_api_consent.sql': (table,row) => table==='api_oauth_applications'?{...row,grant_type:'client_credentials',redirect_uri:null}:table==='api_credentials'?{...row,oauth_grant_id:null}:row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.

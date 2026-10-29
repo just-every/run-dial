@@ -12,7 +12,7 @@ export type CredentialRow = {
   id: string; name: string; operator_id: string; workspace_id: string;
   host_id: string | null; team_id: string | null; scopes_json: string;
   expires_at: string; last_used_at: string | null; revoked_at: string | null;
-  oauth_application_id: string | null; created_at: string; updated_at: string;
+  oauth_application_id: string | null; oauth_grant_id: string | null; created_at: string; updated_at: string;
 };
 export function credentialRecord(row: CredentialRow): Credential {
   return { id: row.id, name: row.name, operatorId: row.operator_id, workspaceId: row.workspace_id,
@@ -26,12 +26,12 @@ export async function hashSecret(secret: string) {
 export function randomSecret() {
   return Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, "0")).join("");
 }
-export async function createCredential(db: D1Database, input: CredentialInput, operatorId: string, applicationId?: string) {
+export async function createCredential(db: D1Database, input: CredentialInput, operatorId: string, applicationId?: string, grantId?: string) {
   const id = createId(), secret = randomSecret(), now = nowIso();
   await db.prepare(`INSERT INTO api_credentials
-    (id,name,operator_id,workspace_id,host_id,team_id,scopes_json,secret_hash,expires_at,oauth_application_id,created_at,updated_at)
-    VALUES(?,?,?,'default',?,?,?,?,?,?,?,?)`).bind(id,input.name,operatorId,input.hostId ?? null,input.teamId ?? null,
-      JSON.stringify(input.scopes),await hashSecret(secret),input.expiresAt,applicationId ?? null,now,now).run();
+    (id,name,operator_id,workspace_id,host_id,team_id,scopes_json,secret_hash,expires_at,oauth_application_id,created_at,updated_at,oauth_grant_id)
+    VALUES(?,?,?,'default',?,?,?,?,?,?,?,?,?)`).bind(id,input.name,operatorId,input.hostId ?? null,input.teamId ?? null,
+      JSON.stringify(input.scopes),await hashSecret(secret),input.expiresAt,applicationId ?? null,now,now,grantId ?? null).run();
   return { credential: { id, name: input.name, operatorId, workspaceId: "default", hostId: input.hostId ?? null,
     teamId: input.teamId ?? null, scopes: input.scopes, expiresAt: input.expiresAt, lastUsedAt: null }, secret };
 }

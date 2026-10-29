@@ -42,6 +42,7 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  api_oauth_codes: "Single-use delegated authorization codes and PKCE bindings never leave the installation",
   workflow_dispatches: "Workflow execution receipts and replay authority remain installation-local",
   api_request_keys: "Credential-bound write replay records and private response bodies never travel",
   api_rate_windows: "Ephemeral per-credential rate counters remain installation-local",

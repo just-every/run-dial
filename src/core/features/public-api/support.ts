@@ -1,3 +1,4 @@
+import { hostExists } from "../api-credentials/authority";
 import type { Context } from "hono";
 import seed from "../../../../seed.json";
 import type { AppEnvironment } from "../../app/context";
@@ -31,10 +32,13 @@ export async function rateLimit(c: Context<AppEnvironment>, credential: Credenti
 
 export async function hostAllowed(c: Context<AppEnvironment>, credential: Credential) {
   const host = await c.get("services").hostProfile.getProfile();
-  return host && (!credential.hostId || credential.hostId === host.id) ? host : undefined;
+  return host && (!credential.hostId || await hostExists(c.get("apiDatabase"),credential.hostId)) ? {...host,id:credential.hostId??host.id} : undefined;
 }
 export async function eventAllowed(c: Context<AppEnvironment>, credential: Credential, eventTypeId: string) {
   if (!await hostAllowed(c,credential)) return false;
+  const owned=await c.get("apiDatabase").prepare(`SELECT e.id FROM event_types e LEFT JOIN api_event_hosts a ON a.event_type_id=e.id
+    WHERE e.id=? AND (? IS NULL OR COALESCE(a.host_id,(SELECT id FROM host_profiles WHERE singleton_key='default'))=?)`).bind(eventTypeId,credential.hostId,credential.hostId).first();
+  if(!owned)return false;
   if (!credential.teamId) return true;
   return Boolean(await c.get("apiDatabase").prepare("SELECT event_type_id FROM team_event_types WHERE team_id=? AND event_type_id=?").bind(credential.teamId,eventTypeId).first());
 }
