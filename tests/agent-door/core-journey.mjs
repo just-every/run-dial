@@ -15,10 +15,13 @@ export default async function coreJourney({request,origin,cookie,tool}) {
  try{const refused=await tool('dial.profile.save',{...profile,title:'Paused change',idempotency_key:randomUUID()});assert.equal(code(refused),'agents_paused');assert.deepEqual(await witness(),after);}finally{await pause(false);}
  assert.equal(before.id,after.id,'native singleton identity survives writes and replay');
  // Exercise the existing native erasure lifecycle after approvals and retained reads.
- const preview=await request(origin+'/api/app/privacy/preview',{method:'POST',headers,body:JSON.stringify({email:'synthetic-dial-1@example.invalid'})});assert.equal(preview.status,200);
+ const catalogue=await tool('dial.clients.list',{});
+ const subject=catalogue.result?.structuredContent?.clients?.find(client=>client.email.endsWith('@example.invalid'))?.email;
+ assert.ok(subject,'native fixture must retain a client for erasure');
+ const preview=await request(origin+'/api/app/privacy/preview',{method:'POST',headers,body:JSON.stringify({email:subject})});assert.equal(preview.status,200);
  const proof=await preview.json();
- const erased=await request(origin+'/api/app/privacy/erase',{method:'POST',headers,body:JSON.stringify({email:'synthetic-dial-1@example.invalid',confirmation:proof.confirmation,expiresAt:proof.expiresAt})});assert.equal(erased.status,200);
+ const erased=await request(origin+'/api/app/privacy/erase',{method:'POST',headers,body:JSON.stringify({email:subject,confirmation:proof.confirmation,expiresAt:proof.expiresAt})});assert.equal(erased.status,200);
  const receipt=await erased.json();assert.equal(receipt.localComplete,true);
  const clients=await tool('dial.clients.list',{});assert.ok(clients.result?.structuredContent);
- assert.equal(JSON.stringify(clients.result.structuredContent).includes('synthetic-dial-1@example.invalid'),false);
+ assert.equal(JSON.stringify(clients.result.structuredContent).includes(subject),false);
 }

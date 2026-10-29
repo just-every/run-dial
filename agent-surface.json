@@ -1858,7 +1858,10 @@
       "id": "clients_history",
       "tool": "dial.clients.history",
       "args": {
-        "email": "synthetic-dial-1@example.invalid"
+        "email": {
+          "$fixture": "clientTarget",
+          "pointer": ""
+        }
       },
       "expect": [
         {
@@ -2603,7 +2606,10 @@
       "id": "note",
       "tool": "dial.clients.add_note",
       "args": {
-        "email": "synthetic-dial-1@example.invalid",
+        "email": {
+          "$fixture": "clientTarget",
+          "pointer": ""
+        },
         "body": "Prepare the planning agenda."
       },
       "expect": [
@@ -2621,7 +2627,10 @@
       "id": "client_field",
       "tool": "dial.clients.add_field",
       "args": {
-        "email": "synthetic-dial-1@example.invalid",
+        "email": {
+          "$fixture": "clientTarget",
+          "pointer": ""
+        },
         "label": "Planning focus",
         "value": "Project rollout"
       },
@@ -3398,8 +3407,14 @@
       "id": "client_merge",
       "tool": "dial.clients.merge",
       "args": {
-        "source": "synthetic-dial-2@example.invalid",
-        "target": "synthetic-dial-1@example.invalid"
+        "source": {
+          "$fixture": "clientSource",
+          "pointer": ""
+        },
+        "target": {
+          "$fixture": "clientTarget",
+          "pointer": ""
+        }
       },
       "expect": [
         {
