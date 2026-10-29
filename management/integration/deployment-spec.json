@@ -618,6 +618,12 @@
       "name": "0101_workflow_authority_revocation.sql",
       "sha256": "f3fb6e1d1331b43638ca27fa8dc8ae695908be63eebb7b6d273e87cbea398df5",
       "sql": "-- Revocation is permanent; restoring a role requires fresh explicit grants.\n-- The timestamp also distinguishes a revoked rule from an ordinary paused rule.\nALTER TABLE workflow_rules ADD COLUMN authority_revoked_at TEXT;\nCREATE TRIGGER workflow_owner_authority_revoked AFTER UPDATE OF role,status ON oa_operators\n WHEN OLD.role='owner' AND OLD.status='active' AND (NEW.role<>'owner' OR NEW.status<>'active') BEGIN\n UPDATE workflow_rules SET enabled=0,enabled_at=NULL,version=version+1,\n  authority_revoked_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')\n  WHERE operator_id=OLD.id AND enabled=1 AND removed_at IS NULL;\n UPDATE workflow_crm_connections SET status='revoked',credential_ciphertext=NULL,version=version+1,\n  reason='owner_authority_revoked',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')\n  WHERE operator_id=OLD.id AND credential_ciphertext IS NOT NULL;\nEND;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0102_routing_workflow_mail.sql",
+      "sha256": "d01106e29df8f6ef53a1eca023693780a0e3811cb0e73cf45c48ea0049de301a",
+      "sql": "-- Routing notifications retain a source-bound receipt without inventing a booking.\nCREATE TABLE workflow_routing_mail_runs (\n id TEXT PRIMARY KEY NOT NULL,\n workflow_id TEXT NOT NULL REFERENCES workflow_rules(id) ON DELETE CASCADE,\n routing_submission_id TEXT NOT NULL REFERENCES routing_submissions(id) ON DELETE CASCADE,\n outbox_id TEXT NOT NULL UNIQUE,\n recipient_id TEXT NOT NULL,\n workflow_version INTEGER NOT NULL,\n created_at TEXT NOT NULL,\n UNIQUE(workflow_id,routing_submission_id,recipient_id)\n);\nCREATE TRIGGER routing_workflow_mail_removed AFTER DELETE ON workflow_routing_mail_runs BEGIN\n DELETE FROM delivery_outbox WHERE id=OLD.outbox_id;\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

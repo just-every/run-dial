@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4d35099fca5bb4f2a44df96e522161b9f3548ae1bee30a905556c319161683a5",
+      "sha256": "2d627553ebcaf4ab8e254ef7a1bd7ef8b64bc32ddbb336a3a65ece8af7340998",
       "executable": false
     },
     "DEMO.md": {
@@ -952,7 +952,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "b31515de24b81ba166bc7045cfd6d9378c24e71159be37768e8e74ed6578b954",
+      "sha256": "7736ccee5a9c4f14f6a842a995801dd5f80ae8aff4c2703aee5f2ee12d585199",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -993,6 +993,10 @@
     },
     "docs/WORKFLOW-CRM.md": {
       "sha256": "c7a637275c848c9216080981199c57df3497001e838512bc32c4f656ae00eab7",
+      "executable": false
+    },
+    "docs/WORKFLOW-ROUTING.md": {
+      "sha256": "215ce9a539c1bf38e2d2c1e536936cc7c0c0d1bbb6dc327b81c3781174bdd947",
       "executable": false
     },
     "edition.json": {
@@ -1680,7 +1684,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "5df281a51ec7d2f7a0ccca1ff92d8d70cc0861d4c71a0182847f89122595d1d2",
+      "sha256": "c90156b79f32550e8171efacd2331493753d0f408c8225e8d47bece33e63600e",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
