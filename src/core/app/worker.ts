@@ -21,6 +21,7 @@ import { isPrivateLocalPath } from "../platform/private-local-path";
 import { PublicAdmissionGate, PublicAdmissionError, admissionErrorResponse, admissionResponse, isAuthenticatedCallbackPath, requiresPublicAdmission } from "../platform/public-admission";
 
 import start from "./start.server";
+import favicon from "../features/public-booking/ui/favicon.svg?raw";
 import { seedDemo } from "../../demo";
 
 export { BookingCoordinator } from "./booking-coordinator";
@@ -68,6 +69,8 @@ return {
    if (isPrivateLocalPath(url.pathname)) return new Response("Not found", { status: 404 });
    const runtime = parseRuntimeEnvironment(env);
    if (url.host !== new URL(runtime.APP_URL).host || (request.headers.has("host") && request.headers.get("host") !== new URL(runtime.APP_URL).host)) return new Response("Not found", { status: 404 });
+   // Browsers ask for this path on documents with no icon link (the sign-in confirmation); answer with Dial's own icon.
+   if (url.pathname === "/favicon.ico" && (request.method === "GET" || request.method === "HEAD")) return new Response(favicon, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
    if (url.pathname.startsWith("/api/portability/")) return hostedExport(request, env, servicesFor(env).operators);
    const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
    const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };
