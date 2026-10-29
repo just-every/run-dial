@@ -1250,7 +1250,10 @@
         "PROFILE-002",
         "BRAND-001",
         "BOOK-011",
-        "AGENT-005"
+        "AGENT-005",
+        "LINK-001",
+        "LINK-002",
+        "POLL-001"
       ],
       "reason": "screen"
     }
@@ -3565,6 +3568,12 @@
         "https://api.sendgrid.com",
         "https://cloudflare-dns.com",
         "https://synthetic-dial-site.example"
+      ]
+    },
+    "journey": "tests/agent-door/core-journey.mjs",
+    "replayAdmission": {
+      "prepare": [
+        "profile_save"
       ]
     }
   }

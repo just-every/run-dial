@@ -17,6 +17,10 @@ export const rowUpgrades = {
   // Credential metadata and replay tables are additive and start empty in earlier archives.
   'core/0090_api_credentials.sql': (_table, row) => row,
   'core/0091_public_api.sql': (_table, row) => row,
+  // Installation-local Business/agent stores start empty and never alter an archived product row.
+  'core/0093_business_settings.sql': (_table, row) => row,
+  'core/0094_business_people.sql': (_table, row) => row,
+  'core/0095_agent_door.sql': (_table, row) => row,
   // Relationship cleanup triggers do not change any existing archived row.
   'core/0089_event_type_webhook_cleanup.sql': (_table, row) => row,
   'core/0087_webhook_sources.sql': (_table,row) => row,

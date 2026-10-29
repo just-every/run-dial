@@ -12,8 +12,8 @@ export async function eraseAgentCustody(db: D1Database, subjects: readonly strin
       .bind(JSON.stringify({outcome: "refused", code: "resource_erased", decision: previous.decision ?? null}), row.agent, row.key));
   }
   for (const table of ["agent_door_approvals", "agent_door_reviews"] as const) {
-    const rows = await db.prepare(`SELECT id,saved FROM ${table}`).all<{id: string; saved: string}>();
-    for (const row of rows.results) if (matches(row.saved)) {
+    const rows = await db.prepare(`SELECT id,saved${table === "agent_door_approvals" ? ",result" : ""} FROM ${table}`).all<{id: string; saved: string; result?: string | null}>();
+    for (const row of rows.results) if (matches(row.saved) || row.result && matches(row.result)) {
       const saved = JSON.parse(row.saved) as Record<string, unknown>;
       delete saved.args; delete saved.arguments; delete saved.result; delete saved.undo;
       saved.summary = {items: ["Client content removed by native person erasure"]};
