@@ -21,7 +21,8 @@ const emptyInput = z.object({}).strict();
 
 async function revocableConnection(ctx: ToolContext, id: string) {
   const record = required(await connection(ctx, id));
-  if (!record.operatorId && record.status !== "disconnected") throw new ToolRefusal("calendar_authority_missing", "The native calendar connection has no authorising operator.");
+  if (record.status === "disconnected") throw new ToolRefusal("not_connected");
+  if (!record.operatorId) throw new ToolRefusal("calendar_authority_missing", "The native calendar connection has no authorising operator.");
   return record;
 }
 
@@ -88,7 +89,7 @@ export function calendarTools(services: AppServices): ToolDefinition[] {
       scope: "dial:write", readOnly: false, input: targetInput, outputSchema: objectOutput,
       classes: ["access", "live", "destructive"], clauses: ["CAL-001", "CAL-006", "AVAIL-004"],
       widens: false, narrowing: { effect: "revoke", target: "id" },
-      authority: async (args, ctx) => ({ subject: (await revocableConnection(ctx, args.id)).operatorId ?? ctx.person.id, widens: false }),
+      authority: async (args, ctx) => ({ subject: (await revocableConnection(ctx, args.id)).operatorId!, widens: false }),
       classify: async (args, ctx) => {
         await revocableConnection(ctx, args.id);
         return [{ class: "access", facts: { measure: 1, direction: "narrows" } }, live("Dial calendar connection"), { class: "destructive", facts: { measure: 1 } }];
