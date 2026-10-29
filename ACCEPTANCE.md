@@ -2,7 +2,7 @@
 
 # Dial acceptance
 
-Counts: 176 clauses — 90 done, 35 partial, 51 missing.
+Counts: 189 clauses — 90 done, 40 partial, 59 missing.
 
 CONTRACT.md is the source of requirements, acceptance and status. Every row below retains its acceptance text; provider and role boundaries remain in the source clause.
 
@@ -184,3 +184,16 @@ CONTRACT.md is the source of requirements, acceptance and status. Every row belo
 | AGENT-009 — Scheduling assistant in email threads | Native test with an inbound-mail fixture: a CC'd thread receives three valid times after host approval, a counter-proposal inside availability books directly, and a thread from an unknown sender is ignored. | partial |
 | AGENT-010 — Flexible holds and availability tuning | Native test: a priority booking moves one flexible block within its range and re-places it, a non-flexible event is never moved, and a monthly proposal changes nothing until accepted. | partial |
 | AGENT-011 — Voice booking through a contracted provider | Integration test with the voice provider's webhooks synthetic: a call transcript requesting Tuesday at 3 p.m. books a valid slot once, an unavailable time is answered with alternatives, and an outbound reminder call is not placed without recorded consent. | partial |
+| BASE-AGENT-001 — One MCP door per seed | #### BASE-AGENT-001 — One MCP door per seed | missing |
+| BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions | #### BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions | missing |
+| BASE-AGENT-003 — Records are resources | #### BASE-AGENT-003 — Records are resources | partial |
+| BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens | #### BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens | missing |
+| BASE-AGENT-005 — An agent acts as a person in a role, never more | #### BASE-AGENT-005 — An agent acts as a person in a role, never more | missing |
+| BASE-AGENT-006 — Every action declares its risk class | #### BASE-AGENT-006 — Every action declares its risk class | missing |
+| BASE-AGENT-007 — The company's policy decides, at one chokepoint | #### BASE-AGENT-007 — The company's policy decides, at one chokepoint | missing |
+| BASE-AGENT-008 — Truthful attribution | #### BASE-AGENT-008 — Truthful attribution | missing |
+| BASE-AGENT-009 — Every agent action is audited with its class and decision | #### BASE-AGENT-009 — Every agent action is audited with its class and decision | missing |
+| BASE-AGENT-010 — Agents can follow changes | #### BASE-AGENT-010 — Agents can follow changes | partial |
+| BASE-AGENT-011 — Limits are policy, and Pause stops everything | #### BASE-AGENT-011 — Limits are policy, and Pause stops everything | partial |
+| BASE-AGENT-012 — Writes are idempotent and conflict-safe | #### BASE-AGENT-012 — Writes are idempotent and conflict-safe | partial |
+| BASE-AGENT-013 — Manifest, docs and the conformance journey | #### BASE-AGENT-013 — Manifest, docs and the conformance journey | partial |
