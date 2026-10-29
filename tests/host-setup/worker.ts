@@ -1,17 +1,12 @@
 import review from "../review/worker";
 export { BookingCoordinator } from "../review/worker";
 import type { AppBindings } from "../../src/core/app/bindings";
-import favicon from "../../src/core/features/public-booking/ui/favicon.svg?raw";
 
 export default {
   ...review,
   async fetch(request: Request, env: AppBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response(null, { status: 404 });
-    // Chromium asks for this asset on the native confirmation document, which
-    // has no app icon link. This isolated host supplies the real Dial asset at
-    // its static-asset edge; every product and native identity response stays real.
-    if (url.pathname === "/favicon.ico" && request.method === "GET") return new Response(favicon, { headers: { "Content-Type": "image/svg+xml" } });
     if (url.pathname === "/__host/reset" && request.method === "POST") {
       const existing = await env.DB.prepare("SELECT count(*) AS count FROM oa_operators").first<{ count: number }>();
       if (existing?.count) return new Response("Fixture requires fresh native state", { status: 409 });
