@@ -12,6 +12,10 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Installation-local Business/agent stores start empty and never alter an archived product row.
+  'core/0090_business_settings.sql': (_table, row) => row,
+  'core/0091_business_people.sql': (_table, row) => row,
+  'core/0092_agent_door.sql': (_table, row) => row,
   // Relationship cleanup triggers do not change any existing archived row.
   'core/0089_event_type_webhook_cleanup.sql': (_table, row) => row,
   'core/0087_webhook_sources.sql': (_table,row) => row,
