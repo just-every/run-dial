@@ -10,6 +10,7 @@ export type AppEnvironment = {
     runtime: RuntimeEnvironment;
     services: AppServices;
     session: SessionRecord;
+    apiDatabase: D1Database;
     apiCredential: import("../features/api-credentials/auth").Credential;
     inertMutation: boolean;
     admitProvider: (provider: CallbackProvider) => Promise<Admission>;

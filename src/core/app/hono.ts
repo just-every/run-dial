@@ -59,6 +59,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       const services = servicesFactory ? servicesFactory(context.env) : createServices(context.env.DB, runtime, (documents ?? context.env.ASSETS) as Fetcher, { files: context.env.FILES });
       const origin = context.req.header("Origin");
       if (["POST", "PATCH", "PUT", "DELETE"].includes(context.req.method) && origin && origin !== new URL(runtime.APP_URL).origin && !context.req.path.startsWith("/api/webhooks/")) return apiError(context, 403, "origin_not_allowed", "Use the deployment origin for this action.");
+      context.set("apiDatabase", context.env.DB);
       context.set("runtime", runtime);
       context.set("services", services);
       context.set("admitProvider", (provider) => admitProvider ? admitProvider(context.req.raw, context.env, provider) : new PublicAdmissionGate(context.env.DB, runtime).admit(context.req.raw, provider));

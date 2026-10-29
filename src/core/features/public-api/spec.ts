@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { eventTypeCreationSchema, eventTypeInputSchema } from "../event-types/event-input";
-import { formSchema } from "../routing/types";
-import { pollInput } from "../polls/types";
+import { workflowInput,workflowPatch } from "../workflows";
+import { eventTypeCreationSchema, eventTypeInputSchema } from "../event-types";
+import { formSchema } from "../routing";
+import { pollInput } from "../polls";
 import { apiAttendanceSchema, apiAvailabilityQuerySchema, apiBookingCreateSchema, apiCancellationSchema, apiRescheduleSchema, apiRoutingSubmissionSchema, apiTeamSchema, apiWebhookSchema } from "./request-schemas";
 
 const schema=(input:z.ZodType)=>z.toJSONSchema(input,{io:"input",unrepresentable:"any"});
@@ -31,12 +32,14 @@ const availabilityQuery=Object.entries(schema(apiAvailabilityQuerySchema).proper
 export const openApiDocument={openapi:"3.1.0",info:{title:"Dial public API",version:"1.0.0",description:"Send the owner-issued credential as Authorization: Bearer. Credentials never grant operator documents, archive export, erasure or role changes. Availability and booking mutations retain the ordinary public policies."},servers:[{url:"/api/v1"}],components:{securitySchemes:{bearerAuth:{type:"http",scheme:"bearer"}},schemas:{
  ApiError:{type:"object",required:["error"],properties:{error:{type:"object",required:["code","message"],properties:{code:{type:"string",description:"Stable codes include invalid_credential, credential_expired, credential_revoked, scope_forbidden, not_found, invalid_request, invalid_answers, invalid_pagination, invalid_cursor, idempotency_key_required, idempotency_key_reused, request_in_progress, erased, rate_limited, and the named ordinary booking or routing refusal."},message:{type:"string"},request_id:{type:"string"},details:{type:"array",items:{type:"string"}}}}}},
  CursorPage:{type:"object",required:["data","nextCursor"],properties:{data:{type:"array",items:{type:"object"}},nextCursor:{type:["string","null"]}}},
+ WorkflowInput:schema(workflowInput),WorkflowPatch:schema(workflowPatch),
  BookingInput:schema(apiBookingCreateSchema),CancelInput:schema(apiCancellationSchema),RescheduleInput:schema(apiRescheduleSchema),AttendanceInput:schema(apiAttendanceSchema),
  EventTypeCreateInput:schema(eventTypeCreationSchema),EventTypeUpdateInput:schema(eventTypeInputSchema),TeamInput:schema(apiTeamSchema),RoutingFormInput:schema(formSchema),RoutingSubmissionInput:schema(apiRoutingSubmissionSchema),PollInput:schema(pollInput),WebhookSubscriptionInput:schema(apiWebhookSchema),
 }},paths:{
  "/openapi.json":{get:operation("Read this API description",{scopes:[]})},
  "/event-types":{get:operation("List event types",{list:true,description:"Requires bookings:read or event-types:manage."}),post:operation("Create an event type",{...eventWrites,input:"EventTypeCreateInput"})},
- "/event-types/{id}":{get:operation("Read an event type",{description:"Requires bookings:read or event-types:manage."}),put:operation("Update an event type",{...eventWrites,input:"EventTypeUpdateInput"})},
+ "/event-types/{id}":{get:operation("Read an event type",{description:"Requires bookings:read or event-types:manage."}),put:operation("Update an event type",{...eventWrites,input:"EventTypeUpdateInput"}),delete:operation("Delete an event type through its ordinary lifecycle",eventWrites)},
+ "/event-types/{id}/disable":{post:operation("Disable an event type",eventWrites)},
  "/event-types/{id}/publish":{post:operation("Publish after ordinary readiness checks",eventWrites)},
  "/availability":{get:operation("Read the public booking slots",{query:availabilityQuery,description:"The eventTypeId, week, inviteeTimezone and optional duration select the same slots as the public booking page."})},
  "/bookings":{get:operation("List bookings",{list:true}),post:operation("Book using the ordinary public claim and side effects",{...bookingWrites,input:"BookingInput"})},
@@ -49,6 +52,8 @@ export const openApiDocument={openapi:"3.1.0",info:{title:"Dial public API",vers
  "/routing-submissions":{get:operation("List scoped routing submissions",{...routingRead,list:true}),post:operation("Submit answers through the ordinary routing rules",{...routingWrites,input:"RoutingSubmissionInput",description:"The form and selected destination must be in the credential's host or team scope. The server issues and consumes one routing capability; repeating the key returns the stored submission."})},
  "/polls":{get:operation("List meeting polls",{list:true}),post:operation("Create a meeting poll",{...eventWrites,input:"PollInput"})},
  "/polls/{id}":{get:operation("Read a meeting poll")},"/polls/{id}/close":{post:operation("Close a meeting poll",eventWrites)},
+ "/workflows":{get:operation("List granted booking-created workflows",{list:true,scopes:["workflows:manage"]}),post:operation("Create an explicitly enabled or disabled workflow",{write:true,input:"WorkflowInput",scopes:["workflows:manage"]})},
+ "/workflows/{id}":{get:operation("Read a scoped workflow",{scopes:["workflows:manage"]}),patch:operation("Change workflow settings and invalidate prior queued authority",{write:true,input:"WorkflowPatch",scopes:["workflows:manage"]}),delete:operation("Remove a workflow and stop unsent messages",{write:true,scopes:["workflows:manage"]})},
  "/webhook-subscriptions":{get:operation("List scoped webhook subscriptions",{...webhookRead,list:true}),post:operation("Create a scoped webhook subscription",{...webhookWrites,input:"WebhookSubscriptionInput",description:"The subscription inherits the credential scope. The signing secret is returned once; a replay returns its id and secretShown: false."})},
  "/webhook-subscriptions/{id}":{delete:operation("Delete a scoped webhook subscription",webhookWrites)},
 }};

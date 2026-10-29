@@ -3,6 +3,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:net";
+import { createServer as httpServer } from "node:http";
+import { resourceJourney } from "./resources.mjs";
+import { workflowJourney } from "./workflows.mjs";
 import { startWebhookRuntime } from "../booking-wire/webhook-runtime.mjs";
 
 export async function machineCredentialJourney(context) {
@@ -11,8 +14,15 @@ export async function machineCredentialJourney(context) {
   const port=reservation.address().port;
   await new Promise(resolve=>reservation.close(resolve));
   const origin=`http://127.0.0.1:${port}`,state=await mkdtemp(join(tmpdir(),"dial-machine-authority-"));
+  const receiver=httpServer((request,response)=>{
+    const type=Number(new URL(request.url,"http://localhost").searchParams.get("type"));
+    response.writeHead(200,{"Content-Type":"application"+"/json"});
+    response.end(JSON.stringify({Status:0,Answer:type===1?[{type,data:"93.184.216.34"}]:[]}));
+  });
+  await new Promise(resolve=>receiver.listen(0,"127.0.0.1",resolve));
+  context.after(()=>new Promise(resolve=>{receiver.close(resolve);receiver.closeAllConnections();}));
   console.log("Machine journey: starting native runtime");
-  const runtime=await startWebhookRuntime({state,port,origin,receiver:port});
+  const runtime=await startWebhookRuntime({state,port,origin,receiver:receiver.address().port});
   context.after(async()=>{await runtime.dispose();await rm(state,{recursive:true,force:true});});
   const db=await runtime.getD1Database("DB");
   console.log("Machine journey: native schema ready");
@@ -21,7 +31,7 @@ export async function machineCredentialJourney(context) {
   const call=(path,{body,method=body===undefined?"GET":"POST",secret,key,session=false}={})=>fetch(origin+path,{
     method,redirect:"manual",headers:{Origin:origin,"content-type":"application/json",...(session&&cookie?{cookie}:{}),...(secret?{Authorization:`Bearer ${secret}`} : {}),...(key?{"Idempotency-Key":key}:{} )},...(body===undefined?{}:{body:JSON.stringify(body)}),
   });
-  const json=async(path,options={},status=200)=>{console.log(`Machine journey: ${path}`);const response=await call(path,options);assert.equal(response.status,status,`${path} status`);return response.json();};
+  const json=async(path,options={},status=200)=>{console.log(`Machine journey: ${path}`);const response=await call(path,options);assert.equal(response.status,status,`${path} status${response.status!==status?" "+JSON.stringify((await response.clone().json().catch(()=>({}))).error?.code??"unclassified"):""}`);return response.json();};
   await json("/wire/init",{body:{}});
   const boot=await call("/auth/bootstrap",{body:{token:"dial-test-only-setup-token-at-least-32",displayName:"Synthetic Dial Owner",returnTo:"/app"}});
   assert.equal(boot.status,303);cookie=boot.headers.get("set-cookie").split(";")[0];
@@ -49,13 +59,27 @@ export async function machineCredentialJourney(context) {
   const first=await writes();assert.equal(first.bookings.length,1);assert.equal(first.commands.filter(row=>row.kind==="calendar_upsert").length,1);assert.equal(first.commands.filter(row=>row.kind==="mail_send").length,2);
   const replay=await call("/api/v1/bookings",{body,secret:writer.secret,key});assert.equal(replay.status,201);assert.equal(replay.headers.get("Idempotent-Replay"),"true");assert.deepEqual(await replay.json(),created);assert.equal(JSON.stringify(await writes())===JSON.stringify(first),true);
   const changed=await call("/api/v1/bookings",{body:{...body,name:"Changed identity"},secret:writer.secret,key});assert.equal(changed.status,409);assert.equal((await changed.json()).error.code,"idempotency_key_reused");assert.equal(JSON.stringify(await writes())===JSON.stringify(first),true);
-  assert.equal((await call("/api/v1/bookings",{secret:writer.secret})).status,403);assert.equal((await json(`/api/v1/bookings/${created.id}`,{secret:reader.secret})).inviteeName,body.name);
+  assert.equal((await call("/api/v1/bookings",{secret:writer.secret})).status,403);
+  assert.equal((await call("/api/v1/bookings",{secret:writer.secret,method:"HEAD"})).status,403,"HEAD retains the read permission boundary");assert.equal((await json(`/api/v1/bookings/${created.id}`,{secret:reader.secret})).inviteeName,body.name);
   assert.equal((await json("/api/v1/bookings?limit=1",{secret:reader.secret})).data[0].id,created.id);
   const used=await json("/api/app/api-credentials",{session:true});assert.ok(used.credentials.find(row=>row.id===reader.credential.id).lastUsedAt);
   for(const path of ["/api/app/api-credentials","/api/app/operators","/api/app/erasures","/app"]){assert.equal((await call(path,{secret:writer.secret})).status,path==="/app"?302:401,"machine authority cannot mint an operator session");}
   await db.prepare("UPDATE api_credentials SET host_id=? WHERE id=?").bind("01K00000000000000000000999",reader.credential.id).run();
   assert.equal((await call(`/api/v1/bookings/${created.id}`,{secret:reader.secret})).status,404);assert.equal(JSON.stringify(await writes())===JSON.stringify(first),true);
   await db.prepare("UPDATE api_credentials SET host_id=? WHERE id=?").bind(profile.id,reader.credential.id).run();
+  const other=await json("/api/v1/bookings",{body:{...body,startAt:apiSlots.slots[5].startAt,name:"Other synthetic invitee",email:address("synthetic-dial-903")},secret:writer.secret,key:"synthetic-dial-page-booking"},201);
+  const pageOne=await json("/api/v1/bookings?limit=1",{secret:reader.secret});assert.ok(pageOne.nextCursor);
+  const pageTwo=await json(`/api/v1/bookings?limit=1&cursor=${encodeURIComponent(pageOne.nextCursor)}`,{secret:reader.secret});
+  assert.deepEqual(new Set([...pageOne.data,...pageTwo.data].map(row=>row.id)),new Set([created.id,other.id]),"cursor pages preserve every actual booking once");assert.equal(pageTwo.nextCursor,null);
+  const move={startAt:apiSlots.slots[3].startAt,inviteeTimezone:"UTC",reason:"Synthetic move"};
+  const moved=await json(`/api/v1/bookings/${created.id}/reschedule`,{body:move,secret:writer.secret,key:"synthetic-dial-move-once"});
+  assert.equal(moved.occurrence.startAt,move.startAt);
+  const afterMove=JSON.stringify(await writes());
+  const movedReplay=await call(`/api/v1/bookings/${created.id}/reschedule`,{body:move,secret:writer.secret,key:"synthetic-dial-move-once"});
+  assert.equal(movedReplay.status,200);assert.equal(movedReplay.headers.get("Idempotent-Replay"),"true");assert.equal(JSON.stringify(await writes())===afterMove,true,"a repeated move issues no second change command");
+  assert.equal((await call("/__fixtures/booking-ended",{body:{id:other.id}})).status,204);
+  const attended=await json(`/api/v1/bookings/${other.id}/attendance`,{body:{status:"attended",note:"Synthetic attendance"},secret:writer.secret,key:"synthetic-dial-attendance"});
+  assert.equal(attended.attendance.status,"attended");
   await json("/__fixtures/deliver",{body:{}});
   assert.equal((await json(`/api/v1/bookings/${created.id}/cancel`,{body:{reason:"Synthetic cancellation"},secret:writer.secret,key:"synthetic-dial-cancel-once"})).state,"cancelled");
   const cancellationState=await writes();
@@ -70,20 +94,23 @@ export async function machineCredentialJourney(context) {
   assert.ok(limited);assert.ok(Number(limited.headers.get("Retry-After"))>0);assert.equal((await limited.json()).error.code,"rate_limited");assert.equal(JSON.stringify(await writes())===JSON.stringify(deliveredState),true);
   await json(`/api/app/bookings/${created.id}`,{session:true,method:"DELETE"},202);
   const erasedState=await writes();
-  assert.equal(erasedState.bookings.length,0);
+  assert.equal(erasedState.bookings.length,1);
   const erasedReplay=await call("/api/v1/bookings",{body,secret:writer.secret,key});
   assert.equal(erasedReplay.status,410);assert.equal((await erasedReplay.json()).error.code,"erased");
   assert.equal((await call(`/api/v1/bookings/${created.id}`,{secret:reader.secret})).status,404);
   assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true,"erased captures cannot recreate the booking");
-  const tombstones=(await db.prepare("SELECT state,response_json,request_hash,booking_id FROM api_request_keys WHERE credential_id=?").bind(writer.credential.id).all()).results;
+  const tombstones=(await db.prepare("SELECT state,response_json,request_hash,booking_id FROM api_request_keys WHERE credential_id=? AND state='erased'").bind(writer.credential.id).all()).results;
   assert.ok(tombstones.length>0&&tombstones.every(row=>row.state==="erased"&&row.response_json===null&&row.request_hash===null&&row.booking_id===null));
   assert.equal((await call(`/api/app/api-credentials/${writer.credential.id}/revoke`,{session:true,body:{}})).status,204);
   const afterRevoke=await call("/api/v1/bookings",{body:{...body,startAt:apiSlots.slots[2].startAt},secret:writer.secret,key:"synthetic-dial-after-revoke"});assert.equal(afterRevoke.status,401);assert.equal((await afterRevoke.json()).error.code,"credential_revoked");assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true);
+  await resourceJourney({call,json,issue,fixture,week,profile,db});
+  await workflowJourney({call,json,issue,fixture,week,db});
   const app=await json("/api/app/oauth-applications",{session:true,body:{name:"Synthetic Dial application",scopes:["bookings:read"],expiresAt}},201);
   const grant=await fetch(origin+"/api/oauth/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:app.application.id,client_secret:app.clientSecret})});
   assert.equal(grant.status,200);const access=await grant.json();assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,200);
   assert.equal((await call(`/api/app/oauth-applications/${app.application.id}/revoke`,{session:true,body:{}})).status,204);assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,401);
+  const beforeExpiry=await writes();
   await db.prepare("UPDATE api_credentials SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(reader.credential.id).run();
   const expired=await call("/api/v1/bookings",{secret:reader.secret});assert.equal(expired.status,401);assert.equal((await expired.json()).error.code,"credential_expired");
-  assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true,"expired credentials change no booking or queued command");
+  assert.equal(JSON.stringify(await writes())===JSON.stringify(beforeExpiry),true,"expired credentials change no booking or queued command");
 }

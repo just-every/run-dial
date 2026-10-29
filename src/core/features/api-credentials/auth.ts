@@ -14,7 +14,7 @@ export async function authenticateCredential(context: Context<AppEnvironment>): 
     return apiError(context, 401, code, "A valid API credential is required.");
   };
   if (!match) return refused("invalid_credential");
-  const db = context.env.DB;
+  const db = context.get("apiDatabase");
   const row = await db.prepare("SELECT * FROM api_credentials WHERE secret_hash=? AND workspace_id='default'")
     .bind(await hashSecret(match[1])).first<CredentialRow>();
   if (!row) return refused("invalid_credential");

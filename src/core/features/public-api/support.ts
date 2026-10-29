@@ -4,8 +4,8 @@ import type { AppEnvironment } from "../../app/context";
 import { createId } from "../../shared/ids";
 import { hashToken } from "../../platform/auth/tokens";
 import { stableJson } from "../../shared/stable-json";
-import type { Credential } from "../api-credentials/auth";
-import type { BookingRecord } from "../bookings/types";
+import type { Credential } from "../api-credentials";
+import type { BookingRecord } from "../bookings";
 
 export type ApiEnvironment = AppEnvironment;
 export function refusal(c: Context<AppEnvironment>, status: 400 | 401 | 403 | 404 | 409 | 410 | 422 | 429 | 503, code: string, message: string) {
@@ -16,7 +16,7 @@ export async function rateLimit(c: Context<AppEnvironment>, credential: Credenti
   const limit = seed.limits.publicApiRequestsPerMinute;
   const started = Math.floor(Date.now() / 60_000) * 60_000;
   const window = new Date(started).toISOString(), expires = new Date(started + 60_000).toISOString();
-  const row = await c.env.DB.prepare(`INSERT INTO api_rate_windows(id,credential_id,window_started_at,request_count,expires_at) VALUES(?,?,?,1,?)
+  const row = await c.get("apiDatabase").prepare(`INSERT INTO api_rate_windows(id,credential_id,window_started_at,request_count,expires_at) VALUES(?,?,?,1,?)
     ON CONFLICT(credential_id,window_started_at) DO UPDATE SET request_count=request_count+1 RETURNING request_count AS count`)
     .bind(`${credential.id}-${window}`, credential.id, window, expires).first<{count:number}>();
   if (!row) throw new Error("api_rate_window_unavailable");
@@ -36,7 +36,7 @@ export async function hostAllowed(c: Context<AppEnvironment>, credential: Creden
 export async function eventAllowed(c: Context<AppEnvironment>, credential: Credential, eventTypeId: string) {
   if (!await hostAllowed(c,credential)) return false;
   if (!credential.teamId) return true;
-  return Boolean(await c.env.DB.prepare("SELECT event_type_id FROM team_event_types WHERE team_id=? AND event_type_id=?").bind(credential.teamId,eventTypeId).first());
+  return Boolean(await c.get("apiDatabase").prepare("SELECT event_type_id FROM team_event_types WHERE team_id=? AND event_type_id=?").bind(credential.teamId,eventTypeId).first());
 }
 export async function bookingAllowed(c: Context<AppEnvironment>, credential: Credential, id: string) {
   const booking = await c.get("services").bookings.getForOperator(id);
@@ -60,10 +60,10 @@ export async function idempotent(c: Context<ApiEnvironment>, body: unknown, exec
   const now=new Date().toISOString(),expires=new Date(Date.now()+86400000).toISOString();
   // A pending reservation is never stolen: a crash can hold the key for its
   // retention window, but can never admit a second mutation on that key.
-  const inserted=await c.env.DB.prepare("INSERT OR IGNORE INTO api_request_keys(id,credential_id,key_hash,request_hash,state,created_at,expires_at) VALUES(?,?,?,?,'pending',?,?)")
+  const inserted=await c.get("apiDatabase").prepare("INSERT OR IGNORE INTO api_request_keys(id,credential_id,key_hash,request_hash,state,created_at,expires_at) VALUES(?,?,?,?,'pending',?,?)")
     .bind(createId(),credential.id,keyHash,requestHash,now,expires).run();
   if (!inserted.meta.changes) {
-    const prior=await c.env.DB.prepare("SELECT state,request_hash AS requestHash,response_json AS responseJson,response_status AS responseStatus,booking_id AS bookingId FROM api_request_keys WHERE credential_id=? AND key_hash=?")
+    const prior=await c.get("apiDatabase").prepare("SELECT state,request_hash AS requestHash,response_json AS responseJson,response_status AS responseStatus,booking_id AS bookingId FROM api_request_keys WHERE credential_id=? AND key_hash=?")
       .bind(credential.id,keyHash).first<Receipt>();
     if (prior?.state==="erased") return refusal(c,410,"erased","This booking was erased. Start a new request.");
     if (prior?.requestHash!==requestHash) return refusal(c,409,"idempotency_key_reused","This key was used for different request details.");
@@ -75,16 +75,24 @@ export async function idempotent(c: Context<ApiEnvironment>, body: unknown, exec
     return refusal(c,409,"request_in_progress","This request is still in progress.");
   }
   const result=await execute(),json=JSON.stringify(result.body);
-  await c.env.DB.prepare("UPDATE api_request_keys SET state='completed',response_json=?,response_status=?,booking_id=? WHERE credential_id=? AND key_hash=? AND state='pending'")
+  await c.get("apiDatabase").prepare("UPDATE api_request_keys SET state='completed',response_json=?,response_status=?,booking_id=? WHERE credential_id=? AND key_hash=? AND state='pending'")
     .bind(JSON.stringify(result.replayBody??result.body),result.status,result.bookingId??null,credential.id,keyHash).run();
   return c.newResponse(json,result.status as 200,{"Content-Type":"application/json"});
 }
 
-export function page<T extends {id:string}>(c:Context<AppEnvironment>, rows:T[]) {
-  const rawLimit=c.req.query("limit")??"50",limit=Number(rawLimit),cursor=c.req.query("cursor");
+export function parsePage(c:Context<AppEnvironment>) {
+  const limit=Number(c.req.query("limit")??"50"),cursor=c.req.query("cursor");
   if(!Number.isInteger(limit)||limit<1||limit>100)return refusal(c,400,"invalid_pagination","Choose a limit from 1 to 100.");
   let after="";
   if(cursor){try{after=atob(cursor);if(!/^[0-9A-Z]{26}$/.test(after))throw new Error();}catch{return refusal(c,400,"invalid_cursor","This cursor is invalid.");}}
-  const sorted=[...rows].sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0).filter(row=>row.id>after),data=sorted.slice(0,limit);
-  return c.json({data,nextCursor:sorted.length>limit?btoa(data[data.length-1].id):null});
+  return {limit,after};
+}
+export function pageResult<T extends {id:string}>(c:Context<AppEnvironment>,rows:T[],limit:number){
+  const data=rows.slice(0,limit);
+  return c.json({data,nextCursor:rows.length>limit?btoa(data[data.length-1].id):null});
+}
+export function page<T extends {id:string}>(c:Context<AppEnvironment>,rows:T[]) {
+  const bounds=parsePage(c);if(bounds instanceof Response)return bounds;
+  const sorted=[...rows].sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0).filter(row=>row.id>bounds.after);
+  return pageResult(c,sorted,bounds.limit);
 }

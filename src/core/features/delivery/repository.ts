@@ -195,6 +195,17 @@ export class DeliveryRepository {
     return result.meta.changes > 0;
   }
 
+  async workflowMailAuthorized(workflowId: string, version: number, creatorId: string, record: DeliveryOutboxRecord) {
+    if (!record.bookingId) return false;
+    return Boolean(await this.binding.prepare(`SELECT 1 FROM workflow_rules rule
+      JOIN oa_operators owner ON owner.id=rule.operator_id
+      JOIN workflow_dispatches dispatch ON dispatch.workflow_id=rule.id
+      WHERE rule.id=? AND rule.version=? AND rule.operator_id=? AND rule.enabled=1 AND rule.removed_at IS NULL
+       AND owner.status='active' AND owner.role='owner'
+       AND dispatch.booking_id=? AND dispatch.outbox_id=? AND dispatch.workflow_version=rule.version`)
+      .bind(workflowId,version,creatorId,record.bookingId,record.id).first());
+  }
+
   async currentBookingMail(record: DeliveryOutboxRecord, cancelled: boolean, directContact = false) {
     if (!record.bookingId) return true;
     if (directContact && record.occurrenceId === null) return Boolean(await this.binding.prepare("SELECT 1 FROM bookings WHERE id=?").bind(record.bookingId).first());

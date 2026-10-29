@@ -10,7 +10,7 @@ const { Miniflare, convertV4MiniflareOptions } = await import(pathToFileURL(requ
 export async function startWebhookRuntime({ state, port, origin, receiver }) {
   const { workerOptions, main, define } = unstable_getMiniflareWorkerOptions("tests/booking-wire/worker.wrangler.toml");
   const compiled = await build({ entryPoints: [main], define, bundle: true, format: "esm", platform: "browser", external: ["node:*", "cloudflare:workers"], write: false });
-  const runtime = new Miniflare(convertV4MiniflareOptions({ host: "127.0.0.1", port, cf: false, workers: [{
+  const runtime = new Miniflare(convertV4MiniflareOptions({ host: "127.0.0.1", port, cf: false, unsafeTriggerHandlers: true, workers: [{
     name: "dial-booking-wire-test", compatibilityDate: workerOptions.compatibilityDate, compatibilityFlags: workerOptions.compatibilityFlags,
     d1Databases: workerOptions.d1Databases, r2Buckets: workerOptions.r2Buckets, queueProducers: workerOptions.queueProducers, durableObjects: workerOptions.durableObjects,
     modules: true, modulesRoot: state, script: compiled.outputFiles[0].text,

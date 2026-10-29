@@ -52,7 +52,7 @@ AUTH-008 is partial: API credentials and connected apps.
 
 Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
 
-Gap: Owner-issued personal tokens and registered OAuth machine applications use hashed secrets, named scopes, expiry, last use and next-request revocation. Conservative owner-only grant under the standing scope policy; delegated OAuth consent, admin issuance and native two-host and team authority proof remain.
+Gap: Owner-issued personal tokens and registered OAuth machine applications use hashed secrets, named scopes, expiry, last use and next-request revocation. Conservative owner-only grant under the standing scope policy; delegated OAuth consent, admin issuance and native two-host authority proof remain. Current team-scoped reads and routing refusals are qualified; the explicit workflow grant uses the same conservative owner-only policy.
 
 OPER-001 is partial: Roles and permissions.
 
@@ -844,7 +844,7 @@ API-001 is partial: Public REST API.
 
 Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney.
 
-Gap: Native bearer routes, public booking claims, cursor pages, durable write replay, credential limits and an OpenAPI document ship. Workflow administration remains; broader resource lifecycle, machine routing submission qualification, paid and approval continuation, and native multi-host and team qualification remain unproved.
+Gap: Current native resource families, routing submissions, booking lifecycle, cursor pages, durable write replay, credential limits and an OpenAPI document are qualified. Workflows currently provide explicitly enabled booking-created invitee email only; broader triggers and actions, paid and approval continuation, and native multi-host qualification remain. The owner-only machine grant and explicit workflow scope retain the conservative standing policy pending judgment.
 
 API-002 is done: Webhooks.
 
