@@ -47,7 +47,7 @@ function missing(values: EventDetailsInput, field: Field) {
 
 function describe(values: EventDetailsInput, field: Field, issue: ReturnType<typeof failing>[number]) {
   if (field === "title") return "Give the event a name.";
-  if (field === "questions") return values.questions.some(question => !question.label.trim()) ? "Write the question." : plainProblem(field, issue);
+  if (field === "questions") return values.questions.some(question => !question.label.trim()) ? "Write the question." : issue.path[2] === "options" && typeof issue.path[3] === "number" ? "Fill in each choice’s label and what it is saved as." : plainProblem(field, issue);
   if (field === "postBookingRedirect") return "Add the page to send invitees to.";
   if (field === "locations") {
     const location = values.locations?.[Number(issue.path[1])];
