@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import {
   ToolRefusal,
   type ToolDefinition,
@@ -86,7 +87,14 @@ export function nativeToolContext(env: AppBindings, services: AppServices) {
               await authorize(ctx);
               if (completed) return options.classify(args, ctx, completed);
               const before = await riskWitness(env.DB);
-              const classes = await options.classify(args, ctx);
+              let classes;
+              try {
+                classes = await options.classify(args, ctx);
+              } catch (error) {
+                if (error instanceof ZodError)
+                  throw new ToolRefusal("invalid_arguments");
+                throw error;
+              }
               const after = await riskWitness(env.DB);
               if (before !== after) throw new ToolRefusal("revision_conflict");
               classified.set(ctx.operationId, after);

@@ -34,7 +34,29 @@ export async function afterStep({
   cookie,
   tool,
 }) {
-  if (step.id !== "read" || !["autonomous", "held"].includes(phase)) return;
+  if (!["autonomous", "held"].includes(phase)) return;
+  if (step.id === "profile-read") {
+    const refused = await tool("dial.profile.save", {
+      ...result.record,
+      timezone: "US/Eastern",
+      idempotency_key: crypto.randomUUID(),
+    });
+    if (
+      refused.result?._meta?.["com.runeditrun/error"]?.code !==
+      "invalid_arguments"
+    )
+      throw new Error("Native canonical-timezone validation was bypassed");
+    const current = await request(new URL("/api/app/profile", origin), {
+      headers: { cookie, origin },
+    });
+    if (
+      !current.ok ||
+      JSON.stringify(await current.json()) !== JSON.stringify(result.record)
+    )
+      throw new Error("Invalid profile input changed native state");
+    return;
+  }
+  if (step.id !== "read") return;
   const old = result.record;
   const response = await request(
     new URL(`/api/app/event-types/${old.id}/disable`, origin),

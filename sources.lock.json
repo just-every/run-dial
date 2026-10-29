@@ -5828,11 +5828,11 @@
       "executable": false
     },
     "src/core/app/agent-door/schemas.ts": {
-      "sha256": "57c536ec07a0a0ca363837631b2970f3ff548a6191da4bc2ef991b205f285da9",
+      "sha256": "ea333c9afb13950f3e211f7c565d4439f6c728b2a8644aae9da70e05df722e41",
       "executable": false
     },
     "src/core/app/agent-door/tool-context.ts": {
-      "sha256": "61c899d923fdbb11fb25c02c6b4e23c42615a47e7b4969389839b9d0f37c2791",
+      "sha256": "f3aef5df114500f76d9175331b313be62c2af93ba13df539396fae8d9dc145a1",
       "executable": false
     },
     "src/core/app/agent-door/tools.ts": {
@@ -7107,6 +7107,10 @@
       "sha256": "285e33e19f94164469439b5b5a658c57eb01d8dd9ec7502a432a168ac330f2c4",
       "executable": false
     },
+    "src/core/features/host-profile/input.ts": {
+      "sha256": "1675ee070a237b5ce0d54b65043361a74429630e71fb27289756c6bde093b191",
+      "executable": false
+    },
     "src/core/features/host-profile/profile-writes.ts": {
       "sha256": "e23725ac0913567507b9781772fb607f4141fe9607ef679ce1153e7a85339f1c",
       "executable": false
@@ -7124,7 +7128,7 @@
       "executable": false
     },
     "src/core/features/host-profile/routes.ts": {
-      "sha256": "3e8e04e9b7bbc52017977192edc485945bc4c484d9fc8c8b4f4d1b2d2f0890eb",
+      "sha256": "9764caa024bc2e2b18ae9f211d066e5dd1fe298d2d191580048fc411a3b8f87a",
       "executable": false
     },
     "src/core/features/host-profile/service.ts": {
@@ -9160,7 +9164,7 @@
       "executable": false
     },
     "tests/agent-native-journey.mjs": {
-      "sha256": "84546da12688d0c1879bcc2bb6b1fc7ae83729a45fe0661a882126014d967ee2",
+      "sha256": "fb5eee45a7cdbee95bb00787385e69a5dc78f0072d4921fadce1feecd26984cb",
       "executable": false
     },
     "tests/agent-phase-fixtures.mjs": {
