@@ -5,7 +5,7 @@ import { createHmac } from "node:crypto";
 /** The machine door delegates payment and approval to their ordinary native authorities. */
 export async function continuationJourney({call,json,issue,week,db,origin}) {
  const address=n=>`synthetic-dial-continuation-${n}${String.fromCharCode(64)}example.test`;
- const credential=await issue(["bookings:read","bookings:write"]),options={secret:credential.secret};
+ const credential=await issue(["bookings:read","bookings:write","workflows:manage"]),options={secret:credential.secret};
  const operator=(path,body,status=200,method)=>json(path,{session:true,body,method},status);
  const oauth=await call("/api/app/payments/stripe/oauth/start",{session:true});assert.equal(oauth.status,302);
  const state=new URL(oauth.headers.get("location")).searchParams.get("state");
@@ -49,6 +49,7 @@ export async function continuationJourney({call,json,issue,week,db,origin}) {
  assert.equal((await json(`/api/v1/bookings/${pending.id}`,options)).state,"confirmed");
  const terms={deposit:{kind:"fixed",amountCents:1000},balanceDueHours:24,freeWindowHours:24,lateCancelFeeCents:0,noShowFeeCents:0};
  const priced=await makeEvent(2,{price:4000,terms}),paidBody=await booking(priced,2);
+ const paymentRule=await json("/api/v1/workflows",{...options,key:"synthetic-dial-payment-workflow",body:{name:"Synthetic payment follow-through",eventTypeId:priced.id,enabled:true,trigger:"payment-received",subject:"Synthetic payment proof",text:"Your deposit was received."}},201);
  const before=(await snapshot()).payment_holds.length;
  for(const override of [{amountCents:1},{price:0},{paid:true}])assert.equal((await call("/api/v1/bookings",{...options,key:"synthetic-dial-price-override",body:{...paidBody,...override}})).status,400);
  assert.equal((await snapshot()).payment_holds.length,before,"money overrides create no hold");
@@ -59,6 +60,8 @@ export async function continuationJourney({call,json,issue,week,db,origin}) {
  await webhook("checkout.session.completed",completed,false);await noBooking(paid.id);
  await webhook("checkout.session.completed",completed);await webhook("checkout.session.completed",completed);
  const confirmed=await json(`/api/v1/bookings/${paid.id}`,options);assert.equal(confirmed.state,"confirmed");assert.equal(confirmed.payment.amountCents,1000);
+ for(let i=0;i<2;i++){const tick=await call("/cdn-cgi/local/scheduled?format=json");assert.equal(tick.status,200);await tick.arrayBuffer();await json("/__fixtures/deliver",{body:{}});}
+ const paymentRuns=(await json(`/api/v1/workflows/${paymentRule.id}/runs`,options)).data;assert.equal(paymentRuns.length,1);assert.equal(paymentRuns[0].outcome,"sent","a signed deposit payment fires its workflow once");
  const cancelKey="synthetic-dial-paid-cancel";
  await json(`/api/v1/bookings/${paid.id}/cancel`,{...options,key:cancelKey,body:{}});
  await json(`/api/v1/bookings/${paid.id}/cancel`,{...options,key:cancelKey,body:{}});
@@ -76,6 +79,15 @@ export async function continuationJourney({call,json,issue,week,db,origin}) {
  snap=await snapshot();intent=JSON.parse(snap.wire_stripe_objects.find(row=>row.id===authorized.payment_intent).payload);
  await webhook("payment_intent.succeeded",intent,false);await noBooking(approvalStep.id);
  await webhook("payment_intent.succeeded",intent);assert.equal((await json(`/api/v1/bookings/${approvalStep.id}`,options)).state,"confirmed");
+ const feeEvent=await makeEvent(6,{terms:{...terms,deposit:{kind:"none"},lateCancelFeeCents:1200,noShowFeeCents:2400}}),feeBody=await booking(feeEvent,6);
+ const notConsented=await call("/api/v1/bookings",{...options,key:"synthetic-dial-no-fee-consent",body:feeBody});assert.equal(notConsented.status,422);assert.equal((await notConsented.json()).error.code,"card_consent_required");
+ const selection=await json(`/api/public/book/dial-host/${feeEvent.slug}/selection`,{body:{startAt:feeBody.startAt,inviteeTimezone:"UTC"}},201);
+ const disclosed=await json(`/api/public/book/dial-host/${feeEvent.slug}/selection?${new URLSearchParams({startAt:feeBody.startAt,nonce:selection.nonce,inviteeTimezone:"UTC"})}`);
+ const consented=await book({...feeBody,cardConsent:{accepted:true,version:disclosed.payment.consent.version}},"synthetic-dial-consented-card");safe(consented);assert.equal(consented.payment.mode,"setup");assert.equal(consented.payment.amountCents,0);await noBooking(consented.id);
+ snap=await snapshot();const feeSession=JSON.parse(snap.wire_stripe_sessions.find(row=>JSON.parse(row.payload).url===consented.payment.checkoutUrl).payload);
+ const setupComplete=await json("/__fixtures/payments/pay",{body:{sessionId:feeSession.id}});
+ await webhook("checkout.session.completed",setupComplete,false);await noBooking(consented.id);
+ await webhook("checkout.session.completed",setupComplete);assert.equal((await json(`/api/v1/bookings/${consented.id}`,options)).state,"confirmed");
  // Both tentative resource families retain an erased-key tombstone.
  for(const [event,number] of [[free,4],[priced,5]]){
   const body=await booking(event,number),key=`synthetic-dial-erased-pending-${number}`,step=await book(body,key);

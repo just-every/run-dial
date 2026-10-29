@@ -564,6 +564,18 @@
       "name": "0092_workflows.sql",
       "sha256": "31b74895928ad8977b311cb33384e65b80e87eae0d1b48105562e1a0b62342d1",
       "sql": "CREATE TABLE workflow_rules (\n id TEXT PRIMARY KEY NOT NULL,\n name TEXT NOT NULL,\n event_type_id TEXT NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,\n operator_id TEXT NOT NULL,\n enabled INTEGER NOT NULL DEFAULT 0 CHECK(enabled IN (0,1)),\n enabled_at TEXT,\n version INTEGER NOT NULL DEFAULT 1,\n subject TEXT NOT NULL,\n text TEXT NOT NULL,\n removed_at TEXT,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX workflow_rules_event ON workflow_rules(event_type_id);\nCREATE TABLE workflow_dispatches (\n id TEXT PRIMARY KEY NOT NULL,\n workflow_id TEXT NOT NULL REFERENCES workflow_rules(id) ON DELETE CASCADE,\n booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n outbox_id TEXT NOT NULL UNIQUE,\n workflow_version INTEGER NOT NULL,\n created_at TEXT NOT NULL,\n UNIQUE(workflow_id,booking_id)\n);\nCREATE INDEX workflow_dispatches_booking ON workflow_dispatches(booking_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0093_api_pending_erasure.sql",
+      "sha256": "bd0980ca3fa8783a9988d7553f92900822449eb8f849fda537eaaa9da6454186",
+      "sql": "-- A pending booking's API receipt is private replay authority too. Redact it\n-- before erasure deletes the pending source or clears its personal claim.\nCREATE TRIGGER api_approval_erasure BEFORE DELETE ON booking_approval_requests BEGIN\n UPDATE api_request_keys SET state='erased',request_hash=NULL,response_json=NULL,response_status=410,booking_id=NULL WHERE booking_id=OLD.booking_id;\nEND;\nCREATE TRIGGER api_payment_hold_erasure BEFORE DELETE ON payment_holds BEGIN\n UPDATE api_request_keys SET state='erased',request_hash=NULL,response_json=NULL,response_status=410,booking_id=NULL WHERE booking_id=COALESCE(OLD.booking_id,json_extract(OLD.claim_json,'$.bookingId'));\nEND;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0094_workflow_lifecycle.sql",
+      "sha256": "7526eb106a8ff9f3910cd07fc8af6f853ce78053bdf395f8d9fca062289f4bf4",
+      "sql": "ALTER TABLE workflow_rules ADD COLUMN trigger TEXT NOT NULL DEFAULT 'booking-created'\n CHECK(trigger IN ('booking-created','booking-rescheduled','booking-canceled','before-start','after-end','marked-attended','marked-no-show','payment-received'));\nALTER TABLE workflow_rules ADD COLUMN action TEXT NOT NULL DEFAULT 'email-invitee' CHECK(action IN ('email-invitee','email-hosts'));\nALTER TABLE workflow_rules ADD COLUMN offset_minutes INTEGER NOT NULL DEFAULT 0 CHECK(offset_minutes BETWEEN 0 AND 43200);\n\n-- Preserve the existing once-only receipts while allowing each later lifecycle\n-- event and each authorized recipient to have its own durable delivery.\nALTER TABLE workflow_dispatches RENAME TO workflow_dispatches_previous;\nCREATE TABLE workflow_dispatches (\n id TEXT PRIMARY KEY NOT NULL,\n workflow_id TEXT NOT NULL REFERENCES workflow_rules(id) ON DELETE CASCADE,\n booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n outbox_id TEXT NOT NULL UNIQUE,\n workflow_version INTEGER NOT NULL,\n event_key TEXT NOT NULL,\n recipient_key TEXT NOT NULL,\n created_at TEXT NOT NULL,\n UNIQUE(workflow_id,booking_id,event_key,recipient_key)\n);\nINSERT INTO workflow_dispatches(id,workflow_id,booking_id,outbox_id,workflow_version,event_key,recipient_key,created_at)\n SELECT id,workflow_id,booking_id,outbox_id,workflow_version,'booking-created','invitee',created_at FROM workflow_dispatches_previous;\nDROP TABLE workflow_dispatches_previous;\nCREATE INDEX workflow_dispatches_booking ON workflow_dispatches(booking_id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

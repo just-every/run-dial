@@ -32,7 +32,7 @@ export async function machineCredentialJourney(context) {
   const call=(path,{body,method=body===undefined?"GET":"POST",secret,key,session=false}={})=>fetch(origin+path,{
     method,redirect:"manual",headers:{Origin:origin,"content-type":"application/json",...(session&&cookie?{cookie}:{}),...(secret?{Authorization:`Bearer ${secret}`} : {}),...(key?{"Idempotency-Key":key}:{} )},...(body===undefined?{}:{body:JSON.stringify(body)}),
   });
-  const json=async(path,options={},status=200)=>{console.log(`Machine journey: ${path}`);const response=await call(path,options);assert.equal(response.status,status,`${path} status${response.status!==status?" "+JSON.stringify((await response.clone().json().catch(()=>({}))).error?.code??"unclassified"):""}`);return response.json();};
+  const json=async(path,options={},status=200)=>{console.log(`Machine journey: ${path.split("?")[0]}`);const response=await call(path,options);assert.equal(response.status,status,`${path} status${response.status!==status?" "+JSON.stringify((await response.clone().json().catch(()=>({}))).error?.code??"unclassified"):""}`);return response.json();};
   await json("/wire/init",{body:{}});
   const boot=await call("/auth/bootstrap",{body:{token:"dial-test-only-setup-token-at-least-32",displayName:"Synthetic Dial Owner",returnTo:"/app"}});
   assert.equal(boot.status,303);cookie=boot.headers.get("set-cookie").split(";")[0];
@@ -92,6 +92,7 @@ export async function machineCredentialJourney(context) {
   assert.equal(mail.filter(item=>item.subject?.startsWith("Booking cancelled:")).length,2,"ordinary cancellation reaches each recipient once");
   const deliveredState=await writes();
   assert.ok(!JSON.stringify(wire).includes(writer.secret),"credentials never enter provider requests or queued messages");
+  assert.equal((await call("/__test/clock",{body:{now:Date.now()}})).status,200,"the rate window uses a pinned clock");
   const burst=await issue(["bookings:read"]);let limited;
   for(let i=0;i<130;i++){const response=await call(`/api/v1/bookings/${created.id}`,{secret:burst.secret});if(response.status===429){limited=response;break;}assert.equal(response.status,200);}
   assert.ok(limited);assert.ok(Number(limited.headers.get("Retry-After"))>0);assert.equal((await limited.json()).error.code,"rate_limited");assert.equal(JSON.stringify(await writes())===JSON.stringify(deliveredState),true);
@@ -107,7 +108,8 @@ export async function machineCredentialJourney(context) {
   assert.equal((await call(`/api/app/api-credentials/${writer.credential.id}/revoke`,{session:true,body:{}})).status,204);
   const afterRevoke=await call("/api/v1/bookings",{body:{...body,startAt:apiSlots.slots[2].startAt},secret:writer.secret,key:"synthetic-dial-after-revoke"});assert.equal(afterRevoke.status,401);assert.equal((await afterRevoke.json()).error.code,"credential_revoked");assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true);
   await resourceJourney({call,json,issue,fixture,week,profile,db});
-  await workflowJourney({call,json,issue,fixture,week,db});
+  const continuedSession=await workflowJourney({call,json,issue,fixture,week,db});
+  cookie=continuedSession.cookie;
   await continuationJourney({call,json,issue,week,db,origin});
   const app=await json("/api/app/oauth-applications",{session:true,body:{name:"Synthetic Dial application",scopes:["bookings:read"],expiresAt}},201);
   const grant=await fetch(origin+"/api/oauth/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:app.application.id,client_secret:app.clientSecret})});

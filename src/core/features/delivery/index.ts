@@ -11,3 +11,6 @@ export type { BookingCancellationTemplate } from "./mail";
 
 export { renderBrandedMail } from './branded-layout';
 export { operatorRecipientAdmission } from './operator-mail';
+
+export { BookingCorrespondenceRepository } from "./correspondence-repository";
+export type { BookingCorrespondence } from "./correspondence-repository";

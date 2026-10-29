@@ -12,7 +12,7 @@ export async function workflowJourney({call,json,issue,fixture,week,db}) {
   const event=await json(`/api/app/event-types/${fixture.eventId}`,{session:true});
   const book=async(index)=>json("/api/v1/bookings",{...options,key:`synthetic-dial-workflow-book-${index}`,body:{eventTypeId:fixture.eventId,startAt:slots[index*2].startAt,inviteeTimezone:"UTC",name:`Synthetic workflow guest ${index}`,email:`synthetic-dial-workflow-${index}${String.fromCharCode(64)}example.test`,answers:{[event.questions[0].key]:"Synthetic workflow"}}},201);
   const tick=async()=>{const response=await call("/cdn-cgi/local/scheduled?format=json");assert.equal(response.status,200,"the native scheduled event completes");await response.arrayBuffer();};
-  const dispatches=async()=>(await db.prepare("SELECT id,outbox_id AS outboxId FROM workflow_dispatches WHERE workflow_id=? ORDER BY id").bind(rule.id).all()).results;
+  const dispatches=async()=>(await db.prepare("SELECT id,booking_id AS bookingId,outbox_id AS outboxId FROM workflow_dispatches WHERE workflow_id=? ORDER BY id").bind(rule.id).all()).results;
   await book(0);await tick();assert.equal((await dispatches()).length,0,"disabled workflows send nothing");
   await json(`/api/v1/workflows/${rule.id}`,{...options,method:"PATCH",key:"synthetic-dial-enable-workflow",body:{enabled:true}});
   await tick();assert.equal((await dispatches()).length,0,"enabling never replays earlier bookings");
@@ -23,11 +23,11 @@ export async function workflowJourney({call,json,issue,fixture,week,db}) {
     return wire.wire_calls.filter(row=>new URL(row.url).hostname==="api.sendgrid.com"&&row.method==="POST").map(row=>JSON.parse(row.body)).filter(mail=>mail.subject===input.subject);
   };
   assert.equal((await sent()).length,1,"one actual provider message follows the explicit enablement");
-  await book(2);await tick();assert.equal((await dispatches()).length,2);
+  const unsentBooking=await book(2);await tick();assert.equal((await dispatches()).length,2);
   await json(`/api/v1/workflows/${rule.id}`,{...options,method:"PATCH",key:"synthetic-dial-disable-workflow",body:{enabled:false}});
   await json("/__fixtures/deliver",{body:{}});
   assert.equal((await sent()).length,1,"revoking the workflow stops an already queued message");
-  const newest=(await dispatches()).at(-1);
+  const newest=(await dispatches()).find(row=>row.bookingId===unsentBooking.id);assert.ok(newest);
   const stopped=await db.prepare("SELECT state,last_error_code AS reason FROM delivery_outbox WHERE id=?").bind(newest.outboxId).first();
   assert.equal(stopped.state,"failed");assert.equal(stopped.reason,"workflow_authority_revoked");
   await json(`/api/v1/workflows/${rule.id}`,{...options,method:"PATCH",key:"synthetic-dial-reenable-workflow",body:{enabled:true}});await tick();
@@ -36,5 +36,6 @@ export async function workflowJourney({call,json,issue,fixture,week,db}) {
   assert.equal((await json(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:"synthetic-dial-remove-workflow"})).removed,true);
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,options)).status,404);
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:"synthetic-dial-remove-workflow"})).headers.get("Idempotent-Replay"),"true");
-  await lifecycleWorkflows({call,json,issue,fixture,week,db,options,tick,slots,event});
+  const lifecycleManager=await issue(["workflows:manage","bookings:read","bookings:write"]);
+  return lifecycleWorkflows({call,json,issue,fixture,week,db,options:{secret:lifecycleManager.secret},tick,slots,event});
 }

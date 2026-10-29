@@ -4,6 +4,7 @@ export type ProviderFailureCode =
   | "superseded_occurrence"
   | "operator_removed"
   | "workflow_authority_revoked"
+  | "invalid_workflow_template"
   | "operator_mail_outcome_unknown"
   | "operator_notification_coordination_failed"
   | "operator_notification_coordination_missing"

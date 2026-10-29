@@ -1,3 +1,4 @@
+import { workflowMessage } from "../workflows";
 import type { AnalyticsDelivery } from "../analytics";
 import { templatedCalendar, templatedMail } from "./correspondence";
 import { reminderMessage } from "./reminders";
@@ -237,6 +238,15 @@ export class ProviderDeliveryService {
         }
         if (data) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now));
       }
+    }
+    if(!frozen&&payload.messageKind==="workflow"){
+      if(!record.bookingId||!record.occurrenceId||typeof payload.subject!=="string"||typeof payload.text!=="string")throw new ProviderFailure("invalid_delivery_payload",false);
+      const data=await this.repository.correspondence(record.bookingId,record.occurrenceId,this.runtime);
+      if(!data)throw new ProviderFailure("invalid_delivery_payload",false);
+      const template={subject:payload.subject,text:payload.text,action:payload.recipientRole==="operator"?"email-hosts":"email-invitee"};
+      const manageUrl=payload.recipientRole==="invitee"&&/\{manage link\}/u.test(template.subject+template.text)?await this.currentInviteeManageUrl(record,now):"";
+      try{payload={...payload,...workflowMessage(template,data,manageUrl)};}
+      catch{throw new ProviderFailure("invalid_workflow_template",false);}
     }
     const message = toMailMessage(frozen ?? payload, providerKey);
     if (!message) throw new ProviderFailure("invalid_delivery_payload", false);

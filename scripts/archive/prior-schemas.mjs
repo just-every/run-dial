@@ -12,6 +12,9 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Existing workflow definitions keep their original event and recipient semantics.
+  'core/0094_workflow_lifecycle.sql': (table,row) => table==='workflow_rules'?{...row,trigger:'booking-created',action:'email-invitee',offset_minutes:0}:row,
+  'core/0093_api_pending_erasure.sql': (_table,row) => row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.

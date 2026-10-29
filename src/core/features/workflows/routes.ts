@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { createId, nowIso } from "../../shared/ids";
 import { validate } from "../../shared/validation";
-import { eventAllowed, idempotent, page, refusal, type ApiEnvironment } from "../public-api";
+import { bookingAllowed, eventAllowed, idempotent, page, refusal, type ApiEnvironment } from "../public-api";
+import { requireScope } from "../api-credentials";
+import { BookingCorrespondenceRepository } from "../delivery";
+import { workflowMessage, workflowTemplateErrors } from "./templates";
 import { workflowInput,workflowPatch,workflowView,type WorkflowRule } from "./types";
 
 const missing={error:{code:"not_found",message:"This workflow does not exist."}};
@@ -15,6 +18,16 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
   const row=await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE id=? AND removed_at IS NULL").bind(c.req.param("id")).first<WorkflowRule>();
   return row&&await eventAllowed(c,c.get("apiCredential"),row.event_type_id)?c.json(workflowView(row)):refusal(c,404,"not_found","This workflow does not exist.");
  })
+ .get("/api/v1/workflows/:id/preview",async c=>{
+  const credential=c.get("apiCredential"),denied=await requireScope(c,credential,"bookings:read");if(denied)return denied;
+  const row=await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE id=? AND removed_at IS NULL").bind(c.req.param("id")).first<WorkflowRule>();
+  const booking=await bookingAllowed(c,credential,c.req.query("bookingId")??"");
+  if(!row||!booking||booking.eventTypeId!==row.event_type_id)return refusal(c,404,"not_found","This workflow or booking does not exist.");
+  const data=await new BookingCorrespondenceRepository(c.get("apiDatabase")).read(booking.id,booking.occurrence.id,c.get("runtime"));
+  if(!data)return refusal(c,409,"booking_unavailable","This booking cannot be previewed.");
+  try{return c.json(workflowMessage({subject:row.subject,text:row.text,action:row.action},data,"[Invitee management link]"));}
+  catch{return refusal(c,409,"invalid_template","Update the workflow's unavailable variables.");}
+ })
  .get("/api/v1/workflows/:id/runs",async c=>{
   const id=c.req.param("id"),db=c.get("apiDatabase"),rule=await db.prepare("SELECT * FROM workflow_rules WHERE id=? AND removed_at IS NULL").bind(id).first<WorkflowRule>();
   if(!rule||!await eventAllowed(c,c.get("apiCredential"),rule.event_type_id))return refusal(c,404,"not_found","This workflow does not exist.");
@@ -26,6 +39,9 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
  .post("/api/v1/workflows",validate("json",workflowInput),async c=>{
   const input=c.req.valid("json"),credential=c.get("apiCredential");
   if(!await c.get("services").eventTypes.getEventType(input.eventTypeId)||!await eventAllowed(c,credential,input.eventTypeId))return refusal(c,404,"not_found","This event type does not exist.");
+  const event=await c.get("services").eventTypes.getEventType(input.eventTypeId);
+  const invalid=workflowTemplateErrors(input,event?.questions??[]);
+  if(invalid.length)return refusal(c,400,"invalid_template",`Unavailable workflow variable: ${invalid.join(", ")}`);
   return idempotent(c,input,async()=>{
    const id=createId(),now=nowIso();
    await c.get("apiDatabase").prepare(`INSERT INTO workflow_rules(id,name,event_type_id,operator_id,enabled,enabled_at,subject,text,trigger,action,offset_minutes,created_at,updated_at)
@@ -38,6 +54,9 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
  .patch("/api/v1/workflows/:id",validate("json",workflowPatch),async c=>{
   const id=c.req.param("id"),input=c.req.valid("json"),row=await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE id=?").bind(id).first<WorkflowRule>();
   if(!row||!await eventAllowed(c,c.get("apiCredential"),row.event_type_id))return refusal(c,404,"not_found","This workflow does not exist.");
+  const event=await c.get("services").eventTypes.getEventType(row.event_type_id);
+  const invalid=workflowTemplateErrors({subject:input.subject??row.subject,text:input.text??row.text,action:input.action??row.action},event?.questions??[]);
+  if(invalid.length)return refusal(c,400,"invalid_template",`Unavailable workflow variable: ${invalid.join(", ")}`);
   return idempotent(c,input,async()=>{
    const now=nowIso(),enabled=input.enabled??row.enabled===1;
    const result=await c.get("apiDatabase").prepare(`UPDATE workflow_rules SET name=?,subject=?,text=?,trigger=?,action=?,offset_minutes=?,enabled=?,

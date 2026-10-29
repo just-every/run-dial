@@ -1,3 +1,4 @@
+import { controlClock } from "../operator-management/clock";
 import { runWorkflows } from "../../src/core/features/workflows";
 import { webhookFixtures } from "./webhook-fixtures";
 import { webhookWire } from "./webhook-wire";
@@ -35,6 +36,7 @@ export default {
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
     const webhookFixture = await webhookFixtures(request, servicesFor(env), env);
     if (webhookFixture) return webhookFixture;
+    if (url.pathname === "/__test/clock") return controlClock(request);
     if (url.pathname === "/__fixtures/workflows-run" && request.method === "POST") {
       const {now,deliver}=await request.json<{now:string;deliver?:boolean}>(),clock=new Date(now);
       const result=await runWorkflows(env.DB,parseRuntimeEnvironment(env),clock);
