@@ -881,7 +881,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "c524c61e770db9b794d0f31d803dbc8b16339aa0ed6fa56257ba49b32df9a9fc",
+      "sha256": "6e1dcde7d42d951b74aa8cf91118786787825371b316af5f121feb7201ddaf67",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -4253,7 +4253,7 @@
       "executable": false
     },
     "modules/PROVENANCE.md": {
-      "sha256": "278b6f07523f4678ecd26c0480b63e1ef9e5af3ec81596f832a5153144ba205d",
+      "sha256": "e0f5350c23399593854f340c802efae68ff00c91fcebab19042ed2c217e83624",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -4961,7 +4961,7 @@
       "executable": false
     },
     "scripts/validate-manifest-contract.mjs": {
-      "sha256": "ed1fcb64fb5d39759961ad7c920c23e8558e857d3cfdc01c8606b4d3bb4fa1c0",
+      "sha256": "75372eccba2f79d0958bb94de42b76c450dbe56e6a8a7efb79d1a3e77e55b360",
       "executable": false
     },
     "scripts/verify-acceptance-audit.mjs": {
@@ -5113,7 +5113,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "809c3fca6c88839aeab0f6be483e901a13cba147fb4bdf79b041843d9edcbffe",
+      "sha256": "d6fa0904ceaa3268245bd1060155da5d4b5aa63ce5b7355122e4f5fa05adb966",
       "executable": false
     },
     "src/agent-door/accounting-tools.ts": {
@@ -5233,7 +5233,7 @@
       "executable": false
     },
     "src/agent-door/README.md": {
-      "sha256": "818b7736d2d9a55e704d6df3e45f39b9e502c445c22da2bf93f2297204d3fae8",
+      "sha256": "0b4127136f351ab2db97f57f7941845d8b5ed13de889bfe6f7ee025504c5d59e",
       "executable": false
     },
     "src/agent-door/reporting-tools.ts": {
@@ -8637,7 +8637,7 @@
       "executable": false
     },
     "tests/agent-door/core-journey.mjs": {
-      "sha256": "532961d46a9b6eee37913e8b0a875a4890bccdaaf92390654858f1a9fd11b1ef",
+      "sha256": "f4e70e94bcc19c49282a895d23d68b71c81b3df9c47911c8bf89d10b5c8a6169",
       "executable": false
     },
     "tests/agent-door/native-calendar.mjs": {
@@ -8649,7 +8649,7 @@
       "executable": false
     },
     "tests/agent-door/phase-fixtures.mjs": {
-      "sha256": "fb9208eb0e03ebd5ee3dc7909b70bcc21f3255e440dc9e87eda604bd335b9174",
+      "sha256": "2c7e48803f9e26813b315b90b558f9253c0c2b2216aefaa3a52706ec600f5ee7",
       "executable": false
     },
     "tests/agent-door/provider-edge.mjs": {
