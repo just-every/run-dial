@@ -6,7 +6,12 @@ export async function workflowCandidates(db:D1Database,rule:WorkflowRule,timesta
  const action=rule.trigger==="booking-rescheduled"?"rescheduled":rule.trigger==="booking-canceled"?"cancelled":rule.trigger.startsWith("marked-")?"attendance_marked":"created";
  const timed=rule.trigger==="before-start"||rule.trigger==="after-end";
  const payment=rule.trigger==="payment-received";
- const source=payment?"JOIN booking_payments fact ON fact.booking_id=b.id AND fact.status='paid'":timed?"":"JOIN booking_history fact ON fact.booking_id=b.id AND fact.action=?";
+ const paymentFacts=`JOIN (
+  SELECT id,booking_id,paid_at FROM booking_payments WHERE status='paid' AND amount_cents>0
+  UNION ALL SELECT id,booking_id,updated_at AS paid_at FROM payment_movements
+   WHERE status='succeeded' AND amount_cents>0 AND kind IN ('balance','invoice','late_cancel_fee','no_show_fee')
+ ) fact ON fact.booking_id=b.id`;
+ const source=payment?paymentFacts:timed?"":"JOIN booking_history fact ON fact.booking_id=b.id AND fact.action=?";
  const key=rule.trigger==="booking-created"?"'booking-created'":timed?"o.id":"fact.id";
  const time=payment?"fact.paid_at":timed?`strftime('%Y-%m-%dT%H:%M:%fZ',o.${rule.trigger==="before-start"?"start_at":"end_at"},?)`:"fact.created_at";
  const state=rule.trigger==="booking-canceled"?"b.state='cancelled'":"b.state IN ('confirmed','rescheduled')";

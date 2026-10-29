@@ -7328,7 +7328,7 @@
       "executable": false
     },
     "src/core/features/workflows/candidates.ts": {
-      "sha256": "3a2fa9e26d955e4c8186ad140781ec012e29537f9b704dc0501f2fb200c760a7",
+      "sha256": "8497224a38702c2f01d3cb42019d44a95de17b15c08f50ef219224bd4d32c015",
       "executable": false
     },
     "src/core/features/workflows/engine.ts": {
@@ -7341,6 +7341,10 @@
     },
     "src/core/features/workflows/routes.ts": {
       "sha256": "1ae676c647d2a53c6c0a72e4d30de818ecd07c3657d03e925f31c2befcc60129",
+      "executable": false
+    },
+    "src/core/features/workflows/templates.ts": {
+      "sha256": "50bc3d240fe167d8071178c648f5a7343e9c502d8ca38148179aec6b310c5e38",
       "executable": false
     },
     "src/core/features/workflows/types.ts": {
@@ -9780,7 +9784,7 @@
       "executable": false
     },
     "tests/public-api/continuations.mjs": {
-      "sha256": "406a5ec23bf74bcb6f9abe372275e626d98de5e4409bb8763002e8633b84916d",
+      "sha256": "8f11f70db33ddc0cb4c7766fc781d8ff7690d0870030c1c01baa9cbad83d85f3",
       "executable": false
     },
     "tests/public-api/journey.mjs": {

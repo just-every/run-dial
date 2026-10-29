@@ -66,12 +66,23 @@ export async function continuationJourney({call,json,issue,week,db,origin}) {
  await json(`/api/v1/bookings/${paid.id}/cancel`,{...options,key:cancelKey,body:{}});
  await json(`/api/v1/bookings/${paid.id}/cancel`,{...options,key:cancelKey,body:{}});
  const cancelled=await snapshot(),refunds=cancelled.payment_movements.filter(row=>row.booking_id===paid.id&&row.kind==="refund");assert.equal(refunds.length,1);assert.equal(refunds[0].amount_cents,1000,"ordinary cancellation refunds the deposit once under the saved policy");
+ // A later balance is a distinct payment fact, using the ordinary balance capability.
+ let snap;
+ const balanceBody=await booking(priced,7),balanceStep=await book(balanceBody,"synthetic-dial-balance-booking");
+ snap=await snapshot();const depositSession=JSON.parse(snap.wire_stripe_sessions.find(row=>JSON.parse(row.payload).url===balanceStep.payment.checkoutUrl).payload);
+ const depositPaid=await json("/__fixtures/payments/pay",{body:{sessionId:depositSession.id}});await webhook("checkout.session.completed",depositPaid);
+ const money=await operator(`/api/app/bookings/${balanceStep.id}/money`),balanceToken=new URL(money.money.balanceUrl).pathname.split("/").at(-1);
+ const balanceResponse=await call(`/api/public/payments/balance/${balanceToken}`,{body:{}});assert.equal(balanceResponse.status,200);const balanceCheckout=await balanceResponse.json();
+ snap=await snapshot();const balanceSession=JSON.parse(snap.wire_stripe_sessions.find(row=>JSON.parse(row.payload).url===balanceCheckout.checkoutUrl).payload);
+ const balancePaid=await json("/__fixtures/payments/pay",{body:{sessionId:balanceSession.id}});await webhook("checkout.session.completed",balancePaid);
+ for(let i=0;i<2;i++){const tick=await call("/cdn-cgi/local/scheduled?format=json");assert.equal(tick.status,200);await tick.arrayBuffer();await json("/__fixtures/deliver",{body:{}});}
+ const balanceRuns=(await json(`/api/v1/workflows/${paymentRule.id}/runs`,options)).data.filter(row=>row.bookingId===balanceStep.id);assert.equal(balanceRuns.length,2,"deposit and later balance each trigger once");assert.ok(balanceRuns.every(row=>row.outcome==="sent"));
  const approvedPrice=await makeEvent(3,{price:6400,approval:true}),approvalBody=await booking(approvedPrice,3),approvalStep=await book(approvalBody,"synthetic-dial-paid-approval");safe(approvalStep);
  assert.equal(approvalStep.payment.amountCents,6400);await noBooking(approvalStep.id);
  const approvalSnapshot=await snapshot(),approvalSession=JSON.parse(approvalSnapshot.wire_stripe_sessions.find(row=>JSON.parse(row.payload).url===approvalStep.payment.checkoutUrl).payload);
  assert.equal(approvalSession.payment_intent_data.capture_method,"manual");
  const authorized=await json("/__fixtures/payments/pay",{body:{sessionId:approvalSession.id,paymentMethod:"card"}});
- let snap=await snapshot(),intent=JSON.parse(snap.wire_stripe_objects.find(row=>row.id===authorized.payment_intent).payload);
+ snap=await snapshot();let intent=JSON.parse(snap.wire_stripe_objects.find(row=>row.id===authorized.payment_intent).payload);
  await webhook("payment_intent.amount_capturable_updated",intent);await noBooking(approvalStep.id);
  const approvalRequest=snap=await snapshot(),approvalRow=approvalRequest.booking_approval_requests.find(row=>row.booking_id===approvalStep.id);
  assert.equal((await json(`/api/v1/bookings/${approvalStep.id}`,options)).state,"pending_approval");
@@ -80,6 +91,7 @@ export async function continuationJourney({call,json,issue,week,db,origin}) {
  await webhook("payment_intent.succeeded",intent,false);await noBooking(approvalStep.id);
  await webhook("payment_intent.succeeded",intent);assert.equal((await json(`/api/v1/bookings/${approvalStep.id}`,options)).state,"confirmed");
  const feeEvent=await makeEvent(6,{terms:{...terms,deposit:{kind:"none"},lateCancelFeeCents:1200,noShowFeeCents:2400}}),feeBody=await booking(feeEvent,6);
+ const setupRule=await json("/api/v1/workflows",{...options,key:"synthetic-dial-setup-workflow",body:{name:"Synthetic setup silence",eventTypeId:feeEvent.id,enabled:true,trigger:"payment-received",subject:"Synthetic setup proof",text:"A payment was received."}},201);
  const notConsented=await call("/api/v1/bookings",{...options,key:"synthetic-dial-no-fee-consent",body:feeBody});assert.equal(notConsented.status,422);assert.equal((await notConsented.json()).error.code,"card_consent_required");
  const selection=await json(`/api/public/book/dial-host/${feeEvent.slug}/selection`,{body:{startAt:feeBody.startAt,inviteeTimezone:"UTC"}},201);
  const disclosed=await json(`/api/public/book/dial-host/${feeEvent.slug}/selection?${new URLSearchParams({startAt:feeBody.startAt,nonce:selection.nonce,inviteeTimezone:"UTC"})}`);
@@ -88,6 +100,8 @@ export async function continuationJourney({call,json,issue,week,db,origin}) {
  const setupComplete=await json("/__fixtures/payments/pay",{body:{sessionId:feeSession.id}});
  await webhook("checkout.session.completed",setupComplete,false);await noBooking(consented.id);
  await webhook("checkout.session.completed",setupComplete);assert.equal((await json(`/api/v1/bookings/${consented.id}`,options)).state,"confirmed");
+ const setupTick=await call("/cdn-cgi/local/scheduled?format=json");assert.equal(setupTick.status,200);await setupTick.arrayBuffer();
+ assert.deepEqual((await json(`/api/v1/workflows/${setupRule.id}/runs`,options)).data,[],"saving a card without receiving money never fires payment-received");
  // Both tentative resource families retain an erased-key tombstone.
  for(const [event,number] of [[free,4],[priced,5]]){
   const body=await booking(event,number),key=`synthetic-dial-erased-pending-${number}`,step=await book(body,key);
