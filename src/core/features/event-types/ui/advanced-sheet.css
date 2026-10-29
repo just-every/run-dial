@@ -23,6 +23,7 @@
   .event-payment-deposit { grid-column:3 / span 4; grid-row:1; }
   .event-payment-price-confirm,.event-payment-lengths { grid-column:1 / -1; }
   .event-payment-balance { grid-column:1 / -1; }
-  .event-payment-window,.event-payment-fees > div { grid-column:span 2; }
+  /* The three terms share their label and field rows, so labels that wrap unevenly still leave the fields level. */
+  .event-payment-window,.event-payment-fees > div { grid-column:span 2; grid-row:span 2; grid-template-rows:subgrid; }
   .event-payment-account { grid-column:1 / -1; }
 }
