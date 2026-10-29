@@ -6,7 +6,7 @@ type Template={subject:string;text:string;action:string};
 export function workflowTemplateErrors(rule:Template,questions:readonly {key?:string;private?:boolean}[]) {
  const keys=questions.flatMap(question=>!question.private&&question.key?[question.key]:[]);
  const invalid=new Set([...invalidTemplateVariables(rule.subject,keys),...invalidTemplateVariables(rule.text,keys)]);
- if(rule.action==="email-hosts"&&/\{manage link\}/u.test(rule.subject+rule.text))invalid.add("manage link");
+ if(rule.action!=="email-invitee"&&/\{manage link\}/u.test(rule.subject+rule.text))invalid.add("manage link");
  return [...invalid];
 }
 export function workflowMessage(rule:Template,data:BookingCorrespondence,manageUrl:string) {

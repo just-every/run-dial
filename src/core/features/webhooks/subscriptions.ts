@@ -2,8 +2,9 @@ import { createId, nowIso } from "../../shared/ids";
 import { createOpaqueToken } from "../../platform/auth/tokens";
 import { seal } from "../../platform/crypto/sealed";
 import { webhookEndpoint } from "./endpoint";
+import { workflowWebhookAuthority } from "../workflows/webhooks";
 
-export const webhookEventTypes = ["booking.created.v1", "booking.rescheduled.v1", "booking.reschedule-requested.v1", "booking.canceled.v1", "booking.no-show.v1", "booking.attendance.v1", "booking.payment.v1", "routing.submitted.v1", "poll.created.v1", "poll.voted.v1", "poll.closed.v1", "calendar.connection-health-changed.v1"] as const;
+export const webhookEventTypes = ["booking.created.v1", "booking.rescheduled.v1", "booking.reschedule-requested.v1", "booking.canceled.v1", "booking.no-show.v1", "booking.attendance.v1", "booking.payment.v1", "routing.submitted.v1", "poll.created.v1", "poll.voted.v1", "poll.closed.v1", "calendar.connection-health-changed.v1", "workflow.action.v1"] as const;
 export type SubscriptionInput = { endpoint: string; events: string[]; scope: "workspace" | "host" | "team"; scopeId: string | null };
 
 export class WebhookSubscriptions {
@@ -36,9 +37,10 @@ export class WebhookSubscriptions {
   }
 
   async redeliver(id: string, now = new Date()) {
-    return (await this.db.prepare(`UPDATE webhook_deliveries SET state='pending',response_code=NULL,attempts=0,next_attempt_at=?,retry_until=?,lease_id=NULL,lease_until=NULL,last_error=NULL,updated_at=?
+    return (await this.db.prepare(`UPDATE webhook_deliveries AS d SET state='pending',response_code=NULL,attempts=0,next_attempt_at=?,retry_until=?,lease_id=NULL,lease_until=NULL,last_error=NULL,updated_at=?
       WHERE id=? AND state IN ('delivered','failed') AND EXISTS(SELECT 1 FROM webhook_subscriptions s WHERE s.id=subscription_id AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL)
-      AND (booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))`)
+      AND (booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))
+      AND ${workflowWebhookAuthority("d")}`)
       .bind(now.toISOString(), new Date(now.getTime() + 86400000).toISOString(), now.toISOString(), id).run()).meta.changes > 0;
   }
 }

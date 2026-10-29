@@ -4,6 +4,8 @@ import { BookingsRepository } from "../bookings";
 import { operatorRecipientAdmission } from "../delivery/mail";
 import type { WorkflowRule } from "./types";
 import { workflowCandidates } from "./candidates";
+import { workflowAction } from "./types";
+import { queueWorkflowWebhooks } from "./webhooks";
 
 /** Only explicit owner-enabled rules queue actions; every native event and recipient is dispatched once. */
 export async function runWorkflows(db:D1Database,_runtime?:RuntimeEnvironment,now=new Date()) {
@@ -11,7 +13,9 @@ export async function runWorkflows(db:D1Database,_runtime?:RuntimeEnvironment,no
  const rules=(await db.prepare(`SELECT r.* FROM workflow_rules r JOIN oa_operators owner ON owner.id=r.operator_id
   WHERE r.enabled=1 AND r.removed_at IS NULL AND r.enabled_at IS NOT NULL AND owner.status='active' AND owner.role='owner' ORDER BY r.id`).all<WorkflowRule>()).results;
  let queued=0;
- for(const rule of rules)for(const candidate of await workflowCandidates(db,rule,timestamp)){
+ for(const rule of rules){
+  if(workflowAction(rule)==="webhook"){queued+=await queueWorkflowWebhooks(db,rule,timestamp);continue;}
+  for(const candidate of await workflowCandidates(db,rule,timestamp)){
   const recipients=rule.action==="email-hosts"?(await new BookingsRepository(db).listOperatorRecipients()).map(host=>({to:host.email,key:host.id,recipientRole:"operator" as const,operatorAccess:{id:host.id,generation:host.generation}})):[{to:candidate.inviteeEmail,key:"invitee",recipientRole:"invitee" as const,operatorAccess:undefined}];
   for(const recipient of recipients){
    const id=createId(),outboxId=createId(),key=`workflow:${rule.id}:${candidate.bookingId}:${candidate.eventKey}:${recipient.key}`;
@@ -35,6 +39,6 @@ export async function runWorkflows(db:D1Database,_runtime?:RuntimeEnvironment,no
    ]);
    queued+=results[1].meta.changes;
   }
- }
+ }}
  return {queued};
 }

@@ -1,7 +1,8 @@
+import { webhookWorkflows } from "./workflow-webhooks.mjs";
 import { lifecycleWorkflows } from "./workflow-lifecycle.mjs";
 import assert from "node:assert/strict";
 
-export async function workflowJourney({call,json,issue,fixture,week,db}) {
+export async function workflowJourney({call,json,issue,fixture,week,db,webhookEdge}) {
   const limited=await issue(["event-types:manage"]);
   const input={name:"Synthetic welcome",eventTypeId:fixture.eventId,subject:"Synthetic welcome follow-through",text:"Your synthetic booking was received."};
   assert.equal((await call("/api/v1/workflows",{secret:limited.secret,key:"synthetic-dial-denied-workflow",body:input})).status,403,"managing event types grants no outbound workflow authority");
@@ -36,6 +37,7 @@ export async function workflowJourney({call,json,issue,fixture,week,db}) {
   assert.equal((await json(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:"synthetic-dial-remove-workflow"})).removed,true);
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,options)).status,404);
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:"synthetic-dial-remove-workflow"})).headers.get("Idempotent-Replay"),"true");
+  await webhookWorkflows({call,json,issue,fixture,week,db,webhookEdge,tick});
   const lifecycleManager=await issue(["workflows:manage","bookings:read","bookings:write"]);
   return lifecycleWorkflows({call,json,issue,fixture,week,db,options:{secret:lifecycleManager.secret},tick,slots,event});
 }

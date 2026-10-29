@@ -1,0 +1,55 @@
+import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
+
+/** Real API writes and the production scheduler drive a native signed receiver. */
+export async function webhookWorkflows({call,json,issue,fixture,week,db,webhookEdge,tick}) {
+ const grant=await issue(["workflows:manage","webhooks:manage","routing:manage","bookings:read","bookings:write"]),options={secret:grant.secret};
+ const subscription=await json("/api/v1/webhook-subscriptions",{...options,key:"synthetic-dial-workflow-destination",body:{endpoint:"https://receiver.synthetic.test/workflow",events:["workflow.action.v1"]}},201);
+ const input={name:"Synthetic signed follow-through",eventTypeId:fixture.eventId,action:"webhook",trigger:"booking-created",webhookSubscriptionId:subscription.id,enabled:true,subject:"Synthetic webhook",text:"Native scheduling facts only."};
+ const restricted=await issue(["workflows:manage"]);
+ assert.equal((await call("/api/v1/workflows",{secret:restricted.secret,key:"synthetic-dial-no-webhook-grant",body:input})).status,403,"workflow configuration alone grants no external destination");
+ const rule=await json("/api/v1/workflows",{...options,key:"synthetic-dial-signed-workflow",body:input},201);
+ const slots=(await json(`/api/v1/availability?eventTypeId=${fixture.eventId}&week=${week}&inviteeTimezone=UTC`,options)).slots;
+ const event=await json(`/api/app/event-types/${fixture.eventId}`,{session:true});
+ const book=index=>json("/api/v1/bookings",{...options,key:`synthetic-dial-webhook-book-${index}`,body:{eventTypeId:fixture.eventId,startAt:slots[index*2].startAt,inviteeTimezone:"UTC",name:"Synthetic transport invitee",email:`synthetic-dial-transport-${index}${String.fromCharCode(64)}example.test`,answers:{[event.questions[0].key]:"Private synthetic preparation"}}},201);
+ const runs=async id=>(await json(`/api/v1/workflows/${id}/runs`,options)).data;
+ const process=now=>json("/__fixtures/webhooks/process",{body:now?{now}: {}});
+ const first=await book(0);await tick();await tick();
+ let recorded=await runs(rule.id);assert.equal(recorded.length,1);assert.equal(recorded[0].bookingId,first.id);
+ webhookEdge.status=500;await process();assert.equal(webhookEdge.requests.length,1);
+ const delivery=await db.prepare("SELECT next_attempt_at AS next FROM webhook_deliveries WHERE workflow_id=?").bind(rule.id).first();
+ webhookEdge.status=200;await process(delivery.next);await process(delivery.next);
+ assert.equal(webhookEdge.requests.length,2);assert.equal(webhookEdge.requests[0].body,webhookEdge.requests[1].body,"retry preserves exact bytes");
+ const message=webhookEdge.requests[1],body=JSON.parse(message.body),signature=message.headers["dial-signature"],timestamp=signature.match(/t=(\d+)/)[1];
+ assert.equal(signature,`t=${timestamp},v1=${createHmac("sha256",subscription.secret).update(`${timestamp}.${message.body}`).digest("hex")}`);
+ assert.equal(body.data.bookingId,first.id);assert.equal(body.workflowId,rule.id);assert.equal(body.type,"workflow.action.v1");
+ assert.ok(!message.body.includes("Private synthetic preparation")&&!message.body.includes("/manage/")&&!message.body.includes("example.test"),"external actions carry neither answers, personal addresses nor manage authority");
+ assert.equal((await runs(rule.id))[0].outcome,"sent");
+ const pending=await book(1);await tick();
+ await json(`/api/v1/workflows/${rule.id}`,{...options,method:"PATCH",key:"synthetic-dial-webhook-stop",body:{enabled:false}});
+ await process();assert.equal(webhookEdge.requests.length,2);
+ assert.ok((await runs(rule.id)).some(row=>row.bookingId===pending.id&&row.outcome==="skipped"&&row.reason==="workflow_authority_revoked"));
+ const refusedReplay=await db.prepare("SELECT id,state,attempts,next_attempt_at FROM webhook_deliveries WHERE workflow_id=? AND booking_id=?").bind(rule.id,pending.id).first();
+ assert.equal((await call(`/api/app/webhook-deliveries/${refusedReplay.id}/redeliver`,{session:true,body:{}})).status,404);
+ assert.deepEqual(await db.prepare("SELECT id,state,attempts,next_attempt_at FROM webhook_deliveries WHERE id=?").bind(refusedReplay.id).first(),refusedReplay,"revoked replay changes no capture");
+ await json(`/api/v1/workflows/${rule.id}`,{...options,method:"PATCH",key:"synthetic-dial-webhook-resume",body:{enabled:true}});await tick();await process();
+ assert.equal(webhookEdge.requests.length,2,"reenabling never replays a captured action");
+ const form=await json("/api/v1/routing-forms",{...options,key:"synthetic-dial-no-booking-form",body:{title:"Synthetic qualification",questions:[{key:"purpose",label:"Purpose",required:true}],rules:[],defaultMessage:"Please contact the host."}},201);
+ const routing=await json("/api/v1/workflows",{...options,key:"synthetic-dial-no-booking-workflow",body:{...input,name:"Synthetic routing follow-through",trigger:"routing-without-booking",routingFormId:form.id}},201);
+ const count=await db.prepare("SELECT count(*) AS n FROM bookings").first();
+ const submit={formId:form.id,answers:{purpose:"Synthetic no booking"}};
+ const submitted=await json("/api/v1/routing-submissions",{...options,key:"synthetic-dial-no-booking-submit",body:submit},201);
+ await json("/api/v1/routing-submissions",{...options,key:"synthetic-dial-no-booking-submit",body:submit},201);
+ await tick();await tick();await process();await process();
+ assert.equal((await db.prepare("SELECT count(*) AS n FROM bookings").first()).n,count.n,"routing-only trigger creates no booking");
+ const routeRuns=await runs(routing.id);assert.equal(routeRuns.length,1);assert.equal(routeRuns[0].submissionId,submitted.submissionId);assert.equal(routeRuns[0].outcome,"sent");
+ const routed=JSON.parse(webhookEdge.requests.at(-1).body);assert.equal(routed.data.submissionId,submitted.submissionId);assert.equal(routed.data.state,"disqualified");assert.ok(!JSON.stringify(routed).includes(submit.answers.purpose));
+ const erased=await book(2);await tick();
+ await json(`/api/app/bookings/${erased.id}`,{session:true,method:"DELETE"},202);await tick();await process();
+ assert.ok(!(await runs(rule.id)).some(row=>row.bookingId===erased.id),"erasure removes external captures and replay receipts");
+ const destinationPending=await book(3);await tick();
+ await json(`/api/v1/webhook-subscriptions/${subscription.id}`,{...options,method:"DELETE",key:"synthetic-dial-delete-workflow-destination"});
+ const before=webhookEdge.requests.length;await process();assert.equal(webhookEdge.requests.length,before);
+ assert.ok((await runs(rule.id)).some(row=>row.bookingId===destinationPending.id&&row.outcome==="skipped"&&row.reason==="destination_removed"));
+ for(const id of [rule.id,routing.id])await json(`/api/v1/workflows/${id}`,{...options,method:"DELETE",key:`synthetic-dial-remove-hook-${id}`});
+}

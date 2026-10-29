@@ -15,7 +15,13 @@ export async function machineCredentialJourney(context) {
   const port=reservation.address().port;
   await new Promise(resolve=>reservation.close(resolve));
   const origin=`http://127.0.0.1:${port}`,state=await mkdtemp(join(tmpdir(),"dial-machine-authority-"));
-  const receiver=httpServer((request,response)=>{
+  const webhookEdge={requests:[],status:200};
+  const receiver=httpServer(async(request,response)=>{
+    if(request.method==="POST"){
+      const chunks=[];for await(const chunk of request)chunks.push(chunk);
+      webhookEdge.requests.push({path:request.url,headers:request.headers,body:Buffer.concat(chunks).toString()});
+      response.writeHead(webhookEdge.status);response.end();return;
+    }
     const type=Number(new URL(request.url,"http://localhost").searchParams.get("type"));
     response.writeHead(200,{"Content-Type":"application"+"/json"});
     response.end(JSON.stringify({Status:0,Answer:type===1?[{type,data:"93.184.216.34"}]:[]}));
@@ -108,7 +114,7 @@ export async function machineCredentialJourney(context) {
   assert.equal((await call(`/api/app/api-credentials/${writer.credential.id}/revoke`,{session:true,body:{}})).status,204);
   const afterRevoke=await call("/api/v1/bookings",{body:{...body,startAt:apiSlots.slots[2].startAt},secret:writer.secret,key:"synthetic-dial-after-revoke"});assert.equal(afterRevoke.status,401);assert.equal((await afterRevoke.json()).error.code,"credential_revoked");assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true);
   await resourceJourney({call,json,issue,fixture,week,profile,db});
-  const continuedSession=await workflowJourney({call,json,issue,fixture,week,db});
+  const continuedSession=await workflowJourney({call,json,issue,fixture,week,db,webhookEdge});
   cookie=continuedSession.cookie;
   await continuationJourney({call,json,issue,week,db,origin});
   const app=await json("/api/app/oauth-applications",{session:true,body:{name:"Synthetic Dial application",scopes:["bookings:read"],expiresAt}},201);
