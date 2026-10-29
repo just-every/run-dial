@@ -13,7 +13,7 @@ const [contract, baseline, manifestText] = await Promise.all([
 ]);
 execFileSync(process.execPath, ["scripts/contract-docs.mjs", "check"], { cwd: root, stdio: "inherit" });
 const manifest = JSON.parse(manifestText);
-const clauseIds = matches(contract, /\*\*([A-Z][A-Z-]*-\d{3})\s+—/g);
+const clauseIds = [...matches(contract, /\*\*([A-Z][A-Z-]*-\d{3})\s+—/g), ...matches(contract, /^#### (BASE-AGENT-\d{3})\s+—/gm)];
 await validateContractStatus(root, contract, clauseIds);
 const mappedIds = manifest.capabilities.flatMap((capability) => capability.clauses);
 
@@ -21,7 +21,7 @@ assert.equal(typeof manifest.name, "string", "manifest name is required");
 assert.equal(typeof manifest.id, "string", "manifest id is required");
 assert.ok(Array.isArray(manifest.capabilities), "manifest capabilities must be an array");
 assertUnique(clauseIds, "contract clause IDs");
-assert.ok(clauseIds.every((id) => !id.startsWith("BASE-")), "BASE- is reserved for baseline clauses");
+assert.ok(clauseIds.every((id) => !id.startsWith("BASE-") || /^BASE-AGENT-\d{3}$/.test(id)), "BASE- is reserved for delivered baseline clauses");
 assert.deepEqual([...mappedIds].sort(), [...clauseIds].sort(), "capabilities must map every contract clause exactly once");
 assertUnique(manifest.capabilities.map((capability) => capability.id), "capability IDs");
 

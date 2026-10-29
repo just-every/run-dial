@@ -527,8 +527,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 70 | 6 | 0 | 76 |
-| Target and push further | 20 | 24 | 69 | 113 |
-| All | 90 | 30 | 69 | 189 |
+| Target and push further | 20 | 38 | 55 | 113 |
+| All | 90 | 44 | 55 | 189 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -697,7 +697,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `MIGRATE-005` | Cutover and old links | target | partial | `src/core/features/move-in/switch-over.ts`, `tests/move-in-catch-up.test.mjs`, `tests/move-in-browser.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
 | `CUSTOM-001` | Operator annotations | published | done | `tests/custom-fields.test.mjs` | Role refusals carried by `OPER-001`. |
 | `CUSTOM-002` | Annotation privacy and portability | published | done | `tests/custom-fields.test.mjs` |  |
-| `AGENT-001` | Agent authority, limits and audit | push-further | missing |  | No implementing code yet. |
+| `AGENT-001` | Agent authority, limits and audit | push-further | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Signed company policy and scoped owner-bound tokens govern the declared configuration tools. Per-host specialist grants, contact caps, quiet hours, external sends and queued specialist work remain to build. |
 | `AGENT-002` | Exception negotiator | push-further | missing |  | No agent constraint solver, exception proposals or approval-to-offered-times flow ships; alternative requests are handled manually. |
 | `AGENT-003` | Unanswered-thread follow-up | push-further | missing |  | No implementing code yet. |
 | `AGENT-004` | Calendar drift reconciler | push-further | partial | `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs` | The cited paths cover part of the clause; the rest is still to build. |
@@ -708,16 +708,16 @@ Done means implemented with a test exercising the clause through its public or o
 | `AGENT-009` | Scheduling assistant in email threads | push-further | missing |  | No implementing code yet. |
 | `AGENT-010` | Flexible holds and availability tuning | push-further | missing |  | No implementing code yet. |
 | `AGENT-011` | Voice booking through a contracted provider | push-further | missing |  | No implementing code yet. |
-| `BASE-AGENT-001` | One MCP door per seed | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-002` | The seed's jobs are tools, through the UI's own actions | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-003` | Records are resources | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-004` | Business identity and short-lived, audience-bound tokens | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-005` | An agent acts as a person in a role, never more | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-006` | Every action declares its risk class | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-007` | The company's policy decides, at one chokepoint | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-008` | Truthful attribution | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-009` | Every agent action is audited with its class and decision | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-010` | Agents can follow changes | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-011` | Limits are policy, and Pause stops everything | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-012` | Writes are idempotent and conflict-safe | target | missing | | Not yet judged through this seed's own doors. |
-| `BASE-AGENT-013` | Manifest, docs and the conformance journey | target | missing | | Not yet judged through this seed's own doors. |
+| `BASE-AGENT-001` | One MCP door per seed | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Declared core door and resources are wired before native redirects. Events, prompts and subscriptions are undeclared; full installation parity remains to prove. |
+| `BASE-AGENT-002` | The seed's jobs are tools, through the UI's own actions | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Registry currently covers profile, event-type and schedule configuration. Booking, request, client, report, payment, people and other implemented native verbs still require adapters; no full MCP parity is claimed. |
+| `BASE-AGENT-003` | Records are resources | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Host, event-type and schedule resources are declared. Booking, occurrence, request, client, delivery, payment and poll resources and resource refresh are undeclared. |
+| `BASE-AGENT-004` | Business identity and short-lived, audience-bound tokens | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Owner-bound signed tokens use the durable original setup owner. Native team role admission, local MCP credentials and inactive/excluded-person fixtures remain undeclared; existing REST credentials retain their own purpose. |
+| `BASE-AGENT-005` | An agent acts as a person in a role, never more | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Active native owner authorization is re-read at calls, reads and effect batches. Business team admission, multi-sponsor and access/security tool families remain undeclared. |
+| `BASE-AGENT-006` | Every action declares its risk class | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Declared native effects compute standard, live and destructive. Other effect families remain outside this registry and are not claimed. |
+| `BASE-AGENT-007` | The company's policy decides, at one chokepoint | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Shared signed policy, exact named approvals and Pause are wired for the declared registry. Queued lifecycle and wider native jobs remain undeclared. |
+| `BASE-AGENT-008` | Truthful attribution | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Declared native writes retain agent for sponsor and named approvers in agent_native_activity. Wider native timelines, external content and native Undo are undeclared. |
+| `BASE-AGENT-009` | Every agent action is audited with its class and decision | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Shared door audit and native operation attribution are wired. Wider private reads, queued lifecycle and multi-sponsor journeys remain undeclared. |
+| `BASE-AGENT-010` | Agents can follow changes | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Gap: events and subscriptions families are UNDECLARED in this core subset. No event tool or subscription claim. |
+| `BASE-AGENT-011` | Limits are policy, and Pause stops everything | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Core local and Business Pause are wired. Spend reservations, mail dispatch, timed and queued lifecycle are undeclared; no provider cost is registered. |
+| `BASE-AGENT-012` | Writes are idempotent and conflict-safe | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Core idempotency and native revision fences are wired. Queued lifecycle and uncertain provider effects are undeclared. |
+| `BASE-AGENT-013` | Manifest, docs and the conformance journey | target | partial | `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs` | Declared configuration journey and generated agent docs are present. Prompts, complete scheduling-week specialist, multi-sponsor, resource refresh and wider native jobs remain undeclared. |

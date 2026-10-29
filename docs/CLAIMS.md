@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 90 done / 30 partial / 69 missing (189 clauses).
+The contract census is 90 done / 44 partial / 55 missing (189 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -996,11 +996,11 @@ Evidence: `tests/custom-fields.test.mjs`
 
 Gap: None.
 
-AGENT-001 is missing: Agent authority, limits and audit.
+AGENT-001 is partial: Agent authority, limits and audit.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: No implementing code yet.
+Gap: Signed company policy and scoped owner-bound tokens govern the declared configuration tools. Per-host specialist grants, contact caps, quiet hours, external sends and queued specialist work remain to build.
 
 AGENT-002 is missing: Exception negotiator.
 
@@ -1062,80 +1062,80 @@ Evidence: None.
 
 Gap: No implementing code yet.
 
-BASE-AGENT-001 is missing: One MCP door per seed.
+BASE-AGENT-001 is partial: One MCP door per seed.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Declared core door and resources are wired before native redirects. Events, prompts and subscriptions are undeclared; full installation parity remains to prove.
 
-BASE-AGENT-002 is missing: The seed's jobs are tools, through the UI's own actions.
+BASE-AGENT-002 is partial: The seed's jobs are tools, through the UI's own actions.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Registry currently covers profile, event-type and schedule configuration. Booking, request, client, report, payment, people and other implemented native verbs still require adapters; no full MCP parity is claimed.
 
-BASE-AGENT-003 is missing: Records are resources.
+BASE-AGENT-003 is partial: Records are resources.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Host, event-type and schedule resources are declared. Booking, occurrence, request, client, delivery, payment and poll resources and resource refresh are undeclared.
 
-BASE-AGENT-004 is missing: Business identity and short-lived, audience-bound tokens.
+BASE-AGENT-004 is partial: Business identity and short-lived, audience-bound tokens.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Owner-bound signed tokens use the durable original setup owner. Native team role admission, local MCP credentials and inactive/excluded-person fixtures remain undeclared; existing REST credentials retain their own purpose.
 
-BASE-AGENT-005 is missing: An agent acts as a person in a role, never more.
+BASE-AGENT-005 is partial: An agent acts as a person in a role, never more.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Active native owner authorization is re-read at calls, reads and effect batches. Business team admission, multi-sponsor and access/security tool families remain undeclared.
 
-BASE-AGENT-006 is missing: Every action declares its risk class.
+BASE-AGENT-006 is partial: Every action declares its risk class.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Declared native effects compute standard, live and destructive. Other effect families remain outside this registry and are not claimed.
 
-BASE-AGENT-007 is missing: The company's policy decides, at one chokepoint.
+BASE-AGENT-007 is partial: The company's policy decides, at one chokepoint.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Shared signed policy, exact named approvals and Pause are wired for the declared registry. Queued lifecycle and wider native jobs remain undeclared.
 
-BASE-AGENT-008 is missing: Truthful attribution.
+BASE-AGENT-008 is partial: Truthful attribution.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Declared native writes retain agent for sponsor and named approvers in agent_native_activity. Wider native timelines, external content and native Undo are undeclared.
 
-BASE-AGENT-009 is missing: Every agent action is audited with its class and decision.
+BASE-AGENT-009 is partial: Every agent action is audited with its class and decision.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Shared door audit and native operation attribution are wired. Wider private reads, queued lifecycle and multi-sponsor journeys remain undeclared.
 
-BASE-AGENT-010 is missing: Agents can follow changes.
+BASE-AGENT-010 is partial: Agents can follow changes.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Gap: events and subscriptions families are UNDECLARED in this core subset. No event tool or subscription claim.
 
-BASE-AGENT-011 is missing: Limits are policy, and Pause stops everything.
+BASE-AGENT-011 is partial: Limits are policy, and Pause stops everything.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Core local and Business Pause are wired. Spend reservations, mail dispatch, timed and queued lifecycle are undeclared; no provider cost is registered.
 
-BASE-AGENT-012 is missing: Writes are idempotent and conflict-safe.
+BASE-AGENT-012 is partial: Writes are idempotent and conflict-safe.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Core idempotency and native revision fences are wired. Queued lifecycle and uncertain provider effects are undeclared.
 
-BASE-AGENT-013 is missing: Manifest, docs and the conformance journey.
+BASE-AGENT-013 is partial: Manifest, docs and the conformance journey.
 
-Evidence: None.
+Evidence: `src/core/app/agent-door/`, `agent-surface.json`, `tests/agent-phase-fixtures.mjs`
 
-Gap: Not yet judged through this seed's own doors.
+Gap: Declared configuration journey and generated agent docs are present. Prompts, complete scheduling-week specialist, multi-sponsor, resource refresh and wider native jobs remain undeclared.

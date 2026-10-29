@@ -42,6 +42,22 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  bs_settings: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  bs_overrides: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  bs_logo: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  bs_team: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  bs_audit: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  bs_assert: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_state: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_agents: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_audit: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_calls: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_approvals: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_reviews: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_events: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_door_usage: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+  agent_native_activity: "Signed company authority and retained agent decisions remain installation-local; never restore execution authority",
+
   workflow_dispatches: "Workflow execution receipts and replay authority remain installation-local",
   api_request_keys: "Credential-bound write replay records and private response bodies never travel",
   api_rate_windows: "Ephemeral per-credential rate counters remain installation-local",
