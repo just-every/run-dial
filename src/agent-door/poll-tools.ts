@@ -35,7 +35,7 @@ export function pollTools(services: AppServices): ToolDefinition[] {
         const poll = await host(args.id);
         return Boolean(poll.showTally) === args.show ? standard(0) : [...standard(), { class: "access", facts: { measure: poll.participants.length, direction: args.show ? "widens" : "narrows" } }];
       },
-      authority: async args => ({ subject: `poll-participants:${args.id}`, widens: args.show && !(await host(args.id)).showTally }),
+      authority: async args => { await host(args.id); return null; },
       revisionType: "string", revision: async args => stateDigest(await host(args.id)),
       summary: async args => ({ target: { id: args.id, name: (await host(args.id)).title }, items: [args.show ? "Show vote tally to this poll's participants" : "Hide vote tally from this poll's participants"] }),
       async run(args, ctx) {
@@ -52,7 +52,7 @@ export function pollTools(services: AppServices): ToolDefinition[] {
         const poll = await host(args.id);
         return [...standard(), { class: "access", facts: { measure: poll.participants.length, direction: "narrows" } }, ...(poll.holdLinkId ? [live("booking availability")] : [])];
       },
-      authority: async args => ({ subject: `poll-participants:${args.id}`, widens: false }),
+      authority: async args => ({ subject: (await host(args.id)).id, widens: false }),
       revisionType: "string", revision: async args => stateDigest(await host(args.id)),
       summary: async args => ({ target: { id: args.id, name: (await host(args.id)).title }, items: ["Close voting, stop pending invitations and release candidate holds"] }),
       async run(args, ctx) {

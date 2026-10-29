@@ -44,7 +44,7 @@ missing authorizing identity on a connected record refuses. The other narrowing
 witnesses read native voting and booking-link grants without returning capabilities.
 There is no invented widening mode. Poll visibility cannot widen a native owner's
 standing authority, so its surface states `sponsorEscalation:false` while retaining
-the runtime authority resolver.
+a native target check; it does not name a person as the subject of a record visibility change.
 
 The ten resource readers remain prepared in `resources.ts`, with owner checks,
 record-derived sensitive classes, safe projections and untrusted text. They are
@@ -90,7 +90,7 @@ jobs from AGENT-002 onward are not claimed as existing native tools.
 and replay, completes native session-bound OAuth, and creates native fixture
 records through person/public routes. `provider-edge.mjs` replaces only exact
 network origins, validates the real request credentials/payload and returns
-provider-shaped receipts. All opaque values are generated per run. The fixture
+provider-shaped receipts. Google/SendGrid and Microsoft/Resend are exercised through native OAuth, health and grant revocation; website and DNS reads keep their exact-origin fixtures. All opaque values are generated per run. The fixture
 control is test-only, never a production route. The surface journey records real
 native tool/class calls, narrowing witnesses and injection arguments. Base's
 normal verification exits remain unchanged and failures must be reported.

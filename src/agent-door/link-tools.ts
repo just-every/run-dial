@@ -29,7 +29,7 @@ export function linkTools(services: AppServices): ToolDefinition[] {
         return [...standard(), { class: "access", facts: { measure: link.state === "active" ? 1 : 0, direction: "narrows" } },
           ...(link.state === "active" && link.holdUntil && Date.parse(link.holdUntil) > ctx.now() ? [live("booking availability")] : [])];
       },
-      authority: async args => ({ subject: `booking-link:${args.id}`, widens: false }),
+      authority: async args => ({ subject: (await record(args.id)).id, widens: false }),
       summary: async args => {
         const link = await record(args.id), event = await services.eventTypes.getEventType(link.eventTypeId);
         return { target: { id: link.id, name: event?.title ?? link.kind }, items: ["Revoke private booking authority and release remaining offered-time holds", `Current state: ${link.state}`] };
