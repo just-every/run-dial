@@ -79,9 +79,8 @@ The following families remain undeclared (core subset, 2026-10-29):
   delayed agent jobs, timers, monthly tuning or second host is declared.
 - **provider administration:** Stripe connection/status/ACH, money settlement,
   QuickBooks account mapping/export/disconnect, and messaging disconnect remain
-  native connector/owner operations. The current verification binding contract
-  cannot supply all of their typed per-run provider configurations and native
-  grant witnesses. No fake authority or receipt is substituted.
+  native connector/owner operations. Their complete typed per-run provider configurations and native grant witnesses
+  have not been declared or proven. No fake authority or receipt is substituted.
 
 OAuth, installation, import, avatar/file upload and other person-only operations
 are explicit clause-backed `notTools`. Target-only agent solvers and follow-up
@@ -129,3 +128,36 @@ listed-release version 2 archive has no schema-object inventory. The published
 portability importer refuses it before Dial's exact prior schema proof and
 row upgrades can run. Native restore stays empty on refusal. No unverified-schema
 acknowledgment is added and the native DATA-001 requirement is retained.
+
+The 116 prepared verbs from round 2 become 92 declared verbs: these 26 stay
+outside the registry, and two native grant readers are added. The following
+locations are relative to `src/core/features/`; no excluded verb is a mock tool.
+
+| Native verb | Undeclared family | Native path | Clauses | Reason |
+| --- | --- | --- | --- | --- |
+| `dial.accounting.accounts` | provider administration | `payments/accounting-routes.ts:13` | `PAY-006` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.accounting.disconnect` | provider administration | `payments/accounting-routes.ts:17` | `PAY-006` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.accounting.export` | provider administration | `payments/accounting-routes.ts:16` | `PAY-006` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.accounting.mapping_set` | provider administration | `payments/accounting-routes.ts:15` | `PAY-006` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.accounting.reconciliation_acknowledge` | ownerNativeAdministration | `payments/accounting-routes.ts:9` | `PAY-006` | Acknowledges a processor disagreement as a native person. |
+| `dial.bookings.approval_cancel` | queuedLifecycle | `bookings/service.ts:91` | `BOOK-002`, `BOOK-010`, `PAY-007`, `NOTIFY-004`, `AGENT-001` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.approval_decision` | queuedLifecycle | `bookings/service.ts:90` | `BOOK-002`, `BOOK-010`, `PAY-007`, `NOTIFY-004`, `AGENT-001` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.attendance` | ownerNativeAdministration | `bookings/service.ts:461` | `BOOK-011`, `BOOK-010`, `AGENT-001` | Native human attendance judgment stays with its person door. |
+| `dial.bookings.calendar_conflict_restore` | queuedLifecycle | `bookings/service.ts:509` | `CAL-008`, `CAL-004`, `CAL-005`, `AGENT-004` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.calendar_deletion_retry` | queuedLifecycle | `bookings/service.ts:496` | `CAL-008`, `CAL-005`, `PAY-003`, `NOTIFY-004`, `AGENT-004` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.cancel` | queuedLifecycle | `bookings/service.ts:402` | `BOOK-008`, `BOOK-009`, `BOOK-010`, `PAY-003`, `PAY-005`, `NOTIFY-004` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.create` | queuedLifecycle | `bookings/operator-creation.ts:37` | `BOOK-001`, `BOOK-002`, `BOOK-003`, `BOOK-012`, `REQUEST-003`, `NOTIFY-001` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.manage_link_rotate` | queuedLifecycle | `bookings/service.ts:503` | `BOOK-006` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.request_new_time` | queuedLifecycle | `bookings/service.ts:376` | `BOOK-014`, `BOOK-010`, `PAY-003`, `NOTIFY-009` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.bookings.reschedule` | queuedLifecycle | `bookings/service.ts:428` | `BOOK-001`, `BOOK-004`, `BOOK-009`, `BOOK-010`, `NOTIFY-004` | The native command prepares outbox/provider work beyond the synchronous admission. |
+| `dial.calendar.check` | queuedLifecycle | `calendar-connection/service.ts:127` | `CAL-001`, `CAL-006`, `CAL-008`, `NOTIFY-007` | Native health reconciliation can initiate deferred managed-calendar work. |
+| `dial.delivery.retry` | queuedLifecycle | `delivery/recovery.ts:11` | `NOTIFY-005`, `CAL-004`, `CAL-005` | Resends queued native side effects. |
+| `dial.notices.disconnect` | provider administration | `workspace-notices/routes.ts:12` | `FLOW-005` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.payments.ach_set` | provider administration | `payments/routes.ts:34` | `PAY-001` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.payments.invoice_issue` | queuedLifecycle | `payments/invoices.ts:29` | `PAY-005`, `AGENT-001` | Requires provider settlement/dispatch and its retained native receipt. |
+| `dial.payments.no_show_fee` | queuedLifecycle | `payments/money-service.ts:146` | `PAY-003`, `PAY-005`, `NOTIFY-008`, `AGENT-001` | Requires provider settlement/dispatch and its retained native receipt. |
+| `dial.payments.refund` | queuedLifecycle | `payments/money-service.ts:130` | `PAY-003`, `AGENT-001` | Requires provider settlement/dispatch and its retained native receipt. |
+| `dial.payments.stripe_disconnect` | provider administration | `payments/routes.ts:33` | `PAY-001` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.payments.stripe_status` | provider administration | `payments/routes.ts:28` | `PAY-001` | Connector operation; complete per-run provider configuration and native grant proof are not declared. |
+| `dial.polls.create` | queuedLifecycle | `polls/service.ts:9` | `POLL-001` | Fans out a private invitation per participant. |
+| `dial.requests.transition` | queuedLifecycle | `availability-requests/service.ts:132` | `REQUEST-003`, `REQUEST-005` | Prepares the native request-transition notice. |
