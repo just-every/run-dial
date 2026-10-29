@@ -1138,4 +1138,4 @@ BASE-AGENT-013 is partial: Manifest, docs and the conformance journey.
 
 Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
 
-Gap: 2026-10-29: events/subscriptions; resources; multiSponsor; mailEdges; resourceRefresh; timedLifecycle; dualHost; ownerNativeAdministration; queuedLifecycle not declared in the door (core subset, 2026-10-29).
+Gap: 2026-10-29: events/subscriptions; resources; prompts; multiSponsor; mailEdges; resourceRefresh; timedLifecycle; dualHost; ownerNativeAdministration; queuedLifecycle not declared in the door (core subset, 2026-10-29).

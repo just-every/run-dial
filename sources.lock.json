@@ -909,7 +909,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6af980825985ae24b3b1ab00e294811302464cce5e6cc1ed0f7d0c9170893f11",
+      "sha256": "b4f347d0a80683d18d39e59cc7f7b6bb39db2161e12caf18cd266ac845040f5b",
       "executable": false
     },
     "DEMO.md": {
@@ -953,7 +953,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "6a7625a2efa01bc738b1b062d7b40a57832671ac81d2115ea6706c01941e4a9c",
+      "sha256": "d4cca7a8f3558432535f1308c0c75587b2f4671ade222a61f1bf7569ce30379e",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -5249,11 +5249,11 @@
       "executable": false
     },
     "src/agent-door/README.md": {
-      "sha256": "d3175b0630a7d5b1df2786600d6c4d6d82e8bf38ad9cbd9dbf4f613df02ddff3",
+      "sha256": "035c25c57ecc28cd025e89d5a980ea10331d8c06026bcae030b7ae7b14394341",
       "executable": false
     },
     "src/agent-door/registry.md": {
-      "sha256": "1468706f1462d1911e40ad0e496353ddc020c387ad77754b32b912aae3a052cb",
+      "sha256": "644e790934f64c5643ef74463e793997a454390b20ead20a37d23916ce203830",
       "executable": false
     },
     "src/agent-door/reporting-tools.ts": {

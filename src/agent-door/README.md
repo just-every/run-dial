@@ -70,7 +70,8 @@ The following families remain undeclared (core subset, 2026-10-29):
   copied `operation.ts` and `pipeline.ts` are unchanged from their recorded
   0.2.88 source. The preceding release fixed G-op-fanout; queued lifecycle stays undeclared
   because Dial has not integrated or proven native continuation custody.
-- **events/subscriptions:** retained change feeds, subscriptions and delivery.
+- **events/subscriptions/prompts:** retained change feeds, subscriptions, delivery
+  and MCP prompt retrieval are not offered by the core declaration.
   Version 0.2.88 withholds its built-in listing under the declared core subset.
 - **multiSponsor / ownerNativeAdministration:** Business team provisioning,
   operator invitations/roles, and native human confirmation of attendance stay
@@ -115,12 +116,19 @@ through the existing person and public routes. Every public fixture participant
 has an isolated synthetic network identity; real rate limits remain active.
 The fixture module is test-only and supplies no production route or SQL writer.
 
+The core declaration refuses `events`, `resources`, `prompts` and
+`subscriptions` with `capability_not_declared`. It does not scope
+`multiSponsor`, `mailEdges`, `resourceRefresh`, `timedLifecycle`, `dualHost`,
+`queuedLifecycle` or `ownerNativeApi`; those remain explicit native adoption
+boundaries. Owner bootstrap, approvals and audit stay available as core security.
+
 The canonical BASE-AGENT clauses come only from `rer door clauses --write`.
 Their presence and generated status rows do not claim completed acceptance.
 Dial's contract validator uses the same clause parser as the contract generator
 and maps the shared clauses explicitly in `seed.json`.
 
-Known upstream receipt limits remain visible on this pin. The runtime resolves
+Known upstream receipt limits remain visible on this pin
+(`modules/agent-door/pipeline.ts:78,105,111,123-127`). The runtime resolves
 native targets and reclassifies before returning an approved result. Completed
 deletion can return `not_found` on its receipt retry, and completed disable,
 clear or disconnect can return a new review/refusal after the native effect.

@@ -116,4 +116,4 @@ The ten readers below are not mounted or declared as the `resources` capability.
 | `dial://requests/{id}` | Alternative time request |
 | `dial://polls/{id}` | Meeting poll |
 
-The specialist prompt and discovery describe the company-agent door. Native OAuth, provider setup, installation, import and screen-only confirmation retain their own credentials and person lifecycle. MCP supports `2026-07-28` and `2025-11-25`; March `2025-03-26` is refused.
+Discovery describes the company-agent specialist. MCP prompt retrieval is undeclared under the core capability set. Native OAuth, provider setup, installation, import and screen-only confirmation retain their own credentials and person lifecycle. MCP supports `2026-07-28` and `2025-11-25`; March `2025-03-26` is refused.
