@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { hostDateSchema, ianaTimeZoneSchema } from "../../shared/scheduling";
-import { formParams, submissionSchema } from "../routing/types";
+import { formParams, submissionSchema } from "../routing";
 
 const instant=z.string().datetime({offset:true}).transform(value=>new Date(value).toISOString());
 export const apiAvailabilityQuerySchema=z.object({eventTypeId:z.string().length(26),week:hostDateSchema.optional(),inviteeTimezone:ianaTimeZoneSchema.optional(),durationMinutes:z.coerce.number().int().min(5).max(480).optional()}).strict();

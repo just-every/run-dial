@@ -27,6 +27,7 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  workflow_rules: {name:"Synthetic Dial booking workflow",operator_id:"owner",enabled:1,enabled_at:instant,subject:"Booking preparation",text:"Please review the agreed preparation."},
   api_oauth_applications: {name:"Synthetic Dial connected app",operator_id:"owner",scopes_json:'["bookings:read"]',client_secret_hash:secret+"_API_CLIENT",expires_at:end,revoked_at:null},
   api_credentials: {name:"Synthetic Dial integration",operator_id:"owner",scopes_json:'["bookings:read"]',secret_hash:secret+"_API_TOKEN",expires_at:end,revoked_at:null,last_used_at:instant},
   webhook_subscriptions: {endpoint:'https://receiver.synthetic.test/archive',events_json:'["booking.created.v1"]',scope:'workspace',scope_id:null,secret_ciphertext:secret+'_HOOK',enabled:1},

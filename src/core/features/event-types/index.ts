@@ -19,3 +19,5 @@ export { EventBookingPolicyRepository, inviteeChangePolicyPredicate } from "./bo
 
 export { offeredLocations, resolveBookingLocation } from "./locations";
 export type { EventLocationOption, PublicLocationOption } from "./locations";
+
+export { eventTypeCreationSchema, eventTypeInputSchema } from "./event-input";

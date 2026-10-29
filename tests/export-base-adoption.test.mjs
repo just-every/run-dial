@@ -64,6 +64,11 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
     const archive = await createArchive(testPlatform(source.db));
     assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
+    const archivedWorkflow = archive.tables.find(table => table.name === 'workflow_rules').rows[0];
+    assert.equal(archivedWorkflow.enabled, 0, 'restored workflow configuration never carries live outbound authority');
+    assert.equal(archivedWorkflow.enabled_at, null);
+    assert.equal(archivedWorkflow.text, source.db.prepare('SELECT text FROM workflow_rules').get().text);
+    assert.equal(archive.tables.some(table => table.name === 'workflow_dispatches'), false, 'old workflow execution receipts never replay on another installation');
     for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
       const original = source.db.prepare(`SELECT * FROM ${table}`).get();
       const archived = archive.tables.find(entry => entry.name === table).rows[0];
@@ -112,6 +117,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
       assert.ok(restored.revoked_at, 'an imported machine identity has no live credential');
       assert.equal(restored.name, source.db.prepare(`SELECT name FROM ${table}`).get().name);
     }
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM workflow_rules WHERE enabled=1 OR enabled_at IS NOT NULL').get().n, 0, 'imported workflow configuration requires a fresh owner enable');
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM workflow_dispatches').get().n, 0);
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_subscriptions WHERE enabled=1 OR secret_ciphertext IS NOT NULL").get().n, 0, 'restore never enables outbound authority');
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_deliveries WHERE state IN ('pending','sending')").get().n, 0, 'restore never resumes historical webhook commands');
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM routing_capabilities').get().n, 0);

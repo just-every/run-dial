@@ -1,9 +1,10 @@
 import { Hono } from "hono";
-import { authenticateCredential, requireScope } from "../api-credentials/auth";
-import { BookingsRepository } from "../bookings/repository";
+import { authenticateCredential, requireScope } from "../api-credentials";
+import { BookingsRepository } from "../bookings";
 import { createId } from "../../shared/ids";
 import { validate } from "../../shared/validation";
 import { bookingAllowed, bookingView, eventAllowed, hostAllowed, idempotent, rateLimit, refusal, type ApiEnvironment } from "./support";
+import { workflowRoutes } from "../workflows";
 import { resourceRoutes } from "./resources";
 import { openApiDocument } from "./spec";
 import { apiAvailabilityQuerySchema as availability, apiBookingCreateSchema as create, apiCancellationSchema as cancellation, apiRescheduleSchema as reschedule, apiAttendanceSchema as attendance } from "./request-schemas";
@@ -18,8 +19,8 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
     if(credential instanceof Response)return credential;
     c.set("apiCredential",credential);
     const limited=await rateLimit(c,credential);if(limited)return limited;
-    const read=c.req.method==="GET",path=c.req.path;
-    const scope=path.includes("webhook")?"webhooks:manage":path.includes("routing")?"routing:manage":(path.includes("event-types")||path.includes("teams")||path.includes("polls"))&&!read?"event-types:manage":read?"bookings:read":"bookings:write";
+    const read=c.req.method==="GET"||c.req.method==="HEAD",path=c.req.path;
+    const scope=path.includes("workflows")?"workflows:manage":path.includes("webhook")?"webhooks:manage":path.includes("routing")?"routing:manage":(path.includes("event-types")||path.includes("teams")||path.includes("polls"))&&!read?"event-types:manage":read?"bookings:read":"bookings:write";
     const configurationRead=read&&(path.includes("event-types")||path.includes("teams")||path.includes("polls"))&&credential.scopes.includes("event-types:manage");
     const denied=path.endsWith("/openapi.json")||configurationRead?undefined:await requireScope(c,credential,scope);if(denied)return denied;
     if(!await hostAllowed(c,credential))return refusal(c,404,"not_found","This record does not exist.");
@@ -39,7 +40,7 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
     const credential=c.get("apiCredential"),limit=Number(c.req.query("limit")??"50");let after="";
     if(!Number.isInteger(limit)||limit<1||limit>100)return refusal(c,400,"invalid_pagination","Choose a limit from 1 to 100.");
     try{if(c.req.query("cursor")){after=atob(c.req.query("cursor")!);if(!/^[0-9A-Z]{26}$/.test(after))throw new Error();}}catch{return refusal(c,400,"invalid_cursor","This cursor is invalid.");}
-    const ids=(await c.env.DB.prepare(`SELECT id FROM bookings b WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
+    const ids=(await c.get("apiDatabase").prepare(`SELECT id FROM bookings b WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
       .bind(after,credential.teamId,credential.teamId,limit+1).all<{id:string}>()).results;
     const data=[];
     for(const row of ids.slice(0,limit)){const booking=await bookingAllowed(c,credential,row.id);if(booking)data.push(bookingView(booking));}
@@ -105,10 +106,11 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
       return result.kind==="marked"&&result.booking?{status:200,body:bookingView(result.booking),bookingId:booking.id}:{status:409,body:error(result.kind)};
     });
   })
-  .route("/",resourceRoutes);
+  .route("/",resourceRoutes)
+  .route("/",workflowRoutes);
 
 async function manageToken(c:Parameters<typeof hostAllowed>[0],id:string){
-  const url=await new BookingsRepository(c.env.DB).storedManageUrl(id);
+  const url=await new BookingsRepository(c.get("apiDatabase")).storedManageUrl(id);
   if(!url)return undefined;
   const parsed=new URL(url);
   return parsed.origin===new URL(c.get("runtime").APP_URL).origin&&parsed.pathname.startsWith("/manage/")?parsed.pathname.slice("/manage/".length):undefined;

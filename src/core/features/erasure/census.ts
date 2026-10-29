@@ -1,5 +1,6 @@
 // Exhaustive migrated application census; unknown tables stop erasure before writes.
 export const applicationTables = [
+  "workflow_rules", "workflow_dispatches",
   "api_credentials", "api_oauth_applications", "api_request_keys", "api_rate_windows",
   "analytics_settings", "analytics_connections", "analytics_deliveries",
   "dial_portability_admission",

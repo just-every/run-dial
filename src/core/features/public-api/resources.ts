@@ -1,15 +1,15 @@
 import { Hono } from "hono";
-import { eventTypeCreationSchema, eventTypeInputSchema } from "../event-types/event-input";
-import { toPublicEventType } from "../event-types/public";
-import { formSchema, type RoutingForm } from "../routing/types";
-import { routingAnswerDecision, submitRoutingForm } from "../routing/submission";
+import { eventTypeCreationSchema, eventTypeInputSchema } from "../event-types";
+import { toPublicEventType } from "../event-types";
+import { formSchema, type RoutingForm } from "../routing";
+import { routingAnswerDecision, submitRoutingForm } from "../routing";
 import { createOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import { apiError } from "../../shared/http";
-import { pollInput } from "../polls/types";
+import { pollInput } from "../polls";
 import { validate } from "../../shared/validation";
 import { createId } from "../../shared/ids";
 import { apiTeamSchema as teamInput, apiRoutingSubmissionSchema as routingSubmission, apiWebhookSchema as webhookInput } from "./request-schemas";
-import { eventAllowed, hostAllowed, idempotent, page, refusal, type ApiEnvironment } from "./support";
+import { eventAllowed, hostAllowed, idempotent, page, parsePage, pageResult, refusal, type ApiEnvironment } from "./support";
 
 const fail=(code:string)=>({error:{code,message:"This request cannot be completed.",request_id:createId()}});
 export const resourceRoutes=new Hono<ApiEnvironment>()
@@ -36,6 +36,22 @@ export const resourceRoutes=new Hono<ApiEnvironment>()
  .post("/api/v1/event-types/:id/publish",async c=>{
   const id=c.req.param("id");if(!await eventAllowed(c,c.get("apiCredential"),id))return refusal(c,404,"not_found","This event type does not exist.");
   return idempotent(c,{},async()=>{const result=await c.get("services").eventTypes.publishEventType(id);return result.kind==="published"?{status:200,body:{id:result.eventType.id,status:result.eventType.status,...toPublicEventType(result.eventType)}}:{status:409,body:fail(result.kind)};});
+ })
+ .post("/api/v1/event-types/:id/disable",async c=>{
+  const id=c.req.param("id"),credential=c.get("apiCredential");
+  if(!await eventAllowed(c,credential,id))return refusal(c,404,"not_found","This event type does not exist.");
+  return idempotent(c,{},async()=>{
+    const event=await c.get("services").eventTypes.disableEventType(id);
+    return event?{status:200,body:{id:event.id,status:event.status,...toPublicEventType(event)}}:{status:404,body:fail("not_found")};
+  });
+ })
+ .delete("/api/v1/event-types/:id",async c=>{
+  const id=c.req.param("id");
+  if(!await eventAllowed(c,c.get("apiCredential"),id))return refusal(c,404,"not_found","This event type does not exist.");
+  return idempotent(c,{},async()=>{
+    const deleted=await c.get("services").eventTypes.deleteEventType(id);
+    return deleted?{status:200,body:{id,deleted:true}}:{status:404,body:fail("not_found")};
+  });
  })
  .get("/api/v1/hosts",async c=>{
   const host=await hostAllowed(c,c.get("apiCredential"));
@@ -79,13 +95,17 @@ export const resourceRoutes=new Hono<ApiEnvironment>()
  })
  .get("/api/v1/routing-submissions",async c=>{
   const credential=c.get("apiCredential"),host=await hostAllowed(c,credential);
-  const rows=(await c.env.DB.prepare("SELECT id,form_id AS formId,event_type_id AS eventTypeId,team_id AS teamId,rule_id AS ruleId,state,result_json AS resultJson,created_at AS createdAt FROM routing_submissions WHERE host_id=? AND (? IS NULL OR team_id=?) ORDER BY id LIMIT 1000")
-    .bind(host?.id??"",credential.teamId,credential.teamId).all<{id:string;formId:string;eventTypeId:string|null;teamId:string|null;ruleId:string|null;state:string;resultJson:string;createdAt:string}>()).results;
-  return page(c,rows.map(({resultJson,...row})=>({...row,result:JSON.parse(resultJson)})));
+  const bounds=parsePage(c);if(bounds instanceof Response)return bounds;
+  const rows=(await c.get("apiDatabase").prepare("SELECT id,form_id AS formId,event_type_id AS eventTypeId,team_id AS teamId,rule_id AS ruleId,state,result_json AS resultJson,created_at AS createdAt FROM routing_submissions WHERE host_id=? AND (? IS NULL OR team_id=?) AND id>? ORDER BY id LIMIT ?")
+    .bind(host?.id??"",credential.teamId,credential.teamId,bounds.after,bounds.limit+1).all<{id:string;formId:string;eventTypeId:string|null;teamId:string|null;ruleId:string|null;state:string;resultJson:string;createdAt:string}>()).results;
+  return pageResult(c,rows.map(({resultJson,...row})=>({...row,result:JSON.parse(resultJson)})),bounds.limit);
  })
  .get("/api/v1/polls",async c=>{
-  const rows=[],credential=c.get("apiCredential");for(const poll of await c.get("services").polls.repository.list())if(await eventAllowed(c,credential,poll.eventTypeId))rows.push(poll);
-  return page(c,rows);
+  const credential=c.get("apiCredential"),bounds=parsePage(c);if(bounds instanceof Response)return bounds;
+  const rows=(await c.get("apiDatabase").prepare(`SELECT id,event_type_id AS eventTypeId,title,closes_at AS closesAt,state,show_tally AS showTally,hold_link_id AS holdLinkId FROM meeting_polls p
+    WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=p.event_type_id)) ORDER BY id LIMIT ?`)
+    .bind(bounds.after,credential.teamId,credential.teamId,bounds.limit+1).all<{id:string;eventTypeId:string;title:string;closesAt:string;state:string;showTally:number;holdLinkId:string|null}>()).results;
+  return pageResult(c,rows,bounds.limit);
  })
  .post("/api/v1/polls",validate("json",pollInput),async c=>{
   const body=c.req.valid("json");if(!await eventAllowed(c,c.get("apiCredential"),body.eventTypeId))return refusal(c,404,"not_found","This event type does not exist.");
@@ -114,8 +134,10 @@ export const resourceRoutes=new Hono<ApiEnvironment>()
   });
  })
  .delete("/api/v1/webhook-subscriptions/:id",async c=>{
-  const credential=c.get("apiCredential"),id=c.req.param("id"),status=await c.get("services").webhooks.subscriptions.status();
-  const exists=status.subscriptions.some(s=>s.id===id&&(credential.teamId?s.scope==="team"&&s.scopeId===credential.teamId:credential.hostId?s.scope==="host"&&s.scopeId===credential.hostId:true));
-  if(!exists)return refusal(c,404,"not_found","This subscription does not exist.");
-  return idempotent(c,{},async()=>({status:200,body:{deleted:await c.get("services").webhooks.subscriptions.remove(id)}}));
+  const credential=c.get("apiCredential"),id=c.req.param("id");
+  return idempotent(c,{},async()=>{
+    const status=await c.get("services").webhooks.subscriptions.status();
+    const exists=status.subscriptions.some(s=>s.id===id&&(credential.teamId?s.scope==="team"&&s.scopeId===credential.teamId:credential.hostId?s.scope==="host"&&s.scopeId===credential.hostId:true));
+    return exists?{status:200,body:{deleted:await c.get("services").webhooks.subscriptions.remove(id)}}:{status:404,body:fail("not_found")};
+  });
  });

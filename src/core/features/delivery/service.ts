@@ -240,6 +240,11 @@ export class ProviderDeliveryService {
     }
     const message = toMailMessage(frozen ?? payload, providerKey);
     if (!message) throw new ProviderFailure("invalid_delivery_payload", false);
+    if (payload.messageKind === "workflow" && (typeof payload.workflowId !== "string" || typeof payload.workflowVersion !== "number"
+      || typeof payload.workflowCreatorId !== "string"
+      || !await this.repository.workflowMailAuthorized(payload.workflowId,payload.workflowVersion,payload.workflowCreatorId,record))) {
+      throw new ProviderFailure("workflow_authority_revoked", false);
+    }
     if (await this.repository.operatorMailRevoked(record)) throw new ProviderFailure("operator_removed", false);
     if (isOperatorBookingMail(record, payload) && await this.repository.bookingMailMuted(message.to)) return undefined;
     if (!frozen) await this.repository.freezeMail(record, message, payload.recipientRole === "invitee" && typeof payload.manageUrl === "string" ? payload.manageUrl : undefined);

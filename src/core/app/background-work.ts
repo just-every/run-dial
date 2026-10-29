@@ -1,3 +1,4 @@
+import { runWorkflows } from "../features/workflows/engine";
 import { isWebhookJob } from "../features/webhooks/delivery";
 import type { AppBindings } from "./bindings";
 import type { AppServices } from "./services";
@@ -31,6 +32,7 @@ export async function runScheduledWork(env: AppBindings, services: AppServices) 
   await services.calendar.syncManagedEvents();
   await processDueCalendarDeletionProbes(env);
   await services.delivery.renewCalendarChannels();
+  await runWorkflows(env.DB,parseRuntimeEnvironment(env));
   await services.delivery.enqueueDue(env.JOBS);
   await services.webhooks.delivery.enqueue(env.JOBS);
   // Admission-state cleanup cannot prevent the independent booking recovery work above.

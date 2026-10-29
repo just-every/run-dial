@@ -25,6 +25,8 @@ export async function bookingMutationTarget(request: Request, env: AppBindings) 
   if (requestTarget) return `request:${requestTarget[1]}`;
   const approval = /^\/api\/app\/booking-approvals\/([^/]+)\/(?:decision|cancel)$/.exec(path);
   if(approval)return (await env.DB.prepare("SELECT booking_id AS id FROM booking_approval_requests WHERE id=?").bind(approval[1]).first<{id:string}>())?.id;
+  const machine = /^\/api\/v1\/bookings\/([0-9A-Z]{26})\/(?:cancel|reschedule|attendance)$/.exec(path);
+  if (machine) return machine[1];
   const operator = /^\/api\/app\/(?:bookings|erasures)\/([^/]+)(?:\/|$)/.exec(path);
   if (operator) return operator[1];
   // PAY-003: a balance link's Checkout is opened under its booking's coordinator, so two clicks share one session.

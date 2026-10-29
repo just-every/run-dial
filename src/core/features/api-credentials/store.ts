@@ -1,6 +1,6 @@
 import { createId, nowIso } from "../../shared/ids";
 
-export const credentialScopes = ["bookings:read", "bookings:write", "event-types:manage", "routing:manage", "reports:read", "webhooks:manage"] as const;
+export const credentialScopes = ["bookings:read", "bookings:write", "event-types:manage", "routing:manage", "reports:read", "webhooks:manage", "workflows:manage"] as const;
 export type CredentialScope = typeof credentialScopes[number];
 export type Credential = {
   id: string; name: string; operatorId: string; workspaceId: string;

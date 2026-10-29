@@ -63,6 +63,13 @@ contract(["AUTH-001", "AUTH-008", "API-001"], "direct Base administrative aliase
   const credentialResponse = await call("/api/app/api-credentials", { name: "Synthetic Dial removed owner", scopes: ["bookings:read"], expiresAt: new Date(Date.now() + 86400000).toISOString() }, oldCookie);
   assert.equal(credentialResponse.status, 201);
   const removedCredential = await credentialResponse.json();
+  const machineAuthorityBefore = JSON.stringify(await authority());
+  for (const [path, method] of [["/api/portability/status", "GET"], ["/api/portability/exports", "POST"], ["/api/app/privacy/erase", "POST"], [`/api/app/operators/${target}/remove`, "POST"], ["/api/app/bookings/01K00000000000000000000999", "DELETE"]]) {
+    const denied = await fetch(origin + path, { method, headers: { Origin: origin, Authorization: `Bearer ${removedCredential.secret}`, "content-type": "application/json" }, ...(method === "GET" ? {} : { body: "{}" }) });
+    assert.equal(denied.status, 401, "machine credentials cannot grant archive, erasure or role authority");
+  }
+  assert.equal(JSON.stringify(await authority()) === machineAuthorityBefore, true, "machine attempts cannot change native identities or sessions");
+
   const removePath = `/api/app/operators/${target}/remove`;
   assert.equal((await call(removePath, {}, cookie)).status, 204);
   assert.deepEqual(await mailState(), [], "operator erasure deletes old operator and invitee queued mail at the address");
