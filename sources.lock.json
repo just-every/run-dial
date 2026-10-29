@@ -2055,6 +2055,10 @@
       "sha256": "51aa39622d866b987d71b6e37c9a8300e7f24c54a55611edaab669ed051b01cd",
       "executable": false
     },
+    "migrations/core/0095_agent_door.sql": {
+      "sha256": "016d8a98b964385f5c4a13447361c3c783910a76aaf4606b0e0081482bc819cc",
+      "executable": false
+    },
     "modules/agent-door/admission.ts": {
       "sha256": "c67ee28a1ae61b963619ffc64807baaa37b618aec41d6a2d90f1852f5beebf9e",
       "executable": false
@@ -5096,27 +5100,27 @@
       "executable": false
     },
     "src/agent-door/accounting-tools.ts": {
-      "sha256": "335a19266dd63dc1b3b123d4888e22abb150d06bece265774ee975665f9d24c0",
+      "sha256": "1b2d8850e4984fc8f88bf6de6a5ce7f117375f1539db0c8472d549dbdc86fefb",
       "executable": false
     },
     "src/agent-door/availability-schedule-tools.ts": {
-      "sha256": "fe557965b7bb356d8fc7ef574241be2dc15854360e3d4c5a53f6974a23437199",
+      "sha256": "8780681f7eff43f93a549d10b1c2a692c4950368d7f66dad1f7b42b3667f91c2",
       "executable": false
     },
     "src/agent-door/availability-tools.ts": {
-      "sha256": "30e02fd35702c01f743fd14445d748973ed8b9ae22ae47eb0432259a20c98208",
+      "sha256": "1280dbfeed77143e49e426a89c87d31d921f47812a5621844d9850ef721fbc8b",
       "executable": false
     },
     "src/agent-door/booking-approvals.ts": {
-      "sha256": "ca24d89439a0d3253923d758828673fcb835778dbc1793ed116c9f4ef1e1c717",
+      "sha256": "ce9a4ff1766229b8820441f4beaddc06ee6a95445e055f8b3f87bf3c3353dbbc",
       "executable": false
     },
     "src/agent-door/booking-calendar.ts": {
-      "sha256": "33bbd449fd4b073a47dfca1161ca0ab4be77b53ea14913e941b118416926d762",
+      "sha256": "a9fdd13b81c2ee86a2f5c19aba8b56c1998c769f38bd7c1781bb3ebd00e65ad6",
       "executable": false
     },
     "src/agent-door/booking-lifecycle.ts": {
-      "sha256": "5c057e00a0b825403c774aee4ef6011cffe050c26a98736af110e1bcca73d2e4",
+      "sha256": "f421742f1f45273c191646798b0f1873a85fded100d980109e15b8e6e2591ada",
       "executable": false
     },
     "src/agent-door/booking-native-state.ts": {
@@ -5128,43 +5132,47 @@
       "executable": false
     },
     "src/agent-door/booking-tools.ts": {
-      "sha256": "5b39811c7f2c15f3a039c7605d3a2da285c1ddf493e05f174641e8718f408319",
+      "sha256": "fdb3eb3f4dd454dc9626c39efc7454f72f918744c97b5b9b2695f054a6e8e7cf",
       "executable": false
     },
     "src/agent-door/brand-tools.ts": {
-      "sha256": "7ff856687f5b725a6d701f3a0c1a35925eef717f6a8ee5130e57bbd572f937eb",
+      "sha256": "90b1f4b32ab6703694ace55a223e352ecf50fd9df493d9628b80de81f2462d15",
       "executable": false
     },
     "src/agent-door/business.ts": {
-      "sha256": "158e698c7c54bfd5f3dee25a3294065d07277efa0891352449836c32f24494a5",
+      "sha256": "ffa21a4fcba6f283abf3d5cfe1eb2ce232902446c07af8401c9c89fe38bd6522",
       "executable": false
     },
     "src/agent-door/calendar-tools.ts": {
-      "sha256": "eb381264c02b6c10548f1a17a6bd80e05310300efb9d23ee7b4763b343b8facc",
+      "sha256": "6ff524f237e6bd95b208c2e321776a5a5c24c0c30eed6dae3bf087429c5bd79a",
       "executable": false
     },
     "src/agent-door/client-tools.ts": {
-      "sha256": "026b30216d41cd934d42cb812fa221925a4873327d782f3f1ed73df25901a70d",
+      "sha256": "ece25d7c44efabf75ce1d91c6168ff0d2c10e4de44d33ca253761be8ca72dd24",
       "executable": false
     },
     "src/agent-door/custom-tools.ts": {
-      "sha256": "b18f0fd28e246ba649f0773152e30e4cb162c4e0c152846b4ceebe8c78737e53",
+      "sha256": "30c1eae1bf4354f8f31fcab3cacb5b7fc375f565b7bb7fc27592c9d104301434",
       "executable": false
     },
     "src/agent-door/delivery-tools.ts": {
-      "sha256": "59ebd95ee115471423095679d422379fe074ec8d32e5a3b0ef4f1f18650eff4e",
+      "sha256": "9ca7e00fd5127720248add71ab00f793d4eb53c1e2ec19c4ee0894d1ee073d88",
       "executable": false
     },
     "src/agent-door/entitlement-tools.ts": {
-      "sha256": "6e1d4a5490351d26dca38fd07cdd9a775e101b8d571e98cc91e9be8a420f98a9",
+      "sha256": "32c3a2082e2bb7c68e26326ecdc8911eaf05b723e50e71d9a16d9a7c9b26f025",
+      "executable": false
+    },
+    "src/agent-door/erasure.ts": {
+      "sha256": "b66308c91550be2d6611b74fdeeebb2bd0828915722abcba2ea5246e341bf732",
       "executable": false
     },
     "src/agent-door/event-configuration-tools.ts": {
-      "sha256": "1c005a6cfaab225a234ee43c8d523ac56df954b386113c6c382db0f6dfc5069e",
+      "sha256": "46f01abab39888fce07d52c29cb98ee0636202f8fd101a1f06a53ea38ccde7aa",
       "executable": false
     },
     "src/agent-door/event-hours-tools.ts": {
-      "sha256": "32800c533d2c7f735a5c4ffe1fcb427ccf986a243c48d65a11de80ee536a14a6",
+      "sha256": "52da1661bd37ad17703b1a84c7f9e56c0f7577feec6cb81516e8f4eec347674a",
       "executable": false
     },
     "src/agent-door/event-tool-support.ts": {
@@ -5172,11 +5180,15 @@
       "executable": false
     },
     "src/agent-door/event-tools.ts": {
-      "sha256": "9583ae58d170ca25d977877e8e1575dc9d8f959d958d6808d2c37fb169645308",
+      "sha256": "8ac5b904995dc44689883a3c476998e47df68e1006c530126456a425000d3cf2",
+      "executable": false
+    },
+    "src/agent-door/index.server.ts": {
+      "sha256": "b5d2381c7ad87e904950fa8296ead2ce585d441bc73cc23192bd12752c349a57",
       "executable": false
     },
     "src/agent-door/link-tools.ts": {
-      "sha256": "07b163171b7943e79f3a51eaf8ce2c02ad64e0ecdae5818466773bb4768f39f7",
+      "sha256": "8445b4fecd429499169789ccf29896076b7e4803df8c3ff090394c2a1fe8e75c",
       "executable": false
     },
     "src/agent-door/native-tool.ts": {
@@ -5184,7 +5196,7 @@
       "executable": false
     },
     "src/agent-door/notice-tools.ts": {
-      "sha256": "1b29032fc39c54a0502e5b8ba024f42e0958bd59300654daf525d9c72ec61c69",
+      "sha256": "3c103d95560fae61a5438dc57f3bafbec186c88d5f72ff436aa9be63bd196a41",
       "executable": false
     },
     "src/agent-door/payment-facts.ts": {
@@ -5192,11 +5204,11 @@
       "executable": false
     },
     "src/agent-door/payment-money-tools.ts": {
-      "sha256": "5bd4fd5b91b43cfc3990aed1f934f3dc0476fed62963a7fbf930d303684c9e92",
+      "sha256": "3763809cb0f1dc4c4e1c519e4f68d22af8e8848cfd4ff5dd7d3b35153fd6b6da",
       "executable": false
     },
     "src/agent-door/payment-tools.ts": {
-      "sha256": "967985fe451124c6fee8730efbb24173c774af167595b5e5e037d34db4258c14",
+      "sha256": "77162648c4cf6b124a7483ed165e44db46f2bab2fb70137e08f815e2c15423a0",
       "executable": false
     },
     "src/agent-door/people.ts": {
@@ -5204,11 +5216,11 @@
       "executable": false
     },
     "src/agent-door/poll-tools.ts": {
-      "sha256": "fd7198bef1dc415ad914c506ce32b135a98d8d6fc989040310660c71f92a6023",
+      "sha256": "6d81dacab5a6cc0575dc62bcbc3cbba0d38a7502457bca37202a857ad927d399",
       "executable": false
     },
     "src/agent-door/README.md": {
-      "sha256": "79c164605c8ec0c59b823aa6f27b2d8f08a91bf1b8ec2c6a7030f193468df955",
+      "sha256": "c3a99fdc2d1e1e5b8832402c67264e4b09e248c5e4465e635c7c1a8a9e214864",
       "executable": false
     },
     "src/agent-door/reporting-tools.ts": {
@@ -5216,7 +5228,7 @@
       "executable": false
     },
     "src/agent-door/request-tools.ts": {
-      "sha256": "7101f43aedad911f06af22e1188665c456d721eaa01d3631c62e0878daa5e0cf",
+      "sha256": "f8e29c2544a048f6b5a722d7df3d805c230eda037ad19ebb92106d75c73f622c",
       "executable": false
     },
     "src/agent-door/resource-bookings.ts": {
@@ -5228,15 +5240,15 @@
       "executable": false
     },
     "src/agent-door/resource-people.ts": {
-      "sha256": "07be15d028c2de807b1f8d6a197bb65f473781f144ceb81e605851bc74fc893d",
+      "sha256": "891ceda83a1857c16243fbfddf6d3201e76c4747378c5863031214a843179b10",
       "executable": false
     },
     "src/agent-door/resource-scheduling.ts": {
-      "sha256": "9c2b266ed49dac8e20c00b09de532a91b2c1b7878ebfcb427b473363c9bbe71e",
+      "sha256": "f0a058288d70e659af8c4f90e1ae40319cc8c0eab439ef1eb30475170d5cce39",
       "executable": false
     },
     "src/agent-door/resources.ts": {
-      "sha256": "0b2d9a8bb7ebbb424f33a30831035f67cb89226c058fd70805b90e155d1f0bc0",
+      "sha256": "897d1d2dab7fed4eb6ebd11d79ec3dac987b5824ad13c0a0e79b031620297796",
       "executable": false
     },
     "src/agent-door/scheduling-tools.ts": {
@@ -5244,7 +5256,7 @@
       "executable": false
     },
     "src/agent-door/tools.ts": {
-      "sha256": "248b1ae574dedc18473f0d58059481cb4d7bba4f69d68dac5f89cb311b19cdfb",
+      "sha256": "536c36111893af8e86b568fd6ca0e7f3d96e5b4f3b65c26fec0b999d91270c91",
       "executable": false
     },
     "src/agent-door/workspace-tools.ts": {
@@ -5520,7 +5532,7 @@
       "executable": false
     },
     "src/core/app/worker.ts": {
-      "sha256": "fe12f0f4ee2840bf8b946b2f5ebb8519998b8d6e33d3bece34b327abd9fd033a",
+      "sha256": "a88986072d73aea7f081e6b3c65f2c9c8a7866b1ab361fbf82a16f45131cbe5c",
       "executable": false
     },
     "src/core/app/workspace-reads.server.ts": {
@@ -6308,7 +6320,7 @@
       "executable": false
     },
     "src/core/features/erasure/census.ts": {
-      "sha256": "088f113213b961e38d7ceb3c7bdb6d833634087c80cbb306e00975693a618c4b",
+      "sha256": "a724c8f436293fd73403572336e479fecbadb5286943829fc026bb3ee804dc88",
       "executable": false
     },
     "src/core/features/erasure/entitlements.ts": {
@@ -6348,7 +6360,7 @@
       "executable": false
     },
     "src/core/features/erasure/person.ts": {
-      "sha256": "492a74960ff2764ac83743566b7c4bef0a0846b7a2454a9ed4c4dc1d3026a036",
+      "sha256": "eb24b6dc7aaba19673fd8487c66a9d50c59f28dfa4afe8867f1702c6f2beb4cf",
       "executable": false
     },
     "src/core/features/erasure/portability.ts": {
@@ -8160,7 +8172,7 @@
       "executable": false
     },
     "src/core/shared/archive-exclusions.mjs": {
-      "sha256": "decafc5f1f6c3d84e0cb87417abbbc6cfed0782644caeba4e75b5a6c83a2742c",
+      "sha256": "ec6de8c51a230a9ce2ccc71e82a066da6e75cf35cd5fcfdcef53f32d7568d586",
       "executable": false
     },
     "src/core/shared/booking-horizon.ts": {

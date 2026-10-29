@@ -2,8 +2,8 @@ import { z } from "zod";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
 import { productInput } from "../core/features/payments/entitlements";
-import { nativeTool, required, standard, arrayOutput, objectOutput } from "./native-tool";
-import { financial, usdAmount } from "./payment-facts";
+import { arrayOutput,nativeTool,objectOutput,required,standard } from "./native-tool";
+import { financial,usdAmount } from "./payment-facts";
 
 const eventInput = z.object({ id: z.string().min(1).max(64) }).strict();
 

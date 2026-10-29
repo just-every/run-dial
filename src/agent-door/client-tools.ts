@@ -3,7 +3,7 @@ import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
 import { stateDigest } from "./booking-native-state";
-import { nativeTool, objectOutput, standard } from "./native-tool";
+import { nativeTool,objectOutput,standard } from "./native-tool";
 
 const email = z.string().trim().email().max(320);
 const page = z.object({ limit: z.number().int().min(1).max(100).default(100), offset: z.number().int().min(0).max(1_000_000).default(0) }).strict();
@@ -50,7 +50,7 @@ export function clientTools(services: AppServices): ToolDefinition[] {
       classify: () => standard(), revisionType: "integer", revision: args => revision(args.email),
       summary: async args => ({ target: { email: (await known(args.email)).email }, items: ["Add a private client note", args.body] }),
       async run(args, ctx) {
-        const id = await records.add(args.email, { body: args.body, operatorId: ctx.person.id });
+        const id = await records.add(args.email, { body: `${ctx.actor.label}\n\n${args.body}`, operatorId: ctx.person.id });
         if (!id) throw new ToolRefusal("client_not_found");
         ctx.emit("dial.client.note_added", uri(args.email), { id, actorLabel: ctx.actor.label });
         return { result: { id } };

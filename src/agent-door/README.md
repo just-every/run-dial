@@ -36,7 +36,7 @@ operator APIs, admins have a move-in exception, and members have no operator
 product access. Business identity must never select authority by token email or
 create equal-owner accounts for a team admin/member.
 
-Additive migrations `0090_business_settings.sql` and `0091_business_people.sql`
+Additive migrations `0093_business_settings.sql` and `0094_business_people.sql`
 prepare the signed settings store and durable Business IDs. The native setup-owner
 record remains authoritative. Unknown subjects, inactive or allow-list-excluded
 owners cannot sponsor calls. Business settings, native bindings and invitation
