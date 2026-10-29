@@ -57,7 +57,7 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   await page.getByRole("combobox", { name: "Location kind", exact: true }).selectOption("phone");
   await page.getByLabel("Private link, number, or address", { exact: true }).fill("+1 202 555 0100");
   onPhase("first-run event save");
-  await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/availability$/);
+  await page.getByRole("button", { name: "Save changes", exact: true }).click(); await page.waitForURL(/\/hours$/);
   // A request-only event keeps its empty exception; your set-once hours stay available to other events.
   const eventId = new URL(page.url()).pathname.split("/").at(-2);
   const own = page.getByRole("radio", { name: "Its own hours", exact: true });
@@ -71,7 +71,8 @@ export async function completeFirstRun(page, origin, onPhase = () => {}) {
   }
   await page.reload(); await expect(own).toBeChecked();
   assert.deepEqual((await (await page.request.get(origin + `/api/app/event-types/${eventId}`)).json()).availability, [], "hours edits survive a reload without a Save button");
-  await page.getByRole("link", { name: "Back to event", exact: true }).click();
+  await page.getByRole("button", { name: "Close hours", exact: true }).click();
+  await page.waitForURL(/\/event-types\/[A-Z0-9]{26}$/);
   onPhase("first-run request publication");
   await page.getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("button", { name: "Open requests", exact: true }).click();
