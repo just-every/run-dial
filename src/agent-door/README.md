@@ -37,6 +37,8 @@ adapter is installed, so failed recognizable Business tokens have no local path.
 Consent, current policy, pause, native revisions, scopes and named approvals stay
 in the copied pipeline. Mutations expose server summaries; native client notes
 name the agent as preparer and retain the sponsoring operator as native author.
+Client merge audit rows separately retain the agent actor, sponsoring owner and
+real named approvers; an agent merge is never recorded as a human operator act.
 
 Calendar disconnect uses the narrowing-only target schema and native connection
 record. `calendar.grants` witnesses the actual retained connection authority;

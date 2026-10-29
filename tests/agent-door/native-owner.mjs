@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import {calendarFixtureSecret} from './native-calendar.mjs';
 export const profile = {handle:'synthetic-dial-owner',name:'Avery Chen',title:'Scheduling coordinator',biography:'Meet with Avery to plan the next project.',timezone:'UTC',focusAreas:[],socialProof:[]};
 export const eventInput = (slug='synthetic-dial-meeting') => ({slug,title:'Project planning',description:'Plan the next project together.',durationMinutes:30,color:'#dcab3c',locationType:'fixed_link',locationLabel:'Meeting link',locationValue:'https://meet.example.invalid/planning',listed:true,alternativeRequestsEnabled:true,slotIncrementMinutes:30,minimumNoticeMinutes:0,bookingHorizonDays:60,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,postBookingRedirect:null,questions:[],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:0,endMinute:1440}))});
-export default async function initialize({request,origin,token,claim,fixtures}) {
+let nativeDatabase;
+export async function mergeAudits() {
+ assert.ok(nativeDatabase,'native owner lifecycle must initialize the disposable audit reader');
+ return (await nativeDatabase.prepare("SELECT actor_type,actor_id,reason FROM anonymized_audit WHERE entity_kind='client' AND action='merged' ORDER BY happened_at,id").all()).results;
+}
+export default async function initialize({request,origin,token,claim,fixtures,database}) {
  const post=(path,body,headers={})=>request(new URL(path,origin).href,{method:'POST',redirect:'manual',headers:{Origin:origin,'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
  const raw=await post(claim.path,{token,displayName:'Avery Chen'}); assert.equal(raw.status,403,'signed endpoint refuses raw setup token');
  const owner=await post(claim.path,{token:claim.token,displayName:'Avery Chen',returnTo:'/app'}); assert.equal(owner.status,303,'signed owner claim opens native session');
@@ -16,5 +21,6 @@ export default async function initialize({request,origin,token,claim,fixtures}) 
  await fixtures.set('https://synthetic-dial-site.example',{});
  await data('/api/app/profile',profile,'PATCH');
  calendarFixtureSecret(token);
+ nativeDatabase=await database('DB');
  return owner;
 }

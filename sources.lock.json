@@ -5161,7 +5161,7 @@
       "executable": false
     },
     "src/agent-door/client-tools.ts": {
-      "sha256": "ece25d7c44efabf75ce1d91c6168ff0d2c10e4de44d33ca253761be8ca72dd24",
+      "sha256": "ecae011aee6d8169ab99c104070ed93cd37b99dee51f4855a9cf5b6dcfa4ba28",
       "executable": false
     },
     "src/agent-door/custom-tools.ts": {
@@ -5233,7 +5233,7 @@
       "executable": false
     },
     "src/agent-door/README.md": {
-      "sha256": "a5af5f7d4ef9977d13ad764ab1f1dc88170bee53b4e585a553a16bf7ce2e2620",
+      "sha256": "0ddfcbdfaca0c8bcd24be2010b04a84db7d265fca8469c0fb47525181323a369",
       "executable": false
     },
     "src/agent-door/reporting-tools.ts": {
@@ -6105,7 +6105,7 @@
       "executable": false
     },
     "src/core/features/clients/records.ts": {
-      "sha256": "975c0dd70b0af458a2f71cf77f579b318b93fa47388ae29b045d2320466aa901",
+      "sha256": "de9e87561545e4125bf3d3ab17e6295e1d2cfe23e6ba6f5638a49d967837ee38",
       "executable": false
     },
     "src/core/features/clients/remember-routes.ts": {
@@ -8637,7 +8637,7 @@
       "executable": false
     },
     "tests/agent-door/core-journey.mjs": {
-      "sha256": "f4e70e94bcc19c49282a895d23d68b71c81b3df9c47911c8bf89d10b5c8a6169",
+      "sha256": "46d765bfa2250d40a820fe98e03f98d0f50d7334453a3d0fe8a029abee8b46ee",
       "executable": false
     },
     "tests/agent-door/native-calendar.mjs": {
@@ -8645,7 +8645,7 @@
       "executable": false
     },
     "tests/agent-door/native-owner.mjs": {
-      "sha256": "38d1711730f095835940317fa1bcdcb75956d1be37d8c81a87f81f2eb33d2e0d",
+      "sha256": "0c457f5419ba96feeaa1e5c51cf0fdc73ac27152c30573bd35bd9c6721001f3f",
       "executable": false
     },
     "tests/agent-door/phase-fixtures.mjs": {
