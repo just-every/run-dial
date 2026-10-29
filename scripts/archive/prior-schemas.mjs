@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { migrationReplay } from '@runeditrun/rer/modules/portability/migration-history';
+import { policy as archivePolicy, schemaIdentity } from '@runeditrun/rer/modules/portability/catalogue';
 import { applicationCatalog, catalogQuery } from './catalog.mjs';
 import { migrationFiles } from './schema.mjs';
 import { exported } from './policy.mjs';
@@ -86,16 +86,23 @@ export const rowUpgrades = {
  * guarded json_set of 0063 and 0064 does). A set whose schema matches the current
  * one (later migrations changed only data) is left to Base's own migration placement. */
 export async function priorSchemas(policy) {
-  const files = await migrationFiles(), result = new Map();
-  const identity = names => migrationReplay(files.map(m => ({ name: m.file, statements: [m.sql], sha256: m.sha256 })), policy).schemaAfter(names);
-  const current = await identity(files.map(m => m.file));
+  const files = await migrationFiles(), result = new Map(), snapshots=new Map();
+  let first=files.length;
+  while(first>0&&Object.hasOwn(rowUpgrades,files[first-1].file))first--;
+  // Reuse the same forward replay for every accepted prefix. Each snapshot still
+  // uses Base's canonical schema identity and the exact application catalog.
+  const db=new DatabaseSync(':memory:'),config=archivePolicy(policy);
+  const binding={prepare(sql){const query=db.prepare(sql);let values=[];return {bind(...args){values=args;return this;},async all(){return {results:query.all(...values)};}};}};
+  try{
+    for(let index=0;index<files.length;index++){
+      db.exec(files[index].sql);
+      if(index+1>=first)snapshots.set(index+1,{schema:await schemaIdentity(binding,config),catalog:applicationCatalog(db.prepare(catalogQuery).all())});
+    }
+  }finally{db.close();}
+  const current=snapshots.get(files.length).schema;
   for (let k = files.length - 1; k > 0 && Object.hasOwn(rowUpgrades, files[k].file); k--) {
     const earlier = files.slice(0, k), later = files.slice(k).map(m => rowUpgrades[m.file]);
-    const db = new DatabaseSync(':memory:');
-    let catalog;
-    try { for (const { sql } of earlier) db.exec(sql); catalog = applicationCatalog(db.prepare(catalogQuery).all()); }
-    finally { db.close(); }
-    const schema = await identity(earlier.map(m => m.file));
+    const {schema,catalog}=snapshots.get(k);
     if (schema === current) continue;
     const proof = JSON.stringify({ migrations: earlier.map(({ file, sha256 }) => ({ file, sha256 })), catalog });
     const emptyTables = exported.filter(name => !catalog.some(entry => entry.type === 'table' && entry.name === name));

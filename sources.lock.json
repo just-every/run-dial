@@ -4028,7 +4028,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "310277a6874419d95381e3001314d5445f3e71f2b1a76dcff5b8c8c1e9bd1ec4",
+      "sha256": "0443b46aa32aca667ed6f92d2bf7c225e9700b7f4a9f180a78d2b7fdff3f0d4e",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
