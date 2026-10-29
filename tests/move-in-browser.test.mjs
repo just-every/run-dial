@@ -5,7 +5,7 @@ import { tmpdir, userInfo } from 'node:os';
 import { resolve } from 'node:path';
 import { contract } from './contract.mjs';
 import { evidencePath } from '../scripts/evidence-path.mjs';
-contract('DATA-003','real hydrated move-in journeys and axe at 1440 and 390 cover reports, choices, apply, booking occupancy and undo',async()=>{
+contract(['DATA-003','MIGRATE-004'],'real hydrated move-in journeys and axe at 1440 and 390 cover reports, choices, apply, booking occupancy and undo',async()=>{
  for(const width of [1440,390]){
   const state=await mkdtemp(resolve(tmpdir(),'dial-move-in-browser-'));const origin='http://127.0.0.1:15754',config=resolve('tests/move-in/browser.wrangler.toml');
   const env={...process.env,CI:'1',DIAL_WRANGLER_CONFIG_PATH:config,DIAL_PERSIST_STATE_DIR:state,DIAL_INSPECTOR_PORT:'15755',DIAL_REVIEW_ORIGIN:origin,DIAL_MOVE_IN_WIDTH:String(width)};let server,output='';
