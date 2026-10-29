@@ -16,7 +16,7 @@ export async function subscriptions(rt: Runtime, request: Request, rpc: Rpc, pri
     if (typeof uri !== 'string' || uris.includes(uri)) continue
     const resource = rt.options.resources?.find(resource => templateMatches(resource.uriTemplate, uri))
     if (resource && (!resource.scope || principal.scopes.includes(resource.scope))) {
-      try { if (await resource.read(uri, { person: principal.person, db: rt.options.db })) uris.push(uri) } catch { /* Visibility refusals do not reveal existence. */ }
+      try { if (await resource.read(uri, { ...principal, db: rt.options.db })) uris.push(uri) } catch { /* Visibility refusals do not reveal existence. */ }
     }
   }
   const filter = { ...(requested?.toolsListChanged === true ? { toolsListChanged: true } : {}), ...(uris.length ? { resourceSubscriptions: uris } : {}) }
@@ -52,7 +52,7 @@ export async function subscriptions(rt: Runtime, request: Request, rpc: Rpc, pri
           for (const row of rows) {
             cursor = row.sequence
             const event: AgentEvent = JSON.parse(row.event)
-            if (uris.includes(event.uri) && await eventVisible(rt, person.person, event)) notify('notifications/resources/updated', { uri: event.uri })
+            if (uris.includes(event.uri) && await person.scopes.includes('events:read') && await eventVisible(rt, person, event)) notify('notifications/resources/updated', { uri: event.uri })
           }
           if (filter.toolsListChanged) {
             const next = await listed()
