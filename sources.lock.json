@@ -5145,7 +5145,7 @@
       "executable": false
     },
     "src/agent-door/calendar-tools.ts": {
-      "sha256": "6ff524f237e6bd95b208c2e321776a5a5c24c0c30eed6dae3bf087429c5bd79a",
+      "sha256": "8ef1ac8a81112fb60942727eede826e708b02e5a191ae902c17ac4412e7e3fa7",
       "executable": false
     },
     "src/agent-door/client-tools.ts": {
