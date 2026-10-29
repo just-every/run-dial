@@ -888,7 +888,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "cc7bbf3e6af2005869a6a0371e9679bf4c4e85ce207e7e4f8f4d587cf8d7932f",
+      "sha256": "ab06eae67deeb43bd0cd8608e7bd346589c0762babbe130926a47d6cc9da2387",
       "executable": false
     },
     "BASELINE.md": {
@@ -2060,7 +2060,7 @@
       "executable": false
     },
     "modules/agent-door/ADOPTING.md": {
-      "sha256": "32226371c21871a96294e5fb7b4b0669e0ee48c576b56db0d91ca649db1d0d12",
+      "sha256": "4c2308559c5d989c2547805aeb4a42b1cb06939942e79a44b6a36c0b9a71c0be",
       "executable": false
     },
     "modules/agent-door/approval-execution.ts": {
@@ -4256,11 +4256,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "afc2d2ea5e36d4fa085c9bfcbf63c357d5f2bb4152b6c8e16839420ea241cf8a",
+      "sha256": "2caa03fa8f11b767bbb728e776c4baaef39d1686a8ccebe8449c24839ea458f8",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "b93adb6286e669b0b152337bfbd4ca8263813171dee705d39e65f2cf7a3cc7bb",
+      "sha256": "7af3668a6033d52cefc71065e2d7100b545a776df09a6adc5662ccadd1c52418",
       "executable": false
     },
     "public/brand/band.svg": {
