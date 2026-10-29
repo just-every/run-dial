@@ -23,7 +23,12 @@
   .event-payment-deposit { grid-column:3 / span 4; grid-row:1; }
   .event-payment-price-confirm,.event-payment-lengths { grid-column:1 / -1; }
   .event-payment-balance { grid-column:1 / -1; }
-  /* The three terms share their label and field rows, so labels that wrap unevenly still leave the fields level. */
+  /* The three terms share their label and field rows, so labels that wrap unevenly still leave the fields level. A subgrid
+     adds no rows of its own, so a failed save or a confirm under a field takes a further row (one each when both show)
+     instead of being clamped onto the field, and the fee keeps its own height beside it. */
   .event-payment-window,.event-payment-fees > div { grid-column:span 2; grid-row:span 2; grid-template-rows:subgrid; }
+  .event-payment-window:has(> :nth-child(3)),.event-payment-fees > div:has(> :nth-child(3)) { grid-row:span 3; }
+  .event-payment-fees > div:has(> :nth-child(4)) { grid-row:span 4; }
+  .event-payment-fees input { align-self:start; }
   .event-payment-account { grid-column:1 / -1; }
 }

@@ -5960,7 +5960,7 @@
       "executable": false
     },
     "src/core/features/event-types/ui/advanced-sheet.css": {
-      "sha256": "0d011e990a235f8cff6512fa42706253e3bd9b126b2ca822400b2fa56adfc1ae",
+      "sha256": "e99ad6dc6318c132dab4352310be38a934c91ca797df1a30722e8e0636990384",
       "executable": false
     },
     "src/core/features/event-types/ui/advanced-sheet.tsx": {
