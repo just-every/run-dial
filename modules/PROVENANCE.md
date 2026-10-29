@@ -89,16 +89,21 @@ the byte-exact Base copy claims and does not change the upstream revision.
 
 The 18 October 2026 LINK-002 round pins the published CLI package to rer 0.2.50 and reruns its frozen install. Recorded vendored Base copies retain their existing source revisions and bytes; the CLI package pin is separate from those copy claims.
 
-The agent-door and business-settings source modules, with their theme/icon
-helpers, are refreshed to Base `e1b4265eb0d839a67dae3c36a04f83fa48c9d480`.
-They are retained source for native adoption; the Worker does not yet mount
-them. New additive migrations prepare Business settings and durable person IDs;
-the agent-door SQL is not yet applied. The CLI remains the separately pinned
-published package. Earlier migration bytes and native authority are unchanged.
+The mounted agent-door and business-settings modules, with their theme/icon
+helpers, are refreshed through the installed 0.2.87 CLI to the immutable
+`rer-v0.2.87` source commit `62f07fe6ecfdeae1a90bf6e65a02abae288996b3`.
+The authenticated source archive supplies the four selected records; all source
+bytes, modes and prior membership are retained by `base-copies.json`.
+The Worker mounts the native synchronous core door before app setup and session
+redirects. Additive migrations 0090–0092 establish Business identities and door
+stores. Applied migration bytes are unchanged.
 
-Native adapters and ten resource readers are prepared under `src/agent-door`.
-They are not mounted or proven as an agent surface. The combined Base head
-supports MCP `2026-07-28` and `2025-11-25`. It deliberately refuses
-`2025-03-26` with `UnsupportedProtocolVersion` (`-32022`); this is the supported
-contract, not a protocol gap. Its copied transport remains byte-exact.
-The directory README records the outstanding native integration boundaries.
+The declared native tools live under `src/agent-door`; ten resource readers
+remain prepared, unmounted and undeclared. MCP supports `2026-07-28` and
+`2025-11-25`, and refuses `2025-03-26` with `UnsupportedProtocolVersion` (-32022).
+The directory README records current native boundaries and upstream limitations.
+
+Public-surface copies, including `src/base/run-site.ts` and demo navigation,
+retain their existing `6d38b54a6401879989e8d1f7ab4a02ffbdb4c46c` pin and bytes.
+They are outside this door refresh. Native runtime source is distinct from the
+published CLI pin, and neither is evidence that optional families are complete.

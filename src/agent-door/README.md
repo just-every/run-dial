@@ -2,14 +2,14 @@
 
 Dial mounts one copied `createAgentDoor` in the production Worker, inside native
 archive admission and ahead of application authentication and setup redirects.
-The runtime and CLI pin is `rer-v0.2.86`, Base commit
-`f96363bf919ea3e7ed1837daba6894810a50e4a6`. Copied transport, policy and validators
+The runtime and CLI pin is `rer-v0.2.87`, Base commit
+`62f07fe6ecfdeae1a90bf6e65a02abae288996b3`. Copied transport, policy and validators
 are unchanged. MCP negotiates `2026-07-28` and `2025-11-25`; `2025-03-26` refuses
 with HTTP 400 / JSON-RPC -32022.
 
 The declared capabilities are `tools`, `policy`, `pause`, `audit`, `idempotency`,
 in `agent-surface.json` and the options passed to `createAgentDoor`. Version
-0.2.86 accepts this field but does not scope optional families. Base #670 must
+0.2.87 accepts this field but does not scope optional families. Base #670 must
 supply that behavior before this adoption can be complete. In particular, the
 copied runtime always adds `dial.events.list`; Dial does not declare the events
 family or silently add it to its specialist contract to satisfy the old validator.
@@ -63,10 +63,11 @@ The following families remain undeclared (core subset, 2026-10-29):
   locations are `bookings/write-commands.ts`, `bookings/reminder-commands.ts`,
   `bookings/service.ts`, `polls/service.ts`, `availability-requests/service.ts`,
   `delivery/recovery.ts` and `payments/`. No agent continuation is wired, and the
-  copied `operation.ts` and `pipeline.ts` are unchanged. G-op-fanout remains a Base
-  dependency for a later adoption, not an excuse to bypass consent.
+  copied `operation.ts` and `pipeline.ts` are unchanged from their recorded
+  0.2.87 source. That release fixes G-op-fanout; queued lifecycle stays undeclared
+  because Dial has not integrated or proven native continuation custody.
 - **events/subscriptions:** retained change feeds, subscriptions and delivery.
-  Version 0.2.86 exposes its built-in listing regardless of the declared subset.
+  Version 0.2.87 exposes its built-in listing regardless of the declared subset.
 - **multiSponsor / ownerNativeAdministration:** Business team provisioning,
   operator invitations/roles, and native human confirmation of attendance stay
   with native people and screen doors. A company approval does not invent the
@@ -90,7 +91,7 @@ jobs from AGENT-002 onward are not claimed as existing native tools.
 and replay, completes native session-bound OAuth, and creates native fixture
 records through person/public routes. `provider-edge.mjs` replaces only exact
 network origins, validates the real request credentials/payload and returns
-provider-shaped receipts. Google/SendGrid and Microsoft/Resend are exercised through native OAuth, health and grant revocation; website and DNS reads keep their exact-origin fixtures. All opaque values are generated per run. The fixture
+provider-shaped receipts. The provider module covers Google/SendGrid and Microsoft/Resend native OAuth, health and grant revocation; website and DNS reads keep their exact-origin fixtures. All opaque values are generated per run. The fixture
 control is test-only, never a production route. The surface journey records real
 native tool/class calls, narrowing witnesses and injection arguments. Base's
 normal verification exits remain unchanged and failures must be reported.
@@ -104,21 +105,27 @@ evidence stays retained; erasure never invents a person's approval or an Undo.
 The public Run site and demo navigation records retain their existing 6d38b54a
 pin and bytes. Mounting the agent door does not refresh those public records.
 
-Known upstream completion limits remain visible. The 0.2.86 harness reuses native
-fixture state across autonomous, held and blocked passes, so a revoked OAuth
-connection, merged client or revoked link is not prepared afresh between passes
-(`conformance/index.mjs:27-29`). Native adapters must retain their real refusals.
-The runtime also resolves targets before replay lookup (`pipeline.ts:71`) and
-reclassifies before returning an approved result (`pipeline.ts:104-121`). A
-completed deletion can therefore return `not_found` on its receipt retry, and a
-completed disable/clear can return `review_required` after its native risk has
-fallen to standard. Preserve the once-only native effect and its truthful current
-classes; do not fabricate a record, replay an outside effect or freeze a risk
-class to hide these upstream receipt limitations.
+The native owner initializer rejects a raw setup token (403), accepts its signed
+claim (303), and refuses replay (409). Per-phase fixtures reconnect the native
+OAuth flow and create fresh native events, links, polls and distinct clients
+through the existing person and public routes. Every public fixture participant
+has an isolated synthetic network identity; real rate limits remain active.
+The fixture module is test-only and supplies no production route or SQL writer.
+
+The canonical BASE-AGENT clauses come only from `rer door clauses --write`.
+Their presence and generated status rows do not claim completed acceptance.
+Dial's contract validator uses the same clause parser as the contract generator
+and maps the shared clauses explicitly in `seed.json`.
+
+Known upstream receipt limits remain visible on this pin. The runtime resolves
+native targets and reclassifies before returning an approved result. Completed
+deletion can return `not_found` on its receipt retry, and completed disable,
+clear or disconnect can return a new review/refusal after the native effect.
+Preserve once-only native effects and truthful current classes; never fabricate a
+record, replay an outside effect or freeze risk to hide this receipt limitation.
 
 Legacy archive compatibility also needs an upstream change at this pin. The
-listed-release version 2 archive has no schema-object inventory. Base 0.2.86
-`modules/portability/import.mjs:39` refuses its older destination identity before
-Dial's exact prior schema proof and declared row upgrades can run. Native restore
-stays empty on refusal. No unverified-schema acknowledgment is added, no archive
-is altered, and the native DATA-001 requirement is retained.
+listed-release version 2 archive has no schema-object inventory. The published
+portability importer refuses it before Dial's exact prior schema proof and
+row upgrades can run. Native restore stays empty on refusal. No unverified-schema
+acknowledgment is added and the native DATA-001 requirement is retained.
