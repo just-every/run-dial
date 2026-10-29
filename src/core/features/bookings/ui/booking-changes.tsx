@@ -13,6 +13,7 @@ type Props = { booking: BookingRecord; onChanged(notice?: string): Promise<void>
 export function BookingChanges({ booking, onChanged, onCancel, renderActions }: Props) {
   const hydrated = useHydrated();
   const conflictsOpener = useRef<HTMLButtonElement>(null);
+  const cancelOpener = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -42,15 +43,16 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
     } catch { setNotice("Restoration could not be checked. Refresh the booking before trying again."); }
     finally { setWorking(false); }
   }
-  async function cancel() {
-    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  /** From the conflicts dialog, which closes, focus goes to the page's own Cancel booking, as if it had been pressed there. */
+  async function cancel(fromDialog = false) {
+    returnFocus.current = fromDialog ? cancelOpener.current : document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setWorking(true); setNotice("");
     try {
       const response = await api.api.app.bookings[":id"].money.$get({ param: { id: booking.id } });
       if (!response.ok) { setNotice(await errorMessage(response)); return; }
       const { money } = await response.json() as { money: BookingRecord["money"] | null };
       if (money) { setEditing(false); setRequesting(false); setConflictsOpen(false); setCancelling(current => !current); }
-      else await onCancel(booking.id);
+      else { setConflictsOpen(false); await onCancel(booking.id); }
     }
     catch { setNotice("Cancellation could not be checked. Refresh the booking before trying again."); }
     finally { setWorking(false); }
@@ -64,12 +66,12 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
         const current = conflict.occurrenceId === booking.occurrence.id;
         const actionable = current && conflict.state === "open" && booking.state !== "cancelled";
         return <article key={conflict.id} className="grid min-w-0 gap-3 border-t border-[#e6d5ae] pt-3 text-sm">
-          <div className="flex flex-wrap items-center gap-2"><Badge tone={actionable ? "warning" : "neutral"}>{!current ? "Previous booking time" : conflict.state === "restored" ? "Restoration requested" : conflict.state}</Badge></div>
+          <div className="flex flex-wrap items-center gap-2"><Badge tone={actionable ? "warning" : "neutral"}>{!current ? "Previous booking time" : conflict.state === "restored" ? "Restoration requested" : conflict.state === "cancelled" ? "Booking cancelled" : "Needs your decision"}</Badge></div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div><h4 className="font-semibold">Booking time</h4><p>Host: {timeRange(conflict.canonicalStartAt, conflict.canonicalEndAt, booking.hostTimezone)}</p>{booking.inviteeTimezone !== booking.hostTimezone ? <p>Invitee: {timeRange(conflict.canonicalStartAt, conflict.canonicalEndAt, booking.inviteeTimezone)}</p> : null}<p className="mt-2 break-words"><strong>Booking location: </strong>{conflict.canonicalLocation || "No location"}</p></div>
             <div><h4 className="font-semibold">Calendar time</h4><p>Host: {timeRange(conflict.externalStartAt, conflict.externalEndAt, booking.hostTimezone)}</p>{booking.inviteeTimezone !== booking.hostTimezone ? <p>Invitee: {timeRange(conflict.externalStartAt, conflict.externalEndAt, booking.inviteeTimezone)}</p> : null}<p className="mt-2 break-words"><strong>Calendar location: </strong>{conflict.externalLocation ?? "Not provided by calendar"}</p></div>
           </div>
-          {actionable ? <div className="flex flex-wrap gap-3"><Button variant="secondary" type="button" onClick={() => void restore(conflict.id)}>Restore booking time</Button><Button variant="danger" type="button" onClick={() => void cancel()}>Cancel booking instead</Button></div> : null}
+          {actionable ? <div className="flex flex-wrap gap-3"><Button variant="secondary" type="button" onClick={() => void restore(conflict.id)}>Restore booking time</Button><Button variant="danger" type="button" onClick={() => void cancel(true)}>Cancel booking instead</Button></div> : null}
         </article>;
       })}
     </section></FocusDialog> : null}</> : null}
@@ -81,7 +83,7 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
         {booking.state !== "cancelled" ? <>
           {!futureStart ? <Button variant="secondary" type="button" disabled={!booking.eventTypeId} onClick={() => { setRequesting(false); setCancelling(false); setEditing(current => !current); }}>Reschedule booking</Button> : null}
           {hydrated && booking.eventTypeId && futureStart && (booking.rescheduleRequest?.archiveHistorical || booking.rescheduleRequest?.state !== "open") ? <Button variant="secondary" type="button" aria-expanded={requesting} onClick={() => { setEditing(false); setCancelling(false); setRequesting(current => !current); }}>Ask invitee to pick a new time</Button> : null}
-          <Button variant="danger" type="button" aria-expanded={cancelling} onClick={() => void cancel()}>Cancel booking</Button>
+          <Button ref={cancelOpener} variant="danger" type="button" aria-expanded={cancelling} onClick={() => void cancel()}>Cancel booking</Button>
         </> : null}
       </>
     )}
