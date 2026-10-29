@@ -6,7 +6,10 @@ export async function workflowRuns(db:D1Database,id:string,limit:number,after:st
   CASE WHEN o.state='delivered' THEN 'sent' WHEN o.id IS NULL OR o.last_error IN ('workflow_authority_revoked','scope_revoked') THEN 'skipped' WHEN o.state='failed' THEN 'failed' ELSE 'pending' END AS outcome,
   CASE WHEN o.id IS NULL THEN 'destination_removed' ELSE o.last_error END AS reason,d.created_at AS createdAt
   FROM workflow_webhook_runs d LEFT JOIN webhook_deliveries o ON o.id=d.delivery_id WHERE d.workflow_id=?
+  UNION ALL SELECT d.id AS id,NULL AS bookingId,d.routing_submission_id AS submissionId,d.routing_submission_id AS eventKey,d.recipient_id AS recipient,
+  CASE WHEN o.state='succeeded' THEN 'sent' WHEN o.state='failed' AND o.last_error_code IN ('workflow_authority_revoked','operator_removed') THEN 'skipped' WHEN o.state='failed' THEN 'failed' ELSE 'pending' END AS outcome,
+  o.last_error_code AS reason,d.created_at AS createdAt FROM workflow_routing_mail_runs d JOIN delivery_outbox o ON o.id=d.outbox_id WHERE d.workflow_id=?
   UNION ALL SELECT d.id AS id,d.booking_id AS bookingId,NULL AS submissionId,d.event_key AS eventKey,'hubspot' AS recipient,
   CASE WHEN d.state='sent' THEN 'sent' WHEN d.state='skipped' THEN 'skipped' WHEN d.state='failed' THEN 'failed' ELSE 'pending' END AS outcome,
-  d.reason,d.created_at AS createdAt FROM workflow_crm_runs d WHERE d.workflow_id=?) WHERE id>? ORDER BY id LIMIT ?`).bind(id,id,id,after,limit).all<{id:string}>()).results;
+  d.reason,d.created_at AS createdAt FROM workflow_crm_runs d WHERE d.workflow_id=?) WHERE id>? ORDER BY id LIMIT ?`).bind(id,id,id,id,after,limit).all<{id:string}>()).results;
 }

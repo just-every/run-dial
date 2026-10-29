@@ -1,3 +1,4 @@
+import { routingMailWorkflows } from "./workflow-routing-mail.mjs";
 import { crmWorkflows } from "./workflow-crm.mjs";
 import { webhookWorkflows } from "./workflow-webhooks.mjs";
 import { lifecycleWorkflows } from "./workflow-lifecycle.mjs";
@@ -39,6 +40,7 @@ export async function workflowJourney({call,json,issue,fixture,week,db,webhookEd
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,options)).status,404);
   assert.equal((await call(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:"synthetic-dial-remove-workflow"})).headers.get("Idempotent-Replay"),"true");
   await webhookWorkflows({call,json,issue,fixture,week,db,webhookEdge,tick});
+  await routingMailWorkflows({call,json,issue,fixture,db,tick});
   await crmWorkflows({call,json,issue,fixture,week,db,crmEdge,tick});
   const lifecycleManager=await issue(["workflows:manage","bookings:read","bookings:write"]);
   const lifecycleSlots=(await json(`/api/v1/availability?eventTypeId=${fixture.eventId}&week=${week}&inviteeTimezone=UTC`,{secret:lifecycleManager.secret})).slots;

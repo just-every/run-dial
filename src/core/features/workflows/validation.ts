@@ -14,7 +14,7 @@ export async function workflowDestinationError(c:Context<AppEnvironment>,input:C
   if(!credential.scopes.includes("routing:manage"))return refusal(c,403,"scope_forbidden","Routing workflows require the routing grant.");
   const form=input.routingFormId?await c.get("services").routing.get(input.routingFormId):undefined;
   const host=await hostAllowed(c,credential);
-  if(input.action!=="webhook")return refusal(c,400,"invalid_workflow_action","Routing-only actions require a webhook destination.");
+  if(!["webhook","email-hosts"].includes(input.action))return refusal(c,400,"invalid_workflow_action","Routing-only actions require a webhook destination or the owning host email.");
   if(!form||form.hostId!==host?.id||credential.teamId)return refusal(c,404,"not_found","This routing form is outside the workflow grant.");
  }else if(input.routingFormId)return refusal(c,400,"invalid_workflow_source","A routing form requires the routing-only trigger.");
  if(input.action==="webhook"){

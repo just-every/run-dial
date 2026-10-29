@@ -29,6 +29,8 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
  .get("/api/v1/workflows/:id/preview",async c=>{
   const credential=c.get("apiCredential"),denied=await requireScope(c,credential,"bookings:read");if(denied)return denied;
   const row=await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE id=? AND removed_at IS NULL").bind(c.req.param("id")).first<WorkflowRule>();
+  if(!row||!await eventAllowed(c,credential,row.event_type_id))return refusal(c,404,"not_found","This workflow does not exist.");
+  if(workflowTrigger(row)==="routing-without-booking")return refusal(c,400,"invalid_workflow_source","Routing notices have no booking preview or booking variables.");
   const booking=await bookingAllowed(c,credential,c.req.query("bookingId")??"");
   if(!row||!booking||booking.eventTypeId!==row.event_type_id)return refusal(c,404,"not_found","This workflow or booking does not exist.");
   const data=await new BookingCorrespondenceRepository(c.get("apiDatabase")).read(booking.id,booking.occurrence.id,c.get("runtime"));
@@ -64,7 +66,7 @@ export const workflowRoutes=new Hono<ApiEnvironment>()
   const config={...workflowView(row),...input};
   const destinationError=await workflowDestinationError(c,config);if(destinationError)return destinationError;
   const event=await c.get("services").eventTypes.getEventType(row.event_type_id);
-  const invalid=workflowTemplateErrors({subject:input.subject??row.subject,text:input.text??row.text,action:input.action??workflowAction(row)},event?.questions??[]);
+  const invalid=workflowTemplateErrors({subject:input.subject??row.subject,text:input.text??row.text,action:input.action??workflowAction(row),trigger:input.trigger??workflowTrigger(row)},event?.questions??[]);
   if(invalid.length)return refusal(c,400,"invalid_template",`Unavailable workflow variable: ${invalid.join(", ")}`);
   return idempotent(c,input,async()=>{
    const now=nowIso(),enabled=input.enabled??row.enabled===1;

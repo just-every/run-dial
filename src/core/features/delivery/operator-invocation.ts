@@ -1,3 +1,4 @@
+import { routingWorkflowMailAuthorized } from "../workflows/routing-mail";
 import { ProviderFailure } from "../../platform/calendar";
 import type { MailSender } from "../../platform/mail";
 import { nowIso } from "../../shared/ids";
@@ -14,6 +15,7 @@ export async function invokeOperatorMail(binding: D1Database, mail: MailSender, 
     throw new ProviderFailure("operator_removed", false);
   }
   const payload = JSON.parse(row.payload);
+  if(payload.messageKind==="routing_workflow"&&!await routingWorkflowMailAuthorized(binding,outboxId))throw new ProviderFailure("workflow_authority_revoked",false);
   const message = toMailMessage(payload.wireMail, payload.wireMail?.idempotencyKey);
   if (!message) throw new ProviderFailure("invalid_delivery_payload", false);
   const unresolved = await binding.prepare("SELECT 1 FROM operator_mail_invocations WHERE provider_key = ? AND state = 'invoking'")

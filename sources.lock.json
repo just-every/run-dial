@@ -2083,6 +2083,10 @@
       "sha256": "f3fb6e1d1331b43638ca27fa8dc8ae695908be63eebb7b6d273e87cbea398df5",
       "executable": false
     },
+    "migrations/core/0102_routing_workflow_mail.sql": {
+      "sha256": "d01106e29df8f6ef53a1eca023693780a0e3811cb0e73cf45c48ea0049de301a",
+      "executable": false
+    },
     "modules/d1-transport/index.d.mts": {
       "sha256": "b1dcfba529210c9237fa257faa0da8c9062bef946961ba8edeb8af7e171611f3",
       "executable": false
@@ -4040,7 +4044,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "445fbbd58513737244bb18d54baded882979efd811c51897a15cede10a79eceb",
+      "sha256": "70b9af1de53255cef821ad938237a91b821702464dfe7b830b445ef2d95f1d58",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
@@ -5716,7 +5720,7 @@
       "executable": false
     },
     "src/core/features/delivery/operator-invocation.ts": {
-      "sha256": "3e9347b85b501cf1ee7eac7c62527ebc64ca239cd4461da11aae3cc2794fc19a",
+      "sha256": "9d46db0badb88e43708ec04725ae754da0882acc42ab851d796dc354b4e913b7",
       "executable": false
     },
     "src/core/features/delivery/operator-mail.ts": {
@@ -5740,7 +5744,7 @@
       "executable": false
     },
     "src/core/features/delivery/repository.ts": {
-      "sha256": "fcd27a9d77c52673def26985c5019d4dbfc3339b6a1fb5e88ce86b5a8775a0f1",
+      "sha256": "2660d0185600cba2431a0ee7c1dc30a8387f973932201d26ecbcb58b9f9a77d4",
       "executable": false
     },
     "src/core/features/delivery/request-mails.ts": {
@@ -5756,7 +5760,7 @@
       "executable": false
     },
     "src/core/features/delivery/service.ts": {
-      "sha256": "2906c876534f34f3436edd04bf9bbf0e2e9d9adaa395257294bbd0f282dd74b4",
+      "sha256": "f2bd3a89cbdd137203755cedc9465598c914bca40853767635401c98e52be394",
       "executable": false
     },
     "src/core/features/delivery/ui/mail-preferences.tsx": {
@@ -5832,7 +5836,7 @@
       "executable": false
     },
     "src/core/features/erasure/census.ts": {
-      "sha256": "4596854ad5b2f79d55852f9e961dcb1f3ef91a8dd84adba6ed2242f22f9d997a",
+      "sha256": "5c085ad7f10be7fe0868603b5217cda646033000bca30a2aad1ec2075ee8a136",
       "executable": false
     },
     "src/core/features/erasure/entitlements.ts": {
@@ -5852,7 +5856,7 @@
       "executable": false
     },
     "src/core/features/erasure/operator-graph.ts": {
-      "sha256": "f36b8d8bce6fcbd55e1d20bdb5b1cc10849a4012604206709537ccd40076e753",
+      "sha256": "c12965431f1bb600d58482135c515401d1e5c2b2de2ca3e8ea417393a4c3f6c6",
       "executable": false
     },
     "src/core/features/erasure/operator.ts": {
@@ -6756,7 +6760,7 @@
       "executable": false
     },
     "src/core/features/public-api/spec.ts": {
-      "sha256": "3fc1984da2b050bdd0415f94415bc7f462abdbca4ba8a1164c0d0afd0acd2dde",
+      "sha256": "1bd50bc9093caadd98aa985ad424939a7825a20aa5e4e5d35e9d84365aecb5aa",
       "executable": false
     },
     "src/core/features/public-api/support.ts": {
@@ -7432,7 +7436,7 @@
       "executable": false
     },
     "src/core/features/workflows/engine.ts": {
-      "sha256": "af9d0df0e39980d1880f75ddbd2e94649aac602f2ea501a9ff22fe8e656dfa6d",
+      "sha256": "ab15770c722f30f03cc098ee4c98d5841dbf8a56dccd65470b72cb8a85d9bdca",
       "executable": false
     },
     "src/core/features/workflows/index.ts": {
@@ -7440,15 +7444,19 @@
       "executable": false
     },
     "src/core/features/workflows/routes.ts": {
-      "sha256": "8a071da77bb2728c102bcd89d4ca2f21e0a1873d0d78afba24ee4158c7959ba8",
+      "sha256": "05b3ac30d2aa1e9bb0da58e77e897b9c1add3a89a54cc125a44e2c0210d6d919",
+      "executable": false
+    },
+    "src/core/features/workflows/routing-mail.ts": {
+      "sha256": "f9d77099380adb156f645dcaf6535a9eac52462101fc0ba4e2bf7bc7e7d29044",
       "executable": false
     },
     "src/core/features/workflows/runs.ts": {
-      "sha256": "b1606ff3634d30ce051c0ae90d358d817a6c4515da5649b69ef31488ddb659bb",
+      "sha256": "d68b249581c659dadd1c35ebaddf9d5f23bc9fb447121d7436143bb11f3f7cfa",
       "executable": false
     },
     "src/core/features/workflows/templates.ts": {
-      "sha256": "aeb4bfc1396d50928a545244f33587cd9528a72eb312a5e7edca3e388daec340",
+      "sha256": "b157d00046d1cfc20f5c0d48efcb5287aa40dbd23a33b509da3a8c0e75ef1fff",
       "executable": false
     },
     "src/core/features/workflows/types.ts": {
@@ -7456,7 +7464,7 @@
       "executable": false
     },
     "src/core/features/workflows/validation.ts": {
-      "sha256": "e9218975c7f0448b744dbe174f53b3232da4f103f10600f9c99f12599ec02852",
+      "sha256": "280e548904a5e7bb648afcc6394c77e412f56029f8b72675e250a60316936f6c",
       "executable": false
     },
     "src/core/features/workflows/webhooks.ts": {
@@ -7736,7 +7744,7 @@
       "executable": false
     },
     "src/core/shared/archive-exclusions.mjs": {
-      "sha256": "cd9165be6826040b85ed544e28229f9a55d4d0fb20d86d3d37bf994876288495",
+      "sha256": "479a4c2124393d10a6c4109b1e8751969e89388bd4eca88a89e8d81cbf8db71e",
       "executable": false
     },
     "src/core/shared/booking-horizon.ts": {
@@ -9923,12 +9931,16 @@
       "sha256": "47406a1f8ae64470b46dcca573c9a0da1894997018efcea8fb08c49d671e59cb",
       "executable": false
     },
+    "tests/public-api/workflow-routing-mail.mjs": {
+      "sha256": "dd9853d244de0c129e8b50351f716e556bead26f3bf3566fc0aac04b8ebe38c2",
+      "executable": false
+    },
     "tests/public-api/workflow-webhooks.mjs": {
       "sha256": "497cce836fcb67dd0c7faa52e13fa2a8b4b4e69eaaccb5f94f7450a8773e6305",
       "executable": false
     },
     "tests/public-api/workflows.mjs": {
-      "sha256": "00a9026a18bab5a7dcde72d9b47fdc72c0dffe6cb8d351951ede27000bc24ccc",
+      "sha256": "fbacfd6ccbad990f7eaa396a801e4d2422f27e199914e3705a932e12cb4749a2",
       "executable": false
     },
     "tests/public-blocking.test.mjs": {

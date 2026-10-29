@@ -1,3 +1,4 @@
+import { routingWorkflowMailAuthorized } from "../workflows/routing-mail";
 import { ConfirmationDeliveryRepository } from "./confirmation-repository";
 import { BookingCorrespondenceRepository } from "./correspondence-repository";
 import { and, asc, eq, isNull, lte, sql } from "drizzle-orm";
@@ -194,6 +195,8 @@ export class DeliveryRepository {
     const result = await this.binding.prepare("UPDATE delivery_outbox SET state = 'failed', last_error_code = ?, updated_at = ? WHERE state = 'succeeded' AND id IN (SELECT outbox_id FROM delivery_attempts WHERE provider_message_id = ?)").bind(errorCode, nowIso(), providerMessageId).run();
     return result.meta.changes > 0;
   }
+
+  async routingWorkflowMailAuthorized(outboxId:string){return routingWorkflowMailAuthorized(this.binding,outboxId);}
 
   async workflowMailAuthorized(workflowId: string, version: number, creatorId: string, record: DeliveryOutboxRecord) {
     if (!record.bookingId) return false;

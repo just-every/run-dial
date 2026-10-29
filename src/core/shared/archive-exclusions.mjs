@@ -1,5 +1,6 @@
 // Shared by native restore admission and erasure. These rows never travel in an archive.
 export const importExcluded = {
+  workflow_routing_mail_runs: "Installation-local routing email receipts; never replay on restore",
   workflow_crm_runs: "Installation-local provider effect authority and dispatch history; never resumes on restore",
   workflow_webhook_runs: "Installation-local workflow dispatch receipts; never replay on restore",
   "ik_d1_reversal_fences": "Local undo verification; no replay authority travels in archives",

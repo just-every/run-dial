@@ -14,6 +14,7 @@ export function operatorGraph(retainNative: boolean) {
     {table:"api_credentials",from:"api_oauth_grants",on:{oauth_grant_id:"id"}},
     {table:"api_credential_audit",from:root,on:{actor_id:"id"}},
     { table: "workflow_crm_runs", from: "workflow_rules", on: { workflow_id: "id" } },
+    { table: "workflow_routing_mail_runs", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "workflow_dispatches", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "workflow_webhook_runs", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "webhook_deliveries", from: "workflow_rules", on: { workflow_id: "id" } },

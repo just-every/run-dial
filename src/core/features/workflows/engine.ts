@@ -1,3 +1,5 @@
+import { queueRoutingWorkflowMail } from "./routing-mail";
+import { workflowTrigger } from "./types";
 import { queueCrmWorkflow } from "./crm-queue";
 import { createId } from "../../shared/ids";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
@@ -17,6 +19,7 @@ export async function runWorkflows(db:D1Database,_runtime?:RuntimeEnvironment,no
  for(const rule of rules){
   if(workflowAction(rule)==="hubspot-contact-update"){queued+=await queueCrmWorkflow(db,rule,timestamp);continue;}
   if(workflowAction(rule)==="webhook"){queued+=await queueWorkflowWebhooks(db,rule,timestamp);continue;}
+  if(workflowTrigger(rule)==="routing-without-booking"){queued+=await queueRoutingWorkflowMail(db,rule,timestamp);continue;}
   for(const candidate of await workflowCandidates(db,rule,timestamp)){
   const recipients=rule.action==="email-hosts"?(await new BookingsRepository(db).listOperatorRecipients()).map(host=>({to:host.email,key:host.id,recipientRole:"operator" as const,operatorAccess:{id:host.id,generation:host.generation}})):[{to:candidate.inviteeEmail,key:"invitee",recipientRole:"invitee" as const,operatorAccess:undefined}];
   for(const recipient of recipients){
