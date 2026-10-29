@@ -3,10 +3,10 @@ import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
 import { eventBookingPolicySchema } from "../core/shared/booking-policy";
-import { correspondenceConfigSchema, requestRoutingSchema } from "../core/shared/correspondence";
+import { correspondenceConfigSchema,requestRoutingSchema } from "../core/shared/correspondence";
 import { nowIso } from "../core/shared/ids";
-import { eventIdInput, eventWrite } from "./event-tool-support";
-import { nativeTool, objectOutput, required, standard } from "./native-tool";
+import { eventIdInput,eventWrite } from "./event-tool-support";
+import { nativeTool,objectOutput,required,standard } from "./native-tool";
 
 // Native templates need current question metadata. The repository parses that after this route-shaped envelope.
 const correspondenceInput = z.object({

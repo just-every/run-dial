@@ -1,5 +1,5 @@
 import type { AppServices } from "../core/app/services";
-import { nativeResource, recordCount, resourceText } from "./resource-definition";
+import { nativeResource,recordCount,resourceText } from "./resource-definition";
 
 export function peopleResources(services: AppServices) {
   return [nativeResource("clients", "Client record", async (id, ctx) => {

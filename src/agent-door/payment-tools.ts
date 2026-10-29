@@ -4,7 +4,7 @@ import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
 import { eventPriceInputSchema } from "../core/features/payments/pricing";
 import { paymentTermsInputSchema } from "../core/features/payments/terms";
-import { nativeTool, required, standard, live, external, objectOutput } from "./native-tool";
+import { nativeTool, required, standard, live, objectOutput } from "./native-tool";
 import { financial, usdAmount } from "./payment-facts";
 import { paymentMoneyTools } from "./payment-money-tools";
 import { accountingTools } from "./accounting-tools";
@@ -28,19 +28,6 @@ export function paymentTools(services: AppServices): ToolDefinition[] {
       classes: ["standard", "sensitive"], clauses: ["PAY-001"],
       classify: async () => (await services.payments.connection.status()).accountId ? [financial(1)] : standard(),
       run: async () => ({ result: await services.payments.connection.status() }),
-    }),
-    nativeTool({
-      name: "dial.payments.stripe_disconnect", title: "Disconnect Stripe", description: "Stop new paid bookings and ask Stripe to revoke the current connection. Does not cancel existing bookings.",
-      scope: "dial:write", readOnly: false, input: z.object({ id: z.enum(["stripe"]) }).strict(), outputSchema: objectOutput,
-      classes: ["security", "live", "external"], clauses: ["PAY-001"],
-      widens: false, narrowing: { effect: "revoke", target: "id" }, authority: async () => null,
-      classify: async () => {
-        const saved = await services.payments.connection.status();
-        return [{ class: "security", facts: { measure: 1, setting: "stripe_connection" } }, live("booking-payments"), ...(saved.configured && saved.accountId ? [external(1)] : [])];
-      },
-      revisionType: "string", revision: async () => (await services.payments.connection.status()).statusChangedAt,
-      summary: async () => ({ target: { id: "stripe", name: "Stripe connection" }, items: ["Stop new paid bookings", "Revoke Dial's Stripe access"] }),
-      run: async () => ({ result: await services.payments.connection.disconnect() }),
     }),
     nativeTool({
       name: "dial.payments.ach_set", title: "Set ACH payment method", description: "Enable or disable ACH for the currently connected Stripe account.",

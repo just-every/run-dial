@@ -2,9 +2,9 @@ import { z } from "zod";
 import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
-import { closureFields, scheduleInputSchema, type NamedSchedule, type ScheduleInput } from "../core/features/availability/schedule-input";
-import { eventChangeClasses, eventIdInput } from "./event-tool-support";
-import { arrayOutput, nativeTool, objectOutput, required, standard } from "./native-tool";
+import { closureFields,scheduleInputSchema,type NamedSchedule,type ScheduleInput } from "../core/features/availability/schedule-input";
+import { eventChangeClasses,eventIdInput } from "./event-tool-support";
+import { arrayOutput,nativeTool,objectOutput,required,standard } from "./native-tool";
 
 function requireNoClosures(input: ScheduleInput) {
   const fields = closureFields(input);

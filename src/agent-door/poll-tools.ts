@@ -3,8 +3,8 @@ import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
 import { stateDigest } from "./booking-native-state";
-import { pollInput } from "../core/features/polls/types";
-import { arrayOutput, external, live, nativeTool, objectOutput, required, standard } from "./native-tool";
+
+import { arrayOutput, live, nativeTool, objectOutput, required, standard } from "./native-tool";
 
 const target = z.object({ id: z.string().regex(/^[0-9A-Z]{26}$/) }).strict();
 const uri = (id: string) => `dial://polls/${id}`;
@@ -12,6 +12,11 @@ const uri = (id: string) => `dial://polls/${id}`;
 export function pollTools(services: AppServices): ToolDefinition[] {
   const host = async (id: string) => required(await services.polls.host(id));
   return [
+    nativeTool({
+      name: "dial.polls.grants", title: "Read poll voting grants", description: "Read the targeted native poll's current participant grant IDs without any voting capability.",
+      scope: "dial:read", readOnly: true, input: target, outputSchema: objectOutput, classes: ["standard"], clauses: ["POLL-001"], classify: () => standard(),
+      run: async args => { const poll = await host(args.id); return { result: { id: poll.id, grants: poll.state === "open" ? poll.participants.map(person => person.id) : [] } }; },
+    }),
     nativeTool({
       name: "dial.polls.list", title: "List meeting polls", description: "Read the latest 100 native meeting polls and their open/closed state, without participant capabilities.",
       scope: "dial:read", readOnly: true, input: z.object({}).strict(), outputSchema: arrayOutput, classes: ["standard"], clauses: ["POLL-001"],
@@ -22,23 +27,6 @@ export function pollTools(services: AppServices): ToolDefinition[] {
       scope: "dial:read", readOnly: true, input: target, outputSchema: objectOutput, classes: ["sensitive"], clauses: ["POLL-001"], untrusted: true,
       classify: async args => [{ class: "sensitive", facts: { measure: (await host(args.id)).participants.length, kind: "meeting poll participants and votes" } }],
       run: async args => ({ result: await host(args.id) }),
-    }),
-    nativeTool({
-      name: "dial.polls.create", title: "Create meeting poll", description: "Create a native poll with 1–50 participants and 2–12 live times; queues one private invitation per participant. Only unpriced, unapproved published event types. Optional holds reserve candidate times until expiry or close.",
-      scope: "dial:write", readOnly: false, input: pollInput, outputSchema: objectOutput, classes: ["standard", "external", "access", "live"], clauses: ["POLL-001"],
-      classify: args => [...standard(), external(args.participants.length, "new"), { class: "access", facts: { measure: args.participants.length, direction: "widens" } }, ...(args.hold ? [live("booking availability")] : [])],
-      authority: async args => ({ subject: `poll-participants:${args.eventTypeId}`, widens: true }),
-      summary: async args => {
-        const event = required(await services.eventTypes.getEventType(args.eventTypeId));
-        return { target: { id: event.id, name: event.title }, recipients: args.participants.map(person => person.email.trim().toLowerCase()),
-          items: [args.title, `Closes ${args.closesAt}`, ...args.starts, args.hold ? "Reserve all candidate times until expiry or close" : "Leave candidate times unheld", args.showTally ? "Show participant tally" : "Hide participant tally"] };
-      },
-      async run(args, ctx) {
-        const result = await services.polls.create(args);
-        if (!result) throw new ToolRefusal("poll_refused", "Choose distinct live times before expiry and unique participants on an unpriced, unapproved published event type.");
-        ctx.emit("dial.poll.created", uri(result.id), { actorLabel: ctx.actor.label });
-        return { result, resources: [{ uri: uri(result.id), name: "Meeting poll" }] };
-      },
     }),
     nativeTool({
       name: "dial.polls.set_tally", title: "Set participant tally visibility", description: "Choose whether participants see the tally through their own native poll capability.",

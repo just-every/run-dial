@@ -2,9 +2,9 @@ import { z } from "zod";
 import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
+import { definitionSchema,entitySchema } from "../ext/custom-fields/model";
 import { stateDigest } from "./booking-native-state";
-import { definitionSchema, entitySchema } from "../ext/custom-fields/model";
-import { arrayOutput, nativeTool, objectOutput, required, standard } from "./native-tool";
+import { arrayOutput,nativeTool,objectOutput,required,standard } from "./native-tool";
 
 const id = z.string().min(1).max(80);
 const entryTarget = z.object({ entity: z.enum(["booking", "availabilityRequest"]), id }).strict();

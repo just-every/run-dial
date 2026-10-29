@@ -4,7 +4,7 @@ import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
 import { SiteLookRepository } from "../core/features/site-look/repository";
 import { SiteLookError } from "../core/features/site-look/service";
-import { external, live, nativeTool, objectOutput, standard, type ToolContext } from "./native-tool";
+import { live,nativeTool,objectOutput,standard,type ToolContext } from "./native-tool";
 
 const colour = z.string().regex(/^#[0-9a-fA-F]{6}$/).transform(value => value.toLowerCase()).nullable().optional();
 const change = z.object({
@@ -29,17 +29,6 @@ export function brandTools(services: AppServices): ToolDefinition[] {
       name: "dial.site_look.read", title: "Read stored site look", description: "Read the stored native website look, owner's changes, contrast adjustments, source and last-read result. Performs no website fetch.",
       scope: "dial:read", readOnly: true, input: z.object({}).strict(), outputSchema: objectOutput, classes: ["standard"], clauses: ["BRAND-001"], untrusted: true,
       classify: () => standard(0), run: async () => ({ result: await services.siteLook.state() }),
-    }),
-    nativeTool({
-      name: "dial.site_look.apply", title: "Read website and apply its look", description: "Use the native site reader to fetch a website now, store its mark and colours, and apply its look to booking pages. Preserves hand edits and an existing plain-look choice. A failed read records its reason and keeps the previous look. This changes the running product; it is not a read-only website inspection. Excludes uploads and custom domains.",
-      scope: "dial:write", readOnly: false, input: z.object({ url: z.string().trim().min(1).max(500) }).strict(), outputSchema: objectOutput, classes: ["live", "external"], clauses: ["BRAND-001"], untrusted: true,
-      classify: () => [live("public booking page branding"), external(1, "public")], revisionType: "integer", revision,
-      summary: async args => ({ target: { name: "Public booking page branding" }, items: [`Fetch website and apply its native look: ${args.url}`, "Keep the owner's individual overrides and existing plain-look choice"] }),
-      async run(args, ctx) {
-        const result = await nativeResult(() => services.siteLook.read(args.url));
-        ctx.emit("dial.site_look.read_applied", "dial://site-look", { actorLabel: ctx.actor.label });
-        return { result };
-      },
     }),
     nativeTool({
       name: "dial.site_look.change", title: "Change booking page look", description: "Change native stored branding values, hide the mark, select plain type or switch site/plain look. Null restores a value from the site's read. Requires a successful previous site read except selecting plain by itself.",

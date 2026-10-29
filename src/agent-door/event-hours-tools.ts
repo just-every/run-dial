@@ -3,9 +3,9 @@ import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
 import { recurringAvailabilitySchema } from "../core/features/event-types/event-input";
-import { dateAvailabilityOverrideInputSchema, hostDateSchema } from "../core/shared/scheduling";
-import { arrayOutput, nativeTool, required, standard } from "./native-tool";
-import { eventIdInput, eventWrite, recurringTargets } from "./event-tool-support";
+import { dateAvailabilityOverrideInputSchema,hostDateSchema } from "../core/shared/scheduling";
+import { eventIdInput,eventWrite,recurringTargets } from "./event-tool-support";
+import { arrayOutput,nativeTool,required,standard } from "./native-tool";
 
 export function eventHoursTools(services: AppServices): ToolDefinition[] {
   return [

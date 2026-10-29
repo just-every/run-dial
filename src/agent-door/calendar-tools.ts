@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 import type { AppServices } from "../core/app/services";
-import { external, live, nativeTool, objectOutput, required, standard, type ToolContext } from "./native-tool";
+import { external,live,nativeTool,objectOutput,required,standard,type ToolContext } from "./native-tool";
 
 type NativeConnection = {
   id: string;
@@ -21,8 +21,7 @@ const emptyInput = z.object({}).strict();
 
 async function revocableConnection(ctx: ToolContext, id: string) {
   const record = required(await connection(ctx, id));
-  if (record.status === "disconnected") throw new ToolRefusal("not_connected");
-  if (!record.operatorId) throw new ToolRefusal("calendar_authority_missing", "The native calendar connection has no authorising operator.");
+  if (!record.operatorId && record.status !== "disconnected") throw new ToolRefusal("calendar_authority_missing", "The native calendar connection has no authorising operator.");
   return record;
 }
 
@@ -76,25 +75,6 @@ export function calendarTools(services: AppServices): ToolDefinition[] {
       },
     }),
     nativeTool({
-      name: "dial.calendar.check", title: "Check calendar connection", description: "Run the native live connection check, renew provider watches and reconcile managed calendar changes where required. Record native health or return the provider failure.",
-      scope: "dial:write", readOnly: false, input: emptyInput, outputSchema: objectOutput,
-      classes: ["standard", "live", "external"], clauses: ["CAL-001", "CAL-006", "CAL-008", "NOTIFY-007"],
-      classify: async (_args, ctx) => {
-        const record = await connection(ctx);
-        return !record || record.status === "disconnected" ? standard() : [live("Dial calendar connection"), external(1, "known")];
-      },
-      revisionType: "string", revision: async (_args, ctx) => (await connection(ctx))?.updatedAt ?? null,
-      summary: async (_args, ctx) => {
-        const record = await connection(ctx);
-        return { target: record ? { id: record.id, name: `${record.provider} calendar connection` } : { name: "Calendar connection" }, items: ["Check the selected native destination and conflict calendars", "Renew watches and reconcile managed calendar changes when required"] };
-      },
-      run: async () => {
-        const result = await services.calendar.checkConnection();
-        if (result.kind !== "healthy") throw new ToolRefusal("calendar_unavailable", "Calendar data cannot be read right now.", { reason: result.code });
-        return { result };
-      },
-    }),
-    nativeTool({
       ...read, name: "dial.calendar.grants", title: "Read native calendar grant", description: "Witness whether the targeted native connection still holds its provider grant. A disconnected connection has an empty grant set.",
       input: targetInput, clauses: ["CAL-001"],
       outputSchema: { type: "object", properties: { id: { type: "string" }, grants: { type: "array", items: { type: "string" }, uniqueItems: true } }, required: ["id", "grants"], additionalProperties: false },
@@ -108,7 +88,7 @@ export function calendarTools(services: AppServices): ToolDefinition[] {
       scope: "dial:write", readOnly: false, input: targetInput, outputSchema: objectOutput,
       classes: ["access", "live", "destructive"], clauses: ["CAL-001", "CAL-006", "AVAIL-004"],
       widens: false, narrowing: { effect: "revoke", target: "id" },
-      authority: async (args, ctx) => ({ subject: (await revocableConnection(ctx, args.id)).operatorId!, widens: false }),
+      authority: async (args, ctx) => ({ subject: (await revocableConnection(ctx, args.id)).operatorId ?? ctx.person.id, widens: false }),
       classify: async (args, ctx) => {
         await revocableConnection(ctx, args.id);
         return [{ class: "access", facts: { measure: 1, direction: "narrows" } }, live("Dial calendar connection"), { class: "destructive", facts: { measure: 1 } }];
