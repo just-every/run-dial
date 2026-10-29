@@ -1,0 +1,89 @@
+import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createServer } from "node:net";
+import { startWebhookRuntime } from "../booking-wire/webhook-runtime.mjs";
+
+export async function machineCredentialJourney(context) {
+  const reservation=createServer();
+  await new Promise(resolve=>reservation.listen(0,"127.0.0.1",resolve));
+  const port=reservation.address().port;
+  await new Promise(resolve=>reservation.close(resolve));
+  const origin=`http://127.0.0.1:${port}`,state=await mkdtemp(join(tmpdir(),"dial-machine-authority-"));
+  console.log("Machine journey: starting native runtime");
+  const runtime=await startWebhookRuntime({state,port,origin,receiver:port});
+  context.after(async()=>{await runtime.dispose();await rm(state,{recursive:true,force:true});});
+  const db=await runtime.getD1Database("DB");
+  console.log("Machine journey: native schema ready");
+  const address=name=>`${name}${String.fromCharCode(64)}example.test`;
+  let cookie;
+  const call=(path,{body,method=body===undefined?"GET":"POST",secret,key,session=false}={})=>fetch(origin+path,{
+    method,redirect:"manual",headers:{Origin:origin,"content-type":"application/json",...(session&&cookie?{cookie}:{}),...(secret?{Authorization:`Bearer ${secret}`} : {}),...(key?{"Idempotency-Key":key}:{} )},...(body===undefined?{}:{body:JSON.stringify(body)}),
+  });
+  const json=async(path,options={},status=200)=>{console.log(`Machine journey: ${path}`);const response=await call(path,options);assert.equal(response.status,status,`${path} status`);return response.json();};
+  await json("/wire/init",{body:{}});
+  const boot=await call("/auth/bootstrap",{body:{token:"dial-test-only-setup-token-at-least-32",displayName:"Synthetic Dial Owner",returnTo:"/app"}});
+  assert.equal(boot.status,303);cookie=boot.headers.get("set-cookie").split(";")[0];
+  const fixture=await json("/__fixtures/setup",{body:{},session:true});
+  await json("/wire/control",{body:{name:"google-conference",value:"success"}});
+  const profile=await json("/api/app/profile",{session:true}),event=await json(`/api/app/event-types/${fixture.eventId}`,{session:true});
+  const expiresAt=new Date(Date.now()+86400000).toISOString();
+  const issue=(scopes,extra={})=>json("/api/app/api-credentials",{session:true,body:{name:"Synthetic Dial integration",scopes,expiresAt,...extra}},201);
+  assert.equal((await call("/api/app/api-credentials",{body:{name:"untrusted",scopes:["bookings:write"],expiresAt}})).status,401);
+  const writer=await issue(["bookings:write"],{hostId:profile.id}),reader=await issue(["bookings:read"],{hostId:profile.id});
+  const listedBefore=await json("/api/app/api-credentials",{session:true});
+  assert.ok(listedBefore.credentials.every(row=>row.lastUsedAt===null));assert.ok(!JSON.stringify(listedBefore).includes(writer.secret),"later lists omit the one-time secret");
+  const stored=await db.prepare("SELECT secret_hash AS hash FROM api_credentials WHERE id=?").bind(writer.credential.id).first();assert.ok(stored.hash && stored.hash!==writer.secret,"storage holds a hash");
+  const week=new Date(Date.now()+10*86400000).toISOString().slice(0,10);
+  const publicSlots=await json(`/api/public/book/dial-host/intro/availability?week=${week}&inviteeTimezone=UTC`);
+  const apiSlots=await json(`/api/v1/availability?eventTypeId=${fixture.eventId}&week=${week}&inviteeTimezone=UTC`,{secret:reader.secret});
+  assert.deepEqual(apiSlots.slots,publicSlots.slots,"machine availability equals the public page's slots");assert.ok(apiSlots.slots.length>2);
+  const body={eventTypeId:fixture.eventId,startAt:apiSlots.slots[0].startAt,inviteeTimezone:"UTC",name:"Synthetic Dial invitee",email:address("synthetic-dial-901"),answers:{[event.questions[0].key]:"Synthetic scheduling"}};
+  const writes=async()=>({bookings:(await db.prepare("SELECT id,state,current_occurrence_id FROM bookings ORDER BY id").all()).results,commands:(await db.prepare("SELECT id,kind,payload_json FROM delivery_outbox ORDER BY id").all()).results});
+  const empty=await writes();
+  for(const [secret,status] of [[undefined,401],["synthetic-dial-invalid",401],[reader.secret,403]]){assert.equal((await call("/api/v1/bookings",{body,secret,key:"synthetic-dial-denied"})).status,status);assert.equal(JSON.stringify(await writes())===JSON.stringify(empty),true,"refused authority creates no booking or command");}
+  assert.equal((await call("/api/v1/bookings",{body,secret:writer.secret})).status,400);assert.equal(JSON.stringify(await writes())===JSON.stringify(empty),true);
+  const key="synthetic-dial-booking-once",created=await json("/api/v1/bookings",{body,secret:writer.secret,key},201);
+  assert.ok(created.id);assert.ok(!JSON.stringify(created).includes("/manage/"));
+  const first=await writes();assert.equal(first.bookings.length,1);assert.equal(first.commands.filter(row=>row.kind==="calendar_upsert").length,1);assert.equal(first.commands.filter(row=>row.kind==="mail_send").length,2);
+  const replay=await call("/api/v1/bookings",{body,secret:writer.secret,key});assert.equal(replay.status,201);assert.equal(replay.headers.get("Idempotent-Replay"),"true");assert.deepEqual(await replay.json(),created);assert.equal(JSON.stringify(await writes())===JSON.stringify(first),true);
+  const changed=await call("/api/v1/bookings",{body:{...body,name:"Changed identity"},secret:writer.secret,key});assert.equal(changed.status,409);assert.equal((await changed.json()).error.code,"idempotency_key_reused");assert.equal(JSON.stringify(await writes())===JSON.stringify(first),true);
+  assert.equal((await call("/api/v1/bookings",{secret:writer.secret})).status,403);assert.equal((await json(`/api/v1/bookings/${created.id}`,{secret:reader.secret})).inviteeName,body.name);
+  assert.equal((await json("/api/v1/bookings?limit=1",{secret:reader.secret})).data[0].id,created.id);
+  const used=await json("/api/app/api-credentials",{session:true});assert.ok(used.credentials.find(row=>row.id===reader.credential.id).lastUsedAt);
+  for(const path of ["/api/app/api-credentials","/api/app/operators","/api/app/erasures","/app"]){assert.equal((await call(path,{secret:writer.secret})).status,path==="/app"?302:401,"machine authority cannot mint an operator session");}
+  await db.prepare("UPDATE api_credentials SET host_id=? WHERE id=?").bind("01K00000000000000000000999",reader.credential.id).run();
+  assert.equal((await call(`/api/v1/bookings/${created.id}`,{secret:reader.secret})).status,404);assert.equal(JSON.stringify(await writes())===JSON.stringify(first),true);
+  await db.prepare("UPDATE api_credentials SET host_id=? WHERE id=?").bind(profile.id,reader.credential.id).run();
+  await json("/__fixtures/deliver",{body:{}});
+  assert.equal((await json(`/api/v1/bookings/${created.id}/cancel`,{body:{reason:"Synthetic cancellation"},secret:writer.secret,key:"synthetic-dial-cancel-once"})).state,"cancelled");
+  const cancellationState=await writes();
+  const cancelReplay=await call(`/api/v1/bookings/${created.id}/cancel`,{body:{reason:"Synthetic cancellation"},secret:writer.secret,key:"synthetic-dial-cancel-once"});assert.equal(cancelReplay.status,200);assert.equal(cancelReplay.headers.get("Idempotent-Replay"),"true");assert.equal(JSON.stringify(await writes())===JSON.stringify(cancellationState),true);
+  await json("/__fixtures/deliver",{body:{}});await json("/__fixtures/deliver",{body:{}});
+  const wire=await json("/wire/state"),mail=wire.wire_calls.filter(row=>new URL(row.url).hostname==="api.sendgrid.com"&&row.method==="POST").map(row=>JSON.parse(row.body));
+  assert.equal(mail.filter(item=>item.subject?.startsWith("Booking cancelled:")).length,2,"ordinary cancellation reaches each recipient once");
+  const deliveredState=await writes();
+  assert.ok(!JSON.stringify(wire).includes(writer.secret),"credentials never enter provider requests or queued messages");
+  const burst=await issue(["bookings:read"]);let limited;
+  for(let i=0;i<130;i++){const response=await call(`/api/v1/bookings/${created.id}`,{secret:burst.secret});if(response.status===429){limited=response;break;}assert.equal(response.status,200);}
+  assert.ok(limited);assert.ok(Number(limited.headers.get("Retry-After"))>0);assert.equal((await limited.json()).error.code,"rate_limited");assert.equal(JSON.stringify(await writes())===JSON.stringify(deliveredState),true);
+  await json(`/api/app/bookings/${created.id}`,{session:true,method:"DELETE"},202);
+  const erasedState=await writes();
+  assert.equal(erasedState.bookings.length,0);
+  const erasedReplay=await call("/api/v1/bookings",{body,secret:writer.secret,key});
+  assert.equal(erasedReplay.status,410);assert.equal((await erasedReplay.json()).error.code,"erased");
+  assert.equal((await call(`/api/v1/bookings/${created.id}`,{secret:reader.secret})).status,404);
+  assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true,"erased captures cannot recreate the booking");
+  const tombstones=(await db.prepare("SELECT state,response_json,request_hash,booking_id FROM api_request_keys WHERE credential_id=?").bind(writer.credential.id).all()).results;
+  assert.ok(tombstones.length>0&&tombstones.every(row=>row.state==="erased"&&row.response_json===null&&row.request_hash===null&&row.booking_id===null));
+  assert.equal((await call(`/api/app/api-credentials/${writer.credential.id}/revoke`,{session:true,body:{}})).status,204);
+  const afterRevoke=await call("/api/v1/bookings",{body:{...body,startAt:apiSlots.slots[2].startAt},secret:writer.secret,key:"synthetic-dial-after-revoke"});assert.equal(afterRevoke.status,401);assert.equal((await afterRevoke.json()).error.code,"credential_revoked");assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true);
+  const app=await json("/api/app/oauth-applications",{session:true,body:{name:"Synthetic Dial application",scopes:["bookings:read"],expiresAt}},201);
+  const grant=await fetch(origin+"/api/oauth/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:app.application.id,client_secret:app.clientSecret})});
+  assert.equal(grant.status,200);const access=await grant.json();assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,200);
+  assert.equal((await call(`/api/app/oauth-applications/${app.application.id}/revoke`,{session:true,body:{}})).status,204);assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,401);
+  await db.prepare("UPDATE api_credentials SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(reader.credential.id).run();
+  const expired=await call("/api/v1/bookings",{secret:reader.secret});assert.equal(expired.status,401);assert.equal((await expired.json()).error.code,"credential_expired");
+  assert.equal(JSON.stringify(await writes())===JSON.stringify(erasedState),true,"expired credentials change no booking or queued command");
+}

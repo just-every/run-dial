@@ -1,3 +1,6 @@
+import { credentialRoutes } from "../features/api-credentials/routes";
+import { credentialOAuthRoutes } from "../features/api-credentials/oauth";
+import { publicApiRoutes } from "../features/public-api/routes";
 import { webhookRoutes } from "../features/webhooks/routes";
 import { teamRoutes } from "../features/teams";
 import { routingRoutes } from "../features/routing";
@@ -85,6 +88,9 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       const health = await checkPlatformBindings({ database: context.env.DB, files: context.env.FILES, jobs: context.env.JOBS });
       return context.json({ ...health, checkedAt: new Date().toISOString() });
     })
+    .route("/", credentialRoutes)
+    .route("/", credentialOAuthRoutes)
+    .route("/", publicApiRoutes)
     .route("/", analyticsRoutes)
     .route("/", extensionRoutes)
     .route("/", operatorRoutes)

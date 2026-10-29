@@ -12,6 +12,9 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Credential metadata and replay tables are additive and start empty in earlier archives.
+  'core/0090_api_credentials.sql': (_table, row) => row,
+  'core/0091_public_api.sql': (_table, row) => row,
   // Relationship cleanup triggers do not change any existing archived row.
   'core/0089_event_type_webhook_cleanup.sql': (_table, row) => row,
   'core/0087_webhook_sources.sql': (_table,row) => row,

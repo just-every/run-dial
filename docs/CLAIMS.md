@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 90 done / 28 partial / 58 missing (176 clauses).
+The contract census is 90 done / 30 partial / 56 missing (176 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -48,11 +48,11 @@ Evidence: `tests/booking-wire/booking-links-journey.mjs`, `tests/booking-wire/in
 
 Gap: Routing, poll, payment-return and workflow-unsubscribe capabilities are carried by `ROUTE-001`, `POLL-001`, `PAY-001` and `FLOW-001`, which each name this clause.
 
-AUTH-008 is missing: API credentials and connected apps.
+AUTH-008 is partial: API credentials and connected apps.
 
-Evidence: None.
+Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
 
-Gap: No implementing code yet.
+Gap: Owner-issued personal tokens and registered OAuth machine applications use hashed secrets, named scopes, expiry, last use and next-request revocation. Conservative owner-only grant under the standing scope policy; delegated OAuth consent, admin issuance and native two-host and team authority proof remain.
 
 OPER-001 is partial: Roles and permissions.
 
@@ -840,11 +840,11 @@ Evidence: None.
 
 Gap: Filtered reporting CSVs and scheduled member reports are absent; the owner archive is DATA-001, not this reporting flow.
 
-API-001 is missing: Public REST API.
+API-001 is partial: Public REST API.
 
-Evidence: None.
+Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney.
 
-Gap: No versioned credential-authorized public API, cursor pagination, per-credential limits or OpenAPI document ships; existing page-internal and invitee-capability JSON routes are not this API.
+Gap: Native bearer routes, public booking claims, cursor pages, durable write replay, credential limits and an OpenAPI document ship. Workflow administration remains; broader resource lifecycle, machine routing submission qualification, paid and approval continuation, and native multi-host and team qualification remain unproved.
 
 API-002 is done: Webhooks.
 

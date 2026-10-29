@@ -11,9 +11,9 @@ export async function startRuntime(context, { legacy = true, now } = {}) {
   const env = { ...process.env, CI: "1", DIAL_WRANGLER_CONFIG_PATH: resolve(root.pathname, config), DIAL_PERSIST_STATE_DIR: persist, DIAL_DISABLE_INSPECTOR: "1" };
   let server, output = "";
   const run = (command, args) => new Promise((done, reject) => {
-    const child = spawn(command, args, { cwd: root, env, stdio: "pipe" }); let text = "";
-    child.stdout.on("data", (chunk) => { text += chunk; }); child.stderr.on("data", (chunk) => { text += chunk; });
-    child.once("error", reject); child.once("exit", (code) => code === 0 ? done(text) : reject(new Error(text.slice(-10000))));
+    const child = spawn(command, args, { cwd: root, env, stdio: "pipe" }); let text = "", stdout = "";
+    child.stdout.on("data", (chunk) => { text += chunk; stdout += chunk; }); child.stderr.on("data", (chunk) => { text += chunk; });
+    child.once("error", reject); child.once("exit", (code) => code === 0 ? done(stdout) : reject(new Error(text.slice(-10000))));
   });
   const sql = (command) => run("pnpm", ["exec", "wrangler", "d1", "execute", "dial-operator-management-test", "--local", "--persist-to", persist, "--config", config, "--command", command]);
   async function stop() {
