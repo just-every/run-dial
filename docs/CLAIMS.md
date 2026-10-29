@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 90 done / 30 partial / 56 missing (176 clauses).
+The contract census is 90 done / 30 partial / 69 missing (189 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -1061,3 +1061,81 @@ AGENT-011 is missing: Voice booking through a contracted provider.
 Evidence: None.
 
 Gap: No implementing code yet.
+
+BASE-AGENT-001 is missing: One MCP door per seed.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-002 is missing: The seed's jobs are tools, through the UI's own actions.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-003 is missing: Records are resources.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-004 is missing: Business identity and short-lived, audience-bound tokens.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-005 is missing: An agent acts as a person in a role, never more.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-006 is missing: Every action declares its risk class.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-007 is missing: The company's policy decides, at one chokepoint.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-008 is missing: Truthful attribution.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-009 is missing: Every agent action is audited with its class and decision.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-010 is missing: Agents can follow changes.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-011 is missing: Limits are policy, and Pause stops everything.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-012 is missing: Writes are idempotent and conflict-safe.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-013 is missing: Manifest, docs and the conformance journey.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
