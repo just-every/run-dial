@@ -32,7 +32,8 @@ export function eventWrite<T extends z.ZodType<{ id: string }>>(services: AppSer
   const { items, affected, publicWrite, destructive, ...tool } = definition;
   return nativeTool({
     ...tool, scope: "dial:write", readOnly: false, outputSchema: objectOutput,
-    classes: destructive ? ["standard", "live", "external", "destructive"] : ["standard", "live", "external"],
+    classes: publicWrite ? ["live", "external"] : destructive ? ["live", "external", "destructive"] : ["standard", "live", "external"],
+    target: async args => { await required(await services.eventTypes.getEventType(String(args.id))); return {kind: "event", id: String(args.id)}; },
     revisionType: "string",
     revision: async args => (await eventRecord(services, args.id)).updatedAt,
     classify: async (args, ctx) => {

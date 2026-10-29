@@ -1,86 +1,105 @@
-# Dial native door preparation
+# Dial's company agent door
 
-This directory is source preparation, not a shipped agent door. The production
-Worker does not import it. There is no `agent-surface.json`, applied agent-door
-migration, production Business receiver, queued-consent handoff or MCP claim.
-The 116 tool declarations and ten resource readers are not production registries.
-No contract clause is marked complete by these adapters.
+Dial mounts one copied `createAgentDoor` in the production Worker, inside native
+archive admission and ahead of application authentication and setup redirects.
+The runtime and CLI pin is `rer-v0.2.86`, Base commit
+`f96363bf919ea3e7ed1837daba6894810a50e4a6`. Copied transport, policy and validators
+are unchanged. MCP negotiates `2026-07-28` and `2025-11-25`; `2025-03-26` refuses
+with HTTP 400 / JSON-RPC -32022.
 
-The copied Base runtime is recorded at
-`e1b4265eb0d839a67dae3c36a04f83fa48c9d480`. MCP supports `2026-07-28` and
-`2025-11-25`. Initializing `2025-03-26` correctly returns HTTP 400 and JSON-RPC
-`UnsupportedProtocolVersion` (`-32022`); March's batched transport and legacy
-result schema are not supported. The copied transport remains unchanged.
+The declared capabilities are `tools`, `policy`, `pause`, `audit`, `idempotency`,
+in `agent-surface.json` and the options passed to `createAgentDoor`. Version
+0.2.86 accepts this field but does not scope optional families. Base #670 must
+supply that behavior before this adoption can be complete. In particular, the
+copied runtime always adds `dial.events.list`; Dial does not declare the events
+family or silently add it to its specialist contract to satisfy the old validator.
+The resulting registry and surface failures stay failing in normal verification.
 
-`tools.ts` collects adapters for the real profile, event, availability, calendar,
-booking, alternative-request, delivery, report, client, poll, booking-link,
-custom-field, branding, Stripe, accounting, entitlement and notice services.
-The intended specialist is a scheduling coordinator acting for a current native
-owner. `native-tool.ts` parses arguments, checks current native owner authority,
-and supplies server classifications and summaries. Monetary policy measures
-use integer USD cents; approval summaries display dollars. Adapter calls remain
-unverified until the production integration and complete journey run.
+The scheduling coordinator reads native profiles, event configuration, hours,
+calendar health, bookings, requests, delivery status, reports, clients, polls,
+private link definitions, typed annotations and payment records. Its synchronous
+commands edit profiles, draft and published event settings, schedules, booking
+limits, correspondence configuration, payment configuration and appointment
+product definitions; add client notes and fields; merge native clients; change
+poll visibility; and revoke poll, booking-link and calendar grants. Website reads
+and branding use the real native reader with its public-address checks. Creating
+a product or changing a price never charges a person. There is no provider cost
+registration; verification policy uses `spend: {none:true}`.
 
-`resources.ts` prepares ten native resource templates. Readers require current
-owner authority and `dial:read`; missing and restricted reads both return null.
-They use real native IDs, explicit projections and untrusted-text markers.
-Delivery payloads, mail bodies, payment capabilities and provider credentials
-are excluded. History-only clients without a native profile ID are not invented
-as records; payment resources use the native `booking_payments.id`.
+Every call re-reads the native owner's authority. Signed Business `owner_id` maps
+through `operator_setup_identity.operator_id` to `oa_operators.id`; token email
+never selects an account. Unknown or inactive native subjects cannot act.
+Business team rows remain conflicts because Dial's native operator lifecycle
+supports equal owners, not Business admin/member provisioning. A local promotion
+cannot create a Business binding. No native session, device, SDK, provider or
+import credential is converted into an agent credential. No local-credential
+adapter is installed, so failed recognizable Business tokens have no local path.
+Consent, current policy, pause, native revisions, scopes and named approvals stay
+in the copied pipeline. Mutations expose server summaries; native client notes
+name the agent as preparer and retain the sponsoring operator as native author.
 
-The prepared `people.ts` and `business.ts` adapters bind signed Business owner
-IDs through the native setup-owner record. They remain unmounted. Business team
-rows report conflicts: the applied native schema permits only equal-owner
-operators, and cannot provision admin/member accounts. Preserve admission: owners can use the
-operator APIs, admins have a move-in exception, and members have no operator
-product access. Business identity must never select authority by token email or
-create equal-owner accounts for a team admin/member.
+Calendar disconnect uses the narrowing-only target schema and native connection
+record. `calendar.grants` witnesses the actual retained connection authority;
+missing authorizing identity on a connected record refuses. The other narrowing
+witnesses read native voting and booking-link grants without returning capabilities.
+There is no invented widening mode. Poll visibility cannot widen a native owner's
+standing authority, so its surface states `sponsorEscalation:false` while retaining
+the runtime authority resolver.
 
-Additive migrations `0090_business_settings.sql` and `0091_business_people.sql`
-prepare the signed settings store and durable Business IDs. The native setup-owner
-record remains authoritative. Unknown subjects, inactive or allow-list-excluded
-owners cannot sponsor calls. Business settings, native bindings and invitation
-authority stay installation-local during archive transfer; the destination must
-pair again. Override and logo storage are also local while the receiver is
-unmounted; portable branding requires its own native custody integration.
+The ten resource readers remain prepared in `resources.ts`, with owner checks,
+record-derived sensitive classes, safe projections and untrusted text. They are
+not mounted or declared as the `resources` capability: their complete resource
+policy/approval/visibility proof is outstanding. Private records are available
+through the declared native read tools. Missing and inaccessible resource targets
+are not distinguished by the prepared readers.
 
-Mounting mutations also requires Base to support several native continuation
-items under one originating admission. Dial creates both 24-hour and one-hour
-reminders for each recipient in one booking transaction. The current continuation
-claim is keyed by operation, tool and original public key; distinct items sent
-through one dispatch tool collide with `idempotency_conflict`. Do not remove the
-originating operation ID, merge future reminders into an early dispatch, or skip
-the final consent check to evade that limitation.
+The following families remain undeclared (core subset, 2026-10-29):
 
-The existing narrowing-only calendar disconnect declaration is retained. Its full
-conformance journey must prepare a real native OAuth connection for every pass;
-a provider-edge response alone cannot restore native connection authority after
-disconnect. Stripe disconnect also needs a native read-only grant witness before
-its narrowing coverage can be declared.
+- **queuedLifecycle:** booking creation/cancellation/rescheduling/new-time
+  requests and approval decisions, calendar conflict restoration/deletion retry,
+  management-link rotation, delivery retry, poll invitations, request transitions,
+  refunds, no-show fees and invoice issuance. These native commands prepare
+  outbox work, independently due reminders or provider settlement. The native
+  locations are `bookings/write-commands.ts`, `bookings/reminder-commands.ts`,
+  `bookings/service.ts`, `polls/service.ts`, `availability-requests/service.ts`,
+  `delivery/recovery.ts` and `payments/`. No agent continuation is wired, and the
+  copied `operation.ts` and `pipeline.ts` are unchanged. G-op-fanout remains a Base
+  dependency for a later adoption, not an excuse to bypass consent.
+- **events/subscriptions:** retained change feeds, subscriptions and delivery.
+  Version 0.2.86 exposes its built-in listing regardless of the declared subset.
+- **multiSponsor / ownerNativeAdministration:** Business team provisioning,
+  operator invitations/roles, and native human confirmation of attendance stay
+  with native people and screen doors. A company approval does not invent the
+  seed's human proof or a new native role.
+- **mailEdges:** inbound scheduling threads, mailbox identity and outbound
+  agent messages are not offered. Native configured business notifications are
+  ordinary seed automation, not an agent continuation claim.
+- **resourceRefresh, timedLifecycle, dualHost:** no resource refresh service,
+  delayed agent jobs, timers, monthly tuning or second host is declared.
+- **provider administration:** Stripe connection/status/ACH, money settlement,
+  QuickBooks account mapping/export/disconnect, and messaging disconnect remain
+  native connector/owner operations. The current verification binding contract
+  cannot supply all of their typed per-run provider configurations and native
+  grant witnesses. No fake authority or receipt is substituted.
 
-The integration must preserve booking Durable Object serialization, carry
-originating consent, sponsor, scopes, client and agent attribution atomically
-with native outbox work, and reenter the public door at final dispatch. A direct
-service call alone does not provide that custody or native activity attribution.
-Mount one copied `createAgentDoor` before application redirects, retain browser
-Origin/session/CSRF checks, then declare the complete registry and real provider
-edge fixtures in the conformance journey. No transport, auth or policy stand-in
-belongs in production.
+OAuth, installation, import, avatar/file upload and other person-only operations
+are explicit clause-backed `notTools`. Target-only agent solvers and follow-up
+jobs from AGENT-002 onward are not claimed as existing native tools.
 
-Known unfinished boundaries are explicit: provider OAuth, device, installation
-and import work retain their existing doors; Teams setup retains its secret URL
-at the connector door; link creation needs a secure person handoff for its
-one-time capability; destructive erasure needs the real native-session proof;
-operator invitations need their native request/coordination boundary. Taxed
-invoice classification needs a native quote before approval, and money recovery
-must account for all effects it would dispatch. The pin now provides record-only
-security effects and per-surface escalation declarations; native adapters and
-their full journey still need integration. Do not fabricate an escalation,
-discard a required native verb or claim these paths are finished. No provider
-`cost` or spend enforcement is registered.
+`tests/agent-door/native-owner.mjs` drives signed owner claim, rejects raw setup
+and replay, completes native session-bound OAuth, and creates native fixture
+records through person/public routes. `provider-edge.mjs` replaces only exact
+network origins, validates the real request credentials/payload and returns
+provider-shaped receipts. All opaque values are generated per run. The fixture
+control is test-only, never a production route. The surface journey records real
+native tool/class calls, narrowing witnesses and injection arguments. Base's
+normal verification exits remain unchanged and failures must be reported.
 
-The ct source remains read-only at
-`bab78f7386586562c389505b2e8cb367efb0ddf7`: 27 aggregate tool rows, ten resources,
-and clauses ending at `AGENT-011`. Its branch is not merged, and the missing
-clause identifiers are not invented. There is no specialist journey or native
-conformance evidence yet.
+Additive migrations 0090/0091 establish Business state; 0092 copies the door SQL.
+Authority, replay, pending approvals, policy and audit stores never travel in an
+archive. Native person erasure scrubs matching retained client payloads and
+expires matching pending work under exclusive native admission. Policy audit
+evidence stays retained; erasure never invents a person's approval or an Undo.
+
+The public Run site and demo navigation records retain their existing 6d38b54a
+pin and bytes. Mounting the agent door does not refresh those public records.
