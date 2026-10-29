@@ -1,3 +1,5 @@
+import { apiHosts } from "../api-credentials/authority";
+import { webhookDeliveryScope } from "./scope";
 import { createId, nowIso } from "../../shared/ids";
 import { createOpaqueToken } from "../../platform/auth/tokens";
 import { seal } from "../../platform/crypto/sealed";
@@ -23,7 +25,7 @@ export class WebhookSubscriptions {
   async create(input: SubscriptionInput) {
     if (!input.events.length || input.events.some(event => !webhookEventTypes.includes(event as typeof webhookEventTypes[number]))) return undefined;
     if (input.scope === "workspace" && input.scopeId !== null) return undefined;
-    if (input.scope === "host" && !await this.db.prepare("SELECT id FROM host_profiles WHERE singleton_key='default' AND id=?").bind(input.scopeId).first()) return undefined;
+    if (input.scope === "host" && !(await apiHosts(this.db)).some(host=>host.id===input.scopeId)) return undefined;
     if (input.scope === "team" && !await this.db.prepare("SELECT id FROM teams WHERE id=?").bind(input.scopeId).first()) return undefined;
     const endpoint = await webhookEndpoint(input.endpoint, this.transport), id = createId(), secret = createOpaqueToken(), now = nowIso();
     await this.db.prepare("INSERT INTO webhook_subscriptions(id,endpoint,events_json,scope,scope_id,secret_ciphertext,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)")
@@ -40,7 +42,7 @@ export class WebhookSubscriptions {
     return (await this.db.prepare(`UPDATE webhook_deliveries AS d SET state='pending',response_code=NULL,attempts=0,next_attempt_at=?,retry_until=?,lease_id=NULL,lease_until=NULL,last_error=NULL,updated_at=?
       WHERE id=? AND state IN ('delivered','failed') AND EXISTS(SELECT 1 FROM webhook_subscriptions s WHERE s.id=subscription_id AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL)
       AND (booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))
-      AND ${workflowWebhookAuthority("d")}`)
+      AND ${workflowWebhookAuthority("d")} AND ${webhookDeliveryScope("d")}`)
       .bind(now.toISOString(), new Date(now.getTime() + 86400000).toISOString(), now.toISOString(), id).run()).meta.changes > 0;
   }
 }

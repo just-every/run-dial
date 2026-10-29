@@ -45,8 +45,8 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
       SELECT id,event_type_id FROM bookings
       UNION SELECT booking_id,event_type_id FROM booking_approval_requests WHERE state='pending'
       UNION SELECT json_extract(claim_json,'$.bookingId'),event_type_id FROM payment_holds WHERE state IN ('held','processing') AND claim_json IS NOT NULL
-    ) b WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
-      .bind(after,credential.teamId,credential.teamId,limit+1).all<{id:string}>()).results;
+    ) b WHERE id>? AND (? IS NULL OR COALESCE((SELECT host_id FROM api_event_hosts a WHERE a.event_type_id=b.event_type_id),(SELECT id FROM host_profiles WHERE singleton_key='default'))=?) AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
+      .bind(after,credential.hostId,credential.hostId,credential.teamId,credential.teamId,limit+1).all<{id:string}>()).results;
     const data=[];
     for(const row of ids.slice(0,limit)){const booking=await bookingAllowed(c,credential,row.id),pending=booking?undefined:await pendingBooking(c,row.id);if(booking)data.push(bookingView(booking));else if(pending)data.push(pending);}
     return c.json({data,nextCursor:ids.length>limit?btoa(ids[limit-1].id):null});

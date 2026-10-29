@@ -17,9 +17,11 @@ export async function workflowDestinationError(c:Context<AppEnvironment>,input:C
   const subscriptions=await c.get("services").webhooks.subscriptions.status();
   const destination=subscriptions.subscriptions.find(row=>row.id===input.webhookSubscriptionId);
   const host=await hostAllowed(c,credential);
+  const eventHost=await c.get("apiDatabase").prepare("SELECT COALESCE((SELECT host_id FROM api_event_hosts WHERE event_type_id=?),(SELECT id FROM host_profiles WHERE singleton_key='default')) AS id").bind(input.eventTypeId).first<{id:string}>();
+  const routingHost=input.routingFormId?(await c.get("services").routing.get(input.routingFormId))?.hostId:undefined;
   if(!destination||!destination.events.includes("workflow.action.v1")||!host||credential.teamId&&(destination.scope!=="team"||destination.scopeId!==credential.teamId)
    ||credential.hostId&&destination.scope==="workspace"
-   ||destination.scope==="host"&&destination.scopeId!==host.id
+   ||destination.scope==="host"&&destination.scopeId!==(routingHost??eventHost?.id)
    ||destination.scope==="team"&&!await c.get("apiDatabase").prepare("SELECT 1 FROM team_event_types WHERE team_id=? AND event_type_id=?").bind(destination.scopeId,input.eventTypeId).first()
    ||input.trigger==="routing-without-booking"&&destination.scope==="team")return refusal(c,404,"not_found","This webhook destination is outside the workflow grant.");
  }else if(input.webhookSubscriptionId)return refusal(c,400,"invalid_workflow_destination","A webhook destination requires a webhook action.");

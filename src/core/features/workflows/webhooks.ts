@@ -1,9 +1,10 @@
+import { webhookEventHost } from "../webhooks/scope";
 import { createId } from "../../shared/ids";
 import { workflowCandidates } from "./candidates";
 import { workflowTrigger, type WorkflowRule } from "./types";
 
 const subscriptionScope=`EXISTS(SELECT 1 FROM json_each(s.events_json) WHERE value='workflow.action.v1')
- AND (s.scope='workspace' OR s.scope='host' AND s.scope_id=(SELECT id FROM host_profiles WHERE singleton_key='default')
+ AND (s.scope='workspace' OR s.scope='host' AND s.scope_id=CASE WHEN r.trigger_kind='routing-without-booking' THEN (SELECT host_id FROM routing_forms WHERE id=r.routing_form_id) ELSE ${webhookEventHost('r.event_type_id')} END
  OR s.scope='team' AND r.trigger_kind IS NULL AND EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=s.scope_id AND t.event_type_id=r.event_type_id))`;
 
 /** This predicate is checked at claim and again after DNS and signing yield. */

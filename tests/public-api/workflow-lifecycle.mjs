@@ -9,7 +9,8 @@ export async function lifecycleWorkflows({call,json,issue,fixture,db,options,tic
   rules.push(rule);assert.equal(rule.trigger,trigger);assert.equal(rule.action,action);return rule;
  };
  const rescheduled=await create("booking-rescheduled"),cancelled=await create("booking-canceled","email-hosts"),attended=await create("marked-attended"),noShow=await create("marked-no-show"),before=await create("before-start","email-invitee",15),after=await create("after-end","email-invitee",60);
- const runs=async rule=>(await json(`/api/v1/workflows/${rule.id}/runs`,options)).data;
+ let observer=options;
+ const runs=async rule=>(await json(`/api/v1/workflows/${rule.id}/runs`,observer)).data;
  const book=number=>json("/api/v1/bookings",{...options,key:`synthetic-dial-workflow-lifecycle-${number}`,body:{eventTypeId:fixture.eventId,startAt:slots[10+number*2].startAt,inviteeTimezone:"UTC",name:"Synthetic lifecycle guest",email:`synthetic-dial-lifecycle-${number}${String.fromCharCode(64)}example.test`,answers:{[event.questions[0].key]:"Lifecycle proof"}}},201);
  const first=await book(0);
  const preview=await json(`/api/v1/workflows/${rescheduled.id}/preview?bookingId=${first.id}`,options);
@@ -83,10 +84,14 @@ export async function lifecycleWorkflows({call,json,issue,fixture,db,options,tic
  const revokedRule=await create("booking-created"),revokedBooking=await book(6);await tick();
  const queued=await runs(revokedRule);assert.ok(queued.some(row=>row.bookingId===revokedBooking.id&&row.outcome==="pending"));
  const owner=await db.prepare("SELECT operator_id AS id FROM workflow_rules WHERE id=?").bind(revokedRule.id).first();
+ const replacementCookie=replacementSession.headers.get("set-cookie").split(";")[0];
+ const surviving=await json("/api/app/api-credentials",{session:true,operatorCookie:replacementCookie,body:{name:"Synthetic surviving owner",scopes:["workflows:manage","bookings:read"],expiresAt:new Date(Date.now()+86400000).toISOString()}},201);
  await db.prepare("UPDATE oa_operators SET status='inactive' WHERE id=?").bind(owner.id).run();
  try{await json("/__fixtures/deliver",{body:{}});}finally{await db.prepare("UPDATE oa_operators SET status='active' WHERE id=?").bind(owner.id).run();}
+ assert.equal((await call(`/api/v1/workflows/${revokedRule.id}/runs`,options)).status,401,"restoring the creator cannot revive their revoked machine credential");
+ observer={secret:surviving.secret};
  assert.ok((await runs(revokedRule)).some(row=>row.bookingId===revokedBooking.id&&row.outcome==="skipped"&&row.reason==="workflow_authority_revoked"),"removing the enabling owner's authority stops queued outbound mail");
  await tick();assert.equal((await runs(revokedRule)).filter(row=>row.bookingId===revokedBooking.id).length,1,"reactivation cannot replay a revoked delivery");
- for(const rule of rules)await json(`/api/v1/workflows/${rule.id}`,{...options,method:"DELETE",key:`synthetic-dial-remove-${rule.trigger}`});
+ for(const rule of rules)await json(`/api/v1/workflows/${rule.id}`,{...observer,method:"DELETE",key:`synthetic-dial-remove-${rule.trigger}`});
  return {cookie:replacementSession.headers.get("set-cookie").split(";")[0]};
 }

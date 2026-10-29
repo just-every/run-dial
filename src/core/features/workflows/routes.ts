@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { createId, nowIso } from "../../shared/ids";
+import { discardRequestBody } from "../../shared/http";
 import { validate } from "../../shared/validation";
 import { bookingAllowed, eventAllowed, idempotent, page, refusal, type ApiEnvironment } from "../public-api";
 import { requireScope } from "../api-credentials";
@@ -11,6 +12,11 @@ import { workflowRuns } from "./runs";
 
 const missing={error:{code:"not_found",message:"This workflow does not exist."}};
 export const workflowRoutes=new Hono<ApiEnvironment>()
+ .use("/api/v1/workflows*",async(c,next)=>{
+  const owner=await c.get("apiDatabase").prepare("SELECT id FROM oa_operators WHERE id=? AND status='active' AND role='owner'").bind(c.get("apiCredential").operatorId).first();
+  if(!owner){await discardRequestBody(c.req.raw);return refusal(c,403,"role_forbidden","Only a workspace owner can authorize workflows.");}
+  await next();
+ })
  .get("/api/v1/workflows",async c=>{
   const rows=(await c.get("apiDatabase").prepare("SELECT * FROM workflow_rules WHERE removed_at IS NULL ORDER BY id").all<WorkflowRule>()).results;
   const scoped=[];for(const row of rows)if(await eventAllowed(c,c.get("apiCredential"),row.event_type_id))scoped.push(workflowView(row));

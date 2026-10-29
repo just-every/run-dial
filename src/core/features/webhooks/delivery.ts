@@ -1,3 +1,4 @@
+import { webhookDeliveryScope } from "./scope";
 import { createId } from "../../shared/ids";
 import { unseal } from "../../platform/crypto/sealed";
 import { webhookEndpoint, webhookSignature } from "./endpoint";
@@ -13,8 +14,10 @@ export class WebhookDelivery {
 
   async due(now = new Date()) {
     const at = now.toISOString();
-    await this.db.prepare(`UPDATE webhook_deliveries AS d SET state='failed',last_error='workflow_authority_revoked',lease_id=NULL,lease_until=NULL,updated_at=?
-      WHERE d.workflow_id IS NOT NULL AND d.state IN ('pending','sending') AND NOT ${workflowWebhookAuthority("d")}`).bind(at).run();
+    await this.db.prepare(`UPDATE webhook_deliveries AS d SET state='failed',last_error='scope_revoked',lease_id=NULL,lease_until=NULL,updated_at=?
+      WHERE d.state IN ('pending','sending') AND NOT ${webhookDeliveryScope("d")}`).bind(at).run();
+    await this.db.prepare(`UPDATE webhook_deliveries AS d SET state='failed',last_error='workflow_authority_revoked' ,lease_id=NULL,lease_until=NULL,updated_at=?
+      WHERE d.workflow_id IS NOT NULL AND d.state IN ('pending','sending') AND NOT (${workflowWebhookAuthority("d")} AND ${webhookDeliveryScope("d")})`).bind(at).run();
     await this.db.prepare("UPDATE webhook_deliveries SET state='pending',lease_id=NULL,lease_until=NULL WHERE state='sending' AND lease_until<=?").bind(at).run();
     return (await this.db.prepare("SELECT id FROM webhook_deliveries WHERE state='pending' AND next_attempt_at<=? ORDER BY next_attempt_at,id LIMIT 25").bind(at).all<{ id: string }>()).results.map(row => row.id);
   }
@@ -28,7 +31,7 @@ export class WebhookDelivery {
     const claimed = await this.db.prepare(`UPDATE webhook_deliveries AS d SET state='sending',attempts=attempts+1,lease_id=?,lease_until=?,updated_at=?
       WHERE id=? AND state='pending' AND next_attempt_at<=? AND EXISTS(SELECT 1 FROM webhook_subscriptions s WHERE s.id=subscription_id AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL)
       AND (booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))
-      AND ${workflowWebhookAuthority("d")}`)
+      AND ${workflowWebhookAuthority("d")} AND ${webhookDeliveryScope("d")}`)
       .bind(lease, new Date(now.getTime() + 60000).toISOString(), at, id, at).run();
     if (!claimed.meta.changes) return "not_due";
     const row = await this.db.prepare(`SELECT d.*,s.endpoint,s.secret_ciphertext FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id=d.subscription_id AND s.enabled=1 WHERE d.id=? AND d.lease_id=?`).bind(id, lease).first<Delivery>();
@@ -43,7 +46,7 @@ export class WebhookDelivery {
       const active = await this.db.prepare(`SELECT d.id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id=d.subscription_id
         WHERE d.id=? AND d.lease_id=? AND d.state='sending' AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL
         AND (d.booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=d.booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))
-        AND ${workflowWebhookAuthority("d")}`).bind(id, lease).first();
+        AND ${workflowWebhookAuthority("d")} AND ${webhookDeliveryScope("d")}`).bind(id, lease).first();
       if (!active) {await this.finish(id,lease,"failed",null,"workflow_authority_revoked",at,at);return "unavailable";}
       const response = await this.transport(endpoint, { method: "POST", redirect: "manual", signal: AbortSignal.timeout(10000), headers: { "Content-Type": "application" + "/json", "Dial-Signature": signature, "Dial-Event-Id": row.event_id }, body: row.body_json });
       code = response.status;

@@ -60,7 +60,7 @@ Erasure cannot recall a payload the receiver already accepted. Manage that recei
 
 ## Team setup and routing event sources
 
-The current team foundation associates event types with the installation's one actual host. It does not implement a full multi-host team scheduling product or a team management interface. Configure the host profile first. GET `/api/app/teams` lists teams with `hostId` and `eventTypeIds`. POST `/api/app/teams` creates a team with a name and existing event-type IDs:
+The team foundation associates event types with the configured host. Native API host partitions can own event types and use host-scoped subscriptions; event facts resolve the current owning partition at capture and delivery. A host transfer invalidates queued delivery to the previous host scope. It does not implement a full multi-host team scheduling product or a team management interface. Configure the host profile first. GET `/api/app/teams` lists teams with `hostId` and `eventTypeIds`. POST `/api/app/teams` creates a team with a name and existing event-type IDs:
 
 ```json
 {

@@ -8,7 +8,11 @@ export function operatorGraph(retainNative: boolean) {
   const email = retainNative ? "(SELECT email FROM oa_operators WHERE id=?)" : "?";
   const recipient = retainNative ? "id" : "email";
   const edges: Edge[] = [
-    ...["workflow_rules", "api_credentials", "api_oauth_applications", "oa_sessions", "oa_tokens", "oa_credentials", "oa_owner_signins", "oa_step_up_challenges", "oa_external_identities", "oa_invitation_cancellations", "calendar_oauth_states", "accounting_oauth_states", "notice_oauth_states", "oc_owner_claims", "operator_sessions", "magic_link_tokens", "operator_delivery_preferences", "operator_creation_receipts", "operator_creation_tombstones"].map(table => ({ table, from: root, on: { operator_id: "id" } })),
+    ...["api_oauth_grants", "workflow_rules", "api_credentials", "api_oauth_applications", "oa_sessions", "oa_tokens", "oa_credentials", "oa_owner_signins", "oa_step_up_challenges", "oa_external_identities", "oa_invitation_cancellations", "calendar_oauth_states", "accounting_oauth_states", "notice_oauth_states", "oc_owner_claims", "operator_sessions", "magic_link_tokens", "operator_delivery_preferences", "operator_creation_receipts", "operator_creation_tombstones"].map(table => ({ table, from: root, on: { operator_id: "id" } })),
+    {table:"api_oauth_grants",from:"api_oauth_applications",on:{application_id:"id"}},
+    {table:"api_oauth_codes",from:"api_oauth_grants",on:{grant_id:"id"}},
+    {table:"api_credentials",from:"api_oauth_grants",on:{oauth_grant_id:"id"}},
+    {table:"api_credential_audit",from:root,on:{actor_id:"id"}},
     { table: "workflow_dispatches", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "workflow_webhook_runs", from: "workflow_rules", on: { workflow_id: "id" } },
     { table: "webhook_deliveries", from: "workflow_rules", on: { workflow_id: "id" } },
@@ -38,6 +42,8 @@ export function operatorGraph(retainNative: boolean) {
   ];
   return defineErasure({ entity: retainNative ? "operator-author" : "operator", root: { table: root }, edges,
     retain: [
+      {table:"api_hosts",reason:"Anonymous host partitions retain event ownership; operator identity is detached on erasure."},
+      {table:"api_event_hosts",reason:"Event ownership must not fall back to another host after person erasure."},
       { table: "oa_domain_rules", reason: "Shared domain policies retain the original anonymous author ID and all policy values." },
       ...(retainNative ? [{ table: "oa_operators", reason: "Inactive anonymous author reference only; native capabilities and identifying fields are erased in the same batch." }] : []),
     ],
