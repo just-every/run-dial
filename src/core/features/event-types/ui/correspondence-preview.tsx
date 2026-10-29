@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { operatorDateTime } from "../../../shared/operator-format";
 import { appendInvitationManageLink, renderCorrespondenceTemplate } from "../../../shared/correspondence";
 
 type PreviewValues = Parameters<typeof renderCorrespondenceTemplate>[1];
@@ -20,7 +21,7 @@ export function CorrespondencePreview({ templates, keys, questionKeys, hostName,
     future.setUTCHours(14, 0, 0, 0);
     return future;
   });
-  const dateAndTime = new Intl.DateTimeFormat("en-US", { dateStyle: "full", timeStyle: "long", timeZone: "UTC" }).format(date);
+  const dateAndTime = operatorDateTime(date.toISOString());
   const values: PreviewValues = {
     "invitee full name": "Taylor Morgan",
     "invitee first name": "Taylor",
