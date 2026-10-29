@@ -10,10 +10,13 @@
       { "slug": "calendar-and-email", "source": "docs/calendar-and-email.md", "label": "Calendar and email" },
       { "slug": "backups", "source": "docs/backups.md", "label": "Backups and export" },
       { "slug": "importing", "source": "docs/importing.md", "label": "Moving in" },
+      { "slug": "importing-schedulers", "source": "docs/importing-schedulers.md", "label": "Capture a scheduler" },
+      { "slug": "importing-templates", "source": "docs/importing-templates.md", "label": "Import templates" },
       { "slug": "updating", "source": "docs/updating.md", "label": "Updating" }
     ]}
   ],
   "githubOnly": [
+    { "source": "docs/WEBHOOKS.md", "reason": "Webhook receiver protocol and native source API details for integration developers" },
     { "source": "ACCEPTANCE.md", "reason": "Release evidence gates for the product requirements, for maintainers" },
     { "source": "ADAPTERS.md", "reason": "Calendar and mail adapter contracts, for developers extending Dial" },
     { "source": "AGENTS.consumer.md", "reason": "Instructions for coding agents working in an owner's copy of the source" },
@@ -31,6 +34,7 @@
     { "source": "README.md", "reason": "The repository front page, with developer commands; the docs home is Overview" },
     { "source": "RELEASE.md", "reason": "Release and publication procedure for maintainers" },
     { "source": "RENDERING.md", "reason": "Rendering and routing architecture notes for developers" },
+    { "source": "RULINGS.md", "reason": "Recorded contract interpretations for maintainers" },
     { "source": "RUN-LOCALLY.md", "reason": "The full local command reference, with every flag and exit code; Install walks through the same first run" },
     { "source": "SEED-COMMAND-CONTRACT.md", "reason": "The shared command contract behind every setup, run, export and deploy command, for maintainers" }
   ]

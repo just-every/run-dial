@@ -55,6 +55,8 @@ export async function reconciliationProbes({call,data,state,hold,slot,day,comple
     async function stateSnapshot(){return (await data('/wire/state'));}
   });
   await probe('PAY-006 QuickBooks one receipt per captured payment survives response loss, repeat and concurrent export',async()=>{
+    // This Worker runs QBO_ENVIRONMENT=sandbox against a sandbox company; the money screens keep the production default.
+    await data('/wire/control',{name:'accounting-sandbox-company',value:1});
     const accounts=await data('/api/app/payments/accounting/accounts');await call('/api/app/payments/accounting/mapping',{accountId:accounts.accounts[0].id},200,'PUT');
     await data('/wire/control',{name:'accounting-response-lost',value:1});await call('/api/app/payments/accounting/export',{},503);
     await data('/api/app/payments/accounting/export',{});await Promise.all([data('/api/app/payments/accounting/export',{}),data('/api/app/payments/accounting/export',{})]);
@@ -77,7 +79,8 @@ export async function reconciliationProbes({call,data,state,hold,slot,day,comple
     await call('/api/app/payments/accounting/accounts',undefined,409);assert.equal((await data('/api/app/payments/accounting')).state,'unhealthy');
     await data('/wire/control',{name:'accounting-token-refused',value:0});
     assert.equal((await data('/__fixtures/payments/accounting-state')).receipts.length,count,'a refused refresh sends no receipt');
-    console.log('PAY-006: PASS mapped income account, one anonymous sales receipt/payment, lost response recovery, repeated/concurrent retry and revoked token stops sends');
+    assert.deepEqual([...new Set((await state()).wire_calls.map(c=>new URL(c.url)).filter(u=>u.hostname.endsWith('quickbooks.api.intuit.com')).map(u=>u.origin))],['https://sandbox-quickbooks.api.intuit.com'],'sandbox mode sends every accounting call to the sandbox base');
+    console.log('PAY-006: PASS sandbox base for every accounting call, mapped income account, one anonymous sales receipt/payment, lost response recovery, repeated/concurrent retry and revoked token stops sends');
   });
   await probe('PAY-006 erasure keeps reconciliation and export references only in anonymous audit',async()=>{
     const before=await data('/__fixtures/payments/all-rows');

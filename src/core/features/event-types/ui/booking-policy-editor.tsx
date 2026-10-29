@@ -1,48 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import { api, errorMessage } from "../../../api/client";
-import { Button, Card, noticeClassName } from "../../../app/ui/primitives";
-import { SectionHeading } from "../../../app/ui/page-header";
-import { useHydrated } from "../../../app/use-hydrated";
-import { defaultEventBookingPolicy, eventBookingPolicySchema, type EventBookingPolicy } from "../../../shared/booking-policy";
+import { useAutosave } from "../../../app/ui/autosave/use-autosave";
+import { eventBookingPolicySchema, type EventBookingPolicy } from "../../../shared/booking-policy";
 import { LockedZoneFields } from "./locked-zone-fields";
 import { ChangePolicyFields } from "./change-policy-fields";
-
-export function BookingPolicyEditor({ eventId, hostTimezone, onSaved }: { eventId: string; hostTimezone: string; onSaved(): void }) {
-  const hydrated = useHydrated();
-  const [value, setValue] = useState<EventBookingPolicy>({ ...defaultEventBookingPolicy });
-  const [loaded, setLoaded] = useState(false), [saving, setSaving] = useState(false);
-  const [error, setError] = useState(""), [status, setStatus] = useState("");
-  const busy = useRef(false);
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      try {
-        const response = await api.api.app["event-types"][":id"]["booking-policy"].$get({ param: { id: eventId } });
-        if (!response.ok) throw new Error(await errorMessage(response));
-        const policy = await response.json();
-        if (active) { setValue(policy); setLoaded(true); }
-      } catch (cause) { if (active) setError(cause instanceof Error ? cause.message : "Booking controls could not be loaded. Reload to try again."); }
-    })();
-    return () => { active = false; };
-  }, [eventId]);
-  async function save(event: React.FormEvent) {
-    event.preventDefault();
-    if (!hydrated || !loaded || busy.current) return;
-    const parsed = eventBookingPolicySchema.safeParse(value);
-    if (!parsed.success) { setError(parsed.error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`).join(" ")); return; }
-    busy.current = true; setSaving(true); setError(""); setStatus("");
-    try {
-      const response = await api.api.app["event-types"][":id"]["booking-policy"].$put({ param: { id: eventId }, json: parsed.data });
-      if (!response.ok) throw new Error(await errorMessage(response));
-      setValue(await response.json()); setStatus("Booking controls saved."); onSaved();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "The save result could not be received. Your settings are kept here; reload to check the saved controls."); }
-    finally { busy.current = false; setSaving(false); }
-  }
-  return <form className="mt-7 grid gap-5" onSubmit={save} aria-label="Booking controls">
-    <Card className="p-5 sm:p-6"><SectionHeading icon="clock" title="Meeting timezone" description="Keep an in-person meeting’s location time clear for travelling invitees." /><div className="mt-5"><LockedZoneFields value={value.lockedTimezone} hostTimezone={hostTimezone} disabled={!hydrated || !loaded || saving} onChange={lockedTimezone => { setValue(current => ({ ...current, lockedTimezone })); setStatus(""); }} /></div></Card>
-    <ChangePolicyFields value={value} disabled={!hydrated || !loaded || saving} onChange={policy => { setValue(current => ({ ...current, ...policy })); setStatus(""); }} />
-    {error ? <p role="alert" className={noticeClassName("error")}>{error}</p> : null}
-    {status ? <p role="status" className={noticeClassName("success")}>{status}</p> : null}
-    <div><Button type="submit" disabled={!hydrated || !loaded || saving}>{saving ? "Saving…" : "Save booking controls"}</Button></div>
-  </form>;
+import { SettingReadState, useSettingRead, writeSetting } from "../../../app/ui/autosave-setting";
+type Props = { eventId: string; hostTimezone: string; onSaved(): void; initial?: EventBookingPolicy; group?: "changes" | "timezone" };
+export function BookingPolicyEditor(props: Props) {
+  const read = useSettingRead<EventBookingPolicy>(`/api/app/event-types/${props.eventId}/booking-policy`, props.initial);
+  return read.value ? <PolicyFields {...props} initial={read.value} /> : <SettingReadState error={read.error} retry={read.retry} />;
+}
+function PolicyFields({ eventId, hostTimezone, onSaved, initial, group }: Props & { initial: EventBookingPolicy }) {
+  const save = useAutosave(`event:${eventId}:booking-policy`, initial, async (next, init) => { const parsed = eventBookingPolicySchema.safeParse(next); if (!parsed.success) throw new Error(parsed.error.issues.some(issue => issue.path[0] === "lockedTimezone") ? "Choose a time zone from the list." : "Use a whole number, or leave this blank."); await writeSetting(`/api/app/event-types/${eventId}/booking-policy`, parsed.data, init); onSaved(); });
+  return <div aria-label="Booking controls" className="grid gap-3" onBlur={save.leave}>
+    {group !== "changes" ? <LockedZoneFields state={save.state("lockedTimezone")} onRetry={save.retry} value={save.values.lockedTimezone} hostTimezone={hostTimezone} compact onDraftChange={zone => save.type("lockedTimezone", zone)} onChange={zone => save.choose("lockedTimezone", zone)} /> : null}
+    {group !== "timezone" ? <ChangePolicyFields state={save.state} onRetry={save.retry} value={save.values} compact onChange={next => { for (const key of ["rescheduleCutoffMinutes", "cancellationCutoffMinutes", "maxInviteeReschedules"] as const) if (next[key] !== save.values[key]) save.type(key, next[key]); }} /> : null}
+  </div>;
 }

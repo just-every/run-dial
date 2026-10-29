@@ -35,7 +35,9 @@ export class OperatorsService {
   }
 
   private async equalOperatorPolicy({ actor, action, target, role }: PolicyInput) {
-    if (actor.status !== "active" || action === "operators:role" || (role && role !== "owner")) return false;
+    if (actor.status !== "active") return false;
+    if (actor.role !== "owner") return ["sessions:list", "sessions:revoke"].includes(action) && target?.id === actor.id;
+    if (action === "operators:role" || (role && role !== "owner")) return false;
     if (action === "operators:deactivate" && target) {
       const setup = await this.binding.prepare("SELECT operator_id FROM operator_setup_identity WHERE singleton_key='default'").first<{ operator_id: string }>();
       if (!setup) return false;

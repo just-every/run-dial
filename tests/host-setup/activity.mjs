@@ -21,6 +21,7 @@ export async function activityJourney(page, origin, eventId, scan) {
   assert.ok(booking.calendar_provider_event_id);
   assert.equal((await page.request.post(origin + "/__fixtures/change", { data: { kind: "changed", bookingId: booking.id, occurrenceId: occurrence.id, providerEventId: booking.calendar_provider_event_id, updatedAt: new Date(Date.now() + 5000).toISOString(), startAt: new Date(Date.parse(occurrence.start_at) + 300000).toISOString(), endAt: new Date(Date.parse(occurrence.end_at) + 300000).toISOString(), location: "External edited room" } })).status(), 204);
   await page.goto(origin + "/app/bookings");
+  await page.locator("details.dial-more > summary").first().click();
   const opener = page.getByRole("button", { name: "Review calendar conflicts", exact: true }); await opener.click();
   const dialog = page.getByRole("dialog", { name: "Calendar conflicts", exact: true }); await expect(dialog).toBeVisible(); await expect(dialog.getByRole("button", { name: "Close", exact: true })).toBeFocused();
   await expect(dialog).toContainText("External edited room"); await expect(dialog).toContainText("America/New_York"); await expect(dialog).toContainText("UTC"); await expect(dialog.getByRole("button", { name: "Restore booking time", exact: true })).toBeEnabled(); await expect(dialog.getByRole("button", { name: "Cancel booking instead", exact: true })).toBeEnabled(); await scan("conflict-dialog");

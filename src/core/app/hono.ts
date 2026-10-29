@@ -1,3 +1,7 @@
+import { webhookRoutes } from "../features/webhooks/routes";
+import { teamRoutes } from "../features/teams";
+import { routingRoutes } from "../features/routing";
+import { analyticsRoutes } from "../features/analytics";
 import { pollRoutes } from "../features/polls";
 import { clientRoutes, rememberRoutes } from "../features/clients";
 import { noticeRoutes } from '../features/workspace-notices';
@@ -59,7 +63,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       await next();
       if (context.req.path === "/app" || context.req.path.startsWith("/app/")) context.res = editorDocument(context.res, runtime);
       if (["POST", "PUT", "PATCH", "DELETE"].includes(context.req.method) && context.res.status < 400 && !context.req.path.startsWith("/api/app/move-in/") && !context.get("inertMutation")) {
-        context.executionCtx.waitUntil(services.delivery.enqueueDue(context.env.JOBS));
+        context.executionCtx.waitUntil(Promise.all([services.delivery.enqueueDue(context.env.JOBS), services.webhooks.delivery.enqueue(context.env.JOBS)]));
       }
     })
     .all("/auth/*", async (context) => (await context.get("services").operators.handle(context.req.raw)) ?? context.notFound())
@@ -81,6 +85,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       const health = await checkPlatformBindings({ database: context.env.DB, files: context.env.FILES, jobs: context.env.JOBS });
       return context.json({ ...health, checkedAt: new Date().toISOString() });
     })
+    .route("/", analyticsRoutes)
     .route("/", extensionRoutes)
     .route("/", operatorRoutes)
     .route("/", operatorManagementRoutes)
@@ -110,6 +115,9 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", invitationManageRoutes)
     .route("/", paymentRoutes)
     .route("/", accountingRoutes)
+    .route("/", webhookRoutes)
+    .route("/", teamRoutes)
+    .route("/", routingRoutes)
     .route("/", noticeRoutes)
     .route("/", reportRoutes)
     .route("/", publicBookingRoutes)
@@ -133,7 +141,10 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
 /** Keep native error envelopes identical for HTTP and private document reads. */
 export const appError: ErrorHandler<AppEnvironment> = (error, context) => {
     if (error instanceof ArchiveMaintenance) return maintenanceResponse();
-    if (error instanceof ErasureError) return apiError(context, error.status as 400, error.code, error.code === "native_session_required" ? "Sign in with your operator sign-in link to erase personal data." : error.code === "erasure_preview_changed" ? "The preview expired or matching records changed. Preview again before confirming." : error.code === "erasure_import_value_too_long" ? "A saved value for this person inside another person's imported booking is longer than 4,096 characters and cannot be matched exactly; no completed erasure receipt was issued." : "Erasure could not complete. Preview the email again to resume; no completed receipt was issued.");
+    if (error instanceof ErasureError) {
+      if (error.code.startsWith("unclassified_table:") || error.code.startsWith("missing_table:")) return apiError(context, error.status as 409 | 503, "erasure_census_incomplete", "Some stored data has no erasure rule. Ask the person who maintains Dial to update this workspace.");
+      return apiError(context, error.status as 400, error.code, error.code === "native_session_required" ? "Sign in with your operator sign-in link to erase personal data." : error.code === "erasure_preview_changed" ? "The preview expired or matching records changed. Preview again before confirming." : error.code === "erasure_import_value_too_long" ? "Some imported data cannot be erased safely. Ask the person who maintains Dial to review it." : "Erasure stopped before it finished. Preview this email again to resume.");
+    }
     if (error instanceof AuthError) return context.json({ error: { code: error.code, message: error.code === "last_owner" ? "The last operator cannot be removed." : error.code === "operator_identity_overlap" ? "This operator also has bookings or requests. Use Erase personal data in Settings to erase every matching invitee record, then remove the operator separately." : "Operator access could not be changed. Reload and try again." } }, error.status as 400);
     if (error instanceof PublicAdmissionError) return admissionErrorResponse(error);
     if (error instanceof RuntimeConfigurationError) return apiError(context, 503, "configuration_missing", error.message);
@@ -157,6 +168,12 @@ async function requireSession(context: Context<AppEnvironment>, next: Next) {
     }
     await discardRequestBody(context.req.raw);
     return apiError(context, 401, "session_required", "A valid operator session is required.");
+  }
+  const authority=await context.env.DB.prepare('SELECT role FROM oa_operators WHERE id=?').bind(session.id).first<{role:string}>();
+  const importing=context.req.path.startsWith('/api/app/move-in/');
+  if(authority?.role!=='owner'&&!(importing&&authority?.role==='admin')){
+    await discardRequestBody(context.req.raw);
+    return apiError(context,403,'role_forbidden',`This role cannot perform ${importing?'move-in':context.req.path}.`);
   }
   if (document) {
     const completed = await context.get("services").hostSetup.completion();

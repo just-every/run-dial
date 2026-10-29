@@ -24,7 +24,7 @@ export async function requestOnlyJourney(browser, origin, scans, errors, storage
         await page.goto(`${origin}/book/${profile.handle}/requests`);
         await page.getByRole("heading", { name: `Request a time with ${profile.name}.`, exact: true }).waitFor();
         assert.equal(await page.locator(".pb-slot-button").count(), 0);
-        assert.equal(await page.getByRole("link", { name: /View availability|Back to availability/ }).count(), 0);
+        assert.equal(await page.getByRole("link", { name: /View event types|Back to availability/ }).count(), 0);
         assert.equal(await page.getByRole("navigation", { name: "Booking progress" }).count(), 0);
         await audit("request-only-page");
         await keyboardActivate(page, page.getByRole("link", { name: "Send another request", exact: true }));
@@ -38,7 +38,7 @@ export async function requestOnlyJourney(browser, origin, scans, errors, storage
         await page.getByLabel("End", { exact: true }).fill("09:00");
         await page.getByLabel("Name", { exact: true }).fill(`Request-only guest ${width}`);
         await page.getByLabel("Email", { exact: true }).fill(`requests${width}@dial.test`);
-        assert.equal(await page.getByRole("link", { name: /View availability|Back to availability/ }).count(), 0);
+        assert.equal(await page.getByRole("link", { name: /View event types|Back to availability/ }).count(), 0);
         await audit("request-compose");
         await keyboardActivate(page, page.getByRole("button", { name: "Review request", exact: true }));
         await page.getByRole("status").filter({ hasText: "Each time window needs an end after its start." }).waitFor();
@@ -60,7 +60,7 @@ export async function requestOnlyJourney(browser, origin, scans, errors, storage
         await audit("request-only-email-sent");
         await keyboardActivate(page, page.getByRole("button", { name: "Send another request", exact: true }));
         await page.getByRole("button", { name: "Review request", exact: true }).waitFor();
-        assert.equal(await page.getByRole("link", { name: /View availability|Back to availability/ }).count(), 0);
+        assert.equal(await page.getByRole("link", { name: /View event types|Back to availability/ }).count(), 0);
         assert.equal((await context.cookies()).length, 0, "the request journey is sessionless");
       } finally { await context.close(); }
     }

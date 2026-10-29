@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { contractTitle } from "../contract.mjs";
 import { assertTimeRange, assertActionParity, htmlBody, recipient, textBody, timeRange, wireMail } from "./mail-contracts.mjs";
 
-export async function occurrenceDurationJourney(origin, t) {
+export async function occurrenceDurationJourney(origin) {
+  // Consecutive observations of one booking belong to its parent journey. Keep
+  // each clause point named in failures without registering the journey again.
+  async function step(title, run) {
+    try { await run(); }
+    catch (error) { error.message = `${title}: ${error.message}`; throw error; }
+  }
   let cookie;
   async function data(path, body, expected = 200, method = body === undefined ? "GET" : "POST") {
     const response = await fetch(origin + path, { method, headers: { origin, "content-type": "application/json", ...(cookie ? { cookie } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: "manual" });
@@ -28,7 +34,7 @@ export async function occurrenceDurationJourney(origin, t) {
   const booking = snapshot.bookings.find(item => item.invitee_email === email);
   const deliver = async row => { assert.ok(row, "the production transaction queued its delivery"); await data("/__fixtures/deliver", { id: row.id }); };
   const currentRows = kind => snapshot.delivery_outbox.filter(row => row.booking_id === booking.id && row.occurrence_id === snapshot.bookings.find(item => item.id === booking.id).current_occurrence_id && row.kind === kind);
-  await t.test(contractTitle("NOTIFY-001", "original confirmation retains its exact 30-minute occurrence and escaped text/HTML facts"), async () => {
+  await step(contractTitle("NOTIFY-001", "original confirmation retains its exact 30-minute occurrence and escaped text/HTML facts"), async () => {
     for (const row of currentRows("mail_send")) await deliver(row);
     snapshot = await state();
     const confirmations = wireMail(snapshot).filter(mail => ["Confirmed: " + title, "New booking: " + title].includes(mail.subject));
@@ -50,7 +56,7 @@ export async function occurrenceDurationJourney(origin, t) {
   assert.equal(duration(changed.occurrence), 60);
   assert.equal(changed.durationMinutes, 60);
   assert.equal(changed.calendarState, "pending");
-  await t.test(contractTitle("NOTIFY-004", "changed-duration reschedule preserves prior 30-minute time and describes the new 60-minute pending occurrence"), async () => {
+  await step(contractTitle("NOTIFY-004", "changed-duration reschedule preserves prior 30-minute time and describes the new 60-minute pending occurrence"), async () => {
     for (const row of currentRows("mail_send")) await deliver(row);
     snapshot = await state();
     const mails = wireMail(snapshot).filter(mail => mail.subject === "Rescheduled: " + title);
@@ -65,7 +71,7 @@ export async function occurrenceDurationJourney(origin, t) {
       assert.ok(htmlBody(mail).includes(escape(reason)));
     }
   });
-  await t.test(contractTitle("NOTIFY-002", "link-ready mail selects the current 60-minute occurrence despite the 30-minute booking snapshot"), async () => {
+  await step(contractTitle("NOTIFY-002", "link-ready mail selects the current 60-minute occurrence despite the 30-minute booking snapshot"), async () => {
     for (const row of currentRows("calendar_upsert")) await deliver(row);
     snapshot = await state();
     const link = currentRows("mail_send").find(row => JSON.parse(row.payload_json).subject === "Your meeting link is ready");
@@ -75,7 +81,7 @@ export async function occurrenceDurationJourney(origin, t) {
     assert.equal(mails.length, 1);
     assertFacts(mails[0], 60, "Calendar setup: Up to date.", title);
   });
-  await t.test(contractTitle("NOTIFY-003", "all recipient reminders select the current 60-minute occurrence"), async () => {
+  await step(contractTitle("NOTIFY-003", "all recipient reminders select the current 60-minute occurrence"), async () => {
     const rows = currentRows("reminder");
     assert.equal(rows.length, 4);
     for (const row of rows) { await data("/__fixtures/due", { id: row.id }, 204); await deliver(row); }
@@ -84,7 +90,7 @@ export async function occurrenceDurationJourney(origin, t) {
     assert.equal(mails.length, 4);
     for (const mail of mails) assertFacts(mail, 60, "Calendar setup: Up to date.", title);
   });
-  await t.test(contractTitle("NOTIFY-004", "Google cancellation describes the transaction-selected current 60-minute occurrence in both parts"), async () => {
+  await step(contractTitle("NOTIFY-004", "Google cancellation describes the transaction-selected current 60-minute occurrence in both parts"), async () => {
     const persisted = snapshot.bookings.find(item => item.id === booking.id);
     await data("/wire/delete", { id: persisted.calendar_provider_event_id });
     snapshot = await state();

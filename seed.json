@@ -494,6 +494,62 @@
         "Destination hostnames for public DNS resolution"
       ],
       "adapters": []
+    },
+    {
+      "id": "operator-webhook-receivers",
+      "required": false,
+      "why": "API-002: only an owner-created subscription sends selected native facts to its public HTTPS receiver. Private destinations and redirects are refused. Receiver retention is controlled by the operator; local erasure stops future delivery but cannot recall a payload already accepted. Public DNS-over-HTTPS at cloudflare-dns.com checks endpoint hostnames before each attempt.",
+      "data": [
+        "Stable event identifiers and timestamps",
+        "Booking identifiers, state, time, chosen duration and attribution",
+        "Payment amount, currency and status",
+        "Calendar connection health states and named reasons",
+        "Routing form, matched rule and destination identifiers",
+        "Poll identifiers and vote revision",
+        "Destination hostnames for public DNS resolution"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "booking-browser-analytics",
+      "required": false,
+      "why": "INTEG-006: owner-configured booking measurement only; unconfigured pages and embeds do not load these providers. The invitee privacy notice names Google Analytics, Google Tag Manager, Meta, Google Ads and LinkedIn.",
+      "data": [
+        "sanitized booking page URL",
+        "page view, slot selection and booking conversion events"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "booking-ad-conversions",
+      "required": false,
+      "why": "INTEG-006: explicitly connected Google Ads and LinkedIn accounts receive confirmed booking conversions. HTTP-edge synthetic acceptance only; provider attribution and account eligibility are not claimed.",
+      "data": [
+        "matching advertising click ID",
+        "stable anonymous booking conversion reference",
+        "conversion time and configured destination"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "calcom-move-in",
+      "required": false,
+      "why": "MIGRATE-004: only an owner or admin can request a read-only Cal.com API capture with an explicitly supplied access token. The token is used for that request and is never saved. Preview, apply and undo use the saved capture without contacting the source. No provider mutation or live account validation is claimed.",
+      "data": [
+        "Operator-supplied provider credential in an authorization header",
+        "Inbound source account, event configuration and booking records"
+      ],
+      "adapters": []
+    },
+    {
+      "id": "savvycal-move-in",
+      "required": false,
+      "why": "MIGRATE-004: only an owner or admin can request a read-only SavvyCal API capture with an explicitly supplied access token. The token is used for that request and is never saved. Preview, apply and undo use the saved capture without contacting the source. No provider mutation or live account validation is claimed.",
+      "data": [
+        "Operator-supplied provider credential in an authorization header",
+        "Inbound source account, event configuration and booking records"
+      ],
+      "adapters": []
     }
   ],
   "env": [
@@ -628,6 +684,12 @@
       "secret": true,
       "required": false,
       "why": "PAY-006 (external quickbooks-online): QuickBooks Online OAuth client secret. Stored only as deployment configuration; accounting credentials never travel in an archive."
+    },
+    {
+      "name": "QBO_ENVIRONMENT",
+      "secret": false,
+      "required": false,
+      "why": "PAY-006 (external quickbooks-online): production (the default) or sandbox. Selects only the QuickBooks Online accounting API base; Intuit development keys reach only sandbox companies, at sandbox-quickbooks.api.intuit.com. Any other value fails runtime configuration naming this variable."
     },
     {
       "name": "SLACK_CLIENT_ID",

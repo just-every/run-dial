@@ -36,7 +36,7 @@ contract('LINK-002','host offers held times and recipient books one at desktop a
       await expect(form.getByRole('checkbox').first()).toBeEnabled({timeout:45000});
       await form.getByLabel('Week starting',{exact:true}).fill(new Date(Date.now()+10*86400000).toISOString().slice(0,10));
       await expect(form.getByRole('checkbox').first()).toBeEnabled({timeout:45000});
-      for(const time of [/^9:00 AM/,/^9:30 AM/,/^10:00 AM/])await form.getByRole('checkbox',{name:time}).first().check();
+      for(const time of [/, 9-/,/, 9:30-/,/, 10-/])await form.getByRole('checkbox',{name:time}).first().check();
       await form.getByLabel('Link expires (your device timezone)',{exact:true}).fill(new Date(Date.now()+4*86400000).toISOString().slice(0,16));
       assert.equal(await form.getByLabel('Hold duration (hours)',{exact:true}).inputValue(),'48');
       await snapshot(page,width,'selected');
@@ -48,7 +48,8 @@ contract('LINK-002','host offers held times and recipient books one at desktop a
       const offered=await (await host.request.get(origin+'/api/app/booking-links')).json();
       const starts=offered.find(row=>row.id===created.id).offeredStarts;
       assert.equal(starts.length,3);
-      const normal=await (await host.request.get(origin+`/api/public/book/dial-host/intro/availability?week=${starts[0].slice(0,10)}`)).json();
+      // Retry reset transports for these read-only checks; HTTP refusals still fail.
+      const normal=await (await host.request.get(origin+`/api/public/book/dial-host/intro/availability?week=${starts[0].slice(0,10)}`,{maxRetries:2})).json();
       for(const start of starts)assert.ok(!normal.slots.some(s=>s.startAt===start));
       const guest=await invitee.newPage();guest.on('pageerror',e=>errors.push(e.message));await guest.goto(url);
       const time=guest.locator('button[data-start-at]').first();
@@ -58,7 +59,7 @@ contract('LINK-002','host offers held times and recipient books one at desktop a
       await guest.getByLabel('What would you like to discuss?',{exact:false}).fill('Planning the product workshop with our team.');
       await guest.getByRole('button',{name:'Confirm booking',exact:true}).click();
       await expect(guest.getByRole('heading',{name:/confirmed|booked/i})).toBeVisible();await snapshot(guest,width,'confirmed');
-      const after=await (await host.request.get(origin+`/api/public/book/dial-host/intro/availability?week=${starts[0].slice(0,10)}`)).json();
+      const after=await (await host.request.get(origin+`/api/public/book/dial-host/intro/availability?week=${starts[0].slice(0,10)}`,{maxRetries:2})).json();
       assert.equal(starts.filter(start=>after.slots.some(s=>s.startAt===start)).length,2);
       await guest.goto(url);await expect(guest.getByRole('heading',{name:'This link has already been used.',exact:true})).toBeVisible();await snapshot(guest,width,'used');
       assert.deepEqual(errors,[]);

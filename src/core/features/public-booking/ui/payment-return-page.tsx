@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { errorMessage, publicApi } from "../../../api/client";
 import { formatUsd } from "../../../shared/event-price";
-import { format } from "./flow-shell";
+import { format, formatRange } from "./flow-shell";
 import { manageToken } from "./navigation";
 import { PublicFooter, PublicHeader, PublicTheme } from "./public-shell";
 import { PublicRecoveryPage } from "./recovery-page";
@@ -40,7 +40,7 @@ export function PaymentReturnPage({ handle, slug, token }: { handle: string; slu
     <p className="pb-eyebrow">{status?.approvalRequired ? "Booking request" : "Payment"}</p>
     {!status ? <p>{error || "Checking your payment with Stripe…"}</p> : <>
       <h1>{status.approvalRequired && ["held", "processing"].includes(status.state) ? status.mode === "setup" ? "Waiting for Stripe to confirm your saved card." : "Waiting for Stripe to confirm your authorization." : status.state === "confirmed" ? status.mode === "setup" ? "Card saved." : "Payment confirmed." : status.state === "released" ? "This payment window has closed." : status.state === "unbookable" ? status.mode === "setup" ? "Card saved, but the time is no longer available." : "Payment received, but the time is no longer available." : status.mode === "setup" ? "Waiting for Stripe to confirm your card." : "Waiting for Stripe to confirm your payment."}</h1>
-      <p>{status.mode === "setup" ? "Nothing charged" : `${status.approvalRequired && status.state !== "confirmed" ? "Authorization · " : ""}${formatUsd(status.amountCents)}`} · {format(status.startAt, timezone)} · {timezone}</p>
+      <p>{status.mode === "setup" ? "Nothing charged" : `${status.approvalRequired && status.state !== "confirmed" ? "Authorization · " : ""}${formatUsd(status.amountCents)}`} · {formatRange(status.startAt, status.endAt, timezone)}</p><p>Times in <strong>{timezone}</strong></p>
       {status.reference ? <p>Stripe reference <code>{status.reference}</code></p> : null}
       {status.state === "held" ? <p>Your time is held until {format(status.expiresAt, timezone)}. {status.approvalRequired ? "Finish on Stripe to submit your request. Nothing is charged before the host approves. The booking is confirmed only after approval and, for a priced request, Stripe confirms the capture." : "If you have not paid yet, return to Stripe to finish. The booking is confirmed only when Stripe confirms the payment."}</p> : null}
       {status.state === "processing" ? <p>{status.approvalRequired ? "Stripe is checking your authorization. The host can decide once it is accepted; no booking has been confirmed." : "Your bank payment is processing. Your time stays held, and you will receive a confirmation email once Stripe confirms the payment."}</p> : null}

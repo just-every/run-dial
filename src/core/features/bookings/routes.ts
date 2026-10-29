@@ -107,7 +107,7 @@ export const bookingOperatorRoutes = new Hono<AppEnvironment>()
     if (result.kind === "created" || result.kind === "replayed") return context.json(result.booking, result.kind === "created" ? 201 : 200);
     return createResult(context, result.kind, result.kind === "slot_invalid" ? result.exclusions : undefined);
   })
-  .get("/api/app/bookings/:id", validate("param", bookingIdSchema), async (context) => {
+  .get("/api/app/bookings/:id", validate("param", z.object({ id: z.string().min(1).max(200) })), async (context) => {
     const booking = await context.get("services").bookings.getForOperator(context.req.valid("param").id);
     return booking ? context.json({ ...booking, customFields: await context.get("services").customFields.entries("booking", booking.id) }) : apiError(context, 404, "booking_not_found", "The booking does not exist.");
   })

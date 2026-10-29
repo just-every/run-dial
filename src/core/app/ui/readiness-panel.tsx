@@ -1,15 +1,15 @@
+import { Link } from "@tanstack/react-router";
 import { readinessFix } from "../../features/event-types/readiness";
-import { SectionHeading } from "./page-header";
-import { Card, WarningMark } from "./primitives";
-import { operatorTimestamp } from "../../shared/operator-format";
 
-export function ReadinessPanel({ missing, checking = false, notice, eventId, workspace = "/app", checkedAt, timezone }: { workspace?: "/app" | "/setup"; missing?: string[]; checking?: boolean; notice?: string; eventId?: string; checkedAt?: string; timezone?: string }) {
-  return <Card className="p-5 sm:p-6">
-    <SectionHeading icon="check" title="Event type readiness" description={notice ?? (checking ? "Checking configured connections…" : missing === undefined ? "Readiness could not be checked. Reload the event to check again." : missing.length ? "Meet these requirements before publishing." : "Required publication checks passed.")} />
-    {checkedAt ? <p className="mt-2 text-[13px] text-muted">Connections last checked {operatorTimestamp(checkedAt, timezone ?? "UTC")}.</p> : null}
-    <ul className="mt-4 grid gap-3 text-sm text-ink">{missing?.map((code) => {
+/** Publication lists the requirements where the owner acts, with a way to each one. */
+export function ReadinessPanel({ missing, checking = false, notice, eventId, workspace = "/app" }: { workspace?: "/app" | "/setup"; missing?: string[]; checking?: boolean; notice?: string; eventId?: string; checkedAt?: string; timezone?: string }) {
+  return <section aria-label="Publication requirements" className="grid gap-3">
+    <h3 className="font-bold">Before you publish</h3>
+    {notice || checking || missing === undefined ? <p className="text-sm text-soft">{notice ?? (checking ? "Checking requirements…" : "Requirements could not be checked. Try publishing to check again.")}</p> : null}
+    {missing?.length ? <ul className="grid gap-2 text-sm">{missing.map(code => {
       const fix = readinessFix(code, eventId);
-      return <li key={code} className="flex items-start gap-3 rounded-[14px] border border-gold-line bg-gold-wash p-3"><WarningMark /><a href={fix.href.replace(/^\/app(?=\/|$)/, workspace)} className="font-semibold underline decoration-[1.5px] underline-offset-4 hover:decoration-gold-deep">{fix.label}</a></li>;
-    })}</ul>
-  </Card>;
+      const href = fix.href.replace(/\/availability$/, "/hours").replace(/^\/app(?=\/|$)/, workspace);
+      return <li key={code}><Link to={href} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">{fix.label}</Link></li>;
+    })}</ul> : missing ? <p className="text-sm text-soft">Ready to publish.</p> : null}
+  </section>;
 }

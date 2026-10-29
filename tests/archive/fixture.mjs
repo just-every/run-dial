@@ -27,6 +27,10 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
   reminderBody: null,
 } });
 const overrides = {
+  webhook_subscriptions: {endpoint:'https://receiver.synthetic.test/archive',events_json:'["booking.created.v1"]',scope:'workspace',scope_id:null,secret_ciphertext:secret+'_HOOK',enabled:1},
+  webhook_deliveries: {event_type:'booking.created.v1',body_json:'{"id":"synthetic-dial-1501","type":"booking.created.v1","data":{"bookingId":"bookings-1"}}',state:'pending',lease_id:null,lease_until:null,response_code:null,last_error:null,retry_until:end},
+  routing_forms: {config_json:'{"title":"Planning route","questions":[],"rules":[],"defaultMessage":"Contact the host"}'},
+  routing_submissions: {state:'matched',result_json:'{"submissionId":"routing_submissions-1","eventTypeId":"event_types-1","bookingPath":"/book/host/event"}'},
   meeting_polls:{state:'open',title:'Project planning',closes_at:end,show_tally:0},
   poll_participants:{name:'Alex Rivera',email:'invitee@example.test'},
   poll_votes:{choice:'yes'},
@@ -102,6 +106,9 @@ const overrides = {
   payment_processor_facts: {kind:'dispute',account_id:'synthetic-dial-1',processor_ref:'synthetic-dial-2',source_ref:'synthetic-dial-3',amount_cents:5000,status:'needs_response',disagreement:1,event_created:1},
   accounting_connections: {id:'quickbooks',realm_id:'synthetic-dial-4',status:'connected',access_token_ciphertext:secret+'_ACCOUNTING_ACCESS',refresh_token_ciphertext:secret+'_ACCOUNTING_REFRESH'},
   accounting_exports: {connection_id:'quickbooks',payment_ref:'synthetic-dial-3',amount_cents:5000,request_id:'synthetic-dial-5',document_ref:'synthetic-dial-5',payload_json:'{}',receipt_id:'synthetic-dial-6',state:'exported'},
+  analytics_settings: {id:'default',tags_json:JSON.stringify({ga4MeasurementId:'G-SYNTHETIC930'})},
+  analytics_connections: {provider:'google_ads',generation:1,status:'connected',credential_ciphertext:secret+'_ANALYTICS',destination_json:JSON.stringify({customerId:'1234567890',conversionAction:['customers','1234567890','conversionActions','930'].join('/')})},
+  analytics_deliveries: {provider:'google_ads',generation:1,event_id:'synthetic-dial-930',click_id:'synthetic-dial-931',destination_json:JSON.stringify({customerId:'1234567890',conversionAction:['customers','1234567890','conversionActions','930'].join('/')}),confirmed_at:instant,state:'pending'},
   workspace_notice_destinations:{id:'slack',status:'connected',target:'synthetic-dial-700',external_key:'synthetic-dial-701',masked_tail:'••••-700',credential_ciphertext:secret+'_NOTICE'},
   workspace_notice_deliveries:{destination_id:'slack',account_id:'synthetic-dial-701',channel_id:'synthetic-dial-700',event_kind:'created',state:'pending'},
   notice_erasure_requests:{provider:'slack',source_delivery_id:'synthetic-dial-702',account_id:'synthetic-dial-701',channel_id:'synthetic-dial-700',state:'pending'},

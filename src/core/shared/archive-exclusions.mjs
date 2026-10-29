@@ -42,6 +42,11 @@ export const importExcluded = {
 };
 
 export const excluded = {
+  routing_capabilities: "One-use routing submission authority and hashes remain installation-local",
+  payment_products: "Payment entitlement catalog is not portable yet; export refuses populated entitlement data",
+  payment_entitlements: "Purchaser identity, redemption code hashes and live Stripe purchase authority never travel; export refuses populated entitlement data",
+  payment_redemptions: "Live entitlement balances and booking redemption history are not portable yet; export refuses populated entitlement data",
+  payment_entitlement_events: "Stripe entitlement replay authority is installation-local; export refuses populated entitlement data",
   poll_vote_tokens: 'Poll participant capabilities and hashes; restore never recreates voting authority',
   client_remember_links: 'Single-use saved-details capabilities and their hashes; a restore never recreates remembered-details authority',
   notice_oauth_states: "Session-bound single-use Slack OAuth capabilities; never restored.",

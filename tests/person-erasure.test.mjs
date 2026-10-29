@@ -1,3 +1,4 @@
+import { personalEntitlements } from './erasure/entitlements.mjs';
 import { personalPoll } from './polls/native.mjs';
 import assert from 'node:assert/strict';
 import { contract } from './contract.mjs';
@@ -139,6 +140,8 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
     const archive = await dialPolicy(rt.db, { SESSION_SECRET: 'synthetic-dial-booking-wire-synthetic-local-session-secret' });
     const transfers = await createPortability({ db: rt.db, buckets: { FILES: guardedBucket(rt.bucket, archive.knownSecrets) }, policy: archive.policy });
     const frozenExport = await transfers.exports.create();
+    const entitlementProof=await personalEntitlements(rt,{email,aliasEmail,eventId:editableEvent.id,bookingId:native.id,controlId});
+    markers.push(...entitlementProof.markers);
     const before = await snapshot(rt.db);
     const preview = await rt.data('/api/app/privacy/preview', { email: email.toUpperCase() });
     assert.deepEqual({ bookings: preview.bookings, requests: preview.requests, operatorIdentityRetained: preview.operatorIdentityRetained }, { bookings: 4, requests: 1, operatorIdentityRetained: false });
@@ -168,6 +171,7 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
     await assert.rejects(() => rt.db.prepare("UPDATE oa_operators SET email=? WHERE email='operator@dial.test'").bind(email).run(), /person_erasure_in_progress/);
     await assert.rejects(() => rt.db.prepare("UPDATE operators SET normalized_email=? WHERE normalized_email='operator@dial.test'").bind(email).run(), /person_erasure_in_progress/);
     await assert.rejects(() => rt.db.prepare('UPDATE bookings SET invitee_email=? WHERE id=?').bind(email,controlId).run(), /person_erasure_in_progress/);
+    await entitlementProof.assertAdmissionClosed();
     const existingMail = before.delivery_outbox.find(row => row.kind === 'mail_send' && row.booking_id === native.id);
     assert.ok(existingMail, 'real booking mail provides the concurrent admission input');
     const racingMail = { ...existingMail, id: 'racing-mail', idempotency_key: 'racing-mail' };
@@ -191,6 +195,7 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
     const localMilliseconds = Date.now() - started;
     assert.equal((await rt.db.prepare('SELECT count(*) AS n FROM person_erasure_receipts').first()).n, 1, 'partial erasure resumes its original anonymous receipt');
     await pollProof.assertErased();
+    await entitlementProof.assertErased();
     assert.equal(receipt.localComplete, true);
     assert.equal(receipt.calendarCleanup, 'pending');
     assert.ok(receipt.externalRequests.some(item=>item.kind==='calendar_event_cancel'),'each known calendar cancellation is listed');
@@ -237,14 +242,59 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
   } finally { await rt.close(); }
 });
 
-contract('DATA-002', 'one confirmation erases operator and self-owner invitee records while retaining native identity; unknown tables fail closed', async (context) => {
+contract(['DATA-002', 'DATA-004'], 'one confirmation erases operator and self-owner invitee records while retaining native identity; unknown tables fail closed', async (context) => {
   const rt = await bookingRuntime({ developmentMail: true });
   try {
     await eraseOperatorInviteeRecords(rt, context);
-    await rt.db.prepare('CREATE TABLE unclassified_personal_data(id TEXT PRIMARY KEY, value TEXT)').run();
+    const email = 'someone@example.test';
+    const preview = await rt.data('/api/app/privacy/preview', { email });
+    for (const table of ['unclassified_personal_data', 'oa_unclassified_personal_data']) {
+      await rt.db.prepare(`CREATE TABLE ${table}(id TEXT PRIMARY KEY, value TEXT)`).run();
+      const before = await snapshot(rt.db);
+      const refused = await rt.data('/api/app/privacy/preview', { email }, 409);
+      const confirmation = await rt.data('/api/app/privacy/erase', { email, confirmation: preview.confirmation, expiresAt: preview.expiresAt }, 409);
+      for (const response of [refused, confirmation]) {
+        assert.equal(response.error.code, 'erasure_census_incomplete');
+        assert.equal(JSON.stringify(response).includes(table), false, 'census refusal does not expose internal table names');
+      }
+      assert.equal(JSON.stringify(await snapshot(rt.db)) === JSON.stringify(before), true, 'unknown table refusal leaves all rows unchanged');
+      await rt.db.prepare(`DROP TABLE ${table}`).run();
+    }
+  } finally { await rt.close(); }
+});
+
+contract(['DATA-002', 'DATA-004'], 'demo setup markers allow invitee preview and one-confirmation erasure while preserving a control person', async () => {
+  const rt = await bookingRuntime({ developmentMail: true });
+  try {
+    // Exact bookkeeping shape created by Base modules/demo/index.mjs.
+    await rt.db.prepare('CREATE TABLE IF NOT EXISTS rer_demo (name TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL)').run();
+    await rt.db.prepare("INSERT INTO rer_demo(name, value) VALUES ('seeded', ?)").bind(new Date().toISOString()).run();
+    const markers = (await rt.db.prepare('SELECT * FROM rer_demo').all()).results;
+    await rt.data('/__fixtures/setup', {});
+    const email = 'demo-invitee@example.test';
+    const event = await rt.data('/api/public/events/dial-host/intro');
+    const week = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+    async function book(email, name) {
+      const startAt = (await rt.data(`/api/public/book/dial-host/intro/availability?week=${week}`)).slots[0].startAt;
+      const selected = await rt.data('/api/public/book/dial-host/intro/selection', { startAt, inviteeTimezone: 'UTC' }, 201);
+      return rt.data('/api/public/book/dial-host/intro/confirm', { nonce: selected.nonce, startAt, inviteeTimezone: 'UTC', name, email, answers: { [event.eventType.questions[0].key]: 'Demo private answer' } }, 201);
+    }
+    const target = await book(email, 'Demo invitee');
+    await book('demo-control@example.test', 'Demo control');
+    const composition = { inviteeName: 'Demo invitee', inviteeEmail: email, inviteeTimezone: 'UTC', note: 'Demo private request', windows: [{ date: week, startMinute: 600, endMinute: 630 }] };
+    const review = await rt.data('/api/public/events/dial-host/intro/request/review', composition, 201);
+    await rt.data(`/api/public/events/dial-host/intro/request?nonce=${review.nonce}`, composition, 201);
+    const control = (await rt.data('/api/app/bookings')).find(row => row.inviteeEmail === 'demo-control@example.test');
     const before = await snapshot(rt.db);
-    await rt.data('/api/app/privacy/preview', { email: 'someone@example.test' }, 409);
-    assert.equal(JSON.stringify(await snapshot(rt.db)) === JSON.stringify(before), true, 'unknown table refusal leaves all rows unchanged');
-    await rt.db.prepare('DROP TABLE unclassified_personal_data').run();
+    const preview = await rt.data('/api/app/privacy/preview', { email });
+    assert.deepEqual([preview.bookings, preview.requests, preview.operatorIdentityRetained], [1, 1, false]);
+    assert.deepEqual(await snapshot(rt.db), before, 'demo-shaped preview remains write-free');
+    const receipt = await rt.data('/api/app/privacy/erase', { email, confirmation: preview.confirmation, expiresAt: preview.expiresAt });
+    assert.deepEqual([receipt.bookings, receipt.requests, receipt.localComplete, receipt.operatorIdentityRetained], [1, 1, true, false]);
+    assert.deepEqual(await rt.data('/api/app/bookings'), [control], 'control booking stays unchanged and the session remains usable');
+    assert.deepEqual(await rt.data('/api/app/availability-requests'), []);
+    assert.deepEqual((await rt.db.prepare('SELECT * FROM rer_demo').all()).results, markers, 'demo setup marker remains intact');
+    const expired = await rt.api(new URL(target.manageUrl).pathname.replace('/manage/', '/api/public/manage/'));
+    assert.ok([404, 410].includes(expired.status)); await expired.arrayBuffer();
   } finally { await rt.close(); }
 });

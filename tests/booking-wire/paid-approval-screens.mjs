@@ -11,7 +11,7 @@ export async function runPaidApprovalScreens(options){
   try{
     if(options.combinedOnly){await combinedApprovalScreens(h);await h.finish();return {shots:h.shots};}
     const priced=await h.makeEvent('synthetic-pay007-screen-priced',{price:6400}),setup=await h.makeEvent('synthetic-pay007-screen-setup',{terms:feeTerms});
-    await capture('approval-settings',`/app/event-types/${priced.id}`,async page=>{const form=page.getByRole('form',{name:'Host approval'});await form.getByRole('button',{name:'Save approval settings'}).waitFor();await form.getByLabel('Require host approval').waitFor();return form;},{session:true});
+    await capture('approval-settings',`/app/event-types/${priced.id}/advanced`,async page=>{await page.getByRole('button',{name:/^Guests and approval/}).click();const form=page.getByRole('group',{name:'Host approval'});await form.getByLabel('Require host approval').waitFor();return form;},{session:true});
     const selection=await h.selection(priced);
     await capture('paid-request-details',h.details(selection),async page=>{await page.getByRole('button',{name:'Authorize payment · $64.00 USD',exact:true}).waitFor();await page.getByLabel('Name',{exact:true}).fill('Maya Chen');await page.getByLabel('Email',{exact:true}).fill('synthetic-pay007-maya@example.test');});
     const held=await h.hold(priced,{selection,name:'Maya Chen'});

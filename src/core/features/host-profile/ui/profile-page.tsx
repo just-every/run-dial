@@ -1,18 +1,20 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { HostAvatar } from "./host-avatar";
 import { AvatarEditor } from "./avatar-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
-import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
 import { Button, Card, Input, Textarea, noticeClassName } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
+import { TimezonePicker } from "../../../shared/timezone-picker";
 import type { ProfileInput, ProfileRecord } from "../repository";
 
 export function ProfilePage() {
   const hydrated = useHydrated();
   const inFlight = useRef(false);
   const loadEpoch = useRef(0);
+  const edited = useRef(false);
   const initialProfile = useWorkspaceRead<ProfileRecord>("/api/app/profile");
   const [profile, setProfile] = useState<ProfileInput | ProfileRecord | undefined>(initialProfile);
   const [error, setError] = useState("");
@@ -26,7 +28,7 @@ export function ProfilePage() {
       if (epoch !== loadEpoch.current) return;
       if (response.ok) {
         const current = await response.json();
-        if (epoch === loadEpoch.current) setProfile(current ?? { handle: "", name: "", title: "", biography: "", timezone: "", focusAreas: [], socialProof: [] });
+        if (epoch === loadEpoch.current && !edited.current) setProfile(current ?? { handle: "", name: "", title: "", biography: "", timezone: "", focusAreas: [], socialProof: [] });
         return;
       }
       const message = await errorMessage(response); if (epoch === loadEpoch.current) setError(message);
@@ -34,9 +36,10 @@ export function ProfilePage() {
   }, []);
   useEffect(() => { void load(); return () => { loadEpoch.current += 1; }; }, [load]);
 
-  if (!profile) return error ? <EmptyState tone="error" title="Profile unavailable" description={error} action={<Button type="button" disabled={!hydrated} onClick={() => void load()}>Reload profile</Button>} /> : <p role="status" className="text-sm text-muted">Loading profile…</p>;
+  if (!profile) return <WorkspaceLoadState error={error} label="Loading profile…" onRetry={() => load()} />;
 
   function update<K extends keyof ProfileInput>(key: K, value: ProfileInput[K]) {
+    edited.current = true;
     setSaved(false);
     setProfile((current) => (current ? { ...current, [key]: value } : current));
   }
@@ -58,7 +61,7 @@ export function ProfilePage() {
 
   return (
     <form className="grid gap-7" onSubmit={save}>
-      <PageHeader eyebrow="Host configuration" title="Profile" description="This is the single host identity shown across your public scheduling pages." actions={<Button type="submit" disabled={!hydrated || saving}>{saving ? "Saving…" : "Save profile"}</Button>} />
+      <PageHeader title="Profile" description="This is the single host identity shown across your public scheduling pages." actions={<Button type="submit" disabled={!hydrated || saving}>{saving ? "Saving…" : "Save profile"}</Button>} />
       {error ? <p role="alert" className="rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{error}</p> : null}
       {saved ? <p role="status" className={noticeClassName("success")}>Profile saved.</p> : null}
       <fieldset disabled={!hydrated || saving} className="grid gap-6 border-0 p-0 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -69,7 +72,7 @@ export function ProfilePage() {
               <Field label="Name"><Input maxLength={120} value={profile.name} onChange={(event) => update("name", event.target.value)} required /></Field>
               <Field label="Title"><Input maxLength={180} value={profile.title} onChange={(event) => update("title", event.target.value)} required /></Field>
               <Field label="Public handle"><Input maxLength={80} value={profile.handle} onChange={(event) => update("handle", event.target.value.toLowerCase())} required /></Field>
-              <Field label="Host timezone"><Input value={profile.timezone} aria-describedby="host-timezone-help" onChange={(event) => update("timezone", event.target.value)} required /><span id="host-timezone-help" className="text-[13px] font-normal text-muted">Use a canonical IANA zone, for example Australia/Brisbane.</span></Field>
+              <TimezonePicker label="Host timezone" value={profile.timezone} onChange={(zone) => update("timezone", zone)} required />
               <Field label="Biography" className="sm:col-span-2"><Textarea maxLength={2000} value={profile.biography} onChange={(event) => update("biography", event.target.value)} required /></Field>
             </div>
           </Card>
@@ -80,7 +83,7 @@ export function ProfilePage() {
             </div>
           </Card>
           <Card className="p-5 sm:p-6">
-            <SectionHeading icon="message" title="Operator-authored social proof" description="Quotes and attributions are typed by you; Dial never collects ratings or reviews." action={<Button variant="secondary" type="button" disabled={profile.socialProof.length >= 3} onClick={() => update("socialProof", [...profile.socialProof, { quote: "", attribution: "" }])}>Add quote</Button>} />
+            <SectionHeading icon="message" title="Quotes" description="Quotes and attributions are typed by you; Dial never collects ratings or reviews." action={<Button variant="secondary" type="button" disabled={profile.socialProof.length >= 3} onClick={() => update("socialProof", [...profile.socialProof, { quote: "", attribution: "" }])}>Add quote</Button>} />
             <div className="mt-5 grid gap-4">
               {profile.socialProof.map((entry, index) => <div key={index} className="rounded-2xl bg-row p-4"><Field label="Quote"><Textarea maxLength={280} value={entry.quote} onChange={(event) => update("socialProof", profile.socialProof.map((item, position) => position === index ? { ...item, quote: event.target.value } : item))} required /></Field><div className="mt-3 flex gap-2"><div className="flex-1"><Field label="Attribution"><Input maxLength={120} value={entry.attribution} onChange={(event) => update("socialProof", profile.socialProof.map((item, position) => position === index ? { ...item, attribution: event.target.value } : item))} required /></Field></div><Button className="mt-6" variant="quiet" type="button" onClick={() => update("socialProof", profile.socialProof.filter((_, position) => position !== index))}>Remove</Button></div></div>)}
             </div>

@@ -29,12 +29,12 @@ try {
   assert.equal((await owner.request.get(`${origin}/api/payments/stripe/oauth/callback?code=wire-stripe-consent&state=${encodeURIComponent(new URL(start.headers().location).searchParams.get("state"))}`, { maxRedirects: 0 })).status(), 302);
   const event = await json(await owner.request.post(origin + "/api/app/event-types", { headers, data: { slug: "coaching", title: "Coaching session", description: "A focused hour to work through your plan.", durationMinutes: 60, color: "#176b5a", locationType: "fixed_link", locationLabel: "Video room", locationValue: "https://meet.example.test/room", listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 60, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 })) } }), 201);
   const { capture, shots } = screenRecorder({ browser, origin, folder, storageState: await owner.storageState() });
-  const termsForm = async (page, deposit) => { const form = page.getByRole("form", { name: "Deposits and cancellation policy" }); await form.getByRole("button", { name: "Save payment terms" }).waitFor(); for (let attempt = 0; deposit && await form.getByLabel("Deposit (USD)").inputValue().catch(() => "") !== deposit; attempt++) { assert.ok(attempt < 100, "the saved deposit loads"); await page.waitForTimeout(100); } await form.scrollIntoViewIfNeeded(); return form; };
-  for (const width of widths) await capture(width, "event-terms-empty", `/app/event-types/${event.id}`, page => termsForm(page));
+  const termsForm = async (page, deposit) => { await page.getByRole("button", { name: /^Price and payment/ }).click(); const form = page.getByRole("group", { name: "Deposits and cancellation policy" }); await form.getByLabel("Free cancellation until").waitFor(); if (deposit) assert.equal(Number(await form.getByLabel("Deposit (USD)").inputValue()), Number(deposit), "the stored deposit loads"); const layout = form.locator(".."); await layout.scrollIntoViewIfNeeded(); const box = await layout.boundingBox(); assert.ok(box && box.width > 0 && box.height > 0, "payment settings have a visible capture area"); return layout; };
+  for (const width of widths) await capture(width, "event-terms-empty", `/app/event-types/${event.id}/advanced`, page => termsForm(page));
   await json(await owner.request.put(`${origin}/api/app/event-types/${event.id}/price`, { headers, data: { amountCents: 10000, durationPrices: [] } }));
   await json(await owner.request.put(`${origin}/api/app/event-types/${event.id}/payment-terms`, { headers, data: { deposit: { kind: "fixed", amountCents: 2500 }, balanceDueHours: 24, freeWindowHours: 48, lateCancelFeeCents: 4000, noShowFeeCents: 6000 } }));
   await json(await owner.request.post(`${origin}/api/app/event-types/${event.id}/publish`, { headers, data: {} }));
-  for (const width of widths) await capture(width, "event-terms", `/app/event-types/${event.id}`, page => termsForm(page, "25.00"));
+  for (const width of widths) await capture(width, "event-terms", `/app/event-types/${event.id}/advanced`, page => termsForm(page, "25.00"));
 
   // A fee edit while the details page is open refuses the old consent, refreshes the terms and unchecks consent.
   const staleConsentErrors = [];
@@ -150,7 +150,7 @@ try {
     await capture(width, "paid-invoice-cancel-refund-choice", invoiceRecord, async page => {
       await invoiceSection(page);
       // The invoice is paid through the general ledger and has no booking_payments row.
-      await page.getByRole("button", { name: "Cancel booking", exact: true }).click();
+      if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click();
       const form = page.getByRole("form", { name: "Cancel booking" });
       await form.waitFor({ timeout: 5000 });
       await form.getByText("Refund everything paid, $108.88 USD.", { exact: false }).waitFor();
@@ -187,7 +187,7 @@ try {
   for(const width of widths)await capture(width,'payments-accounting-connected','/app/settings',async page=>{const section=await accountingSection(page);await section.getByRole('button',{name:'Export to QuickBooks Online',exact:true}).click();await section.getByRole('alert').waitFor();return section;});
   // PAY-003 (D4): the host cancels a paid booking from its record; everything paid is refunded unless the operator
   // refunds less with a reason, which the invitee's cancellation email and manage page then state.
-  const cancelForm = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); const form = page.getByRole("form", { name: "Cancel booking" }); await form.getByText("Refund everything paid, $90.00 USD.", { exact: false }).waitFor(); return form; };
+  const cancelForm = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); const form = page.getByRole("form", { name: "Cancel booking" }); await form.getByText("Refund everything paid, $90.00 USD.", { exact: false }).waitFor(); return form; };
   for (const width of widths) {
     await capture(width, "booking-record-cancel-form", record, async page => { const form = await cancelForm(page); await form.scrollIntoViewIfNeeded(); return form; });
     await capture(width, "booking-record-cancel-less-refused", record, async page => {

@@ -1,3 +1,5 @@
+import { webhookJourney } from "./webhook-journey.mjs";
+import { analyticsJourney } from "./analytics-journey.mjs";
 import { pollJourney } from "./poll-journey.mjs";
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
@@ -8,7 +10,7 @@ import { approvalAccessJourney } from "./approval-access-journey.mjs";
 
 // Each feature gets a fresh production Worker and an independent registration; only providers are synthetic.
 const origin = process.env.DIAL_REVIEW_ORIGIN, feature = process.argv[2], checks = [];
-const journeys = { guests: guestJourney, approval: approvalJourney, "approval-access": approvalAccessJourney };
+const journeys = { analytics: analyticsJourney, webhooks: webhookJourney, guests: guestJourney, approval: approvalJourney, "approval-access": approvalAccessJourney };
 assert.ok(Object.hasOwn(journeys, feature));
 let cookie;
 async function call(path, body, expected = 200, method = body === undefined ? "GET" : "POST") {

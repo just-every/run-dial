@@ -7,7 +7,7 @@ const timestamps = {
 
 export const calendarConnections = sqliteTable("calendar_connections", {
   singletonKey: text("singleton_key").primaryKey(),
-  provider: text("provider", { enum: ["google"] }).notNull(),
+  provider: text("provider", { enum: ["google", "microsoft"] }).notNull(),
   status: text("status", { enum: ["disconnected", "healthy", "unhealthy"] }).notNull(),
   authorisedByOperatorId: text("authorised_by_operator_id"),
   accountEmail: text("account_email"),

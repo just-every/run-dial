@@ -3,11 +3,8 @@ import assert from "node:assert/strict";
 import { startWorker, executeD1, queuedMail } from "./requests/runtime.mjs";
 import { contract } from "./contract.mjs";
 
-let journey;
-const gate = (context) => journey ??= requestJourney(context);
-contract("REQUEST-002", "reviewed alternative requests replay exactly after nonce expiry and retain no public internal identifiers", gate);
-contract("REQUEST-003", "operators list requests by state, read each window in the invitee's and the host's zone, and mark a request handled or closed once", gate);
-contract("REQUEST-004", "a request mails every host by default; a subset mails only the chosen operators; suppressed email keeps the in-app record and mails nobody", gate);
+// One request moves through review, private handling and its event's recipient policy.
+contract(["REQUEST-002", "REQUEST-003", "REQUEST-004"], "reviewed alternative request flows through private handling and per-event mail routing", requestJourney);
 
 async function requestJourney(context) {
   const server = await startWorker(context);
@@ -38,8 +35,8 @@ async function requestJourney(context) {
   assert.equal(inbox.length, 1);
   assert.equal(inbox[0].inviteeEmail, body.inviteeEmail);
   const detail = await json(await fetch(`${server.origin}/api/app/availability-requests/${inbox[0].id}`, { headers: { cookie } }));
-  assert.match(detail.windows[0].inviteeLabel, /1:00\sPM UTC\+00:00.*\(UTC\)$/, "REQUEST-003: the window in the invitee's zone");
-  assert.match(detail.windows[0].hostLabel, /11:00\sPM UTC\+10:00.*\(Australia\/Brisbane\)$/, "REQUEST-003: the same window in the host's zone");
+  assert.match(detail.windows[0].inviteeLabel, /, 1-2 PM$/, "REQUEST-003: the window in the invitee's zone");
+  assert.match(detail.windows[0].hostLabel, /, 11 PM-.+, 12 AM$/, "REQUEST-003: the same window in the host's zone");
   const handled = await fetch(`${server.origin}/api/app/availability-requests/${inbox[0].id}/state`, { ...post({ state: "handled" }), headers: { ...post({}).headers, cookie } });
   assert.equal(handled.status, 200, await handled.clone().text());
   const repeatTransition = await fetch(`${server.origin}/api/app/availability-requests/${inbox[0].id}/state`, { ...post({ state: "handled" }), headers: { ...post({}).headers, cookie } });

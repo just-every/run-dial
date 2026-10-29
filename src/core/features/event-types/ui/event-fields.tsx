@@ -1,15 +1,23 @@
 import { LocationFields } from "./location-fields";
 import { DurationFields } from "./duration-fields";
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import { FieldFailed, FieldSaved, type EventFieldSaving } from "./event-field-saving";
 import { Card, IconTile, Input, Select, Textarea } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
 import type { IconName } from "../../../shared/drawing/icons";
-import type { EventTypeInput } from "../repository";
+import type { EventDetailsInput, EventTypeInput } from "../repository";
 
-type Props = { event: EventTypeInput; update<K extends keyof EventTypeInput>(key: K, value: EventTypeInput[K]): void };
+type Props = EventFieldSaving & { mode?: "essentials"; event: EventTypeInput; update<K extends keyof EventDetailsInput>(key: K, value: EventDetailsInput[K]): void };
 
-export function EventFields({ event, update }: Props) {
+export function EventFields({ event, update, mode, ...saving }: Props) {
   const [more, setMore] = useState(false);
+  const id = useId();
+  if (mode === "essentials") return <div className="grid min-w-0 gap-4">
+    <div className="grid gap-2"><div className="flex items-center justify-between gap-3 text-sm font-[650]"><label htmlFor={`${id}-name`}>Name</label><FieldSaved saving={saving} field="title" /></div><Input aria-label="Name" id={`${id}-name`} value={event.title} onChange={entry => update("title", entry.target.value)} onBlur={() => saving.onLeave?.("title")} aria-describedby={saving.state?.("title").failed ? `${id}-name-failed` : undefined} required /><FieldFailed saving={saving} field="title" id={`${id}-name-failed`} what="the name" /></div>
+    <div className="grid gap-2"><div className="flex items-center justify-between gap-3 text-sm font-[650]"><label htmlFor={`${id}-description`}>Description</label><FieldSaved saving={saving} field="description" /></div><Textarea className="event-essentials-description" aria-label="Description" id={`${id}-description`} value={event.description} onChange={entry => update("description", entry.target.value)} onBlur={() => saving.onLeave?.("description")} aria-describedby={saving.state?.("description").failed ? `${id}-description-failed` : undefined} required /><FieldFailed saving={saving} field="description" id={`${id}-description-failed`} what="the description" /></div>
+    <DurationFields compact event={event} update={update} {...saving} />
+    <LocationFields compact event={event} update={update} {...saving} />
+  </div>;
   return <>
     <Card className="p-5 sm:p-6"><SectionHeading icon="file" title="Details" description="Start with the offer your guests will book." /><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="Event name"><Input value={event.title} onChange={(entry) => update("title", entry.target.value)} required /></Field></div><DurationFields event={event} update={update} /></Card>
     <LocationFields event={event} update={update} />

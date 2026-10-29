@@ -8,13 +8,44 @@ on:
       - pr-dial-export-fix
       - "style/**"
 
+  pull_request:
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == 'refs/heads/main' && github.run_id || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
 
 jobs:
-  verify:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.reuse.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - id: reuse
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          WF_REF: ${{ github.workflow_ref }}
+        run: bash scripts/ci/verify-plan.sh
+
+  checks:
+    needs: plan
+    if: needs.plan.outputs.skip != 'true'
     name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Each runner owns its native listeners/state. The slow README installation
     # and real-time Cron journey live in nightly-journeys.yml; all other test
@@ -79,21 +110,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Reclaim disposable hosted-runner SDKs for native CLI proof
-        if: ${{ runner.environment == 'github-hosted' && runner.os == 'Linux' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ "$GITHUB_ACTIONS" == "true" && "$RUNNER_ENVIRONMENT" == "github-hosted" && "$RUNNER_OS" == "Linux" ]]
-          available_bytes() {
-            df -B1 --output=avail "$1" | tail -n 1 | tr -d ' '
-          }
-          printf 'Before checkout available bytes: %s\n' "$(available_bytes "$GITHUB_WORKSPACE")"
-          printf 'Before temporary available bytes: %s\n' "$(available_bytes "$RUNNER_TEMP")"
-          # Dial uses none of these preinstalled SDKs. Keep the native CLI's real disk guard.
-          sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
-          printf 'After checkout available bytes: %s\n' "$(available_bytes "$GITHUB_WORKSPACE")"
-          printf 'After temporary available bytes: %s\n' "$(available_bytes "$RUNNER_TEMP")"
       - uses: pnpm/action-setup@v4
         with:
           version: 10.12.4
@@ -106,30 +122,19 @@ jobs:
           sudo sysctl -w "net.ipv4.ip_local_reserved_ports=$ports"
           node scripts/ci-runtime-ports.mjs --check
       - run: pnpm install --frozen-lockfile
-      - name: Install Chromium and native dependencies
-        if: ${{ matrix.args != 'static' }}
+      - name: Identify browser partition
+        id: browser
+        run: node scripts/ci/browser-needed.mjs ${{ matrix.args }} >> "$GITHUB_OUTPUT"
+      - name: Install Chromium
+        if: steps.browser.outputs.browser == 'true'
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          mirrors=(runner-default http://mirrors.edge.kernel.org/ubuntu/ http://us-east-1.ec2.archive.ubuntu.com/ubuntu/)
-          for attempt in 1 2 3; do
-            mirror=${mirrors[attempt - 1]}
-            printf 'Chromium apt: attempt %s/3 (60s deadline; mirror %s)\n' "$attempt" "$mirror"
-            # Elevate before timeout: otherwise sudo's child can outlive the
-            # deadline and retain dpkg's lock into the next mirror attempt.
-            if sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS timeout --kill-after=5s 60s bash -ec '
-              export PLAYWRIGHT_BROWSERS_PATH="$4"
-              "$1" scripts/ci-apt-bootstrap.mjs "$3"
-              dpkg --configure -a
-              "$1" "$2" install --with-deps chromium
-            ' bash "$(command -v node)" "$(node -p "require.resolve('@playwright/test/package.json').replace(/package.json$/, 'cli.js')")" "$mirror" "$HOME/.cache/ms-playwright"; then
-              exit 0
-            else
-              status=$?
-              printf 'Chromium apt: attempt %s/3 failed (mirror %s; exit %s)\n' "$attempt" "$mirror" "$status" >&2
-            fi
-          done
-          exit "$status"
+          pnpm exec playwright install chromium
+          if ! pnpm exec node scripts/chromium-probe.mjs; then
+            sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS env "PATH=$PATH" "APT_ARCHIVES=$RUNNER_TEMP/rer-apt/archives" python3 scripts/install-chromium-deps.py
+            pnpm exec node scripts/chromium-probe.mjs
+          fi
       - name: Run verification partition
         env:
           DIAL_TEST_DIAGNOSTICS_DIR: ${{ runner.temp }}/dial-test-diagnostics
@@ -139,3 +144,20 @@ jobs:
           trap 'kill "$monitor" 2>/dev/null || true; wait "$monitor" 2>/dev/null || true' EXIT
           export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$PWD/scripts/test-worker-diagnostics.mjs"
           node scripts/ci-verify.mjs ${{ matrix.args }}
+
+  verify:
+    needs: [plan, checks]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Require the plan and every partition
+        env:
+          PLAN: ${{ needs.plan.result }}
+          SKIP: ${{ needs.plan.outputs.skip }}
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          set -euo pipefail
+          test "$PLAN" = success
+          if [ "$SKIP" = true ]; then exit 0; fi
+          for result in $RESULTS; do test "$result" = success; done

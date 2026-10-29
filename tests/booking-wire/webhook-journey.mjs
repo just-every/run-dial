@@ -1,0 +1,116 @@
+import assert from "node:assert/strict";
+import { webhookReceiver } from "./webhook-receiver.mjs";
+import { webhookRetries } from "./webhook-retries.mjs";
+import { pollInput, pollLinks } from "../polls/fixture.mjs";
+import { paidApprovalSupport } from "./paid-approval-support.mjs";
+
+export async function webhookJourney(h) {
+  const { data, call, state, future, checks } = h;
+  const receiver = await webhookReceiver();
+  try {
+    const settings = await data("/api/app/webhooks");
+    assert.equal((await call("/api/app/webhooks")).headers.get("cache-control"), "no-store", "private endpoint metadata cannot be cached");
+    assert.deepEqual(settings.subscriptions, []);
+    const anonymous = await fetch(process.env.DIAL_REVIEW_ORIGIN + "/api/app/webhooks");
+    assert.equal(anonymous.status, 401);
+    const origin = process.env.DIAL_REVIEW_ORIGIN;
+    const denied = await fetch(origin + "/api/app/webhooks", { method: "POST", headers: { Origin: origin, "content-type": "application" + "/json" }, body: JSON.stringify({ endpoint: "https://receiver.synthetic.test/anonymous", events: settings.eventTypes, scope: "workspace", scopeId: null }) });
+    assert.equal(denied.status, 401);
+    assert.equal((await data("/api/app/webhooks")).subscriptions.length, 0);
+    const subscribe = async (path, events = settings.eventTypes, scope = "workspace", scopeId = null) => {
+      const response = await call("/api/app/webhooks", { endpoint: `https://receiver.synthetic.test${path}`, events, scope, scopeId }, 201);
+      assert.equal(response.headers.get("cache-control"), "no-store", "one-time signing secret cannot be cached");
+      return response.json();
+    };
+    for (const endpoint of ["http://receiver.synthetic.test/refused", "https://127.0.0.1/refused", "https://169.254.169.254/refused", "https://private.synthetic.test/refused"]) await call("/api/app/webhooks", { endpoint, events: settings.eventTypes, scope: "workspace", scopeId: null }, 400);
+    await call("/api/app/webhooks", { endpoint: "https://receiver.synthetic.test/refused", events: settings.eventTypes, scope: "host", scopeId: "foreign-host" }, 400);
+    const workspace = await subscribe("/workspace"), host = await subscribe("/host", ["booking.created.v1"], "host", settings.hostId);
+    const eventInput = { slug: "synthetic-dial-1400", title: "Planning consultation", description: "A planning session.", durationMinutes: 30, durationOptionsMinutes: [30, 60], color: "#176b5a", locationType: "fixed_link", locationLabel: "Meeting room", locationValue: "https://meet.example.test/planning", listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 })) };
+    const event = await data("/api/app/event-types", eventInput, 201);
+    await data(`/api/app/event-types/${event.id}/publish`, {});
+    const team = await data("/api/app/teams", { name: "Planning", eventTypeIds: [event.id] }, 201);
+    const otherTeam = await data("/api/app/teams", { name: "Unrelated", eventTypeIds: [] }, 201);
+    const teamSub = await subscribe("/team", ["booking.created.v1", "routing.submitted.v1"], "team", team.id);
+    const unrelatedSub = await subscribe("/unrelated-team", settings.eventTypes, "team", otherTeam.id);
+    const dispatch = (now, id) => data("/__fixtures/webhooks/process", { ...(now ? { now } : {}), ...(id ? { id } : {}) });
+    const base = `/api/public/book/dial-host/${event.slug}`;
+    let number = 1401;
+    async function book() {
+      const slot = (await data(`${base}/availability?week=${future}&durationMinutes=60`)).slots[0]; assert.ok(slot);
+      const selection = await data(base + "/selection", { startAt: slot.startAt, durationMinutes: 60, inviteeTimezone: "UTC" }, 201);
+      const email = [`synthetic-dial-${number++}`, "example.test"].join("@");
+      const payload = { nonce: selection.nonce, startAt: slot.startAt, durationMinutes: 60, inviteeTimezone: "UTC", name: "Planning invitee", email, answers: {}, attribution: { utm_source: "newsletter", utm_medium: "email", utm_campaign: "planning", utm_term: "consultation", utm_content: "october", source: "calendar-card" } };
+      const receipt = await data(base + "/confirm", payload, 201);
+      await call(base + "/confirm", payload, 200);
+      const booking = (await state()).bookings.find(row => row.invitee_email === email);
+      return { receipt, booking, payload, token: new URL(receipt.manageUrl).pathname.split("/").at(-1) };
+    }
+    const first = await book(); await dispatch(); await dispatch();
+    const created = receiver.captures.filter(row => JSON.parse(row.body).type === "booking.created.v1");
+    console.log("WEBHOOK_INITIAL " + JSON.stringify({ door: "native Worker default fetch", received: created.length, deliveries: (await state()).webhook_deliveries.map(row => ({ state: row.state, error: row.last_error, responseCode: row.response_code })) }));
+    assert.deepEqual(created.map(row => row.path).sort(), ["/host", "/team", "/workspace"]);
+    const createdBody = JSON.parse(created.find(row => row.path === "/workspace").body);
+    assert.deepEqual(createdBody.data.attribution, { utm_source: "newsletter", utm_medium: "email", utm_campaign: "planning", utm_term: "consultation", utm_content: "october", source: "calendar-card" });
+    assert.equal(createdBody.data.durationMinutes, 60);
+    assert.equal(createdBody.data.bookingId, first.booking.id);
+    assert.ok(!JSON.stringify(created).includes(first.token));
+    const slot = (await data(`/api/public/manage/${first.token}/reschedule/availability?week=${future}`)).slots.find(row => row.startAt !== first.receipt.occurrence.startAt);
+    const selection = await data(`/api/public/manage/${first.token}/reschedule/selection`, { startAt: slot.startAt, inviteeTimezone: "UTC" }, 201);
+    const change = { nonce: selection.nonce, startAt: slot.startAt, inviteeTimezone: "UTC", reason: "New time" };
+    await data(`/api/public/manage/${first.token}/reschedule`, change); await data(`/api/public/manage/${first.token}/reschedule`, change);
+    await data(`/api/app/bookings/${first.booking.id}/reschedule-request`, { message: "Please pick another time", releaseTime: false, expiresInDays: 14, reminderHours: null });
+    await data(`/api/public/manage/${first.token}/cancel`, { reason: "Plans changed" }); await data(`/api/public/manage/${first.token}/cancel`, { reason: "Plans changed" });
+    const attendance = await book(); await call("/__fixtures/booking-ended", { id: attendance.booking.id }, 204);
+    await data(`/api/app/bookings/${attendance.booking.id}/attendance`, { status: "no_show", note: "" });
+    await data(`/api/app/bookings/${attendance.booking.id}/attendance`, { status: "attended", note: "" });
+    const form = await data("/api/app/routing-forms", { title: "Planning route", questions: [{ key: "purpose", label: "Purpose", required: true }], rules: [{ id: "planning", questionKey: "purpose", equals: "planning", eventTypeId: event.id, teamId: team.id }], defaultMessage: "Contact the host" }, 201);
+    const door = await data(`/api/public/routing/${form.id}`), submission = { nonce: door.capability.nonce, answers: { purpose: "planning" } };
+    const routed = await data(`/api/public/routing/${form.id}/submit`, submission, 201);
+    assert.equal(routed.bookingPath, `/book/dial-host/${event.slug}`);
+    await data(`/api/public/routing/${form.id}/submit`, submission);
+    const pollSlots = (await data(`${base}/availability?week=${future}`)).slots;
+    const poll = await data("/api/app/polls", pollInput(event, pollSlots, [{ name: "Planning participant", email: ["synthetic-dial-1410", "example.test"].join("@") }]), 201);
+    const pollHost = await data(`/api/app/polls/${poll.id}`), pollLink = pollLinks((await state()).delivery_outbox, poll.id)[0];
+    await data(`/api/public/polls/${poll.id}/votes`, { token: pollLink.token, votes: pollHost.candidates.map(row => ({ candidateId: row.id, choice: "yes" })) });
+    await data(`/api/app/polls/${poll.id}/close`, {}); await data(`/api/app/polls/${poll.id}/close`, {});
+    const oauth = new URL((await call("/api/app/payments/stripe/oauth/start", undefined, 302)).headers.get("location"));
+    await call("/api/payments/stripe/oauth/callback?" + new URLSearchParams({ state: oauth.searchParams.get("state"), code: "wire-stripe-consent" }), undefined, 302);
+    const paid = await paidApprovalSupport({ ...h, origin });
+    const priced = await paid.makeEvent("synthetic-dial-1411", { price: 5000 });
+    await paid.capture(await paid.authorize(await paid.hold(priced, { email: ["synthetic-dial-1412", "example.test"].join("@") })));
+    await call("/__fixtures/calendar-health", { healthy: false }, 204); await call("/__fixtures/calendar-health", { healthy: false }, 204);
+    await dispatch(); await dispatch();
+    const workspaceCaptures = receiver.captures.filter(row => row.path === "/workspace"), eventTypes = workspaceCaptures.map(row => JSON.parse(row.body).type);
+    assert.deepEqual([...new Set(eventTypes)].sort(), ["booking.created.v1", "booking.rescheduled.v1", "booking.reschedule-requested.v1", "booking.canceled.v1", "booking.no-show.v1", "booking.attendance.v1", "booking.payment.v1", "routing.submitted.v1", "poll.created.v1", "poll.voted.v1", "poll.closed.v1", "calendar.connection-health-changed.v1"].sort());
+    for (const type of settings.eventTypes.filter(type => type !== "booking.created.v1")) assert.equal(eventTypes.filter(value => value === type).length, 1, `${type} one delivery despite replay`);
+    const health = (await state()).calendar_connection_health_changes.find(row => row.reason === "provider_timeout");
+    const healthBody = JSON.parse(workspaceCaptures.find(row => JSON.parse(row.body).type === "calendar.connection-health-changed.v1").body);
+    assert.equal(healthBody.id, health.id);
+    assert.deepEqual(healthBody.data, { fromState: health.from_state, toState: health.to_state, reason: "provider_timeout", occurredAt: health.occurred_at });
+    const teamRouting = receiver.captures.filter(row => row.path === "/team" && JSON.parse(row.body).type === "routing.submitted.v1"); assert.equal(teamRouting.length, 1);
+    assert.equal(teamRouting[0] && JSON.parse(teamRouting[0].body).id, routed.submissionId);
+    const unrelated = receiver.captures.filter(row => row.path === "/unrelated-team" && JSON.parse(row.body).type !== "calendar.connection-health-changed.v1"); assert.equal(unrelated.length, 0);
+    assert.equal(receiver.captures.filter(row => row.path === "/unrelated-team" && JSON.parse(row.body).type === "calendar.connection-health-changed.v1").length, 1, "team receives its actual host calendar health");
+    for (const capture of receiver.captures) receiver.verify(capture, capture.path === "/workspace" ? workspace.secret : capture.path === "/host" ? host.secret : capture.path === "/unrelated-team" ? unrelatedSub.secret : teamSub.secret);
+    console.log("WEBHOOK_CREATED " + JSON.stringify(created.find(row => row.path === "/workspace")));
+    const listed = await data("/api/app/webhooks");
+    assert.ok(!JSON.stringify(listed).includes(workspace.secret));
+    assert.ok(listed.deliveries.every(row => row.state === "delivered" && row.responseCode === 204));
+    await webhookRetries({ ...h, receiver, subscribe, process: dispatch, book, workspace, first, eventInput });
+    const beforeNonOwner = await state();
+    for (const [path, method, body] of [["/api/app/webhooks", "GET"], ["/api/app/webhooks", "POST", { endpoint: "https://receiver.synthetic.test/non-owner", events: ["booking.created.v1"], scope: "workspace", scopeId: null }], [`/api/app/webhooks/${workspace.id}`, "DELETE"], [`/api/app/webhook-deliveries/${listed.deliveries[0].id}/redeliver`, "POST", {}]]) {
+      const denied = await fetch(origin + path, { method, headers: { Origin: origin, Cookie: "oa_session=synthetic-dial-1492", "content-type": "application" + "/json" }, ...(body ? { body: JSON.stringify(body) } : {}) });
+      assert.equal(denied.status, 401, "a non-owner carrying an unissued credential is refused");
+    }
+    const afterNonOwner = await state();
+    for (const table of ["webhook_subscriptions", "webhook_deliveries"]) assert.deepEqual(afterNonOwner[table], beforeNonOwner[table], "a refused non-owner changes no webhook authority or delivery");
+    const beforeRevocation = (await state()).webhook_subscriptions;
+    await call("/auth/signout", {}, 204);
+    await call("/api/app/webhooks", undefined, 401);
+    await call("/api/app/webhooks", { endpoint: "https://receiver.synthetic.test/revoked", events: ["booking.created.v1"], scope: "workspace", scopeId: null }, 401);
+    await call(`/api/app/webhooks/${workspace.id}`, undefined, 401, "DELETE");
+    await call("/api/app/webhook-deliveries/synthetic-dial-1499/redeliver", {}, 401);
+    assert.deepEqual((await state()).webhook_subscriptions, beforeRevocation, "a revoked session cannot regain webhook authority");
+    checks.push("API-002: all native facts, scoped subscriptions, independently verified HMAC, UTM and source, duration, retry, manual replay, deletion and erasure");
+  } finally { await receiver.close(); }
+}

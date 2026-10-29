@@ -7,6 +7,7 @@ import { assertReport } from '../tests/move-in/report-validator.mjs';
 import { evidencePath } from './evidence-path.mjs';
 import { assertNativeImportedHistory } from './move-in-browser-history.mjs';
 import { catchUpJourney, switchOverJourney } from './move-in-browser-catch-up.mjs';
+import { schedulerJourney } from './move-in-browser-schedulers.mjs';
 const origin=process.env.DIAL_REVIEW_ORIGIN??'http://127.0.0.1:15754',width=Number(process.env.DIAL_MOVE_IN_WIDTH??1440);
 // Move exercises an established workspace. A native first-owner claim starts
 // unfinished, so complete the real setup protocol before clearing product data.
@@ -59,6 +60,7 @@ try{
  async function audit(name){const report=await new AxeBuilder({page}).analyze();assert.deepEqual(report.violations.filter(v=>['serious','critical'].includes(v.impact)),[]);assert.ok(await page.evaluate(()=>globalThis.document.documentElement.scrollWidth<=globalThis.innerWidth));await page.screenshot({path:evidencePath(`move-in-${width}-${name}.png`),fullPage:true,caret:'initial'});scans.push({name,width,violations:report.violations});}
  const fixture=async name=>Promise.all((await readdir(`tests/move-in/fixtures/${name}`)).filter(n=>n.endsWith('.json')).map(n=>resolve(`tests/move-in/fixtures/${name}`,n)));
  async function selectFiles(name){const input=page.getByLabel('Saved response files');await expect(input).toBeEnabled();await input.setInputFiles(await fixture(name));}
+ await schedulerJourney({page,context,origin,width,audit});
  await page.goto(origin+'/app/settings#move-in');await selectFiles('solo');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByRole('button',{name:'Download JSON report'}).waitFor();await audit('preview');
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Download JSON report'}).click();const file=await download;await file.saveAs(evidencePath(`move-in-${width}-report.json`));const report=JSON.parse(await readFile(evidencePath(`move-in-${width}-report.json`),'utf8'));assertReport(report);assert.equal(report.counts.bookings.imported,10);
  await page.getByLabel('I acknowledge all listed losses, rejected overlaps and changed values.').check();await page.getByRole('button',{name:'Apply reviewed import'}).click();await page.getByRole('button',{name:'Continue import'}).waitFor();await audit('progress');

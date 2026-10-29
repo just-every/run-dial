@@ -1,3 +1,5 @@
+import { conversionStatements } from "../analytics";
+import { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "../payments";
 import { ApprovalsRepository } from "./approvals";
 import { GuestsRepository } from "./guests";
 import { offeredHoldPredicate } from "../booking-links";
@@ -117,6 +119,10 @@ export class BookingsRepository {
     const nonce = await this.getNonce(input.nonceHash);
     const approvalAdmission = approval && payment ? {sql:"EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=? AND state='pending' AND claim_json IS NOT NULL AND json_extract(payment_json,'$.holdId')=? AND ((json_extract(payment_json,'$.mode')='payment' AND json_extract(payment_json,'$.state')='capture_pending') OR (json_extract(payment_json,'$.mode')='setup' AND json_extract(payment_json,'$.state')='authorized' AND expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now')))) AND EXISTS(SELECT 1 FROM payment_holds WHERE id=? AND state IN ('held','processing') AND claim_json IS NOT NULL)",params:[approval.id,payment.holdId,payment.holdId]} : undefined;
     const guard = await slotClaimGuard(this.binding, input, approvalAdmission ?? (approval ? {sql:"EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=? AND state='pending' AND expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now')) AND EXISTS(SELECT 1 FROM booking_nonces n WHERE n.id=? AND (n.link_id IS NULL OR EXISTS(SELECT 1 FROM booking_links l WHERE l.id=n.link_id AND l.consumed_at IS NULL AND l.revoked_at IS NULL AND l.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now'))))",params:[approval.id,input.nonceId]} : payment ? holdAdmission(payment.holdId) : nonceAdmission(input.nonceId, input.nonceHash, input.now)), nonce?.linkId, payment?.holdId, approval?.id);
+    if(input.entitlement) {
+      const credit=entitlementGuard(input.entitlement.id,input.entitlement.units,event.id,input.entitlement.at);
+      guard.sql+=` AND ${credit.sql}`;guard.params.push(...credit.params);
+    }
     const statements: D1PreparedStatement[] = [
       this.binding.prepare(
         `INSERT INTO bookings (id, event_type_id, event_slug, event_title, duration_minutes, location_type, location_label, location_value, invitee_name, invitee_email, host_timezone, invitee_timezone, state, ical_uid, calendar_required, calendar_state, meeting_state, meeting_url, created_at, updated_at, attribution_json, post_booking_redirect_url)
@@ -138,6 +144,7 @@ export class BookingsRepository {
         "INSERT INTO booking_history (id, booking_id, occurrence_id, action, actor_type, actor_id, new_start_at, created_at) SELECT ?, ?, ?, 'created', 'invitee', NULL, ?, ? WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?)",
       ).bind(createId(), input.bookingId, input.occurrenceId, input.selection.startAt, input.now, input.bookingId),
       ...outboxStatements(this.binding, input.bookingId, input.occurrenceId, input.calendarPayload, input.emails, input.now),
+      ...conversionStatements(this.binding, input),
       this.binding.prepare("UPDATE booking_links SET consumed_at=?,consumed_booking_id=?,updated_at=? WHERE id=(SELECT link_id FROM booking_nonces WHERE id=?) AND consumed_at IS NULL AND EXISTS(SELECT 1 FROM bookings WHERE id=?)").bind(input.now,input.bookingId,input.now,input.nonceId,input.bookingId),
       payment || approval
         // The hold consumed the nonce when the slot was held; the paid booking becomes its replay result.
@@ -145,6 +152,7 @@ export class BookingsRepository {
         : this.binding.prepare(
           "UPDATE booking_nonces SET consumed_at = ?, payload_hash = ?, result_booking_id = ? WHERE id = ? AND nonce_hash = ? AND consumed_at IS NULL AND EXISTS (SELECT 1 FROM bookings WHERE id = ?)",
         ).bind(input.now, input.payloadHash, input.bookingId, input.nonceId, input.nonceHash, input.bookingId),
+      ...(input.entitlement ? redeemStatements(this.binding,input.bookingId,input.entitlement,input.now) : []),
       ...(payment?.statements ?? []),
       ...(approval ? [this.approvals.approvedStatement(approval.id,input.bookingId,approval.operatorId,input.now)] : []),
     ];
@@ -379,6 +387,7 @@ export class BookingsRepository {
         ON CONFLICT(idempotency_key) DO NOTHING`)
         .bind(createId(), `booking:${booking.id}:occurrence:`, now, now, now, booking.id, now),
       ...cancellationOutboxStatements(this.binding, booking.id, emails, now),
+      ...restoreEntitlementStatements(this.binding,booking.id,now,actor.type!=="invitee"),
       closeCalendarConflicts(this.binding, booking.id, now),
       ...money,
     ];

@@ -1,3 +1,4 @@
+import { operatorDateTime, operatorTimeRange } from "../../../shared/operator-format";
 import { wallClockInstants, zonedParts, zonedOffsetLabel } from "../../availability";
 
 export function localInput(instant: string, timezone: string) {
@@ -18,10 +19,9 @@ export function resolveOperatorTime(local: string, timezone: string) {
 }
 
 export function timeRange(start: string | null, end: string | null, timezone: string) {
-  const formatter = new Intl.DateTimeFormat("en-US", { timeZone: timezone, dateStyle: "medium", timeStyle: "short" });
-  return `${start ? formatter.format(new Date(start)) : "Start not provided"}–${end ? formatter.format(new Date(end)) : "end not provided"} (${timezone})`;
+  return operatorTimeRange(start, end, timezone);
 }
 
 export function startTime(start: string, timezone: string) {
-  return `${new Intl.DateTimeFormat("en-US", { timeZone: timezone, dateStyle: "medium", timeStyle: "short" }).format(new Date(start))} (${timezone})`;
+  return operatorDateTime(start, timezone);
 }

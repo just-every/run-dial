@@ -1,8 +1,9 @@
+import { completePendingAnalytics } from "./analytics";
 import { BookingChangeTerms } from "./booking-change-terms";
 import { PaymentSummary } from "./pay-step";
 import { LockedBookingTime, LockedTimezoneNotice, useBrowserTimezone } from "./locked-timezone";
 import { HostAvatar } from "../../host-profile";
-import { format, formatTime } from "./flow-shell";
+import { formatRange } from "./flow-shell";
 import { useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useDocumentData } from "../../../app/document-data";
@@ -16,6 +17,7 @@ export function BookingConfirmationPage({ token, embedded = false }: { token: st
   const browserTimezone = useBrowserTimezone();
   const search = useRouterState({ select: (state) => state.location.searchStr });
   const [booking, setBooking] = useState<Confirmation | undefined>(useDocumentData<Confirmation>());
+  useEffect(() => { if (booking) void completePendingAnalytics(booking, embedded); }, [booking, embedded]);
   const [unavailable, setUnavailable] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
   const refreshReceipt = useCallback(async () => {
@@ -45,8 +47,7 @@ export function BookingConfirmationPage({ token, embedded = false }: { token: st
     <p className="pb-eyebrow">{cancelled ? "Booking cancelled" : "Booking receipt"}</p>
     <h1>{cancelled ? "This booking is cancelled." : "Booking confirmed."}</h1>
     <p>{booking.event.eventTitle} with {booking.host.name}</p>
-    {booking.lockedTimezone ? <><LockedTimezoneNotice timezone={booking.lockedTimezone} /><LockedBookingTime startAt={booking.occurrence.startAt} endAt={booking.occurrence.endAt} timezone={booking.lockedTimezone} browserTimezone={browserTimezone} /><p>{booking.event.durationMinutes} minutes</p></> : <><p>{format(booking.occurrence.startAt, booking.inviteeTimezone)} – {formatTime(booking.occurrence.endAt, booking.inviteeTimezone)} · {booking.inviteeTimezone} · {booking.event.durationMinutes} minutes</p>
-    <p>Host time: {format(booking.occurrence.startAt, booking.host.timezone)} – {formatTime(booking.occurrence.endAt, booking.host.timezone)} · {booking.host.timezone}</p></>}
+    {booking.lockedTimezone ? <><LockedTimezoneNotice timezone={booking.lockedTimezone} /><LockedBookingTime startAt={booking.occurrence.startAt} endAt={booking.occurrence.endAt} timezone={booking.lockedTimezone} browserTimezone={browserTimezone} /><p>{booking.event.durationMinutes} minutes</p></> : <><p>{formatRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone)} · {booking.event.durationMinutes} minutes</p><p>Times in <strong>{booking.inviteeTimezone}</strong></p></>}
     {booking.payment ? <PaymentSummary payment={booking.payment} timezone={booking.lockedTimezone ?? booking.inviteeTimezone} open={!cancelled} /> : null}
     <BookingChangeTerms policy={booking.changePolicy?.effectivePolicy} />
     {!cancelled && booking.location.state === "ready" ? <p>{booking.location.label}{booking.location.value && !joinUrl ? <>: {booking.location.value}</> : null}</p> : null}

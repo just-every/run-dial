@@ -1,3 +1,4 @@
+import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { noticeClassName } from "../../../app/ui/primitives";
@@ -26,7 +27,7 @@ export function ClientBookingRecord({ id, onChanged, onErased }: { id: string; o
   }
   return <section aria-label="Selected client booking" className="grid min-w-0 gap-4">
     {notice ? <p role="status" className={noticeClassName("success")}>{notice}</p> : null}
-    {error ? <p role="alert" className={noticeClassName("error")}>{error}</p> : null}
-    {loading ? <p role="status">Loading booking record…</p> : data ? <BookingDetail key={data.id} booking={data} onChanged={changed} onCancel={cancel} onAttendance={attendance} onErased={() => { onChanged(); onErased(); }} /> : null}
+    {error ? <WorkspaceLoadState error={error} onRetry={changed} /> : null}
+    {loading ? <WorkspaceLoadState label="Loading booking record…" onRetry={changed} /> : data ? <BookingDetail key={data.id} booking={data} onChanged={changed} onCancel={cancel} onAttendance={attendance} onErased={() => { onChanged(); onErased(); }} /> : null}
   </section>;
 }

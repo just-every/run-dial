@@ -8,12 +8,13 @@ import { captures, operators, request, runtime, token } from './archive/auth.mjs
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
-import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade, noticeUpgrade } from './archive/payment-erasure-upgrade.mjs';
+import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade, noticeUpgrade, entitlementUpgrade } from './archive/payment-erasure-upgrade.mjs';
 import { clientUpgrade } from './archive/client-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    await entitlementUpgrade(source.db);
     await noticeUpgrade(source.db);
     await reconciliationUpgrade(source.db);
     await paymentErasureUpgrade(source.db);
@@ -57,7 +58,19 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.prepare("UPDATE bookings SET location_type='invitee_phone',location_value=?").run(phone);
     source.db.prepare(`INSERT INTO booking_answers(id,booking_id,question_key,question_label,question_kind,value_json,created_at)
       SELECT id||'-phone',booking_id,'synthetic-dial-907','Phone','phone',?,created_at FROM booking_answers`).run(JSON.stringify(phone));
+    // PAY-004 refuses a populated entitlement catalog before an archive can omit balances or carry code hashes.
+    source.db.exec("INSERT INTO payment_products(id,event_type_id,kind,name,sessions,amount_cents,validity_days,created_at,updated_at) VALUES('synthetic-dial-archive-credit','event_types-1','package','Appointment credit',3,300,30,'2026-10-07T00:00:00.000Z','2026-10-07T00:00:00.000Z')");
+    await assert.rejects(createArchive(testPlatform(source.db)), /archive-payment-entitlements-not-portable/);
+    source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
     const archive = await createArchive(testPlatform(source.db));
+    assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
+    const webhookSubscription = archive.tables.find(table => table.name === 'webhook_subscriptions').rows[0];
+    assert.equal(webhookSubscription.secret_ciphertext, null, 'signing authority is absent from the archive');
+    assert.equal(webhookSubscription.enabled, 0, 'restored subscriptions require a fresh secret');
+    const webhookDelivery = archive.tables.find(table => table.name === 'webhook_deliveries').rows[0];
+    assert.equal(webhookDelivery.state, 'failed');
+    assert.equal(webhookDelivery.last_error, 'restored_historical_command');
+    assert.ok(!archive.tables.some(table=>['payment_products','payment_entitlements','payment_redemptions','payment_entitlement_events'].includes(table.name)),'live entitlement and redemption authority never leave an archive');
     assert.equal(archive.tables.some(table=>table.name==='client_remember_links'),false);
     assert.equal(archive.tables.some(table=>table.name==='poll_vote_tokens'),false);
     assert.equal(JSON.stringify(archive).includes(poll.token),false);assert.equal(JSON.stringify(archive).includes(poll.hash),false);
@@ -83,6 +96,9 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
     await restoreArchive(destination, archive);
+    assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_subscriptions WHERE enabled=1 OR secret_ciphertext IS NOT NULL").get().n, 0, 'restore never enables outbound authority');
+    assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_deliveries WHERE state IN ('pending','sending')").get().n, 0, 'restore never resumes historical webhook commands');
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM routing_capabilities').get().n, 0);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM client_remember_links').get().n,0,'restoring never recreates saved-details authority');
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_invitation_cancellations').all(), ledger);
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());
@@ -100,6 +116,10 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.ok(!archive.tables.some(table => table.name === 'payment_link_tokens'), 'PAY-003 balance-link capabilities never travel');
     for(const table of ['payment_processor_facts','accounting_exports'])assert.deepEqual(target.db.prepare(`SELECT * FROM ${table}`).all(),source.db.prepare(`SELECT * FROM ${table}`).all(),`${table} round trips`);
     const notices=target.db.prepare("SELECT * FROM workspace_notice_destinations").get();assert.equal(notices.status,"needs_reconnect");assert.equal(notices.credential_ciphertext,null);assert.ok(target.db.prepare("SELECT state FROM workspace_notice_deliveries").all().every(r=>r.state==="failed"));assert.ok(target.db.prepare("SELECT archive_historical FROM notice_erasure_requests").all().every(r=>r.archive_historical===1));assert.ok(!archive.tables.some(t=>t.name==="notice_oauth_states"));
+    const analytics=target.db.prepare('SELECT * FROM analytics_connections').all();
+    assert.equal(analytics.length,1);assert.equal(analytics[0].status,'needs_reconnect');assert.equal(analytics[0].credential_ciphertext,null,'advertising credentials never restore');
+    const conversions=target.db.prepare('SELECT * FROM analytics_deliveries').all();assert.equal(conversions.length,1);
+    assert.equal(conversions[0].state,'failed');assert.equal(conversions[0].archive_historical,1,'restored conversion commands cannot upload again');
     const accounting=target.db.prepare('SELECT * FROM accounting_connections').get();
     assert.equal(accounting.status,'unhealthy');assert.equal(accounting.access_token_ciphertext,null);assert.equal(accounting.refresh_token_ciphertext,null);
     const approvals=archive.tables.find(table=>table.name==='booking_approval_requests');

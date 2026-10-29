@@ -1,0 +1,6 @@
+.event-sheet { position:fixed; inset:0 0 0 auto; width:min(620px,100%); max-width:none; height:100dvh; max-height:none; margin:0; padding:0; border:0; color:var(--color-ink); background:var(--color-paper); overflow:hidden; box-shadow:-12px 0 48px color-mix(in srgb,var(--ink) 14%,transparent); }
+.event-sheet::backdrop { background:color-mix(in srgb,var(--ink) 40%,transparent); }
+.event-sheet-surface { display:flex; flex-direction:column; height:100%; }
+.event-sheet-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:26px 28px 20px; flex-shrink:0; }
+.event-sheet-content { overflow:auto; overscroll-behavior:contain; padding:0 28px 32px; flex:1; }
+@media(max-width:639px) { .event-sheet-header { padding:20px; } .event-sheet-content { padding:0 20px 24px; } }

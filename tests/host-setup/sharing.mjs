@@ -40,8 +40,8 @@ export async function securityJourney(page, origin, eventId) {
 
 export async function clipboardJourney({ browser, page, context, origin, eventId, requestsOnly, scan }) {
   const expected = origin + "/book/fresh-host/first-event", endpoint = `**/api/app/event-types/${eventId}/copy-report`;
-  const share = page.locator("section").filter({ has: page.getByRole("heading", { name: "Share this event", exact: true }) });
-  const copy = share.getByRole("button", { name: "Copy booking link", exact: true });
+  const share = page.getByRole("region", { name: "Booking link", exact: true });
+  const copy = share.getByRole("button", { name: "Copy link", exact: true });
   let posts = 0; const listener = request => { if (request.url().endsWith(`/${eventId}/copy-report`) && request.method() === "POST") posts++; }; page.on("request", listener);
   const setup = async () => (await page.request.get(origin + "/api/app/host-setup")).json();
   const unavailable = route => route.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Completion temporarily unavailable." } } });
@@ -71,7 +71,13 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   const fresh = await browser.newContext({ storageState: await context.storageState(), viewport: page.viewportSize() });
   try { const freshPage = await fresh.newPage(); await freshPage.goto(origin + "/app"); const state = await (await freshPage.request.get(origin + "/api/app/host-setup")).json(); assert.ok(state.links[0].copiedAt); await freshPage.reload(); assert.ok((await (await freshPage.request.get(origin + "/api/app/host-setup")).json()).links[0].copiedAt); } finally { await fresh.close(); }
   await page.goto(origin + "/setup/event-types");
-  await page.getByRole("main").getByRole("button", { name: "Copy booking link", exact: true }).click();
+  const eventCard = page.locator(".dial-event-card").first();
+  const moreActions = eventCard.getByRole("button", { name: "More actions", exact: true });
+  await expect(eventCard).toBeVisible();
+  const cardCopy = eventCard.getByRole("button", { name: "Copy booking link", exact: true });
+  if (await moreActions.isVisible()) await moreActions.click();
+  else await eventCard.hover();
+  await cardCopy.click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText("Booking link copied.");
   assert.equal(await page.evaluate(() => globalThis.navigator.clipboard.readText()), expected);
   await page.goto(origin + "/setup");
@@ -95,22 +101,64 @@ export async function clipboardJourney({ browser, page, context, origin, eventId
   if (mobile) await page.keyboard.press("Escape");
   await scan("event-links");
   await page.goto(origin + `/app/event-types/${eventId}`);
-  await expect(page.getByRole("button", { name: "Copy embed code (inline)", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeVisible().catch(async error => {
+    await page.screenshot({ path: evidencePath(`host-event-copy-missing-${page.viewportSize().width}.png`), fullPage: true });
+    const text = (await page.getByRole("main").innerText()).replace(/https?:\/\/[^\s"'<>]+/g, url => new URL(url).pathname);
+    throw new Error(`${error.message}\nEvent page: ${text.slice(0, 2500)}`);
+  });
   const publicPage = await context.newPage();
-  try { await publicPage.goto(expected); if (requestsOnly) { await expect(publicPage.getByRole("heading", { name: "Request a time with Fresh Host.", exact: true })).toBeVisible(); await expect(publicPage.locator(".pb-event-flow").getByRole("heading", { name: "First event", exact: true })).toBeVisible(); assert.equal(await publicPage.locator(".pb-slot-button").count(), 0); } else await expect(publicPage.locator(".pb-slot-button").first()).toBeVisible(); } finally { await publicPage.close(); }
+  try { await publicPage.goto(expected); if (requestsOnly) { await expect(publicPage.getByRole("heading", { name: "Request a time with Fresh Host.", exact: true })).toBeVisible(); await expect(publicPage.locator(".pb-event-flow").getByRole("heading", { name: "First event", exact: true })).toBeVisible(); assert.equal(await publicPage.locator(".pb-slot-button").count(), 0); } else {
+    // The public picker is day-first. Wait for its hydrated choices, then
+    // choose a real available day before asserting that its times are shown.
+    const day = publicPage.getByRole("group", { name: "Choose a day", exact: true }).getByRole("button").first();
+    await day.waitFor();
+    await day.click();
+    await expect(day).toHaveAttribute("aria-pressed", "true");
+    await expect(publicPage.locator(".pb-slot-button").first()).toBeVisible();
+  } }
+  catch (error) {
+    await publicPage.screenshot({ path: evidencePath(`host-public-unavailable-${page.viewportSize().width}.png`), fullPage: true });
+    const text = (await publicPage.locator("body").innerText()).replace(/https?:\/\/[^\s"'<>]+/g, url => new URL(url).pathname);
+    const availability = await publicPage.request.get(origin + `/api/public/book/fresh-host/first-event/availability?week=${new Date().toISOString().slice(0, 10)}`);
+    const result = await availability.json();
+    const diagnostic = { status: availability.status(), state: result.state, slots: result.slots?.length, error: result.error?.code };
+    throw new Error(`${error.message}\nPublic page: ${text.slice(0, 2500)}\nAvailability: ${JSON.stringify(diagnostic)}`);
+  } finally { await publicPage.close(); }
   await page.bringToFront();
   const snippets = {};
-  for (const mode of ["inline", "modal"]) {
-    await page.getByRole("button", { name: `Copy embed code (${mode})`, exact: true }).click(); await expect(share.getByRole("status").filter({ hasText: "embed copied." })).toBeVisible();
-    snippets[mode] = await page.evaluate(() => globalThis.navigator.clipboard.readText());
-    const script = `<script async src="${origin}/embed/dial.js" data-dial-handle="fresh-host" data-dial-embed="first-event" data-dial-mode="${mode}"></script>`;
-    assert.equal(snippets[mode], mode === "inline" ? script : '<button type="button" data-dial-embed="first-event">Book a time</button>\n' + script);
-  }
   const host = createServer((request, response) => { response.setHeader("Content-Type", "text/html"); response.end(`<!doctype html><html lang="en"><head><title>Embed host</title></head><body><main>${snippets[request.url === "/modal" ? "modal" : "inline"]}</main></body></html>`); });
   await new Promise((resolve, reject) => { host.once("error", reject); host.listen(0, "127.0.0.1", resolve); });
   try {
     const hostOrigin = `http://127.0.0.1:${host.address().port}`;
-    assert.equal((await page.request.put(origin + "/api/app/embed-settings", { headers: { Origin: origin }, data: { allowedOrigins: [hostOrigin] } })).status(), 200);
+    await page.goto(origin + "/app/settings#embed-settings");
+    const embed = page.locator("#embed-settings");
+    await embed.getByRole("combobox", { name: "Event", exact: true }).selectOption("first-event");
+    await expect(embed.getByRole("combobox", { name: "Event", exact: true })).toHaveValue("first-event");
+    for (const mode of ["inline", "modal"]) {
+      await embed.getByRole("button", { name: mode === "inline" ? "Copy inline code" : "Copy popup code", exact: true }).click();
+      if (mode === "inline") {
+        await embed.getByRole("textbox", { name: "Website address", exact: true }).fill(hostOrigin + "/booking");
+        await embed.getByRole("button", { name: "Allow website and copy", exact: true }).click();
+      }
+      await expect(embed.getByRole("status").filter({ hasText: "embed copied." })).toBeVisible();
+      assert.deepEqual((await (await page.request.get(origin + "/api/app/embed-settings")).json()).allowedOrigins, [hostOrigin]);
+      snippets[mode] = await page.evaluate(() => globalThis.navigator.clipboard.readText());
+      const script = `<script async src="${origin}/embed/dial.js" data-dial-handle="fresh-host" data-dial-embed="first-event" data-dial-mode="${mode}"></script>`;
+      assert.equal(snippets[mode], mode === "inline" ? script : '<button type="button" data-dial-embed="first-event">Book a time</button>\n' + script);
+    }
+    await embed.getByRole("button", { name: "Add website", exact: true }).click();
+    await embed.getByRole("textbox", { name: "Website address", exact: true }).fill("https://retained.example.test/page");
+    await embed.getByRole("button", { name: "Allow website", exact: true }).click();
+    await expect(embed.getByRole("list", { name: "Embed websites", exact: true })).toContainText("https://retained.example.test");
+    await embed.getByRole("button", { name: "Remove https://retained.example.test", exact: true }).click();
+    await embed.getByRole("button", { name: "Keep website", exact: true }).click();
+    assert.equal((await (await page.request.get(origin + "/api/app/embed-settings")).json()).allowedOrigins.length, 2);
+    await embed.getByRole("button", { name: "Remove https://retained.example.test", exact: true }).click();
+    await embed.getByRole("button", { name: "Remove website", exact: true }).click();
+    await expect(embed.getByRole("list", { name: "Embed websites", exact: true })).not.toContainText("https://retained.example.test");
+    await page.reload();
+    await expect(embed.getByRole("list", { name: "Embed websites", exact: true })).toContainText(hostOrigin);
+    assert.deepEqual((await (await page.request.get(origin + "/api/app/embed-settings")).json()).allowedOrigins, [hostOrigin]);
     const embedded = await context.newPage();
     const identities = [], failures = [];
     try {

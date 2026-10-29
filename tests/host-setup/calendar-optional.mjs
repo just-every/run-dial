@@ -10,10 +10,9 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
   const path = "/api/public/book/fresh-host/first-event";
   try {
     await owner.goto(origin + `/app/event-types/${eventId}`);
-    // Check the operator can review the disconnected booking limitation beside publication.
-    const lifecycle = owner.locator("section").filter({ has: owner.getByRole("heading", { name: "Lifecycle", exact: true }) });
-    await expect(lifecycle).toContainText(/does not check external calendar conflicts/i);
-    await expect(lifecycle.getByRole("button", { name: "Update published event", exact: true })).toBeEnabled();
+    // The disconnected limitation was reviewed under Publish before this live event opened.
+    await expect(owner.getByRole("button", { name: "Event actions", exact: true })).toBeEnabled();
+    await expect(owner.getByText("Live", { exact: true })).toBeVisible();
     const guest = await visitor.newPage();
     await guest.goto(origin + "/book/fresh-host/first-event");
     await expect(guest.locator(".pb-slot-button").first()).toBeVisible();
@@ -60,8 +59,10 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     await expect(owner.getByRole("button", { name: /Schedule guest/ })).toBeVisible();
     const booked = bookings.find(booking => booking.inviteeName === "Schedule guest");
     assert.notEqual(booked.hostTimezone, booked.inviteeTimezone);
-    const hostTime = new Intl.DateTimeFormat("en-US", { timeZone: booked.hostTimezone, dateStyle: "medium", timeStyle: "short" }).format(new Date(booked.occurrence.startAt));
-    await expect(owner.getByRole("button", { name: /Schedule guest/ })).toContainText(`${hostTime} (${booked.hostTimezone})`);
+    const hostTime = new Intl.DateTimeFormat("en-US", { timeZone: booked.hostTimezone, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(new Date(booked.occurrence.startAt)).filter(part => part.type !== "literal" && !(part.type === "minute" && part.value === "00")).map(part => part.value);
+    const displayed = await owner.getByRole("button", { name: /Schedule guest/ }).innerText();
+    assert.ok(hostTime.every(value => displayed.includes(value)), "the row shows the booking in the host's local clock");
+    await expect(owner.getByText(`Times in ${booked.hostTimezone}`, { exact: true })).toBeVisible();
     await owner.getByRole("button", { name: /Schedule guest/ }).click();
     await expect(owner.getByText("No connected calendar", { exact: true })).toBeVisible();
     await scan("calendar-optional-host-booking");
@@ -74,8 +75,8 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     await guest.getByRole("button", { name: "Confirm reschedule", exact: true }).click();
     await expect(guest.getByText("Your booking has been rescheduled.", { exact: true })).toBeVisible();
     assert.equal((await (await visitor.request.get(origin + `/api/public/manage/${token}`)).json()).calendarState, "not_required");
-    guest.once("dialog", dialog => dialog.accept());
     await guest.getByRole("button", { name: "Cancel booking", exact: true }).click();
+    await guest.getByRole("button", { name: "Confirm cancellation", exact: true }).click();
     await expect(guest.getByText("This booking has been cancelled.", { exact: true })).toBeVisible();
     const afterCancel = await (await owner.request.get(origin + "/__fixtures/status")).json();
     assert.equal(afterCancel.delivery_outbox.filter(job => job.kind.startsWith("calendar_")).length, 0, "schedule-only lifecycle never queues an impossible provider command");

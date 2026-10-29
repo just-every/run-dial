@@ -2,6 +2,10 @@
    invalidates live SSR modules when parallel verification writes or removes them. */
 @import "tailwindcss" source("../../");
 @import "../shared/drawing/dial.css";
+@import "./ui/autosave/autosave.css";
+@import "./ui/sheet.css";
+@import "../features/event-types/ui/event-page.css";
+@import "../features/event-types/ui/advanced-sheet.css";
 
 @theme inline {
   --color-paper: var(--paper);

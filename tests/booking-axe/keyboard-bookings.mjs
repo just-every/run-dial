@@ -13,6 +13,8 @@ export async function seedConflict(page, origin, booking) {
 }
 
 export async function bookingKeyboardJourney(page, origin, width, keys, checks, booking) {
+  const more = page.locator("details.dial-more").first();
+  if (await more.getAttribute("open") === null) await keys.activate(more.locator("summary"), "Open more booking actions");
   const before = await get(page, origin, `/api/app/bookings/${booking.id}`);
   for (const label of ["Mark attended", "Mark no-show"]) {
     const trigger = button(page, label);

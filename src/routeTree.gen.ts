@@ -30,9 +30,12 @@ import { Route as SetupIndexRouteImport } from './routes/setup.index'
 import { Route as SetupEventTypesRouteImport } from './routes/setup.event-types'
 import { Route as SetupProfileRouteImport } from './routes/setup.profile'
 import { Route as SetupSettingsRouteImport } from './routes/setup.settings'
+import { Route as AppBookingsIdRouteImport } from './routes/app.bookings.$id'
 import { Route as AppBookingsNewRouteImport } from './routes/app.bookings_.new'
 import { Route as AppEventTypesIdRouteImport } from './routes/app.event-types_.$id'
 import { Route as AppEventTypesNewRouteImport } from './routes/app.event-types_.new'
+import { Route as AppRequestsIdRouteImport } from './routes/app.requests.$id'
+import { Route as AppSettingsHoursRouteImport } from './routes/app.settings_.hours'
 import { Route as BookHandleSlugRouteImport } from './routes/book.$handle_.$slug'
 import { Route as EmbedHandleSlugRouteImport } from './routes/embed.$handle.$slug'
 import { Route as EmbedManageTokenRouteImport } from './routes/embed.manage.$token'
@@ -40,6 +43,8 @@ import { Route as ManageBalanceTokenRouteImport } from './routes/manage.balance.
 import { Route as ManageInviteTokenRouteImport } from './routes/manage.invite.$token'
 import { Route as SetupEventTypesIdRouteImport } from './routes/setup.event-types_.$id'
 import { Route as SetupEventTypesNewRouteImport } from './routes/setup.event-types_.new'
+import { Route as AppEventTypesIdAdvancedRouteImport } from './routes/app.event-types_.$id.advanced'
+import { Route as AppEventTypesIdHoursRouteImport } from './routes/app.event-types_.$id.hours'
 import { Route as AppEventTypesIdAvailabilityRouteImport } from './routes/app.event-types_.$id_.availability'
 import { Route as AppEventTypesIdPreviewRouteImport } from './routes/app.event-types_.$id_.preview'
 import { Route as BookHandleSlugConfirmedRouteImport } from './routes/book.$handle_.$slug_.confirmed'
@@ -49,6 +54,8 @@ import { Route as BookHandleSlugRequestRouteImport } from './routes/book.$handle
 import { Route as EmbedHandleSlugConfirmedRouteImport } from './routes/embed.$handle.$slug_.confirmed'
 import { Route as EmbedHandleSlugDetailsRouteImport } from './routes/embed.$handle.$slug_.details'
 import { Route as EmbedHandleSlugRequestRouteImport } from './routes/embed.$handle.$slug_.request'
+import { Route as SetupEventTypesIdAdvancedRouteImport } from './routes/setup.event-types_.$id.advanced'
+import { Route as SetupEventTypesIdHoursRouteImport } from './routes/setup.event-types_.$id.hours'
 import { Route as SetupEventTypesIdAvailabilityRouteImport } from './routes/setup.event-types_.$id_.availability'
 
 const IndexRoute = IndexRouteImport.update({
@@ -156,6 +163,11 @@ const SetupSettingsRoute = SetupSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => SetupRoute,
 } as any)
+const AppBookingsIdRoute = AppBookingsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppBookingsRoute,
+} as any)
 const AppBookingsNewRoute = AppBookingsNewRouteImport.update({
   id: '/bookings_/new',
   path: '/bookings/new',
@@ -169,6 +181,16 @@ const AppEventTypesIdRoute = AppEventTypesIdRouteImport.update({
 const AppEventTypesNewRoute = AppEventTypesNewRouteImport.update({
   id: '/event-types_/new',
   path: '/event-types/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRequestsIdRoute = AppRequestsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppRequestsRoute,
+} as any)
+const AppSettingsHoursRoute = AppSettingsHoursRouteImport.update({
+  id: '/settings_/hours',
+  path: '/settings/hours',
   getParentRoute: () => AppRoute,
 } as any)
 const BookHandleSlugRoute = BookHandleSlugRouteImport.update({
@@ -205,6 +227,16 @@ const SetupEventTypesNewRoute = SetupEventTypesNewRouteImport.update({
   id: '/event-types_/new',
   path: '/event-types/new',
   getParentRoute: () => SetupRoute,
+} as any)
+const AppEventTypesIdAdvancedRoute = AppEventTypesIdAdvancedRouteImport.update({
+  id: '/advanced',
+  path: '/advanced',
+  getParentRoute: () => AppEventTypesIdRoute,
+} as any)
+const AppEventTypesIdHoursRoute = AppEventTypesIdHoursRouteImport.update({
+  id: '/hours',
+  path: '/hours',
+  getParentRoute: () => AppEventTypesIdRoute,
 } as any)
 const AppEventTypesIdAvailabilityRoute =
   AppEventTypesIdAvailabilityRouteImport.update({
@@ -253,6 +285,17 @@ const EmbedHandleSlugRequestRoute = EmbedHandleSlugRequestRouteImport.update({
   path: '/embed/$handle/$slug/request',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SetupEventTypesIdAdvancedRoute =
+  SetupEventTypesIdAdvancedRouteImport.update({
+    id: '/advanced',
+    path: '/advanced',
+    getParentRoute: () => SetupEventTypesIdRoute,
+  } as any)
+const SetupEventTypesIdHoursRoute = SetupEventTypesIdHoursRouteImport.update({
+  id: '/hours',
+  path: '/hours',
+  getParentRoute: () => SetupEventTypesIdRoute,
+} as any)
 const SetupEventTypesIdAvailabilityRoute =
   SetupEventTypesIdAvailabilityRouteImport.update({
     id: '/event-types_/$id_/availability',
@@ -267,10 +310,10 @@ export interface FileRoutesByFullPath {
   '/setup': typeof SetupRouteWithChildren
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
-  '/app/bookings': typeof AppBookingsRoute
+  '/app/bookings': typeof AppBookingsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
   '/app/profile': typeof AppProfileRoute
-  '/app/requests': typeof AppRequestsRoute
+  '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -282,16 +325,21 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
+  '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
-  '/app/event-types/$id': typeof AppEventTypesIdRoute
+  '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types/new': typeof AppEventTypesNewRoute
+  '/app/requests/$id': typeof AppRequestsIdRoute
+  '/app/settings/hours': typeof AppSettingsHoursRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
   '/manage/balance/$token': typeof ManageBalanceTokenRoute
   '/manage/invite/$token': typeof ManageInviteTokenRoute
-  '/setup/event-types/$id': typeof SetupEventTypesIdRoute
+  '/setup/event-types/$id': typeof SetupEventTypesIdRouteWithChildren
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
+  '/app/event-types/$id/advanced': typeof AppEventTypesIdAdvancedRoute
+  '/app/event-types/$id/hours': typeof AppEventTypesIdHoursRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
   '/app/event-types/$id/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle/$slug/confirmed': typeof BookHandleSlugConfirmedRoute
@@ -301,6 +349,8 @@ export interface FileRoutesByFullPath {
   '/embed/$handle/$slug/confirmed': typeof EmbedHandleSlugConfirmedRoute
   '/embed/$handle/$slug/details': typeof EmbedHandleSlugDetailsRoute
   '/embed/$handle/$slug/request': typeof EmbedHandleSlugRequestRoute
+  '/setup/event-types/$id/advanced': typeof SetupEventTypesIdAdvancedRoute
+  '/setup/event-types/$id/hours': typeof SetupEventTypesIdHoursRoute
   '/setup/event-types/$id/availability': typeof SetupEventTypesIdAvailabilityRoute
 }
 export interface FileRoutesByTo {
@@ -308,10 +358,10 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
-  '/app/bookings': typeof AppBookingsRoute
+  '/app/bookings': typeof AppBookingsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
   '/app/profile': typeof AppProfileRoute
-  '/app/requests': typeof AppRequestsRoute
+  '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -323,16 +373,21 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/docs': typeof DocsIndexRoute
   '/setup': typeof SetupIndexRoute
+  '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
-  '/app/event-types/$id': typeof AppEventTypesIdRoute
+  '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types/new': typeof AppEventTypesNewRoute
+  '/app/requests/$id': typeof AppRequestsIdRoute
+  '/app/settings/hours': typeof AppSettingsHoursRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
   '/manage/balance/$token': typeof ManageBalanceTokenRoute
   '/manage/invite/$token': typeof ManageInviteTokenRoute
-  '/setup/event-types/$id': typeof SetupEventTypesIdRoute
+  '/setup/event-types/$id': typeof SetupEventTypesIdRouteWithChildren
   '/setup/event-types/new': typeof SetupEventTypesNewRoute
+  '/app/event-types/$id/advanced': typeof AppEventTypesIdAdvancedRoute
+  '/app/event-types/$id/hours': typeof AppEventTypesIdHoursRoute
   '/app/event-types/$id/availability': typeof AppEventTypesIdAvailabilityRoute
   '/app/event-types/$id/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle/$slug/confirmed': typeof BookHandleSlugConfirmedRoute
@@ -342,6 +397,8 @@ export interface FileRoutesByTo {
   '/embed/$handle/$slug/confirmed': typeof EmbedHandleSlugConfirmedRoute
   '/embed/$handle/$slug/details': typeof EmbedHandleSlugDetailsRoute
   '/embed/$handle/$slug/request': typeof EmbedHandleSlugRequestRoute
+  '/setup/event-types/$id/advanced': typeof SetupEventTypesIdAdvancedRoute
+  '/setup/event-types/$id/hours': typeof SetupEventTypesIdHoursRoute
   '/setup/event-types/$id/availability': typeof SetupEventTypesIdAvailabilityRoute
 }
 export interface FileRoutesById {
@@ -352,10 +409,10 @@ export interface FileRoutesById {
   '/setup': typeof SetupRouteWithChildren
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
-  '/app/bookings': typeof AppBookingsRoute
+  '/app/bookings': typeof AppBookingsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
   '/app/profile': typeof AppProfileRoute
-  '/app/requests': typeof AppRequestsRoute
+  '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/book/$handle': typeof BookHandleRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -367,16 +424,21 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/setup/': typeof SetupIndexRoute
+  '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings_/new': typeof AppBookingsNewRoute
-  '/app/event-types_/$id': typeof AppEventTypesIdRoute
+  '/app/event-types_/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types_/new': typeof AppEventTypesNewRoute
+  '/app/requests/$id': typeof AppRequestsIdRoute
+  '/app/settings_/hours': typeof AppSettingsHoursRoute
   '/book/$handle_/$slug': typeof BookHandleSlugRoute
   '/embed/$handle/$slug': typeof EmbedHandleSlugRoute
   '/embed/manage/$token': typeof EmbedManageTokenRoute
   '/manage/balance/$token': typeof ManageBalanceTokenRoute
   '/manage/invite/$token': typeof ManageInviteTokenRoute
-  '/setup/event-types_/$id': typeof SetupEventTypesIdRoute
+  '/setup/event-types_/$id': typeof SetupEventTypesIdRouteWithChildren
   '/setup/event-types_/new': typeof SetupEventTypesNewRoute
+  '/app/event-types_/$id/advanced': typeof AppEventTypesIdAdvancedRoute
+  '/app/event-types_/$id/hours': typeof AppEventTypesIdHoursRoute
   '/app/event-types_/$id_/availability': typeof AppEventTypesIdAvailabilityRoute
   '/app/event-types_/$id_/preview': typeof AppEventTypesIdPreviewRoute
   '/book/$handle_/$slug_/confirmed': typeof BookHandleSlugConfirmedRoute
@@ -386,6 +448,8 @@ export interface FileRoutesById {
   '/embed/$handle/$slug_/confirmed': typeof EmbedHandleSlugConfirmedRoute
   '/embed/$handle/$slug_/details': typeof EmbedHandleSlugDetailsRoute
   '/embed/$handle/$slug_/request': typeof EmbedHandleSlugRequestRoute
+  '/setup/event-types_/$id/advanced': typeof SetupEventTypesIdAdvancedRoute
+  '/setup/event-types_/$id/hours': typeof SetupEventTypesIdHoursRoute
   '/setup/event-types_/$id_/availability': typeof SetupEventTypesIdAvailabilityRoute
 }
 export interface FileRouteTypes {
@@ -412,9 +476,12 @@ export interface FileRouteTypes {
     | '/app/'
     | '/docs/'
     | '/setup/'
+    | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
     | '/app/event-types/new'
+    | '/app/requests/$id'
+    | '/app/settings/hours'
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -422,6 +489,8 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
+    | '/app/event-types/$id/advanced'
+    | '/app/event-types/$id/hours'
     | '/app/event-types/$id/availability'
     | '/app/event-types/$id/preview'
     | '/book/$handle/$slug/confirmed'
@@ -431,6 +500,8 @@ export interface FileRouteTypes {
     | '/embed/$handle/$slug/confirmed'
     | '/embed/$handle/$slug/details'
     | '/embed/$handle/$slug/request'
+    | '/setup/event-types/$id/advanced'
+    | '/setup/event-types/$id/hours'
     | '/setup/event-types/$id/availability'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -453,9 +524,12 @@ export interface FileRouteTypes {
     | '/app'
     | '/docs'
     | '/setup'
+    | '/app/bookings/$id'
     | '/app/bookings/new'
     | '/app/event-types/$id'
     | '/app/event-types/new'
+    | '/app/requests/$id'
+    | '/app/settings/hours'
     | '/book/$handle/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -463,6 +537,8 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types/$id'
     | '/setup/event-types/new'
+    | '/app/event-types/$id/advanced'
+    | '/app/event-types/$id/hours'
     | '/app/event-types/$id/availability'
     | '/app/event-types/$id/preview'
     | '/book/$handle/$slug/confirmed'
@@ -472,6 +548,8 @@ export interface FileRouteTypes {
     | '/embed/$handle/$slug/confirmed'
     | '/embed/$handle/$slug/details'
     | '/embed/$handle/$slug/request'
+    | '/setup/event-types/$id/advanced'
+    | '/setup/event-types/$id/hours'
     | '/setup/event-types/$id/availability'
   id:
     | '__root__'
@@ -496,9 +574,12 @@ export interface FileRouteTypes {
     | '/app/'
     | '/docs/'
     | '/setup/'
+    | '/app/bookings/$id'
     | '/app/bookings_/new'
     | '/app/event-types_/$id'
     | '/app/event-types_/new'
+    | '/app/requests/$id'
+    | '/app/settings_/hours'
     | '/book/$handle_/$slug'
     | '/embed/$handle/$slug'
     | '/embed/manage/$token'
@@ -506,6 +587,8 @@ export interface FileRouteTypes {
     | '/manage/invite/$token'
     | '/setup/event-types_/$id'
     | '/setup/event-types_/new'
+    | '/app/event-types_/$id/advanced'
+    | '/app/event-types_/$id/hours'
     | '/app/event-types_/$id_/availability'
     | '/app/event-types_/$id_/preview'
     | '/book/$handle_/$slug_/confirmed'
@@ -515,6 +598,8 @@ export interface FileRouteTypes {
     | '/embed/$handle/$slug_/confirmed'
     | '/embed/$handle/$slug_/details'
     | '/embed/$handle/$slug_/request'
+    | '/setup/event-types_/$id/advanced'
+    | '/setup/event-types_/$id/hours'
     | '/setup/event-types_/$id_/availability'
   fileRoutesById: FileRoutesById
 }
@@ -692,6 +777,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupSettingsRouteImport
       parentRoute: typeof SetupRoute
     }
+    '/app/bookings/$id': {
+      id: '/app/bookings/$id'
+      path: '/$id'
+      fullPath: '/app/bookings/$id'
+      preLoaderRoute: typeof AppBookingsIdRouteImport
+      parentRoute: typeof AppBookingsRoute
+    }
     '/app/bookings_/new': {
       id: '/app/bookings_/new'
       path: '/bookings/new'
@@ -711,6 +803,20 @@ declare module '@tanstack/react-router' {
       path: '/event-types/new'
       fullPath: '/app/event-types/new'
       preLoaderRoute: typeof AppEventTypesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/requests/$id': {
+      id: '/app/requests/$id'
+      path: '/$id'
+      fullPath: '/app/requests/$id'
+      preLoaderRoute: typeof AppRequestsIdRouteImport
+      parentRoute: typeof AppRequestsRoute
+    }
+    '/app/settings_/hours': {
+      id: '/app/settings_/hours'
+      path: '/settings/hours'
+      fullPath: '/app/settings/hours'
+      preLoaderRoute: typeof AppSettingsHoursRouteImport
       parentRoute: typeof AppRoute
     }
     '/book/$handle_/$slug': {
@@ -761,6 +867,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/setup/event-types/new'
       preLoaderRoute: typeof SetupEventTypesNewRouteImport
       parentRoute: typeof SetupRoute
+    }
+    '/app/event-types_/$id/advanced': {
+      id: '/app/event-types_/$id/advanced'
+      path: '/advanced'
+      fullPath: '/app/event-types/$id/advanced'
+      preLoaderRoute: typeof AppEventTypesIdAdvancedRouteImport
+      parentRoute: typeof AppEventTypesIdRoute
+    }
+    '/app/event-types_/$id/hours': {
+      id: '/app/event-types_/$id/hours'
+      path: '/hours'
+      fullPath: '/app/event-types/$id/hours'
+      preLoaderRoute: typeof AppEventTypesIdHoursRouteImport
+      parentRoute: typeof AppEventTypesIdRoute
     }
     '/app/event-types_/$id_/availability': {
       id: '/app/event-types_/$id_/availability'
@@ -825,6 +945,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedHandleSlugRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/setup/event-types_/$id/advanced': {
+      id: '/setup/event-types_/$id/advanced'
+      path: '/advanced'
+      fullPath: '/setup/event-types/$id/advanced'
+      preLoaderRoute: typeof SetupEventTypesIdAdvancedRouteImport
+      parentRoute: typeof SetupEventTypesIdRoute
+    }
+    '/setup/event-types_/$id/hours': {
+      id: '/setup/event-types_/$id/hours'
+      path: '/hours'
+      fullPath: '/setup/event-types/$id/hours'
+      preLoaderRoute: typeof SetupEventTypesIdHoursRouteImport
+      parentRoute: typeof SetupEventTypesIdRoute
+    }
     '/setup/event-types_/$id_/availability': {
       id: '/setup/event-types_/$id_/availability'
       path: '/event-types/$id/availability'
@@ -835,44 +969,97 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppBookingsRouteChildren {
+  AppBookingsIdRoute: typeof AppBookingsIdRoute
+}
+
+const AppBookingsRouteChildren: AppBookingsRouteChildren = {
+  AppBookingsIdRoute: AppBookingsIdRoute,
+}
+
+const AppBookingsRouteWithChildren = AppBookingsRoute._addFileChildren(
+  AppBookingsRouteChildren,
+)
+
+interface AppRequestsRouteChildren {
+  AppRequestsIdRoute: typeof AppRequestsIdRoute
+}
+
+const AppRequestsRouteChildren: AppRequestsRouteChildren = {
+  AppRequestsIdRoute: AppRequestsIdRoute,
+}
+
+const AppRequestsRouteWithChildren = AppRequestsRoute._addFileChildren(
+  AppRequestsRouteChildren,
+)
+
+interface AppEventTypesIdRouteChildren {
+  AppEventTypesIdAdvancedRoute: typeof AppEventTypesIdAdvancedRoute
+  AppEventTypesIdHoursRoute: typeof AppEventTypesIdHoursRoute
+}
+
+const AppEventTypesIdRouteChildren: AppEventTypesIdRouteChildren = {
+  AppEventTypesIdAdvancedRoute: AppEventTypesIdAdvancedRoute,
+  AppEventTypesIdHoursRoute: AppEventTypesIdHoursRoute,
+}
+
+const AppEventTypesIdRouteWithChildren = AppEventTypesIdRoute._addFileChildren(
+  AppEventTypesIdRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAvailabilityRoute: typeof AppAvailabilityRoute
-  AppBookingsRoute: typeof AppBookingsRoute
+  AppBookingsRoute: typeof AppBookingsRouteWithChildren
   AppEventTypesRoute: typeof AppEventTypesRoute
   AppProfileRoute: typeof AppProfileRoute
-  AppRequestsRoute: typeof AppRequestsRoute
+  AppRequestsRoute: typeof AppRequestsRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppBookingsNewRoute: typeof AppBookingsNewRoute
-  AppEventTypesIdRoute: typeof AppEventTypesIdRoute
+  AppEventTypesIdRoute: typeof AppEventTypesIdRouteWithChildren
   AppEventTypesNewRoute: typeof AppEventTypesNewRoute
+  AppSettingsHoursRoute: typeof AppSettingsHoursRoute
   AppEventTypesIdAvailabilityRoute: typeof AppEventTypesIdAvailabilityRoute
   AppEventTypesIdPreviewRoute: typeof AppEventTypesIdPreviewRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAvailabilityRoute: AppAvailabilityRoute,
-  AppBookingsRoute: AppBookingsRoute,
+  AppBookingsRoute: AppBookingsRouteWithChildren,
   AppEventTypesRoute: AppEventTypesRoute,
   AppProfileRoute: AppProfileRoute,
-  AppRequestsRoute: AppRequestsRoute,
+  AppRequestsRoute: AppRequestsRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
   AppBookingsNewRoute: AppBookingsNewRoute,
-  AppEventTypesIdRoute: AppEventTypesIdRoute,
+  AppEventTypesIdRoute: AppEventTypesIdRouteWithChildren,
   AppEventTypesNewRoute: AppEventTypesNewRoute,
+  AppSettingsHoursRoute: AppSettingsHoursRoute,
   AppEventTypesIdAvailabilityRoute: AppEventTypesIdAvailabilityRoute,
   AppEventTypesIdPreviewRoute: AppEventTypesIdPreviewRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface SetupEventTypesIdRouteChildren {
+  SetupEventTypesIdAdvancedRoute: typeof SetupEventTypesIdAdvancedRoute
+  SetupEventTypesIdHoursRoute: typeof SetupEventTypesIdHoursRoute
+}
+
+const SetupEventTypesIdRouteChildren: SetupEventTypesIdRouteChildren = {
+  SetupEventTypesIdAdvancedRoute: SetupEventTypesIdAdvancedRoute,
+  SetupEventTypesIdHoursRoute: SetupEventTypesIdHoursRoute,
+}
+
+const SetupEventTypesIdRouteWithChildren =
+  SetupEventTypesIdRoute._addFileChildren(SetupEventTypesIdRouteChildren)
+
 interface SetupRouteChildren {
   SetupEventTypesRoute: typeof SetupEventTypesRoute
   SetupProfileRoute: typeof SetupProfileRoute
   SetupSettingsRoute: typeof SetupSettingsRoute
   SetupIndexRoute: typeof SetupIndexRoute
-  SetupEventTypesIdRoute: typeof SetupEventTypesIdRoute
+  SetupEventTypesIdRoute: typeof SetupEventTypesIdRouteWithChildren
   SetupEventTypesNewRoute: typeof SetupEventTypesNewRoute
   SetupEventTypesIdAvailabilityRoute: typeof SetupEventTypesIdAvailabilityRoute
 }
@@ -882,7 +1069,7 @@ const SetupRouteChildren: SetupRouteChildren = {
   SetupProfileRoute: SetupProfileRoute,
   SetupSettingsRoute: SetupSettingsRoute,
   SetupIndexRoute: SetupIndexRoute,
-  SetupEventTypesIdRoute: SetupEventTypesIdRoute,
+  SetupEventTypesIdRoute: SetupEventTypesIdRouteWithChildren,
   SetupEventTypesNewRoute: SetupEventTypesNewRoute,
   SetupEventTypesIdAvailabilityRoute: SetupEventTypesIdAvailabilityRoute,
 }

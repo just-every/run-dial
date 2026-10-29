@@ -18,7 +18,7 @@ Open **Profile** in the operator app. Dial has one host and one profile. Fill in
 
 Open **Event types** and choose **New event type**. Each has an **Event name**, a **Description**, a **Duration** from 5 to 480 minutes and a **Slug** for its address, which you find under **More options**. A slug follows the handle rules. If you change it, the old link and any embeds stop working, but the manage links of existing bookings keep working.
 
-**Location.** Pick **Google Meet**, **Fixed link**, **Host phone number** or **In-person address**. Clients see only the label until they book, then the link, number or address appears in the receipt, email and any connected calendar event. Google Meet requires a connected Google Calendar; the other locations can work without one.
+**Location.** Pick **Google Meet**, **Meeting link**, **Host phone number** or **In-person address**. Clients see only the label until they book, then the link, number or address appears in the receipt, email and any connected calendar event. Google Meet requires a connected Google Calendar; the other locations can work without one.
 
 **Questions.** Name and email are always asked. Add your own, up to 25, as text, textarea, single choice, multiple choice or checkbox, each required or optional. New event types start with an optional Agenda question.
 
@@ -72,6 +72,6 @@ Under **Alternative request email** in the event type's email settings, choose w
 
 ## Embed it on your site
 
-In **Settings**, under **Origin-gated embeds**, add the exact address of your site, such as one starting with `https://`. Wildcards and paths are refused. Choose a published event type, then **Copy inline tag** or **Copy modal tag**, and paste it where you want the flow. Modal adds a button that opens it in a window.
+In **Settings**, under **Embed**, choose the event, then **Copy inline code** or **Copy popup code** and paste it where you want the flow. The first copy asks for your site's address and allows it. Popup adds a button that opens the flow in a window.
 
 Next, set up mail and optional calendar integration in [Calendar and email](calendar-and-email.md).

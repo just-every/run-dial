@@ -43,17 +43,24 @@ export async function bookingJourney(browser, origin, scans, errors, widths = [1
       await page.getByLabel("View in timezone", { exact: true }).fill("Australia/Brisbane");
       await page.getByLabel("View in timezone", { exact: true }).press("Enter");
       await page.getByText("Checking current times…", { exact: true }).waitFor({ state: "hidden" });
-      assert.ok(await page.getByText(/Currently:.*Australia\/Brisbane/).first().isVisible());
+      assert.equal(await page.getByLabel("View in timezone", { exact: true }).inputValue(), "Australia/Brisbane");
       assert.equal(await page.getByRole("button", { name: "Confirm reschedule", exact: true }).count(), 0, "no confirm before choosing an offered slot"); await audit("manage-error");
       const endpoint = await (await page.request.get(`${origin}/api/public/manage/${token}/reschedule/availability?inviteeTimezone=Australia%2FBrisbane`)).json(); assert.ok(endpoint.slots.length);
       const actual = []; const days = page.locator(".pb-picker-day");
       for (let day = 0; day < await days.count(); day++) { await days.nth(day).click(); actual.push(...await page.locator(".pb-slot-button").evaluateAll(elements => elements.map(el => el.dataset.startAt))); }
-      assert.deepEqual(actual.sort(), endpoint.slots.map(slot => slot.startAt).sort(), "Brisbane picker offers exactly native engine slots, in a New York browser");
+      assert.deepEqual(actual.sort(), endpoint.slots.filter(slot => slot.startAt !== old.occurrence.startAt).map(slot => slot.startAt).sort(), "Brisbane picker offers native engine slots apart from the current booking, in a New York browser");
       await page.locator(".pb-slot-button").first().click(); await page.getByRole("button", { name: "Confirm reschedule", exact: true }).waitFor(); assert.equal(await page.getByRole("button", { name: "Confirm reschedule", exact: true }).count(), 1);
       assert.equal((await (await page.request.get(`${origin}/api/public/manage/${token}`)).json()).occurrence.startAt, old.occurrence.startAt, "old slot is held until Confirm commits"); await audit("reschedule-review");
+      await page.getByLabel("Reason for rescheduling (optional)", { exact: true }).fill("Our project review moved");
       await page.getByRole("button", { name: "Confirm reschedule", exact: true }).click(); await page.getByText("Your booking has been rescheduled.", { exact: true }).waitFor(); await audit("rescheduled");
-      page.once("dialog", dialog => dialog.dismiss()); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); assert.notEqual((await (await page.request.get(`${origin}/api/public/manage/${token}`)).json()).state, "cancelled");
-      page.once("dialog", dialog => dialog.accept()); await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); await page.getByText("This booking has been cancelled.", { exact: true }).waitFor();
+      const afterMove = await (await page.request.get(origin + "/__fixtures/status")).json();
+      const record = afterMove.bookings.find(row => row.invitee_email === `axe${width}@dial.test`);
+      assert.ok(record);
+      assert.ok(afterMove.booking_history.some(row => row.booking_id === record.id && row.action === "rescheduled" && row.reason === "Our project review moved"));
+      await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); await page.getByRole("button", { name: "Keep booking", exact: true }).click(); assert.notEqual((await (await page.request.get(`${origin}/api/public/manage/${token}`)).json()).state, "cancelled");
+      await page.getByRole("button", { name: "Cancel booking", exact: true }).click(); await page.getByLabel("Reason (optional)", { exact: true }).fill("We need more preparation time"); await page.getByRole("button", { name: "Confirm cancellation", exact: true }).click(); await page.getByText("This booking has been cancelled.", { exact: true }).waitFor();
+      const afterCancel = await (await page.request.get(origin + "/__fixtures/status")).json();
+      assert.ok(afterCancel.booking_history.some(row => row.booking_id === record.id && row.action === "cancelled" && row.reason === "We need more preparation time"));
       await page.reload(); await page.locator("main[aria-busy=false]").waitFor(); assert.equal(await page.getByRole("button", { name: "Cancel booking", exact: true }).count(), 0); assert.equal(await page.getByRole("button", { name: "Reschedule booking", exact: true }).count(), 0); assert.equal(await page.locator("textarea, .pb-slot-button").count(), 0); await audit("cancelled");
     } finally { await context.close(); }
   }

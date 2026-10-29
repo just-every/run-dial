@@ -1,0 +1,18 @@
+.dial-timezone-picker { display: grid; align-content: start; gap: 8px; width: 100%; min-width: 0; font-family: var(--font); }
+.dial-timezone-picker > label { margin: 0; color: var(--ink); font-size: 14px; font-weight: 650; line-height: 1.45; }
+.dial-timezone-picker__control { position: relative; min-width: 0; }
+.dial-timezone-picker .dial-timezone-picker__input { display: block; box-sizing: border-box; width: 100%; min-width: 0; height: 44px; border: 1px solid var(--line); border-radius: 12px; background: var(--field); padding: 0 14px; color: var(--ink); font: 650 15px/1.45 var(--font); outline: none; box-shadow: none; }
+.dial-timezone-picker .dial-timezone-picker__input:focus { border-color: var(--ink); outline: none; box-shadow: none; }
+.dial-timezone-picker .dial-timezone-picker__input:disabled { cursor: not-allowed; background: var(--wash); color: var(--muted); }
+.dial-timezone-picker__menu { position: absolute; top: calc(100% + 6px); inset-inline: 0; z-index: 20; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); color: var(--ink); text-align: left; }
+.dial-timezone-picker__menu > ul { max-height: min(280px, 40vh); overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 4px; list-style: none; }
+.dial-timezone-picker__menu [role="option"] { display: flex; align-items: center; min-height: 44px; box-sizing: border-box; border-radius: 8px; padding: 8px 10px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; cursor: pointer; }
+.dial-timezone-picker__menu [role="option"]:hover, .dial-timezone-picker__menu [aria-selected="true"] { background: var(--gold-wash); }
+.dial-timezone-picker__menu > p { margin: 0; padding: 12px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.dial-timezone-control { margin: 29px 0 22px; }
+.dial-timezone-picker--request { margin-bottom: 24px; }
+.pb-theme .dial-timezone-picker > label { color: var(--soft); font-weight: 700; }
+.pb-theme .dial-timezone-picker .dial-timezone-picker__input { border-radius: 9px; background: var(--card); padding: 0 10px; font-weight: 400; line-height: 1.5; }
+.pb-theme .dial-timezone-picker .dial-timezone-picker__input:focus { border-color: var(--pb-primary); }
+
+.pb-theme .dial-timezone-picker--request .dial-timezone-picker__input { font-size: 14px; font-weight: 700; }

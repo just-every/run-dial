@@ -80,8 +80,11 @@ export async function switchOverJourney({ page, context, origin, width, audit, s
  assert.match(csv, /"Intro call","https:\/\/schedule\.example\.test\/cutover-host\/intro-call","[^"]+\/book\/cutover-host\/intro-call","draft"/u);
  const event = (await json(context, origin, '/api/app/event-types')).find(row => row.title === 'Intro call');
  await page.goto(`${origin}/app/event-types/${event.id}`);
- await page.getByRole('button', { name: 'Publish event type' }).click();
- await page.getByRole('button', { name: 'Update published event' }).waitFor();
+ await page.getByRole('button', { name: 'Publish', exact: true }).click();
+ const published = page.waitForResponse(response => new URL(response.url()).pathname === `/api/app/event-types/${event.id}/publish` && response.request().method() === 'POST');
+ await page.getByRole('button', { name: 'Publish event', exact: true }).click();
+ assert.equal((await published).status(), 200);
+ await page.getByText('Live', { exact: true }).waitFor();
  await page.clock.setSystemTime(new Date('2026-02-05T00:00:00.000Z'));
  await page.goto(origin + '/app/settings#move-in'); await selectFiles('cutover-later');
  const report = await previewAndDownload(page, width, 'cutover-catch-up');

@@ -1,12 +1,13 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { api, errorMessage } from "../../../api/client";
-import { useHydrated } from "../../../app/use-hydrated";
-import { Button, Input } from "../../../app/ui/primitives";
-
-export function GuestSettings({eventId}:{eventId:string}) {
-  const [limit,setLimit]=useState(0),[loaded,setLoaded]=useState(false),[working,setWorking]=useState(false),[notice,setNotice]=useState("");
-  const hydrated=useHydrated();
-  useEffect(()=>{let active=true;void (async()=>{try{const response=await api.api.app["event-types"][":id"].guests.$get({param:{id:eventId}});if(!active)return;if(!response.ok){setNotice(await errorMessage(response));return;}const result=await response.json();setLimit(result.guestLimit);setLoaded(true);}catch{if(active)setNotice("Guest settings could not be loaded. Reload to try again.");}})();return()=>{active=false;};},[eventId]);
-  async function save(event:FormEvent){event.preventDefault();setWorking(true);setNotice("");try{const response=await api.api.app["event-types"][":id"].guests.$put({param:{id:eventId},json:{guestLimit:limit}});setNotice(response.ok?"Guest settings saved.":await errorMessage(response));}catch{setNotice("Guest settings could not be saved. Try again.");}finally{setWorking(false);}}
-  return <form aria-label="Invitee guests" onSubmit={event=>void save(event)} className="grid gap-4 rounded-xl border border-line p-4"><h3 className="font-semibold">Invitee guests</h3><p className="text-sm text-muted">Guests receive calendar invitations and booking notices. Only the invitee can manage the booking.</p><fieldset disabled={!hydrated||!loaded||working} className="grid gap-4 border-0 p-0"><label className="grid gap-2 text-sm font-semibold">Maximum guests<Input type="number" min={0} max={20} value={limit} onChange={event=>setLimit(Number(event.target.value))} required /></label><p className="text-sm text-muted">Set to 0 to keep guest invitations off. Existing bookings keep their guest limit.</p><Button type="submit">{working?"Saving…":"Save guest settings"}</Button></fieldset>{notice?<p role="status" className="text-sm">{notice}</p>:null}</form>;
+import { Input } from "../../../app/ui/primitives";
+import { useAutosave } from "../../../app/ui/autosave/use-autosave";
+import { SavedMark, SaveFailed } from "../../../app/ui/autosave/saved-state";
+import { SettingReadState, useSettingRead, writeSetting } from "../../../app/ui/autosave-setting";
+type Props = { eventId: string; initial?: { guestLimit: number }; onSaved?(): void };
+export function GuestSettings(props: Props) {
+  const read = useSettingRead<{ guestLimit: number }>(`/api/app/event-types/${props.eventId}/guests`, props.initial);
+  return read.value ? <GuestFields {...props} initial={read.value} /> : <SettingReadState error={read.error} retry={read.retry} />;
+}
+function GuestFields({ eventId, initial, onSaved }: Props & { initial: { guestLimit: number } }) {
+  const save = useAutosave(`event:${eventId}:guests`, { guestLimit: String(initial.guestLimit) }, async (next, init) => { await writeSetting(`/api/app/event-types/${eventId}/guests`, { guestLimit: Number(next.guestLimit) }, init); onSaved?.(); });
+  return <div role="group" aria-label="Invitee guests" className="grid gap-2"><label className="flex items-center justify-between gap-2 text-sm font-semibold" htmlFor={`guests-${eventId}`}>Maximum guests<SavedMark state={save.state("guestLimit")} /></label><Input id={`guests-${eventId}`} aria-label="Maximum guests" type="number" min={0} max={20} value={save.values.guestLimit} onChange={event => save.type("guestLimit", event.target.value)} onBlur={save.leave} required /><SaveFailed id={`guests-failed-${eventId}`} state={save.state("guestLimit")} what="the guest limit" onRetry={save.retry} /></div>;
 }

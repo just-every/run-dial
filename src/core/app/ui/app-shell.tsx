@@ -10,24 +10,15 @@ import { Suspense, use, useEffect, useInsertionEffect, useRef, useState } from "
 import { api } from "../../api/client";
 import { readProfile } from "../../features/host-profile/read-profile";
 import { Button, buttonClassName } from "./primitives";
-import { Icon, type IconName } from "../../shared/drawing/icons";
+import { Icon } from "../../shared/drawing/icons";
 import { BrandMark } from "../../features/public-booking";
-
-const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
-  ["Overview", "/app", "home"],
-  ["Bookings", "/app/bookings", "calendar"],
-  ["Event types", "/app/event-types", "clock"],
-  ["Availability", "/app/availability", "overrides"],
-  ["Requests", "/app/requests", "mail"],
-  ["Profile", "/app/profile", "user"],
-  ["Settings", "/app/settings", "gear"],
-];
+import { currentNavigationPath, navigation, RouteLoadPending, WorkspaceBootstrapRecovery } from "./route-load-error";
 
 type ProfileSummary = { name: string; title: string; handle: string };
 
 export function AppShell() {
   const initial = useLoaderData({ from: "/app" });
-  return <Suspense fallback={null}><WorkspaceShell reads={initial.reads} /></Suspense>;
+  return <Suspense fallback={<RouteLoadPending />}><WorkspaceShell reads={initial.reads} /></Suspense>;
 }
 
 function WorkspaceShell({ reads: pending }: { reads: WorkspaceReads | Promise<WorkspaceReads> }) {
@@ -70,6 +61,7 @@ function AppShellContent() {
   }
 
   return (
+    <>
     <div data-operator-ready={hydrated} inert={!hydrated} className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
       {initial.editorConfigured ? <OwnerEditorShell /> : null}
       <div className="hidden border-r border-line bg-sidebar lg:block">
@@ -86,10 +78,13 @@ function AppShellContent() {
       </header>
       <main className="mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10"><Outlet /></main>
     </div>
+    {!hydrated ? <WorkspaceBootstrapRecovery /> : null}
+    </>
   );
 }
 
 function SidebarContent({ bookingLink, pathname, profile, profileError, onSignOut, onNavigate, compact = false }: { bookingLink?: BookingLink; pathname: string; profile: ProfileSummary | null; profileError: string; onSignOut: () => Promise<void>; onNavigate?: () => void; compact?: boolean }) {
+  const currentPath = currentNavigationPath(pathname);
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
       {!compact ? <Link to="/app" className="mb-10 inline-flex items-center gap-2.5 text-[30px] font-extrabold leading-none tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></Link> : null}
@@ -100,8 +95,8 @@ function SidebarContent({ bookingLink, pathname, profile, profileError, onSignOu
       {profileError ? <p role="alert" className="mb-4 text-sm text-danger">{profileError}</p> : null}
       <nav aria-label="Operator navigation" className="grid gap-1">
         {navigation.map(([label, to, icon]) => {
-          const active = to === "/app" ? pathname === "/app" : pathname === to || pathname.startsWith(`${to}/`);
-          return <Link key={label} to={to} aria-current={active ? "page" : undefined} onClick={onNavigate} className={`flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-[15px] leading-[1.2] transition-colors ${active ? "bg-gold-wash font-bold text-ink" : "font-[550] text-soft hover:bg-row"}`}>
+          const active = to === currentPath;
+          return <Link key={label} to={to} activeOptions={{ exact: !active }} aria-current={active ? "page" : undefined} onClick={onNavigate} className={`flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-[15px] leading-[1.2] transition-colors ${active ? "bg-gold-wash font-bold text-ink" : "font-[550] text-soft hover:bg-row"}`}>
             <span aria-hidden="true" className={`-ml-1 h-[7px] w-[7px] shrink-0 rounded-full ${active ? "bg-gold" : ""}`} />
             <Icon name={icon} className="line-icon h-5 w-5 text-ink" />{label}
           </Link>;

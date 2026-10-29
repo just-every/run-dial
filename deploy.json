@@ -55,6 +55,12 @@
       "optional": true
     },
     {
+      "binding": "QBO_ENVIRONMENT",
+      "environment": "QBO_ENVIRONMENT",
+      "optional": true,
+      "verifyStandIn": "production"
+    },
+    {
       "binding": "SLACK_CLIENT_ID",
       "environment": "SLACK_CLIENT_ID",
       "optional": true

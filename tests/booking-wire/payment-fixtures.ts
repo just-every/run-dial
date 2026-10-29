@@ -1,4 +1,6 @@
 import type { AppServices } from "../../src/core/app/services";
+import { env } from "cloudflare:workers";
+import { seal } from "../../src/core/platform/crypto/sealed";
 import { payStripeInvoice, payStripeSession } from "./stripe-wire";
 import { stripeGateFixture } from "./stripe-gates";
 import { stripeAuthorization } from "./stripe-authorization";
@@ -6,6 +8,27 @@ import { stripeAuthorization } from "./stripe-authorization";
 /** PAY-001 test-only controls: the payer finishing Stripe's page, a payment window or OAuth state reaching its
  * end, the production sweep, and a full-table scan for payer details. */
 export async function paymentFixtures(url: URL, request: Request, db: D1Database, providerDb: D1Database, services: AppServices) {
+  if(url.pathname==='/__fixtures/payments/entitlement-expiry') {
+    const {id,expiresAt}=await request.json<{id:string;expiresAt:string}>();
+    await db.prepare("UPDATE payment_entitlements SET expires_at=? WHERE id=?").bind(expiresAt,id).run();return Response.json({ok:true});
+  }
+  if(url.pathname==='/__fixtures/payments/subscription-period') {
+    const {id,start,end,status}=await request.json<{id:string;start:number;end:number;status:string}>();
+    const row=await providerDb.prepare("SELECT payload FROM wire_stripe_objects WHERE id=? AND type='subscriptions'").bind(id).first<{payload:string}>();
+    if(!row)return new Response(null,{status:404});
+    const payload={...JSON.parse(row.payload),status,items:{data:[{current_period_start:start,current_period_end:end}]}};
+    await providerDb.prepare("UPDATE wire_stripe_objects SET payload=? WHERE id=?").bind(JSON.stringify(payload),id).run();return Response.json(payload);
+  }
+  if (url.pathname === "/__fixtures/payments/accounting-seed" && request.method === "POST") {
+    // Held fleet grant exchanged once by the harness and seeded by fixture;
+    // Dial's refresh path and the OAuth consent door were not exercised.
+    const { realmId, accessToken, expiresAt } = await request.json<{ realmId: string; accessToken: string; expiresAt: string }>();
+    const secret = (env as { SESSION_SECRET: string }).SESSION_SECRET;
+    const now = new Date().toISOString();
+    await db.prepare("INSERT INTO accounting_connections(id,realm_id,status,access_token_ciphertext,refresh_token_ciphertext,expires_at,created_at,updated_at) VALUES('quickbooks',?,'connected',?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET realm_id=excluded.realm_id,status='connected',access_token_ciphertext=excluded.access_token_ciphertext,refresh_token_ciphertext=excluded.refresh_token_ciphertext,expires_at=excluded.expires_at,income_account_id=NULL,item_id=NULL,reason=NULL,refresh_started_at=NULL,updated_at=excluded.updated_at")
+      .bind(realmId, await seal(accessToken, secret), await seal("synthetic-dial-hk2-refresh-placeholder", secret), expiresAt, now, now).run();
+    return new Response(null, { status: 204 });
+  }
   if(url.pathname==='/__fixtures/payments/payout'){
     const {intentId,payoutId}=await request.json<{intentId:string;payoutId:string}>();
     const value={id:'synthetic-dial-208',object:'balance_transaction',payout:payoutId,currency:'usd',amount:2500,fee:100,net:2400,source:{id:'synthetic-dial-202',payment_intent:intentId}};
