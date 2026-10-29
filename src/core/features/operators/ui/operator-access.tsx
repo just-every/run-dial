@@ -29,7 +29,7 @@ export function OperatorAccessCard() {
     if (working) return;
     setWorking(true); setError(""); setNotice("");
     try {
-      const response = await api.api.app.operators.$post({ json: { email,role } });
+      const response = role==="owner"?await api.api.app.operators.$post({json:{email}}):await api.api.app["api-administrators"].$post({json:{email}});
       if (!response.ok) throw new Error(await errorMessage(response));
       const result = await response.json();
       setEmail("");
@@ -49,7 +49,7 @@ export function OperatorAccessCard() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : "The result could not be received. Reload operators before retrying."); }
     finally { setWorking(false); }
   }
-  return <Card className="p-5 sm:p-6 xl:col-span-2">
+  return <Card id="operator-access" className="p-5 sm:p-6 xl:col-span-2">
     <SectionHeading icon="people" title="Workspace access" />
     <p className="mt-3 text-sm leading-6 text-soft">Owners share workspace access. Admins can manage API credentials and connected apps through authenticated API requests; workspace pages remain owner-only. Removal erases their identity, sessions, private links and local mail. Authored records remain anonymous and the shared calendar stays connected. Erase matching invitee bookings and requests from their detail pages before removing an operator.</p>
     {error ? <p role="alert" className={noticeClassName("error", "mt-3")}>{error}</p> : null}

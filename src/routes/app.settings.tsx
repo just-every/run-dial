@@ -1,3 +1,4 @@
+import { ApiCredentialsCard } from "../core/features/api-credentials/ui/settings-card";
 import { WebhookSettingsCard } from "../core/features/webhooks/ui/settings-card";
 import { AnalyticsSettingsCard } from "../core/features/analytics/ui/settings-card";
 import { NoticeDestinationsCard } from '../core/features/workspace-notices/ui/destinations-card';
@@ -19,5 +20,5 @@ export const Route = createFileRoute('/app/settings' )({ codeSplitGroupings: [],
 
 function SettingsRoute() {
   const { shell } = Route.useRouteContext();
-  return <><SettingsPage paymentSettings={timezone => <><StripeConnectionCard timezone={timezone} /><AccountingCard /><NoticeDestinationsCard /><WebhookSettingsCard /><AnalyticsSettingsCard /></>} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} />{shell.canInspectArchive ? <ArchiveStatusCard /> : null}<div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
+  return <><SettingsPage paymentSettings={timezone => <><StripeConnectionCard timezone={timezone} /><AccountingCard /><NoticeDestinationsCard /><WebhookSettingsCard /><ApiCredentialsCard /><AnalyticsSettingsCard /></>} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} />{shell.canInspectArchive ? <ArchiveStatusCard /> : null}<div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
 }
