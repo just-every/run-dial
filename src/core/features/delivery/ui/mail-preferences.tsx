@@ -44,7 +44,7 @@ export function MailPreferencesCard() {
     {notice ? <p role="status" className="mt-4 rounded-[14px] bg-gold-wash p-3 text-sm text-ink">{notice}</p> : null}
     <form onSubmit={(event) => void save(event)} className="mt-5">
       <fieldset disabled={!ready || working}>
-        <label className="flex items-start gap-3 text-sm font-[650] text-ink"><input type="checkbox" className="mt-1" checked={muted} onChange={(event) => { setMuted(event.target.checked); setNotice(""); }} />Mute booking mail for me</label>
+        <label className="flex min-h-11 items-center gap-3 text-sm font-[650] text-ink sm:min-h-0 sm:items-start"><input type="checkbox" className="sm:mt-1" checked={muted} onChange={(event) => { setMuted(event.target.checked); setNotice(""); }} />Mute booking mail for me</label>
         <Button type="submit" className="mt-5">{working ? "Saving…" : "Save mail preference"}</Button>
       </fieldset>
     </form>
