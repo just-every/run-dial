@@ -5,18 +5,17 @@ verb with its scope, possible classes and contract clauses.
 
 Dial mounts one copied `createAgentDoor` in the production Worker, inside native
 archive admission and ahead of application authentication and setup redirects.
-The runtime and CLI pin is `rer-v0.2.87`, Base commit
-`62f07fe6ecfdeae1a90bf6e65a02abae288996b3`. Copied transport, policy and validators
+The runtime and CLI pin is `rer-v0.2.88`, Base commit
+`114ef7a61f080da053af783c5fbe06f625d692cc`. Copied transport, policy and validators
 are unchanged. MCP negotiates `2026-07-28` and `2025-11-25`; `2025-03-26` refuses
 with HTTP 400 / JSON-RPC -32022.
 
 The declared capabilities are `tools`, `policy`, `pause`, `audit`, `idempotency`,
 in `agent-surface.json` and the options passed to `createAgentDoor`. Version
-0.2.87 accepts this field but does not scope optional families. Base #670 must
-supply that behavior before this adoption can be complete. In particular, the
-copied runtime always adds `dial.events.list`; Dial does not declare the events
-family or silently add it to its specialist contract to satisfy the old validator.
-The resulting registry and surface failures stay failing in normal verification.
+0.2.88 accepts this field and scopes both the runtime registry and conformance.
+The door exposes the declared core tools and refuses optional families with
+typed errors. Dial does not declare the events family or add its built-in
+listing to the specialist contract.
 
 The scheduling coordinator reads native profiles, event configuration, hours,
 calendar health, bookings, requests, delivery status, reports, clients, polls,
@@ -69,10 +68,10 @@ The following families remain undeclared (core subset, 2026-10-29):
   `bookings/service.ts`, `polls/service.ts`, `availability-requests/service.ts`,
   `delivery/recovery.ts` and `payments/`. No agent continuation is wired, and the
   copied `operation.ts` and `pipeline.ts` are unchanged from their recorded
-  0.2.87 source. That release fixes G-op-fanout; queued lifecycle stays undeclared
+  0.2.88 source. The preceding release fixed G-op-fanout; queued lifecycle stays undeclared
   because Dial has not integrated or proven native continuation custody.
 - **events/subscriptions:** retained change feeds, subscriptions and delivery.
-  Version 0.2.87 exposes its built-in listing regardless of the declared subset.
+  Version 0.2.88 withholds its built-in listing under the declared core subset.
 - **multiSponsor / ownerNativeAdministration:** Business team provisioning,
   operator invitations/roles, and native human confirmation of attendance stay
   with native people and screen doors. A company approval does not invent the
