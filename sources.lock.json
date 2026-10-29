@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e887b1dea6f4f445a932ca05991e83cb01b05a0c01273ee8f377351e926d7c47",
+      "sha256": "4d35099fca5bb4f2a44df96e522161b9f3548ae1bee30a905556c319161683a5",
       "executable": false
     },
     "DEMO.md": {
@@ -952,7 +952,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "ef56dfb11c91cc31ea0421ca7c2c1793839366a65eebc559941967c3beab484c",
+      "sha256": "b31515de24b81ba166bc7045cfd6d9378c24e71159be37768e8e74ed6578b954",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -988,7 +988,7 @@
       "executable": false
     },
     "docs/WEBHOOKS.md": {
-      "sha256": "a5af54a7bdc65898d663a9365dd9ffd5b0d1e520057e2b57a475ab0cd6721d0c",
+      "sha256": "917a141144a0108f753263710f993034511c749854d55fdcac27c4a4338a7da2",
       "executable": false
     },
     "docs/WORKFLOW-CRM.md": {
@@ -1680,7 +1680,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "1a3e75b37b041773aef1ccb7c05c12a68572f2af4c8c9e2f36204b57b01ce532",
+      "sha256": "5df281a51ec7d2f7a0ccca1ff92d8d70cc0861d4c71a0182847f89122595d1d2",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -2051,35 +2051,35 @@
       "sha256": "ed6616253c047d9ede55d18e52461fcf8b2749f0476f645e1df26cc0f7cc1e1e",
       "executable": false
     },
-    "migrations/core/0093_api_pending_erasure.sql": {
+    "migrations/core/0094_api_pending_erasure.sql": {
       "sha256": "bd0980ca3fa8783a9988d7553f92900822449eb8f849fda537eaaa9da6454186",
       "executable": false
     },
-    "migrations/core/0094_api_authority_cleanup.sql": {
+    "migrations/core/0095_api_authority_cleanup.sql": {
       "sha256": "630e8d565bfb8137ede95f81e5f38b54d0f6f7b0716c5b8414ce88f58a02e6d6",
       "executable": false
     },
-    "migrations/core/0094_workflow_lifecycle.sql": {
+    "migrations/core/0096_workflow_lifecycle.sql": {
       "sha256": "7526eb106a8ff9f3910cd07fc8af6f853ce78053bdf395f8d9fca062289f4bf4",
       "executable": false
     },
-    "migrations/core/0095_api_authority_revocation.sql": {
+    "migrations/core/0097_api_authority_revocation.sql": {
       "sha256": "1a26ba2efb6c40c69fa43d87a0f004526df154edd7e13aacd1963dd8cbdc5f42",
       "executable": false
     },
-    "migrations/core/0095_workflow_webhooks.sql": {
+    "migrations/core/0098_workflow_webhooks.sql": {
       "sha256": "d42512e9371dac7e03966ec76bc13c8a778b22b5af1e28b374c60abbbadaea2a",
       "executable": false
     },
-    "migrations/core/0096_api_webhook_host_scope.sql": {
+    "migrations/core/0099_api_webhook_host_scope.sql": {
       "sha256": "81c6aa3dde7f4c8f99643b631e3833c745cc0ac637f1d255ca9cf923cdc11d96",
       "executable": false
     },
-    "migrations/core/0097_workflow_crm.sql": {
+    "migrations/core/0100_workflow_crm.sql": {
       "sha256": "362585a9729d67f3838a203b0df0f624fc2d98c0cad20342c02abdd7cc222227",
       "executable": false
     },
-    "migrations/core/0098_workflow_authority_revocation.sql": {
+    "migrations/core/0101_workflow_authority_revocation.sql": {
       "sha256": "f3fb6e1d1331b43638ca27fa8dc8ae695908be63eebb7b6d273e87cbea398df5",
       "executable": false
     },
@@ -4040,7 +4040,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "2982d7db245f4a09aafee733a7ec28c90be90cfe67c9cd255ba855ba7eade0de",
+      "sha256": "445fbbd58513737244bb18d54baded882979efd811c51897a15cede10a79eceb",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
@@ -4732,7 +4732,7 @@
       "executable": false
     },
     "scripts/verify-webhook-settings.mjs": {
-      "sha256": "2d9c73ed302936208050c4944da7760d04db40972240a6b24256a1389e7101f1",
+      "sha256": "a8e060c8f85bb123bd7a147a7c6725f824b44b57216e9c0a6136b2cef33c732e",
       "executable": false
     },
     "scripts/verify.mjs": {
@@ -7396,11 +7396,11 @@
       "executable": false
     },
     "src/core/features/webhooks/subscriptions.ts": {
-      "sha256": "572e86e3e9271531f0b672dce738a50fadcb1259b76b3c5de067d63539d2d71b",
+      "sha256": "efef41f6fdcf25645a506ebfff2babc2e41286d50a83c740a842c88aa6659325",
       "executable": false
     },
     "src/core/features/webhooks/ui/settings-card.tsx": {
-      "sha256": "890b5735d9bb3a3947a79faed80c4bfa166001ea18bfca78a0582fc61c21d9b9",
+      "sha256": "d8470f98b482634ea8f53fd727a1a354bf0b5e482974a56038fef2f2c025a2da",
       "executable": false
     },
     "src/core/features/workflows/candidates.ts": {

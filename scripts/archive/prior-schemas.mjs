@@ -12,15 +12,15 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
-  'core/0098_workflow_authority_revocation.sql': (table,row)=>table==='workflow_rules'?{...row,authority_revoked_at:null}:row,
-  'core/0097_workflow_crm.sql': (table,row)=>table==='workflow_rules'?{...row,action_type:row.action_kind??row.action,crm_connection_id:null}:row,
-  'core/0096_api_webhook_host_scope.sql': (_table,row)=>row,
-  'core/0095_workflow_webhooks.sql': (table,row) => table==='workflow_rules'?{...row,action_kind:null,trigger_kind:null,routing_form_id:null,webhook_subscription_id:null}:table==='webhook_deliveries'?{...row,workflow_id:null,workflow_version:null,workflow_occurrence_id:null,workflow_booking_state:null,routing_submission_id:null}:row,
+  'core/0101_workflow_authority_revocation.sql': (table,row)=>table==='workflow_rules'?{...row,authority_revoked_at:null}:row,
+  'core/0100_workflow_crm.sql': (table,row)=>table==='workflow_rules'?{...row,action_type:row.action_kind??row.action,crm_connection_id:null}:row,
+  'core/0099_api_webhook_host_scope.sql': (_table,row)=>row,
+  'core/0098_workflow_webhooks.sql': (table,row) => table==='workflow_rules'?{...row,action_kind:null,trigger_kind:null,routing_form_id:null,webhook_subscription_id:null}:table==='webhook_deliveries'?{...row,workflow_id:null,workflow_version:null,workflow_occurrence_id:null,workflow_booking_state:null,routing_submission_id:null}:row,
   // Existing workflow definitions keep their original event and recipient semantics.
-  'core/0094_workflow_lifecycle.sql': (table,row) => table==='workflow_rules'?{...row,trigger:'booking-created',action:'email-invitee',offset_minutes:0}:row,
-  'core/0093_api_pending_erasure.sql': (_table,row) => row,
-  'core/0095_api_authority_revocation.sql': (_table,row)=>row,
-  'core/0094_api_authority_cleanup.sql': (_table,row)=>row,
+  'core/0096_workflow_lifecycle.sql': (table,row) => table==='workflow_rules'?{...row,trigger:'booking-created',action:'email-invitee',offset_minutes:0}:row,
+  'core/0094_api_pending_erasure.sql': (_table,row) => row,
+  'core/0097_api_authority_revocation.sql': (_table,row)=>row,
+  'core/0095_api_authority_cleanup.sql': (_table,row)=>row,
   'core/0093_api_consent.sql': (table,row) => table==='api_oauth_applications'?{...row,grant_type:'client_credentials',redirect_uri:null}:table==='api_credentials'?{...row,oauth_grant_id:null}:row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,

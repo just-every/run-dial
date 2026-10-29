@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { evidencePath } from "./evidence-path.mjs";
@@ -6,7 +7,7 @@ import { completeEmptyWorkspace } from "../tests/booking-axe/first-run-fixture.m
 import { webhookReceiver } from "../tests/booking-wire/webhook-receiver.mjs";
 
 const origin = process.env.DIAL_REVIEW_ORIGIN, receiver = await webhookReceiver();
-const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
+const browser = await chromium.launch({ headless: true, ...(existsSync("/usr/bin/chromium") ? { executablePath: "/usr/bin/chromium" } : {}), args: ["--no-sandbox", "--use-mock-keychain", "--password-store=basic"] });
 const owner = await browser.newContext(), headers = { Origin: origin };
 const data = async (path, body, expected = 200) => {
   const response = body === undefined ? await owner.request.get(origin + path) : await owner.request.post(origin + path, { headers, data: body });
@@ -34,7 +35,9 @@ try {
         const axe = await new AxeBuilder({ page }).include("#webhook-settings").analyze(); assert.deepEqual(axe.violations.filter(row => ["serious", "critical"].includes(row.impact)).map(row => row.id), []);
         await section.screenshot({ path: evidencePath(`webhook-${name}-${width}.png`), mask: [section.getByRole("region", { name: "New webhook signing secret" }).locator("code")] });
       };
-      const form = section.getByRole("form", { name: "Create webhook" }); await form.waitFor(); await capture("new");
+      const form = section.getByRole("form", { name: "Create webhook" }); await form.waitFor();
+      await expect(form.getByRole("checkbox", { name: "Workflow action", exact: true })).toBeVisible();
+      await capture("new");
       await form.getByLabel("HTTPS endpoint", { exact: true }).fill(`https://receiver.synthetic.test/screen-${width}`);
       await form.getByLabel("Send events from").selectOption("team"); await form.getByRole("combobox", { name: /^Team/ }).selectOption({ label: "Planning" });
       await form.getByLabel("Booking created", { exact: true }).check(); await form.getByLabel(/I authorize Dial/).check();

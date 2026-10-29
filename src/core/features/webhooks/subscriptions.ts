@@ -19,7 +19,8 @@ export class WebhookSubscriptions {
       this.db.prepare("SELECT id FROM host_profiles WHERE singleton_key='default'").first<{ id: string }>(),
       this.db.prepare("SELECT id,name FROM teams ORDER BY name,id").all(),
     ]);
-    return { subscriptions: subscriptions.results.map(({ eventsJson, ...row }) => ({ ...row, events: JSON.parse(eventsJson) as string[] })), deliveries: deliveries.results, eventTypes: webhookEventTypes, hostId: host?.id ?? "", teams: teams.results };
+    return { subscriptions: subscriptions.results.map(({ eventsJson, ...row }) => ({ ...row, events: JSON.parse(eventsJson) as string[] })), deliveries: deliveries.results,
+      eventTypes: webhookEventTypes.filter(type => type !== "workflow.action.v1"), workflowEventTypes: ["workflow.action.v1"], hostId: host?.id ?? "", teams: teams.results };
   }
 
   async create(input: SubscriptionInput) {

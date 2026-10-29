@@ -15,7 +15,7 @@ const deliverySchema = z.object({
 });
 const settingsSchema = z.object({
   subscriptions: z.array(subscriptionSchema), deliveries: z.array(deliverySchema),
-  eventTypes: z.array(z.string()), hostId: z.string(), teams: z.array(z.object({ id: z.string(), name: z.string() })),
+  eventTypes: z.array(z.string()), workflowEventTypes: z.array(z.string()), hostId: z.string(), teams: z.array(z.object({ id: z.string(), name: z.string() })),
 });
 type Settings = z.infer<typeof settingsSchema>;
 
@@ -157,7 +157,7 @@ export function WebhookSettingsCard() {
             </Select>
           </label> : null}
           <fieldset className="grid gap-2"><legend className="mb-2 text-sm font-semibold text-ink">Events</legend>
-            {settings.eventTypes.map(type => <label key={type} className="flex min-h-11 items-center gap-3 text-sm text-ink">
+            {[...settings.eventTypes, ...settings.workflowEventTypes].map(type => <label key={type} className="flex min-h-11 items-center gap-3 text-sm text-ink">
               <input type="checkbox" className="h-[18px] w-[18px] shrink-0 accent-ink" checked={events.includes(type)} onChange={event => { setEvents(current => event.target.checked ? [...current, type] : current.filter(item => item !== type)); setConsent(false); }} />
               {eventLabel(type)}
             </label>)}
