@@ -6444,7 +6444,7 @@
       "executable": false
     },
     "src/core/features/operators/ui/operator-access.tsx": {
-      "sha256": "560dfe7916212576502a7926d5db66b712310a0835d9fdf8712a5565f152c944",
+      "sha256": "c2f560a28dcd446ac46154e5c76fcca98e693ca6fcbbdf0d1bd59ee7652b343d",
       "executable": false
     },
     "src/core/features/operators/ui/overview-activity.tsx": {
@@ -7048,7 +7048,7 @@
       "executable": false
     },
     "src/core/features/public-site/docs/docs.css": {
-      "sha256": "0778c6f0d6e90ad9fccc3c145c03758d0321cb60d10004c86c0265fbd6ada608",
+      "sha256": "6ca397187db481bddf77fb860d2b60becb21d002cbb541643b4539a3de11074b",
       "executable": false
     },
     "src/core/features/public-site/docs/DocsArticle.tsx": {
@@ -7164,7 +7164,7 @@
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Hero.tsx": {
-      "sha256": "98f129b81f62e59539ae99985ae07880d2cfe66e75ddfc92e55d7a4b69b013fe",
+      "sha256": "ab616610c8cfffaf8466e5a6b27368b43eef47e9fc94027f63437aeebab299c4",
       "executable": false
     },
     "src/core/features/public-site/landing/sections/Invitees.tsx": {
