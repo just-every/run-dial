@@ -23,7 +23,7 @@ export class PollReminders {
     const timestamp = now.toISOString();
     const due = await this.db.prepare(`SELECT m.id AS pollId,m.title,m.closes_at AS closesAt,
         p.id AS participantId,p.email,t.token_hash AS tokenHash,o.value AS offsetMinutes,
-        json_extract(invitation.payload_json,'$.text') AS invitationText
+        invitation.payload_json AS invitationPayload
       FROM meeting_polls m JOIN json_each(m.reminder_offsets_json) o
       JOIN poll_participants p ON p.poll_id=m.id
       JOIN poll_vote_tokens t ON t.participant_id=p.id
@@ -34,14 +34,11 @@ export class PollReminders {
         AND strftime('%Y-%m-%dT%H:%M:%fZ',m.closes_at,'-'||o.value||' minutes')<=?
         AND NOT EXISTS(SELECT 1 FROM delivery_outbox WHERE idempotency_key='poll-reminder:'||p.id||':'||o.value)
       ORDER BY m.closes_at,o.value DESC,p.id LIMIT ?`).bind(timestamp,timestamp,limit)
-      .all<{pollId:string;title:string;closesAt:string;participantId:string;email:string;tokenHash:string;offsetMinutes:number;invitationText:string}>();
+      .all<{pollId:string;title:string;closesAt:string;participantId:string;email:string;tokenHash:string;offsetMinutes:number;invitationPayload:string}>();
     let queued = 0;
     for (const item of due.results) {
-      const link = item.invitationText?.match(/https?:\/\/\S+/u)?.[0];
-      if (!link) continue;
-      const url = new URL(link), token = url.searchParams.get("token");
-      if (url.origin !== new URL(this.origin).origin || url.pathname !== `/poll/${item.pollId}`
-        || !token || await hashToken(token,this.secret) !== item.tokenHash) continue;
+      const url = await this.liveLink(item.invitationPayload,item.pollId,item.tokenHash);
+      if (!url) continue;
       const payload = { to:item.email,subject:`Reminder: ${item.title}`,
         text:`${item.title}\nPlease choose your availability: ${url.href}\nThis personal link expires when the poll closes.`,
         html:renderBrandedMail({businessName:"Dial",heading:item.title,intro:"Please choose your availability before this poll closes.",facts:[{label:"Your personal poll link",value:url.href}]}),
@@ -61,5 +58,20 @@ export class PollReminders {
       queued += inserted.meta.changes;
     }
     return {queued};
+  }
+
+  private async liveLink(invitationPayload: string, pollId: string, tokenHash: string) {
+    const invitation = JSON.parse(invitationPayload) as {pollLink?:string;text?:string};
+    // Older invitations have only rendered text. A URL in the host's title
+    // must neither hide the personal link nor become the reminder's action.
+    const candidates = [invitation.pollLink,...(invitation.text?.match(/https?:\/\/\S+/gu) ?? [])];
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      let url: URL;
+      try { url = new URL(candidate); } catch { continue; }
+      const token = url.searchParams.get("token");
+      if (url.origin === new URL(this.origin).origin && url.pathname === `/poll/${pollId}`
+        && !url.username && !url.password && token && await hashToken(token,this.secret) === tokenHash) return url;
+    }
   }
 }

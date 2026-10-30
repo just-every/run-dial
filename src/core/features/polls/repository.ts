@@ -20,7 +20,7 @@ export class PollsRepository {
   for(const person of input.participants){const participantId=createId(),token=createOpaqueToken();
    statements.push(this.db.prepare("INSERT INTO poll_participants(id,poll_id,name,email,created_at,updated_at) VALUES(?,?,?,?,?,?)").bind(participantId,id,person.name,foldEmail(person.email),now,now),this.db.prepare("INSERT INTO poll_vote_tokens(participant_id,token_hash,created_at,updated_at) VALUES(?,?,?,?)").bind(participantId,await hashToken(token,this.secret),now,now));
    const url=new URL(`/poll/${id}`,this.origin);url.searchParams.set("token",token);const text=`${input.title}\nChoose your availability: ${url.href}\nThis personal link expires when the poll closes.`;
-   const payload={to:foldEmail(person.email),subject:`Meeting poll: ${input.title}`,text,html:renderBrandedMail({businessName:"Dial",heading:input.title,intro:"Choose your availability before this poll closes.",facts:[{label:"Your personal poll link",value:url.href}]}),pollParticipantId:participantId};
+   const payload={to:foldEmail(person.email),subject:`Meeting poll: ${input.title}`,text,html:renderBrandedMail({businessName:"Dial",heading:input.title,intro:"Choose your availability before this poll closes.",facts:[{label:"Your personal poll link",value:url.href}]}),pollParticipantId:participantId,pollLink:url.href};
    statements.push(this.db.prepare("INSERT INTO delivery_outbox(id,kind,idempotency_key,payload_json,state,attempts,next_attempt_at,created_at,updated_at) VALUES(?,'mail_send',?,?,'pending',0,?,?,?)").bind(createId(),`poll-invitation:${participantId}`,JSON.stringify(payload),now,now,now));}
   await this.db.batch(statements);return {id};
  }

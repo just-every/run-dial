@@ -3,9 +3,10 @@ import { pollEvent, pollInput, pollLinks } from '../polls/fixture.mjs';
 import { wireMail, recipient, textBody, htmlBody } from './mail-contracts.mjs';
 
 export async function pollReminderJourney({data,call,state,deliver,future,checks,phase,persisted}) {
+ const title='Project planning https://example.test/notes';
  const fixture=(action,now,id)=>data('/__fixtures/poll-reminders',{action,now,id});
  const reminders=(snapshot,id)=>snapshot.delivery_outbox.filter(r=>{const p=JSON.parse(r.payload_json);return p.pollId===id&&p.pollReminderOffsetMinutes!==undefined;});
- const sent=(snapshot,id)=>wireMail(snapshot).filter(m=>m.subject==='Reminder: Project planning'&&textBody(m).includes(`/poll/${id}?`));
+ const sent=(snapshot,id)=>wireMail(snapshot).filter(m=>m.subject===`Reminder: ${title}`&&textBody(m).includes(`/poll/${id}?`));
  const vote=async (id,link)=>{const host=await data(`/api/app/polls/${id}`);return data(`/api/public/polls/${id}/votes`,{token:link.token,votes:host.candidates.map(c=>({candidateId:c.id,choice:'yes'}))});};
  const erase=async email=>{const preview=await data('/api/app/privacy/preview',{email});return data('/api/app/privacy/erase',{email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});};
  if (phase==='after-restart') {
@@ -32,7 +33,7 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
  const slots=(await data(`/api/public/book/dial-host/${event.slug}/availability?week=${future}`)).slots;
  const create=async (number,count=1)=>{
   const people=Array.from({length:count},(_,index)=>({name:`Participant ${number+index}`,email:[`synthetic-dial-${number+index}`,'example.test'].join('@')}));
-  const created=await data('/api/app/polls',pollInput(event,slots,people),201);
+  const created=await data('/api/app/polls',{...pollInput(event,slots,people),title},201);
   const host=await data(`/api/app/polls/${created.id}`);
   assert.deepEqual(host.reminderOffsetsMinutes,[],'new polls default to no reminders');
   const links=pollLinks((await state()).delivery_outbox,created.id).map(link=>({...link,name:people.find(p=>p.email===link.email).name}));
@@ -53,6 +54,7 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
  assert.equal(reminders(await state(),silent.id).length,0,'an unconfigured poll never gains implicit reminders');
  await data(`/api/app/polls/${id}/reminders`,{offsetsMinutes:[60,120]});
  assert.deepEqual((await data(`/api/app/polls/${id}`)).reminderOffsetsMinutes,[120,60]);
+ await fixture('legacy-invitation',before,poll.links[0].row.id);
  await deliver();
  await vote(id,poll.links[2]);await erase(poll.links[3].email);
  await Promise.all([fixture('sweep',before),fixture('sweep',before)]);
@@ -93,6 +95,31 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
    assert.equal(after.poll_participants.some(p=>p.email===target.links[0].email),false);
    assert.equal(after.delivery_outbox.some(r=>r.payload_json.includes(target.links[0].email)||r.payload_json.includes(target.links[0].token)),false,'erasure removes queued reminder address and capability');
   }
+ }
+ // Frozen provider bytes must not outlive any later change in reminder eligibility.
+ for(const [index,action] of ['close','expire','erase','disable'].entries()) {
+  const target=await create(1280+index);
+  await deliver();
+  await data(`/api/app/polls/${target.id}/reminders`,{offsetsMinutes:[240,180]});
+  const due=new Date(Date.parse(target.host.closesAt)-240*60000).toISOString();
+  await fixture('sweep',due);
+  await data('/wire/control',{name:`mail-rate-limited:${target.links[0].email}`,value:1});
+  await fixture('deliver',due);
+  const attempt=reminders(await state(),target.id)[0];
+  assert.equal(attempt.state,'pending');
+  assert.ok(JSON.parse(attempt.payload_json).wireMail,'the provider retry has frozen bytes before eligibility changes');
+  await data('/wire/control',{name:`mail-rate-limited:${target.links[0].email}`,value:0});
+  if(action==='close')await data(`/api/app/polls/${target.id}/close`,{});
+  if(action==='expire')await fixture('expire',new Date(Date.now()-60000).toISOString(),target.id);
+  if(action==='erase')await erase(target.links[0].email);
+  if(action==='disable')await data(`/api/app/polls/${target.id}/reminders`,{offsetsMinutes:[]});
+  const beforeRetry=sent(await state(),target.id).length;
+  const later=new Date(Date.parse(target.host.closesAt)-180*60000).toISOString();
+  await fixture('sweep',later);await fixture('deliver',later);
+  await fixture('sweep',later);await fixture('deliver',later);
+  const after=await state();
+  assert.equal(sent(after,target.id).length,beforeRetry,`${action}: frozen retries and later sweeps never reach the mail provider`);
+  if(action==='erase')assert.equal(after.delivery_outbox.some(r=>r.payload_json.includes(target.links[0].email)||r.payload_json.includes(target.links[0].token)),false,'erasure removes the frozen personal reminder payload');
  }
  checks.push('POLL-001 native reminders default off; owner-only bounded future configuration; no early mail; voting, closure, expiry, erasure, disabling and restored closure stop queued and future reminders.');
  return {id,second,links:poll.links};

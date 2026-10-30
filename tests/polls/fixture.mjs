@@ -3,4 +3,4 @@ export async function pollEvent(data,slug='synthetic-dial-1012'){
  await data(`/api/app/event-types/${event.id}/publish`,{});return event;
 }
 export function pollInput(event,slots,participants,hold=false){return {eventTypeId:event.id,title:'Project planning',participants,starts:slots.slice(0,2).map(s=>s.startAt),closesAt:new Date(Date.now()+86400000).toISOString(),hold,showTally:false};}
-export function pollLinks(rows,id){return rows.filter(r=>{const p=JSON.parse(r.payload_json);return p.pollParticipantId&&p.text.includes(`/poll/${id}?`);}).map(row=>{const payload=JSON.parse(row.payload_json),url=new URL(payload.text.match(/https?:\/\/\S+/)[0]);return {email:payload.to,token:url.searchParams.get('token'),row};});}
+export function pollLinks(rows,id){return rows.filter(r=>{const p=JSON.parse(r.payload_json);return p.pollParticipantId&&p.text.includes(`/poll/${id}?`);}).map(row=>{const payload=JSON.parse(row.payload_json),url=[...payload.text.matchAll(/https?:\/\/\S+/gu)].map(match=>new URL(match[0])).find(url=>url.pathname===`/poll/${id}`);return {email:payload.to,token:url.searchParams.get('token'),row};});}

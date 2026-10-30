@@ -7,6 +7,12 @@ export async function pollReminderFixture(request: Request, env: AppBindings, se
   if (!Number.isFinite(clock.getTime())) return new Response(null,{status:400});
   if (action === "sweep") return Response.json(await services.polls.repository.reminders.sweep(clock));
   if (action === "deliver") return Response.json(await services.delivery.processDue(100,clock));
+  if (action === "legacy-invitation") {
+    await env.DB.prepare(`UPDATE delivery_outbox SET payload_json=json_remove(payload_json,'$.pollLink')
+      WHERE id=? AND idempotency_key LIKE 'poll-invitation:%'`)
+      .bind(id).run();
+    return Response.json({updated:true});
+  }
   if (action === "expire") {
     await env.DB.prepare("UPDATE meeting_polls SET closes_at=? WHERE id=?").bind(now,id).run();
     return Response.json({expired:true});

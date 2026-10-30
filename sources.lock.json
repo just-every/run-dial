@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "981e7827d2c4d74e1fcc568dbc00dfdf4bf332a09e1bbcdfedb5794dc21276e6",
+      "sha256": "9f14dace9bb79a23b4dadcd7ee09ce0fdec66a9ec972d3186d53380659d6eca6",
       "executable": false
     },
     "DEMO.md": {
@@ -2045,6 +2045,10 @@
     },
     "migrations/core/0094_coupon_issuance_receipts.sql": {
       "sha256": "c9fd8163b548e4abbb8b4be971c0acb5427e497e58100e79b7a514ff7b8f4961",
+      "executable": false
+    },
+    "migrations/core/0095_poll_reminders.sql": {
+      "sha256": "0dd3b26ff3f0148342d1c9776af5b3dbf1ed513a82391a4de1ef9f36099235cb",
       "executable": false
     },
     "modules/d1-transport/index.d.mts": {
@@ -5659,6 +5663,10 @@
       "sha256": "14f6e1d1967097a230f4a92dfc2cbb5468699ecd425f4ec6764b2cbe80cbe1a1",
       "executable": false
     },
+    "src/core/features/delivery/poll-reminders.ts": {
+      "sha256": "e490160e4c29192ae92aa29d71c1dafd1483d41431876aa8a2c8c1a3d73b9033",
+      "executable": false
+    },
     "src/core/features/delivery/preferences-repository.ts": {
       "sha256": "d76c463ea3c492f400768e4e1de354f75854b4b584e8aa97a35280b3a759441a",
       "executable": false
@@ -6619,8 +6627,12 @@
       "sha256": "3f050ee105c42804f59bbec9a706921c5ab78fcfc08c11654a125be5d1dc014d",
       "executable": false
     },
+    "src/core/features/polls/reminders.ts": {
+      "sha256": "37ff92fba14d49a9929ec87d0229ed624a75c66e5039e2a9af3d8ba2163b717e",
+      "executable": false
+    },
     "src/core/features/polls/repository.ts": {
-      "sha256": "8e4a4f28ee458cc1b6a733255d28af97d732b5b94ea44ac217ea98515633ec20",
+      "sha256": "1975b23a0e23182ed2527e52e1ec07b86238c40ece0cad9bbd3714d1ae7e1ef9",
       "executable": false
     },
     "src/core/features/polls/routes.ts": {
@@ -8656,7 +8668,15 @@
       "executable": false
     },
     "tests/booking-wire/poll-journey.mjs": {
-      "sha256": "e4629a13fb75a426d7c09798b1f871b1e4b3f7d8582d8d8fd3ee0f44e2a3f8f6",
+      "sha256": "c99ab94c34150afe35ef904cd02433f8ed599ab3b2828267b4b0294cd50f46a7",
+      "executable": false
+    },
+    "tests/booking-wire/poll-reminder-fixtures.ts": {
+      "sha256": "650280be87c9bd15df61efff3187c90fc0fb60a07e8abd9bddd6d9e6569dbb0b",
+      "executable": false
+    },
+    "tests/booking-wire/poll-reminder-journey.mjs": {
+      "sha256": "ff03a44d4437679a0c171d4d10af14cc0e07dcf68d27de78c4ffc0929daecd42",
       "executable": false
     },
     "tests/booking-wire/reconciliation-probes.mjs": {
@@ -9752,7 +9772,7 @@
       "executable": false
     },
     "tests/polls/fixture.mjs": {
-      "sha256": "3d99ccefb19c9f7b472d2776a09f65085838d2f8110b6895007a8541f7c33998",
+      "sha256": "867977ec018eef7b6ae62db9f0a8b9ac109219ba8209addef88023ccdf4dd430",
       "executable": false
     },
     "tests/polls/native.mjs": {
