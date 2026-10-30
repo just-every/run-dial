@@ -241,7 +241,14 @@ contract("REPORT-002", "payment-state filters select exact booking identities an
     const refunded = fixtures.find(row => row.name === "partial-refund");
     await runtime.db.prepare(`INSERT INTO payment_movements (id,booking_id,kind,amount_cents,status,actor_type,reason,account_id,idempotency_key,created_at,updated_at)
       VALUES (?,?,'refund',100,'succeeded','invitee','Second synthetic refund','synthetic-dial-account','synthetic-dial-second-refund',?,?)`).bind(ulid(), refunded.id, now, now).run();
-    const snapshot = async () => Promise.all(["bookings", "booking_payments", "booking_payment_terms", "payment_movements", "payment_processor_facts", "delivery_outbox", "accounting_exports"].map(table => runtime.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all().then(result => result.results)));
+    const paid = fixtures.find(row => row.name === "full-payment");
+    await runtime.db.batch([
+      runtime.db.prepare(`INSERT INTO delivery_outbox (id,kind,idempotency_key,booking_id,payload_json,state,attempts,next_attempt_at,last_error_code,created_at,updated_at)
+        VALUES (?,'mail_send','synthetic-dial-filter-delivery',?,'{}','failed',1,?,'synthetic_failure',?,?)`).bind(ulid(), paid.id, now, now, now),
+      runtime.db.prepare(`INSERT INTO accounting_exports (id,booking_id,connection_id,payment_ref,amount_cents,request_id,document_ref,payload_json,receipt_id,state,created_at,updated_at)
+        VALUES (?,?,'synthetic-dial-connection','synthetic-dial-payment',10000,'synthetic-dial-request','synthetic-dial-document','{}','synthetic-dial-receipt','exported',?,?)`).bind(ulid(), paid.id, now, now),
+    ]);
+    const snapshot = async () => Promise.all(["bookings", "booking_occurrences", "booking_payments", "booking_payment_terms", "payment_movements", "payment_processor_facts", "delivery_outbox", "accounting_exports"].map(table => runtime.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all().then(result => result.results)));
     const before = await snapshot();
     const check = async (filters, expectedIds, total = expectedIds.length) => {
       const response = await runtime.api(`/api/app/bookings?${new URLSearchParams(filters)}`);
@@ -264,11 +271,40 @@ contract("REPORT-002", "payment-state filters select exact booking identities an
     await check({ ...combined, attendance: "attended" }, []);
     await check({ ...combined, deliveryFailed: "true" }, []);
     await check({ ...combined, query: "no matching invitee" }, []);
+    await check({ paymentState: "paid", deliveryFailed: "true" }, [paid.id]);
     for (const paymentState of ["unknown", "", "PAID", "paid,free", "paid' OR 1=1"]) {
       assert.equal((await runtime.api(`/api/app/bookings?${new URLSearchParams({ paymentState })}`)).status, 400, "invalid payment states are refused instead of broadening the list");
     }
     await check({}, fixtures.map(row => row.id));
     assert.deepEqual(await snapshot(), before, "filtered reads and refusals leave bookings, delivery, money and accounting rows unchanged");
+
+    // Put every money-bearing match beyond the unfiltered list's default window.
+    const decoys = Array.from({ length: 505 }, () => ({ id: ulid(), occurrenceId: ulid() }));
+    await runtime.db.batch([
+      runtime.db.prepare(`INSERT INTO bookings (id,event_type_id,event_slug,event_title,duration_minutes,location_type,location_label,location_value,invitee_name,invitee_email,host_timezone,invitee_timezone,state,ical_uid,calendar_state,meeting_state,created_at,updated_at)
+        SELECT json_extract(value,'$.id'),?,'payment-filter','Payment filter',30,'fixed_link','Meeting','https://dial.test/meeting','synthetic-dial-decoy',?,'UTC','UTC','confirmed',json_extract(value,'$.id'),'succeeded','not_required',?,?
+        FROM json_each(?)`).bind(setup.eventId, ["synthetic-dial-decoy", "dial.test"].join("@"), now, now, JSON.stringify(decoys)),
+      runtime.db.prepare(`INSERT INTO booking_occurrences (id,booking_id,sequence,start_at,end_at,occupied_start_at,occupied_end_at,host_date,state,is_current,created_at)
+        SELECT json_extract(value,'$.occurrenceId'),json_extract(value,'$.id'),0,'2030-05-14T12:00:00.000Z','2030-05-14T12:30:00.000Z','2030-05-14T12:00:00.000Z','2030-05-14T12:30:00.000Z','2030-05-14','current',1,?
+        FROM json_each(?)`).bind(now, JSON.stringify(decoys)),
+      runtime.db.prepare(`UPDATE bookings SET current_occurrence_id=(SELECT id FROM booking_occurrences WHERE booking_id=bookings.id)
+        WHERE id IN (SELECT json_extract(value,'$.id') FROM json_each(?))`).bind(JSON.stringify(decoys)),
+    ]);
+    const populated = await snapshot();
+    const decoyIds = decoys.map(row => row.id).sort();
+    await check({}, decoyIds.slice(0, 500), decoys.length + fixtures.length);
+    const freeIds = [...decoyIds, ...fixtures.filter(row => row.expected === "free").map(row => row.id)];
+    await check({ paymentState: "free", limit: "5", offset: "503" }, freeIds.slice(503, 508), freeIds.length);
+    for (const paymentState of ["unpaid", "paid", "balance_due", "refunded"]) {
+      const ids = fixtures.filter(row => row.expected === paymentState).map(row => row.id);
+      await check({ paymentState }, ids);
+      await check({ paymentState, limit: "1", offset: "1" }, ids.slice(1, 2), ids.length);
+    }
+    await check(combined, combinedIds);
+    await check({ ...combined, limit: "1", offset: "2" }, combinedIds.slice(2), 3);
+    assert.equal((await runtime.api('/api/app/bookings?paymentState=paid', { headers: { cookie: '' } })).status, 401);
+    assert.equal((await runtime.api('/api/app/bookings?paymentState=unknown')).status, 400);
+    assert.deepEqual(await snapshot(), populated, "reads beyond the display window and refused reads preserve populated delivery and accounting records");
   } finally {
     await runtime.close();
   }
