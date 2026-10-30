@@ -60,6 +60,13 @@ export async function paymentEntitlements({data,call,webhook,stripeEvent,future}
  const gift=await define('gift',1,5000),giftPurchase=await data(`${root}/products/${gift.id}/purchase`,{email,idempotencyKey:randomUUID()},201);
  let giftRow=(await rows()).payment_entitlements.find(row=>row.id===giftPurchase.entitlement.id);
  await webhook(stripeEvent('checkout.session.completed',await data('/__fixtures/payments/pay',{sessionId:giftRow.checkout_session_id})));
+ const giftBooking=await data(`${root}/confirm`,await selection((await slots())[0],{code:giftPurchase.code}),201);
+ const giftView=await data(`/api/public/manage/${manage(giftBooking)}`);
+ assert.equal(giftView.entitlement.balance,0,'an active USD gift pays the booking in whole cents');
+ assert.equal(giftView.entitlement.history[0].units,5000);
+ await data(`/api/public/manage/${manage(giftBooking)}/cancel`,{reason:'Eligible gift cancellation'});
+ await data(`/api/public/manage/${manage(giftBooking)}/cancel`,{reason:'Repeated gift cancellation'});
+ assert.equal((await data('/api/app/payments/entitlements')).find(row=>row.id===giftRow.id).balance,5000,'eligible gift cancellation restores exactly the redeemed cents once');
  await data('/__fixtures/payments/entitlement-expiry',{id:giftRow.id,expiresAt:'2000-01-01T00:00:00.000Z'});
  assert.equal((await data(`${root}/confirm`,await selection((await slots())[0],{code:giftPurchase.code}),409)).error.code,'credit_expired');
  const couponErasure=await couponRedemptions({data,call,webhook,stripeEvent,root,event,define,rows,slots,selection,email});
@@ -180,12 +187,12 @@ async function couponRedemptions({data,call,webhook,stripeEvent,root,event,defin
   const beforeInvalid=await rows();
   for(const body of bodies)assert.equal((await data(`${root}/confirm`,{...body,redemption:{code:'synthetic-dial-missing'}},409)).error.code,'credit_not_found');
   const afterInvalid=await rows();for(const table of ['payment_entitlements','payment_redemptions','payment_holds'])assert.deepEqual(afterInvalid[table],beforeInvalid[table],'invalid credit codes change no balances, redemptions or holds');
-  const responses=await Promise.all(bodies.map(body=>call(`${root}/confirm`,body,[202,409])));
+  const responses=await Promise.all(bodies.map(async body=>{const response=await call(`${root}/confirm`,body,[202,409]);return {status:response.status,value:await response.json()};}));
   const winners=responses.filter(response=>response.status===202),losers=responses.filter(response=>response.status===409);
   assert.equal(winners.length,uses,'fifty simultaneous claims never reserve more than the issued use count');
-  for(const loser of losers)assert.equal((await loser.json()).error.code,'credit_balance_insufficient');
+  for(const loser of losers)assert.equal(loser.value.error.code,'credit_balance_insufficient');
   assert.equal(await balance(racing),0);
-  for(const response of winners){const step=await response.json();await assertCharge(step,4000);await finish({step});}
+  for(const response of winners){const step=response.value;await assertCharge(step,4000);await finish({step});}
   const snapshot=await rows();assert.equal(snapshot.payment_entitlements.find(row=>row.id===racing.entitlement.id).balance,0);
   assert.equal(snapshot.payment_redemptions.filter(row=>row.entitlement_id===racing.entitlement.id).length,uses,'only the paid winning claims become redemptions');
  }
