@@ -44,12 +44,13 @@ export class Entitlements {
   const now=(await this.clock()).toISOString();
   const hash=code?await hashToken(code,this.runtime.SESSION_SECRET):null;
   const rows=(await this.db.prepare(`SELECT e.*,p.name,e.balance-${reservedCredit} AS available_balance FROM payment_entitlements e JOIN payment_products p ON p.id=e.product_id WHERE e.event_type_id=? AND (? IS NOT NULL AND e.code_hash=? OR ? IS NULL AND e.purchaser_email_folded=?) AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=e.purchaser_email_folded) ORDER BY e.expires_at,e.id`).bind("",eventId,hash,hash,hash,foldEmail(email)).all<Entitlement>()).results;
-  const needed=(row:Entitlement)=>row.kind==='gift'&&!row.is_coupon?priceCents:1;
-  const reasonFor=(row:Entitlement)=>row.state!=="active"?row.state==='past_due'?"membership_unpaid":"credit_not_active":row.expires_at<=now||(row.kind==='membership'&&(!row.period_end||row.period_end<=now||!row.period_start||row.period_start>now))?"credit_expired":(row.available_balance??0)<needed(row)?"credit_balance_insufficient":undefined;
+  // Gift balances are cents: reserve the available value and charge only the uncovered price.
+  const needed=(row:Entitlement)=>row.kind==='gift'&&!row.is_coupon?Math.min(priceCents,row.available_balance??0):1;
+  const reasonFor=(row:Entitlement)=>row.state!=="active"?row.state==='past_due'?"membership_unpaid":"credit_not_active":row.expires_at<=now||(row.kind==='membership'&&(!row.period_end||row.period_end<=now||!row.period_start||row.period_start>now))?"credit_expired":(row.available_balance??0)<=0||(row.available_balance??0)<needed(row)?"credit_balance_insufficient":undefined;
   const row=rows.find(row=>!reasonFor(row))??rows[0];
   const reason=row?reasonFor(row):"credit_not_found";
   if(reason||!row)return {kind:"refused" as const,reason:reason!,balance:row?.available_balance??0,...(reason==="credit_expired"?{expiresAt:row!.expires_at}:{})};
-  const discountCents=row.is_coupon?Math.min(priceCents,row.amount_cents):priceCents;
+  const discountCents=row.is_coupon?Math.min(priceCents,row.amount_cents):row.kind==='gift'?needed(row):priceCents;
   if(priceCents-discountCents>0&&priceCents-discountCents<50)return {kind:"refused" as const,reason:"credit_remainder_below_minimum",balance:row.available_balance??0};
   return {kind:"available" as const,id:row.id,units:needed(row),at:now,discountCents,dueNowCents:priceCents-discountCents,entitlement:entitlementSummary(row)};
  }

@@ -1,3 +1,4 @@
+import { giftCertificateRedemption, failedCheckoutCouponRelease } from "./payment-entitlements-journey-proofs.mjs";
 import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
 /** PAY-004 public purchase and booking commands with Stripe at the network edge. */
@@ -79,6 +80,13 @@ export async function paymentEntitlements({data,call,webhook,stripeEvent,future}
  await webhook(stripeEvent('invoice.paid',{...invoice,id:invoice.id+'-duplicate-period'}));
  assert.equal((await data('/api/app/payments/entitlements')).find(row=>row.id===memberRow.id).balance,3);
  const couponProof=await paymentCoupons({data,call,webhook,stripeEvent,rows,event,root,email,name,slots,selection,manage});
+ const failures=[],proofResults=[];
+ for(const proof of [giftCertificateRedemption,failedCheckoutCouponRelease]) {
+  try {const result=await proof({data,call,webhook,stripeEvent,rows,event,root,email,slots,selection,manage});couponProof.audit.push(...result.audit);proofResults.push(result);}
+  catch(error) {console.error(proof.name+': '+error.stack);failures.push(error);}
+ }
+ if(failures.length)throw new AggregateError(failures,'PAY-004 R6/R19 public-door proofs failed');
+
  await data('/__fixtures/payments/control',{name:'entitlement-clock',value:0});
  const preview=await data('/api/app/privacy/preview',{email});
  await data('/api/app/privacy/erase',{email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});
@@ -88,6 +96,7 @@ export async function paymentEntitlements({data,call,webhook,stripeEvent,future}
  const finalProcessor=await data('/__fixtures/payments/processor-state');
  assert.equal(JSON.parse(finalProcessor.wire_stripe_objects.find(row=>row.id===memberPaid.subscription).payload).status,'canceled','erasure stops recurring renewal');
  await couponProof.assertErased();
+ for(const proof of proofResults)await proof.assertErased();
  console.log('PAY-004 packages, coupons, atomic redemptions, cancellation credit, expiry and signed membership renewal passed.');
  return couponProof.audit;
 }

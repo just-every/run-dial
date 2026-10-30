@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "2059ff8f4de6c58bf026e86d00989ab074ee45d033458d6a27f3abe0c67b2add",
+      "sha256": "d5da7e61309124ca848c9f68130c26fc6e977ddfa980f3c2ff84f68921e85819",
       "executable": false
     },
     "DEMO.md": {
@@ -948,7 +948,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "8edcff7c5e430aa75273be7155886619ae47aac50d85b511cfdf6d64995ed2dd",
+      "sha256": "ba1c21416fed1b7dbc8b7cc7e4055e7f11998f0e59f495fc1f1d75b14f5b2dcb",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -6476,7 +6476,7 @@
       "executable": false
     },
     "src/core/features/payments/entitlements.ts": {
-      "sha256": "5b93b25148abc35d05e613e16373c9047d00cf6863ae4e1882d2fce8acd75099",
+      "sha256": "6915eb8290b46517eaf7fd62e9934c90c97bf89018c6414dfe437f2782626388",
       "executable": false
     },
     "src/core/features/payments/erasure.ts": {
@@ -8627,8 +8627,12 @@
       "sha256": "658e0a4bf310db875aec5d4e79e7137a879bb645a9e9ee15a4c74f2bbbdf9124",
       "executable": false
     },
+    "tests/booking-wire/payment-entitlements-journey-proofs.mjs": {
+      "sha256": "5e7812afd90316cfc31c5199f66d8ba3b8d4cafdb6957333ab604b21cc5cd9fd",
+      "executable": false
+    },
     "tests/booking-wire/payment-entitlements-journey.mjs": {
-      "sha256": "285229b82a74ebd074cd2c2d7b345dd7b5abc2f29ee7f8a0f302f3784a651c22",
+      "sha256": "1a411369462c6eafd0b3cbde122054ea5efad46a5a764891d4dde3a8af249b6b",
       "executable": false
     },
     "tests/booking-wire/payment-entitlements-screens.mjs": {
