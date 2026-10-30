@@ -9744,7 +9744,7 @@
       "executable": false
     },
     "tests/payments-wire.test.mjs": {
-      "sha256": "648bc1ded9c4bf65ce7e929f0fd713e1028691e33868ed3c419c102ca3f498c8",
+      "sha256": "5c514741b48a7f867e5f488ef8ffe80d395a8efbe8f0eeda39ae0d932c1b132b",
       "executable": false
     },
     "tests/person-erasure.test.mjs": {

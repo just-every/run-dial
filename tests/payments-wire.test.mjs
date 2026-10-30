@@ -28,7 +28,13 @@ async function wireJourney(t, journey, port, log) {
   server.stdout.on("data", chunk => { output += chunk; }); server.stderr.on("data", chunk => { output += chunk; });
   for (let attempt = 0; ; attempt++) { if (server.exitCode !== null || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
   assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
-  console.log((await run(["node", journey])).trim());
+  try { console.log((await run(["node", journey])).trim()); }
+  catch (error) {
+    // The HTTP error can name only Miniflare's dispatch boundary. Preserve the
+    // Worker diagnostic that explains a reset, binding failure or lost stream.
+    console.error(output.replace(/\/manage\/(?:invite\/|balance\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]").replace(/[?#][^\s"'<>]*/gu, "[redacted]"));
+    throw error;
+  }
 }
 
 test("PAY-001 a paid booking confirms only after Stripe's signed event", async t => { await wireJourney(t, "tests/booking-wire/payment-journey.mjs", 15758, "payment-wire-worker.log"); await runAxe(t, "tests/booking-wire/payment-entitlements-screens.mjs"); });
