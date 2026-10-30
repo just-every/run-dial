@@ -1,4 +1,4 @@
-import { pollReminderFixture } from "./poll-reminder-fixtures";
+import { pollReminderFixture, pollReminderCron } from "./poll-reminder-fixtures";
 import { webhookFixtures } from "./webhook-fixtures";
 import { webhookWire } from "./webhook-wire";
 import { operatorNotificationCommand } from "../../src/core/platform/operator-notification-boundary";
@@ -29,14 +29,15 @@ const servicesFor = (env: WireBindings) => {
 };
 export class BookingCoordinator extends ProductionCoordinator { protected services(env: WireBindings) { return servicesFor(env); } }
 const app = createApp(undefined, servicesFor);
-export default {
-  async fetch(request: Request, env: WireBindings, context: ExecutionContext) {
+const worker = {
+  async fetch(request: Request, env: WireBindings, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
     const webhookFixture = await webhookFixtures(request, servicesFor(env), env);
     if (webhookFixture) return webhookFixture;
     if (url.pathname === "/__test/mail") return capturedMail(env.DB);
     if (url.pathname === "/wire/init") { await initializeWire(providerDb(env)); return Response.json({ ok: true }); }
+    if (url.pathname === "/__fixtures/poll-cron" && request.method === "POST") return pollReminderCron(request,env,worker);
     if (url.pathname === "/__fixtures/poll-reminders" && request.method === "POST") return pollReminderFixture(request,env,servicesFor(env));
     if (url.pathname === "/wire/state") {
       const tables = ["event_types", "team_event_types", "webhook_deliveries", "webhook_subscriptions", "routing_submissions", "meeting_polls", "poll_candidates", "poll_participants", "poll_votes", "poll_vote_tokens", "calendar_connection_health_changes", "calendar_push_channels", "calendar_busy_read_windows", "calendar_busy_intervals", "wire_calls", "wire_events", "booking_reschedule_requests", "booking_request_history", "booking_links", "event_booking_policies", "booking_presentation", "event_correspondence", "booking_correspondence", "base_mail_dispatch", "calendar_connections", "bookings", "booking_guests", "booking_approval_requests", "booking_approval_tokens", "booking_occurrences", "booking_nonces", "booking_history", "booking_calendar_conflicts", "delivery_outbox", "delivery_attempts", "availability_requests", "availability_request_windows", "calendar_deletion_probes", "payment_processor_facts", "accounting_connections", "accounting_exports", "accounting_oauth_states", "payment_connections", "payment_oauth_states", "payment_holds", "booking_payments", "event_type_prices", "event_type_payment_terms", "booking_payment_terms", "booking_card_consents", "payment_link_tokens", "payment_movements", "payment_settings", "anonymized_audit", "person_erasure_receipts", "wire_stripe_sessions", "wire_stripe_objects"];
@@ -120,3 +121,4 @@ export default {
   async queue(batch: MessageBatch<unknown>, env: WireBindings) { await consumeJobs(batch, env, servicesFor(env)); },
   async scheduled(_controller: ScheduledController, env: WireBindings) { await runScheduledWork(env, servicesFor(env)); },
 };
+export default worker;
