@@ -90,6 +90,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.equal(archive.tables.some(table=>table.name==='poll_vote_tokens'),false);
     assert.equal(JSON.stringify(archive).includes(poll.token),false);assert.equal(JSON.stringify(archive).includes(poll.hash),false);
     assert.ok(archive.tables.find(t=>t.name==='meeting_polls').rows.every(row=>row.state==='closed'));
+    assert.ok(archive.tables.find(t=>t.name==='meeting_polls').rows.every(row=>row.reminder_offsets_json==='[120,60]'),'the owner reminder configuration survives as closed history');
     assert.equal(archive.tables.find(t=>t.name==='poll_votes').rows[0].choice,'yes');
     assert.equal(JSON.stringify(archive).includes(remembered.token),false);
     assert.equal(JSON.stringify(archive).includes(remembered.hash),false);
@@ -123,6 +124,12 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_deliveries WHERE state IN ('pending','sending')").get().n, 0, 'restore never resumes historical webhook commands');
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM routing_capabilities').get().n, 0);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM client_remember_links').get().n,0,'restoring never recreates saved-details authority');
+    assert.equal(target.db.prepare("SELECT count(*) AS n FROM meeting_polls WHERE state='open'").get().n,0,'restored poll configuration cannot schedule more reminders');
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM poll_vote_tokens').get().n,0,'restored participants have no live voting authority');
+    const restoredReminder=target.db.prepare('SELECT state,last_error_code,payload_json FROM delivery_outbox WHERE id=?').get(poll.reminderId);
+    assert.equal(restoredReminder.state,'failed','a reminder queued at export never resumes delivery');
+    assert.equal(restoredReminder.last_error_code,'restored_historical_command');
+    assert.equal(JSON.parse(restoredReminder.payload_json).archiveHistorical,true);
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_invitation_cancellations').all(), ledger);
     assert.deepEqual(target.db.prepare('SELECT * FROM oa_domain_rules').all(), source.db.prepare('SELECT * FROM oa_domain_rules').all());
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM oa_step_up_challenges').get().n, 0);
