@@ -3,9 +3,10 @@ import { pollEvent, pollInput, pollLinks } from '../polls/fixture.mjs';
 import { wireMail, recipient, textBody, htmlBody } from './mail-contracts.mjs';
 
 export async function pollReminderJourney({data,call,state,deliver,future,checks,phase,persisted}) {
+ const title='Project planning https://example.test/notes';
  const fixture=(action,now,id)=>data('/__fixtures/poll-reminders',{action,now,id});
  const reminders=(snapshot,id)=>snapshot.delivery_outbox.filter(r=>{const p=JSON.parse(r.payload_json);return p.pollId===id&&p.pollReminderOffsetMinutes!==undefined;});
- const sent=(snapshot,id)=>wireMail(snapshot).filter(m=>m.subject==='Reminder: Project planning'&&textBody(m).includes(`/poll/${id}?`));
+ const sent=(snapshot,id)=>wireMail(snapshot).filter(m=>m.subject===`Reminder: ${title}`&&textBody(m).includes(`/poll/${id}?`));
  const vote=async (id,link)=>{const host=await data(`/api/app/polls/${id}`);return data(`/api/public/polls/${id}/votes`,{token:link.token,votes:host.candidates.map(c=>({candidateId:c.id,choice:'yes'}))});};
  const erase=async email=>{const preview=await data('/api/app/privacy/preview',{email});return data('/api/app/privacy/erase',{email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});};
  if (phase==='after-restart') {
@@ -32,7 +33,7 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
  const slots=(await data(`/api/public/book/dial-host/${event.slug}/availability?week=${future}`)).slots;
  const create=async (number,count=1)=>{
   const people=Array.from({length:count},(_,index)=>({name:`Participant ${number+index}`,email:[`synthetic-dial-${number+index}`,'example.test'].join('@')}));
-  const created=await data('/api/app/polls',pollInput(event,slots,people),201);
+  const created=await data('/api/app/polls',{...pollInput(event,slots,people),title},201);
   const host=await data(`/api/app/polls/${created.id}`);
   assert.deepEqual(host.reminderOffsetsMinutes,[],'new polls default to no reminders');
   const links=pollLinks((await state()).delivery_outbox,created.id).map(link=>({...link,name:people.find(p=>p.email===link.email).name}));
