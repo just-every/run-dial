@@ -4896,11 +4896,11 @@
       "executable": false
     },
     "src/core/app/styles.css": {
-      "sha256": "f2329a31c1644ce42343d8b42ec3a88345b3c0af6577fdc62b3dbf50db52e62b",
+      "sha256": "e1f3fa1bdd771a20fb28be0f878596672005d571df7ab2ac4918c3e3baa278b0",
       "executable": false
     },
     "src/core/app/ui/app-shell.tsx": {
-      "sha256": "bae354993db7fca9398d279b96c3a5812006be489fcfcc02aeae02ffc0769172",
+      "sha256": "f1e67473d36c84aefae1ac5301cf1d63c64c87ed285bd94b2f8dd8641876a75d",
       "executable": false
     },
     "src/core/app/ui/autosave-setting.tsx": {
@@ -4952,7 +4952,7 @@
       "executable": false
     },
     "src/core/app/ui/route-load-error.tsx": {
-      "sha256": "68079ecdbc9a234d0767653430e061e980353a5b3513aef185646d961f1b077b",
+      "sha256": "ed67ca75816b1f41bb55110cb0427ca57625f471cedd2fc3afcca0cec800a865",
       "executable": false
     },
     "src/core/app/ui/sheet.css": {
