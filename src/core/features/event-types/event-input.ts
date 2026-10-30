@@ -19,7 +19,7 @@ const questionSchema = z
     if (choice && question.options.length === 0) context.addIssue({ code: "custom", path: ["options"], message: "Choice questions need at least one option." });
     if (!choice && question.options.length > 0) context.addIssue({ code: "custom", path: ["options"], message: "Text questions cannot have options." });
     if (new Set(question.options.map((option) => option.value)).size !== question.options.length) {
-      context.addIssue({ code: "custom", path: ["options"], message: "Option values must be stable and unique." });
+      context.addIssue({ code: "custom", path: ["options"], message: "Give each choice different “saved as” text." });
     }
   });
 

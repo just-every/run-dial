@@ -235,6 +235,9 @@ try {
   await page.getByRole("button", { name: "Cancel booking instead", exact: true }).click();
   await dismissed;
   assert.equal(cancellationRequests, 0, "dismissing the cancellation prompt does not mutate the booking");
+  // The dialog closes before the prompt (DL30), so it is opened again for the accepted cancellation.
+  await page.getByRole("dialog", { name: "Calendar conflicts", exact: true }).waitFor({ state: "hidden" });
+  await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
   page.once("dialog", (dialog) => dialog.accept("Synthetic conflict cancellation"));
   const cancelledResponse = page.waitForResponse((response) => response.url() === `${origin}/api/app/bookings/${blocked.id}/cancel`);
   await page.getByRole("button", { name: "Cancel booking instead", exact: true }).click();
