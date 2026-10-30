@@ -30,10 +30,10 @@ export class BookingCoordinator extends ProductionCoordinator {
   protected services(env: WireBindings) { return servicesFor(env); }
   async fetch(request: Request) {
     const confirm = new URL(request.url).pathname.endsWith("/confirm");
-    if (confirm) console.log("PAYMENT_WIRE_COORDINATOR_ENTER", this.ctx.id.toString());
+    if (confirm) console.log("PAYMENT_WIRE_COORDINATOR_ENTER", request.headers.get("x-payment-wire-claim"), this.ctx.id.toString());
     try {
       const response = await super.fetch(request);
-      if (confirm) console.log("PAYMENT_WIRE_COORDINATOR_RESPONSE", this.ctx.id.toString(), response.status);
+      if (confirm) console.log("PAYMENT_WIRE_COORDINATOR_RESPONSE", request.headers.get("x-payment-wire-claim"), this.ctx.id.toString(), response.status);
       return response;
     } catch (error) { console.error("PAYMENT_WIRE_COORDINATOR_ERROR", error); throw error; }
   }
@@ -43,7 +43,7 @@ export default {
   async fetch(request: Request, env: WireBindings, context: ExecutionContext) {
     const url = new URL(request.url);
     const confirm = url.pathname.endsWith("/confirm");
-    if (confirm) console.log("PAYMENT_WIRE_WORKER_ENTER");
+    if (confirm) console.log("PAYMENT_WIRE_WORKER_ENTER", request.headers.get("x-payment-wire-claim"));
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
     const webhookFixture = await webhookFixtures(request, servicesFor(env), env);
     if (webhookFixture) return webhookFixture;
@@ -127,7 +127,7 @@ export default {
     const target = await bookingMutationTarget(request, env);
     try {
       const response = await (target ? forwardBookingRequest(env, target, request) : app.fetch(request, env, context));
-      if (confirm) console.log("PAYMENT_WIRE_WORKER_RESPONSE", response.status);
+      if (confirm) console.log("PAYMENT_WIRE_WORKER_RESPONSE", request.headers.get("x-payment-wire-claim"), response.status);
       return response;
     } catch (error) { console.error("PAYMENT_WIRE_WORKER_ERROR", error); throw error; }
   },

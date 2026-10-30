@@ -196,7 +196,7 @@ async function paymentCoupons({data,call,webhook,stripeEvent,rows,event,root,ema
  assert.equal(available.length,50,'fifty distinct slots exercise a shared coupon balance');
  const claims=await Promise.all(available.map(start=>selection(start,{code:racing.code})));
  const beforeRace=await processor();
- const race=await Promise.all(claims.map(body=>call(`${root}/confirm`,body,[202,409])));
+ const race=await Promise.all(claims.map((body,index)=>call(`${root}/confirm`,body,[202,409],"POST",{"x-payment-wire-claim":String(index)})));
  assert.equal(race.filter(response=>response.status===202).length,1,'fifty concurrent redemptions reserve one coupon use exactly once');
  const refused=await Promise.all(race.filter(response=>response.status===409).map(response=>response.json()));
  assert.equal(refused.length,49);
