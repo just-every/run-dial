@@ -8184,7 +8184,7 @@
       "executable": false
     },
     "tests/archive/client-upgrade.mjs": {
-      "sha256": "342ae8d3ea656a3b6bd9fb9180490a78aaae473f287b74c2c3764a7ae7a69813",
+      "sha256": "314c90d88777ae0e65a5c272497f81f1176d36122a835f9af62ff4f831bbbcba",
       "executable": false
     },
     "tests/archive/command-diagnostics.mjs": {
@@ -8760,7 +8760,7 @@
       "executable": false
     },
     "tests/client-guest-history.test.mjs": {
-      "sha256": "ea35b775bfd954889ad8a357cdeec3286e2bb064d7b2da4df56ce9f36c579a65",
+      "sha256": "a9fc67f2e80249fe51f4625917f5a0ae3cb9029b6dae2462417e99c83c0ce6e7",
       "executable": false
     },
     "tests/contract.mjs": {
