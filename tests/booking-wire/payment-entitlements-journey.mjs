@@ -117,6 +117,22 @@ async function paymentCoupons({data,call,webhook,stripeEvent,rows,event,root,ema
  assert.equal(show.entitlement.expiresAt,coupon.entitlement.expiresAt);
  assert.equal('email' in show.entitlement,false,'public credit preview does not expose the purchaser');
  assert.equal('history' in show.entitlement,false,'public credit preview does not expose unrelated bookings');
+ const normalTerms={deposit:{kind:'none'},balanceDueHours:24,freeWindowHours:48,lateCancelFeeCents:0,noShowFeeCents:0};
+ const paymentSettings=await data('/api/app/payments/settings');
+ for(const incompatible of ['fees','tax','approval']) {
+  if(incompatible==='fees')await data(`/api/app/event-types/${event.id}/payment-terms`,{...normalTerms,lateCancelFeeCents:500},200,'PUT');
+  if(incompatible==='tax')await data('/api/app/payments/settings',{taxEnabled:true,businessName:paymentSettings.businessName},200,'PUT');
+  if(incompatible==='approval')await data(`/api/app/event-types/${event.id}/approval`,{required:true,windowHours:24},200,'PUT');
+  const forbidden=await selection((await slots())[0],{code:coupon.code}),before=await rows(),edge=await processor();
+  assert.equal((await data(`${root}/credit`,{email,code:coupon.code,durationMinutes:30},409)).error.code,'credit_payment_terms_unsupported');
+  assert.equal((await data(`${root}/confirm`,forbidden,409)).error.code,'credit_payment_terms_unsupported',`${incompatible} cannot silently combine with appointment credit`);
+  assert.equal((await rows()).payment_holds.length,before.payment_holds.length);
+  assert.equal(checkoutCalls(await processor()).length,checkoutCalls(edge).length);
+  assert.equal((await hostCredit(coupon.entitlement.id)).balance,2);
+  if(incompatible==='fees')await data(`/api/app/event-types/${event.id}/payment-terms`,normalTerms,200,'PUT');
+  if(incompatible==='tax')await data('/api/app/payments/settings',{taxEnabled:paymentSettings.taxEnabled,businessName:paymentSettings.businessName},200,'PUT');
+  if(incompatible==='approval')await data(`/api/app/event-types/${event.id}/approval`,{required:false,windowHours:24},200,'PUT');
+ }
  const payload=await selection((await slots())[0],{code:coupon.code});
  const step=await data(`${root}/confirm`,payload,202);
  assert.equal(step.payment.amountCents,3499);
@@ -162,6 +178,12 @@ async function paymentCoupons({data,call,webhook,stripeEvent,rows,event,root,ema
  const refundObject=(await processor()).wire_stripe_objects.filter(row=>row.type==='refunds').map(row=>JSON.parse(row.payload)).find(row=>row.payment_intent===JSON.parse(paidEvents[0]).data.object.payment_intent);
  assert.ok(refundObject,'the edge recorded the cash refund');
 
+ const tooSmall=await issue(4951),beforeSmall=await rows(),edgeBeforeSmall=await processor();
+ const small=await data(`${root}/confirm`,await selection((await slots())[0],{code:tooSmall.code}),409);
+ assert.equal(small.error.code,'credit_remainder_below_minimum','a remainder below Stripe minimum is refused without rounding or overdrawing');
+ assert.equal((await hostCredit(tooSmall.entitlement.id)).balance,1);
+ assert.equal((await rows()).payment_holds.length,beforeSmall.payment_holds.length);
+ assert.equal(checkoutCalls(await processor()).length,checkoutCalls(edgeBeforeSmall).length);
  const covering=await issue(6000),beforeCover=await processor();
  const covered=await data(`${root}/confirm`,await selection((await slots())[0],{code:covering.code}),201);
  assert.equal(covered.paymentRequired,undefined);
@@ -214,6 +236,8 @@ async function paymentCoupons({data,call,webhook,stripeEvent,rows,event,root,ema
  const audit=[...paidEvents.map((event,index)=>['payment',[3499,3500,3000][index],JSON.parse(event).data.object.payment_intent]),['refund:succeeded',3499,refundObject.id]];
  return {audit,async assertErased(){
   const ids=issued.map(row=>row.entitlement.id);
+  await call(endpoint,input,409);
+  assert.equal((await rows()).payment_entitlements.filter(row=>ids.includes(row.id)).length,0,'an old issuance request cannot recreate erased coupon identity');
   for(const event of paidEvents)await webhook(event);
   const erased=await rows();
   assert.equal(erased.payment_entitlements.filter(row=>ids.includes(row.id)).length,0,'erasure removes booked and unbooked coupon identities despite signed payment replay');

@@ -38,7 +38,7 @@ export const entitlementRoutes=new Hono<AppEnvironment>()
   const approval=await services.bookings.approvalSettings(event.id);
   if(!quote||quote.kind!=='available'||quote.saveCard||quote.taxRequired||approval?.required)return apiError(c,409,'credit_payment_terms_unsupported','Appointment credits cannot be used with these payment terms.');
   const result=await services.payments.entitlements.resolve(event.id,input.email,input.code,quote.snapshot.priceCents);
-  if(result.kind==='refused')return apiError(c,409,result.reason,`This appointment credit cannot be used. Remaining balance: ${result.balance}.${result.expiresAt?` Expired: ${result.expiresAt}.`:""}`,[String(result.balance),...(result.expiresAt?[result.expiresAt]:[])]);
+  if(result.kind==='refused')return apiError(c,409,result.reason,`${result.reason==="credit_remainder_below_minimum"?"Stripe requires a remaining payment of at least $0.50. Use another credit or remove it. ":""}This appointment credit cannot be used. Remaining balance: ${result.balance}.${result.expiresAt?` Expired: ${result.expiresAt}.`:""}`,[String(result.balance),...(result.expiresAt?[result.expiresAt]:[])]);
   return c.json({kind:result.kind,entitlement:result.entitlement,discountCents:result.discountCents,dueNowCents:result.dueNowCents});
  })
  .post('/api/public/book/:handle/:slug/products/:product/purchase',validate('param',publicProduct),validate('json',z.object({email:z.string().trim().email().max(320),idempotencyKey:z.string().uuid()}).strict()),async c=>{

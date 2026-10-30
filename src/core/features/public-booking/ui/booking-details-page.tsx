@@ -1,4 +1,4 @@
-import { BookingCredit, type AppliedCredit } from "../../payments/ui/booking-credit";
+import { BookingCredit, type AppliedCredit } from "../../payments";
 import { rememberPendingAnalytics, useBookingAnalytics } from "./analytics";
 import { GuestFields, guestEmails } from "./guest-fields";
 import { RememberDetails } from "../../clients/client";
@@ -146,7 +146,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
         if (refused && failure?.error?.code === "tax_changed") tax.refresh();
         if (refused && (failure?.error?.code?.startsWith("credit_") || failure?.error?.code === "membership_unpaid")) setAppliedCredit(undefined);
         if (refused && ["card_consent_required", "payment_terms_changed"].includes(failure?.error?.code ?? "")) {
-          setConsented(false);
+          setConsented(false); setAppliedCredit(undefined);
           await refreshSelection();
           if (currentSelection.payment?.taxRequired) tax.refresh();
           setNotice("The payment terms changed. Review the current fees and agree again before continuing.");

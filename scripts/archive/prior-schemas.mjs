@@ -12,6 +12,7 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  'core/0094_coupon_issuance_receipts.sql': (table,row) => table==='payment_products'?{...row,issuance_key_hash:null}:row,
   // Existing credits keep their previous meaning; no historical coupon or discount is invented.
   'core/0093_payment_coupons.sql': (table,row) => ['payment_products','payment_entitlements'].includes(table)?{...row,is_coupon:0}:table==='payment_redemptions'?{...row,discount_cents:0}:row,
   // Authored workflow configuration starts empty in earlier archives.

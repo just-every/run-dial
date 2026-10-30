@@ -1,4 +1,4 @@
-import { EntitlementSummary } from "../../payments/ui/entitlement-summary";
+import { EntitlementSummary } from "../../payments";
 import { completePendingAnalytics } from "./analytics";
 import { BookingChangeTerms } from "./booking-change-terms";
 import { PaymentSummary } from "./pay-step";

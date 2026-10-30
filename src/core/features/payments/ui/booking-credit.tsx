@@ -7,7 +7,7 @@ export type AppliedCredit = { entitlement: AppointmentCredit; discountCents: num
 export function BookingCredit({ handle, slug, email, durationMinutes, disabled, applied, onApply }: { handle: string; slug: string; email: string; durationMinutes: number; disabled: boolean; applied?: AppliedCredit; onApply(value: AppliedCredit | undefined): void }) {
   const [mode, setMode] = useState("code"), [code, setCode] = useState(""), [error, setError] = useState("");
   const [working, setWorking] = useState(false), epoch = useRef(0);
-  useEffect(() => { epoch.current++; setWorking(false); setError(""); }, [email, durationMinutes]);
+  useEffect(() => { epoch.current++; setWorking(false); setError(""); onApply(undefined); }, [email, durationMinutes, onApply]);
   const current = applied?.email === email ? applied : undefined;
   async function apply() {
     const read = ++epoch.current;

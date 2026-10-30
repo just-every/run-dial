@@ -16,11 +16,12 @@ const invitee = await browser.newContext({ viewport: { width: 1440, height: 1024
 const json = async (response, expected = 200) => { assert.equal(response.status(), expected, await response.text()); return response.json(); };
 const person = ["synthetic-dial-540", "example.test"].join("@");
 const post = async (path, data, expected = 200) => json(await owner.request.post(origin + path, { headers, data }), expected);
+let accountId;
 const pay = async checkoutUrl => {
   const sessionId = new URL(checkoutUrl).pathname.split("/").at(-1);
   const paid = await post("/__fixtures/payments/pay", { sessionId });
   const timestamp = Math.floor(Date.now() / 1000);
-  const body = JSON.stringify({ id: `synthetic-dial-${randomUUID()}`, object: "event", type: "checkout.session.completed", account: "acct_wirehost", livemode: false, created: timestamp, data: { object: paid } });
+  const body = JSON.stringify({ id: `synthetic-dial-${randomUUID()}`, object: "event", type: "checkout.session.completed", account: accountId, livemode: false, created: timestamp, data: { object: paid } });
   const signature = createHmac("sha256", ["whsec", "wiretest"].join("_")).update(`${timestamp}.${body}`).digest("hex");
   await json(await owner.request.post(origin + "/api/webhooks/stripe", { headers: { "content-type": "application/json", "stripe-signature": `t=${timestamp},v1=${signature}` }, data: body }));
   return paid;
@@ -37,6 +38,7 @@ try {
   await post("/__fixtures/setup", {});
   const start = await owner.request.get(origin + "/api/app/payments/stripe/oauth/start", { maxRedirects: 0 });
   assert.equal((await owner.request.get(`${origin}/api/payments/stripe/oauth/callback?code=wire-stripe-consent&state=${encodeURIComponent(new URL(start.headers().location).searchParams.get("state"))}`, { maxRedirects: 0 })).status(), 302);
+  accountId = (await json(await owner.request.get(origin + "/api/app/payments/stripe"))).accountId;
   const event = await post("/api/app/event-types", { slug: "credit-coaching", title: "Credit coaching", description: "Coaching with packages, membership and gifts.", durationMinutes: 30, color: "#176b5a", locationType: "fixed_link", locationLabel: "Meeting room", locationValue: "https://example.test/room", listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 60, minimumNoticeMinutes: 0, bookingHorizonDays: 90, beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null, questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 0, endMinute: 1440 })) }, 201);
   await json(await owner.request.put(`${origin}/api/app/event-types/${event.id}/price`, { headers, data: { amountCents: 5000, durationPrices: [] } }));
   await json(await owner.request.put(`${origin}/api/app/event-types/${event.id}/payment-terms`, { headers, data: { deposit: { kind: "none" }, balanceDueHours: 24, freeWindowHours: 48, lateCancelFeeCents: 0, noShowFeeCents: 0 } }));
@@ -75,6 +77,13 @@ try {
   await page.goto(origin + publicPath);
   const offers = page.getByRole("group", { name: "Appointment products" });
   await page.getByText("Packages, memberships and gifts", { exact: true }).click();
+  const confirmationResults = [];
+  // Preserve the real response before document navigation releases Chromium's response buffer.
+  await page.route(origin + root + "/confirm", async route => {
+    const response = await route.fetch();
+    confirmationResults.push({ status: response.status(), body: await response.json() });
+    await route.fulfill({ response });
+  });
   const purchases = [];
   for (const [index, product] of products.entries()) {
     await page.getByLabel("Purchase email", { exact: true }).fill(index === 0 ? person : [`synthetic-dial-${541 + index}`, "example.test"].join("@"));
@@ -112,7 +121,8 @@ try {
   await page.getByText("Remaining balance: 3 sessions", { exact: false }).waitFor();
   const confirmed = page.waitForResponse(response => new URL(response.url()).pathname.endsWith("/confirm") && response.request().method() === "POST");
   await page.getByRole("button", { name: "Confirm with appointment credit" }).click();
-  const booked = await json(await confirmed, 201);
+  assert.equal((await confirmed).status(), 201);
+  const booked = confirmationResults.at(-1).body;
   await page.getByRole("heading", { name: "Booking confirmed.", exact: true }).waitFor();
   await page.getByRole("link", { name: "Manage booking", exact: true }).click();
   await page.getByRole("region", { name: "Appointment credit" }).getByText("Remaining balance: 2 sessions", { exact: false }).waitFor();
@@ -138,7 +148,8 @@ try {
   await page.route("https://checkout.stripe.com/**", route => route.fulfill({ status: 200, contentType: "text/html", body: "<p>Stripe test edge</p>" }));
   const paymentStep = page.waitForResponse(response => new URL(response.url()).pathname.endsWith("/confirm") && response.request().method() === "POST");
   await page.getByRole("button", { name: "Continue to payment · $34.99 USD", exact: true }).click();
-  const step = await json(await paymentStep, 202);
+  assert.equal((await paymentStep).status(), 202);
+  const step = confirmationResults.at(-1).body;
   assert.equal(step.payment.amountCents, 3499);
   const charged = await pay(step.payment.checkoutUrl);
   assert.equal(charged.amount_total, 3499, "browser coupon confirmation charges the displayed remainder");
@@ -163,12 +174,15 @@ try {
   await couponRow.getByText("Redemption history (1)", { exact: true }).click();
   await couponRow.getByText("Booking discount: $15.01 USD", { exact: true }).waitFor();
   await couponRow.getByText(/^Restored /).waitFor();
+  await card.getByText("Configure products and issue coupons", { exact: true }).click();
+  await card.getByLabel("Credit event type").selectOption(event.id);
+  await form.getByLabel("Product type").selectOption("coupon");
   for (const width of [1440, 390]) { await hostPage.setViewportSize({ width, height: width === 1440 ? 1024 : 844 }); await screenshot(hostPage, "host-credit-balances", card); }
   await hostPage.setViewportSize({ width: 1440, height: 1024 });
   await page.setViewportSize({ width: 1440, height: 1024 });
   for (const current of [hostPage, page]) {
     assert.deepEqual((await new AxeBuilder({ page: current }).analyze()).violations.filter(item => ["serious", "critical"].includes(item.impact)).map(item => item.id), [], "changed credit screens have no serious accessibility findings");
-    assert.ok(await current.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), "changed credit screens have no horizontal overflow");
+    assert.ok(await current.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.document.documentElement.clientWidth + 1), "changed credit screens have no horizontal overflow");
   }
   assert.equal((await json(await invitee.request.get(origin + new URL(booked.manageUrl).pathname.replace("/manage/", "/api/public/manage/")))).entitlement.balance, 2);
   assert.deepEqual(errors, [], "credit screens have no browser errors");

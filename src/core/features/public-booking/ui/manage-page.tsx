@@ -1,4 +1,4 @@
-import { EntitlementSummary } from "../../payments/ui/entitlement-summary";
+import { EntitlementSummary } from "../../payments";
 import { completePendingAnalytics } from "./analytics";
 import { ApprovalStatus } from "./approval-status";
 import { ManageGuests } from "./manage-guests";

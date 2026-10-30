@@ -50,6 +50,7 @@ export class Entitlements {
   const reason=row?reasonFor(row):"credit_not_found";
   if(reason||!row)return {kind:"refused" as const,reason:reason!,balance:row?.available_balance??0,...(reason==="credit_expired"?{expiresAt:row!.expires_at}:{})};
   const discountCents=row.is_coupon?Math.min(priceCents,row.amount_cents):priceCents;
+  if(priceCents-discountCents>0&&priceCents-discountCents<50)return {kind:"refused" as const,reason:"credit_remainder_below_minimum",balance:row.available_balance??0};
   return {kind:"available" as const,id:row.id,units:needed(row),at:now,discountCents,dueNowCents:priceCents-discountCents,entitlement:entitlementSummary(row)};
  }
  async list() {return Promise.all((await this.db.prepare(`SELECT e.*,p.name,e.balance-${reservedCredit} AS available_balance FROM payment_entitlements e JOIN payment_products p ON p.id=e.product_id ORDER BY e.id`).bind("").all<Entitlement>()).results.map(async row=>({...entitlementSummary(row),email:row.purchaser_email_folded,history:await this.history(row.id)})));}

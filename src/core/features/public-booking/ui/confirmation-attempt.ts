@@ -11,7 +11,7 @@ export class ConfirmationAttempt {
   }
   unknown() { this.uncertain = true; }
   refuse(status: number, code?: string) {
-    const knownRefusal = status >= 400 && status < 500 && code !== undefined && ["credit_not_found", "credit_not_active", "credit_expired", "credit_balance_insufficient", "credit_payment_terms_unsupported", "membership_unpaid", "invalid_duration", "invalid_answers", "card_consent_required", "billing_address_required", "tax_changed", "payment_terms_changed", "booking_nonce_not_found", "booking_nonce_expired", "booking_unavailable", "slot_taken", "slot_unavailable", "rate_limited", "invalid_request", "event_not_available"].includes(code);
+    const knownRefusal = status >= 400 && status < 500 && code !== undefined && ["credit_remainder_below_minimum", "credit_not_found", "credit_not_active", "credit_expired", "credit_balance_insufficient", "credit_payment_terms_unsupported", "membership_unpaid", "invalid_duration", "invalid_answers", "card_consent_required", "billing_address_required", "tax_changed", "payment_terms_changed", "booking_nonce_not_found", "booking_nonce_expired", "booking_unavailable", "slot_taken", "slot_unavailable", "rate_limited", "invalid_request", "event_not_available"].includes(code);
     if (this.uncertain || !knownRefusal) { this.unknown(); return false; }
     this.input = undefined;
     return true;

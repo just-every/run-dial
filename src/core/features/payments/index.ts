@@ -17,3 +17,7 @@ export type { WebhookResult } from "./service";
 export { approvalCardSetup, closeApprovalSetup } from "./approval-card";
 
 export { entitlementGuard, redeemStatements, restoreEntitlementStatements } from "./entitlement-repository";
+
+export { AppointmentProducts } from "./ui/appointment-products";
+export { BookingCredit, type AppliedCredit } from "./ui/booking-credit";
+export { EntitlementSummary } from "./ui/entitlement-summary";

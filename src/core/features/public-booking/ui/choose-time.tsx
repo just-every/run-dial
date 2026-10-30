@@ -1,4 +1,4 @@
-import { AppointmentProducts } from "../../payments/ui/appointment-products";
+import { AppointmentProducts } from "../../payments";
 import { bookingAnalyticsEvent, useBookingAnalytics } from "./analytics";
 import { formatDay } from "./invitee-time";
 import { formatUsd, priceForDuration } from "../../../shared/event-price";
