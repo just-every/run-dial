@@ -196,7 +196,7 @@ function confirmationResult(context: Context<AppEnvironment>, result: Awaited<Re
   if (result.kind === "payment_required") return context.json({ paymentRequired: true, payment: result.payment }, 202);
   if (result.kind === "payments_unavailable") return paymentsUnavailable(context, result.reason);
   if (result.kind === "replayed") return context.json(result.booking);
-  if (result.kind === "entitlement_refused") return apiError(context,409,result.reason,`This appointment credit cannot be used. Remaining balance: ${result.balance}.`,[String(result.balance)]);
+  if (result.kind === "entitlement_refused") return apiError(context,409,result.reason,`This appointment credit cannot be used. Remaining balance: ${result.balance}.${result.reason==='credit_expired'&&result.expiresAt?` Expired at ${result.expiresAt}.`:""}`,[String(result.balance),...(result.reason==='credit_expired'&&result.expiresAt?[result.expiresAt]:[])]);
   if (result.kind === "invalid_answers") return apiError(context, 400, "invalid_answers", "Review the required booking details.");
   if (result.kind === "card_consent_required") return apiError(context, 400, "card_consent_required", "Agree to the saved card and the stated fees to book this event.", ["cardConsent"]);
   if (result.kind === "billing_address_required") return apiError(context, 400, "billing_address_required", "Enter the billing address that sales tax is calculated for.", ["billingAddress"]);

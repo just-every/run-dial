@@ -2,26 +2,33 @@ import { foldCase } from "../../shared/case-fold.mjs";
 const foldEmail=(email:string)=>foldCase(email.trim());
 import { z } from "zod";
 import { createId, nowIso } from "../../shared/ids";
-import { deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
+import { createOpaqueToken, deriveOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 import type { StripeEvent } from "./approval-state";
 import type { StripeApi } from "./stripe-api";
-import { entitlementSummary, type Entitlement } from "./entitlement-repository";
-export const productInput = z.object({kind:z.enum(["package","membership","gift"]),name:z.string().trim().min(1).max(120),sessions:z.number().int().min(1).max(1000),amountCents:z.number().int().min(50).max(99_999_999),validityDays:z.number().int().min(1).max(3660)}).strict();
-type Product = {id:string;event_type_id:string;kind:Entitlement["kind"];name:string;sessions:number;amount_cents:number;validity_days:number};
+import { entitlementSummary, reservedUnits, type Entitlement } from "./entitlement-repository";
+export const productInput = z.object({kind:z.enum(["package","membership","gift","coupon"]),name:z.string().trim().min(1).max(120),sessions:z.number().int().min(1).max(1000),amountCents:z.number().int().min(50).max(99_999_999),validityDays:z.number().int().min(1).max(3660)}).strict();
+type Product = {id:string;event_type_id:string;kind:Entitlement["kind"];name:string;sessions:number;amount_cents:number;validity_days:number;is_coupon:number};
 type Live=()=>Promise<{api:StripeApi;accountId:string}|{refusal:string}>;
 /** Purchases have no booking authority until the connected account's signed event confirms Stripe's outcome. */
 export class Entitlements {
  constructor(private readonly db:D1Database,private readonly runtime:RuntimeEnvironment,private readonly live:Live,private readonly clock:()=>Promise<Date>=async()=>new Date()){}
  async define(eventId:string,input:z.infer<typeof productInput>) {
   const id=createId(),now=(await this.clock()).toISOString();
-  await this.db.prepare("INSERT INTO payment_products(id,event_type_id,kind,name,sessions,amount_cents,validity_days,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(id,eventId,input.kind,input.name,input.sessions,input.amountCents,input.validityDays,now,now).run();
-  return {id,...input};
+  const coupon=input.kind==='coupon';
+  const code=coupon?createOpaqueToken():undefined;
+  const entitlementId=coupon?createId():undefined;
+  await this.db.batch([
+   this.db.prepare("INSERT INTO payment_products(id,event_type_id,kind,name,sessions,amount_cents,validity_days,is_coupon,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)").bind(id,eventId,coupon?'package':input.kind,input.name,input.sessions,input.amountCents,input.validityDays,coupon?1:0,now,now),
+   ...(coupon?[this.db.prepare(`INSERT INTO payment_entitlements(id,product_id,event_type_id,kind,sessions,balance,amount_cents,purchaser_email_folded,code_hash,purchase_key,account_id,state,expires_at,is_coupon,created_at,updated_at)
+    VALUES(?,?,?,'package',?,?,?,'',?,?,'','active',?,1,?,?)`).bind(entitlementId,id,eventId,input.sessions,input.sessions,input.amountCents,await hashToken(code!,this.runtime.SESSION_SECRET),await hashToken('coupon:'+code,this.runtime.SESSION_SECRET),new Date(Date.parse(now)+input.validityDays*86400000).toISOString(),now,now)]:[]),
+  ]);
+  return {id,...input,...(coupon?{code,entitlement:entitlementSummary((await this.db.prepare("SELECT * FROM payment_entitlements WHERE id=?").bind(entitlementId).first<Entitlement>())!)}:{})};
  }
- async products(eventId:string) {return (await this.db.prepare("SELECT id,kind,name,sessions,amount_cents AS amountCents,validity_days AS validityDays FROM payment_products WHERE event_type_id=? ORDER BY id").bind(eventId).all()).results;}
+ async products(eventId:string) {return (await this.db.prepare("SELECT id,event_type_id AS eventTypeId,CASE WHEN is_coupon=1 THEN 'coupon' ELSE kind END AS kind,name,sessions,amount_cents AS amountCents,validity_days AS validityDays FROM payment_products WHERE event_type_id=? ORDER BY id").bind(eventId).all()).results;}
  async purchase(eventId:string,productId:string,email:string,key:string,returnPath:string) {
   const product=await this.db.prepare("SELECT * FROM payment_products WHERE id=? AND event_type_id=?").bind(productId,eventId).first<Product>();
-  if(!product)return {kind:"not_found" as const};
+  if(!product||product.is_coupon)return {kind:"not_found" as const};
   const live=await this.live();if("refusal" in live)return {kind:"refused" as const,reason:live.refusal};
   const emailFold=foldEmail(email),purchaseKey=await hashToken(key,this.runtime.SESSION_SECRET),now=(await this.clock()).toISOString();
   const code=await deriveOpaqueToken(key,this.runtime.SESSION_SECRET,"appointment-credit.v1"),codeHash=await hashToken(code,this.runtime.SESSION_SECRET);
@@ -37,17 +44,20 @@ export class Entitlements {
   await this.db.prepare("UPDATE payment_entitlements SET checkout_session_id=?,updated_at=? WHERE id=? AND state='pending'").bind(session.id,now,row.id).run();
   return {kind:"checkout" as const,code,checkoutUrl:session.url,entitlement:entitlementSummary(row)};
  }
- async resolve(eventId:string,email:string,code:string|undefined,units:number) {
+ async resolve(eventId:string,email:string,code:string|undefined,priceCents:number) {
   const now=(await this.clock()).toISOString();
   const hash=code?await hashToken(code,this.runtime.SESSION_SECRET):null;
-  const row=await this.db.prepare(`SELECT * FROM payment_entitlements WHERE event_type_id=? AND (? IS NOT NULL AND code_hash=? OR ? IS NULL AND purchaser_email_folded=?) ORDER BY CASE WHEN state='active' AND balance>=CASE WHEN kind='gift' THEN ? ELSE 1 END AND expires_at>? AND (kind<>'membership' OR (period_start<=? AND period_end>?)) THEN 0 ELSE 1 END,expires_at,id LIMIT 1`).bind(eventId,hash,hash,hash,foldEmail(email),units,now,now,now).first<Entitlement>();
-  const need=row?.kind==='gift'?units:1;
-  const reason=!row?"credit_not_found":row.state!=="active"?row.state==='past_due'?"membership_unpaid":"credit_not_active":row.expires_at<=now||(row.kind==='membership'&&(!row.period_end||row.period_end<=now||!row.period_start||row.period_start>now))?"credit_expired":row.balance<need?"credit_balance_insufficient":undefined;
-  return reason||!row?{kind:"refused" as const,reason:reason!,balance:row?.balance??0}:{kind:"available" as const,id:row.id,units:need,at:now};
+  const row=await this.db.prepare(`SELECT e.*,e.balance-${reservedUnits('e.id')} AS available_balance FROM payment_entitlements e WHERE event_type_id=? AND (? IS NOT NULL AND code_hash=? OR ? IS NULL AND purchaser_email_folded=?) AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=e.purchaser_email_folded) ORDER BY CASE WHEN state='active' AND balance-${reservedUnits('e.id')}>=CASE WHEN kind='gift' THEN ? ELSE 1 END AND expires_at>? AND (kind<>'membership' OR (period_start<=? AND period_end>?)) THEN 0 ELSE 1 END,expires_at,id LIMIT 1`).bind(eventId,hash,hash,hash,foldEmail(email),priceCents,now,now,now).first<Entitlement & {available_balance:number}>();
+  const need=row?.kind==='gift'?priceCents:1;
+  const balance=row?.available_balance??0;
+  const reason=!row?"credit_not_found":row.state!=="active"?row.state==='past_due'?"membership_unpaid":"credit_not_active":row.expires_at<=now||(row.kind==='membership'&&(!row.period_end||row.period_end<=now||!row.period_start||row.period_start>now))?"credit_expired":balance<need?"credit_balance_insufficient":undefined;
+  if(reason||!row)return {kind:"refused" as const,reason:reason!,balance,expiresAt:row?.expires_at};
+  const discountCents=row.is_coupon?Math.min(priceCents,row.amount_cents):priceCents;
+  return {kind:"available" as const,id:row.id,units:need,at:now,balance,unit:row.is_coupon?'uses':row.kind==='gift'?'USD cents':'sessions',expiresAt:row.expires_at,creditKind:row.is_coupon?'coupon':row.kind,discountCents,remainderCents:priceCents-discountCents};
  }
- async list() {return Promise.all((await this.db.prepare("SELECT * FROM payment_entitlements ORDER BY id").all<Entitlement>()).results.map(async row=>({...entitlementSummary(row),email:row.purchaser_email_folded,history:await this.history(row.id)})));}
- async forBooking(bookingId:string) {const row=await this.db.prepare("SELECT e.* FROM payment_entitlements e JOIN payment_redemptions r ON r.entitlement_id=e.id WHERE r.booking_id=?").bind(bookingId).first<Entitlement>();return row?{...entitlementSummary(row),history:await this.history(row.id)}:undefined;}
- private async history(id:string) {return (await this.db.prepare("SELECT booking_id AS bookingId,units,restored_at AS restoredAt,created_at AS createdAt FROM payment_redemptions WHERE entitlement_id=? ORDER BY created_at,id").bind(id).all()).results;}
+ async list() {return Promise.all((await this.db.prepare(`SELECT e.*,p.name,e.balance-${reservedUnits('e.id')} AS available_balance FROM payment_entitlements e JOIN payment_products p ON p.id=e.product_id ORDER BY e.id`).all<Entitlement & {name:string;available_balance:number}>()).results.map(async row=>({...entitlementSummary(row),balance:row.available_balance,name:row.name,eventTypeId:row.event_type_id,email:row.purchaser_email_folded,history:await this.history(row.id)})));}
+ async forBooking(bookingId:string) {const row=await this.db.prepare(`SELECT e.*,p.name,e.balance-${reservedUnits('e.id')} AS available_balance FROM payment_entitlements e JOIN payment_redemptions r ON r.entitlement_id=e.id JOIN payment_products p ON p.id=e.product_id WHERE r.booking_id=?`).bind(bookingId).first<Entitlement & {name:string;available_balance:number}>();return row?{...entitlementSummary(row),name:row.name,balance:row.available_balance,history:await this.history(row.id,row.is_coupon?bookingId:undefined)}:undefined;}
+ private async history(id:string,bookingId?:string) {return (await this.db.prepare("SELECT booking_id AS bookingId,units,discount_cents AS discountCents,restored_at AS restoredAt,created_at AS createdAt FROM payment_redemptions WHERE entitlement_id=? AND (? IS NULL OR booking_id=?) ORDER BY created_at,id").bind(id,bookingId??null,bookingId??null).all()).results;}
  async erasePurchases(email:string,record:(account:string,session:string)=>Promise<void>,customer:(account:string,id:string)=>Promise<void>) {
   const rows=(await this.db.prepare("SELECT * FROM payment_entitlements WHERE purchaser_email_folded=? ORDER BY id").bind(foldEmail(email)).all<Entitlement>()).results;
   for(const row of rows) {

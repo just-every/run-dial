@@ -31,7 +31,7 @@ async function wireJourney(t, journey, port, log) {
   console.log((await run(["node", journey])).trim());
 }
 
-test("PAY-001 a paid booking confirms only after Stripe's signed event", t => wireJourney(t, "tests/booking-wire/payment-journey.mjs", 15758, "payment-wire-worker.log"));
+test("PAY-001 a paid booking confirms only after Stripe's signed event", async t => { await wireJourney(t, "tests/booking-wire/payment-journey.mjs", 15758, "payment-wire-worker.log"); await runAxe(t, "tests/booking-wire/payment-entitlements-screens.mjs"); });
 
 test("PAY-003/PAY-006 deposits, refunds, fees and reconciled accounting exports move or record money once, only as shown", async t => { await wireJourney(t, "tests/booking-wire/payment-terms-journey.mjs", 15760, "payment-terms-wire-worker.log"); await runAxe(t, "scripts/verify-money-screens.mjs"); });
 

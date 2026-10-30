@@ -1,6 +1,7 @@
 import { WebhookSettingsCard } from "../core/features/webhooks/ui/settings-card";
 import { AnalyticsSettingsCard } from "../core/features/analytics/ui/settings-card";
 import { NoticeDestinationsCard } from '../core/features/workspace-notices/ui/destinations-card';
+import { EntitlementSettingsCard } from "../core/features/payments/ui/entitlement-settings";
 import { AccountingCard } from "../core/features/payments/ui/accounting-card";
 import { StripeConnectionCard } from "../core/features/payments/ui/stripe-connection-card";
 import { PersonErasureCard } from "../core/features/erasure/ui/person-erasure";
@@ -19,5 +20,5 @@ export const Route = createFileRoute('/app/settings' )({ codeSplitGroupings: [],
 
 function SettingsRoute() {
   const { shell } = Route.useRouteContext();
-  return <><SettingsPage paymentSettings={timezone => <><StripeConnectionCard timezone={timezone} /><AccountingCard /><NoticeDestinationsCard /><WebhookSettingsCard /><AnalyticsSettingsCard /></>} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} />{shell.canInspectArchive ? <ArchiveStatusCard /> : null}<div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
+  return <><SettingsPage paymentSettings={timezone => <><StripeConnectionCard timezone={timezone} /><EntitlementSettingsCard /><AccountingCard /><NoticeDestinationsCard /><WebhookSettingsCard /><AnalyticsSettingsCard /></>} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} />{shell.canInspectArchive ? <ArchiveStatusCard /> : null}<div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
 }

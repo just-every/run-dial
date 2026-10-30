@@ -120,7 +120,7 @@ export class BookingsRepository {
     const approvalAdmission = approval && payment ? {sql:"EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=? AND state='pending' AND claim_json IS NOT NULL AND json_extract(payment_json,'$.holdId')=? AND ((json_extract(payment_json,'$.mode')='payment' AND json_extract(payment_json,'$.state')='capture_pending') OR (json_extract(payment_json,'$.mode')='setup' AND json_extract(payment_json,'$.state')='authorized' AND expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now')))) AND EXISTS(SELECT 1 FROM payment_holds WHERE id=? AND state IN ('held','processing') AND claim_json IS NOT NULL)",params:[approval.id,payment.holdId,payment.holdId]} : undefined;
     const guard = await slotClaimGuard(this.binding, input, approvalAdmission ?? (approval ? {sql:"EXISTS(SELECT 1 FROM booking_approval_requests WHERE id=? AND state='pending' AND expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now')) AND EXISTS(SELECT 1 FROM booking_nonces n WHERE n.id=? AND (n.link_id IS NULL OR EXISTS(SELECT 1 FROM booking_links l WHERE l.id=n.link_id AND l.consumed_at IS NULL AND l.revoked_at IS NULL AND l.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now'))))",params:[approval.id,input.nonceId]} : payment ? holdAdmission(payment.holdId) : nonceAdmission(input.nonceId, input.nonceHash, input.now)), nonce?.linkId, payment?.holdId, approval?.id);
     if(input.entitlement) {
-      const credit=entitlementGuard(input.entitlement.id,input.entitlement.units,event.id,input.entitlement.at);
+      const credit=entitlementGuard(input.entitlement.id,input.entitlement.units,event.id,input.entitlement.at,payment?.holdId);
       guard.sql+=` AND ${credit.sql}`;guard.params.push(...credit.params);
     }
     const statements: D1PreparedStatement[] = [
@@ -167,6 +167,10 @@ export class BookingsRepository {
   async claimPaymentHold(input: BookingClaim, hold: { id: string; kind: "payment" | "setup"; accountId: string; amountCents: number; returnTokenHash: string; returnExpiresAt: string; expiresAt: string }): Promise<"claimed" | "slot_taken" | "blocked"> {
     const nonce = await this.getNonce(input.nonceHash);
     const guard = await slotClaimGuard(this.binding, input, nonceAdmission(input.nonceId, input.nonceHash, input.now), nonce?.linkId);
+    if(input.entitlement) {
+      const credit=entitlementGuard(input.entitlement.id,input.entitlement.units,input.event.id,input.entitlement.at);
+      guard.sql+=` AND ${credit.sql}`;guard.params.push(...credit.params);
+    }
     const results = await this.binding.batch([
       this.binding.prepare(`INSERT INTO payment_holds (id, nonce_id, event_type_id, link_id, account_id, state, start_at, end_at, occupied_start_at, occupied_end_at, host_date, amount_cents, currency, checkout_session_id, checkout_url, return_token_hash, return_expires_at, claim_json, invitee_email_folded, booking_id, ended_reason, expires_at, created_at, updated_at, kind)
         SELECT ?, ?, ?, ?, ?, 'held', ?, ?, ?, ?, ?, ?, 'usd', NULL, NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?
