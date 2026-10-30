@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 90 done / 30 partial / 56 missing (176 clauses).
+The contract census is 90 done / 36 partial / 63 missing (189 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -996,11 +996,11 @@ Evidence: `tests/custom-fields.test.mjs`
 
 Gap: None.
 
-AGENT-001 is missing: Agent authority, limits and audit.
+AGENT-001 is partial: Agent authority, limits and audit.
 
-Evidence: None.
+Evidence: `src/agent-door/index.server.ts`, `agent-surface.json`, `tests/agent-door/native-owner.mjs`; native specialist grants and delayed execution remain incomplete
 
-Gap: No implementing code yet.
+Gap: No implementing code yet. 2026-10-29: queuedLifecycle; ownerNativeAdministration not declared in the door (core subset, 2026-10-29).
 
 AGENT-002 is missing: Exception negotiator.
 
@@ -1018,7 +1018,7 @@ AGENT-004 is partial: Calendar drift reconciler.
 
 Evidence: `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs`
 
-Gap: The cited paths cover part of the clause; the rest is still to build.
+Gap: The cited paths cover part of the clause; the rest is still to build. 2026-10-29: queuedLifecycle; resourceRefresh not declared in the door (core subset, 2026-10-29).
 
 AGENT-005 is missing: Meeting happened check.
 
@@ -1061,3 +1061,81 @@ AGENT-011 is missing: Voice booking through a contracted provider.
 Evidence: None.
 
 Gap: No implementing code yet.
+
+BASE-AGENT-001 is missing: One MCP door per seed.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-002 is missing: The seed's jobs are tools, through the UI's own actions.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-003 is partial: Records are resources.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: resources; resourceRefresh not declared in the door (core subset, 2026-10-29).
+
+BASE-AGENT-004 is missing: Business identity and short-lived, audience-bound tokens.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-005 is missing: An agent acts as a person in a role, never more.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-006 is missing: Every action declares its risk class.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-007 is missing: The company's policy decides, at one chokepoint.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-008 is missing: Truthful attribution.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-009 is missing: Every agent action is audited with its class and decision.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-010 is partial: Agents can follow changes.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: CORE `dial.events.list` declares the built-in retained-event reader; complete product change feeds, subscriptions and signed webhook delivery remain unproven.
+
+BASE-AGENT-011 is partial: Limits are policy, and Pause stops everything.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: timedLifecycle; queuedLifecycle not declared in the door (core subset, 2026-10-29).
+
+BASE-AGENT-012 is partial: Writes are idempotent and conflict-safe.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: queuedLifecycle not declared in the door (core subset, 2026-10-29).
+
+BASE-AGENT-013 is partial: Manifest, docs and the conformance journey.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: CORE `dial.events.list` is declared; complete events/subscriptions; resources; multiSponsor; mailEdges; resourceRefresh; timedLifecycle; dualHost; ownerNativeAdministration; queuedLifecycle not declared in the door (core subset, 2026-10-29).
