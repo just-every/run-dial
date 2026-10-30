@@ -8724,7 +8724,7 @@
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "4f21925b3d6b53189dfe4298388ffdb144d780694d06b584a650feba3a7c87fb",
+      "sha256": "f61cd56ad56048ebc8a0df2d343c4b5d1ce008c2b18dd1cd350f2960103896f0",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {
@@ -9744,7 +9744,7 @@
       "executable": false
     },
     "tests/payments-wire.test.mjs": {
-      "sha256": "5c514741b48a7f867e5f488ef8ffe80d395a8efbe8f0eeda39ae0d932c1b132b",
+      "sha256": "613ceb58d957cb2a2c5b7fc32838fa939e2160d8352c407e67325f18b30befe4",
       "executable": false
     },
     "tests/person-erasure.test.mjs": {

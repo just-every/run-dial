@@ -26,11 +26,24 @@ const servicesFor = (env: WireBindings) => {
   const runtime = parseRuntimeEnvironment(env), wire = wireTransport(providerDb(env));
   return createServices(env.DB, runtime, env.ASSETS, { ...(env.WEBHOOK_DEFAULT_TRANSPORT ? {} : { webhookTransport: webhookWire(env.WEBHOOK_RECEIVER_ORIGIN) }), operatorNotifications: operatorNotificationCommand(env.BOOKING_COORDINATOR), files: env.FILES, calendar: runtime.CALENDAR_PROVIDER === "microsoft" ? new MicrosoftCalendarAdapter({ clientId: runtime.MICROSOFT_OAUTH_CLIENT_ID!, clientSecret: runtime.MICROSOFT_OAUTH_CLIENT_SECRET! }, wire) : new GoogleCalendarAdapter({ clientId: "wire-client", clientSecret: "wire-secret" }, wire), authMail: captureAuthMail(env.DB), mail: runtime.MAIL_PROVIDER === "development" ? captureMail(env.DB) : new BaseMailSender(env.DB, { ...runtime, ENVIRONMENT: "production" }, wire), calendarChanges: coordinatedCalendarChanges(env), connectionWatch: connectionWatchObservers(env), paymentsClock: async () => { const row = await providerDb(env).prepare("SELECT value FROM wire_controls WHERE name='entitlement-clock'").first<{ value: number }>(); return row?.value ? new Date(row.value) : new Date(); }, paymentsTransport: env.STRIPE_EDGE === "live" ? liveStripe(env.STRIPE_EDGE_RELAY) : wire });
 };
-export class BookingCoordinator extends ProductionCoordinator { protected services(env: WireBindings) { return servicesFor(env); } }
+export class BookingCoordinator extends ProductionCoordinator {
+  protected services(env: WireBindings) { return servicesFor(env); }
+  async fetch(request: Request) {
+    const confirm = new URL(request.url).pathname.endsWith("/confirm");
+    if (confirm) console.log("PAYMENT_WIRE_COORDINATOR_ENTER", this.ctx.id.toString());
+    try {
+      const response = await super.fetch(request);
+      if (confirm) console.log("PAYMENT_WIRE_COORDINATOR_RESPONSE", this.ctx.id.toString(), response.status);
+      return response;
+    } catch (error) { console.error("PAYMENT_WIRE_COORDINATOR_ERROR", error); throw error; }
+  }
+}
 const app = createApp(undefined, servicesFor);
 export default {
   async fetch(request: Request, env: WireBindings, context: ExecutionContext) {
     const url = new URL(request.url);
+    const confirm = url.pathname.endsWith("/confirm");
+    if (confirm) console.log("PAYMENT_WIRE_WORKER_ENTER");
     if (url.hostname !== "127.0.0.1") return new Response("Not found", { status: 404 });
     const webhookFixture = await webhookFixtures(request, servicesFor(env), env);
     if (webhookFixture) return webhookFixture;
@@ -112,7 +125,11 @@ export default {
     }
     if (url.pathname.startsWith("/__fixtures/")) return handleFixtures(request, env, servicesFor);
     const target = await bookingMutationTarget(request, env);
-    return target ? forwardBookingRequest(env, target, request) : app.fetch(request, env, context);
+    try {
+      const response = await (target ? forwardBookingRequest(env, target, request) : app.fetch(request, env, context));
+      if (confirm) console.log("PAYMENT_WIRE_WORKER_RESPONSE", response.status);
+      return response;
+    } catch (error) { console.error("PAYMENT_WIRE_WORKER_ERROR", error); throw error; }
   },
   // Production's own Queue and Cron handlers, over the wire providers.
   async queue(batch: MessageBatch<unknown>, env: WireBindings) { await consumeJobs(batch, env, servicesFor(env)); },

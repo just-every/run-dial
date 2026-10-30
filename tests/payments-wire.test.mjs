@@ -12,9 +12,10 @@ async function wireJourney(t, journey, port, log) {
   const state = await mkdtemp(resolve(tmpdir(), "dial-payment-wire-"));
   const origin = `http://127.0.0.1:${port}`, config = "tests/booking-wire/worker.wrangler.toml";
   const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin };
-  let server, output = "";
+  let server, output = "", failed = false;
   t.after(async () => {
     if (server?.exitCode === null) { const stopped = new Promise(done => server.once("exit", done)); try { process.kill(-server.pid, "SIGTERM"); } catch { server.kill("SIGTERM"); } await stopped; }
+    if (failed) console.error(output.replace(/\/manage\/(?:invite\/|balance\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]").replace(/[?#][^\s"'<>]*/gu, "[redacted]"));
     // C.1 keeps captured Worker evidence free of generated manage capability URLs.
     await writeFile(evidencePath(log), output.replace(/\/manage\/(?:invite\/|balance\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]")); await rm(state, { recursive: true, force: true });
   });
@@ -32,7 +33,8 @@ async function wireJourney(t, journey, port, log) {
   catch (error) {
     // The HTTP error can name only Miniflare's dispatch boundary. Preserve the
     // Worker diagnostic that explains a reset, binding failure or lost stream.
-    console.error(output.replace(/\/manage\/(?:invite\/|balance\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]").replace(/[?#][^\s"'<>]*/gu, "[redacted]"));
+    failed = true;
+    output += "\nPAYMENT_WIRE_JOURNEY_FAILED\n";
     throw error;
   }
 }
