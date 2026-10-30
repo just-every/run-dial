@@ -564,6 +564,18 @@
       "name": "0092_workflows.sql",
       "sha256": "31b74895928ad8977b311cb33384e65b80e87eae0d1b48105562e1a0b62342d1",
       "sql": "CREATE TABLE workflow_rules (\n id TEXT PRIMARY KEY NOT NULL,\n name TEXT NOT NULL,\n event_type_id TEXT NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,\n operator_id TEXT NOT NULL,\n enabled INTEGER NOT NULL DEFAULT 0 CHECK(enabled IN (0,1)),\n enabled_at TEXT,\n version INTEGER NOT NULL DEFAULT 1,\n subject TEXT NOT NULL,\n text TEXT NOT NULL,\n removed_at TEXT,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX workflow_rules_event ON workflow_rules(event_type_id);\nCREATE TABLE workflow_dispatches (\n id TEXT PRIMARY KEY NOT NULL,\n workflow_id TEXT NOT NULL REFERENCES workflow_rules(id) ON DELETE CASCADE,\n booking_id TEXT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,\n outbox_id TEXT NOT NULL UNIQUE,\n workflow_version INTEGER NOT NULL,\n created_at TEXT NOT NULL,\n UNIQUE(workflow_id,booking_id)\n);\nCREATE INDEX workflow_dispatches_booking ON workflow_dispatches(booking_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0093_payment_coupons.sql",
+      "sha256": "163463a096e29d9048ccf93a9efbe0713fb0ae5c0a06497a4b446365a7c9df22",
+      "sql": "-- Coupons reuse the finite session ledger; their value is a fixed USD discount per use.\nALTER TABLE payment_products ADD COLUMN is_coupon INTEGER NOT NULL DEFAULT 0 CHECK(is_coupon IN (0,1));\nALTER TABLE payment_entitlements ADD COLUMN is_coupon INTEGER NOT NULL DEFAULT 0 CHECK(is_coupon IN (0,1));\nALTER TABLE payment_redemptions ADD COLUMN discount_cents INTEGER NOT NULL DEFAULT 0 CHECK(discount_cents>=0);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0094_coupon_issuance_receipts.sql",
+      "sha256": "c9fd8163b548e4abbb8b4be971c0acb5427e497e58100e79b7a514ff7b8f4961",
+      "sql": "-- Non-personal issuance identity survives purchaser erasure, preventing an old command from recreating credit.\nALTER TABLE payment_products ADD COLUMN issuance_key_hash TEXT;\nCREATE UNIQUE INDEX payment_coupon_issuance_identity ON payment_products(issuance_key_hash);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

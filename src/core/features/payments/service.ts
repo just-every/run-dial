@@ -275,7 +275,13 @@ export class PaymentsService {
       ...(money ? this.terms.confirmationStatements(claim.bookingId, money, card, money.balanceSalt ? await this.money.balanceTokenHash(money.balanceSalt) : undefined, now) : []),
       this.repository.confirmHoldStatement(hold.id, claim.bookingId, now),
       ...receipt,
-    ] },approval ? {id:approval.id,operatorId:approval.operatorId} : undefined);
+    ] },approval ? {id:approval.id,operatorId:approval.operatorId} : undefined).catch(async error => {
+      // The claim is one transaction. A concurrent callback can finish it before this duplicate's
+      // dependent inserts run; acknowledge only the exact hold and booking that already committed.
+      const current = await this.repository.hold(hold.id);
+      if (current?.state === "confirmed" && current.bookingId === claim.bookingId) return "slot_taken" as const;
+      throw error;
+    });
     if (outcome !== "claimed") {
       const current = await this.repository.hold(hold.id);
       // A concurrent duplicate already confirmed it; otherwise the paid slot can no longer be booked.
