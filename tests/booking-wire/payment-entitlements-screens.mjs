@@ -160,10 +160,12 @@ try {
       await capturePage.getByRole("button", { name: "Buy Monthly coaching", exact: true }).waitFor();
     }, { session: false });
     await capture(width, "manage-appointment-credit", new URL(second.manageUrl).pathname, async capturePage => {
+      await capturePage.locator('main[aria-busy="false"]').waitFor();
       await capturePage.getByRole("region", { name: "Appointment credit" }).getByText("Three coaching sessions · 1 session remaining", { exact: true }).waitFor();
       await capturePage.getByRole("list", { name: "Redemption history" }).waitFor();
     }, { session: false });
     await capture(width, "manage-coupon", new URL(payment.manageUrl).pathname, async capturePage => {
+      await capturePage.locator('main[aria-busy="false"]').waitFor();
       await capturePage.getByRole("region", { name: "Appointment credit" }).getByText("Coaching welcome coupon · 1 use remaining", { exact: true }).waitFor();
       await capturePage.getByText("Paid $37.66 USD", { exact: false }).waitFor();
     }, { session: false });

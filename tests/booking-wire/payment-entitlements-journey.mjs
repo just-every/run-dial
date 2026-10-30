@@ -174,7 +174,12 @@ async function couponRedemptions({data,call,webhook,stripeEvent,root,event,defin
  for(const uses of [1,3]) {
   const racing=await issue(uses,1000),available=(await slots()).slice(0,50);
   assert.equal(available.length,50,'the race uses fifty independently claimable slots');
-  const bodies=await Promise.all(available.map(start=>selection(start,{code:racing.code})));
+  // Only redemption is raced. Preparing the fifty independent nonces in order
+  // avoids saturating the local calendar transport before the money claim.
+  const bodies=[];for(const start of available)bodies.push(await selection(start,{code:racing.code}));
+  const beforeInvalid=await rows();
+  for(const body of bodies)assert.equal((await data(`${root}/confirm`,{...body,redemption:{code:'synthetic-dial-missing'}},409)).error.code,'credit_not_found');
+  const afterInvalid=await rows();for(const table of ['payment_entitlements','payment_redemptions','payment_holds'])assert.deepEqual(afterInvalid[table],beforeInvalid[table],'invalid credit codes change no balances, redemptions or holds');
   const responses=await Promise.all(bodies.map(body=>call(`${root}/confirm`,body,[202,409])));
   const winners=responses.filter(response=>response.status===202),losers=responses.filter(response=>response.status===409);
   assert.equal(winners.length,uses,'fifty simultaneous claims never reserve more than the issued use count');
