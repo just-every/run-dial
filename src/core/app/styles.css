@@ -94,6 +94,14 @@
   label { align-content: start; }
 }
 
+/* The signed-in app's main column is pure white whatever the canvas token (owner, 30 Oct). Its cards were set apart from the
+   paper only by tone, so inside the column the panel shadow carries a hairline too and nothing melts into the white. The
+   sidebar, the sign-in page and the public pages never carry this class. */
+.app-column {
+  background: #ffffff;
+  --shadow: 0 0 0 1px var(--line-soft), 0 1px 2px rgba(64, 50, 18, 0.06), 0 16px 36px rgba(64, 50, 18, 0.1);
+}
+
 /* Every single-choice select draws its chevron 14 px in from the right border with room under it for the text. Two gradient
    strokes read --rer-select-ink, so the chevron follows the token and paints under the pages' CSP (no data: image). Unlayered,
    so it wins over the utility padding of the Select primitive and the booking forms' own field rule. Multiple and size>1 lists

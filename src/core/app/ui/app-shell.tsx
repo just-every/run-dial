@@ -62,7 +62,7 @@ function AppShellContent() {
 
   return (
     <>
-    <div data-operator-ready={hydrated} inert={!hydrated} className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div data-operator-ready={hydrated} inert={!hydrated} className="min-h-screen bg-white text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
       {initial.editorConfigured ? <OwnerEditorShell /> : null}
       <div className="hidden border-r border-line bg-sidebar lg:block">
         <aside className="sticky top-0 flex h-screen flex-col overflow-y-auto px-5 py-6">
@@ -76,7 +76,7 @@ function AppShellContent() {
         </Button>
         {menuOpen ? <div id="operator-mobile-navigation" className="absolute inset-x-4 top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[20px] bg-card p-3 shadow-panel"><SidebarContent bookingLink={setup.state?.links[0]} pathname={pathname} profile={profile} profileError={profileError} onSignOut={signOut} onNavigate={() => { setMenuOpen(false); menuButton.current?.focus(); }} compact /></div> : null}
       </header>
-      <main className="mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10"><Outlet /></main>
+      <main className="app-column mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10"><Outlet /></main>
     </div>
     {!hydrated ? <WorkspaceBootstrapRecovery /> : null}
     </>
