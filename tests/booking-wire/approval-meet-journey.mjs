@@ -145,6 +145,8 @@ export async function approvalMeetJourney({ data, call, state, deliver, future, 
       await call("/__fixtures/approval-expiry", { id: closed.request.id }, 204);
     }
     await call(`/api/app/booking-approvals/${closed.request.id}/decision`, { decision: "approve" }, 409);
+    const replay = await data(`${base}/confirm`, closed.payload, 202);
+    assert.equal(replay.approval.url, closed.step.approval.url, "replaying a closed submission retains its original request");
     await deliver(); await deliver();
     snapshot = await state();
     noBookingEffects(snapshot, closed.request);
@@ -159,5 +161,5 @@ export async function approvalMeetJourney({ data, call, state, deliver, future, 
     assert.equal(notices.length, 1, `${decision} sends one decision notice`);
     assert.ok(!textBody(notices[0]).includes(joiningLink), "a closed request never receives the approved booking's link");
   }
-  checks.push("EVENT-008: pending requests have no Google event, conference, booking or reminders; only authenticated approval creates one managed event with one stable conference request and one ordinary confirmation; repeated decisions and deliveries repeat no effects; decline and expiry release the slot with one notice and no joining link");
+  checks.push("EVENT-008: pending requests have no Google event, conference, booking or reminders; only authenticated approval creates one managed event with one stable conference request and one ordinary confirmation; repeated decisions and deliveries repeat no effects; decline and expiry release the slot with one notice and no joining link, including after submission replay");
 }
