@@ -83,14 +83,14 @@ function RouteLoadFrame({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: state => state.location.pathname });
   const currentPath = currentNavigationPath(pathname);
   if (!/^\/app(?:\/|$)/.test(pathname) || match.routeId !== "/app" && match.routeId !== "__root__") return children;
-  return <div className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+  return <div className="min-h-screen bg-white text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
     <aside className="border-b border-line bg-sidebar px-5 py-6 lg:min-h-screen lg:border-r lg:border-b-0">
       <Link to="/app" className="mb-8 inline-flex text-[30px] font-extrabold leading-none tracking-[-.02em]"><span data-rer-name>Dial</span></Link>
       <nav aria-label="Operator navigation" className="flex flex-wrap gap-1 lg:grid">
         {navigation.map(([label, to]) => <Link key={to} to={to} activeOptions={{ exact: to !== currentPath }} className="flex min-h-11 items-center rounded-[14px] px-3.5 text-[15px] font-[550] text-soft hover:bg-row">{label}</Link>)}
       </nav>
     </aside>
-    <main className="mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10">{children}</main>
+    <main className="app-column mx-auto w-full max-w-[1400px] px-4 py-7 sm:px-7 sm:py-10 lg:px-10">{children}</main>
   </div>;
 }
 
