@@ -1,5 +1,6 @@
 import { createId, nowIso } from "../../shared/ids";
 import { foldEmail } from "../erasure";
+import { clientExistsSql } from "./participation";
 
 export type ClientProfile = { id: string; email: string; revision: number };
 export class ClientRecords {
@@ -19,7 +20,8 @@ export class ClientRecords {
     ]);
     return { email: profile.email, aliases, notes: notes.results, fields: fields.results };
   }
-  private async known(email: string) { return Boolean(await this.db.prepare("SELECT 1 FROM bookings WHERE invitee_email_folded IN(SELECT value FROM json_each(?)) LIMIT 1").bind(JSON.stringify(await this.addresses(email))).first()); }
+  private async known(email: string) { return Boolean((await this.db.prepare(`SELECT ${clientExistsSql} AS known`).bind(JSON.stringify(await this.addresses(email))).first<{known:number}>())?.known); }
+  private existenceGuard(addresses: string[]) { return this.db.prepare(`SELECT CASE WHEN ${clientExistsSql} THEN 1 ELSE abs(-9223372036854775808) END`).bind(JSON.stringify(addresses)); }
   private profileStatements(email: string, id: string, now: string) {
     return [this.db.prepare("INSERT INTO client_profiles(id,email,created_at,updated_at) VALUES(?,?,?,?) ON CONFLICT(email) DO NOTHING").bind(id,email,now,now),
       this.db.prepare("INSERT INTO client_aliases(email,client_id,created_at,updated_at) SELECT ?,id,?,? FROM client_profiles WHERE email=? ON CONFLICT(email) DO NOTHING").bind(email,now,now,email)];
@@ -29,7 +31,8 @@ export class ClientRecords {
     email = foldEmail(email);
     if (!await this.known(email)) return null;
     const profile = await this.profile(email), id = createId(), now = nowIso(), clientId = profile?.id ?? createId();
-    const statements = [this.guard(await this.addresses(email)), this.db.prepare("SELECT CASE WHEN EXISTS(SELECT 1 FROM client_aliases WHERE email=? UNION ALL SELECT 1 FROM bookings WHERE invitee_email_folded=?) THEN 1 ELSE abs(-9223372036854775808) END").bind(email,email), ...(!profile ? this.profileStatements(email,clientId,now) : [])];
+    const addresses = await this.addresses(email);
+    const statements = [this.guard(addresses), this.existenceGuard(addresses), ...(!profile ? this.profileStatements(email,clientId,now) : [])];
     const client = "(SELECT client_id FROM client_aliases WHERE email=?)";
     if ("body" in input) statements.push(this.db.prepare(`INSERT INTO client_notes(id,client_id,body,operator_id,created_at,updated_at) VALUES(?,${client},?,?,?,?)`).bind(id,email,input.body,input.operatorId,now,now));
     else statements.push(this.db.prepare(`INSERT INTO client_fields(id,client_id,label,value,created_at,updated_at) SELECT ?,${client},?,?,?,? WHERE (SELECT count(*) FROM client_fields WHERE client_id=${client})<20`).bind(id,email,input.label,input.value,now,now,email));
@@ -43,9 +46,11 @@ export class ClientRecords {
     if (source === target || from && to && from.id === to.id) return "identical" as const;
     if (!await this.known(source) || !await this.known(target)) return "missing" as const;
     const sourceId = from?.id ?? createId(), targetId = to?.id ?? createId(), now = nowIso();
-    const addresses = [...await this.addresses(source), ...await this.addresses(target)];
+    const sourceAddresses = await this.addresses(source), targetAddresses = await this.addresses(target);
+    const addresses = [...sourceAddresses, ...targetAddresses];
     await this.db.batch([
       this.guard(addresses),
+      this.existenceGuard(sourceAddresses), this.existenceGuard(targetAddresses),
       this.db.prepare("SELECT CASE WHEN coalesce((SELECT client_id FROM client_aliases WHERE email=?),'')=? AND coalesce((SELECT client_id FROM client_aliases WHERE email=?),'')=? THEN 1 ELSE abs(-9223372036854775808) END").bind(source,from?.id ?? "",target,to?.id ?? ""),
       ...(!from ? this.profileStatements(source,sourceId,now) : []), ...(!to ? this.profileStatements(target,targetId,now) : []),
       this.db.prepare("UPDATE client_notes SET client_id=?,updated_at=? WHERE client_id=?").bind(targetId,now,sourceId),
