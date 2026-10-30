@@ -836,9 +836,9 @@ Gap: Day, week and month share the list query, filters and paginated identity se
 
 REPORT-003 is missing: Exports and scheduled reports.
 
-Evidence: None.
+Evidence: `tests/report-booking-csv.test.mjs` — owner CSV exports every filtered booking safely without changing booking, delivery or accounting custody: native HTTP filters, 503 matches beyond display pagination, Unicode and CSV escaping, literal spreadsheet cells, capability and credential exclusion, anonymous and revoked-session refusal, unchanged product rows.
 
-Gap: Filtered reporting CSVs and scheduled member reports are absent; the owner archive is DATA-001, not this reporting flow.
+Gap: Main’s missing judgment is retained pending clause qualification. The owner-session booking CSV implementation and its native HTTP assertions are present; they do not establish the complete role-scoped reporting flow. Download UI; client, routing-submission and payment CSVs; weekly and monthly scheduled reports to named workspace members with once-per-period delivery; admin, team-manager, member and viewer export and scheduling scope under OPER-001, TEAM-001 and TEAM-002 remain. Delegated authority and policy approval remain unproved. The DATA-001 archive remains separate; retained PAY-004 and PAY-006 accounting and existing routing queue custody are unchanged.
 
 API-001 is partial: Public REST API.
 
