@@ -37,7 +37,7 @@ function CompactLocationFields({ event, update, ...saving }: Props) {
       </div>
       <div className="flex min-w-0 items-start justify-between gap-2">
         {editingLabel === location.id ? <label className="mt-2 grid min-w-0 flex-1 gap-2 text-sm font-[650]">Public label<Input id={`${id}-public-label`} required maxLength={180} value={location.label} onChange={entry => change(index, { label: entry.target.value })} onBlur={() => { saving.onFlush?.(); setEditingLabel(undefined); }} /></label> : <button type="button" className="min-h-11 sm:min-h-7 min-w-0 py-2 text-left text-[13px] leading-5 text-soft underline decoration-line underline-offset-4" onClick={() => setEditingLabel(location.id)}>Invitees see “{location.label}” until they book.</button>}
-        {locations.length > 1 ? <Tooltip label="Remove place"><Button type="button" variant="quiet" className="h-11 w-11 shrink-0 !px-0 text-xl" onClick={() => choose("locations", locations.filter((_, position) => position !== index))}><span aria-hidden="true">×</span></Button></Tooltip> : null}
+        {locations.length > 1 ? <Tooltip label="Remove place"><Button type="button" variant="secondary" className="h-11 w-11 shrink-0 !px-0 text-xl" onClick={() => choose("locations", locations.filter((_, position) => position !== index))}><span aria-hidden="true">×</span></Button></Tooltip> : null}
       </div>
     </div>)}</div>
     {locations.length < 8 ? <div><Button type="button" variant="quiet" className="sm:min-h-8" onClick={add}>Add another place</Button></div> : null}

@@ -9,9 +9,11 @@ export function SavedMark({ state }: { state: FieldState }) {
 
 /**
  * A failed save, in one line under its field: the value stays in the field, the server's reason shows when it gave one, and
- * Retry sends the newest value again. Its id goes in the field's aria-describedby while it shows.
+ * Retry sends the newest value again. Its id goes in the field's aria-describedby while it shows. A `problem` is a value the page
+ * will not send: one plain sentence in its place, with nothing to retry.
  */
-export function SaveFailed({ id, state, what, choice = false, onRetry }: { id: string; state: FieldState; what: string; choice?: boolean; onRetry(): void }) {
+export function SaveFailed({ id, state, what, choice = false, problem, onRetry }: { id: string; state: FieldState; what: string; choice?: boolean; problem?: string; onRetry(): void }) {
+  if (problem) return <p id={id} className="autosave-failed" role="alert" tabIndex={-1} data-autosave-attention>{problem}</p>;
   if (!state.failed) return null;
   return <p id={id} className="autosave-failed" role="alert">
     Couldn’t save {what}. {state.reason ?? (choice ? "Your choice is kept here." : "Your words are kept here.")}{" "}
