@@ -118,7 +118,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
     }
     submitting.current = true; order.current.invalidate();
     const currentSubmission = submissions.current.begin();
-    const input = attempt.current.begin({ ...(redemption ? { redemption } : {}), clickIds: linkContext.clickIds, embedded, ...(currentSelection.guestLimit ? {guests:guestEmails(guests)} : {}), nonce: currentSelection.nonce, startAt: currentSelection.selection.startAt, inviteeTimezone: currentSelection.selection.inviteeTimezone, name, email, answers, ...(chosenLocationId ? { locationId: chosenLocationId } : {}), ...(locationInput ? { locationInput } : {}), ...(link ? { link } : {}), ...(Object.keys(linkContext.attribution).length ? { attribution: linkContext.attribution } : {}), ...(currentSelection.payment?.consent ? { cardConsent: { accepted: consented, version: currentSelection.payment.consent.version } } : {}), ...(currentSelection.approval && currentSelection.payment?.mode === "payment" ? { shownPriceCents:currentSelection.payment.priceCents, shownPaymentCents: tax.quote?.dueNowTotalCents ?? currentSelection.payment.amountCents } : {}), ...(currentSelection.payment?.taxRequired && tax.address && tax.quote ? { billingAddress: tax.address, shownTaxCents: tax.quote.dueNowTaxCents } : {}) });
+    const input = attempt.current.begin({ ...(redemption ? { redemption } : {}), ...(redemption && creditPreview && currentSelection.payment ? { shownPriceCents: currentSelection.payment.priceCents, shownPaymentCents: creditPreview.remainderCents } : {}), clickIds: linkContext.clickIds, embedded, ...(currentSelection.guestLimit ? {guests:guestEmails(guests)} : {}), nonce: currentSelection.nonce, startAt: currentSelection.selection.startAt, inviteeTimezone: currentSelection.selection.inviteeTimezone, name, email, answers, ...(chosenLocationId ? { locationId: chosenLocationId } : {}), ...(locationInput ? { locationInput } : {}), ...(link ? { link } : {}), ...(Object.keys(linkContext.attribution).length ? { attribution: linkContext.attribution } : {}), ...(currentSelection.payment?.consent ? { cardConsent: { accepted: consented, version: currentSelection.payment.consent.version } } : {}), ...(currentSelection.approval && currentSelection.payment?.mode === "payment" ? { shownPriceCents:currentSelection.payment.priceCents, shownPaymentCents: tax.quote?.dueNowTotalCents ?? currentSelection.payment.amountCents } : {}), ...(currentSelection.payment?.taxRequired && tax.address && tax.quote ? { billingAddress: tax.address, shownTaxCents: tax.quote.dueNowTaxCents } : {}) });
     setPending(true); setSaving(true); setNotice("");
     try {
       const response = await publicApi.api.public.book[":handle"][":slug"].confirm.$post({
@@ -154,7 +154,7 @@ function BookingDetailsContent({ handle, slug, capability, embedded }: { handle:
           setConsented(false);
           await refreshSelection();
           if (currentSelection.payment?.taxRequired) tax.refresh();
-          setNotice("The payment terms changed. Review the current fees and agree again before continuing.");
+          setNotice(redemption ? "The price changed. Check your credit balance again before confirming." : "The payment terms changed. Review the current fees and agree again before continuing.");
         }
         return;
       }

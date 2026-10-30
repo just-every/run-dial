@@ -229,6 +229,7 @@ export class BookingsService {
       if(!this.payments || !quote || quote.saveCard || quote.taxRequired || paymentApproval.required)return {kind:"entitlement_refused",reason:"credit_payment_terms_unsupported",balance:0};
       const credit=await this.payments.entitlements.resolve(event.id,invitee.email,input.redemption.code,quote.snapshot.priceCents);
       if(credit.kind==='refused')return {kind:"entitlement_refused",reason:credit.reason,balance:credit.balance,expiresAt:credit.expiresAt};
+      if((input.shownPriceCents!==undefined && input.shownPriceCents!==quote.snapshot.priceCents) || (input.shownPaymentCents!==undefined && input.shownPaymentCents!==credit.remainderCents))return {kind:'payment_terms_changed'};
       entitlement={id:credit.id,units:credit.units,discountCents:credit.discountCents,at:credit.at,freeWindowHours:quote.snapshot.freeWindowHours};
       // A coupon pays part of the booking. Only the remainder reaches Checkout;
       // the credit and slot are reserved together before making that request.

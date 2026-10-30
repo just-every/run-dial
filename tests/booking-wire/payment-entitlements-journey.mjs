@@ -136,6 +136,12 @@ async function couponRedemptions({data,call,webhook,stripeEvent,root,event,defin
  assert.equal((await provider()).wire_stripe_sessions.length,beforeCouponPurchase,'a public buyer cannot mint additional issued coupon uses');
  assert.equal(await balance(coupon),1);
  assert.ok(!(await data(`${root}/products`)).some(row=>row.kind==='coupon'),'issued coupon codes are absent from the public sale catalog');
+ const stale=await selection((await slots())[0],{code:coupon.code}),beforeChange=await rows(),beforeSessions=(await provider()).wire_stripe_sessions.length;
+ await data(`/api/app/event-types/${event.id}/price`,{amountCents:5100,durationPrices:[]},200,'PUT');
+ assert.equal((await data(`${root}/confirm`,{...stale,shownPriceCents:5000,shownPaymentCents:3766},409)).error.code,'payment_terms_changed','a changed price requires a fresh credit preview before charging');
+ const afterChange=await rows();for(const table of ['payment_entitlements','payment_redemptions','payment_holds'])assert.deepEqual(afterChange[table],beforeChange[table],'a stale price neither reserves credit nor changes money');
+ assert.equal((await provider()).wire_stripe_sessions.length,beforeSessions,'a stale preview opens no Stripe charge');
+ await data(`/api/app/event-types/${event.id}/price`,{amountCents:5000,durationPrices:[]},200,'PUT');
  const held=await begin(coupon),session=await assertCharge(held.step,3766);
  assert.equal(await balance(coupon),0,'a pending payment already reserves the sole use');
  const previewBody=await selection((await slots())[0],{});

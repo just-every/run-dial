@@ -4000,7 +4000,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "5ab64a9d341b496db5ac89e6980a06afe7650f86ac2c9fb6ec63de2c1a70e684",
+      "sha256": "d88ff7163c4a9c174a3d30864312f0ab1f39bb9870886ae7c01f783086a9d1ce",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
@@ -5368,7 +5368,7 @@
       "executable": false
     },
     "src/core/features/bookings/service.ts": {
-      "sha256": "5616e8634b7e00e8c4da8a5bbc3493cb264be5419707fa6fa3f51ad9e3e8a6fb",
+      "sha256": "fa1e4f62f209e17844a66f58fadd2000911af7ba4857a6156e229ede7131cb9c",
       "executable": false
     },
     "src/core/features/bookings/types.ts": {
@@ -6740,7 +6740,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/booking-details-page.tsx": {
-      "sha256": "3b5b879c9d507ece5e98bde75c1351909f0707d14a34514cb5f6a4e5b18ea4a3",
+      "sha256": "b3c63b4b48b493c0cef15cc44506ecfb53d3e2176a3ad5b15e7f6c74a8bf6c5a",
       "executable": false
     },
     "src/core/features/public-booking/ui/booking-location.tsx": {
@@ -8200,7 +8200,7 @@
       "executable": false
     },
     "tests/archive/payment-erasure-upgrade.mjs": {
-      "sha256": "7c2ede96922c62024a56aed6a4371a5ea300bbd86995d8fde8c8cf7f179d6349",
+      "sha256": "69ec544609dbb3ab0f63dc2e4a45edb5359d336611227b920cd05420362a83a5",
       "executable": false
     },
     "tests/archive/poll-upgrade.mjs": {
@@ -8612,11 +8612,11 @@
       "executable": false
     },
     "tests/booking-wire/payment-entitlements-journey.mjs": {
-      "sha256": "7205a77d470d1a14010e6fac4118854bd282a9bb73288c1db36dc8775b8f4ef0",
+      "sha256": "6d12f8c53a9679b40d75780ce410c26d47032db00efa5daf56f6d1cabdd0906f",
       "executable": false
     },
     "tests/booking-wire/payment-entitlements-screens.mjs": {
-      "sha256": "a0d815205af303bb4ffd74a9fbb1c4a27d7279102a0ab5bb6d1bcff269d3eb1b",
+      "sha256": "0c3c095ad407d17c3b0299388ead8ebef097e0a94b3b2ebc3b8f5396ea67d25f",
       "executable": false
     },
     "tests/booking-wire/payment-erasure-probes.mjs": {

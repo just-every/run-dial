@@ -12,6 +12,8 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Coupon subtype and discount columns affect only excluded live entitlement tables.
+  'core/0093_payment_coupons.sql': (_table, row) => row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.

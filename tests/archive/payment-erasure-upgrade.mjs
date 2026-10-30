@@ -30,7 +30,11 @@ async function preservedUpgrade(source, file, check) {
   const upgrade = migrations.find(row => row.file === file);
   assert.ok(upgrade, file);
   try {
-    for (const migration of migrations.filter(row => row !== upgrade)) prior.exec(migration.sql);
+    // Replay later changes to a newly introduced table only after its creation.
+    const tables=[...upgrade.sql.matchAll(/\bCREATE TABLE\s+([a-z_]+)/gi)].map(match=>match[1]);
+    const reference=tables.length?new RegExp(`\\b(?:ON|REFERENCES|ALTER\\s+TABLE)\\s+(?:${tables.join('|')})\\b`,'i'):undefined;
+    const dependent=migrations.filter((row,index)=>index>migrations.indexOf(upgrade)&&reference?.test(row.sql));
+    for (const migration of migrations.filter(row => row !== upgrade && !dependent.includes(row))) prior.exec(migration.sql);
     prior.exec("PRAGMA foreign_keys=OFF");
     const triggers = prior.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger'").all();
     for (const trigger of triggers) prior.exec(`DROP TRIGGER "${trigger.name}"`);
@@ -46,6 +50,7 @@ async function preservedUpgrade(source, file, check) {
     }
     for (const trigger of triggers) prior.exec(trigger.sql);
     prior.exec(upgrade.sql);
+    for(const migration of dependent)prior.exec(migration.sql);
     for (const { name, fields, rows } of before) assert.deepEqual(prior.prepare(`SELECT ${fields} FROM "${name}"`).all(), rows, `${name}: ${file} preserves previous facts`);
     check(prior);
   } finally { prior.close(); }

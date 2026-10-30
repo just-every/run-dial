@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 import { completeEmptyWorkspace } from "../booking-axe/first-run-fixture.mjs";
@@ -14,10 +15,10 @@ const headers = { Origin: origin };
 const config = await readFile(new URL("../booking-axe/worker.wrangler.toml", import.meta.url), "utf8");
 const webhookSecret = /^STRIPE_WEBHOOK_SECRET\s*=\s*"([^"]+)"/m.exec(config)?.[1];
 assert.ok(webhookSecret, "the synthetic provider signing key is configured by the review rig");
-const browser = await chromium.launch({ headless: true, ...(process.platform === "linux" ? { executablePath: "/usr/bin/chromium" } : {}), args: ["--no-sandbox", "--use-mock-keychain", "--password-store=basic"] });
+const browser = await chromium.launch({ headless: true, ...(process.platform === "linux" && existsSync("/usr/bin/chromium") ? { executablePath: "/usr/bin/chromium" } : {}), args: ["--no-sandbox", "--use-mock-keychain", "--password-store=basic"] });
 const owner = await browser.newContext({ viewport: { width: 1440, height: 1024 } });
 const payer = await browser.newContext({ viewport: { width: 1440, height: 1024 }, timezoneId: "UTC" });
-const json = async (response, expected = 200) => { assert.equal(response.status(), expected, await response.text()); return response.json(); };
+const json = async (response, expected = 200) => { const body = await response.text(); assert.equal(response.status(), expected, body); return JSON.parse(body); };
 const post = async (path, data, expected = 200) => json(await owner.request.post(origin + path, { headers, data }), expected);
 const get = async path => json(await owner.request.get(origin + path));
 const email = ["synthetic-dial-404-screens", "example.test"].join("@");
@@ -41,9 +42,9 @@ try {
   await hostPage.goto(origin + "/app/settings");
   await hostPage.locator('[data-operator-ready="true"]').waitFor();
   const card = hostPage.locator("#appointment-credits"), form = card.getByRole("form", { name: "Appointment purchase option" });
-  await form.getByLabel("Event type", { exact: true }).selectOption(event.id);
+  await form.getByRole("combobox", { name: "Event type", exact: true }).selectOption(event.id);
   const create = async (kind, name, amount, sessions) => {
-    await form.getByLabel("Credit type", { exact: true }).selectOption(kind);
+    await form.getByRole("combobox", { name: "Credit type", exact: true }).selectOption(kind);
     await form.getByLabel("Name", { exact: true }).fill(name);
     if (kind !== "gift") await form.getByLabel(kind === "coupon" ? "Number of uses" : kind === "membership" ? "Sessions each month" : "Sessions", { exact: true }).fill(String(sessions));
     await form.getByLabel(kind === "coupon" ? "Discount per use (USD)" : kind === "gift" ? "Gift value and price (USD)" : kind === "membership" ? "Monthly price (USD)" : "Price (USD)", { exact: true }).fill(amount);
@@ -66,6 +67,14 @@ try {
     return `/book/dial-host/${event.slug}/details?${new URLSearchParams({ nonce: selection.nonce, startAt: slot, inviteeTimezone: "UTC" })}`;
   };
   const page = await payer.newPage();
+  const confirmations = [];
+  // Observe the real public response before its immediate receipt navigation discards the browser's body.
+  await page.route("**/api/public/book/**/confirm", async route => {
+    const response = await route.fetch();
+    const body = await response.body();
+    confirmations.push({ status: response.status(), value: JSON.parse(body.toString()) });
+    await route.fulfill({ response, body });
+  });
   const fill = async path => {
     await page.goto(origin + path);
     await page.getByLabel("Name", { exact: true }).fill("Synthetic Credit Guest");
@@ -88,9 +97,13 @@ try {
     return json(await preview);
   };
   const confirm = async (label, status = 201) => {
-    const response = page.waitForResponse(response => new URL(response.url()).pathname.endsWith("/confirm") && response.request().method() === "POST");
+    const completed = page.waitForResponse(response => new URL(response.url()).pathname.endsWith("/confirm") && response.request().method() === "POST");
     await page.getByRole("button", { name: label, exact: true }).click();
-    return json(await response, status);
+    await completed;
+    const observed = confirmations.shift();
+    assert.ok(observed, "confirmation crosses the real public HTTP door");
+    assert.equal(observed.status, status, JSON.stringify(observed.value));
+    return observed.value;
   };
   await fill(await details());
   const purchase = await buy("Three coaching sessions");
