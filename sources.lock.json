@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "2059ff8f4de6c58bf026e86d00989ab074ee45d033458d6a27f3abe0c67b2add",
+      "sha256": "43f835800792edff5753be68c3023ff5df6ff2278acc12f94f506033a16fa99c",
       "executable": false
     },
     "DEMO.md": {
@@ -5347,12 +5347,16 @@
       "sha256": "ca0e69c0cad0c40e594f39ae7cbc451ec25dc083336ad3d9a465e5c3d88e70ba",
       "executable": false
     },
+    "src/core/features/bookings/payment-state-filter.ts": {
+      "sha256": "d2932daf7ef6e05a37d534c4e1b612db65644ab13e5dd9f1dfa91a3110a6ed99",
+      "executable": false
+    },
     "src/core/features/bookings/reminder-commands.ts": {
       "sha256": "488696571e7dccaa6f21e203b7b5e3cc92a7196c7715dbd9ec108285f6910038",
       "executable": false
     },
     "src/core/features/bookings/repository.ts": {
-      "sha256": "5c8b91b8ab7de62ededd361bf0f1aab6e10006afeb6a7dcf3362fbd54af14f8a",
+      "sha256": "33447e307489259913424cb68652e8d57404e6bcbf7c6ab89551e20036ebfc34",
       "executable": false
     },
     "src/core/features/bookings/reschedule-request-mail.ts": {
@@ -5364,7 +5368,7 @@
       "executable": false
     },
     "src/core/features/bookings/routes.ts": {
-      "sha256": "2b8fac22ace6a8945315128ae2c0cfb96494fc94685107eba3aec47049c2c81a",
+      "sha256": "d1e87a2fdb6f0fd87c3aee6a93ad53ceb844917873904f19759c2d0049547f14",
       "executable": false
     },
     "src/core/features/bookings/search/case-fold.d.mts": {
@@ -8764,7 +8768,7 @@
       "executable": false
     },
     "tests/bookings-filters.test.mjs": {
-      "sha256": "31abd34f7990bd2b7585aa444f776e8394a4ca78da8cc0f50a2f18163668af65",
+      "sha256": "9b3d637859a066e61eab11553636917b9484aa5ec90a6e90b425185cc6a49465",
       "executable": false
     },
     "tests/bookings-search-upgrade.test.mjs": {
