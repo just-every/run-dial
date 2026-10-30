@@ -62,6 +62,8 @@ export async function clientProjectionRestored(source, target, { guest, solo }) 
     const before = await read(source, path), after = await read(target, path);
     assert.equal(after.totalCount, 1, 'a merged primary and guest alias still counts one booking');
     assert.deepEqual(after.bookings.map(row => row.id), ['bookings-1']);
+    const nextPage = await read(target, path + '&limit=1&offset=1');
+    assert.equal(nextPage.totalCount, 1); assert.deepEqual(nextPage.bookings, []);
     for (const field of ['email', 'aliases', 'notes', 'fields']) assert.deepEqual(after[field], before[field], `restored client ${field}`);
     assert.equal(after.notes.length, 1); assert.equal(after.fields.length, 1);
   }

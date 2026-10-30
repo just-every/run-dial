@@ -81,6 +81,12 @@ contract('CLIENT-001', 'guest clients keep distinct booking history, annotations
     const after = await rt.data('/api/app/clients');
     assert.equal(after.totalCount, 3);
     assert.deepEqual(after.clients.find(row => row.email === guest), { name: 'Primary person 0', email: guest, bookingCount: 3 });
+    const mergedPages = [];
+    for (let offset = 0; offset < 4; offset++) {
+      const page = await rt.data(historyPath(alias) + `&limit=1&offset=${offset}`);
+      assert.equal(page.totalCount, 3); mergedPages.push(...page.bookings.map(row => row.id));
+    }
+    assert.deepEqual(mergedPages, ids, 'merged primary and guest participation cannot duplicate or displace a later page');
     assert.deepEqual((await rt.db.prepare('SELECT * FROM bookings ORDER BY id').all()).results, bookingsBefore);
     const actor = (await rt.data('/api/app/session')).operator.id;
     assert.ok((await rt.db.prepare("SELECT actor_id FROM anonymized_audit WHERE entity_kind='client' AND action='merged'").all()).results.every(row => row.actor_id === actor));
@@ -89,7 +95,17 @@ contract('CLIENT-001', 'guest clients keep distinct booking history, annotations
     await rt.data('/api/app/clients/merge', { source: alias, target: guest }, 409);
     await rt.data('/api/app/clients/merge', { source: guest, target: address(999) }, 404);
     await rt.data('/api/app/clients/notes', { email: address(999), body: 'Unknown client' }, 404);
+    await rt.data('/api/app/clients/fields', { email: address(999), label: 'Unknown reference', value: 'synthetic-dial-217' }, 409);
     assert.deepEqual(await snapshot(), beforeRefused);
+    for (const [path, body] of [
+      ['/api/app/clients/notes', { email: guest, body: 'Anonymous preparation' }],
+      ['/api/app/clients/fields', { email: guest, label: 'Anonymous reference', value: 'synthetic-dial-218' }],
+      ['/api/app/clients/merge', { source: primaries[1], target: guest }],
+    ]) {
+      const response = await rt.api(path, { method: 'POST', headers: { cookie: '', 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      assert.equal(response.status, 401); await response.arrayBuffer();
+      assert.deepEqual(await snapshot(), beforeRefused, 'anonymous mutations cannot change guest annotations or merge identities');
+    }
     await rt.db.prepare('INSERT INTO person_erasure_locks(email,requested_at) VALUES(?,?)').bind(alias, new Date().toISOString()).run();
     for (const [path, body] of [
       ['/api/app/clients/notes', { email: guest, body: 'Refused pending erasure' }],
