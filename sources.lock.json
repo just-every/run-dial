@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9f14dace9bb79a23b4dadcd7ee09ce0fdec66a9ec972d3186d53380659d6eca6",
+      "sha256": "88aa85b6192d484f858654b729126be03f1c4d1265950cefad170aa0faa06b94",
       "executable": false
     },
     "DEMO.md": {
@@ -1672,7 +1672,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "7565b8e9ea7c5973ba0e76075dc5153444399ea919d429fd67272a014dbea404",
+      "sha256": "a2080b0ac4c7662b865e96ad9d78dd8fddea28d1093f0a9b157edf65d88a0999",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -8676,7 +8676,7 @@
       "executable": false
     },
     "tests/booking-wire/poll-reminder-journey.mjs": {
-      "sha256": "ff03a44d4437679a0c171d4d10af14cc0e07dcf68d27de78c4ffc0929daecd42",
+      "sha256": "85115b165c4e4e56e549d96c66c834c3f3230e7b0508120770fd862a27796c5c",
       "executable": false
     },
     "tests/booking-wire/reconciliation-probes.mjs": {

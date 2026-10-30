@@ -10,16 +10,22 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
  const vote=async (id,link)=>{const host=await data(`/api/app/polls/${id}`);return data(`/api/public/polls/${id}/votes`,{token:link.token,votes:host.candidates.map(c=>({candidateId:c.id,choice:'yes'}))});};
  const erase=async email=>{const preview=await data('/api/app/privacy/preview',{email});return data('/api/app/privacy/erase',{email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});};
  if (phase==='after-restart') {
-  const {id,second,links}=persisted;
+  const {id,second,third,links}=persisted;
   assert.equal(sent(await state(),id).length,2,"the second offset has not fired before restart");
   await Promise.all([fixture('sweep',second),fixture('sweep',second)]);
   await Promise.all([fixture('deliver',second),fixture('deliver',second)]);
   await fixture('sweep',second);await fixture('deliver',second);
+  const secondSnapshot=await state();
+  assert.equal(reminders(secondSnapshot,id).length,4,'the second configured offset is durable');
+  assert.equal(sent(secondSnapshot,id).length,4,'the second offset sends once per unanswered participant');
+  await Promise.all([fixture('sweep',third),fixture('sweep',third)]);
+  await Promise.all([fixture('deliver',third),fixture('deliver',third)]);
+  await fixture('sweep',third);await fixture('deliver',third);
   const snapshot=await state(),queued=reminders(snapshot,id),mail=sent(snapshot,id);
-  assert.equal(queued.length,4,'the durable configuration yields two offsets for each unanswered participant across restart');
-  assert.equal(mail.length,4,'concurrent delivery and replay send each configured reminder once');
+  assert.equal(queued.length,6,'the durable configuration yields all three configured offsets for each unanswered participant across restart');
+  assert.equal(mail.length,6,'concurrent delivery and replay send each configured reminder once');
   for(const link of links.slice(0,2)) {
-   const own=mail.filter(m=>recipient(m).includes(link.email));assert.equal(own.length,2);
+   const own=mail.filter(m=>recipient(m).includes(link.email));assert.equal(own.length,3);
    assert.ok(own.every(m=>textBody(m).includes(`token=${link.token}`)&&htmlBody(m).includes(`token=${link.token}`)));
    const view=await data(`/api/public/polls/${id}?token=${link.token}`);
    assert.equal(view.name,link.name);assert.equal(Object.hasOwn(view,'participants'),false);assert.deepEqual(view.votes,[]);
@@ -43,6 +49,7 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
  const before=new Date(Date.parse(poll.host.closesAt)-121*60000).toISOString();
  const first=new Date(Date.parse(poll.host.closesAt)-120*60000).toISOString();
  const second=new Date(Date.parse(poll.host.closesAt)-60*60000).toISOString();
+ const third=new Date(Date.parse(poll.host.closesAt)-30*60000).toISOString();
  const snapshot=await state();
  const anonymous=await fetch(process.env.DIAL_REVIEW_ORIGIN+`/api/app/polls/${id}/reminders`,{method:'POST',headers:{'content-type':'application/json',origin:process.env.DIAL_REVIEW_ORIGIN},body:JSON.stringify({offsetsMinutes:[120,60]})});
  assert.equal(anonymous.status,401);await anonymous.arrayBuffer();
@@ -52,8 +59,8 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
  const silent=await create(1240);
  await fixture('sweep',second);await fixture('deliver',second);
  assert.equal(reminders(await state(),silent.id).length,0,'an unconfigured poll never gains implicit reminders');
- await data(`/api/app/polls/${id}/reminders`,{offsetsMinutes:[60,120]});
- assert.deepEqual((await data(`/api/app/polls/${id}`)).reminderOffsetsMinutes,[120,60]);
+ await data(`/api/app/polls/${id}/reminders`,{offsetsMinutes:[60,30,120]});
+ assert.deepEqual((await data(`/api/app/polls/${id}`)).reminderOffsetsMinutes,[120,60,30]);
  await fixture('legacy-invitation',before,poll.links[0].row.id);
  await deliver();
  await vote(id,poll.links[2]);await erase(poll.links[3].email);
@@ -122,5 +129,5 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
   if(action==='erase')assert.equal(after.delivery_outbox.some(r=>r.payload_json.includes(target.links[0].email)||r.payload_json.includes(target.links[0].token)),false,'erasure removes the frozen personal reminder payload');
  }
  checks.push('POLL-001 native reminders default off; owner-only bounded future configuration; no early mail; voting, closure, expiry, erasure, disabling and restored closure stop queued and future reminders.');
- return {id,second,links:poll.links};
+ return {id,second,third,links:poll.links};
 }
