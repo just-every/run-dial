@@ -8647,10 +8647,6 @@
       "sha256": "0fbd79a2ec595deabf3e0cacd18e21d3e39c980e6227b5b44d22d85c8386d01f",
       "executable": false
     },
-    "tests/booking-wire/payment-runtime.mjs": {
-      "sha256": "0018ce03871b82e23a10b26b7f30673102ce675e80f8545fc31fdc7c2ce93d0a",
-      "executable": false
-    },
     "tests/booking-wire/payment-tax-journey.mjs": {
       "sha256": "55c96084eb39e37603071d1c8e54de6b7b3052a1ba212f5499a870027d4bcb12",
       "executable": false
@@ -9748,7 +9744,7 @@
       "executable": false
     },
     "tests/payments-wire.test.mjs": {
-      "sha256": "ea87db8a87cd37686fb1b0d571a49e14a81a7d1d228b85b217046bf404b51c01",
+      "sha256": "613ceb58d957cb2a2c5b7fc32838fa939e2160d8352c407e67325f18b30befe4",
       "executable": false
     },
     "tests/person-erasure.test.mjs": {

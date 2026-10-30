@@ -1,4 +1,3 @@
-import { startPaymentRuntime } from "./booking-wire/payment-runtime.mjs";
 import { runAxe } from "./booking-axe/run-axe.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -36,19 +35,6 @@ async function wireJourney(t, journey, port, log) {
     // Worker diagnostic that explains a reset, binding failure or lost stream.
     failed = true;
     output += "\nPAYMENT_WIRE_JOURNEY_FAILED\n";
-    if (server?.exitCode === null) { const stopped = new Promise(done => server.once("exit", done)); process.kill(-server.pid, "SIGTERM"); await stopped; }
-    console.error("PAYMENT_WIRE_WRANGLER_FAILURE_START\n" + output.replace(/\/manage\/(?:invite\/|balance\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]").replace(/[?#][^\s"'<>]*/gu, "[redacted]") + "\nPAYMENT_WIRE_WRANGLER_FAILURE_END");
-    failed = false;
-    const comparisonState = await mkdtemp(resolve(tmpdir(), "dial-payment-comparison-"));
-    let comparison;
-    try {
-      console.log("PAYMENT_WIRE_NATIVE_COMPARISON_START (original failure retained)");
-      comparison = await startPaymentRuntime({ state: comparisonState, port, origin, capture: message => { output += message + "\n"; } });
-      assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
-      console.log((await run(["node", journey])).trim());
-      console.log("PAYMENT_WIRE_NATIVE_COMPARISON_PASS (original failure retained)");
-    } catch (comparisonError) { console.error("PAYMENT_WIRE_NATIVE_COMPARISON_ERROR", comparisonError); }
-    finally { await comparison?.dispose(); await rm(comparisonState, { recursive: true, force: true }); }
     throw error;
   }
 }
