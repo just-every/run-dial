@@ -3,7 +3,7 @@ import { ApprovalStatus } from "./approval-status";
 import { ManageGuests } from "./manage-guests";
 import { ManageChangeTerms } from "./booking-change-terms";
 import { ContactHost } from "./contact-host";
-import { CreditLedger } from "../../payments/ui/entitlement-view";
+import { CreditLedger } from "../../../shared/appointment-credit";
 import { PaymentSummary } from "./pay-step";
 import { LockedBookingTime, LockedTimezoneNotice, useBrowserTimezone } from "./locked-timezone";
 import { useEffect, useRef, useState } from "react";

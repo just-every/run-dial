@@ -1,4 +1,4 @@
-import { formatUsd } from "../../../shared/event-price";
+import { formatUsd } from "./event-price";
 
 export type AppointmentCredit = {
   id: string;

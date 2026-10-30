@@ -1672,7 +1672,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "ef6d480b2ac7e464865fe6da35d9215acc28a34d0e4c9fdc9a3f3cc15a2008e1",
+      "sha256": "d8e65d65c3c9138eb80ed61e172823a62c1ee96a024f01162823ca09e8743b91",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -5264,7 +5264,7 @@
       "executable": false
     },
     "src/core/features/bookings/client.ts": {
-      "sha256": "5a1a9f9fdaa8d12c8ab0fd29f41f63a503024f96d2a8ab035faeb2240252128c",
+      "sha256": "be714d8090162e2d4c1fb4b9d6d4eed883e5f856c0c5911a9093a210d1591e68",
       "executable": false
     },
     "src/core/features/bookings/contact-host.ts": {
@@ -6560,11 +6560,7 @@
       "executable": false
     },
     "src/core/features/payments/ui/entitlement-settings.tsx": {
-      "sha256": "5ae64c5d9ce47dd6b5c28a8e6ee695973315fe0dfb551bfd72c756c02b6d7bfc",
-      "executable": false
-    },
-    "src/core/features/payments/ui/entitlement-view.tsx": {
-      "sha256": "39ac617610af9f9172373ac7d7565a40b012d2f76ece26ab3778a06a18bd99a3",
+      "sha256": "c66af95d21bfab34c1ae49d04e5c4087198da351e37e1da5c86f6154cf8ec0ff",
       "executable": false
     },
     "src/core/features/payments/ui/event-payment-settings.tsx": {
@@ -6776,7 +6772,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/credit-entry.tsx": {
-      "sha256": "6c0876659ac155aca74eeda56a0457f157290fc3dbfdab257bff698ec01d89e6",
+      "sha256": "1e8e68e0fc5aae050da2e9c7838fe8a1e06443d1959596329ead19ba676ce09b",
       "executable": false
     },
     "src/core/features/public-booking/ui/credit-purchases.tsx": {
@@ -6852,7 +6848,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/manage-page.tsx": {
-      "sha256": "47b9d7c7bb65d5a0571313ea0c67c7f418fd854ed529d21031bcda10f8d494f1",
+      "sha256": "6a20cc95c4b8734dfb066be070b496831a61379c2b40d03184eaa6b8f602342e",
       "executable": false
     },
     "src/core/features/public-booking/ui/manage-reschedule-request.tsx": {
@@ -6936,7 +6932,7 @@
       "executable": false
     },
     "src/core/features/public-booking/ui/types.ts": {
-      "sha256": "a321f976ca5a750e862d73276366ab7942ca08280f010cbcc583f3df2decc7b4",
+      "sha256": "b3bea63bb72fc7c1f2403016afadb5c3ab8836ce1cfb304e632849695a418561",
       "executable": false
     },
     "src/core/features/public-site/chrome/context.ts": {
@@ -7621,6 +7617,10 @@
     },
     "src/core/platform/theme-files.ts": {
       "sha256": "fe665420849511f2bc8e0651a5f373888e9aa52ff32d82747e794da87d19ea23",
+      "executable": false
+    },
+    "src/core/shared/appointment-credit.tsx": {
+      "sha256": "6c4abe98c62a318f633ef1f40e6ce0508167e86b7fe27f2620decbc07bd91987",
       "executable": false
     },
     "src/core/shared/archive-exclusions.d.mts": {

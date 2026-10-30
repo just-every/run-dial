@@ -3,9 +3,9 @@ import { errorMessage } from "../../../api/client";
 import { useHydrated } from "../../../app/use-hydrated";
 import { Badge, Button, Card, Input, Select, noticeClassName } from "../../../app/ui/primitives";
 import { SectionHeading } from "../../../app/ui/page-header";
-import { useEventTypes } from "../../bookings/ui/use-event-types";
+import { useEventTypes } from "../../bookings/client";
 import { formatUsd } from "../../../shared/event-price";
-import { CreditLedger, creditKinds, type AppointmentCredit } from "./entitlement-view";
+import { CreditLedger, creditKinds, type AppointmentCredit } from "../../../shared/appointment-credit";
 
 type Product = { id: string; kind: AppointmentCredit["kind"]; name: string; sessions: number; amountCents: number; validityDays: number };
 export function EntitlementSettingsCard() {

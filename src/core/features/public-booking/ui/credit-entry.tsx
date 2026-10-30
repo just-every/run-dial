@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { publicApi, errorMessage } from "../../../api/client";
 import { formatUsd } from "../../../shared/event-price";
-import { creditBalance } from "../../payments/ui/entitlement-view";
+import { creditBalance } from "../../../shared/appointment-credit";
 
 export type CreditPreview = { kind: "available"; balance: number; unit: string; expiresAt: string; creditKind: "package" | "membership" | "gift" | "coupon"; discountCents: number; remainderCents: number };
 export type CreditRedemption = { code?: string };
