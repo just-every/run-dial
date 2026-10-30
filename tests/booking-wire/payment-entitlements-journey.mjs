@@ -78,6 +78,7 @@ export async function paymentEntitlements({data,call,webhook,stripeEvent,future}
  assert.equal((await data('/api/app/payments/entitlements')).find(row=>row.id===memberRow.id).balance,3,'paid recovery resumes without a second reset');
  await webhook(stripeEvent('invoice.paid',{...invoice,id:invoice.id+'-duplicate-period'}));
  assert.equal((await data('/api/app/payments/entitlements')).find(row=>row.id===memberRow.id).balance,3);
+ const couponProof=await paymentCoupons({data,call,webhook,stripeEvent,rows,event,root,email,name,slots,selection,manage});
  await data('/__fixtures/payments/control',{name:'entitlement-clock',value:0});
  const preview=await data('/api/app/privacy/preview',{email});
  await data('/api/app/privacy/erase',{email,confirmation:preview.confirmation,expiresAt:preview.expiresAt});
@@ -86,5 +87,138 @@ export async function paymentEntitlements({data,call,webhook,stripeEvent,future}
  assert.equal(snapshot.payment_redemptions.filter(row=>row.entitlement_id===stored.id).length,0);
  const finalProcessor=await data('/__fixtures/payments/processor-state');
  assert.equal(JSON.parse(finalProcessor.wire_stripe_objects.find(row=>row.id===memberPaid.subscription).payload).status,'canceled','erasure stops recurring renewal');
- console.log('PAY-004 package purchases, atomic redemptions, cancellation credit, expiry and signed membership renewal passed.');
+ await couponProof.assertErased();
+ console.log('PAY-004 packages, coupons, atomic redemptions, cancellation credit, expiry and signed membership renewal passed.');
+ return couponProof.audit;
+}
+
+
+/** Coupon money is checked against the actual Stripe request, not just Dial's presentation. */
+async function paymentCoupons({data,call,webhook,stripeEvent,rows,event,root,email,slots,selection,manage}) {
+ const endpoint=`/api/app/event-types/${event.id}/coupons`;
+ const input={name:'Coaching discount',email,amountCents:1501,sessions:2,validityDays:180,idempotencyKey:randomUUID()};
+ const beforeAnonymous=(await rows()).payment_entitlements.length;
+ await call(endpoint,input,401,'POST',{anonymous:'1'});
+ assert.equal((await rows()).payment_entitlements.length,beforeAnonymous,'an unauthenticated coupon issue creates no credit');
+ const coupon=await data(endpoint,input,201);
+ const repeated=await data(endpoint,input,201);
+ assert.deepEqual([repeated.code,repeated.entitlement.id],[coupon.code,coupon.entitlement.id],'retrying issuance returns the same coupon');
+ const issued=[];
+ issued.push(coupon);
+ const issue=async(amountCents,sessions=1)=>{
+  const value=await data(endpoint,{...input,amountCents,sessions,idempotencyKey:randomUUID()},201);
+  issued.push(value);return value;
+ };
+ const hostCredit=async id=>(await data('/api/app/payments/entitlements')).find(row=>row.id===id);
+ const processor=()=>data('/__fixtures/payments/processor-state');
+ const checkoutCalls=value=>value.wire_calls.filter(row=>row.method==='POST'&&new URL(row.url).pathname==='/v1/checkout/sessions');
+ const show=await data(`${root}/credit`,{email,code:coupon.code,durationMinutes:30});
+ assert.deepEqual([show.entitlement.kind,show.entitlement.balance,show.entitlement.unit,show.discountCents,show.dueNowCents],['coupon',2,'uses',1501,3499],'preview shows a whole-cent discount and remaining uses before booking');
+ assert.equal(show.entitlement.expiresAt,coupon.entitlement.expiresAt);
+ assert.equal('email' in show.entitlement,false,'public credit preview does not expose the purchaser');
+ assert.equal('history' in show.entitlement,false,'public credit preview does not expose unrelated bookings');
+ const payload=await selection((await slots())[0],{code:coupon.code});
+ const step=await data(`${root}/confirm`,payload,202);
+ assert.equal(step.payment.amountCents,3499);
+ assert.equal((await data(`${root}/confirm`,payload,202)).payment.checkoutUrl,step.payment.checkoutUrl,'confirm replay reuses its original Checkout');
+ const findCheckout=async step=>{
+  const value=await processor();
+  const session=value.wire_stripe_sessions.map(row=>JSON.parse(row.payload)).find(row=>row.url===step.payment.checkoutUrl);
+  assert.ok(session,'the payment step has a real edge Checkout');
+  const requests=checkoutCalls(value).filter(row=>JSON.parse(row.body)['metadata[dial_hold_id]']===session.metadata.dial_hold_id);
+  assert.equal(requests.length,1,'the remainder is requested once');
+  const form=JSON.parse(requests[0].body);
+  assert.equal(form['line_items[0][price_data][unit_amount]'],String(step.payment.amountCents));
+  assert.equal(form['line_items[0][price_data][currency]'],'usd');
+  assert.equal(session.amount_total,step.payment.amountCents);
+  return session;
+ };
+ const paidEvents=[];
+ const settle=async step=>{
+  const session=await findCheckout(step);
+  const paid=await data('/__fixtures/payments/pay',{sessionId:session.id});
+  const event=stripeEvent('checkout.session.completed',paid);
+  paidEvents.push(event);await Promise.all([webhook(event),webhook(event)]);
+  const token=new URL(step.payment.returnUrl).searchParams.get('return');
+  const returned=await data(`/api/public/payments/${token}`);
+  assert.equal(returned.state,'confirmed');
+  return {returned,session};
+ };
+ const partial=await settle(step),partialToken=manage(partial.returned);
+ const view=await data(`/api/public/manage/${partialToken}`);
+ assert.deepEqual([view.entitlement.balance,view.entitlement.history.length,view.entitlement.history[0].units],[1,1,1],'signed replay spends one coupon use for one booking');
+ assert.equal(view.entitlement.history[0].discountCents,1501,'redemption history records the exact discount separately from uses');
+ assert.equal(view.payment.amountCents,3499,'the manage receipt shows only the charged remainder');
+ const host=await hostCredit(coupon.entitlement.id);
+ assert.deepEqual([host.balance,host.expiresAt,host.history.length],[1,coupon.entitlement.expiresAt,1],'the host sees the live balance, expiry and redemption history');
+ await data(`/api/public/manage/${partialToken}/cancel`,{reason:'Eligible coupon cancellation'});
+ await data(`/api/public/manage/${partialToken}/cancel`,{reason:'Repeated coupon cancellation'});
+ const restored=await hostCredit(coupon.entitlement.id);
+ assert.deepEqual([restored.balance,restored.history.length,restored.history[0].units],[2,1,1],'eligible cancellation restores exactly one use, including a repeated request');
+ assert.ok(restored.history[0].restoredAt,'the restored redemption remains visible');
+ const refunds=(await processor()).wire_calls.filter(row=>row.method==='POST'&&new URL(row.url).pathname==='/v1/refunds'&&JSON.parse(row.body).payment_intent===JSON.parse(paidEvents[0]).data.object.payment_intent);
+ assert.equal(refunds.length,1,'repeated coupon cancellation refunds the cash payment once');
+ assert.equal(JSON.parse(refunds[0].body).amount,'3499','the refund excludes the coupon discount');
+ const refundObject=(await processor()).wire_stripe_objects.filter(row=>row.type==='refunds').map(row=>JSON.parse(row.payload)).find(row=>row.payment_intent===JSON.parse(paidEvents[0]).data.object.payment_intent);
+ assert.ok(refundObject,'the edge recorded the cash refund');
+
+ const covering=await issue(6000),beforeCover=await processor();
+ const covered=await data(`${root}/confirm`,await selection((await slots())[0],{code:covering.code}),201);
+ assert.equal(covered.paymentRequired,undefined);
+ assert.equal(checkoutCalls(await processor()).length,checkoutCalls(beforeCover).length,'a coupon above the booking price charges zero and creates no Checkout');
+ assert.equal((await hostCredit(covering.entitlement.id)).balance,0);
+ const coverHistory=(await data(`/api/public/manage/${manage(covered)}`)).entitlement.history[0];
+ assert.deepEqual([coverHistory.units,coverHistory.discountCents],[1,5000],'an oversized coupon records only the price it covered');
+
+ const racing=await issue(1500),available=(await slots()).slice(0,50);
+ assert.equal(available.length,50,'fifty distinct slots exercise a shared coupon balance');
+ const claims=await Promise.all(available.map(start=>selection(start,{code:racing.code})));
+ const beforeRace=await processor();
+ const race=await Promise.all(claims.map(body=>call(`${root}/confirm`,body,[202,409])));
+ assert.equal(race.filter(response=>response.status===202).length,1,'fifty concurrent redemptions reserve one coupon use exactly once');
+ const refused=await Promise.all(race.filter(response=>response.status===409).map(response=>response.json()));
+ assert.equal(refused.length,49);
+ assert.ok(refused.every(result=>result.error.code==='credit_balance_insufficient'),'all losing requests name the unavailable coupon balance');
+ assert.equal(checkoutCalls(await processor()).length-checkoutCalls(beforeRace).length,1,'losing redemptions do not create payable Checkout sessions');
+ const won=await race.find(response=>response.status===202).json();
+ assert.equal(won.payment.amountCents,3500);
+ const held=await data(`${root}/credit`,{email,code:racing.code,durationMinutes:30},409);
+ assert.equal(held.error.code,'credit_balance_insufficient','another booking cannot spend credit reserved by an unpaid Checkout');
+ const raceBooking=await settle(won);
+ assert.deepEqual([(await hostCredit(racing.entitlement.id)).balance,(await hostCredit(racing.entitlement.id)).history.length],[0,1]);
+ const raceRows=await rows();
+ assert.equal(raceRows.payment_redemptions.filter(row=>row.entitlement_id===racing.entitlement.id).length,1);
+ assert.ok(raceRows.payment_entitlements.every(row=>row.balance>=0),'no entitlement is overdrawn');
+
+ const expiring=await issue(2000),expiringPayload=await selection((await slots())[0],{code:expiring.code});
+ const unpaid=await data(`${root}/confirm`,expiringPayload,202),unpaidSession=await findCheckout(unpaid);
+ await call('/__fixtures/payments/window-ended',{holdId:unpaidSession.metadata.dial_hold_id},204);
+ const released=await data(`${root}/credit`,{email,code:expiring.code,durationMinutes:30});
+ assert.equal(released.entitlement.balance,1,'an expired unpaid Checkout returns the reserved coupon use');
+ const retry=await data(`${root}/confirm`,await selection(expiringPayload.startAt,{code:expiring.code}),202);
+ await settle(retry);
+ assert.equal((await hostCredit(expiring.entitlement.id)).balance,0,'the released use can be redeemed by a fresh booking');
+
+ const expired=await issue(1000),expiredAt='2000-01-01T00:00:00.000Z';
+ await data('/__fixtures/payments/entitlement-expiry',{id:expired.entitlement.id,expiresAt:expiredAt});
+ const expiredSelection=await selection((await slots())[0],{code:expired.code});
+ const beforeExpiry=await rows(),processorBeforeExpiry=await processor();
+ const expiry=await data(`${root}/confirm`,expiredSelection,409);
+ assert.equal(expiry.error.code,'credit_expired');
+ assert.ok(expiry.error.details.includes(expiredAt),'an expired coupon refusal names its expiry');
+ const afterExpiry=await rows();
+ assert.equal(afterExpiry.bookings.length,beforeExpiry.bookings.length);
+ assert.equal(afterExpiry.payment_holds.length,beforeExpiry.payment_holds.length);
+ assert.equal((await hostCredit(expired.entitlement.id)).balance,1,'expiry refusal preserves the unused balance');
+ assert.equal(checkoutCalls(await processor()).length,checkoutCalls(processorBeforeExpiry).length);
+ const audit=[...paidEvents.map((event,index)=>['payment',[3499,3500,3000][index],JSON.parse(event).data.object.payment_intent]),['refund:succeeded',3499,refundObject.id]];
+ return {audit,async assertErased(){
+  const ids=issued.map(row=>row.entitlement.id);
+  for(const event of paidEvents)await webhook(event);
+  const erased=await rows();
+  assert.equal(erased.payment_entitlements.filter(row=>ids.includes(row.id)).length,0,'erasure removes booked and unbooked coupon identities despite signed payment replay');
+  assert.equal(erased.payment_redemptions.filter(row=>ids.includes(row.entitlement_id)).length,0,'erasure removes coupon redemption identities');
+  assert.ok(!JSON.stringify(erased).includes(email));
+  await call(`/api/public/manage/${manage(raceBooking.returned)}`,undefined,404);
+ }};
 }

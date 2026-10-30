@@ -45,7 +45,7 @@ export type BookingSelectionResult =
   | { kind: "policy_blocked"; reason?: string }
   | { kind: "payments_unavailable"; reason: string };
 export type BookingConfirmationResult =
-  | {kind:"entitlement_refused";reason:string;balance:number}
+  | {kind:"entitlement_refused";reason:string;balance:number;expiresAt?:string}
   | { kind: "approval_required"; approval: { url:string; expiresAt:string } }
   | { kind: "created"; booking: BookingConfirmation }
   | { kind: "replayed"; booking: BookingConfirmation }
@@ -224,12 +224,14 @@ export class BookingsService {
     let quote = await this.payments?.quote(event.id, selectedDuration);
     if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
     const paymentApproval = await this.repository.approvals.settings(event.id);
-    let entitlement: {id:string;units:number;at:string;freeWindowHours:number|null}|undefined;
+    let entitlement: import("../payments/entitlement-repository").Redemption|undefined;
     if(input.redemption) {
       if(!this.payments || !quote || quote.saveCard || quote.taxRequired || paymentApproval.required)return {kind:"entitlement_refused",reason:"credit_payment_terms_unsupported",balance:0};
       const credit=await this.payments.entitlements.resolve(event.id,invitee.email,input.redemption.code,quote.snapshot.priceCents);
-      if(credit.kind==='refused')return {kind:"entitlement_refused",reason:credit.reason,balance:credit.balance};
-      entitlement={id:credit.id,units:credit.units,at:credit.at,freeWindowHours:quote.snapshot.freeWindowHours};quote=undefined;
+      if(credit.kind==='refused')return {kind:"entitlement_refused",reason:credit.reason,balance:credit.balance,...(credit.expiresAt?{expiresAt:credit.expiresAt}:{})};
+      if(input.shownPaymentCents!==undefined && input.shownPaymentCents!==credit.dueNowCents)return {kind:"payment_terms_changed"};
+      entitlement={id:credit.id,units:credit.units,at:credit.at,freeWindowHours:quote.snapshot.freeWindowHours,discountCents:credit.discountCents};
+      quote=credit.dueNowCents>0?{...quote,amountCents:credit.dueNowCents,mode:"payment",snapshot:{...quote.snapshot,priceCents:credit.dueNowCents,dueNowCents:credit.dueNowCents,balanceCents:0,depositCents:0}}:undefined;
     }
     // PAY-003: a fee-bearing event needs the invitee's explicit consent to the stated amounts before anything is held.
     if (quote?.saveCard && !(input.cardConsent?.accepted === true && input.cardConsent.version === cardConsentVersion(quote.snapshot))) return { kind: "card_consent_required" };
@@ -239,7 +241,11 @@ export class BookingsService {
       if (paymentApproval.required && quote.mode==="payment" && (input.shownPaymentCents!==priced.quote.amountCents || input.shownPriceCents!==priced.quote.snapshot.priceCents))return {kind:"payment_terms_changed"};
       const approvalToken=paymentApproval.required ? await this.approvals.token(input.nonce) : undefined;
       const paid = await beginPaidConfirmation({ repository: this.repository, payments: this.payments, runtime: this.runtime, confirmationEmails: (manageToken, payment) => this.confirmationEmails({ profile, event, invitee, startAt: selection.slot.startAt, endAt: selection.slot.endAt, inviteeTimezone: input.inviteeTimezone, manageToken, bookingId, calendarRequired: selection.calendarRequired, payment }) },
-        { claim: claimBase, nonce: input.nonce, handle: input.handle, slug: input.slug, quote: priced.quote, durationMinutes: selectedDuration, consent: quote.saveCard ? { version: cardConsentVersion(quote.snapshot) } : undefined,...(approvalToken?{approval:{windowHours:paymentApproval.windowHours,tokenHash:await hashToken(approvalToken,this.runtime.SESSION_SECRET),url:new URL(`/manage/${approvalToken}`,this.runtime.APP_URL).toString()}}:{}) });
+        { claim: {...claimBase,entitlement}, nonce: input.nonce, handle: input.handle, slug: input.slug, quote: priced.quote, durationMinutes: selectedDuration, consent: quote.saveCard ? { version: cardConsentVersion(quote.snapshot) } : undefined,...(approvalToken?{approval:{windowHours:paymentApproval.windowHours,tokenHash:await hashToken(approvalToken,this.runtime.SESSION_SECRET),url:new URL(`/manage/${approvalToken}`,this.runtime.APP_URL).toString()}}:{}) });
+      if(paid.kind==="slot_taken" && entitlement) {
+        const credit=await this.payments.entitlements.resolve(event.id,invitee.email,input.redemption?.code,entitlement.discountCents??entitlement.units);
+        if(credit.kind==="refused")return {kind:"entitlement_refused",reason:credit.reason,balance:credit.balance,...(credit.expiresAt?{expiresAt:credit.expiresAt}:{})};
+      }
       return paid.kind === "slot_taken" || paid.kind === "blocked" ? await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? paid : paid;
     }
     const manageToken = await this.managedTokenFromNonce(input.nonce);
@@ -280,7 +286,7 @@ export class BookingsService {
     if (claim === "blocked" || claim === "slot_taken") {
       if(entitlement && claim==='slot_taken') {
         const credit=await this.payments!.entitlements.resolve(event.id,invitee.email,input.redemption?.code,entitlement.units);
-        if(credit.kind==='refused')return {kind:'entitlement_refused',reason:credit.reason,balance:credit.balance};
+        if(credit.kind==='refused')return {kind:'entitlement_refused',reason:credit.reason,balance:credit.balance,...(credit.expiresAt?{expiresAt:credit.expiresAt}:{})};
       }
       return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: claim };
     }

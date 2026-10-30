@@ -1,3 +1,4 @@
+import { EntitlementsCard } from "../core/features/payments/ui/entitlements-card";
 import { StripeConnectionCard } from "../core/features/payments/ui/stripe-connection-card";
 import { PersonErasureCard } from "../core/features/erasure/ui/person-erasure";
 import { MoveInCard } from "../core/features/move-in/ui/move-in-card";
@@ -13,5 +14,5 @@ export const Route = createFileRoute('/setup/settings' )({ codeSplitGroupings: [
 
 function SettingsRoute() {
   const { shell } = Route.useRouteContext();
-  return <><SettingsPage paymentSettings={timezone => <StripeConnectionCard timezone={timezone} />} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} /><div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
+  return <><SettingsPage paymentSettings={timezone => <><StripeConnectionCard timezone={timezone} /><EntitlementsCard timezone={timezone} /></>} privacySettings={<PersonErasureCard />} embedSettings={<EmbedSettingsCard publicOrigin={shell.publicOrigin} />} blockingSettings={<BlockedAddressesCard />} mailPreferences={<MailPreferencesCard />} /><div className="mt-7"><MoveInCard /></div><SwitchOverCard className="mt-7" /></>;
 }

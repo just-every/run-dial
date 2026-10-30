@@ -1,3 +1,4 @@
+import { EntitlementSummary } from "../../payments/ui/entitlement-summary";
 import { completePendingAnalytics } from "./analytics";
 import { BookingChangeTerms } from "./booking-change-terms";
 import { PaymentSummary } from "./pay-step";
@@ -49,6 +50,7 @@ export function BookingConfirmationPage({ token, embedded = false }: { token: st
     <p>{booking.event.eventTitle} with {booking.host.name}</p>
     {booking.lockedTimezone ? <><LockedTimezoneNotice timezone={booking.lockedTimezone} /><LockedBookingTime startAt={booking.occurrence.startAt} endAt={booking.occurrence.endAt} timezone={booking.lockedTimezone} browserTimezone={browserTimezone} /><p>{booking.event.durationMinutes} minutes</p></> : <><p>{formatRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone)} · {booking.event.durationMinutes} minutes</p><p>Times in <strong>{booking.inviteeTimezone}</strong></p></>}
     {booking.payment ? <PaymentSummary payment={booking.payment} timezone={booking.lockedTimezone ?? booking.inviteeTimezone} open={!cancelled} /> : null}
+    {booking.entitlement ? <EntitlementSummary credit={booking.entitlement} timezone={booking.lockedTimezone ?? booking.inviteeTimezone} /> : null}
     <BookingChangeTerms policy={booking.changePolicy?.effectivePolicy} />
     {!cancelled && booking.location.state === "ready" ? <p>{booking.location.label}{booking.location.value && !joinUrl ? <>: {booking.location.value}</> : null}</p> : null}
     {!cancelled && booking.location.state === "ready" && joinUrl ? <a className="pb-primary-link" href={joinUrl}>Join session</a> : null}

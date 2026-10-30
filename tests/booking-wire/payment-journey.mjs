@@ -200,7 +200,7 @@ for (const mail of changeMail) {
 }
 checks.push("reschedule keeps $90 paid; cancel keeps the payment record and, with no cancellation policy, issues no refund; change and cancellation mail state the payment kept");
 
-await paymentEntitlements({data,call,webhook,stripeEvent,future});
+const entitlementAudit=await paymentEntitlements({data,call,webhook,stripeEvent,future});
 
 // S1: account.application.deauthorized marks the connection unhealthy and stops new paid bookings with a named reason.
 await webhook(stripeEvent("account.application.deauthorized", { id: "ca_wire", object: "application" }, "acct_someoneelse"), 401);
@@ -265,7 +265,8 @@ const retained = await data("/__fixtures/payments/all-rows"), {anonymized_audit:
 for(const detail of ["payer@dial.test","Avery Payer"])assert.ok(!JSON.stringify(retained).includes(detail),"erased payer values are gone from every table, including anonymous audit and cleanup records");
 for(const [table,records] of Object.entries(tables))for(const ref of [session.id,paidSession.payment_intent])assert.ok(!JSON.stringify(records).includes(ref),`${table}: processor references survive only in anonymous audit or cleanup records`);
 assert.deepEqual(cleanup.filter(row=>row.processor_ref===session.id).map(row=>[row.kind,row.state,row.reason,row.requested]),[["stripe_checkout_email","pending","checkout_customer_email_not_editable_no_erasure_api",0]],"the immutable Checkout lookup is explicit and no unmade erasure call is claimed");
-assert.deepEqual(audit.filter(row=>row.entity_kind==="payment").map(row=>[row.action,row.amount_cents,row.processor_ref]),[["payment",9000,paidSession.payment_intent]],"the payment amount and reference survive in the anonymized audit");
+const auditOrder=(a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b));
+assert.deepEqual(audit.filter(row=>row.entity_kind==="payment").map(row=>[row.action,row.amount_cents,row.processor_ref]).sort(auditOrder),[["payment",9000,paidSession.payment_intent],...entitlementAudit].sort(auditOrder),"every payment amount, refund and reference survives in the anonymized audit");
 checks.push("erasure removes every payer value from every table; only anonymous audit and processor cleanup lookup references survive, with immutable Checkout email explicitly pending and no invented request");
 
 await writeFile(evidencePath("payment-wire.json"), JSON.stringify({ title: "PAY-001 a paid booking confirms only after Stripe's signed event", checks, scope: "Native local D1 and production services with Stripe API, Connect OAuth and signed webhooks synthetic at the HTTP edge" }, null, 2));
