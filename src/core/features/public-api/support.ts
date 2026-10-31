@@ -1,4 +1,4 @@
-import { hostExists } from "../api-credentials/authority";
+import { hostExists } from "../api-credentials";
 import type { Context } from "hono";
 import seed from "../../../../seed.json";
 import type { AppEnvironment } from "../../app/context";
@@ -52,6 +52,13 @@ export function bookingView(booking: BookingRecord) {
     inviteeName:booking.inviteeName,inviteeEmail:booking.inviteeEmail,inviteeTimezone:booking.inviteeTimezone,
     durationMinutes:booking.durationMinutes,occurrence:{startAt:booking.occurrence.startAt,endAt:booking.occurrence.endAt},
     attendance:booking.attendance,createdAt:booking.createdAt,updatedAt:booking.updatedAt,cancelledAt:booking.cancelledAt};
+}
+
+export async function hasRequestReceipt(c:Context<ApiEnvironment>){
+ const key=c.req.header("Idempotency-Key");
+ if(!key||key.length<16||key.length>128||/[\r\n]/.test(key))return false;
+ const credential=c.get("apiCredential"),hash=await hashToken(`api-key:${credential.id}:${key}`,c.get("runtime").SESSION_SECRET);
+ return Boolean(await c.get("apiDatabase").prepare("SELECT id FROM api_request_keys WHERE credential_id=? AND key_hash=?").bind(credential.id,hash).first());
 }
 
 type Receipt = { state:"pending"|"completed"|"erased"; requestHash:string|null; responseJson:string|null;responseStatus:number|null;bookingId:string|null };

@@ -576,6 +576,18 @@
       "name": "0094_coupon_issuance_receipts.sql",
       "sha256": "c9fd8163b548e4abbb8b4be971c0acb5427e497e58100e79b7a514ff7b8f4961",
       "sql": "-- Non-personal issuance identity survives purchaser erasure, preventing an old command from recreating credit.\nALTER TABLE payment_products ADD COLUMN issuance_key_hash TEXT;\nCREATE UNIQUE INDEX payment_coupon_issuance_identity ON payment_products(issuance_key_hash);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0095_api_consent.sql",
+      "sha256": "ed6616253c047d9ede55d18e52461fcf8b2749f0476f645e1df26cc0f7cc1e1e",
+      "sql": "-- Native people own API host partitions; the existing public calendar remains shared.\nCREATE TABLE api_hosts (\n id TEXT PRIMARY KEY NOT NULL,\n operator_id TEXT UNIQUE REFERENCES oa_operators(id) ON DELETE SET NULL,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE TABLE api_event_hosts (\n event_type_id TEXT PRIMARY KEY NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,\n host_id TEXT NOT NULL REFERENCES api_hosts(id)\n);\nALTER TABLE api_oauth_applications ADD COLUMN grant_type TEXT NOT NULL DEFAULT 'client_credentials' CHECK(grant_type IN ('client_credentials','authorization_code'));\nALTER TABLE api_oauth_applications ADD COLUMN redirect_uri TEXT;\nCREATE TABLE api_oauth_grants (\n id TEXT PRIMARY KEY NOT NULL,\n application_id TEXT NOT NULL REFERENCES api_oauth_applications(id),\n operator_id TEXT NOT NULL,\n scopes_json TEXT NOT NULL,\n host_id TEXT,\n team_id TEXT,\n expires_at TEXT NOT NULL,\n revoked_at TEXT,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX api_oauth_grants_person ON api_oauth_grants(operator_id);\nALTER TABLE api_credentials ADD COLUMN oauth_grant_id TEXT REFERENCES api_oauth_grants(id);\nCREATE TABLE api_oauth_codes (\n id TEXT PRIMARY KEY NOT NULL,\n grant_id TEXT NOT NULL REFERENCES api_oauth_grants(id),\n code_hash TEXT NOT NULL UNIQUE,\n challenge TEXT NOT NULL,\n redirect_uri TEXT NOT NULL,\n expires_at TEXT NOT NULL,\n consumed_at TEXT,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE TABLE api_credential_audit (\n id TEXT PRIMARY KEY NOT NULL,\n actor_id TEXT NOT NULL,\n action TEXT NOT NULL,\n subject_id TEXT NOT NULL,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0096_api_authority_cleanup.sql",
+      "sha256": "630e8d565bfb8137ede95f81e5f38b54d0f6f7b0716c5b8414ce88f58a02e6d6",
+      "sql": "-- Replace automatic nulling with the explicit erasure batch, preserving host partitions.\nCREATE TABLE api_hosts_next (\n id TEXT PRIMARY KEY NOT NULL,\n operator_id TEXT UNIQUE REFERENCES oa_operators(id),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nINSERT INTO api_hosts_next SELECT * FROM api_hosts;\nCREATE TABLE api_event_hosts_next (\n event_type_id TEXT PRIMARY KEY NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,\n host_id TEXT NOT NULL REFERENCES api_hosts_next(id)\n);\nINSERT INTO api_event_hosts_next SELECT * FROM api_event_hosts;\nDROP TABLE api_event_hosts;\nDROP TABLE api_hosts;\nALTER TABLE api_hosts_next RENAME TO api_hosts;\nALTER TABLE api_event_hosts_next RENAME TO api_event_hosts;\n-- Base keeps active-session versioning and final-owner protection for all native roles.\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
