@@ -2,6 +2,11 @@ import { createId, nowIso } from "../../shared/ids";
 import { foldEmail } from "../erasure";
 
 export type ClientProfile = { id: string; email: string; revision: number };
+export type ClientMergePreparer = {
+  id: string;
+  label: string;
+  approvers: readonly { id: string; name: string }[];
+};
 export class ClientRecords {
   constructor(private readonly db: D1Database) {}
   async profile(email: string) { return this.db.prepare("SELECT c.id,c.email,c.revision FROM client_profiles c JOIN client_aliases a ON a.client_id=c.id WHERE a.email=?").bind(foldEmail(email)).first<ClientProfile>(); }
@@ -48,7 +53,7 @@ export class ClientRecords {
       this.db.prepare("UPDATE client_profiles SET revision=revision+1,updated_at=? WHERE id=?").bind(now, profile.id)];
     try { await this.db.batch(statements); return true; } catch { return false; }
   }
-  async merge(source: string, target: string, operatorId: string) {
+  async merge(source: string, target: string, operatorId: string, preparer?: ClientMergePreparer) {
     source = foldEmail(source); target = foldEmail(target);
     const [from,to] = await Promise.all([this.profile(source),this.profile(target)]);
     if (source === target || from && to && from.id === to.id) return "identical" as const;
@@ -64,7 +69,9 @@ export class ClientRecords {
       this.db.prepare("UPDATE client_aliases SET client_id=?,updated_at=? WHERE client_id=?").bind(targetId,now,sourceId),
       this.db.prepare("DELETE FROM client_profiles WHERE id=?").bind(sourceId),
       this.db.prepare("UPDATE client_profiles SET revision=revision+1,updated_at=? WHERE id=?").bind(now,targetId),
-      this.db.prepare("INSERT INTO anonymized_audit(id,entity_kind,action,actor_type,actor_id,happened_at,erased_at) VALUES(?,'client','merged','operator',?,?,?)").bind(createId(),operatorId,now,now),
+      this.db.prepare("INSERT INTO anonymized_audit(id,entity_kind,action,actor_type,actor_id,happened_at,erased_at,reason) VALUES(?,'client','merged',?,?,?,?,?)")
+        .bind(createId(),preparer ? "agent" : "operator",preparer?.id ?? operatorId,now,now,
+          preparer ? JSON.stringify({ preparedBy: preparer.label, sponsor: operatorId, approvers: preparer.approvers }) : null),
     ]);
     return "merged" as const;
   }
