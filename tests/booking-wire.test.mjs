@@ -58,6 +58,7 @@ async function wireJourney(t, feature) {
 test("Native Google and Microsoft calendar lifecycles and Base SendGrid outbox preserve request-only scheduling", async t => { await wireJourney(t); await wireJourney(t, "microsoft"); });
 test("EVENT-009/POLL-001 invitee guests receive invitations and changes without booking authority", t => wireJourney(t, "guests"));
 test("EVENT-008/PAY-007 approval requests authorize shown terms and confirm only after host approval and signed capture", t => wireJourney(t, "approval"));
+test("approval creates one Google Meet conference only after the owner decides and never on decline or expiry", t => wireJourney(t, "approval-meet"));
 test("an approved request link stops opening the booking once its manage link is replaced or expires", t => wireJourney(t, "approval-access"));
 
 test("signed webhooks deliver native facts once, retry for 24 hours and stop after deletion or erasure", t => wireJourney(t, "webhooks"));
