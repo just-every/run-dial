@@ -1,3 +1,5 @@
+import { startPaymentRuntime } from "./booking-wire/payment-runtime.mjs";
+import { paymentFetch } from "./booking-wire/payment-request.mjs";
 import { runAxe } from "./booking-axe/run-axe.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,11 +12,11 @@ import { evidencePath } from "../scripts/evidence-path.mjs";
 /** One journey against the production services in the booking-wire Worker, with Stripe synthetic at the HTTP edge. */
 async function wireJourney(t, journey, port, log) {
   const state = await mkdtemp(resolve(tmpdir(), "dial-payment-wire-"));
-  const origin = `http://127.0.0.1:${port}`, config = "tests/booking-wire/worker.wrangler.toml";
+  const origin = `http://127.0.0.1:${port}`;
   const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin };
-  let server, output = "";
+  let runtime, output = "";
   t.after(async () => {
-    if (server?.exitCode === null) { const stopped = new Promise(done => server.once("exit", done)); try { process.kill(-server.pid, "SIGTERM"); } catch { server.kill("SIGTERM"); } await stopped; }
+    await runtime?.dispose();
     // C.1 keeps captured Worker evidence free of generated manage capability URLs.
     await writeFile(evidencePath(log), output.replace(/\/manage\/(?:invite\/|balance\/)?[^/?\s"'<>]+/gu, "/manage/[redacted]")); await rm(state, { recursive: true, force: true });
   });
@@ -23,11 +25,8 @@ async function wireJourney(t, journey, port, log) {
     child.stdout.on("data", chunk => { log += chunk; }); child.stderr.on("data", chunk => { log += chunk; });
     child.on("error", reject); child.on("exit", code => code === 0 ? done(log) : reject(new Error(log)));
   });
-  await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
-  server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", String(port), "--inspector-port", String(port + 1), "--var", `APP_URL:${origin}`], { env, stdio: "pipe", detached: true });
-  server.stdout.on("data", chunk => { output += chunk; }); server.stderr.on("data", chunk => { output += chunk; });
-  for (let attempt = 0; ; attempt++) { if (server.exitCode !== null || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
-  assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
+  runtime = await startPaymentRuntime({ state, port, origin, capture: message => { output += message + "\n"; } });
+  assert.equal((await paymentFetch(origin + "/wire/init", { method: "POST" })).status, 200);
   console.log((await run(["node", journey])).trim());
 }
 

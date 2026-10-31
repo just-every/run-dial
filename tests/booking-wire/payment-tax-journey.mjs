@@ -1,3 +1,4 @@
+import { paymentFetch } from "./payment-request.mjs";
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
@@ -11,7 +12,7 @@ const redact = text => text.replace(/\/manage\/[^/?\s"'<>]+/gu, "/manage/[redact
 let cookie;
 const checks = [];
 async function call(path, body, expected = 200, method = body === undefined ? "GET" : "POST", headers = {}) {
-  const response = await fetch(origin + path, { method, headers: { origin, "content-type": "application/json", ...(cookie && !headers.anonymous ? { cookie } : {}), ...headers }, ...(body === undefined ? {} : { body: typeof body === "string" ? body : JSON.stringify(body) }), redirect: "manual" });
+  const response = await paymentFetch(origin + path, { method, headers: { origin, "content-type": "application/json", ...(cookie && !headers.anonymous ? { cookie } : {}), ...headers }, ...(body === undefined ? {} : { body: typeof body === "string" ? body : JSON.stringify(body) }), redirect: "manual" });
   assert.ok((Array.isArray(expected) ? expected : [expected]).includes(response.status), `${method} ${redact(path)} ${response.status}: ${redact(await response.clone().text())}`);
   return response;
 }
