@@ -1,8 +1,9 @@
+import { agentUse } from './archive/agent-audit.mjs';
 import { pollUpgrade } from './archive/poll-upgrade.mjs';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { contract } from './contract.mjs';
-import { fixture, testPlatform } from './archive/fixture.mjs';
+import { fixture, testPlatform, sqliteBinding } from './archive/fixture.mjs';
 import { createArchive } from './archive/artifact.mjs';
 import { captures, operators, request, runtime, token } from './archive/auth.mjs';
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
@@ -14,6 +15,8 @@ import { clientUpgrade, clientProjectionRestored } from './archive/client-upgrad
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    const audit = await agentUse(sqliteBinding(source.db));
+    assert.ok(audit.length >= 16, "native agent calls must leave retained audit facts");
     await entitlementUpgrade(source.db);
     await noticeUpgrade(source.db);
     await reconciliationUpgrade(source.db);
@@ -64,6 +67,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
     source.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,version,created_at) VALUES(?,?,?,'admin','active',1,1791331200000)").run('synthetic-dial-archive-admin',['synthetic-dial-archive-admin','example.test'].join(String.fromCharCode(64)),'Synthetic Dial administrator');
     const archive = await createArchive(testPlatform(source.db));
+    const archivedAudit = archive.tables.find(table => table.name === 'agent_door_audit')?.rows;
+    assert.deepEqual(archivedAudit, audit, 'owner export retains every agent audit field in sequence order');
     assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
     const archivedWorkflow = archive.tables.find(table => table.name === 'workflow_rules').rows[0];
     assert.equal(archivedWorkflow.enabled, 0, 'restored workflow configuration never carries live outbound authority');
@@ -118,6 +123,9 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await restoreArchive(destination, archive);
     await clientProjectionRestored(source.db, target.db, remembered);
     assert.equal(target.db.prepare("SELECT role FROM oa_operators WHERE id='synthetic-dial-archive-admin'").get().role,'admin','native API administrators retain their role without inheriting owner authority');
+    const restoredAudit = target.db.prepare("SELECT * FROM agent_door_audit ORDER BY sequence").all().map(row => ({ ...row }));
+    assert.deepEqual(restoredAudit, audit, "restore retains agent attribution, decisions, evidence and original sequence");
+    console.log(`DATA-001 agent audit round trip: source=${audit.length} archive=${archivedAudit.length} restored=${restoredAudit.length}; order and content equal`);
     for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
       const restored = target.db.prepare(`SELECT * FROM ${table}`).get();
       assert.equal(restored[hashColumn], null);
