@@ -41,7 +41,7 @@ async function wireJourney(t, feature) {
     child.on("error", reject); child.on("exit", code => code === 0 ? done(log) : reject(new Error(log)));
   });
   if (feature !== "webhooks") await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
-  const microsoft = feature === "microsoft" ? ["--var", "CALENDAR_PROVIDER:microsoft", "--var", "MICROSOFT_OAUTH_CLIENT_ID:synthetic-dial-801-client", "--var", "MICROSOFT_OAUTH_CLIENT_SECRET:synthetic-dial-802-secret"] : [];
+  const microsoft = ["microsoft", "calendar-correspondence-microsoft"].includes(feature) ? ["--var", "CALENDAR_PROVIDER:microsoft", "--var", "MICROSOFT_OAUTH_CLIENT_ID:synthetic-dial-801-client", "--var", "MICROSOFT_OAUTH_CLIENT_SECRET:synthetic-dial-802-secret"] : [];
   if (feature === "webhooks") {
     const { startWebhookRuntime } = await import("./booking-wire/webhook-runtime.mjs");
     nativeRuntime = await startWebhookRuntime({ state, port, origin, receiver });
@@ -51,11 +51,18 @@ async function wireJourney(t, feature) {
   }
   for (let attempt = 0; ; attempt++) { if ((server && server.exitCode !== null) || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
   assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
-  console.log((await run(feature === "microsoft" ? ["node", "tests/booking-wire/microsoft-journey.mjs"] : feature ? ["node", "tests/booking-wire/feature-journey.mjs", feature] : ["node", "tests/booking-wire/journey.mjs"])).trim());
+  const journey = feature?.startsWith("calendar-correspondence-")
+    ? ["node", "tests/booking-wire/calendar-correspondence-journey.mjs", feature.split("-").at(-1)]
+    : feature === "microsoft" ? ["node", "tests/booking-wire/microsoft-journey.mjs"] : feature ? ["node", "tests/booking-wire/feature-journey.mjs", feature] : ["node", "tests/booking-wire/journey.mjs"];
+  console.log((await run(journey)).trim());
   await cleanup();
 }
 
 test("Native Google and Microsoft calendar lifecycles and Base SendGrid outbox preserve request-only scheduling", async t => { await wireJourney(t); await wireJourney(t, "microsoft"); });
+test("saved calendar correspondence follows reschedules and the invitation-link toggle on Google and Microsoft", async t => {
+  await wireJourney(t, "calendar-correspondence-google");
+  await wireJourney(t, "calendar-correspondence-microsoft");
+});
 test("EVENT-009/POLL-001 invitee guests receive invitations and changes without booking authority", t => wireJourney(t, "guests"));
 test("EVENT-008/PAY-007 approval requests authorize shown terms and confirm only after host approval and signed capture", t => wireJourney(t, "approval"));
 test("an approved request link stops opening the booking once its manage link is replaced or expires", t => wireJourney(t, "approval-access"));
