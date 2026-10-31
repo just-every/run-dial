@@ -156,6 +156,18 @@ export async function groupSeatJourney(rt, context) {
   const full = await snapshot(rt);
   for (const winner of admitted) assert.deepEqual(await publicData(`${base}/confirm`, concurrentPayloads[winner.index], 200, 50 + winner.index), winner.receipt);
   assert.deepEqual(await snapshot(rt), full, 'replayed winning concurrent claims do not exceed the seat count');
+  const replayStart = initialSlots[13].startAt;
+  for (let index = 0; index < 2; index++) {
+    const selectedSeat = await select(replayStart, 180 + index);
+    await publicData(`${base}/confirm`, composition(group, selectedSeat.nonce, replayStart, 760 + index), 201, 180 + index);
+  }
+  const repeatedSelection = await select(replayStart, 182);
+  const repeatedPayload = composition(group, repeatedSelection.nonce, replayStart, 762);
+  const simultaneous = await Promise.all(Array.from({ length: 8 }, () => publicCall(`${base}/confirm`, repeatedPayload, [200, 201], 182)));
+  assert.equal(simultaneous.filter(response => response.status === 201).length, 1, 'simultaneous nonce copies claim the last seat once');
+  const receipts = await Promise.all(simultaneous.map(response => response.json()));
+  for (const receipt of receipts) assert.deepEqual(receipt, receipts[0], 'every concurrent nonce replay returns the same seat and capability after the slot fills');
+  assert.equal((await rt.db.prepare("SELECT count(*) AS n FROM bookings b JOIN booking_occurrences o ON o.id=b.current_occurrence_id WHERE b.event_type_id=? AND b.state IN ('confirmed','rescheduled') AND o.start_at=?").bind(group.id, replayStart).first()).n, 3);
   const reduction = await rt.data(`/api/app/event-types/${group.id}`, { ...input, questions: group.questions, groupCapacity: 2 }, 409, 'PATCH');
   assert.equal(reduction.error.code, 'group_capacity_conflict');
   assert.equal((await rt.data(`/api/app/event-types/${group.id}`)).groupCapacity, 3);

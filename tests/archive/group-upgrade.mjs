@@ -11,7 +11,7 @@ async function populatedUpgrade(source) {
   const prior = new DatabaseSync(':memory:');
   try {
     const migrations = await migrationFiles();
-    const added = migrations.find(row => row.file === 'core/0095_group_seat_capacity.sql');
+    const added = migrations.find(row => row.file === 'core/0099_group_seat_capacity.sql');
     assert.ok(added, 'the additive group migration is present');
     for (const migration of migrations.filter(row => row !== added)) prior.exec(migration.sql);
     prior.exec('PRAGMA foreign_keys=OFF');

@@ -50,7 +50,7 @@ Gap: Routing, poll, payment-return and workflow-unsubscribe capabilities are car
 
 AUTH-008 is partial: API credentials and connected apps.
 
-Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
+Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/public-api/consent.mjs` — delegatedCredentialJourney; `scripts/verify-api-credentials.mjs` — one-time secret, last use, revocation and explicit app consent in Settings; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
 
 Gap: Owner-issued personal tokens and registered OAuth machine applications use hashed secrets, named scopes, expiry, last use and next-request revocation. Conservative owner-only grant under the standing scope policy; delegated OAuth consent, admin issuance and native two-host authority proof remain. Current team-scoped reads and routing refusals are qualified; the explicit workflow grant uses the same conservative owner-only policy.
 

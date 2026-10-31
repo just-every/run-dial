@@ -13,10 +13,14 @@ const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConf
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
   // Existing event types remain ordinary appointments after a capacity upgrade.
-  'core/0095_group_seat_capacity.sql': (table, row) => table === 'event_types' ? { ...row, group_capacity: null } : row,
+  'core/0099_group_seat_capacity.sql': (table, row) => table === 'event_types' ? { ...row, group_capacity: null } : row,
   'core/0094_coupon_issuance_receipts.sql': (table,row) => table==='payment_products'?{...row,issuance_key_hash:null}:row,
   // Existing credits keep their previous meaning; no historical coupon or discount is invented.
   'core/0093_payment_coupons.sql': (table,row) => ['payment_products','payment_entitlements'].includes(table)?{...row,is_coupon:0}:table==='payment_redemptions'?{...row,discount_cents:0}:row,
+  'core/0095_api_consent.sql': (table,row) => table==='api_oauth_applications'?{...row,grant_type:'client_credentials',redirect_uri:null}:table==='api_credentials'?{...row,oauth_grant_id:null}:row,
+  'core/0096_api_authority_cleanup.sql': (_table,row)=>row,
+  'core/0097_api_authority_revocation.sql': (_table,row)=>row,
+  'core/0098_booking_webhook_hosts.sql': (_table,row)=>row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.

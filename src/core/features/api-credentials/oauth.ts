@@ -1,3 +1,4 @@
+import { exchangeCode } from "./code-exchange";
 import { Hono } from "hono";
 import type { AppEnvironment } from "../../app/context";
 import { apiError, readLimitedBody } from "../../shared/http";
@@ -12,6 +13,10 @@ export const credentialOAuthRoutes = new Hono<AppEnvironment>().post("/api/oauth
   const body=await readLimitedBody(context.req.raw,4096);
   if(!body) return apiError(context,413,"request_too_large","The token request is too large.");
   const input=new URLSearchParams(new TextDecoder().decode(body));
+  if(input.get("grant_type")==="authorization_code"){
+    if([...input.keys()].some(key=>!["grant_type","client_id","client_secret","code","redirect_uri","code_verifier"].includes(key)))return apiError(context,400,"invalid_request","The token request contains unsupported fields.");
+    return exchangeCode(context,input);
+  }
   if(input.get("grant_type")!=="client_credentials") return apiError(context,400,"unsupported_grant_type","Only an explicitly owner-issued client credentials grant is supported.");
   if([...input.keys()].some(key=>!["grant_type","client_id","client_secret","scope"].includes(key))) return apiError(context,400,"invalid_request","The token request contains unsupported fields.");
   const id=input.get("client_id") ?? "",secret=input.get("client_secret") ?? "";
@@ -20,7 +25,7 @@ export const credentialOAuthRoutes = new Hono<AppEnvironment>().post("/api/oauth
   const app=await context.get("apiDatabase").prepare(`SELECT a.id,a.name,a.operator_id,a.host_id,a.team_id,a.scopes_json,a.expires_at
     FROM api_oauth_applications a JOIN oa_operators o ON o.id=a.operator_id
     WHERE a.id=? AND a.client_secret_hash=? AND a.workspace_id='default' AND a.revoked_at IS NULL AND a.expires_at>?
-    AND o.role='owner' AND o.status='active'`).bind(id,await hashSecret(secret),now)
+    AND a.grant_type='client_credentials' AND o.role IN ('owner','admin') AND o.status='active'`).bind(id,await hashSecret(secret),now)
     .first<{id:string;name:string;operator_id:string;host_id:string|null;team_id:string|null;scopes_json:string;expires_at:string}>();
   if(!app) return apiError(context,401,"invalid_client","A valid application credential is required.");
   const allowed=JSON.parse(app.scopes_json) as CredentialScope[];
