@@ -836,7 +836,7 @@ Gap: Day, week and month share the list query, filters and paginated identity se
 
 REPORT-003 is missing: Exports and scheduled reports.
 
-Evidence: None.
+Evidence: `tests/report-booking-csv.test.mjs` — owner CSV exports every filtered booking safely without changing booking, delivery or accounting custody: native HTTP filters, 503 matches beyond display pagination, Unicode and CSV escaping, literal spreadsheet cells, capability and credential exclusion, anonymous and revoked-session refusal, unchanged product rows.
 
 Gap: Filtered reporting CSVs and scheduled member reports are absent; the owner archive is DATA-001, not this reporting flow.
 
