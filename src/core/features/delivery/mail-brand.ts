@@ -1,6 +1,5 @@
 import { installPublicOrigin } from "../../shared/public-origin";
-import { markTypes, publicLookFrom, publicLookStatement } from "../site-look/public-look";
-import type { Palette } from "../site-look/stored";
+import { markTypes, publicLookFrom, publicLookStatement, type Palette } from "../site-look";
 
 /** Public workspace brand values resolved before a confirmation's provider bytes are frozen. */
 export type MailBrand = { name: string | null; markUrl: string | null; colours: Palette };
