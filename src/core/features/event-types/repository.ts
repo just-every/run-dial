@@ -1,3 +1,4 @@
+import { groupConfigurationIssue } from "../group-events";
 import type { EventBookingPolicy } from "../../shared/booking-policy";
 import { duplicateEvent } from "./duplicate";
 import { eventScheduleBindings } from "../../platform/db/availability-schema";
@@ -54,6 +55,7 @@ export type EventTypeInput = {
   description: string;
   durationMinutes: number;
   durationOptionsMinutes?: number[];
+  groupCapacity?: number | null;
   color: string;
   locations?: EventLocationOption[];
   locationType: EventLocationType;
@@ -89,6 +91,10 @@ export class EventTypesRepository {
   constructor(binding: D1Database) {
     this.binding = binding;
     this.db = createDatabase(binding);
+  }
+
+  groupConfigurationIssue(input: EventTypeInput | EventDetailsInput, id?: string) {
+    return groupConfigurationIssue(this.binding, input, id);
   }
 
   async list(): Promise<EventTypeRecord[]> {
@@ -175,9 +181,10 @@ export class EventTypesRepository {
     const existing = await this.get(id);
     if (!existing) return undefined;
     const timestamp = nowIso();
+    const { groupCapacity, ...columns } = eventColumns(input);
     const keepsHours = JSON.stringify(existing.availability) === JSON.stringify([...input.availability].sort((a, b) => a.weekday - b.weekday || a.startMinute - b.startMinute));
     await this.db.batch([
-      this.db.update(eventTypes).set({ ...eventColumns(input), updatedAt: nextEventTimestamp(timestamp) }).where(eq(eventTypes.id, id)),
+      this.db.update(eventTypes).set({ ...columns, ...(input.groupCapacity === undefined ? {} : { groupCapacity }), updatedAt: nextEventTimestamp(timestamp) }).where(eq(eventTypes.id, id)),
       ...(keepsHours ? [] : [this.db.delete(eventScheduleBindings).where(eq(eventScheduleBindings.eventTypeId, id))]),
       this.db.delete(eventQuestions).where(eq(eventQuestions.eventTypeId, id)),
       this.db.delete(recurringAvailabilityWindows).where(eq(recurringAvailabilityWindows.eventTypeId, id)),
@@ -289,6 +296,7 @@ function eventColumns(input: EventTypeInput) {
     title: input.title,
     description: input.description,
     durationMinutes: input.durationMinutes,
+    groupCapacity: input.groupCapacity ?? null,
     durationOptionsJson: JSON.stringify(input.durationOptionsMinutes ?? [input.durationMinutes]),
     color: input.color,
     locationsJson: input.locations ? JSON.stringify(input.locations) : null,

@@ -21,12 +21,12 @@ export async function duplicateEvent(binding: D1Database, id: string): Promise<s
   const overrideIds = new Map(children.results.filter(child => child.kind === "override").map(child => [child.id, createId()]));
   const statements = [binding.prepare(`
     INSERT INTO event_types (id, status, slug, title, description, duration_minutes, duration_options_json,
-      color, location_type, location_label, location_value, locations_json, listed, request_only, alternative_requests_enabled,
+      color, location_type, location_label, location_value, locations_json, group_capacity, listed, request_only, alternative_requests_enabled,
       slot_increment_minutes, minimum_notice_minutes, booking_horizon_days, booking_horizon_mode,
       booking_start_date, booking_end_date, before_buffer_minutes, after_buffer_minutes, host_day_booking_limit, post_booking_redirect_json,
       created_at, updated_at)
     SELECT ?, 'draft', ?, ?, description, duration_minutes, duration_options_json,
-      color, location_type, location_label, location_value, locations_json, listed, 0, alternative_requests_enabled,
+      color, location_type, location_label, location_value, locations_json, group_capacity, listed, 0, alternative_requests_enabled,
       slot_increment_minutes, minimum_notice_minutes, booking_horizon_days, booking_horizon_mode,
       booking_start_date, booking_end_date, before_buffer_minutes, after_buffer_minutes, host_day_booking_limit, post_booking_redirect_json,
       ?, ? FROM event_types WHERE id = ? AND updated_at = ? RETURNING id

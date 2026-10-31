@@ -56,6 +56,7 @@ export const applicationTables = [
   "event_correspondence",
   "event_questions",
   "event_schedule_bindings",
+  // EVENT-007 capacity is host configuration; each seat remains ordinary booking custody.
   "event_types",
   "event_type_prices",
   "ext_custom_field_definitions",

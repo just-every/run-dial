@@ -16,6 +16,7 @@ export async function loadAvailabilityInput(
   excludedBookingId?: string,
 ) {
   if (event.requestOnly) return undefined;
+  if (event.groupCapacity != null && await dependencies.repository.groupConfigurationIssue(event)) return undefined;
   const rangeStart = firstInstantOfHostDate(firstDate, hostTimeZone);
   const rangeEnd = endOfHostDate(datePlus(firstDate, days - 1), hostTimeZone);
   if (!rangeStart || !rangeEnd) return undefined;
@@ -45,6 +46,8 @@ export async function loadAvailabilityInput(
       beforeBufferMinutes: event.beforeBufferMinutes,
       afterBufferMinutes: event.afterBufferMinutes,
       hostDayBookingLimit: event.hostDayBookingLimit,
+      eventTypeId: event.id,
+      groupCapacity: event.groupCapacity,
       enforceMinimumNotice: !operatorOverride.overrideNoticeAndHorizon,
       enforceHorizon: !operatorOverride.overrideNoticeAndHorizon,
     },

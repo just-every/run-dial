@@ -3,6 +3,7 @@ import { hostDateSchema, timeWindowSchema, validateNonOverlappingWindows } from 
 import { locationTypes, locationIssue, offeredLocations, type EventLocationOption } from "./locations";
 import { postBookingRedirectSchema, validateEventRedirect } from "./redirect-validation";
 import { defaultEventQuestions } from "./defaults";
+import { validateGroupShape } from "../group-events";
 
 const optionSchema = z.object({ value: z.string().min(1).max(120), label: z.string().min(1).max(200) });
 const questionSchema = z
@@ -38,6 +39,7 @@ export const eventTypeInputSchema = z
     title: z.string().min(1).max(160),
     description: z.string().min(1).max(4000),
     durationMinutes: z.number().int().min(5).max(480),
+    groupCapacity: z.number().int().min(2).max(1000).nullable().optional(),
     durationOptionsMinutes: z.array(z.number().int().min(5).max(480)).min(1).max(4).optional(),
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     locationType: z.enum(locationTypes),
@@ -62,13 +64,13 @@ export const eventTypeInputSchema = z
     }),
     availability: recurringAvailabilitySchema,
   })
-  .superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
+  .superRefine(requirePrivateLocation).superRefine(validateEventRedirect).superRefine(validateGroupShape);
 
-export const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect);
+export const eventDetailsInputSchema = z.object({ ...eventTypeInputSchema.shape, availability: z.never().optional(), alternativeRequestsEnabled: z.never().optional() }).superRefine(requirePrivateLocation).superRefine(validateEventRedirect).superRefine(validateGroupShape);
 // A new event uses your hours unless `hours` (or windows in the weekly `availability` the API has always taken) gives its own.
 const newEventHoursSchema = z.union([z.object({ uses: z.literal("yours") }).strict(), z.object({ uses: z.literal("own"), windows: recurringAvailabilitySchema }).strict()]);
 export const eventTypeCreationSchema = z.object({ ...eventTypeInputSchema.shape, questions: eventTypeInputSchema.shape.questions.default(defaultEventQuestions), availability: recurringAvailabilitySchema.optional(), hours: newEventHoursSchema.optional() })
-  .superRefine(requirePrivateLocation).superRefine(validateEventRedirect)
+  .superRefine(requirePrivateLocation).superRefine(validateEventRedirect).superRefine(validateGroupShape)
   .superRefine((input, context) => { if (input.hours && input.availability?.length) context.addIssue({ code: "custom", path: ["hours"], message: "Give the event's hours once, as hours or as availability." }); });
 
 function requirePrivateLocation(input: { durationMinutes: number; durationOptionsMinutes?: number[]; locationType: typeof locationTypes[number]; locationLabel: string; locationValue: string; locations?: EventLocationOption[]; bookingHorizonMode?: string; bookingStartDate?: string | null; bookingEndDate?: string | null }, context: z.RefinementCtx) {

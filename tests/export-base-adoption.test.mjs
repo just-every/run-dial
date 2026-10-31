@@ -1,3 +1,4 @@
+import { groupSeatArchiveJourney } from './archive/group-upgrade.mjs';
 import { pollUpgrade } from './archive/poll-upgrade.mjs';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
@@ -153,6 +154,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.deepEqual(target.db.prepare('SELECT payment_json FROM booking_approval_requests').all(),source.db.prepare('SELECT payment_json FROM booking_approval_requests').all(),'PAY-007 processor history survives without its live claim, hold or capability');
     assert.throws(() => target.db.exec("UPDATE oa_operators SET status='active' WHERE id='zz-cancelled'"), /invitation_required/);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox').get().n, 0);
+    await groupSeatArchiveJourney();
     // Future clipboard storage must be classified from its eventual migration,
     // never pre-authorized through a wildcard or guessed table name.
     target.db.exec('CREATE TABLE unclassified_future_data(id TEXT)');
