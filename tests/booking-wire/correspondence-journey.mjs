@@ -152,10 +152,13 @@ export async function confirmationBrandJourney({ data, call, state, deliver, fut
   const config = await data(configPath), [publicQuestion, privateQuestion] = event.questions;
   const hostAddress = ['operator', 'dial.test'].join('@');
   const control = (name, value) => data('/wire/control', { name, value });
-  for (const mode of ['built-in', 'edited', 'plain', 'plain-edited', 'no-mark']) {
+  for (const mode of ['built-in', 'edited', 'plain', 'plain-edited', 'no-mark', 'dark']) {
     const edited = mode === 'edited' || mode === 'plain-edited';
     const plain = mode.startsWith('plain');
-    await setLook({ look: plain ? 'plain' : 'site', mark: mode === 'no-mark' ? 'none' : 'site', name, accent: '#275b83' });
+    const expectedPalette = mode === 'dark'
+      ? { background: '#181a1e', ink: '#ffffff', accent: '#f4cb62', buttonInk: '#181a1e' }
+      : { background: '#f4f9fe', ink: '#1d1c1a', accent: '#275b83', buttonInk: '#ffffff' };
+    await setLook({ look: plain ? 'plain' : 'site', mark: mode === 'no-mark' ? 'none' : 'site', name, ...expectedPalette });
     config.templates.confirmationSubject = edited ? 'A studio visit for {invitee first name}' : null;
     config.templates.confirmationBody = edited ? `Hello {invitee first name}, {event name}\nPrivate note: {answer.${privateQuestion.key}}\n{manage link}` : null;
     if (mode !== 'built-in') await data(configPath, config, 200, 'PUT');
@@ -192,10 +195,10 @@ export async function confirmationBrandJourney({ data, call, state, deliver, fut
       } else {
         assert.ok(html.includes('Studio &lt;script&gt; &amp; &quot;Partners&quot;'));
         assert.ok(!html.includes('<script>'));
-        assert.ok(html.includes('background:#f4f9fe'));
-        assert.ok(html.includes('color:#1d1c1a'));
-        assert.ok(html.includes('background:#275b83'));
-        if (invitee) assert.ok(html.includes('color:#ffffff'));
+        assert.ok(html.includes(`background:${expectedPalette.background}`));
+        assert.ok(html.includes(`color:${expectedPalette.ink}`));
+        assert.ok(html.includes(`background:${expectedPalette.accent}`));
+        if (invitee) assert.ok(html.includes(`color:${expectedPalette.buttonInk}`));
         if (mode === 'no-mark') assert.ok(!html.includes('<img'));
         else {
           const images = [...html.matchAll(/<img\b[^>]*src="([^"]+)"/gu)].map(match => new URL(match[1]));
@@ -204,6 +207,17 @@ export async function confirmationBrandJourney({ data, call, state, deliver, fut
           assert.equal(images[0].pathname, assetPath);
           assert.ok(!html.includes('studio.example.test'));
         }
+      }
+      // Check the rendered colour pairs, including secondary text and action labels.
+      const bodyStyle = /<body\b[^>]*style="([^"]+)"/u.exec(html)?.[1];
+      const background = /(?:^|;)background:(#[a-f0-9]{6})(?:;|$)/u.exec(bodyStyle ?? '')?.[1];
+      assert.ok(background);
+      for (const [, tag, style] of html.matchAll(/<(td|a)\b[^>]*style="([^"]+)"/gu)) {
+        const foreground = /(?:^|;)color:(#[a-f0-9]{6})(?:;|$)/u.exec(style)?.[1];
+        if (!foreground) continue;
+        const ownBackground = /(?:^|;)background:(#[a-f0-9]{6})(?:;|$)/u.exec(style)?.[1];
+        assert.ok(ratio(foreground, ownBackground ?? background) >= 4.5, `${mode} ${tag} text contrast`);
+        if (tag === 'a') assert.ok(ratio(ownBackground, background) >= 3, `${mode} button contrast`);
       }
     }
     const calendar = snap.wire_calls.filter(row => row.method === 'POST' && new URL(row.url).pathname.endsWith('/events')).map(row => JSON.parse(row.body)).find(row => row.extendedProperties?.private?.['dial-booking-id'] === booking.id);
@@ -228,13 +242,13 @@ export async function confirmationBrandJourney({ data, call, state, deliver, fut
     checks.push(`BRAND-001 ${mode}: one native booking; invitee and host HTML, local mark, escaped text, palette, private boundaries, frozen retry and delivery deduplication`);
   }
   // Confirm text and button contrast independently from the normalization result.
-  const ratio = (a, b) => {
+  function ratio(a, b) {
     const light = hex => {
       const rgb = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255).map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
       return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
     };
     return (Math.max(light(a), light(b)) + 0.05) / (Math.min(light(a), light(b)) + 0.05);
-  };
+  }
   const palette = chosen.shown.colours;
   assert.ok(ratio(palette.ink, palette.background) >= 4.5);
   assert.ok(ratio(palette.buttonInk, palette.accent) >= 4.5);
