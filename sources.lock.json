@@ -1676,7 +1676,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "918d4147b0d5aee5e7c161e7447589bfe7624d3c8b93c3796d132e51d8dd577b",
+      "sha256": "0b5e70f82ba6d04b6e2079e16ebafd695c6b199770a04e2a250328a8b19ad33f",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -3920,7 +3920,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "1274a24e710f176c5fe257b13776de1ec1cd3413a7a076911f56f794a6676183",
+      "sha256": "33c19415c08f4f3a259dac9f757cb4914b69d768537c8dfb29940e0ed76be45e",
       "executable": false
     },
     "RELEASE.md": {
