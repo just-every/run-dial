@@ -19,11 +19,9 @@ export function ClientBookingRecord({ id, onChanged, onErased }: { id: string; o
     await changed("Booking cancelled and delivery updates queued.");
   }
   async function attendance(bookingId: string, status: "attended" | "no_show") {
-    const note = window.prompt(status === "attended" ? "Attendance note" : "No-show note");
-    if (note === null) return;
-    const response = await api.api.app.bookings[":id"].attendance.$post({ param: { id: bookingId }, json: { status, note } });
+    const response = await api.api.app.bookings[":id"].attendance.$post({ param: { id: bookingId }, json: { status, note: "" } });
     if (!response.ok) { setNotice(await errorMessage(response)); return; }
-    await changed("Attendance recorded.");
+    await changed(status === "attended" ? "Marked attended." : "Marked no-show.");
   }
   return <section aria-label="Selected client booking" className="grid min-w-0 gap-4">
     {notice ? <p role="status" className={noticeClassName("success")}>{notice}</p> : null}
