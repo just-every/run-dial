@@ -8620,7 +8620,7 @@
       "executable": false
     },
     "tests/booking-wire/correspondence-journey.mjs": {
-      "sha256": "7f805add830b0e1df35fe449b25f226adac6cff1346db702f2d8471cfb88e5b7",
+      "sha256": "3876a0e3efbc6213d45a67fc46aa9c9cbc75f427e41fedbafab48f3053f9382f",
       "executable": false
     },
     "tests/booking-wire/deletion-journey.mjs": {
