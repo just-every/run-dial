@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9ea9fc3cc1bd0a19da89977da46fa7b5daab365a1fc1a25fa1da54f628810158",
+      "sha256": "d8e4070fcf2cd6234c360e01c9df6c985927a9fbb922304f60c78b09277101c8",
       "executable": false
     },
     "DEMO.md": {
@@ -952,7 +952,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "46756f499aed4e8760810508dde37dc8d1d35b401b899338951bcdeae7a52820",
+      "sha256": "e665ea67188f2782495bc7fa05108e7274953b6a06bec74b86e71eb6daa54d83",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -9960,7 +9960,11 @@
       "executable": false
     },
     "tests/report-booking-csv.test.mjs": {
-      "sha256": "c54392afc32883d5d0a6e0805fd19481be9b8389d0e2d6936dd9636b0e858ec7",
+      "sha256": "17b34a73bb24def9328d178727e522c135e400971cafb21cea94e80bdbdfd6c3",
+      "executable": false
+    },
+    "tests/report-booking-csv/lifecycle.mjs": {
+      "sha256": "31a34bf238424d1e8f61c9ceb50954d9fbbaa87cb527ab7cdbc1a003fdc0bded",
       "executable": false
     },
     "tests/request-json-boundary.test.mjs": {
