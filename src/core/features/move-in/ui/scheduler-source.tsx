@@ -14,7 +14,7 @@ export function SchedulerSource({disabled,onCapture}:{disabled:boolean;onCapture
    onCapture(new File([JSON.stringify(capture)],`${provider}-capture.json`,{type:'application/json'}));
   }catch(e){setError(e instanceof Error?e.message:'The scheduler capture could not be downloaded.');}finally{setBusy(false);}
  }
- return <details className="rounded-2xl bg-row p-4 text-sm"><summary className="cursor-pointer font-semibold">Capture from a scheduler API</summary><div className="mt-4 space-y-3">
+ return <details className="rounded-2xl bg-row p-4 text-sm"><summary className="cursor-pointer font-semibold max-sm:min-h-11 max-sm:py-2.5">Capture from a scheduler API</summary><div className="mt-4 space-y-3">
   <p>Download a read-only snapshot, then preview it below. Your access token is used for this request and is never saved. Nothing in your source account changes.</p>
   <label className="block font-semibold">Source scheduler<Select className="mt-2 block" value={provider} disabled={disabled||busy} onChange={e=>{setProvider(e.target.value);setToken('');}}><option value="calcom">Cal.com</option><option value="savvycal">SavvyCal</option></Select></label>
   <label className="block font-semibold">Scheduler access token<Input className="mt-2 block" type="password" autoComplete="off" value={token} disabled={disabled||busy} onChange={e=>setToken(e.target.value)}/></label>

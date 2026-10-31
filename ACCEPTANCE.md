@@ -2,7 +2,7 @@
 
 # Dial acceptance
 
-Counts: 176 clauses — 90 done, 30 partial, 56 missing.
+Counts: 189 clauses — 90 done, 36 partial, 63 missing.
 
 CONTRACT.md is the source of requirements, acceptance and status. Every row below retains its acceptance text; provider and role boundaries remain in the source clause.
 
@@ -37,7 +37,7 @@ CONTRACT.md is the source of requirements, acceptance and status. Every row belo
 | EVENT-004 — Locations | `tests/booking-wire/location-journey.mjs` proves multiple locations, required Ask invitee and E.164 invitee phone on native one-on-one events, with only the chosen private value disclosed after confirmation. The remaining provider and team journey publishes an event offering Zoom, a phone call and an address, books each choice, and checks that only the chosen location is provisioned and disclosed after confirmation; an "Ask invitee" location on a round-robin event refuses a booking with the field empty, and the invitee's address appears in the assigned host's confirmation, the calendar event and the booking record and in no other host's mail. `tests/booking-wire/location-journey.mjs` also proves that an invitee phone given as a location is gone from every product table after the invitee is erased (`DATA-002`). *Implementation:* `tests/booking-wire/location-journey.mjs`, `src/core/features/event-types/locations.ts`, `src/core/features/public-booking/ui/booking-location.tsx`. *Remaining:* Native one-on-one multiple locations, required Ask invitee and E.164 invitee phone; public labels only, chosen private value in receipt/mail/calendar/operator record, duplication and archive validation. Zoom/Teams/Webex/GoTo provisioning and round-robin/collective host isolation are carried by `MEET-001`, `MEET-002`, `MEET-003`, `TEAM-003`, `TEAM-005` and `NOTIFY-008`, which each name this clause. | done |
 | EVENT-005 — Removing an event type | `tests/event-status-trigger.test.mjs`: disabling or deleting an event type removes its page and future slots while bookings keep their copies. | done |
 | EVENT-006 — Publication readiness | `tests/availability-diagnostics.test.mjs`, `tests/host-setup-journey.test.mjs` and `tests/booking-axe/request-only.mjs`: each unmet requirement is named; request-only and calendar-optional publication. | done |
-| EVENT-007 — Group events and capacity | Public journey: a 3-seat slot takes three bookings from three browsers, a fourth invitee joins the waitlist, one cancellation offers the seat to the waitlisted invitee who accepts within the limit, 50 concurrent claims never exceed capacity, and the calendar holds one event with the seated attendees. | missing |
+| EVENT-007 — Group events and capacity | Public journey: a 3-seat slot takes three bookings from three browsers, a fourth invitee joins the waitlist, one cancellation offers the seat to the waitlisted invitee who accepts within the limit, 50 concurrent claims never exceed capacity, and the calendar holds one event with the seated attendees. | partial |
 | EVENT-008 — Bookings that need host approval | Public and operator journey: a request holds the slot, a second invitee cannot take it, approval confirms with one confirmation email and calendar event, decline and expiry each release the slot and send exactly one email. | partial |
 | EVENT-009 — Invitee guests | Public journey: an invitee adds two guests, both receive the invitation from the destination calendar and Dial's confirmation, removing a guest sends them one cancellation, and a guest's address cannot open the manage link. | done |
 | EVENT-010 — Recurring bookings | Public journey: a 6-week series with one blocked week offers an alternate for that week, confirms six occurrences as one series with one calendar series, canceling occurrence 3 alone leaves the rest, and canceling this-and-following ends the series. | missing |
@@ -184,3 +184,16 @@ CONTRACT.md is the source of requirements, acceptance and status. Every row belo
 | AGENT-009 — Scheduling assistant in email threads | Native test with an inbound-mail fixture: a CC'd thread receives three valid times after host approval, a counter-proposal inside availability books directly, and a thread from an unknown sender is ignored. | missing |
 | AGENT-010 — Flexible holds and availability tuning | Native test: a priority booking moves one flexible block within its range and re-places it, a non-flexible event is never moved, and a monthly proposal changes nothing until accepted. | missing |
 | AGENT-011 — Voice booking through a contracted provider | Integration test with the voice provider's webhooks synthetic: a call transcript requesting Tuesday at 3 p.m. books a valid slot once, an unavailable time is answered with alternatives, and an outbound reminder call is not placed without recorded consent. | missing |
+| BASE-AGENT-001 — One MCP door per seed | #### BASE-AGENT-001 — One MCP door per seed | missing |
+| BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions | #### BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions | missing |
+| BASE-AGENT-003 — Records are resources | #### BASE-AGENT-003 — Records are resources | partial |
+| BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens | #### BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens | missing |
+| BASE-AGENT-005 — An agent acts as a person in a role, never more | #### BASE-AGENT-005 — An agent acts as a person in a role, never more | missing |
+| BASE-AGENT-006 — Every action declares its risk class | #### BASE-AGENT-006 — Every action declares its risk class | missing |
+| BASE-AGENT-007 — The company's policy decides, at one chokepoint | #### BASE-AGENT-007 — The company's policy decides, at one chokepoint | missing |
+| BASE-AGENT-008 — Truthful attribution | #### BASE-AGENT-008 — Truthful attribution | missing |
+| BASE-AGENT-009 — Every agent action is audited with its class and decision | #### BASE-AGENT-009 — Every agent action is audited with its class and decision | missing |
+| BASE-AGENT-010 — Agents can follow changes | #### BASE-AGENT-010 — Agents can follow changes | partial |
+| BASE-AGENT-011 — Limits are policy, and Pause stops everything | #### BASE-AGENT-011 — Limits are policy, and Pause stops everything | partial |
+| BASE-AGENT-012 — Writes are idempotent and conflict-safe | #### BASE-AGENT-012 — Writes are idempotent and conflict-safe | partial |
+| BASE-AGENT-013 — Manifest, docs and the conformance journey | #### BASE-AGENT-013 — Manifest, docs and the conformance journey | partial |

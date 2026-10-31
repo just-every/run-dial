@@ -151,8 +151,9 @@ find-or-create behavior and preservation of existing resources before claiming i
 
 ## Commands and verification
 
-Lander-Regenerate: `node scripts/contract-docs.mjs write --clauses MIGRATE-004`;
-then `node scripts/contract-docs.mjs check --clauses MIGRATE-004`. Supply the
+Lander-Regenerate: node scripts/contract-docs.mjs write
+
+Then run `node scripts/contract-docs.mjs check`. Supply `--clauses` followed by the
 IDs of the clauses changed by the landing. The legacy document layout stays
 until ct rewrites it. Regenerate the edition source lock last with
 `node scripts/edition-authoring/cli.mjs lock`, then run its `check` command.

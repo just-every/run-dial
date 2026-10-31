@@ -1,6 +1,6 @@
 import { formatUsd } from "../../../shared/event-price";
 
-export type AppointmentProduct = { id: string; kind: "package" | "membership" | "gift"; name: string; sessions: number; amountCents: number; validityDays: number };
+export type AppointmentProduct = { id: string; kind: "package" | "membership" | "gift"; name: string; sessions: number; amountCents: number; validityDays: number; sold?: number };
 export type AppointmentCredit = { id: string; kind: AppointmentProduct["kind"] | "coupon"; name?: string; eventTypeId?: string; balance: number; unit: string; state: string; expiresAt: string; periodEnd?: string | null; history?: Array<{ bookingId: string; units: number; createdAt: string; discountCents?: number; restoredAt: string | null }> };
 export const creditLabel = (kind: AppointmentCredit["kind"]) => ({ package: "Package", membership: "Membership", gift: "Gift certificate", coupon: "Coupon" })[kind];
 export const creditAmount = (credit: Pick<AppointmentCredit, "kind" | "unit">, units: number) => credit.unit === "USD cents" ? formatUsd(units) : `${units} ${credit.kind === "coupon" ? units === 1 ? "use" : "uses" : units === 1 ? "session" : "sessions"}`;

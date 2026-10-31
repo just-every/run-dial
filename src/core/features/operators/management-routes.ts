@@ -17,6 +17,13 @@ export const operatorManagementRoutes = new Hono<AppEnvironment>()
     const result = await services.operatorManagement.invite(context.req.raw, context.req.valid("json").email);
     return context.json(result, 201);
   })
+  .post("/api/app/api-administrators",validate("json",invitation),async context=>{
+    return context.json(await context.get("services").operatorManagement.invite(context.req.raw,context.req.valid("json").email,"admin"),201);
+  })
+  .post("/api/app/operators/:id/api-role",validate("param",target),validate("json",z.object({role:z.enum(["admin","member"])}).strict()),async context=>{
+    const operator=await context.get("services").operators.auth.setRole(context.req.raw,context.req.valid("param").id,context.req.valid("json").role);
+    return context.json({operator:{id:operator.id,role:operator.role}});
+  })
   .post("/api/app/operators/:id/remove", validate("param", target), async (context) => {
     await context.get("services").operatorManagement.removeWithinNotificationGate(context.req.raw, context.req.valid("param").id);
     return context.body(null, 204);

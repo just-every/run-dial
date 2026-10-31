@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { PageHeader } from "../../../app/ui/page-header";
 import { useHydrated } from "../../../app/use-hydrated";
-import { Button, buttonClassName, noticeClassName } from "../../../app/ui/primitives";
+import { Button, buttonClassName, noticeClassName, PlainLink } from "../../../app/ui/primitives";
 import { hostSetupChanged } from "../../host-setup";
 import { EventFields } from "./event-fields";
 import { RedirectFields } from "./redirect-fields";
@@ -37,7 +37,7 @@ export function EventEditorPage({ workspace = "/app" }: { workspace?: "/app" | "
     finally { busy.current = false; setSaving(false); }
   }
   return <form className="grid gap-7" onSubmit={create}>
-    <PageHeader eyebrow="Event type" title={event.title || "New event type"} description="Configure the guest-facing offer and the rules that govern its availability." actions={<><Link to={`${workspace}/event-types`} className={buttonClassName("secondary")}>Back to event types</Link><Button type="submit" disabled={!hydrated || saving}>{saving ? "Saving…" : "Save changes"}</Button></>} />
+    <PageHeader eyebrow="Event type" title={event.title || "New event type"} description="Configure the guest-facing offer and the rules that govern its availability." actions={<><PlainLink to={`${workspace}/event-types`} className={buttonClassName("secondary")}>Back to event types</PlainLink><Button type="submit" disabled={!hydrated || saving}>{saving ? "Saving…" : "Save changes"}</Button></>} />
     {error ? <p role="alert" className={noticeClassName("error")}>{error}</p> : null}
     <fieldset disabled={!hydrated || saving} className="grid gap-6 border-0 p-0"><EventFields event={event} update={update} /><QuestionsEditor questions={event.questions} onChange={questions => {
       if (event.postBookingRedirect) update("postBookingRedirect", { ...event.postBookingRedirect, fields: event.postBookingRedirect.fields.filter(field => !field.startsWith("answer.") || questions.some(question => question.key === field.slice(7) && !question.private)) });

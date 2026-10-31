@@ -3,7 +3,7 @@ import { Link, useMatch, useRouter, useRouterState, type ErrorComponentProps } f
 import { useEffect, useState, type ReactNode } from "react";
 import { boundedWorkspaceRead, clearWorkspaceReads, retryWorkspaceReads, workspaceReadTimeout } from "../workspace-reads";
 import { useHydrated } from "../use-hydrated";
-import { Button, buttonClassName } from "./primitives";
+import { Button, buttonClassName, PlainLink } from "./primitives";
 import loadStyles from "./route-load-error.css?inline";
 
 function rejectedModule(error: unknown) {
@@ -85,7 +85,7 @@ function RouteLoadFrame({ children }: { children: ReactNode }) {
   if (!/^\/app(?:\/|$)/.test(pathname) || match.routeId !== "/app" && match.routeId !== "__root__") return children;
   return <div className="min-h-screen bg-white text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
     <aside className="border-b border-line bg-sidebar px-5 py-6 lg:min-h-screen lg:border-r lg:border-b-0">
-      <Link to="/app" className="mb-8 inline-flex text-[30px] font-extrabold leading-none tracking-[-.02em]"><span data-rer-name>Dial</span></Link>
+      <PlainLink to="/app" className="mb-8 inline-flex text-[30px] font-extrabold leading-none tracking-[-.02em]"><span data-rer-name>Dial</span></PlainLink>
       <nav aria-label="Operator navigation" className="flex flex-wrap gap-1 lg:grid">
         {navigation.map(([label, to]) => <Link key={to} to={to} activeOptions={{ exact: to !== currentPath }} className="flex min-h-11 items-center rounded-[14px] px-3.5 text-[15px] font-[550] text-soft hover:bg-row">{label}</Link>)}
       </nav>

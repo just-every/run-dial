@@ -1,3 +1,4 @@
+import { dialAgentDoor } from "../../agent-door/index.server";
 import { operatorNotificationCommand } from "../platform/operator-notification-boundary";
 import { withPrivateRequest, privateRequestServices, nativeRequestSession, privateReadTasks, deferPrivateRead } from "./private-request.server";
 // Demo mode's guard comes first, so no later module can keep the real fetch; it does nothing without RER_DEMO=1.
@@ -74,6 +75,13 @@ return {
    if (url.pathname === "/favicon.ico" && (request.method === "GET" || request.method === "HEAD")) return new Response(favicon, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
    if (url.pathname.startsWith("/api/portability/")) return hostedExport(request, env, servicesFor(env).operators);
    const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
+   // Agent transport authenticates itself before native app setup/session redirects.
+   // Archive admission still fences its synchronous effects and retained evidence.
+   if (url.pathname === "/mcp" || url.pathname === "/agents" || url.pathname.startsWith("/agents/") || url.pathname === "/api/rer/agent-policy" || url.pathname === "/api/rer/business-settings" || url.pathname.startsWith("/.well-known/oauth-protected-resource")) {
+    await admit();
+    const response = await dialAgentDoor(env, runtime, servicesFor(env)).handle(request);
+    if (response) return response;
+   }
    const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };
    const state = await setupStateResponse(request, lobbyBindings, claimed); if (state) return state;
    const plain = plainAddressRedirect(request); if (plain) return plain;

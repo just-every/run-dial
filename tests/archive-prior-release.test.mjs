@@ -12,7 +12,9 @@ import { quote } from '../scripts/archive/schema.mjs';
 import { splitSqlStatements } from '../scripts/delivery/base/sql-statements.mjs';
 
 // A native backup the listed release (bb5d650f, migrations up to 0061) made of a
-// populated install with two files, retained unchanged. Its owner-held salt is synthetic.
+// populated install with two files, re-exported with the pinned writer for its
+// complete schema-object inventory (fixtures/archive/README.md). Every original
+// row, file and proof payload is unchanged. Its owner-held salt is synthetic.
 const fixture = new URL('./fixtures/archive/listed-bb5d650f.rer', import.meta.url);
 const deploymentSpec = new URL('../management/integration/deployment-spec.json', import.meta.url);
 const salt = 'synthetic-qualification-owner-salt';

@@ -1,3 +1,4 @@
+import { createLink } from "@tanstack/react-router";
 import type { ComponentPropsWithRef, InputHTMLAttributes, PropsWithChildren, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { Icon, type IconName } from "../../shared/drawing/icons";
 
@@ -21,8 +22,17 @@ export function Button({ className = "", variant = "primary", icon, children, ..
   return <button className={buttonClassName(variant, className)} {...props}>{icon ? <Icon name={icon} className="line-icon h-5 w-5" /> : null}{children}</button>;
 }
 
+/** A link or disclosure alone on its line is a 44px tap target at phone width; wide layouts keep their own height. */
+export const phoneTapClassName = "max-sm:inline-flex max-sm:min-h-11 max-sm:items-center";
+
+/** The native file control drawn inside the app's own field: a pill button in the field, as Profile's avatar field. */
+export const fileInputClassName = "py-1.5 file:mr-3 file:min-h-8 file:cursor-pointer file:rounded-full file:border file:border-solid file:border-line file:bg-card file:px-4 file:text-sm file:font-semibold file:text-ink";
+
 /** An inline text link in ink, underlined, with the landing's gold-deep underline on hover. */
 export const textLinkClassName = "font-semibold text-ink underline decoration-[1.5px] underline-offset-[5px] hover:decoration-gold-deep";
+
+/** A router link that never carries aria-current: only the menu marks the current page, and only its longest matching entry. */
+export const PlainLink = createLink((props: ComponentPropsWithRef<"a">) => <a {...props} aria-current={undefined}>{props.children}</a>);
 
 export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={`${fieldControl} w-full ${className}`} {...props} />;
@@ -88,7 +98,7 @@ export function Segmented<T extends string>({ label, name, value, options, onCha
     <div role="radiogroup" aria-labelledby={`${name}-label`} className="grid w-full min-w-0 grid-cols-2 gap-[3px] rounded-[20px] bg-wash p-[3px] sm:flex sm:w-fit sm:gap-0 sm:rounded-full">
       {options.map(([option, text]) => <label key={option} className="relative min-w-0 cursor-pointer">
         <input type="radio" name={name} value={option} checked={value === option} onChange={() => onChange(option)} className="peer absolute inset-0 m-0 cursor-pointer opacity-0" />
-        <span className="flex min-h-9 items-center justify-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-soft peer-checked:bg-gold-wash peer-checked:text-ink peer-checked:shadow-lift peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink sm:px-4">{text}</span>
+        <span className="flex min-h-11 items-center justify-center whitespace-nowrap sm:min-h-9 rounded-full px-3 text-sm font-semibold text-soft peer-checked:bg-gold-wash peer-checked:text-ink peer-checked:shadow-lift peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink sm:px-4">{text}</span>
       </label>)}
     </div>
   </div>;

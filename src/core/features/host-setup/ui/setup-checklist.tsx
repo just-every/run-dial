@@ -1,4 +1,4 @@
-import { Card, textLinkClassName } from "../../../app/ui/primitives";
+import { Card, phoneTapClassName, textLinkClassName } from "../../../app/ui/primitives";
 import { Icon, type IconName } from "../../../shared/drawing/icons";
 import { ProgressDial } from "../../../shared/drawing/ProgressDial";
 import type { HostSetupOverview } from "../steps";
@@ -19,9 +19,9 @@ export function SetupChecklist({ state, workspace = "/setup" }: { state: HostSet
     <ol aria-label={complete ? "Booking configuration" : "First-run checklist"} className="mt-5 grid gap-2.5 sm:grid-cols-2">{state.steps.map((step, index) => <li key={step.id} data-step={step.id} className="flex items-center gap-3 rounded-2xl bg-row px-4 py-3.5">
       <span aria-hidden="true" className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-sm font-bold ${step.done ? "bg-gold text-ink" : "bg-wash text-ink"}`}>{index + 1}</span>
       <Icon name={stepIcons[step.id] ?? "check"} className="line-icon h-5 w-5 text-ink" />
-      <div className="min-w-0"><a className={textLinkClassName} href={step.href.replace(/^\/app(?=\/|$)/, workspace)}>{step.label}</a><p className="mt-1 text-sm text-muted">{step.optional ? "Optional · using Dial availability" : step.done ? "Done" : "To do"}</p></div>
+      <div className="min-w-0"><a className={`${textLinkClassName} ${phoneTapClassName}`} href={step.href.replace(/^\/app(?=\/|$)/, workspace)}>{step.label}</a><p className="mt-1 text-sm text-muted">{step.optional ? "Optional · using Dial availability" : step.done ? "Done" : "To do"}</p></div>
     </li>)}</ol>
     {state.links[0] ? <div className="mt-4 w-fit"><CopyBookingLink link={state.links[0]} /></div> : null}
-  <p className="mt-4 text-[15px]"><a href={`${workspace}/settings#move-in`} className={textLinkClassName}>Move in from saved scheduling data</a></p>
-    {state.moveInStarted ? <p className="mt-2 text-[15px]"><a href={`${workspace}/settings#switch-over`} className={textLinkClassName}>Switch over from Calendly</a></p> : null}</details></Card>;
+  <p className="mt-4 text-[15px]"><a href={`${workspace}/settings#move-in`} className={`${textLinkClassName} ${phoneTapClassName}`}>Move in from saved scheduling data</a></p>
+    {state.moveInStarted ? <p className="mt-2 text-[15px]"><a href={`${workspace}/settings#switch-over`} className={`${textLinkClassName} ${phoneTapClassName}`}>Switch over from Calendly</a></p> : null}</details></Card>;
 }

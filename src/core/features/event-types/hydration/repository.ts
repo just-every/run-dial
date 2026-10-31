@@ -56,6 +56,7 @@ function eventRecord(record: typeof eventTypes.$inferSelect, questions: (typeof 
     title: record.title,
     description: record.description,
     durationMinutes: record.durationMinutes,
+    groupCapacity: record.groupCapacity,
     durationOptionsMinutes: JSON.parse(record.durationOptionsJson) as number[],
     color: record.color,
     ...(record.locationsJson ? { locations: JSON.parse(record.locationsJson) } : {}),

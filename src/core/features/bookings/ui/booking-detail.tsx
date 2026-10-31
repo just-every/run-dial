@@ -30,7 +30,7 @@ export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onEr
       <Fact label={booking.inviteeTimezone === booking.hostTimezone ? "Time" : "Host time"} value={timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.hostTimezone)} />
       {booking.inviteeTimezone !== booking.hostTimezone ? <Fact label="Invitee time" value={`${timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone)} (${booking.inviteeTimezone})`} /> : null}
       {booking.lockedTimezone ? <><Fact label="Meeting timezone" value={booking.lockedTimezone} /><Fact label="Invitee browser zone" value={booking.browserTimezone ?? "Zone not provided by invitee"} /></> : null}
-      <Fact label="Location" value={booking.meetingUrl || booking.locationValue || booking.locationLabel} /><Fact label="Calendar delivery" value={booking.imported ? "Original calendar entry retained" : calendarStatus(booking.calendarState)} /><Fact label="Meeting" value={meetingStatus(booking.meetingState)} />
+      <Fact label="Location" value={booking.meetingUrl || booking.locationValue || booking.locationLabel} />{booking.attendance ? <Fact label="Attendance" value={booking.attendance.status === "attended" ? "Attended" : "No-show"} /> : null}<Fact label="Calendar delivery" value={booking.imported ? "Original calendar entry retained" : calendarStatus(booking.calendarState)} /><Fact label="Meeting" value={meetingStatus(booking.meetingState)} />
       {Object.keys(booking.attribution).length ? <div className="sm:col-span-2"><dt className="text-[13px] font-[650] text-muted">Booking source</dt><dd className="mt-2 grid gap-2">{Object.entries(booking.attribution).map(([key, value]) => <span className="break-words text-[15px]" key={key}><strong>{key}: </strong>{value}</span>)}</dd></div> : null}
       {booking.answers.length ? <div className="sm:col-span-2"><dt className="text-[13px] font-[650] text-muted">Answers</dt><dd className="mt-2 grid gap-2">{booking.answers.map((answer) => <span className="break-words rounded-xl bg-row px-3.5 py-3 text-[15px]" key={answer.key}><strong>{answer.label}: </strong>{Array.isArray(answer.value) ? answer.value.join(", ") : answer.value}</span>)}</dd></div> : null}
     </dl>
@@ -45,7 +45,6 @@ export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onEr
         {delivery.actions}
       </div></details>
     </>} />
-    {booking.attendance ? <p className="mt-5 text-sm font-semibold text-ink">Attendance: {booking.attendance.status.replace("_", " ")}</p> : null}
     {delivery.content}
     <BookingHistory booking={booking} />
   </Card>;

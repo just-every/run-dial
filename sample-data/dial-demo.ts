@@ -38,7 +38,7 @@ import type { NewEventType } from "../src/core/features/event-types/service";
 /** The demo's event types: the kickoff above on a video link (publishable without a connected calendar) on your hours,
  * Monday to Friday 9:00 AM – 5:00 PM, and two more with hours of their own. */
 export const demoEventTypes: NewEventType[] = [
-  { ...demoEventType, locationType: "fixed_link", locationLabel: "Video call", locationValue: "https://meet.example.com/maya-chen", availability: undefined, hours: { uses: "yours" } },
+  { ...demoEventType, locationType: "fixed_link", locationLabel: "Video call", locationValue: "https://meet.jit.si/dial-demo-maya-chen", availability: undefined, hours: { uses: "yours" } },
   {
     ...demoEventType, slug: "roadmap-review", title: "Roadmap review", durationMinutes: 60, color: "#3b5bdb",
     description: "An hour working through your roadmap together: what to cut, what to sequence, and what to say no to.",

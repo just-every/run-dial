@@ -27,19 +27,6 @@ export async function operatorKeyboardJourney(browser, origin, storageState, che
       await keys.navigate("Bookings");
       await bookingFilterKeyboardJourney(page, origin, width, keys, checks, booking);
       const attendance = button(page, "Mark attended"); await attendance.waitFor();
-      const before = await get(page, origin, `/api/app/bookings/${booking.id}`);
-      const attendanceWrites = [];
-      page.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/bookings/${booking.id}/attendance`)) attendanceWrites.push(request.url()); });
-      await keys.native(attendance, "Cancel attendance prompt", "prompt", false);
-      // Let the UI finish its handler and any issued mutation before readback.
-      await page.waitForLoadState("networkidle");
-      const after = await get(page, origin, `/api/app/bookings/${booking.id}`);
-      checks.push({ width, stage: "attendance-cancel-readback", attendanceWrites: attendanceWrites.length, beforeAttendance: before.attendance, afterAttendance: after.attendance, beforeHistoryLength: before.history.length, afterHistoryLength: after.history.length, passed: attendanceWrites.length === 0 && JSON.stringify(before.attendance) === JSON.stringify(after.attendance) });
-      assert.equal(attendanceWrites.length, 0, "Cancelled attendance issues no mutation request");
-      assert.deepEqual(after.attendance, before.attendance, "Cancelling attendance prompt does not mark attendance");
-      assert.deepEqual(after.history, before.history, "Cancelling attendance prompt adds no history");
-      await keys.restored(attendance, "Cancelled attendance");
-      await keys.screenshot("attendance-cancelled");
       await bookingKeyboardJourney(page, origin, width, keys, checks, booking);
       await eventKeyboardJourney(page, origin, width, keys, checks, errors);
       await settingsKeyboardJourney(page, origin, width, keys, checks, booking, errors);

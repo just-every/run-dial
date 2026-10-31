@@ -13,6 +13,9 @@ export function operatorTimeRange(start: string | null, end: string | null, time
   return `${includeDate ? `${dateLabel(first, timezone)}, ` : ""}${clockLabel(first, Boolean(firstOffset || lastOffset) || first.dayPeriod !== last.dayPeriod, firstOffset)}-${clockLabel(last, true, lastOffset)}`;
 }
 
+/** A calendar date (YYYY-MM-DD) in the same short style as the times: "Tue 27 Oct". */
+export function operatorDay(date: string) { return dateLabel(localParts(`${date}T12:00:00Z`, "UTC"), "UTC"); }
+
 export function operatorTimestamp(value: string, timezone = "UTC", referenceInstant?: string) {
   return operatorDateTime(value, timezone, referenceInstant);
 }

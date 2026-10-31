@@ -1,5 +1,5 @@
 name = "dial-dst-native-test"
-main = "../review/worker.ts"
+main = "./worker.ts"
 compatibility_date = "2026-09-08"
 compatibility_flags = ["nodejs_compat"]
 

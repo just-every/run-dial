@@ -18,7 +18,7 @@ export async function pollScreens(browser,owner,origin,scans,errors){
    await candidates.getByRole('checkbox').nth(0).check();await candidates.getByRole('checkbox').nth(1).check();
    const people=Array.from({length:4},(_,index)=>({name:['Alex Rivera','Morgan Lee','Taylor Bell','Jamie Chen'][index],email:`synthetic-dial-${1015+(width===390?4:0)+index}@example.test`}));
    await page.getByLabel('Participants',{exact:true}).fill(people.map(p=>`${p.name} <${p.email}>`).join('\n'));
-   await page.getByLabel('Close at (UTC)',{exact:true}).fill(new Date(Date.now()+86400000).toISOString().slice(0,16));
+   assert.ok(await page.getByLabel('Close at',{exact:true}).inputValue(),'the close time has a default in the page zone');
    await page.getByLabel('Hold candidate times until the poll closes',{exact:true}).check();
    await audit('poll-composer');
    const created=page.waitForResponse(r=>r.url().endsWith('/api/app/polls')&&r.request().method()==='POST');

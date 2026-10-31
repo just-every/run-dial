@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { toPublicEventType } from "./public";
 import { z } from "zod";
 import { isPaid } from "../payments";
+import { groupConfigurationMessages, groupWriteConflict } from "../group-events";
 import type { AppEnvironment } from "../../app/context";
 import { apiError } from "../../shared/http";
 import { hostDateSchema, timeWindowSchema, validateNonOverlappingWindows } from "../../shared/scheduling";
@@ -20,10 +21,15 @@ const dateAvailabilityOverrideBodySchema = z
 const publicEventSchema = z.object({ handle: z.string().regex(/^[a-z0-9-]+$/), slug: z.string().regex(/^[a-z0-9-]+$/) });
 
 export const eventTypeRoutes = new Hono<AppEnvironment>()
+  .onError((error, context) => {
+    const issue = groupWriteConflict(error);
+    if (issue) return apiError(context, 409, issue, groupConfigurationMessages[issue]);
+    throw error;
+  })
   .get("/api/app/event-types/:id/approval",validate("param",idSchema),async context=>{const settings=await context.get("services").bookings.approvalSettings(context.req.valid("param").id);return settings?context.json(settings):apiError(context,404,"not_found","Event type not found.");})
-  .put("/api/app/event-types/:id/approval",validate("param",idSchema),validate("json",z.object({required:z.boolean(),windowHours:z.number().int().min(1).default(24)}).strict()),async context=>{const result=await context.get("services").bookings.saveApprovalSettings(context.req.valid("param").id,context.req.valid("json"));return result.kind==="saved"?context.json(result.settings):apiError(context,result.kind==="not_found"?404:409,result.kind,result.kind==="approval_window_too_long"?"Approval must be decided within 7 days.":"Priced approval cannot also require a saved card for fees.");})
+  .put("/api/app/event-types/:id/approval",validate("param",idSchema),validate("json",z.object({required:z.boolean(),windowHours:z.number().int().min(1).default(24)}).strict()),async context=>{const event=await context.get("services").eventTypes.getEventType(context.req.valid("param").id);if(event?.groupCapacity!=null&&context.req.valid("json").required)return apiError(context,409,"group_approval_unsupported",groupConfigurationMessages.group_approval_unsupported);const result=await context.get("services").bookings.saveApprovalSettings(context.req.valid("param").id,context.req.valid("json"));return result.kind==="saved"?context.json(result.settings):apiError(context,result.kind==="not_found"?404:409,result.kind,result.kind==="approval_window_too_long"?"Approval must be decided within 7 days.":"Priced approval cannot also require a saved card for fees.");})
   .get("/api/app/event-types/:id/guests",validate("param",idSchema),async context=>{ const settings=await context.get("services").bookings.guestSettings(context.req.valid("param").id); return settings?context.json(settings):apiError(context,404,"not_found","Event type not found."); })
-  .put("/api/app/event-types/:id/guests",validate("param",idSchema),validate("json",z.object({guestLimit:z.number().int().min(0).max(20)}).strict()),async context=>{ const guestLimit=context.req.valid("json").guestLimit; return await context.get("services").bookings.saveGuestSettings(context.req.valid("param").id,guestLimit)?context.json({guestLimit}):apiError(context,404,"not_found","Event type not found."); })
+  .put("/api/app/event-types/:id/guests",validate("param",idSchema),validate("json",z.object({guestLimit:z.number().int().min(0).max(20)}).strict()),async context=>{ const guestLimit=context.req.valid("json").guestLimit;const event=await context.get("services").eventTypes.getEventType(context.req.valid("param").id);if(event?.groupCapacity!=null&&guestLimit>0)return apiError(context,409,"group_guest_unsupported",groupConfigurationMessages.group_guest_unsupported); return await context.get("services").bookings.saveGuestSettings(context.req.valid("param").id,guestLimit)?context.json({guestLimit}):apiError(context,404,"not_found","Event type not found."); })
     .post("/api/app/event-types/:id/open-requests", validate("param", idSchema), async (context) => {
       const result = await context.get("services").eventTypes.openRequests(context.req.valid("param").id);
       if (result.kind === "published") return context.json(result.eventType);
@@ -43,7 +49,12 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       return context.json({ profile: toPublicProfile(profile), eventType: isPaid(price) ? { ...eventType, price } : eventType });
     })
     .get("/api/app/event-types", async (context) => context.json(await context.get("services").eventTypes.listEventTypes()))
-    .post("/api/app/event-types", validate("json", eventTypeCreationSchema), async (context) => context.json(await context.get("services").eventTypes.createEventType(context.req.valid("json")), 201))
+    .post("/api/app/event-types", validate("json", eventTypeCreationSchema), async (context) => {
+      const input = context.req.valid("json");
+      const issue = await context.get("services").eventTypes.groupConfigurationIssue(input);
+      if (issue) return apiError(context, 409, issue, groupConfigurationMessages[issue]);
+      return context.json(await context.get("services").eventTypes.createEventType(input), 201);
+    })
     .post("/api/app/event-types/:id/duplicate", validate("param", idSchema), async context => {
       const event = await context.get("services").eventTypes.duplicateEventType(context.req.valid("param").id);
       return event ? context.json(event, 201) : apiError(context, 404, "event_not_found", "The event type does not exist.");
@@ -53,6 +64,8 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       return eventType ? context.json(eventType) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })
     .patch("/api/app/event-types/:id/details", validate("param", idSchema), validate("json", eventDetailsInputSchema), async (context) => {
+      const issue = await context.get("services").eventTypes.groupConfigurationIssue(context.req.valid("json"), context.req.valid("param").id);
+      if (issue) return apiError(context, 409, issue, groupConfigurationMessages[issue]);
       const config = await context.get("services").correspondence.read(context.req.valid("param").id);
       if (config && !context.get("services").correspondence.validateQuestions(config, context.req.valid("json").questions).success) return apiError(context, 400, "template_question_in_use", "Edit invitation and email templates before removing a referenced question or making its calendar answer private.");
       const event = await context.get("services").eventTypes.updateEventDetails(context.req.valid("param").id, context.req.valid("json"));
@@ -106,6 +119,8 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       return apiError(context, 409, "profile_not_configured", "Configure a valid host timezone before editing availability overrides.");
     })
     .patch("/api/app/event-types/:id", validate("param", idSchema), validate("json", eventTypeInputSchema), async (context) => {
+      const issue = await context.get("services").eventTypes.groupConfigurationIssue(context.req.valid("json"), context.req.valid("param").id);
+      if (issue) return apiError(context, 409, issue, groupConfigurationMessages[issue]);
       const config = await context.get("services").correspondence.read(context.req.valid("param").id);
       if (config && !context.get("services").correspondence.validateQuestions(config, context.req.valid("json").questions).success) return apiError(context, 400, "template_question_in_use", "Edit invitation and email templates before removing a referenced question or making its calendar answer private.");
       const eventType = await context.get("services").eventTypes.updateEventType(context.req.valid("param").id, context.req.valid("json"));
@@ -120,6 +135,9 @@ export const eventTypeRoutes = new Hono<AppEnvironment>()
       return deleted ? context.body(null, 204) : apiError(context, 404, "event_not_found", "The event type does not exist.");
     })
     .post("/api/app/event-types/:id/publish", validate("param", idSchema), async (context) => {
+      const event = await context.get("services").eventTypes.getEventType(context.req.valid("param").id);
+      const issue = event ? await context.get("services").eventTypes.groupConfigurationIssue(event, event.id) : undefined;
+      if (issue) return apiError(context, 409, issue, groupConfigurationMessages[issue]);
       const result = await context.get("services").eventTypes.publishEventType(context.req.valid("param").id);
       if (result.kind === "published") return context.json(result.eventType);
       if (result.kind === "event_not_found") return apiError(context, 404, "event_not_found", "The event type does not exist.", ["event_not_found"]);

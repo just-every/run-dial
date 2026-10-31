@@ -9,7 +9,7 @@ import { Link, Outlet, useRouterState, useLoaderData } from "@tanstack/react-rou
 import { Suspense, use, useEffect, useInsertionEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
 import { readProfile } from "../../features/host-profile/read-profile";
-import { Button, buttonClassName } from "./primitives";
+import { Button, buttonClassName, PlainLink } from "./primitives";
 import { Icon } from "../../shared/drawing/icons";
 import { BrandMark } from "../../features/public-booking";
 import { currentNavigationPath, navigation, RouteLoadPending, WorkspaceBootstrapRecovery } from "./route-load-error";
@@ -70,8 +70,8 @@ function AppShellContent() {
         </aside>
       </div>
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-sidebar px-4 lg:hidden">
-        <Link to="/app" className="inline-flex items-center gap-2 text-2xl font-extrabold tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></Link>
-        <Button ref={menuButton} variant="secondary" className="min-h-9! px-4" type="button" disabled={!hydrated} aria-expanded={menuOpen} aria-controls="operator-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
+        <PlainLink to="/app" className="inline-flex min-h-11 items-center gap-2 text-2xl font-extrabold tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></PlainLink>
+        <Button ref={menuButton} variant="secondary" className="px-4" type="button" disabled={!hydrated} aria-expanded={menuOpen} aria-controls="operator-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
           Menu
         </Button>
         {menuOpen ? <div id="operator-mobile-navigation" className="absolute inset-x-4 top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[20px] bg-card p-3 shadow-panel"><SidebarContent bookingLink={setup.state?.links[0]} pathname={pathname} profile={profile} profileError={profileError} onSignOut={signOut} onNavigate={() => { setMenuOpen(false); menuButton.current?.focus(); }} compact /></div> : null}
@@ -87,7 +87,7 @@ function SidebarContent({ bookingLink, pathname, profile, profileError, onSignOu
   const currentPath = currentNavigationPath(pathname);
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
-      {!compact ? <Link to="/app" className="mb-10 inline-flex items-center gap-2.5 text-[30px] font-extrabold leading-none tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></Link> : null}
+      {!compact ? <PlainLink to="/app" className="mb-10 inline-flex items-center gap-2.5 text-[30px] font-extrabold leading-none tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></PlainLink> : null}
       <div className={`${compact ? "mb-4" : "mb-8"} flex items-center gap-3 rounded-2xl bg-card p-3 shadow-lift`}>
         <span aria-hidden="true" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold-wash text-[15px] font-extrabold text-ink">{initials(profile?.name ?? "Host")}</span>
         <div className="min-w-0"><p className="truncate text-[15px] font-bold">{profileError ? "Host unavailable" : profile?.name ?? "Host not configured"}</p><p className="truncate text-[13px] text-muted">{profile?.title ?? "Set up your host profile"}</p></div>

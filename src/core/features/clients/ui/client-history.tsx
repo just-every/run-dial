@@ -5,8 +5,8 @@ import type { ClientHistory } from "../types";
 
 export function ClientHistoryView({ history, timezone }: { history: ClientHistory; timezone: string }) {
   return <Card className="min-w-0 p-5 sm:p-6">
-    <h2 className="break-all text-xl font-bold">{history.email}</h2>
-    <p className="mt-2 text-sm text-muted">{history.totalCount} booking{history.totalCount === 1 ? "" : "s"} · Times in {timezone}</p>
+    <h2 className="break-words text-xl font-bold">{history.name || history.email}</h2>
+    <p className="mt-2 break-all text-sm text-muted">{history.name ? `${history.email} · ` : ""}{history.totalCount} booking{history.totalCount === 1 ? "" : "s"} · Times in {timezone}</p>
     <ol className="mt-5 grid gap-5" aria-label="Client bookings">
       {history.bookings.map(booking => <li key={booking.id} data-client-booking={booking.id} className="min-w-0 border-t border-line-soft pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><h3 className="break-words font-bold">{booking.eventTitle}</h3><p className="mt-1 break-words text-sm">{booking.name}</p></div><BookingBadge state={booking.state} /></div>

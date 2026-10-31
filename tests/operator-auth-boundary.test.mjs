@@ -1,3 +1,4 @@
+import { runAxe } from "./booking-axe/run-axe.mjs";
 import { machineCredentialJourney } from "./public-api/journey.mjs";
 import assert from "node:assert/strict";
 import { contract } from "./contract.mjs";
@@ -71,7 +72,8 @@ contract(["AUTH-001", "AUTH-008", "API-001"], "direct Base administrative aliase
   assert.equal(JSON.stringify(await authority()) === machineAuthorityBefore, true, "machine attempts cannot change native identities or sessions");
 
   const removePath = `/api/app/operators/${target}/remove`;
-  assert.equal((await call(removePath, {}, cookie)).status, 204);
+  const removed=await call(removePath,{},cookie);
+  assert.equal(removed.status,204,await removed.clone().text());
   assert.deepEqual(await mailState(), [], "operator erasure deletes old operator and invitee queued mail at the address");
   const erasedAuthority = () => runtime.query(`SELECT 'operator' AS kind,id FROM oa_operators WHERE id='${target}'
     UNION ALL SELECT 'session',id FROM oa_sessions WHERE operator_id='${target}'
@@ -120,4 +122,5 @@ contract(["AUTH-001", "AUTH-008", "API-001"], "direct Base administrative aliase
   assert.deepEqual(await runtime.query(`SELECT id FROM api_credentials WHERE operator_id='${target}'`), [], "owner removal erases machine credentials");
   assert.deepEqual(await runtime.query("SELECT operator_id FROM oa_invitation_cancellations"), []);
   await machineCredentialJourney(context);
+  await runAxe(context,"scripts/verify-api-credentials.mjs");
 });

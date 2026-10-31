@@ -5,7 +5,7 @@ export type ReportTileKey = typeof reportTileKeys[number];
 export const reportTileTitles: Record<ReportTileKey, string> = {
   created: "Bookings created",
   rescheduled: "Bookings rescheduled",
-  cancelled: "Bookings canceled",
+  cancelled: "Bookings cancelled",
   attendance: "Attendance and no-shows",
   lead_time: "Lead time",
   popular_days: "Popular days",

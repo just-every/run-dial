@@ -93,11 +93,9 @@ function BookingList(): React.JSX.Element {
   }
 
   async function attendance(id: string, status: "attended" | "no_show") {
-    const note = window.prompt(status === "attended" ? "Attendance note" : "No-show note");
-    if (note === null) return;
-    const response = await api.api.app.bookings[":id"].attendance.$post({ param: { id }, json: { status, note } });
+    const response = await api.api.app.bookings[":id"].attendance.$post({ param: { id }, json: { status, note: "" } });
     if (!response.ok) { setNotice(await errorMessage(response)); return; }
-    focusNotice.current = true; setNotice("Attendance recorded."); await refreshBooking();
+    focusNotice.current = true; setNotice(status === "attended" ? "Marked attended." : "Marked no-show."); await refreshBooking();
   }
 
   const active = selected ? bookings?.find((booking) => booking.id === selected) ?? (selectedRecord?.id === selected ? selectedRecord : undefined) : bookings?.[0];

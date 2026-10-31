@@ -7,6 +7,7 @@ import type { RuntimeEnvironment } from "../../shared/runtime-env";
 import type { StripeEvent } from "./approval-state";
 import type { StripeApi } from "./stripe-api";
 import { issueCoupon, couponInput } from "./coupons";
+import { catalogWithSales, changeProduct, removeProduct, type ProductChange } from "./product-catalog";
 export { couponInput };
 import { entitlementSummary, reservedCredit, type Entitlement } from "./entitlement-repository";
 export const productInput = z.object({kind:z.enum(["package","membership","gift"]),name:z.string().trim().min(1).max(120),sessions:z.number().int().min(1).max(1000),amountCents:z.number().int().min(50).max(99_999_999),validityDays:z.number().int().min(1).max(3660)}).strict();
@@ -21,6 +22,11 @@ export class Entitlements {
   await this.db.prepare("INSERT INTO payment_products(id,event_type_id,kind,name,sessions,amount_cents,validity_days,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(id,eventId,input.kind,input.name,input.sessions,input.amountCents,input.validityDays,now,now).run();
   return {id,...input};
  }
+ catalog(eventId:string) {return catalogWithSales(this.db,eventId);}
+ async change(eventId:string,id:string,input:ProductChange) {return changeProduct(this.db,eventId,id,input,(await this.clock()).toISOString());}
+ remove(eventId:string,id:string) {return removeProduct(this.db,eventId,id);}
+ /** Invitees are offered purchases only while Stripe can take them. */
+ async offered(eventId:string) {return "refusal" in await this.live()?[]:this.products(eventId);}
  async products(eventId:string) {return (await this.db.prepare("SELECT id,kind,name,sessions,amount_cents AS amountCents,validity_days AS validityDays FROM payment_products WHERE event_type_id=? AND is_coupon=0 ORDER BY id").bind(eventId).all()).results;}
  async purchase(eventId:string,productId:string,email:string,key:string,returnPath:string) {
   const product=await this.db.prepare("SELECT * FROM payment_products WHERE id=? AND event_type_id=? AND is_coupon=0").bind(productId,eventId).first<Product>();

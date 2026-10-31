@@ -19,4 +19,3 @@ export function advanceCalendar(anchor: string, mode: CalendarMode, direction: n
   if (mode !== "month") return civilPlus(anchor, direction * (mode === "week" ? 7 : 1));
   const date = new Date(anchor.slice(0,7)+"-01T12:00:00Z"); date.setUTCMonth(date.getUTCMonth()+direction); return date.toISOString().slice(0,10);
 }
-export function civilLabel(date: string) { return new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" }).format(new Date(date+"T12:00:00Z")); }
