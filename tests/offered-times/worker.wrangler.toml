@@ -1,0 +1,55 @@
+name = "dial-booking-axe-test"
+main = "../review/worker.ts"
+compatibility_date = "2026-09-08"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "../../public"
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dial-booking-axe-test"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../../migrations/core"
+
+[[d1_databases]]
+binding = "PROVIDER_DB"
+database_name = "dial-booking-axe-provider-fixtures"
+database_id = "00000000-0000-0000-0000-000000000001"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dial-booking-axe-files"
+
+[[queues.producers]]
+binding = "JOBS"
+queue = "dial-booking-axe-jobs"
+
+[[durable_objects.bindings]]
+name = "BOOKING_COORDINATOR"
+class_name = "BookingCoordinator"
+
+[[migrations]]
+tag = "v1-booking-coordinator"
+new_sqlite_classes = ["BookingCoordinator"]
+
+[vars]
+OWNER_EMAIL = "operator\u0040dial.test"
+MAIL_FROM = "no-reply\u0040dial.test"
+SETUP_TOKEN = "dial-test-only-setup-token-at-least-32"
+ENVIRONMENT = "preview"
+APP_URL = "http://127.0.0.1:15740"
+GOOGLE_OAUTH_CLIENT_ID = "synthetic-client"
+GOOGLE_OAUTH_CLIENT_SECRET = "synthetic-secret"
+CALENDAR_WEBHOOK_SECRET = "synthetic-calendar-webhook-secret-for-test-only"
+SESSION_SECRET = "synthetic-dial-booking-axe-synthetic-local-session-secret"
+STRIPE_SECRET_KEY = "sk_test_wire"
+STRIPE_CONNECT_CLIENT_ID = "ca_wire"
+STRIPE_WEBHOOK_SECRET = "whsec_wiretest"
+
+SLACK_CLIENT_ID = "synthetic-dial-630"
+SLACK_CLIENT_SECRET = "synthetic-dial-631"
+QBO_CLIENT_ID = "synthetic-dial-103"
+QBO_CLIENT_SECRET = "synthetic-dial-104"

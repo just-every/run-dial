@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 // servers or HTTP clients before the corresponding fixture binds its socket.
 // Linux's default 32768-60999 range includes the 41868/41890/42000 listeners.
 // https://docs.kernel.org/networking/ip-sysctl.html#ip-variables
-export const fixturePortRanges = "8787,15700-15739,15750-15756,15762-15767,15770-15771,15802-15805,41868,41890,42000-42001";
+export const fixturePortRanges = "8787,15700-15741,15750-15756,15762-15767,15770-15771,15802-15805,41868,41890,42000-42001";
 const reservedPortsPath = "/proc/sys/net/ipv4/ip_local_reserved_ports";
 
 export function parsePortRanges(value) {

@@ -12,13 +12,13 @@ import { evidencePath } from '../scripts/evidence-path.mjs';
 
 contract('LINK-002','host offers held times and recipient books one at desktop and mobile widths',async t=>{
   const state=await mkdtemp(resolve(tmpdir(),'dial-offers-browser-'));
-  const config=resolve('tests/booking-axe/worker.wrangler.toml'),origin='http://127.0.0.1:15752';
-  const env={...process.env,CI:'1',DIAL_WRANGLER_CONFIG_PATH:config,DIAL_PERSIST_STATE_DIR:state,DIAL_INSPECTOR_PORT:'15753'};
+  const config=resolve('tests/offered-times/worker.wrangler.toml'),origin='http://127.0.0.1:15740';
+  const env={...process.env,CI:'1',DIAL_WRANGLER_CONFIG_PATH:config,DIAL_PERSIST_STATE_DIR:state,DIAL_INSPECTOR_PORT:'15741'};
   let server,browser,log='';
   t.after(async()=>{await browser?.close();await server?.stop();await rm(state,{recursive:true,force:true});});
   const migration=spawnOwned('pnpm',['exec','wrangler','d1','migrations','apply','dial-booking-axe-test','--local','--persist-to',state,'--config',config],{env},{label:'offers migration',onOutput:chunk=>{log+=chunk;}});
   try{await migration.waitForClose(120000);}finally{await migration.stop();}
-  server=spawnOwned('pnpm',[...fixtureVite,'--host','127.0.0.1','--port','15752','--strictPort'],{env},{label:'offers runtime',onOutput:chunk=>{log+=chunk;}});
+  server=spawnOwned('pnpm',[...fixtureVite,'--host','127.0.0.1','--port','15740','--strictPort'],{env},{label:'offers runtime',onOutput:chunk=>{log+=chunk;}});
   for(let i=0;;i++) {server.assertRunning();try{if((await fetch(origin+'/health')).ok)break;}catch{ /* Native runtime is starting. */ }if(i>480)throw new Error(log.slice(-10000));await new Promise(r=>setTimeout(r,125));}
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
   const bootstrap=await browser.newContext();
