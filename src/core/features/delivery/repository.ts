@@ -1,4 +1,4 @@
-import { pollReminderAuthorized } from "./poll-reminders";
+import { duePollReminderIds, pollReminderAuthorized } from "./poll-reminders";
 import { ConfirmationDeliveryRepository } from "./confirmation-repository";
 import { BookingCorrespondenceRepository } from "./correspondence-repository";
 import { and, asc, eq, isNull, lte, sql } from "drizzle-orm";
@@ -37,6 +37,7 @@ export class DeliveryRepository {
   }
 
   pollReminderAuthorized(record: DeliveryOutboxRecord, now: string, secret: string) { return pollReminderAuthorized(this.binding,record,now,secret); }
+  duePollReminderIds(now: string) { return duePollReminderIds(this.binding,now); }
 
   async recoverProcessing(now: string) {
     const cutoff = new Date(Date.parse(now) - 60_000).toISOString();
