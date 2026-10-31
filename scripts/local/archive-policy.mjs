@@ -16,7 +16,9 @@ export async function dialPolicy(db, vars, incoming) {
  const result = await exportPolicy(db, vars, schemaProof);
  // A backup from an earlier migration set restores through its declared row
  // upgrades, and must carry exactly the schema proof of a set with its schema.
- const priors = await priorSchemas(result.policy), current = result.policy.extraPayloads['schema-proof'];
+ // Only an import can select a prior schema. Export keeps the current proof and
+ // validation without replaying every historical schema on each backup.
+ const priors = incoming ? await priorSchemas(result.policy) : [], current = result.policy.extraPayloads['schema-proof'];
  // Base's explicit row upgrades require the archived table inventory. Later
  // additive tables stay empty, rather than acquiring invented historical rows.
  const inherited = priors.find(entry => entry.identity === incoming?.schema);
