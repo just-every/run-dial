@@ -1,5 +1,5 @@
 import { calendarStatus } from "../../shared/booking-status";
-import { inviteeCalendarUrl, renderBrandedMail, type BrandedMailAction, type BrandedMailFact } from "./branded-layout";
+import { inviteeCalendarUrl, renderBrandedMail, type BrandedMailAction, type BrandedMailFact, type BrandedMailInput } from "./branded-layout";
 import { mailJoinActions } from "./mail-action-url";
 import { bookingTimeFacts, previousBookingTimeFacts, timeFactsText } from "./booking-mail-times";
 export { formatTimeRange } from "./booking-mail-times";
@@ -90,14 +90,15 @@ export function bookingConfirmationMail(input: BookingMailDetails & {
   const text = input.recipientRole === "invitee"
     ? `${summary}${answerText}${joinText}\n\nManage this booking: ${input.manageUrl}\nAdd to calendar: ${input.manageUrl ? inviteeCalendarUrl(input.manageUrl) : ""}`
     : `${summary}${answerText}\n\nInvitee: ${input.inviteeName} <${input.inviteeEmail}>${joinText}`;
-  const html = renderBrandedMail({
+  // Keep the frame's plain values until delivery resolves the workspace brand.
+  const confirmationLayout: BrandedMailInput = {
     businessName: input.hostName,
     heading: input.eventTitle,
     intro: input.recipientRole === "invitee" ? "Your booking is confirmed." : "A new booking is confirmed.",
     facts,
     actions,
-  });
-  return { text, html };
+  };
+  return { text, html: renderBrandedMail(confirmationLayout), confirmationLayout };
 }
 
 export function bookingLinkReadyMail(input: BookingMailDetails & { manageUrl: string; meetingUrl: string }) {
