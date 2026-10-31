@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "54b9633f9fdc2700c0ec247cbfc5648ff223d1329b2f452a96e62a510d1386c7",
+      "sha256": "c35d47254b166d0cd0d24b1d06e59e41e9e8e155a75c0cfc20f76ab3a790e4a7",
       "executable": false
     },
     "DEMO.md": {
@@ -8556,7 +8556,7 @@
       "executable": false
     },
     "tests/booking-wire/correspondence-journey.mjs": {
-      "sha256": "006c1da6a9d4bfbeef3f3bd7d45752d24104d18a305dfeec4959af953918ccbb",
+      "sha256": "7f805add830b0e1df35fe449b25f226adac6cff1346db702f2d8471cfb88e5b7",
       "executable": false
     },
     "tests/booking-wire/deletion-journey.mjs": {
