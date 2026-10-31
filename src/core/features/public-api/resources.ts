@@ -1,3 +1,4 @@
+import { apiHosts } from "../api-credentials/authority";
 import { Hono } from "hono";
 import { eventTypeCreationSchema, eventTypeInputSchema } from "../event-types";
 import { toPublicEventType } from "../event-types";
@@ -24,7 +25,10 @@ export const resourceRoutes=new Hono<ApiEnvironment>()
  })
  .post("/api/v1/event-types",validate("json",eventTypeCreationSchema),async c=>{
   if(c.get("apiCredential").teamId)return refusal(c,403,"scope_forbidden","A team credential cannot create workspace event types.");
-  const body=c.req.valid("json");return idempotent(c,body,async()=>{const event=await c.get("services").eventTypes.createEventType(body);return {status:201,body:{id:event.id,status:event.status,...toPublicEventType(event)}};});
+  const body=c.req.valid("json");return idempotent(c,body,async()=>{const event=await c.get("services").eventTypes.createEventType(body);
+    const credential=c.get("apiCredential");
+    if(credential.hostId&&await c.get("apiDatabase").prepare("SELECT id FROM api_hosts WHERE id=?").bind(credential.hostId).first())await c.get("apiDatabase").prepare("INSERT INTO api_event_hosts(event_type_id,host_id) VALUES(?,?)").bind(event.id,credential.hostId).run();
+    return {status:201,body:{id:event.id,status:event.status,...toPublicEventType(event)}};});
  })
  .put("/api/v1/event-types/:id",validate("json",eventTypeInputSchema),async c=>{
   const id=c.req.param("id"),body=c.req.valid("json"),services=c.get("services");
@@ -55,7 +59,7 @@ export const resourceRoutes=new Hono<ApiEnvironment>()
  })
  .get("/api/v1/hosts",async c=>{
   const host=await hostAllowed(c,c.get("apiCredential"));
-  return page(c,host?[{id:host.id,name:host.name,handle:host.handle,timezone:host.timezone}]:[]);
+  return page(c,host?(await apiHosts(c.get("apiDatabase"))).filter(row=>!c.get("apiCredential").hostId||row.id===c.get("apiCredential").hostId):[]);
  })
  .get("/api/v1/teams",async c=>{
   const credential=c.get("apiCredential"),host=await hostAllowed(c,credential);
@@ -103,8 +107,8 @@ export const resourceRoutes=new Hono<ApiEnvironment>()
  .get("/api/v1/polls",async c=>{
   const credential=c.get("apiCredential"),bounds=parsePage(c);if(bounds instanceof Response)return bounds;
   const rows=(await c.get("apiDatabase").prepare(`SELECT id,event_type_id AS eventTypeId,title,closes_at AS closesAt,state,show_tally AS showTally,hold_link_id AS holdLinkId FROM meeting_polls p
-    WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=p.event_type_id)) ORDER BY id LIMIT ?`)
-    .bind(bounds.after,credential.teamId,credential.teamId,bounds.limit+1).all<{id:string;eventTypeId:string;title:string;closesAt:string;state:string;showTally:number;holdLinkId:string|null}>()).results;
+    WHERE id>? AND (? IS NULL OR COALESCE((SELECT host_id FROM api_event_hosts a WHERE a.event_type_id=p.event_type_id),(SELECT id FROM host_profiles WHERE singleton_key='default'))=?) AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=p.event_type_id)) ORDER BY id LIMIT ?`)
+    .bind(bounds.after,credential.hostId,credential.hostId,credential.teamId,credential.teamId,bounds.limit+1).all<{id:string;eventTypeId:string;title:string;closesAt:string;state:string;showTally:number;holdLinkId:string|null}>()).results;
   return pageResult(c,rows,bounds.limit);
  })
  .post("/api/v1/polls",validate("json",pollInput),async c=>{

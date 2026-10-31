@@ -40,8 +40,8 @@ export const publicApiRoutes=new Hono<ApiEnvironment>()
     const credential=c.get("apiCredential"),limit=Number(c.req.query("limit")??"50");let after="";
     if(!Number.isInteger(limit)||limit<1||limit>100)return refusal(c,400,"invalid_pagination","Choose a limit from 1 to 100.");
     try{if(c.req.query("cursor")){after=atob(c.req.query("cursor")!);if(!/^[0-9A-Z]{26}$/.test(after))throw new Error();}}catch{return refusal(c,400,"invalid_cursor","This cursor is invalid.");}
-    const ids=(await c.get("apiDatabase").prepare(`SELECT id FROM bookings b WHERE id>? AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
-      .bind(after,credential.teamId,credential.teamId,limit+1).all<{id:string}>()).results;
+    const ids=(await c.get("apiDatabase").prepare(`SELECT id FROM bookings b WHERE id>? AND (? IS NULL OR COALESCE((SELECT host_id FROM api_event_hosts a WHERE a.event_type_id=b.event_type_id),(SELECT id FROM host_profiles WHERE singleton_key='default'))=?) AND (? IS NULL OR EXISTS(SELECT 1 FROM team_event_types t WHERE t.team_id=? AND t.event_type_id=b.event_type_id)) ORDER BY id LIMIT ?`)
+      .bind(after,credential.hostId,credential.hostId,credential.teamId,credential.teamId,limit+1).all<{id:string}>()).results;
     const data=[];
     for(const row of ids.slice(0,limit)){const booking=await bookingAllowed(c,credential,row.id);if(booking)data.push(bookingView(booking));}
     return c.json({data,nextCursor:ids.length>limit?btoa(ids[limit-1].id):null});
