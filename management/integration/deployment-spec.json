@@ -576,6 +576,12 @@
       "name": "0094_coupon_issuance_receipts.sql",
       "sha256": "c9fd8163b548e4abbb8b4be971c0acb5427e497e58100e79b7a514ff7b8f4961",
       "sql": "-- Non-personal issuance identity survives purchaser erasure, preventing an old command from recreating credit.\nALTER TABLE payment_products ADD COLUMN issuance_key_hash TEXT;\nCREATE UNIQUE INDEX payment_coupon_issuance_identity ON payment_products(issuance_key_hash);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0095_poll_reminders.sql",
+      "sha256": "0dd3b26ff3f0148342d1c9776af5b3dbf1ed513a82391a4de1ef9f36099235cb",
+      "sql": "-- Existing polls remain silent until the owner explicitly configures reminders.\nALTER TABLE meeting_polls ADD COLUMN reminder_offsets_json TEXT NOT NULL DEFAULT '[]'\n CHECK(json_valid(reminder_offsets_json) AND json_type(reminder_offsets_json)='array');\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

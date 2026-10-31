@@ -37,7 +37,10 @@ export class PollReminders {
       .all<{pollId:string;title:string;closesAt:string;participantId:string;email:string;tokenHash:string;offsetMinutes:number;invitationText:string}>();
     let queued = 0;
     for (const item of due.results) {
-      const link = item.invitationText?.match(/https?:\/\/\S+/u)?.[0];
+      // The title may contain links too. Read the final action line from the
+      // invitation format already stored by existing installations.
+      const action = "Choose your availability: ";
+      const link = item.invitationText?.split("\n").filter(line => line.startsWith(action)).at(-1)?.slice(action.length);
       if (!link) continue;
       const url = new URL(link), token = url.searchParams.get("token");
       if (url.origin !== new URL(this.origin).origin || url.pathname !== `/poll/${item.pollId}`

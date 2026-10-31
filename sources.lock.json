@@ -1672,7 +1672,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "7565b8e9ea7c5973ba0e76075dc5153444399ea919d429fd67272a014dbea404",
+      "sha256": "a2080b0ac4c7662b865e96ad9d78dd8fddea28d1093f0a9b157edf65d88a0999",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -6640,7 +6640,7 @@
       "executable": false
     },
     "src/core/features/polls/reminders.ts": {
-      "sha256": "5b63005206d0e3b9a5ce5002547a6b13d23f55118573029505a347e025e9ec2f",
+      "sha256": "e22c532712aab0c624f27b14f9d9e8c8abba9a7b37138750f19b81d87c406a61",
       "executable": false
     },
     "src/core/features/polls/repository.ts": {
@@ -8696,7 +8696,7 @@
       "executable": false
     },
     "tests/booking-wire/poll-journey.mjs": {
-      "sha256": "e4629a13fb75a426d7c09798b1f871b1e4b3f7d8582d8d8fd3ee0f44e2a3f8f6",
+      "sha256": "055544bb14cfebc2dde630635c04b8c9838bdcab33dc357bbd4cfe6d1bac4e52",
       "executable": false
     },
     "tests/booking-wire/poll-reminder-fixtures.ts": {
@@ -8704,7 +8704,7 @@
       "executable": false
     },
     "tests/booking-wire/poll-reminder-journey.mjs": {
-      "sha256": "5a074aa646506591aae56fbdaf48e3ad676068548b4c8b753b0bf44263ca4c74",
+      "sha256": "8025b8bc8e9f5badc94549fef43f2c77701647b9f91c51e29a2707815483db86",
       "executable": false
     },
     "tests/booking-wire/reconciliation-probes.mjs": {
@@ -9800,7 +9800,7 @@
       "executable": false
     },
     "tests/polls/fixture.mjs": {
-      "sha256": "3d99ccefb19c9f7b472d2776a09f65085838d2f8110b6895007a8541f7c33998",
+      "sha256": "3dfd4b61a19a2388be5561469fa7b8ca694055de15e257822a492ca486ff91f3",
       "executable": false
     },
     "tests/polls/native.mjs": {
