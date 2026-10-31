@@ -32,7 +32,7 @@ export const clientRoutes = new Hono<AppEnvironment>()
         customFields: await services.customFields.entries("booking", id),
       });
     }
-    return context.json({ ...await services.clients.records.details(email), totalCount: history.totalCount, bookings });
+    return context.json({ ...await services.clients.records.details(email), name: history.name, totalCount: history.totalCount, bookings });
   })
   .post("/api/app/clients/notes", validate("json", z.object({ email: z.string().trim().email().max(320), body: z.string().trim().min(1).max(5000) }).strict()), async context => {
     context.header("Cache-Control", "private, no-store");
@@ -40,6 +40,17 @@ export const clientRoutes = new Hono<AppEnvironment>()
     const { email, body } = context.req.valid("json");
     const id = await services.clients.records.add(email, { body, operatorId: context.get("session").id });
     return id ? context.json({ id },201) : apiError(context,404,"client_not_found","The client does not exist.");
+  })
+  .post("/api/app/clients/notes/:id/edit", validate("json", z.object({ email: z.string().trim().email().max(320), body: z.string().trim().min(1).max(5000) }).strict()), async context => {
+    context.header("Cache-Control", "private, no-store");
+    const services = context.get("services"); await services.operators.requireMutation(context.req.raw);
+    const { email, body } = context.req.valid("json");
+    return await services.clients.records.changeNote(email, context.req.param("id"), body) ? context.json({ id: context.req.param("id") }) : apiError(context,404,"note_not_found","The note does not exist.");
+  })
+  .post("/api/app/clients/notes/:id/remove", validate("json", z.object({ email: z.string().trim().email().max(320) }).strict()), async context => {
+    context.header("Cache-Control", "private, no-store");
+    const services = context.get("services"); await services.operators.requireMutation(context.req.raw);
+    return await services.clients.records.changeNote(context.req.valid("json").email, context.req.param("id")) ? context.json({ id: context.req.param("id") }) : apiError(context,404,"note_not_found","The note does not exist.");
   })
   .post("/api/app/clients/fields", validate("json", z.object({ email: z.string().trim().email().max(320), label: z.string().trim().min(1).max(120), value: z.string().trim().min(1).max(5000) }).strict()), async context => {
     context.header("Cache-Control", "private, no-store");
