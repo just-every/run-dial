@@ -29,7 +29,7 @@ export async function authenticateCredential(context: Context<AppEnvironment>): 
       .bind(row.oauth_application_id,now).first();
     if (!app) return refused("credential_revoked");
   }
-  if(row.oauth_grant_id&&!await db.prepare("SELECT id FROM api_oauth_grants WHERE id=? AND operator_id=? AND application_id=? AND revoked_at IS NULL AND expires_at>?").bind(row.oauth_grant_id,row.operator_id,row.oauth_application_id,now).first())return refused("credential_revoked");
+  if(row.oauth_grant_id&&!await db.prepare("SELECT g.id FROM api_oauth_grants g JOIN oa_operators person ON person.id=g.operator_id WHERE g.id=? AND g.operator_id=? AND g.application_id=? AND g.revoked_at IS NULL AND g.expires_at>? AND person.status='active' AND person.role='owner'").bind(row.oauth_grant_id,row.operator_id,row.oauth_application_id,now).first())return refused("credential_revoked");
   const used = await db.prepare("UPDATE api_credentials SET last_used_at=?,updated_at=? WHERE id=? AND revoked_at IS NULL AND expires_at>?")
     .bind(now,now,row.id,now).run();
   if (!used.meta.changes) return refused("credential_revoked");
