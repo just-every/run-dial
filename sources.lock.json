@@ -8376,7 +8376,7 @@
       "executable": false
     },
     "tests/booking-axe/keyboard-bookings.mjs": {
-      "sha256": "a471799003bcba3b0ccb485d21a998d825794cb951c7718edf1df60b5191b6c3",
+      "sha256": "b825b3fe30b2b26f6ea1ec38f73d8a1e30f842359d422cccb350b187620357d1",
       "executable": false
     },
     "tests/booking-axe/keyboard-controls.mjs": {
@@ -8412,7 +8412,7 @@
       "executable": false
     },
     "tests/booking-axe/notice-settings.mjs": {
-      "sha256": "491d00984ff71796ecd8b429ee3868d697e435845a128da44826662c849457a7",
+      "sha256": "ac0bd847596c6dfa2d94c31e21789db1f2a4ea774fd578e90ac58a0edbba60b7",
       "executable": false
     },
     "tests/booking-axe/operator.mjs": {
