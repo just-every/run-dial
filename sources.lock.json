@@ -8512,7 +8512,7 @@
       "executable": false
     },
     "tests/booking-wire/booking-policy-journey.mjs": {
-      "sha256": "fcef3144ed132591b3a9ce50e021d44e4c36564e3bc9f5014378c145e6dc2173",
+      "sha256": "efcc9a1ea7082d95f8b80ab168c8356c521ee593fa7464e8023468a65eae646a",
       "executable": false
     },
     "tests/booking-wire/correspondence-journey.mjs": {
