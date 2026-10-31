@@ -4,7 +4,7 @@ import type { AppEnvironment } from "../../app/context";
 import { apiError } from "../../shared/http";
 import { validate } from "../../shared/validation";
 
-const invitation = z.object({ email: z.string().trim().toLowerCase().email().max(320) }).strict();
+const invitation = z.object({ email: z.string().trim().toLowerCase().email().max(320),role:z.enum(["owner","admin"]).default("owner") }).strict();
 const target = z.object({ id: z.string().min(1).max(128) });
 export const operatorManagementRoutes = new Hono<AppEnvironment>()
   .get("/api/app/operators", async (context) => {
@@ -14,8 +14,12 @@ export const operatorManagementRoutes = new Hono<AppEnvironment>()
   })
   .post("/api/app/operators", validate("json", invitation), async (context) => {
     const services = context.get("services");
-    const result = await services.operatorManagement.invite(context.req.raw, context.req.valid("json").email);
+    const result = await services.operatorManagement.invite(context.req.raw, context.req.valid("json").email,context.req.valid("json").role);
     return context.json(result, 201);
+  })
+  .post("/api/app/operators/:id/api-role",validate("param",target),validate("json",z.object({role:z.enum(["admin","member"])}).strict()),async context=>{
+    const operator=await context.get("services").operators.auth.setRole(context.req.raw,context.req.valid("param").id,context.req.valid("json").role);
+    return context.json({operator:{id:operator.id,role:operator.role}});
   })
   .post("/api/app/operators/:id/remove", validate("param", target), async (context) => {
     await context.get("services").operatorManagement.removeWithinNotificationGate(context.req.raw, context.req.valid("param").id);
