@@ -125,3 +125,119 @@ export async function confirmationChoiceJourney({ data, call, state, deliver, fu
   }
   checks.push('NOTIFY-001 default-on and duplicated per-event switch; mail-first calendar success suppresses Dial invitee mail with honest status, failed writes and no-calendar bookings each send one confirmation with manage link and .ics; host mail and reminders survive');
 }
+
+/** Confirmation mail resolves the chosen workspace look before its first provider attempt. */
+export async function confirmationBrandJourney({ data, call, state, deliver, future, checks, origin }) {
+  const { htmlBody } = await import('./mail-contracts.mjs');
+  const proof = [];
+  const name = 'Studio <script> & "Partners"';
+  const setLook = change => data('/api/app/site-look', change, 200, 'PUT');
+  const chosen = await setLook({ name, background: '#f4f9fe', ink: '#f4f9fe', accent: '#275b83', buttonInk: '#275b83' });
+  assert.deepEqual(chosen.shown.colours, { background: '#f4f9fe', ink: '#1d1c1a', accent: '#275b83', buttonInk: '#ffffff' });
+  const assetPath = chosen.shown.mark.url;
+  const publicMark = await fetch(origin + assetPath);
+  assert.equal(publicMark.status, 200);
+  assert.equal(publicMark.headers.get('content-type'), 'image/svg+xml');
+  assert.equal((await fetch(origin + assetPath.replace(/[a-f0-9]{64}/u, '0'.repeat(64)))).status, 404, 'only an authorized stored mark is public');
+  const event = await data('/api/app/event-types', {
+    slug: 'confirmation-brand', title: 'Studio planning', description: 'Plan a studio visit.', durationMinutes: 30,
+    color: '#176b5a', locationType: 'fixed_link', locationLabel: 'Video call', locationValue: 'https://meet.example.test/studio',
+    listed: true, alternativeRequestsEnabled: false, slotIncrementMinutes: 30, minimumNoticeMinutes: 0, bookingHorizonDays: 90,
+    beforeBufferMinutes: 0, afterBufferMinutes: 0, hostDayBookingLimit: null,
+    questions: [{ kind: 'text', label: 'Project', required: true, private: false, options: [] }, { kind: 'text', label: 'Private note', required: true, private: true, options: [] }],
+    availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 240, endMinute: 480 })),
+  }, 201);
+  await data(`/api/app/event-types/${event.id}/publish`, {});
+  const base = `/api/public/book/dial-host/${event.slug}`, configPath = `/api/app/event-types/${event.id}/correspondence`;
+  const config = await data(configPath), [publicQuestion, privateQuestion] = event.questions;
+  const hostAddress = ['operator', 'dial.test'].join('@');
+  const control = (name, value) => data('/wire/control', { name, value });
+  for (const mode of ['built-in', 'edited', 'plain', 'plain-edited', 'no-mark']) {
+    const edited = mode === 'edited' || mode === 'plain-edited';
+    const plain = mode.startsWith('plain');
+    await setLook({ look: plain ? 'plain' : 'site', mark: mode === 'no-mark' ? 'none' : 'site', name, accent: '#275b83' });
+    config.templates.confirmationSubject = edited ? 'A studio visit for {invitee first name}' : null;
+    config.templates.confirmationBody = edited ? `Hello {invitee first name}, {event name}\nPrivate note: {answer.${privateQuestion.key}}\n{manage link}` : null;
+    if (mode !== 'built-in') await data(configPath, config, 200, 'PUT');
+    const email = [`synthetic-dial-902-${mode}`, 'example.test'].join('@');
+    const slot = (await data(`${base}/availability?week=${future}`)).slots[0]; assert.ok(slot);
+    const selection = await data(`${base}/selection`, { startAt: slot.startAt, inviteeTimezone: 'UTC' }, 201);
+    const input = { nonce: selection.nonce, startAt: slot.startAt, inviteeTimezone: 'UTC', name: 'Taylor Morgan', email, answers: { [publicQuestion.key]: 'Library project', [privateQuestion.key]: 'Private studio budget' } };
+    const receipt = await data(`${base}/confirm`, input, 201);
+    await data(`${base}/confirm`, input, 200);
+    let snap = await state();
+    const booking = snap.bookings.find(row => row.id === receipt.bookingReference); assert.ok(booking);
+    const mailRows = snap.delivery_outbox.filter(row => row.booking_id === booking.id && row.kind === 'mail_send');
+    assert.equal(mailRows.length, 2, 'one invitee and one host confirmation, with no extra recipients');
+    assert.deepEqual(mailRows.map(row => JSON.parse(row.payload_json).to).sort(), [email, hostAddress].sort());
+    for (const address of [email, hostAddress]) await control(`mail-rate-limited:${address}`, 1);
+    await deliver(); snap = await state();
+    const first = bookingMail(snap, booking.id);
+    assert.equal(first.length, 2, 'both real provider requests are inspected, including transient refusal');
+    for (const mail of first) {
+      const html = htmlBody(mail), text = textBody(mail), invitee = recipient(mail).includes(email);
+      proof.push({ mode, role: invitee ? 'invitee' : 'host', html });
+      assert.deepEqual(recipient(mail), [invitee ? email : hostAddress]);
+      assert.equal(mail.subject, invitee ? edited ? 'A studio visit for Taylor' : `${mode === 'built-in' ? 'Confirmed' : 'Booking confirmed'}: Studio planning` : 'New booking: Studio planning');
+      assert.ok(html.includes('Studio planning'));
+      assert.ok(text.includes('Private studio budget'), 'the invitee and host keep their existing private answer visibility');
+      if (invitee) assert.ok(html.includes(receipt.manageUrl));
+      else assert.ok(!JSON.stringify(mail).includes(new URL(receipt.manageUrl).pathname.split('/').at(-1)), 'branding never shares invitee authority with host mail');
+      if (plain) {
+        assert.ok(!html.includes('<img'));
+        assert.ok(!html.includes('Studio &lt;script&gt;'));
+        assert.ok(html.includes('Morgan Bell'));
+        assert.ok(html.includes('background:#f4f1ea'));
+        assert.ok(html.includes('background:#1d1c1a'));
+      } else {
+        assert.ok(html.includes('Studio &lt;script&gt; &amp; &quot;Partners&quot;'));
+        assert.ok(!html.includes('<script>'));
+        assert.ok(html.includes('background:#f4f9fe'));
+        assert.ok(html.includes('color:#1d1c1a'));
+        assert.ok(html.includes('background:#275b83'));
+        if (invitee) assert.ok(html.includes('color:#ffffff'));
+        if (mode === 'no-mark') assert.ok(!html.includes('<img'));
+        else {
+          const images = [...html.matchAll(/<img\b[^>]*src="([^"]+)"/gu)].map(match => new URL(match[1]));
+          assert.equal(images.length, 1);
+          assert.equal(images[0].origin, origin, 'mail asset belongs to the deployment, never the source website');
+          assert.equal(images[0].pathname, assetPath);
+          assert.ok(!html.includes('studio.example.test'));
+        }
+      }
+    }
+    const calendar = snap.wire_calls.filter(row => row.method === 'POST' && new URL(row.url).pathname.endsWith('/events')).map(row => JSON.parse(row.body)).find(row => row.extendedProperties?.private?.['dial-booking-id'] === booking.id);
+    assert.ok(calendar);
+    assert.ok(!calendar.description.includes('Private studio budget'), 'a shared calendar invitation never acquires private answers');
+    // A later workspace edit cannot change a retry's text, mark, palette or identity.
+    await setLook({ name: 'Later workspace', accent: '#6b234d', look: plain ? 'site' : 'plain' });
+    for (const row of mailRows) await call('/__fixtures/due', { id: row.id }, 204);
+    await deliver(); snap = await state();
+    const attempts = bookingMail(snap, booking.id);
+    assert.equal(attempts.length, 4);
+    for (const mail of first) {
+      const sameIdentity = attempts.filter(attempt => attempt.custom_args.rer_delivery_id === mail.custom_args.rer_delivery_id);
+      assert.equal(sameIdentity.length, 2);
+      assert.deepEqual(sameIdentity[1], mail, 'retry provider bytes remain frozen after the workspace look changes');
+    }
+    const delivered = snap.wire_calls.length;
+    await Promise.all(mailRows.map(row => data('/__fixtures/deliver', { id: row.id })));
+    await deliver();
+    assert.equal((await state()).wire_calls.length, delivered, 'successful duplicate queue delivery sends nothing');
+    assert.equal((await state()).bookings.filter(row => row.id === booking.id).length, 1);
+    checks.push(`BRAND-001 ${mode}: one native booking; invitee and host HTML, local mark, escaped text, palette, private boundaries, frozen retry and delivery deduplication`);
+  }
+  // Confirm text and button contrast independently from the normalization result.
+  const ratio = (a, b) => {
+    const light = hex => {
+      const rgb = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255).map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    };
+    return (Math.max(light(a), light(b)) + 0.05) / (Math.min(light(a), light(b)) + 0.05);
+  };
+  const palette = chosen.shown.colours;
+  assert.ok(ratio(palette.ink, palette.background) >= 4.5);
+  assert.ok(ratio(palette.buttonInk, palette.accent) >= 4.5);
+  assert.ok(ratio(palette.accent, palette.background) >= 3);
+  return proof;
+}
