@@ -1,3 +1,4 @@
+import type { MailBrandReader } from "./mail-brand";
 import type { AnalyticsDelivery } from "../analytics";
 import { templatedCalendar, templatedMail } from "./correspondence";
 import { reminderMessage } from "./reminders";
@@ -14,7 +15,7 @@ import type { OperatorNotificationCommand } from "../../platform/operator-notifi
 import { isOperatorNotification } from "./operator-mail";
 import { bookingCancellationMail, type BookingCancellationTemplate } from "./booking-mails";
 import { formatUsd } from "../../shared/event-price";
-import { escapeHtml, inviteeCalendarUrl, validateMailUrl } from "./branded-layout";
+import { escapeHtml, inviteeCalendarUrl, renderBrandedMail, validateMailUrl, type BrandedMailInput } from "./branded-layout";
 import { hashToken } from "../../platform/auth/tokens";
 
 const retryDelaysMs = [60_000, 3 * 60_000, 8 * 60_000, 18 * 60_000, 30 * 60_000];
@@ -35,6 +36,7 @@ export class ProviderDeliveryService {
     private readonly notices: import("../workspace-notices").NoticeDelivery,
     private readonly operatorNotification?: OperatorNotificationCommand,
     private readonly analytics?: AnalyticsDelivery,
+    private readonly mailBrand?: MailBrandReader,
   ) {}
 
   async processDue(limit = 25, now = new Date()) {
@@ -198,6 +200,11 @@ export class ProviderDeliveryService {
     // Freeze the exact provider bytes before the effect. An ambiguous explicit
     // retry retains both those bytes and the original provider identity.
     const frozen = isRecord(payload.wireMail) ? payload.wireMail : undefined;
+    const confirmation = record.kind === "mail_send" && (isRecord(payload.confirmationLayout) || payload.messageKind === "confirmation");
+    const brand = !frozen && confirmation ? await this.mailBrand?.read() : undefined;
+    if (!frozen && confirmation && isRecord(payload.confirmationLayout)) {
+      payload.html = renderBrandedMail({ ...payload.confirmationLayout as BrandedMailInput, brand });
+    }
     if (!frozen && payload.mailTemplate !== undefined) {
       const template = bookingCancellationTemplate(payload.mailTemplate);
       if (!template || (payload.recipientRole !== "invitee" && payload.recipientRole !== "operator")) throw new ProviderFailure("invalid_delivery_payload", false);
@@ -235,7 +242,7 @@ export class ProviderDeliveryService {
             return undefined;
           }
         }
-        if (data) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now));
+        if (data) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now), kind === "confirmation" ? brand : undefined);
       }
     }
     const message = toMailMessage(frozen ?? payload, providerKey);
