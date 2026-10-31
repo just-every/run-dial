@@ -25,6 +25,9 @@ export function Button({ className = "", variant = "primary", icon, children, ..
 /** A link or disclosure alone on its line is a 44px tap target at phone width; wide layouts keep their own height. */
 export const phoneTapClassName = "max-sm:inline-flex max-sm:min-h-11 max-sm:items-center";
 
+/** The native file control drawn inside the app's own field: a pill button in the field, as Profile's avatar field. */
+export const fileInputClassName = "py-1.5 file:mr-3 file:min-h-8 file:cursor-pointer file:rounded-full file:border file:border-solid file:border-line file:bg-card file:px-4 file:text-sm file:font-semibold file:text-ink";
+
 /** An inline text link in ink, underlined, with the landing's gold-deep underline on hover. */
 export const textLinkClassName = "font-semibold text-ink underline decoration-[1.5px] underline-offset-[5px] hover:decoration-gold-deep";
 
