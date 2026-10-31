@@ -158,7 +158,11 @@ export async function confirmationBrandJourney({ data, call, state, deliver, fut
     const expectedPalette = mode === 'dark'
       ? { background: '#181a1e', ink: '#ffffff', accent: '#f4cb62', buttonInk: '#181a1e' }
       : { background: '#f4f9fe', ink: '#1d1c1a', accent: '#275b83', buttonInk: '#ffffff' };
-    await setLook({ look: plain ? 'plain' : 'site', mark: mode === 'no-mark' ? 'none' : 'site', name, ...expectedPalette });
+    const requestedPalette = mode === 'built-in'
+      ? { ...expectedPalette, ink: expectedPalette.background, buttonInk: expectedPalette.accent }
+      : expectedPalette;
+    const savedLook = await setLook({ look: plain ? 'plain' : 'site', mark: mode === 'no-mark' ? 'none' : 'site', name, ...requestedPalette });
+    assert.deepEqual(savedLook.siteLook.colours, expectedPalette, 'mail uses the normalized workspace palette after an unsafe contrast choice');
     config.templates.confirmationSubject = edited ? 'A studio visit for {invitee first name}' : null;
     config.templates.confirmationBody = edited ? `Hello {invitee first name}, {event name}\nPrivate note: {answer.${privateQuestion.key}}\n{manage link}` : null;
     if (mode !== 'built-in') await data(configPath, config, 200, 'PUT');
