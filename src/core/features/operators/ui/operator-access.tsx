@@ -29,7 +29,7 @@ export function OperatorAccessCard() {
     if (working) return;
     setWorking(true); setError(""); setNotice("");
     try {
-      const response = await api.api.app.operators.$post({ json: { email,role } });
+      const response = role==="owner"?await api.api.app.operators.$post({json:{email}}):await api.api.app["api-administrators"].$post({json:{email}});
       if (!response.ok) throw new Error(await errorMessage(response));
       const result = await response.json();
       setEmail("");
@@ -49,7 +49,7 @@ export function OperatorAccessCard() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : "The result could not be received. Reload operators before retrying."); }
     finally { setWorking(false); }
   }
-  return <Card className="p-5 sm:p-6 xl:col-span-2">
+  return <Card id="operator-access" className="p-5 sm:p-6 xl:col-span-2">
     <SectionHeading icon="people" title="Workspace access" />
     <p className="mt-3 text-sm leading-6 text-soft">Owners share workspace access. Admins can manage API credentials and connected apps through authenticated API requests; workspace pages remain owner-only. Removal erases their identity, sessions, private links and local mail. Authored records remain anonymous and the shared calendar stays connected. Erase matching invitee bookings and requests from their detail pages before removing an operator.</p>
     {error ? <p role="alert" className={noticeClassName("error", "mt-3")}>{error}</p> : null}
@@ -64,7 +64,7 @@ export function OperatorAccessCard() {
     {removing ? <div className="mt-5 rounded-[14px] border border-danger-line bg-danger-wash p-4 text-ink"><p className="break-words text-sm font-semibold">Remove access for {removing.email}?</p><p className="mt-2 text-sm">Their identity and local mail will be erased, and their sessions and unused sign-in links will stop working.</p><div className="mt-3 flex flex-wrap gap-3"><Button type="button" variant="danger" disabled={working} onClick={() => void remove()}>Confirm removal</Button><Button type="button" variant="secondary" disabled={working} onClick={() => { setRemoving(undefined); removalOpener.current?.focus(); }}>Keep access</Button></div></div> : null}
     <form className="mt-6 grid gap-3 border-t border-line-soft pt-5 sm:grid-cols-[1fr_180px_auto]" onSubmit={(event) => void invite(event)}>
       <label className="grid gap-2 text-sm font-[650]">Operator email<Input type="email" autoComplete="email" maxLength={320} required value={email} onChange={(event) => setEmail(event.target.value)} disabled={working || !operators} /></label>
-      <label className="grid gap-2 text-sm font-[650]">Access level<Select value={role} onChange={event=>setRole(event.target.value as "owner"|"admin")} disabled={working||!operators}><option value="owner">Owner</option><option value="admin">API administrator</option></Select></label>
+      <label className="grid gap-2 text-sm font-[650]">Access level<Select aria-label="Access level" value={role} onChange={event=>setRole(event.target.value as "owner"|"admin")} disabled={working||!operators}><option value="owner">Owner</option><option value="admin">API administrator</option></Select></label>
       <Button ref={inviteButton} type="submit" className="self-end" disabled={working || !operators}>{working ? "Saving…" : "Invite operator"}</Button>
     </form>
   </Card>;

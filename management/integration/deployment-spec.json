@@ -588,6 +588,12 @@
       "name": "0096_api_authority_cleanup.sql",
       "sha256": "630e8d565bfb8137ede95f81e5f38b54d0f6f7b0716c5b8414ce88f58a02e6d6",
       "sql": "-- Replace automatic nulling with the explicit erasure batch, preserving host partitions.\nCREATE TABLE api_hosts_next (\n id TEXT PRIMARY KEY NOT NULL,\n operator_id TEXT UNIQUE REFERENCES oa_operators(id),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nINSERT INTO api_hosts_next SELECT * FROM api_hosts;\nCREATE TABLE api_event_hosts_next (\n event_type_id TEXT PRIMARY KEY NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,\n host_id TEXT NOT NULL REFERENCES api_hosts_next(id)\n);\nINSERT INTO api_event_hosts_next SELECT * FROM api_event_hosts;\nDROP TABLE api_event_hosts;\nDROP TABLE api_hosts;\nALTER TABLE api_hosts_next RENAME TO api_hosts;\nALTER TABLE api_event_hosts_next RENAME TO api_event_hosts;\n-- Base keeps active-session versioning and final-owner protection for all native roles.\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0097_api_authority_revocation.sql",
+      "sha256": "1a26ba2efb6c40c69fa43d87a0f004526df154edd7e13aacd1963dd8cbdc5f42",
+      "sql": "-- Restoring a native role or status cannot revive its old API authority.\nCREATE TRIGGER api_native_authority_changed AFTER UPDATE OF role,status ON oa_operators\n WHEN OLD.role != NEW.role OR OLD.status != NEW.status\n BEGIN\n  UPDATE api_credentials SET revoked_at=COALESCE(revoked_at,strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n   updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')\n   WHERE operator_id=NEW.id OR oauth_application_id IN (SELECT id FROM api_oauth_applications WHERE operator_id=NEW.id);\n  UPDATE api_oauth_grants SET revoked_at=COALESCE(revoked_at,strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n   updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')\n   WHERE operator_id=NEW.id OR application_id IN (SELECT id FROM api_oauth_applications WHERE operator_id=NEW.id);\n  UPDATE api_oauth_applications SET revoked_at=COALESCE(revoked_at,strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n   updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE operator_id=NEW.id;\n END;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
