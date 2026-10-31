@@ -25,7 +25,8 @@
     "REQUEST-003": "DONE on its owner case; role refusals carried by OPER-001.",
     "OPER-002": "DONE on its owner case; role refusals carried by OPER-001.",
     "CUSTOM-001": "DONE on its owner case; role refusals carried by OPER-001.",
-    "EDITOR-001": "DONE on its owner case; role refusals carried by OPER-001."
+    "EDITOR-001": "DONE on its owner case; role refusals carried by OPER-001.",
+    "EVENT-007": "PARTIAL: native owner-session group capacity from 2 to 1,000 for free, unapproved single-host events with one fixed duration and location and no additional guests or connected calendar. Atomic seat admission, private per-invitee booking authority and reminders, individual cancellation, upgrade and archive custody are implemented. Controls, waitlist, whole-slot cancellation, shared calendar delivery and priced or approval group combinations remain unimplemented."
   },
   "extensionPointChanges": [],
   "migrations": [
@@ -276,6 +277,10 @@
     {
       "id": "0098_booking_webhook_hosts.sql",
       "buyerSteps": "Back up before applying in filename order after 0094. Preserve every previously applied migration byte. Binds booking webhook receivers and queued delivery authority to the booking event host, including active native host partitions. Preserves prior booking and delivery history. Recover with the pre-upgrade backup and matching code rather than resetting populated state."
+    },
+    {
+      "id": "0102_group_seat_capacity.sql",
+      "buyerSteps": "Apply in filename order after a verified backup. Existing events retain null group capacity and ordinary overlap exclusion. Group capacity is configured through the native authenticated event endpoints; disconnect the calendar first. Existing booking records remain the seat ledger; the migration adds configuration guards and a slot lookup index."
     }
   ],
   "breaking": false,

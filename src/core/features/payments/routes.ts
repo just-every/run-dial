@@ -1,4 +1,5 @@
 import { entitlementRoutes } from "./entitlement-routes";
+import { groupConfigurationMessages, groupWriteConflict } from "../group-events";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnvironment } from "../../app/context";
@@ -24,6 +25,11 @@ const moneyRefusalMessages: Record<MoneyRefusal, string> = {
 };
 
 export const paymentRoutes = new Hono<AppEnvironment>()
+  .onError((error, context) => {
+    const issue = groupWriteConflict(error);
+    if (issue) return apiError(context, 409, issue, groupConfigurationMessages[issue]);
+    throw error;
+  })
   .route("/",entitlementRoutes)
   .get("/api/app/payments/stripe", async context => context.json(await context.get("services").payments.connection.status()))
   .get("/api/app/payments/stripe/oauth/start", async context => {
@@ -42,6 +48,8 @@ export const paymentRoutes = new Hono<AppEnvironment>()
   .put("/api/app/event-types/:id/price", validate("param", eventSchema), validate("json", eventPriceInputSchema), async context => {
     const event = await context.get("services").eventTypes.getEventType(context.req.valid("param").id);
     if (!event) return apiError(context, 404, "event_type_not_found", "Event type not found.");
+    const input = context.req.valid("json");
+    if (event.groupCapacity != null && (input.amountCents !== null || input.durationPrices.length > 0)) return apiError(context, 409, "group_payment_unsupported", groupConfigurationMessages.group_payment_unsupported);
     const result = await context.get("services").payments.savePrice(event, context.req.valid("json"));
     if (result.kind === "deposit_conflict") return apiError(context, 409, "deposit_conflict", "The saved deposit must stay below every price. Change the deposit first.", ["deposit"]);
     return result.kind === "saved" ? context.json(result.price) : apiError(context, 400, "invalid_price", "Price each offered duration at least $0.50, or set one event price.", ["durationPrices"]);
@@ -54,6 +62,8 @@ export const paymentRoutes = new Hono<AppEnvironment>()
   .put("/api/app/event-types/:id/payment-terms", validate("param", eventSchema), validate("json", paymentTermsInputSchema), async context => {
     const event = await context.get("services").eventTypes.getEventType(context.req.valid("param").id);
     if (!event) return apiError(context, 404, "event_type_not_found", "Event type not found.");
+    const input = context.req.valid("json");
+    if (event.groupCapacity != null && (input.deposit.kind !== "none" || input.lateCancelFeeCents > 0 || input.noShowFeeCents > 0)) return apiError(context, 409, "group_payment_unsupported", groupConfigurationMessages.group_payment_unsupported);
     const result = await context.get("services").payments.saveTerms(event, context.req.valid("json"));
     return result.kind === "saved" ? context.json(result.terms) : apiError(context, 400, result.refusal, termsRefusalMessages[result.refusal]);
   })

@@ -1,3 +1,5 @@
+import { groupConfigurationIssue } from "../group-events";
+import type { EventTypeRecord } from "../event-types";
 import { activeApprovalIntervals } from "./approval-holds";
 import type { BusyInterval, InternalClaim } from "./engine";
 import { BookingLimits } from "./booking-limits";
@@ -6,6 +8,8 @@ import { activeHoldIntervals } from "../payments";
 /** Database reads required by availability; calendar reads stay in the adapter. */
 export class AvailabilityRepository {
   constructor(private readonly binding: D1Database) {}
+  async groupConfigurationIssue(event: EventTypeRecord) { return groupConfigurationIssue(this.binding, event, event.id); }
+
   async limitsForRange(eventId: string, zone: string, date: string, days: number, excludedBookingId?: string, inviteeEmail?: string) {
     if (excludedBookingId && !inviteeEmail) inviteeEmail = (await this.binding.prepare("SELECT invitee_email AS email FROM bookings WHERE id=?").bind(excludedBookingId).first<{ email: string }>())?.email;
     return new BookingLimits(this.binding).forRange(eventId, zone, date, days, excludedBookingId, inviteeEmail);
@@ -18,7 +22,7 @@ export class AvailabilityRepository {
     const result = await this.binding
       .prepare(
         `SELECT occurrence.occupied_start_at AS startAt, occurrence.occupied_end_at AS endAt, occurrence.host_date AS hostDate,
-                occurrence.start_at AS bookingStartAt, occurrence.end_at AS bookingEndAt
+                occurrence.start_at AS bookingStartAt, occurrence.end_at AS bookingEndAt, booking.event_type_id AS eventTypeId
          FROM booking_occurrences occurrence
          JOIN bookings booking ON booking.id = occurrence.booking_id
          WHERE occurrence.is_current = 1 AND occurrence.blocks_time = 1

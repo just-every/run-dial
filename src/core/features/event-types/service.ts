@@ -37,6 +37,10 @@ export class EventTypesService {
     private readonly publication?: EventPublicationReadiness,
   ) {}
 
+  groupConfigurationIssue(input: EventTypeInput | EventDetailsInput, id?: string) {
+    return this.repository.groupConfigurationIssue(input, id);
+  }
+
   listEventTypes() {
     return this.repository.list();
   }

@@ -97,7 +97,8 @@ export class BookingsService {
     if(!access || access.status!=="active")return {kind:"not_found" as const};
     if(access.booking.state==="cancelled" || Date.parse(access.booking.occurrence.startAt)<=Date.now())return {kind:"closed" as const};
     const guests=normalizedGuests(candidate,access.booking.inviteeEmail,await this.repository.guests.bookingLimit(access.booking.id));
-    if(!guests)return {kind:"invalid" as const};
+    const event = access.booking.eventTypeId ? await this.eventTypes.getEventType(access.booking.eventTypeId) : undefined;
+    if(!guests || (event?.groupCapacity != null && guests.length > 0))return {kind:"invalid" as const};
     await this.repository.guests.replace(access.booking,guests);
     return this.getManageBooking(token);
   }
@@ -190,11 +191,13 @@ export class BookingsService {
     const invitee = validateInvitee(event, { name: input.name, email: input.email, answers: input.answers });
     if (!invitee) return { kind: "invalid_answers" };
     const guests = normalizedGuests(input.guests, invitee.email, await this.repository.guests.limit(event.id));
-    if (!guests) return { kind: "invalid_answers" };
+    if (!guests || (event.groupCapacity != null && guests.length > 0)) return { kind: "invalid_answers" };
     invitee.guests = guests;
     if (await this.repository.isBlocked(invitee.email)) return await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce) ?? { kind: "blocked" };
     const selection = await this.availability.verifyResolvedPublicSelection(profile, { ...event, ...(offer?.event.bookingLink ? {bookingLink:offer.event.bookingLink} : {}) }, input.startAt, new Date(), undefined, selectedDuration);
     if (selection.kind !== "valid") {
+      const replay = await this.confirmationReplay(nonceHash, payloadHash, profile, input.nonce);
+      if (replay) return replay;
       if (selection.kind === "invalid_duration") return selection;
       if (selection.kind === "calendar_unavailable") return { kind: "calendar_unavailable" };
       const occupiedStart = new Date(Date.parse(input.startAt) - event.beforeBufferMinutes * 60_000).toISOString();
@@ -221,7 +224,9 @@ export class BookingsService {
       now,
       calendarPayload: selection.calendarRequired !== false ? { bookingId, occurrenceId, icalUid: `dial-${bookingId}@dial`, eventTitle: event.title, startAt: selection.slot.startAt, endAt: selection.slot.endAt, hostTimezone: profile.timezone, lockedTimezone: event.bookingPolicy?.lockedTimezone, invitee: { name: invitee.name, email: invitee.email }, location: event.locationValue, locationType: event.locationType } : undefined,
     };
+    if (event.groupCapacity != null && ((await this.repository.approvals.settings(event.id)).required || selection.calendarRequired !== false)) return { kind: "calendar_unavailable" };
     let quote = await this.payments?.quote(event.id, selectedDuration);
+    if (event.groupCapacity != null && quote) return { kind: "payments_unavailable", reason: "Group seats currently support free events without saved-card fees only." };
     if (quote?.kind === "unavailable") return { kind: "payments_unavailable", reason: quote.reason };
     const paymentApproval = await this.repository.approvals.settings(event.id);
     let entitlement: import("../payments/entitlement-repository").Redemption|undefined;

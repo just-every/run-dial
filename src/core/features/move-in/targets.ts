@@ -42,7 +42,7 @@ function snapshot(tables:NativeValue['tables'],appliedHash:string|null){
  }
  // 0058 and 0060 add physical defaults to SELECT *; omit each only when
  // unchanged, and only accept the complete retained source hash below.
- for(const [table,column,defaultValue] of [['event_types','locations_json',null],['booking_occurrences','blocks_time',1],['event_types','guest_limit',0],['bookings','guest_limit',0],['event_types','approval_required',0],['event_types','approval_window_hours',24]] as const){
+ for(const [table,column,defaultValue] of [['event_types','locations_json',null],['booking_occurrences','blocks_time',1],['event_types','guest_limit',0],['bookings','guest_limit',0],['event_types','approval_required',0],['event_types','approval_window_hours',24],['event_types','group_capacity',null]] as const){
   for(const candidate of [...eventVersions])if(candidate[table]?.length&&candidate[table].every(row=>row[column]===defaultValue))eventVersions.push({...candidate,[table]:candidate[table].map(row=>{const source={...row};delete source[column];return source;})});
  }
  for(const candidate of eventVersions){
@@ -70,7 +70,7 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
  if(table==='event_types'){
   if(!columns.includes('duration_options_json'))predicates.push("actual.duration_options_json IS json_array(actual.duration_minutes)");
   if(!columns.includes('booking_horizon_mode'))predicates.push("actual.booking_horizon_mode IS 'calendar_days'");
-  for(const key of ['booking_start_date','booking_end_date'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
+  for(const key of ['booking_start_date','booking_end_date','group_capacity'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
   if(!columns.includes('post_booking_redirect_json'))predicates.push('actual.post_booking_redirect_json IS NULL');
   for(const [key,defaultValue] of [['guest_limit',0],['approval_required',0],['approval_window_hours',24]] as const)if(!columns.includes(key))predicates.push(`actual.${key} IS ${defaultValue}`);
   if(!columns.includes('locations_json'))predicates.push('actual.locations_json IS NULL');

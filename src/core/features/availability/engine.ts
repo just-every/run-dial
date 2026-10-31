@@ -1,3 +1,4 @@
+import { isSameGroupSlot } from "../group-events";
 import { datePlus, hostDateAt, offsetMinutesAt, zonedOffsetLabel, zonedParts } from "./timezone";
 
 import { horizonAllows } from "../../shared/booking-horizon";
@@ -9,7 +10,7 @@ export { rankSlots, buildRecommendationContext } from "./recommendations";
 export type AvailabilityWindow = { weekday: number; startMinute: number; endMinute: number };
 export type DateOverride = { hostDate: string; mode: "open" | "closed"; windows: Array<{ startMinute: number; endMinute: number }> };
 export type BusyInterval = { startAt: string; endAt: string };
-export type InternalClaim = BusyInterval & { hostDate: string; bookingStartAt?: string; bookingEndAt?: string };
+export type InternalClaim = BusyInterval & { eventTypeId?: string | null; hostDate: string; bookingStartAt?: string; bookingEndAt?: string };
 export type AvailabilityConstraints = {
   durationMinutes: number;
   slotIncrementMinutes: number;
@@ -22,6 +23,8 @@ export type AvailabilityConstraints = {
   beforeBufferMinutes: number;
   afterBufferMinutes: number;
   hostDayBookingLimit: number | null;
+  eventTypeId?: string;
+  groupCapacity?: number | null;
   enforceMinimumNotice?: boolean;
   enforceHorizon?: boolean;
 };
@@ -119,7 +122,10 @@ function evaluateCandidate(
 
   const occupiedStart = start.getTime() - input.constraints.beforeBufferMinutes * 60_000;
   const occupiedEnd = end.getTime() + input.constraints.afterBufferMinutes * 60_000;
-  const overlapsClaim = input.internalClaims.some((claim) => overlaps(occupiedStart, occupiedEnd, Date.parse(claim.startAt), Date.parse(claim.endAt)));
+  const placement = { eventId: input.constraints.eventTypeId ?? "", startAt: start.toISOString(), endAt: end.toISOString(), occupiedStartAt: new Date(occupiedStart).toISOString(), occupiedEndAt: new Date(occupiedEnd).toISOString() };
+  const ownSeats = input.constraints.groupCapacity == null ? [] : input.internalClaims.filter(claim => isSameGroupSlot(claim, placement));
+  const overlapsClaim = ownSeats.length >= (input.constraints.groupCapacity ?? 1)
+    || input.internalClaims.some(claim => !ownSeats.includes(claim) && overlaps(occupiedStart, occupiedEnd, Date.parse(claim.startAt), Date.parse(claim.endAt)));
   const overlapsBusy = input.calendarBusy.some((interval) => overlaps(occupiedStart, occupiedEnd, Date.parse(interval.startAt), Date.parse(interval.endAt)));
   if (overlapsClaim) exclusions.push("dial_booking");
   if (overlapsBusy) exclusions.push("calendar_busy");
