@@ -50,6 +50,7 @@ import { publicAbuseRoutes } from "../features/public-abuse";
 import { accountingRoutes } from "../features/payments/accounting-routes";
 import { paymentRoutes } from "../features/payments";
 import { reportRoutes } from "../features/reports";
+import { auditRoutes } from "../features/audit/routes";
 
 /** Compose typed sub-apps so AppType retains the complete Hono RPC schema. */
 export function createApp(documents?: { fetch(request: Request): Promise<Response> }, servicesFactory?: (env: AppBindings) => AppServices, admitProvider?: (request: Request, env: AppBindings, provider: CallbackProvider) => Promise<Admission>) {
@@ -127,6 +128,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", routingRoutes)
     .route("/", noticeRoutes)
     .route("/", reportRoutes)
+    .route("/", auditRoutes)
     .route("/", publicBookingRoutes)
     .route("/", rememberRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))

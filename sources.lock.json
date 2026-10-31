@@ -904,7 +904,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "7c596d6143271f3f2b06155c76ac705fd0b96c654a895bc5df4fb9313d785d35",
+      "sha256": "98e7a143ffb74d7fa85d1578cf0b53df9bbdcc3fcd59af2512d77531c61538d1",
       "executable": false
     },
     "DEMO.md": {
@@ -4856,7 +4856,7 @@
       "executable": false
     },
     "src/core/app/hono.ts": {
-      "sha256": "7887df3e802f410bfdc36ac6b62e16c46422e0aeb0b533ca1b8f3a98b29a9c70",
+      "sha256": "3b89515c95ebbd4f86420d52562e3e9af875b7b671b94f879e23cf903912332f",
       "executable": false
     },
     "src/core/app/loaders.ts": {
@@ -5041,6 +5041,18 @@
     },
     "src/core/features/api-credentials/store.ts": {
       "sha256": "5c2e414d3894f6d33cc10b7d34fdf15031c59e393fe9b3847a777c69e170dadb",
+      "executable": false
+    },
+    "src/core/features/audit/csv.ts": {
+      "sha256": "5eb90c1aab00e05ee6d5d3733af8bf9b929ee590d80d18c4bad184a9abd8a503",
+      "executable": false
+    },
+    "src/core/features/audit/query.ts": {
+      "sha256": "1abacee785badc60b08dbe6adf7e2b3553cfd979a87eab72fa4a2f77588ab98b",
+      "executable": false
+    },
+    "src/core/features/audit/routes.ts": {
+      "sha256": "48bdda4a0207b06125f6db15872a163e0d368a877d2cc7aabb0fd5ee4649acab",
       "executable": false
     },
     "src/core/features/availability-requests/index.ts": {
@@ -8259,6 +8271,10 @@
       "sha256": "b6cdad41eae86459bad1750ee71a19f2423b912d1c5f297e09a7f73c4673db67",
       "executable": false
     },
+    "tests/audit-erasure.test.mjs": {
+      "sha256": "1dc4607e1a21d3d8079d48cbe110307252fc480a857ab1bcb0a9f01e77d76dd9",
+      "executable": false
+    },
     "tests/auth-client.mjs": {
       "sha256": "99d589071dc7faa81650a246c14e3658be5fc0057b85e97b0cda7f6d82adf599",
       "executable": false
@@ -8928,7 +8944,7 @@
       "executable": false
     },
     "tests/erasure/operator-overlap.mjs": {
-      "sha256": "af16aca4810ee28ff97fda17e4f41474073aaa039c2d31ffd7c8a7568f179289",
+      "sha256": "339619e4886ea8e12e4dc937b95d9d02ddbee281b7a9ccb974e8b43910ff4164",
       "executable": false
     },
     "tests/erasure/personal-source.mjs": {
@@ -9784,7 +9800,7 @@
       "executable": false
     },
     "tests/person-erasure.test.mjs": {
-      "sha256": "8a6d135c90d91c257ee0e5b0510c3cc33e452083752ef898fbbaff90610e95a8",
+      "sha256": "9b8a7f4ff2a3d14c74c0d7239d7a0a1017e45c18e94e6123272dfe363844921f",
       "executable": false
     },
     "tests/polls/fixture.mjs": {
