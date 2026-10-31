@@ -6563,7 +6563,7 @@
       "executable": false
     },
     "src/core/features/event-types/duplicate.ts": {
-      "sha256": "fa2dde0e0c68d6e9c1a02154d2d7c42e75cb488816de84787e1b2fc7c73145f0",
+      "sha256": "3e20a76a90b0ab435f40c089888dff831de9387603379d6e35c5486c4d428fd6",
       "executable": false
     },
     "src/core/features/event-types/event-input.ts": {
@@ -8095,7 +8095,7 @@
       "executable": false
     },
     "src/core/features/workflows/index.ts": {
-      "sha256": "8aeceb6a9f425905394e7953dbe03afc163e96f419c54a367e117a858c7f1e50",
+      "sha256": "70f2873954c3c8dd3dee17ae7f2126af333c5261961d434bc94e05431f9900f5",
       "executable": false
     },
     "src/core/features/workflows/routes.ts": {

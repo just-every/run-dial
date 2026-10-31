@@ -1,4 +1,4 @@
-import { duplicateWorkflowStatements } from "../workflows/duplicate";
+import { duplicateWorkflowStatements } from "../workflows";
 import { createId, nowIso } from "../../shared/ids";
 
 type Source = { slug: string; title: string; updated_at: string };
