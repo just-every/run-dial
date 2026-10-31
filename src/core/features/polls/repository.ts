@@ -1,13 +1,16 @@
+import { PollReminders } from "./reminders";
 import { renderBrandedMail } from "../delivery/mail";
 import { createId, nowIso } from "../../shared/ids";
 import { createOpaqueToken, hashToken } from "../../platform/auth/tokens";
 import { foldEmail } from "../erasure";
 import type { Candidate, Participant, Poll, PollInput, Vote } from "./types";
-const pollFields="id,event_type_id AS eventTypeId,title,closes_at AS closesAt,state,show_tally AS showTally,hold_link_id AS holdLinkId";
+const pollFields="id,event_type_id AS eventTypeId,title,closes_at AS closesAt,state,show_tally AS showTally,hold_link_id AS holdLinkId,reminder_offsets_json AS reminderOffsetsJson";
 export class PollsRepository {
- constructor(private readonly db:D1Database, private readonly secret:string,private readonly origin:string){}
- async list(){return (await this.db.prepare(`SELECT ${pollFields} FROM meeting_polls ORDER BY created_at DESC,id DESC LIMIT 100`).all<Poll>()).results;}
- async get(id:string){return this.db.prepare(`SELECT ${pollFields} FROM meeting_polls WHERE id=?`).bind(id).first<Poll>();}
+ readonly reminders: PollReminders;
+ constructor(private readonly db:D1Database, private readonly secret:string,private readonly origin:string){this.reminders=new PollReminders(db,secret,origin);}
+ private view(row:Omit<Poll,"reminderOffsetsMinutes"> & {reminderOffsetsJson:string}):Poll {const {reminderOffsetsJson,...poll}=row;return {...poll,reminderOffsetsMinutes:JSON.parse(reminderOffsetsJson) as number[]};}
+ async list(){return (await this.db.prepare(`SELECT ${pollFields} FROM meeting_polls ORDER BY created_at DESC,id DESC LIMIT 100`).all<Omit<Poll,"reminderOffsetsMinutes"> & {reminderOffsetsJson:string}>()).results.map(row=>this.view(row));}
+ async get(id:string){const row=await this.db.prepare(`SELECT ${pollFields} FROM meeting_polls WHERE id=?`).bind(id).first<Omit<Poll,"reminderOffsetsMinutes"> & {reminderOffsetsJson:string}>();return row?this.view(row):null;}
  async candidates(id:string){return (await this.db.prepare("SELECT id,start_at AS startAt,end_at AS endAt FROM poll_candidates WHERE poll_id=? ORDER BY start_at,id").bind(id).all<Candidate>()).results;}
  async participants(id:string){return (await this.db.prepare("SELECT id,name,email,revision FROM poll_participants WHERE poll_id=? ORDER BY created_at,id").bind(id).all<Participant>()).results;}
  async votes(id:string){return (await this.db.prepare("SELECT candidate_id AS candidateId,choice FROM poll_votes WHERE participant_id=? ORDER BY candidate_id").bind(id).all<Vote>()).results;}

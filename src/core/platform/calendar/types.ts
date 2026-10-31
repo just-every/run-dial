@@ -2,6 +2,7 @@ export type ProviderFailureCode =
   | "push_channel_unrenewable"
   | "meeting_creation_failed"
   | "superseded_occurrence"
+  | "poll_reminder_inactive"
   | "operator_removed"
   | "workflow_authority_revoked"
   | "operator_mail_outcome_unknown"

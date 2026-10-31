@@ -12,6 +12,8 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Poll reminder configuration starts disabled on every existing poll.
+  'core/0103_poll_reminders.sql': (table,row) => table==='meeting_polls'?{...row,reminder_offsets_json:'[]'}:row,
   // Existing event types remain ordinary appointments after a capacity upgrade.
   'core/0102_group_seat_capacity.sql': (table, row) => table === 'event_types' ? { ...row, group_capacity: null } : row,
   'core/0094_coupon_issuance_receipts.sql': (table,row) => table==='payment_products'?{...row,issuance_key_hash:null}:row,

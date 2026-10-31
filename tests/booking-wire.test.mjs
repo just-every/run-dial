@@ -23,7 +23,7 @@ async function wireJourney(t, feature) {
   const state = await mkdtemp(resolve(tmpdir(), "dial-booking-wire-"));
   const [port, inspector, receiver] = feature === "webhooks" ? await webhookPorts() : [15754, 15755, 15756];
   const origin = `http://127.0.0.1:${port}`, config = "tests/booking-wire/worker.wrangler.toml";
-  const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin, DIAL_WEBHOOK_RECEIVER_PORT: String(receiver) };
+  const env = { ...process.env, CI: "1", DIAL_REVIEW_ORIGIN: origin, DIAL_WEBHOOK_RECEIVER_PORT: String(receiver), ...(feature==="poll-reminders"?{DIAL_POLL_PHASE:"before-restart",DIAL_POLL_RESTART_STATE:resolve(state,"poll-restart.json")}: {}) };
   let server, nativeRuntime, output = "";
   let cleaned = false;
   const cleanup = async () => {
@@ -55,6 +55,14 @@ async function wireJourney(t, feature) {
     ? ["node", "tests/booking-wire/calendar-correspondence-journey.mjs", feature.split("-").at(-1)]
     : feature === "microsoft" ? ["node", "tests/booking-wire/microsoft-journey.mjs"] : feature ? ["node", "tests/booking-wire/feature-journey.mjs", feature] : ["node", "tests/booking-wire/journey.mjs"];
   console.log((await run(journey)).trim());
+  if(feature==="poll-reminders") {
+    const stopped=new Promise(done=>server.once("exit",done));process.kill(-server.pid,"SIGTERM");await stopped;
+    env.DIAL_POLL_PHASE="after-restart";
+    server=spawn("pnpm",["exec","wrangler","dev","--local","--persist-to",state,"--config",config,"--ip","127.0.0.1","--port",String(port),"--inspector-port",String(inspector)],{env,stdio:"pipe",detached:true});
+    server.stdout.on("data",chunk=>{output+=chunk;});server.stderr.on("data",chunk=>{output+=chunk;});
+    for(let attempt=0;;attempt++){if(server.exitCode!==null||attempt>480)throw new Error(output.slice(-15000));try{if((await fetch(origin+"/health")).ok)break;}catch{/* starting */}await new Promise(done=>setTimeout(done,125));}
+    console.log((await run(["node","tests/booking-wire/feature-journey.mjs",feature])).trim());
+  }
   await cleanup();
 }
 
@@ -71,3 +79,5 @@ test("an approved request link stops opening the booking once its manage link is
 test("signed webhooks deliver native facts once, retry for 24 hours and stop after deletion or erasure", t => wireJourney(t, "webhooks"));
 test("configured booking analytics uploads click-only conversions once and honors revoked or erased authority", t => wireJourney(t, "analytics"));
 test("booking analytics emits configured events once and stays silent without tags at desktop and mobile", t => runAxe(t, "tests/booking-axe/analytics.mjs"));
+
+test("unanswered poll reminders follow explicit durable offsets and stop at every terminal transition", t => wireJourney(t, "poll-reminders"));

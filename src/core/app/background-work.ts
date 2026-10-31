@@ -33,6 +33,7 @@ export async function runScheduledWork(env: AppBindings, services: AppServices) 
   await processDueCalendarDeletionProbes(env);
   await services.delivery.renewCalendarChannels();
   await runWorkflows(env.DB,parseRuntimeEnvironment(env));
+  await services.polls.repository.reminders.sweep();
   await services.delivery.enqueueDue(env.JOBS);
   await services.webhooks.delivery.enqueue(env.JOBS);
   // Admission-state cleanup cannot prevent the independent booking recovery work above.
