@@ -70,8 +70,8 @@ function AppShellContent() {
         </aside>
       </div>
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-sidebar px-4 lg:hidden">
-        <PlainLink to="/app" className="inline-flex items-center gap-2 text-2xl font-extrabold tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></PlainLink>
-        <Button ref={menuButton} variant="secondary" className="min-h-9! px-4" type="button" disabled={!hydrated} aria-expanded={menuOpen} aria-controls="operator-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
+        <PlainLink to="/app" className="inline-flex min-h-11 items-center gap-2 text-2xl font-extrabold tracking-[-.02em]"><BrandMark /><span data-rer-name>Dial</span></PlainLink>
+        <Button ref={menuButton} variant="secondary" className="px-4" type="button" disabled={!hydrated} aria-expanded={menuOpen} aria-controls="operator-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
           Menu
         </Button>
         {menuOpen ? <div id="operator-mobile-navigation" className="absolute inset-x-4 top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[20px] bg-card p-3 shadow-panel"><SidebarContent bookingLink={setup.state?.links[0]} pathname={pathname} profile={profile} profileError={profileError} onSignOut={signOut} onNavigate={() => { setMenuOpen(false); menuButton.current?.focus(); }} compact /></div> : null}

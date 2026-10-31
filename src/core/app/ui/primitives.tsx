@@ -22,6 +22,9 @@ export function Button({ className = "", variant = "primary", icon, children, ..
   return <button className={buttonClassName(variant, className)} {...props}>{icon ? <Icon name={icon} className="line-icon h-5 w-5" /> : null}{children}</button>;
 }
 
+/** A link or disclosure alone on its line is a 44px tap target at phone width; wide layouts keep their own height. */
+export const phoneTapClassName = "max-sm:inline-flex max-sm:min-h-11 max-sm:items-center";
+
 /** An inline text link in ink, underlined, with the landing's gold-deep underline on hover. */
 export const textLinkClassName = "font-semibold text-ink underline decoration-[1.5px] underline-offset-[5px] hover:decoration-gold-deep";
 
@@ -92,7 +95,7 @@ export function Segmented<T extends string>({ label, name, value, options, onCha
     <div role="radiogroup" aria-labelledby={`${name}-label`} className="grid w-full min-w-0 grid-cols-2 gap-[3px] rounded-[20px] bg-wash p-[3px] sm:flex sm:w-fit sm:gap-0 sm:rounded-full">
       {options.map(([option, text]) => <label key={option} className="relative min-w-0 cursor-pointer">
         <input type="radio" name={name} value={option} checked={value === option} onChange={() => onChange(option)} className="peer absolute inset-0 m-0 cursor-pointer opacity-0" />
-        <span className="flex min-h-9 items-center justify-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-soft peer-checked:bg-gold-wash peer-checked:text-ink peer-checked:shadow-lift peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink sm:px-4">{text}</span>
+        <span className="flex min-h-11 items-center justify-center whitespace-nowrap sm:min-h-9 rounded-full px-3 text-sm font-semibold text-soft peer-checked:bg-gold-wash peer-checked:text-ink peer-checked:shadow-lift peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink sm:px-4">{text}</span>
       </label>)}
     </div>
   </div>;
