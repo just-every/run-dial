@@ -17,5 +17,5 @@ export async function pollJourney({data,call,state,deliver,future,checks}){
  await deliver();await deliver();const mail=wireMail(await state()).filter(m=>textBody(m).includes(`/poll/${created.id}?`));for(const person of people)assert.equal(mail.filter(m=>recipient(m).includes(person.email)).length,1,'each participant invitation sends once at the synthetic mail edge');
  await data(`/api/app/polls/${created.id}/close`,{});for(const link of links)await call(`/api/public/polls/${created.id}/votes`,{token:link.token,votes:host.candidates.map(c=>({candidateId:c.id,choice:'yes'}))},404);
  const released=await data(`${base}/availability?week=${future}`);for(const candidate of host.candidates)assert.ok(released.slots.some(s=>s.startAt===candidate.startAt));
- checks.push('POLL-001 private rotating participant votes, counts-only optional tally, one invitation per participant at the synthetic SendGrid edge, held candidates disappear and return immediately at close; winning booking and timed reminders remain unbuilt.');
+ checks.push('POLL-001 private rotating participant votes, counts-only optional tally, one invitation per participant at the synthetic SendGrid edge, held candidates disappear and return immediately at close; winning booking remains unbuilt. Timed reminders have their own native journey.');
 }
