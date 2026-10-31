@@ -1,3 +1,4 @@
+import { createLink } from "@tanstack/react-router";
 import type { ComponentPropsWithRef, InputHTMLAttributes, PropsWithChildren, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { Icon, type IconName } from "../../shared/drawing/icons";
 
@@ -23,6 +24,9 @@ export function Button({ className = "", variant = "primary", icon, children, ..
 
 /** An inline text link in ink, underlined, with the landing's gold-deep underline on hover. */
 export const textLinkClassName = "font-semibold text-ink underline decoration-[1.5px] underline-offset-[5px] hover:decoration-gold-deep";
+
+/** A router link that never carries aria-current: only the menu marks the current page, and only its longest matching entry. */
+export const PlainLink = createLink((props: ComponentPropsWithRef<"a">) => <a {...props} aria-current={undefined}>{props.children}</a>);
 
 export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={`${fieldControl} w-full ${className}`} {...props} />;

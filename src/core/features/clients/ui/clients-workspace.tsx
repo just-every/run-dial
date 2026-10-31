@@ -1,8 +1,8 @@
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
-import { Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { useRouter, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "../../../app/ui/page-header";
-import { Card, buttonClassName, noticeClassName } from "../../../app/ui/primitives";
+import { Card, buttonClassName, noticeClassName, PlainLink } from "../../../app/ui/primitives";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { bookingWorkspaceSearch } from "../../bookings/client";
 import type { ClientHistory, ClientList } from "../types";
@@ -26,7 +26,7 @@ export function ClientsWorkspace() {
   const record = params.get("record");
   const navigate = (client: string | undefined, nextPage = page, selectedRecord?: string, nextHistoryPage = 1) => void router.navigate({ to: "/app/bookings", search: () => ({ view: "clients", clientPage: nextPage, historyPage: nextHistoryPage, ...(client ? { client } : {}), ...(selectedRecord ? { record: selectedRecord } : {}) }) });
   return <div className="grid min-w-0 gap-7" data-clients-ready={!list.loading && !history.loading}>
-    <PageHeader title="Clients" description="Review each invitee’s scheduling history and booking details." actions={<Link to="/app/bookings" search={() => ({})} className={buttonClassName("secondary")}>Bookings</Link>} />
+    <PageHeader title="Clients" description="Review each invitee’s scheduling history and booking details." actions={<PlainLink to="/app/bookings" search={() => ({})} className={buttonClassName("secondary")}>Bookings</PlainLink>} />
     {list.error || history.error ? <WorkspaceLoadState error={list.error || history.error} onRetry={() => setRevision(value => value + 1)} /> : null}
     <p role="status" className="text-sm text-muted">{list.loading || list.error ? null : `${list.data?.totalCount ?? 0} client${list.data?.totalCount === 1 ? "" : "s"}`}</p>
     {list.loading ? <WorkspaceLoadState label="Loading clients…" onRetry={() => setRevision(value => value + 1)} /> : null}

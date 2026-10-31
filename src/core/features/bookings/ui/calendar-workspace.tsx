@@ -1,12 +1,12 @@
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
-import { Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useDocumentInstant } from "../../../app/document-data";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { useHydrated } from "../../../app/use-hydrated";
 import { FocusDialog } from "../../../app/ui/focus-dialog";
 import { PageHeader } from "../../../app/ui/page-header";
-import { buttonClassName, Input, Select } from "../../../app/ui/primitives";
+import { buttonClassName, Input, Select, PlainLink } from "../../../app/ui/primitives";
 import { api, errorMessage } from "../../../api/client";
 import { BookingDetail } from "./booking-detail";
 import { BookingsFilterBar } from "./bookings-filter-bar";
@@ -29,7 +29,7 @@ export function CalendarWorkspace() {
   const refresh=(message?:string)=>{setNotice(message??'');setRevision(value=>value+1);};
   const selectedRecord=records?.find(b=>b.id===selected);
   const listSearch=Object.fromEntries(new URLSearchParams(writeBookingFilters(search,activeFilters)));delete listSearch.view;
-  return <div className="grid min-w-0 gap-6" data-calendar-ready={Boolean(records)}><PageHeader title="Booking calendar" description={`Times in ${zone}. Arrow keys move between days; Enter opens the first booking.`} actions={<Link to="/app/bookings" search={()=>listSearch} className={buttonClassName('secondary')}>Filtered list</Link>}/>
+  return <div className="grid min-w-0 gap-6" data-calendar-ready={Boolean(records)}><PageHeader title="Booking calendar" description={`Times in ${zone}. Arrow keys move between days; Enter opens the first booking.`} actions={<PlainLink to="/app/bookings" search={()=>listSearch} className={buttonClassName('secondary')}>Filtered list</PlainLink>}/>
     {notice?<p role="status">{notice}</p>:null}{error?<WorkspaceLoadState error={error} onRetry={()=>setRevision(v=>v+1)}/>:null}
     <fieldset disabled={!hydrated} className="flex min-w-0 flex-wrap items-end gap-3"><legend className="sr-only">Calendar navigation</legend><label className="grid gap-2" htmlFor="calendar-mode">Calendar view<Select id="calendar-mode" value={mode} onChange={e=>move(e.target.value as CalendarMode,anchor)}><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></Select></label><label className="grid gap-2" htmlFor="calendar-anchor">Calendar date<Input id="calendar-anchor" type="date" value={anchor} onChange={e=>{const date=validCalendarDate(e.target.value);if(date)move(mode,date);}}/></label><button type="button" className={buttonClassName('secondary')} onClick={()=>move(mode,advanceCalendar(anchor,mode,-1))}>Previous {mode}</button><button type="button" className={buttonClassName('secondary')} onClick={()=>move(mode,civilDate(now,zone))}>Today</button><button type="button" className={buttonClassName('secondary')} onClick={()=>move(mode,advanceCalendar(anchor,mode,1))}>Next {mode}</button><label className="grid gap-2" htmlFor="calendar-host">Host<Select id="calendar-host" disabled value="host"><option value="host">{profile?.name??'Current host'}</option></Select></label></fieldset>
     <BookingsFilterBar filters={activeFilters} eventTypes={eventTypes} hostTimezone={zone} onChange={change=>{const next={...activeFilters,...change};if(change.from||change.to){move(mode,change.from??change.to!);return;}void navigate(next,1);}} onClear={()=>void navigate({from:range.from,to:range.through},1)}/>

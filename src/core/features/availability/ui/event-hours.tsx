@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
-import { Card, Select, textLinkClassName } from "../../../app/ui/primitives";
+import { Card, Select, textLinkClassName, PlainLink } from "../../../app/ui/primitives";
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { SavedMark, SaveFailed } from "../../../app/ui/autosave/saved-state";
 import { useAutosave } from "../../../app/ui/autosave/use-autosave";
@@ -51,7 +51,7 @@ export function EventHoursPage({ eventId, workspace = "/app" }: { eventId: strin
   if (read.missing) return <RecordNotFound kind="event type" back="/app/event-types" />;
   if (!read.data) return <WorkspaceLoadState error={read.error} label="Loading hours…" onRetry={read.load} />;
   return <div className="grid min-w-0 gap-6">
-    <Link to={`${workspace}/event-types/$id`} params={{ id: eventId }} aria-label="Back to event" className={`${textLinkClassName} flex min-h-11 w-fit items-center`}>‹ {read.data.event.title}</Link>
+    <PlainLink to={`${workspace}/event-types/$id`} params={{ id: eventId }} aria-label="Back to event" className={`${textLinkClassName} flex min-h-11 w-fit items-center`}>‹ {read.data.event.title}</PlainLink>
     <PageHeader title={`${read.data.event.title}’s hours`} description="" />
     <HoursContent key={eventId} data={read.data} />
   </div>;
