@@ -9,6 +9,7 @@ import { hasSupportedInstantPrecision } from "../../shared/instants";
 import { unavailableTimeMessage, type SlotExclusion } from "../availability";
 import { reportRefusal } from "../reports";
 import { reportTileKeys } from "../reports/client";
+import { bookingPaymentStates } from "./payment-state-filter";
 
 const bookingIdSchema = z.object({ id: z.string().length(26) });
 const calendarConflictSchema = bookingIdSchema.extend({ conflictId: z.string().length(26) });
@@ -17,6 +18,7 @@ const instantSchema = z.string().datetime({ offset: true })
   .refine((value) => Number.isFinite(Date.parse(value)), "Use a valid instant.")
   .transform((value) => new Date(value).toISOString());
 const operatorListSchema = z.object({
+  paymentState: z.enum(bookingPaymentStates).optional(),
   attendance: z.enum(["attended","no_show","unmarked"]).optional(),
   rescheduleRequest: z.enum(["open", "picked", "expired", "cancelled"]).optional(),
   state: z.enum(["confirmed", "cancelled", "rescheduled"]).optional(),

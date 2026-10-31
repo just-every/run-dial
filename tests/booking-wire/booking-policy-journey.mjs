@@ -21,7 +21,14 @@ export async function bookingPolicyJourney({ data, call, state, deliver, checks 
   const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   const offers = await data(`${base}/availability?week=${tomorrow}`);
   const within = (low, high) => offers.slots.filter(slot => { const hours = (Date.parse(slot.startAt) - Date.now()) / 3600000; return hours > low && hours < high; });
-  const next = within(25, 28);
+  // This receipt proves TZID-encoded local time. Keep its slots in New York's
+  // daytime so a run before the autumn fold cannot select the later 01:00 hour,
+  // which RFC 5545 correctly requires the product to encode as a UTC instant.
+  const lockedHour = new Intl.DateTimeFormat('en-US', { timeZone: policy.lockedTimezone, hour: 'numeric', hourCycle: 'h23' });
+  const next = within(25, 49).filter(slot => {
+    const hour = Number(lockedHour.format(new Date(slot.startAt)));
+    return hour >= 9 && hour < 17;
+  });
   assert.ok(next.length >= 4);
   const book = async (slot, email) => {
     const selection = await data(`${base}/selection`, { startAt: slot.startAt, inviteeTimezone: 'America/Los_Angeles' }, 201);
@@ -84,9 +91,10 @@ export async function bookingPolicyJourney({ data, call, state, deliver, checks 
   assert.equal(contact.length, 1); assert.equal(contact[0].reply_to.email, 'cutoff-visit@dial.test');
   const moved = await data(`/api/app/bookings/${nearBooking.id}/reschedule`, { startAt: next[3].startAt, inviteeTimezone: 'America/Los_Angeles' });
   assert.equal(moved.id, nearBooking.id, 'operator bypasses invitee cut-off');
-  let foldYear = new Date().getUTCFullYear();
+  // The explicit fold case must be outside the 90-day horizon used by the
+  // clock-relative journeys above; otherwise one can already occupy 06:30 UTC.
+  const foldYear = new Date().getUTCFullYear() + 1;
   const foldDate = year => { const first = new Date(`${year}-11-01T12:00:00Z`); first.setUTCDate(1 + (7 - first.getUTCDay()) % 7); return first.toISOString().slice(0,10); };
-  if (Date.parse(foldDate(foldYear) + 'T06:30:00Z') <= Date.now()) foldYear++;
   const foldStart = foldDate(foldYear) + 'T06:30:00.000Z';
   const foldBooking = await data('/api/app/bookings', { idempotencyKey: randomUUID(), eventTypeId: event.id, startAt: foldStart, inviteeTimezone: 'America/Los_Angeles', name: 'Jordan Rivera', email: 'second-fold@dial.test', answers: {}, overrideNoticeAndHorizon: true }, 201);
   const foldCommands = (await state()).delivery_outbox.filter(row => row.booking_id === foldBooking.id);

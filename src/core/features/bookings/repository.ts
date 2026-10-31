@@ -20,6 +20,7 @@ import { createId } from "../../shared/ids";
 import { blockedProbe, holdAdmission, nonceAdmission, slotClaimGuard } from "./claim-guard";
 import { activeHoldIntervals, paymentHoldPredicate, PaymentsRepository } from "../payments";
 import type { BookingClaim, BookingEmail, BookingRecord, BookingSelection } from "./types";
+import { bookingPaymentStateSql, type BookingPaymentState } from "./payment-state-filter";
 
 type OperatorBookingClaim = Omit<BookingClaim, "nonceId" | "nonceHash" | "payloadHash"> & { hostName: string; requestId?: string; creationIdentity?: OperatorCreationIdentity };
 
@@ -40,6 +41,7 @@ type NonceRecord = {
 
 type ManageTokenLookup = { booking: BookingRecord; status: "active" | "expired" | "rotated" | "invalidated" };
 type OperatorBookingFilters = {
+  paymentState?: BookingPaymentState;
   attendance?: "attended" | "no_show" | "unmarked";
   state?: BookingRecord["state"];
   rescheduleRequest?: "open" | "picked" | "expired" | "cancelled";
@@ -59,6 +61,7 @@ type OperatorBookingFilters = {
 function operatorBookingWhere(filters: OperatorBookingFilters, now: string) {
   const clauses = ["b.current_occurrence_id = o.id"];
   const values: unknown[] = [];
+  if (filters.paymentState) { clauses.push(`(${bookingPaymentStateSql}) = ?`); values.push(filters.paymentState); }
   if (filters.attendance === "unmarked") clauses.push("NOT EXISTS(SELECT 1 FROM booking_attendance a WHERE a.booking_id=b.id)");
   else if (filters.attendance) { clauses.push("EXISTS(SELECT 1 FROM booking_attendance a WHERE a.booking_id=b.id AND a.status=?)"); values.push(filters.attendance); }
   if (filters.rescheduleRequest) { clauses.push("EXISTS(SELECT 1 FROM booking_reschedule_requests rr WHERE rr.booking_id=b.id AND rr.state=?)"); values.push(filters.rescheduleRequest); }

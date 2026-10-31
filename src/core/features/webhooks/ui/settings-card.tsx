@@ -28,7 +28,7 @@ async function request<T>(path: string, schema: z.ZodType<T>, init?: RequestInit
 }
 
 function eventLabel(value: string) {
-  const words = value.replace(/\.v\d+$/, "").replace(/[._-]+/g, " ");
+  const words = value.replace(/\.v\d+$/, "").replace(/[._-]+/g, " ").replace("canceled", "cancelled");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
