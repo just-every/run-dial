@@ -1,6 +1,16 @@
 import { hashToken } from "../../platform/auth/tokens";
 import type { DeliveryOutboxRecord } from "./repository";
 
+/** Dispatch the complete due reminder batch during its final eligible Cron minute. */
+export async function duePollReminderIds(db: D1Database, now: string) {
+  const rows = await db.prepare(`SELECT id FROM delivery_outbox
+    WHERE state='pending' AND next_attempt_at<=?
+      AND CASE WHEN json_valid(payload_json) THEN json_type(payload_json,'$.pollReminderOffsetMinutes') END IS NOT NULL
+      AND CASE WHEN json_valid(payload_json) THEN json_extract(payload_json,'$.archiveHistorical') END IS NOT 1`)
+    .bind(now).all<{id:string}>();
+  return rows.results.map(row => row.id);
+}
+
 /** Reminders revalidate live participation even when a retry has frozen mail bytes. */
 export async function pollReminderAuthorized(db: D1Database, record: DeliveryOutboxRecord, now: string, secret: string) {
   const payload = JSON.parse(record.payloadJson) as Record<string, unknown>;
