@@ -14,6 +14,15 @@ try{
  await completeEmptyWorkspace(owner,origin);await owner.request.post(origin+"/__fixtures/setup",{headers,data:{}});
  const page=await owner.newPage(),errors=[];page.on("pageerror",error=>errors.push(error.message));
  await page.setViewportSize({width:1440,height:1100});await page.goto(origin+"/app/settings");
+ const access=page.locator("#operator-access");
+ const adminAddress=["synthetic-dial-browser-admin","example.test"].join(String.fromCharCode(64));
+ await access.getByLabel("Operator email",{exact:true}).fill(adminAddress);
+ await access.getByLabel("Access level",{exact:true}).selectOption("admin");
+ const invitation=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/app/api-administrators"&&response.request().method()==="POST");
+ await access.getByRole("button",{name:"Invite operator",exact:true}).click();assert.equal((await invitation).status(),201);
+ await expect(access.getByRole("listitem").filter({hasText:adminAddress})).toContainText("API administrator");
+ for(const width of [1440,390]){await page.setViewportSize({width,height:1100});await access.scrollIntoViewIfNeeded();await access.screenshot({path:evidencePath(`api-administrator-invited-${width}.png`)});}
+ await page.setViewportSize({width:1440,height:1100});
  const section=page.locator("#api-credentials"),form=section.getByRole("form",{name:"Create API access"});await form.waitFor();
  const capture=async name=>{
   for(const width of [1440,390]){

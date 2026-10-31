@@ -6,7 +6,7 @@ export async function delegatedCredentialJourney({origin,call,json,issue,week,db
  const address=name=>[name,"example.test"].join(String.fromCharCode(64));
  const expiresAt=new Date(Date.now()+86400000).toISOString();
  const invite=async(name,role)=>{
-  const person=await json("/api/app/operators",{session:true,body:{email:address(name),role}},201);
+  const person=await json(role==="admin"?"/api/app/api-administrators":"/api/app/operators",{session:true,body:{email:address(name)}},201);
   const messages=await json("/__test/mail");
   const message=messages.find(row=>row.message.to.includes(address(name)));
   const link=message?.message.text.match(/https?:\/\/[^\s<>]+\/auth\/confirm\?token=[^\s<>]+/)?.[0];
@@ -32,6 +32,8 @@ export async function delegatedCredentialJourney({origin,call,json,issue,week,db
  const slot=slots.slots[0],selection=await json(base+"/selection",{body:{startAt:slot.startAt,inviteeTimezone:"UTC"}},201);
  const booked=await json(base+"/confirm",{body:{nonce:selection.nonce,startAt:slot.startAt,inviteeTimezone:"UTC",name:"Other host guest",email:address("synthetic-dial-1703"),answers:{}}},201);
  const bookingId=booked.bookingReference;assert.ok(bookingId);
+ const unintended=(await db.prepare("SELECT id FROM delivery_outbox WHERE booking_id=? AND json_extract(payload_json,'$.to')=?").bind(bookingId,address("synthetic-dial-1701")).all()).results;
+ assert.deepEqual(unintended,[],"API administrator admission does not opt a person into private booking notices");
  const primary=await issue(["bookings:read","bookings:write"],{hostId:profile.id}),foreign=await issue(["bookings:read","bookings:write"],{hostId:host.id});
  assert.equal((await json(`/api/v1/bookings/${other.id}`,{secret:primary.secret})).id,other.id);
  assert.equal((await json(`/api/v1/bookings/${bookingId}`,{secret:foreign.secret})).inviteeName,"Other host guest");
@@ -81,6 +83,9 @@ export async function delegatedCredentialJourney({origin,call,json,issue,week,db
  assert.equal((await exchange({code:unused})).status,400,"demotion of the app's administrator stops an unused authorization code");
  assert.equal((await call(`/api/v1/bookings/${other.id}`,{secret:adminToken.secret})).status,401,"demotion revokes the admin's personal credentials");
  assert.equal((await adminCall("/api/app/api-credentials",{body:{name:"Must not issue",scopes:["bookings:read"],expiresAt}})).status,401,"native session version invalidates the demoted administrator");
+ await json(`/api/app/operators/${admin.id}/api-role`,{session:true,body:{role:"admin"}});
+ assert.equal((await call(`/api/v1/bookings/${other.id}`,{secret:adminToken.secret})).status,401,"restoring a role cannot revive a revoked personal token");
+ assert.equal((await exchange({code:unused})).status,400,"restoring a role cannot revive an application's old pending code");
  const secrets=[code,unused,registered.clientSecret,delegated.access_token,adminToken.secret];
  const metadata=JSON.stringify({credentials:await json("/api/app/api-credentials",{session:true}),apps:await json("/api/app/oauth-applications",{session:true}),grants:await json("/api/app/oauth/grants",{session:true}),audit:(await db.prepare("SELECT * FROM api_credential_audit").all()).results,wire:await json("/wire/state")});
  assert.ok(secrets.every(secret=>!metadata.includes(secret)),"one-time secrets and codes are absent from lists, audit and provider logs");
