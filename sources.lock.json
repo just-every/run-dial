@@ -4624,7 +4624,7 @@
       "executable": false
     },
     "scripts/verify-dst-containment.mjs": {
-      "sha256": "809f46bebf4d5f96c05118b57560942dcf11280594a2362a851b57958fb19d50",
+      "sha256": "24152a7d70639e608c1312b1a30d2e79f95e83fd054823cfad97200f579f57cf",
       "executable": false
     },
     "scripts/verify-guest-screens.mjs": {
@@ -8979,8 +8979,12 @@
       "sha256": "dbb3382c49a8acd508a278386da32a7119789b2bc2507755fab0597979362fee",
       "executable": false
     },
+    "tests/dst-native/worker.ts": {
+      "sha256": "6292663bf84eb0da75471037e60188c44868738a28c27ac42b6293293ffbc266",
+      "executable": false
+    },
     "tests/dst-native/worker.wrangler.toml": {
-      "sha256": "b99243c3dd595441bfc69e261ff639f3f35d0f64171fcfa29bce95c588339aa7",
+      "sha256": "eafa4dab21ab4cc291662d0ff04f0e271c58377635594230fd53d6013ff1fe67",
       "executable": false
     },
     "tests/embed-document-authorization.test.mjs": {
