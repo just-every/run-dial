@@ -9,7 +9,7 @@ import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/sche
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
 import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade, noticeUpgrade, entitlementUpgrade } from './archive/payment-erasure-upgrade.mjs';
-import { clientUpgrade } from './archive/client-upgrade.mjs';
+import { clientUpgrade, clientProjectionRestored } from './archive/client-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
@@ -111,6 +111,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
     await restoreArchive(destination, archive);
+    await clientProjectionRestored(source.db, target.db, remembered);
     for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
       const restored = target.db.prepare(`SELECT * FROM ${table}`).get();
       assert.equal(restored[hashColumn], null);

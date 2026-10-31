@@ -2,9 +2,9 @@ import { useId } from "react";
 import { Input } from "../../../app/ui/primitives";
 import { Tooltip } from "../../../app/ui/tooltip";
 import type { AvailabilityWindowInput } from "../../event-types";
+import { clockLabel, weekdays } from "../../../shared/hours-label";
 import { timeInput, timeMinutes } from "./window-time";
 
-const weekdays = [[1, "Monday", "Mon"], [2, "Tuesday", "Tue"], [3, "Wednesday", "Wed"], [4, "Thursday", "Thu"], [5, "Friday", "Fri"], [6, "Saturday", "Sat"], [0, "Sunday", "Sun"]] as const;
 const iconButton = "grid size-11 shrink-0 place-items-center rounded-full bg-wash text-xl text-ink hover:bg-gold-wash focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 /** The same seven compact, directly editable day rows wherever a set of hours is used. */
@@ -44,20 +44,4 @@ function nextWindow(windows: AvailabilityWindowInput[], weekday: number): Availa
   const end = Math.max(0, ...windows.filter(window => window.weekday === weekday).map(window => window.endMinute));
   const startMinute = end && end < 1380 ? end : 540;
   return { weekday, startMinute, endMinute: end && end < 1380 ? Math.min(1440, startMinute + 60) : 1020 };
-}
-
-export function clockLabel(minutes: number) {
-  const value = minutes === 1440 ? 0 : minutes;
-  const hour = Math.floor(value / 60), minute = value % 60;
-  return `${hour % 12 || 12}${minute ? `:${String(minute).padStart(2, "0")}` : ""} ${hour >= 12 ? "PM" : "AM"}`;
-}
-
-export function hoursSummary(windows: AvailabilityWindowInput[]) {
-  if (!windows.length) return "No hours yet";
-  const grouped = new Map<string, string[]>();
-  for (const [weekday, , short] of weekdays) {
-    const ranges = windows.filter(window => window.weekday === weekday).map(window => `${clockLabel(window.startMinute)}–${clockLabel(window.endMinute)}`).join(", ");
-    if (ranges) grouped.set(ranges, [...(grouped.get(ranges) ?? []), short]);
-  }
-  return [...grouped].map(([ranges, days]) => `${days.join(", ")} ${ranges}`).join(" · ");
 }

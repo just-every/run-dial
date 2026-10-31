@@ -818,7 +818,7 @@ Gap: No implementing code yet.
 
 CLIENT-001 is partial: Client records.
 
-Evidence: `tests/person-erasure.test.mjs` ("native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person"), `tests/booking-axe/client-records.mjs`, `tests/booking-axe/remembered-client.mjs`, `tests/erasure/remembered-details.mjs`, `src/core/features/clients/`
+Evidence: `tests/person-erasure.test.mjs` ("native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person"), `tests/booking-axe/client-records.mjs`, `tests/booking-axe/remembered-client.mjs`, `tests/erasure/remembered-details.mjs`, `src/core/features/clients/`; `tests/client-guest-history.test.mjs` ("guest clients keep distinct booking history, annotations and private remembered-details authority through merges"); `tests/export-base-adoption.test.mjs` ("the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused")
 
 Gap: The Bookings Clients workspace groups folded primary-invitee emails, shows viewer-zone history, answers, attendance, read-only payments and booking fields, and opens the exact OPER-004 record. Operator merges preserve booking rows, retain aliases, notes and client text fields, and record the actor; erasure removes the full alias scope. A stored-address-only mailed capability fills saved name, email, phone and answers for one published event after explicit use, once within 15 minutes; requests acknowledge uniformly with a one-minute mail guard. Unbuilt: guest-only, pending-approval and alternative-request histories; shared typed client-field definitions and editing; across-host history (`TEAM-001`), packages (`PAY-004`), SMS consent (`FLOW-002`) and role scope (`OPER-001`).
 
@@ -830,13 +830,13 @@ Gap: Built for today's single-host install and proved on a seeded month: booking
 
 REPORT-002 is partial: Host calendar view and booking workspace.
 
-Evidence: `src/core/features/bookings/ui/calendar-workspace.tsx`, `src/core/features/bookings/ui/calendar-grid.tsx`, `tests/bookings-filters.test.mjs`, `tests/booking-axe/calendar.mjs`
+Evidence: `src/core/features/bookings/ui/calendar-workspace.tsx`, `src/core/features/bookings/ui/calendar-grid.tsx`, `tests/bookings-filters.test.mjs` ("the operator booking route combines every filter and searches literal case-insensitive name and email substrings"; "payment-state filters select exact booking identities and totals before combined filters and pagination without money writes"), `tests/booking-axe/calendar.mjs`
 
 Gap: Day, week and month share the list query, filters and paginated identity set in the viewer profile zone. Attendance filters are applied before count and pagination; the real single host is shown. Native and browser journeys cover the March spring-forward and February/March/April edges, imported placement, keyboard record opening and a real reschedule moving the calendar entry; month is an agenda at mobile width. Open: payment-state filtering, repeated-hour display proof, team filters, member columns and multi-host role scope. The complete mixed-subject acceptance sentence remains intact under ct’s conditional verbatim-carve form.
 
 REPORT-003 is missing: Exports and scheduled reports.
 
-Evidence: None.
+Evidence: `tests/report-booking-csv.test.mjs` — owner CSV exports every filtered booking safely without changing booking, delivery or accounting custody: native HTTP filters, 503 matches beyond display pagination, Unicode and CSV escaping, literal spreadsheet cells, capability and credential exclusion, anonymous and revoked-session refusal, unchanged product rows.
 
 Gap: Filtered reporting CSVs and scheduled member reports are absent; the owner archive is DATA-001, not this reporting flow.
 

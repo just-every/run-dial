@@ -182,3 +182,94 @@ contract(["OPER-003","REPORT-002"], "the operator booking route combines every f
     await runtime.close();
   }
 });
+
+contract("REPORT-002", "payment-state filters select exact booking identities and totals before combined filters and pagination without money writes", async () => {
+  const runtime = await bookingRuntime();
+  try {
+    const setup = await runtime.data("/__fixtures/setup", {});
+    const now = "2026-01-01T00:00:00.000Z";
+    const fixtures = [
+      { name: "free", expected: "free" },
+      { name: "free-with-failed-fee", expected: "free", movement: ["no_show_fee", "failed", 500] },
+      { name: "full-payment", expected: "paid", payment: 10000 },
+      { name: "deposit", expected: "balance_due", payment: 4000, balance: 6000 },
+      { name: "pending-balance", expected: "balance_due", payment: 4000, balance: 6000, movement: ["balance", "pending", 6601] },
+      { name: "failed-balance", expected: "balance_due", payment: 4000, balance: 6000, movement: ["balance", "failed", 6601] },
+      { name: "settled-balance", expected: "paid", payment: 4000, balance: 6000, movement: ["balance", "succeeded", 6601] },
+      { name: "balance-tax-still-due", expected: "balance_due", payment: 4000, balance: 6000, movement: ["balance", "succeeded", 6000] },
+      { name: "cancelled-deposit", expected: "paid", payment: 4000, balance: 6000, state: "cancelled" },
+      { name: "partial-refund", expected: "refunded", payment: 10000, movement: ["refund", "succeeded", 100] },
+      { name: "full-refund", expected: "refunded", payment: 10000, movement: ["refund", "succeeded", 10000] },
+      { name: "refunded-deposit", expected: "refunded", payment: 4000, balance: 6000, movement: ["refund", "succeeded", 4000] },
+      { name: "pending-refund", expected: "paid", payment: 10000, movement: ["refund", "pending", 10000] },
+      { name: "failed-refund", expected: "paid", payment: 10000, movement: ["refund", "failed", 10000] },
+      { name: "processor-refund", expected: "refunded", payment: 10000, fact: "succeeded" },
+      { name: "pending-processor-refund", expected: "paid", payment: 10000, fact: "pending" },
+      { name: "failed-processor-refund", expected: "paid", payment: 10000, fact: "failed" },
+      { name: "pending-invoice", expected: "unpaid", movement: ["invoice", "pending", 10000] },
+      { name: "paid-invoice", expected: "paid", movement: ["invoice", "succeeded", 10000] },
+      { name: "unpaid-price", expected: "unpaid", price: 10000 },
+      { name: "paid-fee", expected: "paid", movement: ["no_show_fee", "succeeded", 500] },
+    ];
+    for (const [index, fixture] of fixtures.entries()) {
+      fixture.id = ulid();
+      const occurrenceId = ulid();
+      const start = `2030-05-15T12:${String(index).padStart(2, "0")}:00.000Z`;
+      const end = new Date(Date.parse(start) + 30 * 60000).toISOString();
+      const reference = `synthetic-dial-${index}`;
+      const paymentRef = `${reference}-payment`;
+      await runtime.db.batch([
+        runtime.db.prepare(`INSERT INTO bookings (id,event_type_id,event_slug,event_title,duration_minutes,location_type,location_label,location_value,invitee_name,invitee_email,host_timezone,invitee_timezone,state,ical_uid,calendar_state,meeting_state,created_at,updated_at)
+          VALUES (?,?,'payment-filter','Payment filter',30,'fixed_link','Meeting','https://dial.test/meeting',?,?,'UTC','UTC',?,?,'succeeded','not_required',?,?)`)
+          .bind(fixture.id, setup.eventId, `synthetic-dial-${fixture.name}`, [reference, "dial.test"].join("@"), fixture.state ?? "confirmed", reference, now, now),
+        runtime.db.prepare(`INSERT INTO booking_occurrences (id,booking_id,sequence,start_at,end_at,occupied_start_at,occupied_end_at,host_date,state,is_current,created_at)
+          VALUES (?,?,0,?,?,?,?, '2030-05-15',?,1,?)`)
+          .bind(occurrenceId, fixture.id, start, end, start, end, fixture.state === "cancelled" ? "cancelled" : "current", now),
+        runtime.db.prepare("UPDATE bookings SET current_occurrence_id=? WHERE id=?").bind(occurrenceId, fixture.id),
+        ...(fixture.payment ? [runtime.db.prepare(`INSERT INTO booking_payments (id,booking_id,account_id,amount_cents,checkout_session_id,payment_intent_id,paid_at,created_at,updated_at,kind)
+          VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(ulid(), fixture.id, "synthetic-dial-account", fixture.payment, `${reference}-checkout`, paymentRef, now, now, now, fixture.balance ? "deposit" : "payment")] : []),
+        ...(fixture.balance || fixture.price ? [runtime.db.prepare(`INSERT INTO booking_payment_terms (booking_id,price_cents,deposit_cents,due_now_cents,balance_cents,balance_due_hours,terms_version,created_at,tax_cents)
+          VALUES (?,10000,?,?,?,24,1,?,?)`).bind(fixture.id, fixture.balance ? 4000 : 0, fixture.balance ? 4000 : 10000, fixture.balance ?? 0, now, fixture.balance ? 1001 : 0)] : []),
+        ...(fixture.movement ? [runtime.db.prepare(`INSERT INTO payment_movements (id,booking_id,kind,amount_cents,status,actor_type,reason,account_id,source_ref,processor_ref,idempotency_key,created_at,updated_at)
+          VALUES (?,?,?,?,?,'invitee','Synthetic filter fixture',?,?,?,?,?,?)`)
+          .bind(ulid(), fixture.id, fixture.movement[0], fixture.movement[2], fixture.movement[1], "synthetic-dial-account", paymentRef, `${reference}-movement`, reference, now, now)] : []),
+        ...(fixture.fact ? [runtime.db.prepare(`INSERT INTO payment_processor_facts (id,booking_id,account_id,kind,processor_ref,source_ref,amount_cents,status,event_created,created_at,updated_at)
+          VALUES (?,?,?,'refund',?,?,100,?,0,?,?)`).bind(ulid(), fixture.id, "synthetic-dial-account", `${reference}-refund`, paymentRef, fixture.fact, now, now)] : []),
+      ]);
+    }
+    // Multiple successful refunds must still select a booking exactly once.
+    const refunded = fixtures.find(row => row.name === "partial-refund");
+    await runtime.db.prepare(`INSERT INTO payment_movements (id,booking_id,kind,amount_cents,status,actor_type,reason,account_id,idempotency_key,created_at,updated_at)
+      VALUES (?,?,'refund',100,'succeeded','invitee','Second synthetic refund','synthetic-dial-account','synthetic-dial-second-refund',?,?)`).bind(ulid(), refunded.id, now, now).run();
+    const snapshot = async () => Promise.all(["bookings", "booking_payments", "booking_payment_terms", "payment_movements", "payment_processor_facts", "delivery_outbox", "accounting_exports"].map(table => runtime.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all().then(result => result.results)));
+    const before = await snapshot();
+    const check = async (filters, expectedIds, total = expectedIds.length) => {
+      const response = await runtime.api(`/api/app/bookings?${new URLSearchParams(filters)}`);
+      assert.equal(response.status, 200);
+      assert.equal(Number(response.headers.get("X-Total-Count")), total, "the count uses the payment predicate before pagination");
+      assert.deepEqual((await response.json()).map(row => row.id), expectedIds, "the public list returns exactly the expected identities in start order");
+    };
+    for (const paymentState of ["free", "unpaid", "paid", "balance_due", "refunded"]) {
+      const ids = fixtures.filter(row => row.expected === paymentState).map(row => row.id);
+      await check({ paymentState }, ids);
+      await check({ paymentState, limit: "1", offset: "1" }, ids.slice(1, 2), ids.length);
+      await check({ paymentState, limit: "1", offset: "500" }, [], ids.length);
+      const anonymous = await runtime.api(`/api/app/bookings?paymentState=${paymentState}`, { headers: { cookie: "" } });
+      assert.equal(anonymous.status, 401, "payment facts remain session gated");
+    }
+    const combined = { paymentState: "paid", state: "confirmed", attendance: "unmarked", eventTypeId: setup.eventId, from: "2030-05-15T12:06:00.000Z", to: "2030-05-15T12:14:00.000Z", deliveryFailed: "false", query: "SYNTHETIC-DIAL" };
+    const combinedIds = fixtures.filter(row => ["settled-balance", "pending-refund", "failed-refund"].includes(row.name)).map(row => row.id);
+    await check(combined, combinedIds);
+    await check({ ...combined, limit: "1", offset: "2" }, combinedIds.slice(2), 3);
+    await check({ ...combined, attendance: "attended" }, []);
+    await check({ ...combined, deliveryFailed: "true" }, []);
+    await check({ ...combined, query: "no matching invitee" }, []);
+    for (const paymentState of ["unknown", "", "PAID", "paid,free", "paid' OR 1=1"]) {
+      assert.equal((await runtime.api(`/api/app/bookings?${new URLSearchParams({ paymentState })}`)).status, 400, "invalid payment states are refused instead of broadening the list");
+    }
+    await check({}, fixtures.map(row => row.id));
+    assert.deepEqual(await snapshot(), before, "filtered reads and refusals leave bookings, delivery, money and accounting rows unchanged");
+  } finally {
+    await runtime.close();
+  }
+});

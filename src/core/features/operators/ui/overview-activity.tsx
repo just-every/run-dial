@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { SectionHeading } from "../../../app/ui/page-header";
-import { Badge, Card, textLinkClassName } from "../../../app/ui/primitives";
+import { Badge, Card, phoneTapClassName, textLinkClassName } from "../../../app/ui/primitives";
 import type { IconName } from "../../../shared/drawing/icons";
 import type { OperatorRequest } from "../../availability-requests";
 import type { BookingRecord } from "../../bookings";
@@ -102,7 +102,7 @@ function ActivityCard<T>({
       : `${state.total} ${state.total === 1 ? noun : `${noun}s`}`;
 
   return <Card className="min-w-0 p-5 sm:p-6">
-    <SectionHeading icon={icon} title={title} description={description} action={<Link to={href} className={`${textLinkClassName} text-[15px]`}>{action}</Link>} />
+    <SectionHeading icon={icon} title={title} description={description} action={<Link to={href} className={`${textLinkClassName} ${phoneTapClassName} text-[15px]`}>{action}</Link>} />
     {state.status === "loading" ? <WorkspaceLoadState label={loadingText} /> : null}
     {state.status === "error" ? <WorkspaceLoadState error={errorText} /> : null}
     {state.status === "loaded" && state.total === 0 ? <p className="mt-5 text-sm leading-6 text-soft">{emptyText}</p> : null}

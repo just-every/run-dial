@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { EventReview,eventName } from './event-review';
 import { DifferencesList } from './differences-list';
 import { moveInChanged } from './switch-over-card';
-import { Button, Card, Input, Select } from '../../../app/ui/primitives';
+import { Button, Card, fileInputClassName, Input, Select } from '../../../app/ui/primitives';
+import { TimezonePicker } from '../../../shared/timezone-picker';
 import { SectionHeading } from '../../../app/ui/page-header';
 import { useHydrated } from '../../../app/use-hydrated';
 import { SchedulerSource } from './scheduler-source';
@@ -28,9 +29,9 @@ export function MoveInCard(){
  return <Card id="move-in" className="min-w-0 space-y-5 p-5 sm:p-6">
   <div><SectionHeading icon="download" title="Move in" /><p className="mt-3 text-sm leading-6 text-soft">Bring saved Calendly, Cal.com or SavvyCal data, or use the CSV and calendar templates for Doodle and other schedulers. Checked against synthetic samples from public documentation; a real account export has not been supplied.</p><p className="mt-2 text-sm leading-6 text-soft">Choose the files described in the importing guide. Preview saves nothing. Imported bookings send no mail or reminders and keep their original calendar entry.</p><p className="mt-2 text-sm"><a className="underline" href="https://github.com/just-every/run-dial/blob/main/docs/importing-templates.md" target="_blank" rel="noreferrer">CSV and calendar templates</a> · <a className="underline" href="https://github.com/just-every/run-dial/blob/main/docs/importing-schedulers.md" target="_blank" rel="noreferrer">Scheduler capture guide</a></p></div>
   <SchedulerSource disabled={!hydrated||busy} onCapture={file=>selectFiles([file])}/>
-  <label className="block text-sm font-[650]">Saved response files<input className="mt-2 block w-full min-w-0 text-sm" type="file" accept=".json,.csv,.ics" multiple disabled={!hydrated||busy} onChange={e=>selectFiles(Array.from(e.target.files??[]))} /></label>
+  <label className="grid gap-2 text-sm font-[650]">Saved response files<Input className={fileInputClassName} type="file" accept=".json,.csv,.ics" multiple disabled={!hydrated||busy} onChange={e=>selectFiles(Array.from(e.target.files??[]))} /></label>
   {files.length?<p className="break-words text-sm" role="status">Selected: {files.map(file=>file.name).join(', ')}</p>:null}
-  <label className="block text-sm font-[650]">Adopt source schedule timezone (leave blank to keep host zone)<Input className="mt-2 block" placeholder="America/New_York" value={choices.zone??''} onChange={e=>update({...choices,zone:e.target.value||undefined})} /></label>
+  <TimezonePicker label="Time zone for the imported schedule" emptyLabel="Keep the host zone" value={choices.zone??''} disabled={!hydrated||busy} onChange={zone=>update({...choices,zone:zone||undefined})} />
   <p className="text-sm">After changing an owner choice, preview again to review the new counts at the same upload time. Selecting files starts a new upload review.</p><Button type="button" disabled={!files.length||busy} onClick={()=>void preview()}>Preview saved data</Button>
   {error?<p role="alert" className="break-words rounded-[14px] bg-danger-wash p-3 text-sm leading-6 text-danger">{error}</p>:null}
   {busy?<p role="status">Working on this bounded batch…</p>:null}

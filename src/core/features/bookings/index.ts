@@ -13,3 +13,6 @@ export { foldBookingSearch } from "./search/case-fold.mjs";
 export { attributionSchema } from "./link-context";
 
 export { invitationManageUrl } from "./invitation-capability";
+
+export { operatorListSchema, resolveOperatorBookingQuery } from "./operator-query";
+export type { BookingExportRow } from "./operator-export";
