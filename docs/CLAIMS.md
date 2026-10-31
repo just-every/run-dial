@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 90 done / 35 partial / 64 missing (189 clauses).
+The contract census is 90 done / 36 partial / 63 missing (189 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -180,11 +180,11 @@ Evidence: `tests/availability-diagnostics.test.mjs`, `tests/host-setup-journey.t
 
 Gap: None.
 
-EVENT-007 is missing: Group events and capacity.
+EVENT-007 is partial: Group events and capacity.
 
-Evidence: None.
+Evidence: `tests/group-seat-capacity.test.mjs` — native group seats preserve capacity, individual authority and delivery through replay, cancellation and erasure; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused (group upgrade and archive journey).
 
-Gap: No implementing code yet.
+Gap: Native owner-session single-host capacity from 2 to 1,000 is implemented for free, unapproved events with one fixed duration and location, without additional guests or a connected calendar; public seats, atomic concurrent admission, individual answers, manage authority, reminders and single-seat cancellation are proven. Held remainder: group controls and browser qualification, displayed remaining seats, early slot closure, ordered waitlist offers and acceptance expiry, whole-slot cancellation, shared destination-calendar event and attendee privacy, priced or approval group combinations, and delegated permissions under OPER-001. Calendar-connected group configuration explicitly refuses until shared-slot delivery exists. The full EVENT-007 acceptance journey remains required; EVENT-010 follows EVENT-007. DATA-002 remains NO, DATA-004 remains held, and existing API, payment, calendar custody and release prerequisites remain unchanged.
 
 EVENT-008 is partial: Bookings that need host approval.
 
