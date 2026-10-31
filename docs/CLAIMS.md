@@ -230,7 +230,7 @@ Gap: Webhook payloads, CRM handoff and reports are carried by `API-002`, `INTEG-
 
 POLL-001 is partial: Meeting polls.
 
-Evidence: `src/core/features/polls/`, `tests/booking-wire/poll-journey.mjs`, `tests/booking-axe/polls.mjs`, `tests/polls/native.mjs`, `tests/archive/poll-upgrade.mjs`
+Evidence: `src/core/features/polls/`, `tests/booking-wire/poll-journey.mjs`, `tests/booking-axe/polls.mjs`, `tests/polls/native.mjs`, `tests/archive/poll-upgrade.mjs`; `tests/booking-wire/poll-reminder-journey.mjs` (pollReminderJourney, registered in `tests/booking-wire.test.mjs`)
 
 Gap: Owner-created polls take up to 50 participants and 2–12 live times for unpriced, unapproved published event types. Private expiring hash-stored capabilities rotate atomically on each complete vote; four browser contexts prove voting, changing a vote, private host-selected counts, held-slot exclusion and immediate release on close. Invitations queue once per participant. Open: winning-time booking with EVENT-009 guests and one booking invitation each, timed reminders, deletion, replacement-link recovery, in-flight invitation fencing and PUBLIC-003 known-expiry/used-state pages. Default: tally hidden; priced, deposit, saved-card fee and approval types refused.
 
