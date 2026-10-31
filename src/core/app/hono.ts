@@ -1,3 +1,4 @@
+import { consentRoutes } from "../features/api-credentials/consent";
 import { credentialRoutes } from "../features/api-credentials/routes";
 import { credentialOAuthRoutes } from "../features/api-credentials/oauth";
 import { publicApiRoutes } from "../features/public-api/routes";
@@ -90,6 +91,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
       return context.json({ ...health, checkedAt: new Date().toISOString() });
     })
     .route("/", credentialRoutes)
+    .route("/", consentRoutes)
     .route("/", credentialOAuthRoutes)
     .route("/", publicApiRoutes)
     .route("/", analyticsRoutes)
@@ -178,7 +180,9 @@ async function requireSession(context: Context<AppEnvironment>, next: Next) {
   }
   const authority=await context.env.DB.prepare('SELECT role FROM oa_operators WHERE id=?').bind(session.id).first<{role:string}>();
   const importing=context.req.path.startsWith('/api/app/move-in/');
-  if(authority?.role!=='owner'&&!(importing&&authority?.role==='admin')){
+  const apiAdministration=/^\/api\/app\/(api-credentials|oauth-applications|api-hosts)(\/|$)/.test(context.req.path);
+  const consent=/^\/api\/app\/oauth\//.test(context.req.path);
+  if(authority?.role!=='owner'&&!(authority?.role==='admin'&&(importing||apiAdministration||consent))){
     await discardRequestBody(context.req.raw);
     return apiError(context,403,'role_forbidden',`This role cannot perform ${importing?'move-in':context.req.path}.`);
   }

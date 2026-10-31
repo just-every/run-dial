@@ -35,6 +35,7 @@ export async function eraseRemovedOperator(db:D1Database,target:{id:string;email
   const statements=[erasureAuthority(actor),
     {sql:`INSERT INTO rer_erasure_guard(value) SELECT CASE WHEN EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND status='inactive') AND EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND status='active') AND (? OR NOT EXISTS(SELECT 1 FROM oa_domain_rules WHERE created_by=?)) AND NOT EXISTS(SELECT 1 FROM bookings WHERE invitee_email_folded=?) AND NOT EXISTS(SELECT 1 FROM availability_requests WHERE ${emailFoldSql("invitee_email")}=?) THEN 1 ELSE 0 END`,params:[target.id,actor.id,retainNative ? 1 : 0,target.id,email,email]},
     // The helper re-reads its planned rows first; address cleanup that overlaps them runs after.
+    {sql:"UPDATE api_hosts SET operator_id=NULL,updated_at=? WHERE operator_id=?",params:[now,target.id]},
     ...plan.statements,
     ...await addressRemainders(db,fence,email,secret,[target.email]),
     ...(retainNative ? [{ sql: "UPDATE oa_operators SET email='erased:'||id,display_name='Removed operator',version=version+1 WHERE id=? AND status='inactive'", params: [target.id] }] : []),
