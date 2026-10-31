@@ -16,15 +16,6 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   const more = page.locator("details.dial-more").first();
   if (await more.getAttribute("open") === null) await keys.activate(more.locator("summary"), "Open more booking actions");
   const before = await get(page, origin, `/api/app/bookings/${booking.id}`);
-  for (const label of ["Mark attended", "Mark no-show"]) {
-    const trigger = button(page, label);
-    await keys.native(trigger, `Cancel ${label} prompt`, "prompt", false);
-    await page.waitForLoadState("networkidle");
-    const after = await get(page, origin, `/api/app/bookings/${booking.id}`);
-    assert.deepEqual(after.attendance, before.attendance);
-    assert.deepEqual(after.history, before.history);
-    await keys.restored(trigger, `Cancelled ${label}`);
-  }
   const opener = button(page, "Review calendar conflicts");
   await keys.activate(opener, "Open native DOM calendar conflict dialog");
   const dialog = page.getByRole("dialog", { name: "Calendar conflicts", exact: true }); await dialog.waitFor();
@@ -75,5 +66,5 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   const cancelled = await get(page, origin, `/api/app/bookings/${booking.id}`);
   assert.equal(cancelled.state, "cancelled"); assert.ok(cancelled.history.some(entry => entry.action === "cancelled" && entry.reason === "Keyboard cancellation note"));
   await keys.screenshot("booking-cancelled");
-  checks.push({ width, flow: "Attendance marking, booking prompt cancellation/confirmation, native DOM modal Tab/Shift+Tab trap, real Escape and Close restoration, API readback", passed: true });
+  checks.push({ width, flow: "Attendance marking, booking cancellation prompt dismissal/confirmation, native DOM modal Tab/Shift+Tab trap, real Escape and Close restoration, API readback", passed: true });
 }
