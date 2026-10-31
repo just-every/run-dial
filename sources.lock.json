@@ -4547,7 +4547,7 @@
       "executable": false
     },
     "scripts/ci-runtime-ports.mjs": {
-      "sha256": "a939829d07b006398f2660d60e6bc1e9a09e9d4378012b76b84491fcf736873f",
+      "sha256": "d9cfd14aa8ab4e9104999e72aa227b4733e41b701895c36f5f0cb49abb3cc547",
       "executable": false
     },
     "scripts/ci-test-files.mjs": {
@@ -10379,7 +10379,11 @@
       "executable": false
     },
     "tests/offered-times.test.mjs": {
-      "sha256": "dc247319f98c9045da4a3c41f3e593506473fcb317063c88002d31cf2912d92a",
+      "sha256": "b19e61a768d62d3a4233b9e9decd65f39f5bfcf874f7abb029bc98489ff0c1d2",
+      "executable": false
+    },
+    "tests/offered-times/worker.wrangler.toml": {
+      "sha256": "46a1bba00542d9609a415875860203adc71d99d862b6959d4c195ed23f7a2653",
       "executable": false
     },
     "tests/operations-command/fixture.mjs": {
