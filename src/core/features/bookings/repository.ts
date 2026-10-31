@@ -326,7 +326,7 @@ export class BookingsRepository {
   }
 
   async listOperatorRecipients() {
-    const result = await this.binding.prepare("SELECT id, email, access_generation AS generation FROM operators WHERE removed_at IS NULL ORDER BY created_at").all<{ id: string; email: string; generation: number }>();
+    const result = await this.binding.prepare("SELECT o.id,o.email,o.access_generation AS generation FROM operators o JOIN oa_operators a ON a.id=o.id WHERE o.removed_at IS NULL AND a.status='active' AND a.role='owner' ORDER BY o.created_at").all<{ id: string; email: string; generation: number }>();
     return result.results;
   }
 
