@@ -8664,7 +8664,7 @@
       "executable": false
     },
     "tests/booking-wire/payment-journey.mjs": {
-      "sha256": "ffaeae3e74131a44ba19b18444defd69004f9f48eebae0a54cc55143f92631ff",
+      "sha256": "405fa15aed6bbad63fd76526511d29ae711f0a9ebc8e39b47a72f9e943ff8e83",
       "executable": false
     },
     "tests/booking-wire/payment-request.mjs": {
@@ -8676,11 +8676,11 @@
       "executable": false
     },
     "tests/booking-wire/payment-tax-journey.mjs": {
-      "sha256": "838e3a853d75a1c9a25980713ff216868d730768edd90434756911ae265828e0",
+      "sha256": "159c9c0e2ea891fb669ff4131a56f9e2d1acd2c681d4b6bb87be7d8c8f55591c",
       "executable": false
     },
     "tests/booking-wire/payment-terms-journey.mjs": {
-      "sha256": "8ac7fd358316c8c525aa6c37ccc1be50a5dd5a827af4a8acf72b481887e519a2",
+      "sha256": "6c810182aaeffc0b9b8dcc4fefa5a02ce2fc2051da8fd254e5633a6ae097e283",
       "executable": false
     },
     "tests/booking-wire/poll-journey.mjs": {

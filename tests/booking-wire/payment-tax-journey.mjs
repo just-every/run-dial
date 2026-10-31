@@ -13,7 +13,10 @@ let cookie;
 const checks = [];
 async function call(path, body, expected = 200, method = body === undefined ? "GET" : "POST", headers = {}) {
   const response = await paymentFetch(origin + path, { method, headers: { origin, "content-type": "application/json", ...(cookie && !headers.anonymous ? { cookie } : {}), ...headers }, ...(body === undefined ? {} : { body: typeof body === "string" ? body : JSON.stringify(body) }), redirect: "manual" });
-  assert.ok((Array.isArray(expected) ? expected : [expected]).includes(response.status), `${method} ${redact(path)} ${response.status}: ${redact(await response.clone().text())}`);
+  // Keep expected response bodies untouched for the journey's later reads.
+  if (!(Array.isArray(expected) ? expected : [expected]).includes(response.status)) {
+    assert.fail(`${method} ${redact(path)} ${response.status}: ${redact(await response.text())}`);
+  }
   return response;
 }
 const data = async (...args) => (await call(...args)).json();
