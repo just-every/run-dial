@@ -363,6 +363,10 @@ export class BookingsService {
     return this.repository.listForOperator(filters, nowIso());
   }
 
+  exportForOperator(filters: Parameters<BookingsRepository["exportForOperator"]>[0]) {
+    return this.repository.exportForOperator(filters, nowIso());
+  }
+
   async listForOperatorWithCount(filters: Parameters<BookingsRepository["listForOperator"]>[0]) {
     const now = nowIso();
     const [bookings, totalCount] = await Promise.all([

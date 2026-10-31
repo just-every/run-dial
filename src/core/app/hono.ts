@@ -126,7 +126,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", teamRoutes)
     .route("/", routingRoutes)
     .route("/", noticeRoutes)
-    .route("/", reportRoutes)
+    .route("/", reportRoutes())
     .route("/", publicBookingRoutes)
     .route("/", rememberRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))

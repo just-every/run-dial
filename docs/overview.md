@@ -6,7 +6,7 @@ Dial is a self-hosted scheduler for one business or one independent host. Client
 
 Dial is for a single host: a consultant, a clinic, a studio, a small business that takes appointments. You set up one host profile and one or more event types, such as a 30-minute intro call. You can invite other people to run the workspace with you, and they all have the same access.
 
-An event type can be free or paid. For a paid one, you connect your own Stripe account and set a price in US dollars, or a price for each length you offer; see [Stripe payments](install.md#stripe-payments-optional-pay-001). Your client pays on Stripe's checkout page while Dial holds the time for 10 minutes, and the booking is confirmed only when Stripe's signed payment event reaches Dial. The receipt, the client's manage page, the emails and your booking record show the amount and Stripe's reference. You can take a deposit and have Dial email your client a link to pay the balance before the meeting, and state a cancellation policy: cancelling inside the free window refunds your client automatically, and after it a late-cancellation fee you stated is charged to a card your client agreed to save; a no-show fee works the same way after you mark the no-show. You refund in full or in part, with a reason, from the booking record. Without a cancellation policy, your client's own cancellation refunds nothing automatically. Turn on Stripe Tax to add US sales tax by your client's billing address: the tax is shown before they pay and on their receipt. Every payment sends one receipt with your business name, the amount, the tax and Stripe's reference to your client and to you, and you can invoice an unpaid booking from its record on an invoice Stripe hosts. Not yet proven against live Stripe: a real Stripe Connect OAuth grant, Stripe delivering its payment events to a deployed Dial, and an ACH Direct Debit payment end to end. A Stripe test-mode run paid a real Checkout Session that Dial created; the test harness, not Stripe, delivered the payment event to Dial.
+An event type can be free or paid. For a paid one, you connect your own Stripe account and set a price in US dollars, or a price for each length you offer; see [Stripe payments](install.md#stripe-payments-optional). Your client pays on Stripe's checkout page while Dial holds the time for 10 minutes, and the booking is confirmed only when Stripe's signed payment event reaches Dial. The receipt, the client's manage page, the emails and your booking record show the amount and Stripe's reference. You can take a deposit and have Dial email your client a link to pay the balance before the meeting, and state a cancellation policy: cancelling inside the free window refunds your client automatically, and after it a late-cancellation fee you stated is charged to a card your client agreed to save; a no-show fee works the same way after you mark the no-show. You refund in full or in part, with a reason, from the booking record. Without a cancellation policy, your client's own cancellation refunds nothing automatically. Turn on Stripe Tax to add US sales tax by your client's billing address: the tax is shown before they pay and on their receipt. Every payment sends one receipt with your business name, the amount, the tax and Stripe's reference to your client and to you, and you can invoice an unpaid booking from its record on an invoice Stripe hosts. Try a paid event type in Stripe's test mode before you take real payments.
 
 If you need several hosts or team round-robin, Dial is not the right tool. See [what Dial does not do](#what-dial-does-not-do).
 
@@ -29,7 +29,7 @@ If nothing suits them, they can send you a request with other dates and times in
 1. Set up your profile, mail and availability, and publish an event type. Google Calendar is optional for fixed links, phone calls and in-person bookings; Google Meet requires it.
 2. Share the booking link, or embed the booking flow on your own site.
 3. When someone books, Dial rechecks your saved schedule and existing Dial bookings, then records the booking and emails you and your client. With a connected calendar, it also rechecks live busy times and creates a calendar event; if the calendar cannot be checked, confirmation stops.
-4. Manage bookings and requests from the operator app. You can reschedule, cancel, mark attendance or create a booking for someone yourself. Filter bookings by lifecycle state, future or past start, event type, date range or failed external delivery, then search invitee names and email addresses. Add private annotations to event types, bookings and requests. Open the scheduling report from Bookings to see, for a period and an event type, what was booked, moved, canceled, attended, paid for and refunded; each figure says what it counts and lists those bookings.
+4. Manage bookings and requests from your Dial workspace. You can reschedule, cancel, mark attendance or create a booking for someone yourself. Filter bookings by lifecycle state, future or past start, event type, date range or failed external delivery, then search invitee names and email addresses. Add private annotations to event types, bookings and requests. Open the scheduling report from Bookings to see, for a period and an event type, what was booked, moved, canceled, attended, paid for and refunded; each figure says what it counts and lists those bookings.
 
 Read [Your booking page](booking-page.md) for every setting, and [Calendar and email](calendar-and-email.md) for what Dial sends and reads.
 
@@ -49,28 +49,19 @@ Dial stays small on purpose. It does not offer:
 - Changing reminder times. Reminders always go out 24 hours and 1 hour before a booking.
 - Automatic acceptance of time or location changes made by hand to a booking's calendar event. Dial records the difference and leaves the booking time as it is.
 - AI ranking of times. Suggested times follow fixed rules.
-- Native mobile apps. The operator app and booking pages work in a browser.
+- Native mobile apps. Your Dial workspace and booking pages work in a browser.
 
-## Where things stand
+## Before you rely on it
 
-This is version 0.1.0. The scheduling and request workflows work and are covered by automated tests that use synthetic calendar and mail providers. Some things are not yet proven against live services, and these pages say so where it matters:
+Try a test calendar and a test event type before you take real appointments, and use Stripe's test mode before real payments. A Google connection set up as a test app needs reconnecting every week; [Calendar and email](calendar-and-email.md#connect-google-calendar) explains when.
 
-- Connecting a real Google Calendar and creating Google Meet links.
-- How long a Google sign-in lasts before you must reconnect.
-- A deploy with `pnpm run deploy` to a real Cloudflare account. Its tests use a stand-in for Cloudflare's API.
-- Connecting a real Stripe account, Stripe sending payment events to a deployed Dial, and US bank account (ACH) payments. A Stripe test-mode run paid a real Checkout Session that Dial created; the test harness, not Stripe, delivered the payment event to Dial.
-
-Export supports local installs and a hosted install through its native owner session. Restore goes into an empty local installation; hosted restore is not exposed. See [Backups and export](backups.md) for the commands and private settings to keep. Live provider recovery remains unverified.
-
-The local browser review does not establish full WCAG 2.2 AA conformance, and local timing measurements do not prove production capacity. Complete data erasure and the final disconnected export-and-restore receipt are still in progress.
-
-Try a test calendar and a test event type before you rely on Dial for real appointments. [HANDOVER.md](../HANDOVER.md) records exactly what has and has not been proven.
+You can export your data from a local install or, from Settings, a hosted one. Restore goes into an empty local installation; hosted restore is not offered. See [Backups and export](backups.md) for the commands and the private settings to keep.
 
 Booking search uses literal, full Unicode case-insensitive substring matching. Operator annotations are private to the workspace and are not included in public pages or outgoing mail.
 
 ## Cost and limits
 
-These figures are the author's estimates, not measured or load-tested. For one host and 1,000 bookings a month, the estimate covers Cloudflare: the Workers Paid plan, about 5 US dollars a month. It does not price SendGrid, which sends Dial's email, so check SendGrid's plans against your mail volume. Google Calendar has no charge inside its standard quota.
+These figures are estimates for planning. For one host and 1,000 bookings a month, the estimate covers Cloudflare: the Workers Paid plan, about 5 US dollars a month. It does not price SendGrid, which sends Dial's email, so check SendGrid's plans against your mail volume. Google Calendar has no charge inside its standard quota.
 
 - Up to 10 operators and 100 event types.
 - Up to about 10,000 bookings a month and 100,000 in all.
