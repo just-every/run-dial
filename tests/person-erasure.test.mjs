@@ -11,7 +11,7 @@ import { hashToken } from '../modules/operator-auth/crypto.mjs';
 import { dialPolicy, guardedBucket } from '../scripts/local/archive-policy.mjs';
 import { createPortability } from '@runeditrun/rer/modules/portability';
 
-contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person', async (context) => {
+contract(['DATA-002', 'CLIENT-001', 'DATA-006', 'ADMIN-002'], 'native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person', async (context) => {
   const rt = await bookingRuntime({ developmentMail: true });
   const email = 'erase-person-78321@example.test', name = 'PERSON_NAME_78321', text = 'PERSON_TEXT_78321';
   const unicodeAlias = 'eraſe-person-78321@example.test';
@@ -204,6 +204,11 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
     assert.equal(receipt.bookings, 4); assert.equal(receipt.requests, 1);
     assert.equal(markers.some(marker => JSON.stringify(receipt).includes(marker)), false);
     assert.ok(receipt.completedAt);
+    const erasureAudit = await rt.data('/api/app/audit/erasures');
+    assert.equal(erasureAudit.filter(row => row.subjectKind === 'booking').length, 4);
+    assert.equal(erasureAudit.filter(row => row.subjectKind === 'availability_request').length, 1);
+    const erasureCsv = await (await rt.api('/api/app/audit/erasures.csv')).text();
+    assert.equal([...markers, ...targets, aliasBooking.id, request.id].some(marker => JSON.stringify(erasureAudit).includes(marker) || erasureCsv.includes(marker)), false, 'email-wide erasure leaves visible actions without invitee identity bridges');
     await assert.rejects(() => transfers.exports.download(frozenExport), /job_not_found/, "a pre-erasure snapshot cannot be downloaded after success");
     const localScan = await scan(rt.db, rt.bucket, markers, knownHashes);
     assert.deepEqual((await clientHistory()).bookings, [], 'person erasure removes the entire derived client history');
@@ -244,7 +249,7 @@ contract(['DATA-002', 'CLIENT-001', 'DATA-006'], 'native email preview is inert;
   } finally { await rt.close(); }
 });
 
-contract(['DATA-002', 'DATA-004'], 'one confirmation erases operator and self-owner invitee records while retaining native identity; unknown tables fail closed', async (context) => {
+contract(['DATA-002', 'DATA-004', 'ADMIN-002'], 'one confirmation erases operator and self-owner invitee records while retaining native identity; unknown tables fail closed', async (context) => {
   const rt = await bookingRuntime({ developmentMail: true });
   try {
     await eraseOperatorInviteeRecords(rt, context);
