@@ -44,7 +44,11 @@ export class ProviderDeliveryService {
   }
 
   async enqueueDue(dispatcher: DeliveryJobDispatcher, limit = 25, now = new Date()) {
-    const ids = await this.repository.dueIds(now.toISOString(), limit);
+    const page = await this.repository.dueIds(now.toISOString(), limit);
+    // A one-minute poll offset gets only one Cron pass before closure. Its
+    // complete due batch must fit independently of the ordinary outbox page.
+    const reminders = await this.repository.duePollReminderIds(now.toISOString());
+    const ids = [...new Set([...page, ...reminders])];
     await Promise.all(ids.map((outboxId) => dispatcher.send({ outboxId })));
     const noticeIds=await this.notices.dueIds(now.toISOString(),limit);
     await Promise.all(noticeIds.map(outboxId=>dispatcher.send({outboxId,channel:"notice"})));

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { pollEvent, pollInput, pollLinks } from '../polls/fixture.mjs';
 import { wireMail, recipient, textBody, htmlBody } from './mail-contracts.mjs';
+import { pollReminderCapacity } from './poll-reminder-capacity.mjs';
 
 export async function pollReminderJourney({data,call,state,deliver,future,checks,phase,persisted}) {
  const title='Project planning https://example.test/notes';
@@ -27,6 +28,7 @@ export async function pollReminderJourney({data,call,state,deliver,future,checks
   }
   await call(`/api/app/polls/${id}/reminders`,{offsetsMinutes:[30]},409);
   checks.push('POLL-001 configured reminders survive a native Worker restart, concurrent sweeps and delivery replay without extra sends; each mail has a private live link.');
+  await pollReminderCapacity({data,state,future,checks});
   return;
  }
  const event=await pollEvent(data,'synthetic-dial-1210');
