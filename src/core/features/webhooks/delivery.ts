@@ -1,3 +1,4 @@
+import { bookingWebhookScope } from "./booking-scope";
 import { createId } from "../../shared/ids";
 import { unseal } from "../../platform/crypto/sealed";
 import { webhookEndpoint, webhookSignature } from "./endpoint";
@@ -13,7 +14,9 @@ export class WebhookDelivery {
   async due(now = new Date()) {
     const at = now.toISOString();
     await this.db.prepare("UPDATE webhook_deliveries SET state='pending',lease_id=NULL,lease_until=NULL WHERE state='sending' AND lease_until<=?").bind(at).run();
-    return (await this.db.prepare("SELECT id FROM webhook_deliveries WHERE state='pending' AND next_attempt_at<=? ORDER BY next_attempt_at,id LIMIT 25").bind(at).all<{ id: string }>()).results.map(row => row.id);
+    return (await this.db.prepare(`SELECT id FROM webhook_deliveries WHERE state='pending' AND next_attempt_at<=?
+      AND EXISTS(SELECT 1 FROM webhook_subscriptions s WHERE s.id=subscription_id AND ${bookingWebhookScope("webhook_deliveries.booking_id")})
+      ORDER BY next_attempt_at,id LIMIT 25`).bind(at).all<{ id: string }>()).results.map(row => row.id);
   }
   async enqueue(queue: Queue, now = new Date()) {
     const ids = await this.due(now);
@@ -23,7 +26,7 @@ export class WebhookDelivery {
   async process(id: string, now = new Date()) {
     const at = now.toISOString(), lease = createId();
     const claimed = await this.db.prepare(`UPDATE webhook_deliveries SET state='sending',attempts=attempts+1,lease_id=?,lease_until=?,updated_at=?
-      WHERE id=? AND state='pending' AND next_attempt_at<=? AND EXISTS(SELECT 1 FROM webhook_subscriptions s WHERE s.id=subscription_id AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL)
+      WHERE id=? AND state='pending' AND next_attempt_at<=? AND EXISTS(SELECT 1 FROM webhook_subscriptions s WHERE s.id=subscription_id AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL AND ${bookingWebhookScope("webhook_deliveries.booking_id")})
       AND (booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))`)
       .bind(lease, new Date(now.getTime() + 60000).toISOString(), at, id, at).run();
     if (!claimed.meta.changes) return "not_due";
@@ -37,7 +40,7 @@ export class WebhookDelivery {
       // DNS and key operations can yield while an owner deletes or erases.
       // Re-read authority at the last boundary before starting the HTTP request.
       const active = await this.db.prepare(`SELECT d.id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id=d.subscription_id
-        WHERE d.id=? AND d.lease_id=? AND d.state='sending' AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL
+        WHERE d.id=? AND d.lease_id=? AND d.state='sending' AND s.enabled=1 AND s.secret_ciphertext IS NOT NULL AND ${bookingWebhookScope("d.booking_id")}
         AND (d.booking_id IS NULL OR EXISTS(SELECT 1 FROM bookings b WHERE b.id=d.booking_id AND NOT EXISTS(SELECT 1 FROM person_erasure_locks l WHERE l.email=b.invitee_email_folded)))`).bind(id, lease).first();
       if (!active) return "unavailable";
       const response = await this.transport(endpoint, { method: "POST", redirect: "manual", signal: AbortSignal.timeout(10000), headers: { "Content-Type": "application" + "/json", "Dial-Signature": signature, "Dial-Event-Id": row.event_id }, body: row.body_json });
