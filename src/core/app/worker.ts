@@ -8,6 +8,7 @@ import { hostedExport } from "../features/portability/routes";
 import { staticAssetResponse } from "../../base/static-assets";
 import { setupStateResponse, claimedWhen } from "../../base/setup-state";
 import { lobbyResponse } from "../../base/lobby";
+import { plainAddressRedirect } from "./app-entry-redirects";
 import { identity } from "../../identity";
 import { ownerClaim } from "../features/operators/owner-claim.server";
 import { createApp } from "./hono";
@@ -75,6 +76,7 @@ return {
    const asset = url.pathname.startsWith("/assets/") ? null : await staticAssetResponse(request, env); if (asset) return asset;
    const lobbyBindings = { DB: env.DB, AUTH_ORIGIN: runtime.APP_URL };
    const state = await setupStateResponse(request, lobbyBindings, claimed); if (state) return state;
+   const plain = plainAddressRedirect(request); if (plain) return plain;
    const lobby = await lobbyResponse(request, lobbyBindings, identity, claimed); if (lobby) return lobby;
    if (isAuthenticatedCallbackPath(request)) {
     // Provider handlers authenticate before calling this gate. Invalid callbacks
