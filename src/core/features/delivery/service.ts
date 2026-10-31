@@ -252,6 +252,7 @@ export class ProviderDeliveryService {
       if (!this.operatorNotification) throw new ProviderFailure("operator_notification_coordination_missing", false);
       return this.operatorNotification<string | null>("send", { outboxId: record.id, attempt: record.attempts });
     }
+    if (!await this.repository.pollReminderAuthorized(record,now.toISOString(),this.sessionSecret)) throw new ProviderFailure("poll_reminder_inactive",false);
     return (await this.mail.send(message)).providerMessageId;
   }
 
