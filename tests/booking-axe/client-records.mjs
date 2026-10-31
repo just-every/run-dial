@@ -34,6 +34,7 @@ export async function clientRecordsJourney(browser, owner, origin, fixture, scan
       assert.equal(await page.locator('[data-client-booking]').count(),3);
       assert.deepEqual(await page.locator('[data-client-booking]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('data-client-booking')).sort()),bookings.map(booking=>booking.id).sort());
       await page.getByText(new RegExp(`Times in ${profile.timezone.replaceAll('/','\\/')}`)).waitFor();
+      await page.getByRole('button',{name:'Add note, field or merge',exact:true}).click();
       await page.getByLabel('New client note',{exact:true}).fill(`Prepare the proposal together at ${width}.`);
       await page.getByRole('button',{name:'Add note',exact:true}).click();
       await page.getByText(`Prepare the proposal together at ${width}.`,{exact:true}).waitFor();
@@ -54,7 +55,7 @@ export async function clientRecordsJourney(browser, owner, origin, fixture, scan
       await page.getByLabel('Merge this client into',{exact:true}).fill(target);
       page.once('dialog',async dialog=>{assert.equal(dialog.type(),'confirm');await dialog.accept();});
       await page.getByRole('button',{name:'Merge clients',exact:true}).click();
-      await page.getByRole('heading',{name:target,exact:true}).waitFor();
+      await page.waitForURL(url=>new URL(url).searchParams.get('client')===target);
       await page.locator('[data-clients-ready="true"]').waitFor();
       assert.equal(await page.locator('[data-client-booking]').count(),4);
       await page.getByText(`Prepare the proposal together at ${width}.`,{exact:true}).waitFor();

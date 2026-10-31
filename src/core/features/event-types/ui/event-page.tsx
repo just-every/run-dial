@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useRouteContext } from "@tanstack/react-router";
+import { useRouteContext } from "@tanstack/react-router";
 import { api, errorMessage } from "../../../api/client";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { useDetailsDraft } from "./advanced-groups/details-draft";
-import { Card, IconTile } from "../../../app/ui/primitives";
+import { Card, IconTile, PlainLink } from "../../../app/ui/primitives";
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { RecordNotFound } from "../../bookings/client";
 import { EventSharing, hostSetupChanged } from "../../host-setup";
@@ -104,7 +104,7 @@ function EventDetailsScope({ initial, workspace, paymentEditor, hostName, hostTi
   const event = { ...initial, ...details.values };
   return <EventPageContext.Provider value={{ event, details, workspace, hostName, hostTimezone, onSaved, onHoursClosed, paymentEditor }}>
     <div className="grid gap-5" data-event-page>
-      <Link to={`${workspace}/event-types`} className="inline-flex min-h-11 sm:min-h-6 w-fit items-center text-sm font-semibold underline-offset-4 hover:underline">‹ Event types</Link>
+      <PlainLink to={`${workspace}/event-types`} className="inline-flex min-h-11 sm:min-h-6 w-fit items-center text-sm font-semibold underline-offset-4 hover:underline">‹ Event types</PlainLink>
       <EventActions event={event} workspace={workspace} readiness={readiness} checking={checking} onChange={setRecord} onSaved={onSaved} />
       <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,350px)]">
         <Card className="min-w-0 p-5 sm:p-6"><EventFields mode="essentials" event={event} update={details.type} choose={details.choose} state={details.state} validation={details.validation} onLeave={details.leave} onFlush={details.leave} onRetry={details.retry} /></Card>
@@ -116,5 +116,5 @@ function EventDetailsScope({ initial, workspace, paymentEditor, hostName, hostTi
   </EventPageContext.Provider>;
 }
 function SettingsRow({ id, to, icon, title, summary }: { id: string; to: string; icon: "clock" | "gear"; title: string; summary: string }) {
-  return <Link id={id} to={to} state={{ eventSettingsFrom: to.slice(0, to.lastIndexOf("/")) }} className="flex min-h-[88px] sm:min-h-[72px] items-center gap-3 rounded-2xl p-3 text-left hover:bg-row focus-visible:outline-2 focus-visible:outline-ink"><IconTile icon={icon} /><span className="min-w-0 flex-1"><span className="block font-bold">{title}</span><span className="mt-1 block text-sm leading-5 text-soft">{summary}</span></span><span aria-hidden="true" className="text-xl">›</span></Link>;
+  return <PlainLink id={id} to={to} state={{ eventSettingsFrom: to.slice(0, to.lastIndexOf("/")) }} className="flex min-h-[88px] sm:min-h-[72px] items-center gap-3 rounded-2xl p-3 text-left hover:bg-row focus-visible:outline-2 focus-visible:outline-ink"><IconTile icon={icon} /><span className="min-w-0 flex-1"><span className="block font-bold">{title}</span><span className="mt-1 block text-sm leading-5 text-soft">{summary}</span></span><span aria-hidden="true" className="text-xl">›</span></PlainLink>;
 }

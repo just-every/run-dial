@@ -14,7 +14,7 @@ export class ClientRecords {
     if (!profile) return { email: foldEmail(email), aliases: [foldEmail(email)], notes: [], fields: [] };
     const [aliases, notes, fields] = await Promise.all([
       this.addresses(email),
-      this.db.prepare("SELECT id,body,operator_id AS operatorId,created_at AS createdAt FROM client_notes WHERE client_id=? ORDER BY created_at,id").bind(profile.id).all<{id:string;body:string;operatorId:string;createdAt:string}>(),
+      this.db.prepare("SELECT n.id,n.body,n.operator_id AS operatorId,coalesce(o.display_name,'') AS author,n.created_at AS createdAt FROM client_notes n LEFT JOIN oa_operators o ON o.id=n.operator_id WHERE n.client_id=? ORDER BY n.created_at,n.id").bind(profile.id).all<{id:string;body:string;operatorId:string;author:string;createdAt:string}>(),
       this.db.prepare("SELECT id,label,value FROM client_fields WHERE client_id=? ORDER BY created_at,id").bind(profile.id).all<{id:string;label:string;value:string}>(),
     ]);
     return { email: profile.email, aliases, notes: notes.results, fields: fields.results };
@@ -36,6 +36,17 @@ export class ClientRecords {
     statements.push(this.db.prepare(`UPDATE client_profiles SET revision=revision+1,updated_at=? WHERE id=${client}`).bind(now,email));
     const result = await this.db.batch(statements);
     return result[statements.length - 2].meta.changes ? id : null;
+  }
+  /** Edits (body) or removes (no body) one note of the client the address belongs to; false when it is not theirs. */
+  async changeNote(email: string, noteId: string, body?: string) {
+    email = foldEmail(email);
+    const profile = await this.profile(email);
+    if (!profile) return false;
+    const now = nowIso(), owned = "client_id=? AND id=?";
+    const statements = [this.guard(await this.addresses(email)), this.db.prepare(`SELECT CASE WHEN EXISTS(SELECT 1 FROM client_notes WHERE ${owned}) THEN 1 ELSE abs(-9223372036854775808) END`).bind(profile.id, noteId),
+      body === undefined ? this.db.prepare(`DELETE FROM client_notes WHERE ${owned}`).bind(profile.id, noteId) : this.db.prepare(`UPDATE client_notes SET body=?,updated_at=? WHERE ${owned}`).bind(body, now, profile.id, noteId),
+      this.db.prepare("UPDATE client_profiles SET revision=revision+1,updated_at=? WHERE id=?").bind(now, profile.id)];
+    try { await this.db.batch(statements); return true; } catch { return false; }
   }
   async merge(source: string, target: string, operatorId: string) {
     source = foldEmail(source); target = foldEmail(target);

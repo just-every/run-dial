@@ -6,7 +6,7 @@ import { stableJson } from "../../../shared/stable-json";
 import { api, errorMessage } from "../../../api/client";
 import { useHydrated } from "../../../app/use-hydrated";
 import { PageHeader } from "../../../app/ui/page-header";
-import { Button, Card, Input, Select, buttonClassName, noticeClassName } from "../../../app/ui/primitives";
+import { Button, Card, Input, Select, buttonClassName, noticeClassName, PlainLink } from "../../../app/ui/primitives";
 import type { EventTypeRecord } from "../../event-types";
 import type { OperatorRequest } from "../../availability-requests";
 import { OperatorQuestion } from "./operator-question";
@@ -106,7 +106,7 @@ function CreateBookingForm({ requestId }: { requestId?: string }) {
           {event?.questions.map((question) => { const key = question.key; return key ? <OperatorQuestion key={key} question={question} value={answers[key] ?? ""} onChange={(value) => { setNotice(""); setAnswers((current) => ({ ...current, [key]: value })); }} /> : null; })}
         </div>
         <label className="mt-6 flex items-start gap-3 rounded-[14px] border border-gold-line bg-gold-wash p-3 text-sm leading-5 text-ink"><input className="mt-0.5 h-[18px] w-[18px] shrink-0" type="checkbox" checked={overrideNoticeAndHorizon} onChange={(entry) => { setNotice(""); setOverrideNoticeAndHorizon(entry.target.checked); }} />Override the event’s minimum-notice and rolling-range rules. Calendar conflicts are still always checked.</label>
-        <div className="mt-6 flex flex-wrap gap-3"><Button type="submit" disabled={saving || !selected}>{saving ? "Creating booking…" : request ? "Create agreed booking" : "Create booking"}</Button><Link to={requestId ? "/app/requests" : "/app/bookings"} className={buttonClassName("secondary")}>Cancel</Link></div>
+        <div className="mt-6 flex flex-wrap gap-3"><Button type="submit" disabled={saving || !selected}>{saving ? "Creating booking…" : request ? "Create agreed booking" : "Create booking"}</Button><PlainLink to={requestId ? "/app/requests" : "/app/bookings"} className={buttonClassName("secondary")}>Cancel</PlainLink></div>
       </fieldset>
     </form></Card>
   </div>;

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../../../api/client";
 import { useWorkspaceRead } from "../../../app/workspace-reads";
 import { PageHeader, SectionHeading } from "../../../app/ui/page-header";
-import { Card, Select, textLinkClassName } from "../../../app/ui/primitives";
+import { Card, Select, textLinkClassName, PlainLink } from "../../../app/ui/primitives";
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { SavedMark, SaveFailed } from "../../../app/ui/autosave/saved-state";
 import { useAutosave } from "../../../app/ui/autosave/use-autosave";
@@ -11,7 +11,8 @@ import { RecordNotFound } from "../../bookings/client";
 import type { EventTypeRecord } from "../../event-types";
 import type { HoursRead } from "../your-hours";
 import type { BookingLimitsConfig } from "../booking-limits";
-import { WeeklyHours, hoursSummary } from "./weekly-hours";
+import { hoursSummary } from "../../../shared/hours-label";
+import { WeeklyHours } from "./weekly-hours";
 import { BookingCaps, capsSummary } from "./booking-caps";
 import { DateChanges } from "./date-changes";
 import { HoursRow } from "./hours-row";
@@ -51,7 +52,7 @@ export function EventHoursPage({ eventId, workspace = "/app" }: { eventId: strin
   if (read.missing) return <RecordNotFound kind="event type" back="/app/event-types" />;
   if (!read.data) return <WorkspaceLoadState error={read.error} label="Loading hours…" onRetry={read.load} />;
   return <div className="grid min-w-0 gap-6">
-    <Link to={`${workspace}/event-types/$id`} params={{ id: eventId }} aria-label="Back to event" className={`${textLinkClassName} flex min-h-11 w-fit items-center`}>‹ {read.data.event.title}</Link>
+    <PlainLink to={`${workspace}/event-types/$id`} params={{ id: eventId }} aria-label="Back to event" className={`${textLinkClassName} flex min-h-11 w-fit items-center`}>‹ {read.data.event.title}</PlainLink>
     <PageHeader title={`${read.data.event.title}’s hours`} description="" />
     <HoursContent key={eventId} data={read.data} />
   </div>;
@@ -82,13 +83,14 @@ function HoursContent({ data }: { data: Read }) {
   });
   useEffect(() => { applyCopy.current = windows => form.choose("windows", windows); }, [form.choose]);
   const options = [{ id: "yours", name: "Your hours", windows: hours.yours?.windows ?? [] }, ...hours.others.map(other => ({ id: other.id, name: other.name, windows: other.windows })), { id: "own", name: "Its own hours", windows: form.values.windows }];
+  const duplicates = (option: (typeof options)[number]) => option.id === "own" && options.some(other => other.id !== "own" && hoursSummary(other.windows) === hoursSummary(option.windows));
   const saved = form.state("windows").saved ? form.state("windows") : form.state("copy");
   return <div className="grid min-w-0 gap-5">
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="mb-3 flex w-full items-center justify-between text-sm font-semibold">Hours{profile?.timezone ? ` · ${profile.timezone.replaceAll("_", " ")}` : ""}<SavedMark state={form.state("uses")} /></legend>
       <div className="grid gap-3 sm:grid-cols-2">{options.map(option => <label key={option.id} className={`relative min-w-0 cursor-pointer rounded-[18px] p-4 ${form.values.uses === option.id ? "bg-gold-wash" : "bg-card shadow-panel"}`}>
         <input className="peer absolute inset-0 m-0 cursor-pointer opacity-0" type="radio" name={`hours-${event.id}`} value={option.id} checked={form.values.uses === option.id} aria-label={option.name} onChange={() => form.choose("uses", option.id)} />
-        <span className="block min-h-11 rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"><span className="block font-bold">{option.name}</span><span className="mt-1 block text-sm text-soft">{hoursSummary(option.windows)}</span></span>
+        <span className="block min-h-11 rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"><span className="block font-bold">{option.name}</span><span className="mt-1 block text-sm text-soft">{duplicates(option) ? "Hours for this event only" : hoursSummary(option.windows)}</span></span>
       </label>)}</div>
       <SaveFailed id="event-hours-choice-failed" state={form.state("uses")} what="hours choice" choice onRetry={form.retry} />
     </fieldset>
