@@ -1,3 +1,4 @@
+import { MailBrandReader } from "../features/delivery/mail-brand";
 import { TeamsRepository } from "../features/teams";
 import { RoutingRepository } from "../features/routing";
 import { WebhookSubscriptions } from "../features/webhooks/subscriptions";
@@ -116,7 +117,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
     calendar,
     mail,
     sendgridWebhook: new SendGridWebhookReceiver(binding, runtime.MAIL_WEBHOOK_KEY),
-    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime, notices.delivery, adapters.operatorNotifications, analytics.delivery),
+    delivery: new ProviderDeliveryService(deliveryRepository, calendar, mail, runtime.MAIL_PROVIDER === "resend" ? runtime.MAIL_WEBHOOK_KEY : runtime.RESEND_WEBHOOK_SECRET, runtime.SESSION_SECRET, runtime, notices.delivery, adapters.operatorNotifications, analytics.delivery, new MailBrandReader(binding, runtime.APP_URL)),
     availability,
     bookings,
     payments,
