@@ -9,7 +9,9 @@ import { contactHost } from "./contact-host";
 import { inviteeChangePolicyPredicate } from "../event-types";
 import { bookingPresentationStatements } from "./booking-presentation";
 import { BookingLimits, activeApprovalIntervals, approvalHoldPredicate } from "../availability";
+import { operatorBookingWhere, operatorBookingOrder, type OperatorBookingFilters } from "./operator-filters";
 import { foldBookingSearch } from "./search/case-fold.mjs";
+import { bookingExportRows } from "./operator-export";
 import { PublicAbuseRepository, blockedAddressSql, blockedAddressValues } from "../public-abuse";
 import { linkedBookingAcknowledgement } from "../availability-requests";
 import { restoreCalendarConflict, closeCalendarConflicts } from "./calendar-conflicts";
@@ -20,7 +22,6 @@ import { createId } from "../../shared/ids";
 import { blockedProbe, holdAdmission, nonceAdmission, slotClaimGuard } from "./claim-guard";
 import { activeHoldIntervals, paymentHoldPredicate, PaymentsRepository } from "../payments";
 import type { BookingClaim, BookingEmail, BookingRecord, BookingSelection } from "./types";
-import { bookingPaymentStateSql, type BookingPaymentState } from "./payment-state-filter";
 
 type OperatorBookingClaim = Omit<BookingClaim, "nonceId" | "nonceHash" | "payloadHash"> & { hostName: string; requestId?: string; creationIdentity?: OperatorCreationIdentity };
 
@@ -40,48 +41,6 @@ type NonceRecord = {
 };
 
 type ManageTokenLookup = { booking: BookingRecord; status: "active" | "expired" | "rotated" | "invalidated" };
-type OperatorBookingFilters = {
-  paymentState?: BookingPaymentState;
-  attendance?: "attended" | "no_show" | "unmarked";
-  state?: BookingRecord["state"];
-  rescheduleRequest?: "open" | "picked" | "expired" | "cancelled";
-  time?: "future" | "past";
-  eventTypeId?: string;
-  from?: string;
-  to?: string;
-  order?: "created";
-  limit?: number;
-  offset?: number;
-  deliveryFailed?: boolean;
-  query?: string;
-  /** A drill-through from the scheduling report: exactly the bookings one figure counts. */
-  ids?: string[];
-};
-
-function operatorBookingWhere(filters: OperatorBookingFilters, now: string) {
-  const clauses = ["b.current_occurrence_id = o.id"];
-  const values: unknown[] = [];
-  if (filters.paymentState) { clauses.push(`(${bookingPaymentStateSql}) = ?`); values.push(filters.paymentState); }
-  if (filters.attendance === "unmarked") clauses.push("NOT EXISTS(SELECT 1 FROM booking_attendance a WHERE a.booking_id=b.id)");
-  else if (filters.attendance) { clauses.push("EXISTS(SELECT 1 FROM booking_attendance a WHERE a.booking_id=b.id AND a.status=?)"); values.push(filters.attendance); }
-  if (filters.rescheduleRequest) { clauses.push("EXISTS(SELECT 1 FROM booking_reschedule_requests rr WHERE rr.booking_id=b.id AND rr.state=?)"); values.push(filters.rescheduleRequest); }
-  if (filters.state) { clauses.push("b.state = ?"); values.push(filters.state); }
-  if (filters.time === "future") { clauses.push("o.start_at >= ?"); values.push(now); }
-  if (filters.time === "past") { clauses.push("o.start_at < ?"); values.push(now); }
-  if (filters.eventTypeId) { clauses.push("b.event_type_id = ?"); values.push(filters.eventTypeId); }
-  if (filters.from) { clauses.push("o.start_at >= ?"); values.push(filters.from); }
-  if (filters.to) { clauses.push("o.start_at <= ?"); values.push(filters.to); }
-  if (filters.deliveryFailed === true) clauses.push("EXISTS (SELECT 1 FROM delivery_outbox d WHERE d.booking_id = b.id AND d.state = 'failed' AND d.last_error_code IS NOT 'reschedule_requested')");
-  if (filters.deliveryFailed === false) clauses.push("NOT EXISTS (SELECT 1 FROM delivery_outbox d WHERE d.booking_id = b.id AND d.state = 'failed' AND d.last_error_code IS NOT 'reschedule_requested')");
-  if (filters.ids) { clauses.push("b.id IN (SELECT value FROM json_each(?))"); values.push(JSON.stringify(filters.ids)); }
-  if (filters.query) {
-    clauses.push("(instr(CAST(b.invitee_name_folded AS BLOB), CAST(? AS BLOB)) > 0 OR instr(CAST(b.invitee_email_folded AS BLOB), CAST(? AS BLOB)) > 0)");
-    const folded = foldBookingSearch(filters.query);
-    values.push(folded, folded);
-  }
-  return { clause: clauses.join(" AND "), values };
-}
-
 export class BookingsRepository {
   readonly requests: RescheduleRequestsRepository;
   readonly guests: GuestsRepository;
@@ -332,14 +291,18 @@ export class BookingsRepository {
 
   async listForOperator(filters: OperatorBookingFilters, now: string) {
     const { clause, values } = operatorBookingWhere(filters, now);
-    const order = filters.order === "created" ? "b.created_at DESC, b.id DESC" : "o.start_at";
+    const order = operatorBookingOrder(filters);
     const results = await this.binding.prepare(
       `SELECT b.imported, b.attribution_json AS attributionJson, b.post_booking_redirect_url AS postBookingRedirectUrl, b.id, b.event_type_id AS eventTypeId, b.event_slug AS eventSlug, b.event_title AS eventTitle, b.location_type AS locationType, b.location_label AS locationLabel, b.location_value AS locationValue, b.invitee_name AS inviteeName, b.invitee_email AS inviteeEmail, b.host_timezone AS hostTimezone, b.invitee_timezone AS inviteeTimezone, b.state, b.ical_uid AS icalUid, CASE WHEN b.calendar_required = 0 THEN 'not_required' ELSE b.calendar_state END AS calendarState, b.meeting_state AS meetingState, b.meeting_url AS meetingUrl, b.calendar_provider_event_id AS calendarProviderEventId, b.calendar_provider_updated_at AS calendarProviderUpdatedAt, b.created_at AS createdAt, b.updated_at AS updatedAt, b.cancelled_at AS cancelledAt, b.cancelled_reason AS cancelledReason,
         o.id AS occurrenceId, o.sequence AS occurrenceSequence, o.start_at AS occurrenceStartAt, o.end_at AS occurrenceEndAt, o.occupied_start_at AS occupiedStartAt, o.occupied_end_at AS occupiedEndAt, o.host_date AS hostDate, o.state AS occurrenceState, o.is_current AS isCurrent
-       FROM bookings b JOIN booking_occurrences o ON ${clause} ORDER BY ${order}, b.id LIMIT ? OFFSET ?`,
+       FROM bookings b JOIN booking_occurrences o ON ${clause} ORDER BY ${order} LIMIT ? OFFSET ?`,
     ).bind(...values, filters.limit ?? 500, filters.offset ?? 0).all<OperatorBookingRow>();
     const [bookings, payments] = await Promise.all([hydrateOperatorBookings(this.binding, results.results), new PaymentsRepository(this.binding).bookingPayments(results.results.map(row => row.id))]);
     return bookings.map(booking => payments.has(booking.id) ? { ...booking, payment: payments.get(booking.id) } : booking);
+  }
+
+  exportForOperator(filters: OperatorBookingFilters, now: string) {
+    return bookingExportRows(this.binding, filters, now);
   }
 
   async countForOperator(filters: OperatorBookingFilters, now: string) {
