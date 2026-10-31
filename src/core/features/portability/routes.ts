@@ -54,7 +54,11 @@ export async function hostedExport(request: Request, env: AppBindings, operators
    if (current?.id === session.id) nativeCookie = cookie.slice(cookie.indexOf("=") + 1);
   }
   const { policy, knownSecrets } = await exportPolicy(env.DB, { ...env, ARCHIVE_NATIVE_COOKIE_SECRET: nativeCookie }, JSON.stringify(schema));
-  const handle = await createPortabilityHandler({ db: env.DB, buckets: { FILES: guardedBucket(env.FILES, knownSecrets) }, policy, appOrigin: origin,
+  // The shared HTTP boundary deliberately hides edition-specific error codes.
+  // Retain only a fixed refusal from this request's native bucket scanner; no
+  // provider exception, object key or response body can create this witness.
+  let bucketRefusal: string | undefined;
+  const handle = await createPortabilityHandler({ db: env.DB, buckets: { FILES: guardedBucket(env.FILES, knownSecrets, (code: string) => { bucketRefusal = code; }) }, policy, appOrigin: origin,
    authorize: async (authorizedRequest, operation) => {
     const current = await operators.auth.getSession(authorizedRequest);
     return operation.operation === "export" && current?.kind === "native" && current.operator.id === session.operator.id && current.operator.role === "owner" ? current.operator.id : null;
@@ -63,6 +67,7 @@ export async function hostedExport(request: Request, env: AppBindings, operators
   if (!response) return reply("not_found", 404);
   if (!response.ok) {
    if (creating) await releaseExport(env.DB, lease);
+   if (bucketRefusal && archiveFailures.has(bucketRefusal)) return reply(bucketRefusal, response.status);
    // Base catches typed bucket refusals inside handle(). Expose only our finite
    // vocabulary to the client that deliberately ignores HTTP response bodies.
    const failure = await response.clone().json().catch(() => null) as { error?: unknown } | null;
