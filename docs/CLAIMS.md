@@ -830,7 +830,7 @@ Gap: Built for today's single-host install and proved on a seeded month: booking
 
 REPORT-002 is partial: Host calendar view and booking workspace.
 
-Evidence: `src/core/features/bookings/ui/calendar-workspace.tsx`, `src/core/features/bookings/ui/calendar-grid.tsx`, `tests/bookings-filters.test.mjs`, `tests/booking-axe/calendar.mjs`
+Evidence: `src/core/features/bookings/ui/calendar-workspace.tsx`, `src/core/features/bookings/ui/calendar-grid.tsx`, `tests/bookings-filters.test.mjs` ("the operator booking route combines every filter and searches literal case-insensitive name and email substrings"; "payment-state filters select exact booking identities and totals before combined filters and pagination without money writes"), `tests/booking-axe/calendar.mjs`
 
 Gap: Day, week and month share the list query, filters and paginated identity set in the viewer profile zone. Attendance filters are applied before count and pagination; the real single host is shown. Native and browser journeys cover the March spring-forward and February/March/April edges, imported placement, keyboard record opening and a real reschedule moving the calendar entry; month is an agenda at mobile width. Open: payment-state filtering, repeated-hour display proof, team filters, member columns and multi-host role scope. The complete mixed-subject acceptance sentence remains intact under ct’s conditional verbatim-carve form.
 
