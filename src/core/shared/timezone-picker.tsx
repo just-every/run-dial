@@ -11,21 +11,24 @@ type Props = {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  /** Offers an empty choice with this wording; the value is "" while it is chosen. */
+  emptyLabel?: string;
 };
 
 /** Search text stays local; only choosing a supported result changes the value. */
-export function TimezonePicker({ label, accessibleLabel, value, onChange, deviceZone, disabled = false, required = false, className = "" }: Props) {
+export function TimezonePicker({ label, accessibleLabel, value, onChange, deviceZone, disabled = false, required = false, className = "", emptyLabel }: Props) {
   const id = useId();
   const list = useRef<HTMLUListElement>(null);
-  const [draft, setDraft] = useState(value);
+  const shown = (zone: string) => zone || emptyLabel || "";
+  const [draft, setDraft] = useState(shown(value));
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const browserZone = deviceZone ?? deviceTimezone(value);
-  const options = useMemo(() => searchTimezones(query, undefined, browserZone), [query, browserZone]);
+  const options = useMemo(() => [...(emptyLabel && !query.trim() ? [""] : []), ...searchTimezones(query, undefined, browserZone)], [query, browserZone, emptyLabel]);
   const empty = open && options.length === 0;
 
-  useEffect(() => { setDraft(value); setQuery(""); setOpen(false); setActive(0); }, [value]);
+  useEffect(() => { setDraft(shown(value)); setQuery(""); setOpen(false); setActive(0); }, [value]);
   useEffect(() => {
     const menu = list.current;
     const option = menu?.children[active];
@@ -35,9 +38,9 @@ export function TimezonePicker({ label, accessibleLabel, value, onChange, device
     else if (choice.bottom > bounds.bottom) menu.scrollTop += choice.bottom - bounds.bottom;
   }, [active, open, query]);
 
-  function restore() { setDraft(value); setQuery(""); setOpen(false); setActive(0); }
-  function show(input: HTMLInputElement) { setDraft(value); setQuery(""); setActive(0); setOpen(true); input.select(); }
-  function commit(zone: string) { setDraft(zone); setQuery(""); setOpen(false); setActive(0); onChange(zone); }
+  function restore() { setDraft(shown(value)); setQuery(""); setOpen(false); setActive(0); }
+  function show(input: HTMLInputElement) { setDraft(shown(value)); setQuery(""); setActive(0); setOpen(true); input.select(); }
+  function commit(zone: string) { setDraft(shown(zone)); setQuery(""); setOpen(false); setActive(0); onChange(zone); }
 
   return <div className={`dial-timezone-picker ${className}`}>
     <label htmlFor={id}>{label}</label>
@@ -58,15 +61,15 @@ export function TimezonePicker({ label, accessibleLabel, value, onChange, device
             else setActive(current => options.length ? (current + (event.key === "ArrowDown" ? 1 : options.length - 1)) % options.length : 0);
           } else if (event.key === "Enter" && open) {
             event.preventDefault();
-            if (options[active]) commit(options[active]);
+            if (options[active] !== undefined) commit(options[active]);
           } else if (event.key === "Escape" && open) {
             event.preventDefault(); event.stopPropagation(); restore();
           }
         }} />
       {open ? <div className="dial-timezone-picker__menu">
         <ul ref={list} id={`${id}-options`} role="listbox" tabIndex={-1} aria-label="Matching timezones">
-          {options.map((zone, index) => <li key={zone} id={`${id}-option-${index}`} role="option" tabIndex={-1} aria-selected={index === active}
-            onPointerDown={event => event.preventDefault()} onClick={() => commit(zone)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); commit(zone); } }}>{zone}</li>)}
+          {options.map((zone, index) => <li key={zone || "empty"} id={`${id}-option-${index}`} role="option" tabIndex={-1} aria-selected={index === active}
+            onPointerDown={event => event.preventDefault()} onClick={() => commit(zone)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); commit(zone); } }}>{shown(zone)}</li>)}
         </ul>
         {empty ? <p id={`${id}-empty`} role="status">No matching timezones. Choose a result to change your timezone.</p> : null}
       </div> : null}

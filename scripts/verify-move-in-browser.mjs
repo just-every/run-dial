@@ -79,7 +79,7 @@ try{
  for(let n=0;n<30&&await page.getByRole('button',{name:'Continue import'}).count();n++){await page.getByRole('button',{name:'Continue import'}).click();await page.getByText('Working on this bounded batch…').waitFor({state:'hidden'});}await audit('undone');
  assert.equal((await context.request.post(origin+'/__fixtures/import-edge-reservation')).status(),200);
  await selectFiles('edges');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByText('Overlapping confirmed Dial or earlier imported booking.',{exact:false}).first().waitFor();await audit('edge-losses');
- await page.getByLabel('Adopt source schedule timezone (leave blank to keep host zone)').fill('Europe/London');await page.getByLabel('Location value (HTTPS link, host phone or address)').first().fill('https://meet.example.test/chosen');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByText(/Host zone Europe\/London/u).waitFor();await audit('owner-choices');
+ const zone=page.getByLabel('Time zone for the imported schedule');await zone.click();await zone.fill('Europe/London');await page.getByRole('option',{name:'Europe/London',exact:true}).click();await page.getByLabel('Location value (HTTPS link, host phone or address)').first().fill('https://meet.example.test/chosen');await page.getByRole('button',{name:'Preview saved data',exact:true}).click();await page.getByText(/Host zone Europe\/London/u).waitFor();await audit('owner-choices');
  await switchOverJourney({page,context,origin,width,audit,selectFiles});
  assert.deepEqual(errors,[]);await context.close();
 }finally{await writeFile(evidencePath(`move-in-${width}-axe.json`),JSON.stringify({scans,errors},null,2));await browser.close();}
