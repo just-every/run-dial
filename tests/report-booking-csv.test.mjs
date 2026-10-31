@@ -3,6 +3,7 @@ import { ulid } from "ulid";
 import { contract } from "./contract.mjs";
 import { bookingRuntime } from "./move-in/booking-runtime.mjs";
 import { csvRecords } from "../src/core/features/move-in/providers/csv.ts";
+import { csvLifecycle } from "./report-booking-csv/lifecycle.mjs";
 
 contract("REPORT-003", "owner CSV exports every filtered booking safely without changing booking, delivery or accounting custody", async () => {
   const runtime = await bookingRuntime();
@@ -54,8 +55,14 @@ contract("REPORT-003", "owner CSV exports every filtered booking safely without 
       runtime.db.prepare("INSERT INTO accounting_connections (id,realm_id,status,access_token_ciphertext,refresh_token_ciphertext,created_at,updated_at) VALUES ('synthetic-dial-1','synthetic-dial-1','healthy',?,?,?,?)").bind(privateMarker, privateMarker, now, now),
       runtime.db.prepare("INSERT INTO accounting_exports (id,booking_id,connection_id,payment_ref,amount_cents,request_id,document_ref,payload_json,state,created_at,updated_at) VALUES (?,?,'synthetic-dial-1','synthetic-dial-1',5000,'synthetic-dial-1','synthetic-dial-1',?,'succeeded',?,?)").bind(ulid(), expected[0], JSON.stringify({ private: privateMarker }), now, now),
     ]);
-    const tables = ["bookings", "booking_occurrences", "booking_manage_tokens", "booking_answers", "booking_history", "booking_attendance", "delivery_outbox", "booking_payments", "payment_movements", "payment_processor_facts", "accounting_connections", "accounting_exports"];
+    const tables = ["bookings", "booking_occurrences", "booking_manage_tokens", "booking_answers", "booking_history", "booking_attendance", "delivery_outbox", "booking_payments", "payment_movements", "payment_processor_facts", "accounting_connections", "accounting_exports", "api_credentials"];
     const snapshot = () => Promise.all(tables.map(async table => (await runtime.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results));
+    const exportIds = async query => {
+      const response = await runtime.api(`/api/app/reports/bookings.csv?${query}`);
+      assert.equal(response.status, 200);
+      return csvRecords(await response.text()).map(row => row.bookingId);
+    };
+    await csvLifecycle(runtime, { eventId, exportIds, snapshot });
     const before = await snapshot();
     const filters = new URLSearchParams({ state: "confirmed", eventTypeId: eventId, fromDate: "2026-03-08", throughDate: "2026-03-08", attendance: "unmarked", deliveryFailed: "true", query: "SYNTHETIC-DIAL-" });
     const endpoint = `/api/app/reports/bookings.csv?${filters}`;
@@ -67,6 +74,7 @@ contract("REPORT-003", "owner CSV exports every filtered booking safely without 
     assert.match(response.headers.get("Content-Type"), /^text\/csv; charset=utf-8$/u);
     assert.match(response.headers.get("Content-Disposition"), /^attachment;/u);
     assert.equal(response.headers.get("Cache-Control"), "no-store");
+    assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
     assert.equal(response.headers.get("X-Host-Timezone"), "America/New_York");
     const text = await response.text();
     const rows = csvRecords(text);
@@ -89,11 +97,6 @@ contract("REPORT-003", "owner CSV exports every filtered booking safely without 
       displayed.push(...(await response.json()).map(row => row.id));
     }
     assert.deepEqual(displayed, expected, "the native list uses the identical combined predicate");
-    const exportIds = async query => {
-      const response = await runtime.api(`/api/app/reports/bookings.csv?${query}`);
-      assert.equal(response.status, 200);
-      return csvRecords(await response.text()).map(row => row.bookingId);
-    };
     assert.deepEqual(await exportIds(`${filters}&limit=1&offset=500`), expected, "display pagination never limits the export");
     const unicode = new URLSearchParams({ query: "ÉLODIE" });
     assert.deepEqual(await exportIds(unicode), [expected[0]], "native Unicode search semantics carry through to the CSV");
@@ -108,9 +111,11 @@ contract("REPORT-003", "owner CSV exports every filtered booking safely without 
       assert.equal((await runtime.api(`/api/app/reports/bookings.csv?${query}`)).status, 400, "invalid native filter semantics are refused");
     }
     assert.deepEqual(await snapshot(), before, "allowed and refused exports leave booking, delivery, payment and accounting rows unchanged");
+    console.log("PROBE REPORT-003 filtered CSV: combined native filters -> exact 503 ordered IDs across display pages; pagination ignored; Unicode and escaped cells round-trip; formulas are literal; private data excluded; anonymous and invalid filters refused; product rows unchanged");
     await runtime.db.prepare("DELETE FROM oa_sessions WHERE operator_id=?").bind(operatorId).run();
     assert.equal((await runtime.api(endpoint)).status, 401, "revocation prevents a previously valid session from exporting again");
     assert.deepEqual(await snapshot(), before);
+    console.log("PROBE REPORT-003 revocation: previously valid owner CSV request -> 401 after session revocation; product rows unchanged");
   } finally {
     await runtime.close();
   }
