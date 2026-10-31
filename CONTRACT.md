@@ -527,8 +527,8 @@ Done means implemented with a test exercising the clause through its public or o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 70 | 6 | 0 | 76 |
-| Target and push further | 20 | 29 | 64 | 113 |
-| All | 90 | 35 | 64 | 189 |
+| Target and push further | 20 | 30 | 63 | 113 |
+| All | 90 | 36 | 63 | 189 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
