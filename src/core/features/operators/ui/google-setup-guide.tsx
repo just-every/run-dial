@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { api } from "../../../api/client";
 
+export type GoogleSetup = { redirectUri: string; configured: boolean };
+
 /** Only public configuration leaves the Worker; credentials stay in encrypted bindings. */
-export function GoogleSetupGuide() {
-  const [setup, setSetup] = useState<{ redirectUri: string; configured: boolean }>();
+export function useGoogleSetup() {
+  const [setup, setSetup] = useState<GoogleSetup>();
   useEffect(() => { void api.api.app.calendar.setup.$get().then(async (response) => {
     if (response.ok) setSetup(await response.json());
   }).catch(() => { /* The guide remains useful while the deployment information is unavailable. */ }); }, []);
+  return setup;
+}
+
+export function GoogleSetupGuide({ setup }: { setup?: GoogleSetup }) {
   return <details className="mt-5 rounded-2xl bg-row px-4 py-3.5 text-sm leading-6 text-soft">
     <summary className="cursor-pointer text-[15px] font-bold text-ink">Set up Google Calendar for this installation</summary>
     <ol className="mt-3 list-decimal space-y-3 pl-5">

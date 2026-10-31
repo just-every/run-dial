@@ -16,15 +16,6 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   const more = page.locator("details.dial-more").first();
   if (await more.getAttribute("open") === null) await keys.activate(more.locator("summary"), "Open more booking actions");
   const before = await get(page, origin, `/api/app/bookings/${booking.id}`);
-  for (const label of ["Mark attended", "Mark no-show"]) {
-    const trigger = button(page, label);
-    await keys.native(trigger, `Cancel ${label} prompt`, "prompt", false);
-    await page.waitForLoadState("networkidle");
-    const after = await get(page, origin, `/api/app/bookings/${booking.id}`);
-    assert.deepEqual(after.attendance, before.attendance);
-    assert.deepEqual(after.history, before.history);
-    await keys.restored(trigger, `Cancelled ${label}`);
-  }
   const opener = button(page, "Review calendar conflicts");
   await keys.activate(opener, "Open native DOM calendar conflict dialog");
   const dialog = page.getByRole("dialog", { name: "Calendar conflicts", exact: true }); await dialog.waitFor();
@@ -52,11 +43,11 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   await keys.restored(opener, "Native DOM dialog Close");
   const effects = async () => { const native = await get(page, origin, "/__fixtures/status"); return { commands: native.delivery_outbox.filter(row => row.booking_id === booking.id).map(row => row.id), event: native.fixture_events.find(row => row.booking_id === booking.id) }; };
   const effectsBefore = await effects(), markedFrom = Date.now();
-  await mutation(page, `/api/app/bookings/${booking.id}/attendance`, () => keys.native(button(page, "Mark attended"), "Confirm attendance", "prompt", true, "Keyboard attendance note"));
-  await page.getByText("Attendance: attended", { exact: true }).waitFor();
+  await mutation(page, `/api/app/bookings/${booking.id}/attendance`, () => keys.activate(button(page, "Mark attended"), "Mark attended"));
+  await page.locator("dd", { hasText: /^Attended$/ }).waitFor();
   checks.push({ width, check: "Attendance confirmation leaves logical focus on its result", passed: await page.getByRole("status", { name: "Booking update" }).evaluate(el => el === globalThis.document.activeElement) });
   const attended = await get(page, origin, `/api/app/bookings/${booking.id}`);
-  assert.equal(attended.attendance.status, "attended"); assert.equal(attended.attendance.note, "Keyboard attendance note");
+  assert.equal(attended.attendance.status, "attended"); assert.equal(attended.attendance.note, "");
   // BOOK-011: the mark records its operator and time, keeps the lifecycle state, and queues no mail or calendar command.
   assert.equal(attended.attendance.operatorId, (await get(page, origin, "/api/app/operators")).currentOperatorId, "BOOK-011: the mark records the signed-in operator");
   assert.ok(Date.parse(attended.attendance.markedAt) >= markedFrom - 1000 && Date.parse(attended.attendance.markedAt) <= Date.now() + 1000, "BOOK-011: the mark records its time");
@@ -75,5 +66,5 @@ export async function bookingKeyboardJourney(page, origin, width, keys, checks, 
   const cancelled = await get(page, origin, `/api/app/bookings/${booking.id}`);
   assert.equal(cancelled.state, "cancelled"); assert.ok(cancelled.history.some(entry => entry.action === "cancelled" && entry.reason === "Keyboard cancellation note"));
   await keys.screenshot("booking-cancelled");
-  checks.push({ width, flow: "Attendance and booking prompt cancellation/confirmation, native DOM modal Tab/Shift+Tab trap, real Escape and Close restoration, API readback", passed: true });
+  checks.push({ width, flow: "Attendance marking, booking cancellation prompt dismissal/confirmation, native DOM modal Tab/Shift+Tab trap, real Escape and Close restoration, API readback", passed: true });
 }

@@ -113,7 +113,7 @@ export function WebhookSettingsCard() {
 
   return <Card id="webhook-settings" className="min-w-0 p-5 sm:p-6 xl:col-span-2">
     <SectionHeading title="Webhooks" description="Send selected events to an HTTPS endpoint you control." action={
-      <Button type="button" variant="secondary" disabled={busy} onClick={() => void reload()}>Reload webhooks</Button>
+      settings?.subscriptions.length || error ? <Button type="button" variant="secondary" disabled={busy} onClick={() => void reload()}>Reload webhooks</Button> : undefined
     } />
     {error ? <p role="alert" className={noticeClassName("error", "mt-4")}>{error}</p> : null}
     {notice ? <p role="status" className={noticeClassName("success", "mt-4")}>{notice}</p> : null}
@@ -146,10 +146,9 @@ export function WebhookSettingsCard() {
           <label className="grid gap-2 text-sm font-semibold text-ink">Send events from
             <Select value={scope} onChange={event => { setScope(event.target.value as "workspace" | "host" | "team"); setConsent(false); }}>
               <option value="workspace">Entire workspace</option><option value="host">Current host</option>
-              <option value="team" disabled={!settings.teams.length}>Team</option>
+              {settings.teams.length ? <option value="team">Team</option> : null}
             </Select>
           </label>
-          {!settings.teams.length ? <p className="text-sm text-soft">Create a team before subscribing at team scope.</p> : null}
           {scope === "team" ? <label className="grid gap-2 text-sm font-semibold text-ink">Team
             <Select required value={teamId} onChange={event => { setTeamId(event.target.value); setConsent(false); }}>
               <option value="">Choose a team</option>

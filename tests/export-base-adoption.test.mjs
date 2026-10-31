@@ -62,6 +62,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec("INSERT INTO payment_products(id,event_type_id,kind,name,sessions,amount_cents,validity_days,created_at,updated_at) VALUES('synthetic-dial-archive-credit','event_types-1','package','Appointment credit',3,300,30,'2026-10-07T00:00:00.000Z','2026-10-07T00:00:00.000Z')");
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-payment-entitlements-not-portable/);
     source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
+    source.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,version,created_at) VALUES(?,?,?,'admin','active',1,1791331200000)").run('synthetic-dial-archive-admin',['synthetic-dial-archive-admin','example.test'].join(String.fromCharCode(64)),'Synthetic Dial administrator');
     const archive = await createArchive(testPlatform(source.db));
     assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
     const archivedWorkflow = archive.tables.find(table => table.name === 'workflow_rules').rows[0];
@@ -78,7 +79,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
       assert.equal(archived.scopes_json, original.scopes_json);
       assert.equal(JSON.stringify(archive).includes(original[hashColumn]), false, 'a stored machine secret hash is absent from every archived field');
     }
-    assert.equal(archive.tables.some(table => ['api_request_keys', 'api_rate_windows'].includes(table.name)), false, 'private API response replays and rate counters stay local');
+    assert.equal(archive.tables.some(table => ['api_request_keys', 'api_rate_windows','api_oauth_codes'].includes(table.name)), false, 'private API response replays, consent codes and rate counters stay local');
+    assert.ok(archive.tables.find(table=>table.name==='api_oauth_grants').rows.every(row=>row.revoked_at),'restored delegated consent is historical and cannot revive authority');
     const webhookSubscription = archive.tables.find(table => table.name === 'webhook_subscriptions').rows[0];
     assert.equal(webhookSubscription.secret_ciphertext, null, 'signing authority is absent from the archive');
     assert.equal(webhookSubscription.enabled, 0, 'restored subscriptions require a fresh secret');
@@ -110,8 +112,12 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec("INSERT INTO operator_erasure_subjects VALUES('unfinished-subject')");
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
+    const changedOwner=await createArchive(testPlatform(source.db),undefined,{transformRow:(name,row)=>name==='oa_operators'&&row.id==='owner'?{...row,role:'admin'}:row});
+    await assert.rejects(restoreArchive(destination,changedOwner),/archive-missing-bootstrap-authority/);
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM bookings').get().n,0,'an archive cannot demote the protected bootstrap owner');
     await restoreArchive(destination, archive);
     await clientProjectionRestored(source.db, target.db, remembered);
+    assert.equal(target.db.prepare("SELECT role FROM oa_operators WHERE id='synthetic-dial-archive-admin'").get().role,'admin','native API administrators retain their role without inheriting owner authority');
     for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
       const restored = target.db.prepare(`SELECT * FROM ${table}`).get();
       assert.equal(restored[hashColumn], null);

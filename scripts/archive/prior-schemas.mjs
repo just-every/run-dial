@@ -15,6 +15,10 @@ export const rowUpgrades = {
   'core/0094_coupon_issuance_receipts.sql': (table,row) => table==='payment_products'?{...row,issuance_key_hash:null}:row,
   // Existing credits keep their previous meaning; no historical coupon or discount is invented.
   'core/0093_payment_coupons.sql': (table,row) => ['payment_products','payment_entitlements'].includes(table)?{...row,is_coupon:0}:table==='payment_redemptions'?{...row,discount_cents:0}:row,
+  'core/0095_api_consent.sql': (table,row) => table==='api_oauth_applications'?{...row,grant_type:'client_credentials',redirect_uri:null}:table==='api_credentials'?{...row,oauth_grant_id:null}:row,
+  'core/0096_api_authority_cleanup.sql': (_table,row)=>row,
+  'core/0097_api_authority_revocation.sql': (_table,row)=>row,
+  'core/0098_booking_webhook_hosts.sql': (_table,row)=>row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.

@@ -5,7 +5,7 @@ const connectionCheck = "Check the intended company and connection configuration
 const recovery = "Keep the same company and connection; check availability, then repeat the same action so Dial can recover any existing result.";
 const review = "Review the current payment and accounting state before trying again.";
 const messages: Record<string, readonly [string, string]> = {
-  accounting_not_configured: ["QuickBooks connection setup is incomplete.", "Ask your installation administrator to finish QuickBooks connection setup."],
+  accounting_not_configured: ["QuickBooks is not set up for this installation.", "Connecting becomes available once the installation has a QuickBooks client."],
   accounting_reconnect_required: ["QuickBooks needs to be connected before this action can continue.", "Connect QuickBooks, then choose and save an income account; if Dial still shows connected, disconnect first."],
   accounting_token_refused: ["QuickBooks did not accept this connection, and Dial cannot tell why.", connectionCheck],
   accounting_authorization_refused: ["QuickBooks did not approve the connection request.", "Check the intended company and connection configuration, then try connection consent again."],

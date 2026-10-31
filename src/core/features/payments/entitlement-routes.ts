@@ -6,15 +6,26 @@ import { apiError } from "../../shared/http";
 import { productInput, couponInput } from "./entitlements";
 const eventId=z.object({id:z.string().min(1).max(64)});
 const publicEvent=z.object({handle:z.string().regex(/^[a-z0-9-]+$/).max(80),slug:z.string().regex(/^[a-z0-9-]+$/).max(80)});
+const productChange=productInput.omit({kind:true}).strict();
+const productId=eventId.extend({product:z.string().length(26)});
 const publicProduct=publicEvent.extend({product:z.string().length(26)});
 /** Native operator configuration and public purchase commands; all stored amounts are USD. */
 export const entitlementRoutes=new Hono<AppEnvironment>()
  .get('/api/app/payments/entitlements',async c=>c.json(await c.get('services').payments.entitlements.list()))
- .get('/api/app/event-types/:id/products',validate('param',eventId),async c=>c.json(await c.get('services').payments.entitlements.products(c.req.valid('param').id)))
+ .get('/api/app/event-types/:id/products',validate('param',eventId),async c=>c.json(await c.get('services').payments.entitlements.catalog(c.req.valid('param').id)))
  .post('/api/app/event-types/:id/products',validate('param',eventId),validate('json',productInput),async c=>{
   const event=await c.get('services').eventTypes.getEventType(c.req.valid('param').id);
   if(!event)return apiError(c,404,'event_type_not_found','Event type not found.');
   return c.json(await c.get('services').payments.entitlements.define(event.id,c.req.valid('json')),201);
+ })
+ .put('/api/app/event-types/:id/products/:product',validate('param',productId),validate('json',productChange),async c=>{
+  const {id,product}=c.req.valid('param');
+  return await c.get('services').payments.entitlements.change(id,product,c.req.valid('json'))?c.body(null,204):apiError(c,404,'product_not_found','This appointment product is not available.');
+ })
+ .delete('/api/app/event-types/:id/products/:product',validate('param',productId),async c=>{
+  const {id,product}=c.req.valid('param'),result=await c.get('services').payments.entitlements.remove(id,product);
+  if(result==='not_found')return apiError(c,404,'product_not_found','This appointment product is not available.');
+  return result==='sold'?apiError(c,409,'product_sold','Customers have bought this product, so it stays in the catalog.'):c.body(null,204);
  })
  .post('/api/app/event-types/:id/coupons',validate('param',eventId),validate('json',couponInput),async c=>{
   const services=c.get('services'),event=await services.eventTypes.getEventType(c.req.valid('param').id);
@@ -27,7 +38,7 @@ export const entitlementRoutes=new Hono<AppEnvironment>()
   const profile=await services.hostProfile.getPublicProfile(handle);
   const event=profile?await services.eventTypes.resolvePublishedEventForPublicRequest(slug):undefined;
   if(!event||event.status!=='published')return apiError(c,404,'event_not_available','This event type is not available.');
-  return c.json(await services.payments.entitlements.products(event.id));
+  return c.json(await services.payments.entitlements.offered(event.id));
  })
  .post('/api/public/book/:handle/:slug/credit',validate('param',publicEvent),validate('json',z.object({email:z.string().trim().email().max(320),code:z.string().min(1).max(200).optional(),durationMinutes:z.number().int().min(5).max(480).optional()}).strict()),async c=>{
   const {handle,slug}=c.req.valid('param'),services=c.get('services'),input=c.req.valid('json');
