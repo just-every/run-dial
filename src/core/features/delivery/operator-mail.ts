@@ -34,7 +34,7 @@ export async function operatorMailRevoked(binding: D1Database, outboxId: string)
   return Boolean(await binding.prepare(`SELECT 1 FROM delivery_outbox d WHERE d.id = ?
     AND d.kind IN ('mail_send', 'reminder') AND ${operatorMail}
     AND (json_extract(d.payload_json, '$.operatorAccessRevoked') = 1 OR d.last_error_code = 'operator_removed' OR NOT EXISTS
-      (SELECT 1 FROM operators o WHERE o.removed_at IS NULL AND o.normalized_email = ${recipient}
+      (SELECT 1 FROM operators o JOIN oa_operators authority ON authority.id=o.id WHERE o.removed_at IS NULL AND authority.status='active' AND authority.role='owner' AND o.normalized_email = ${recipient}
         AND ((json_type(d.payload_json, '$.operatorAccess') IS NULL AND o.access_generation = 0)
           OR (o.id = json_extract(d.payload_json, '$.operatorAccess.id')
             AND o.access_generation = json_extract(d.payload_json, '$.operatorAccess.generation')))))`)
@@ -66,7 +66,7 @@ export function operatorRecipientAdmission(recipient: {
       JOIN oa_operators authority ON authority.id = recipient.id
       WHERE recipient.id = ? AND recipient.access_generation = ?
         AND recipient.normalized_email = ? AND recipient.removed_at IS NULL
-        AND recipient.erased_at IS NULL AND authority.status = 'active'
+        AND recipient.erased_at IS NULL AND authority.status = 'active' AND authority.role='owner'
         AND lower(trim(authority.email)) = recipient.normalized_email)`,
     params: [recipient.operatorAccess.id, recipient.operatorAccess.generation, recipient.to.trim().toLowerCase()],
   };

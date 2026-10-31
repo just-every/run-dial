@@ -2,7 +2,7 @@
 
 # Implemented contract claims
 
-The contract census is 90 done / 30 partial / 56 missing (176 clauses).
+The contract census is 90 done / 36 partial / 63 missing (189 clauses).
 
 Read each claim with its full requirement and acceptance in [CONTRACT.md](../CONTRACT.md). A partial or missing claim keeps its remaining work explicit.
 
@@ -50,7 +50,7 @@ Gap: Routing, poll, payment-return and workflow-unsubscribe capabilities are car
 
 AUTH-008 is partial: API credentials and connected apps.
 
-Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
+Evidence: `tests/operator-auth-boundary.test.mjs` — direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail; `tests/public-api/journey.mjs` — machineCredentialJourney; `tests/public-api/consent.mjs` — delegatedCredentialJourney; `scripts/verify-api-credentials.mjs` — one-time secret, last use, revocation and explicit app consent in Settings; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused.
 
 Gap: Owner-issued personal tokens and registered OAuth machine applications use hashed secrets, named scopes, expiry, last use and next-request revocation. Conservative owner-only grant under the standing scope policy; delegated OAuth consent, admin issuance and native two-host authority proof remain. Current team-scoped reads and routing refusals are qualified; the explicit workflow grant uses the same conservative owner-only policy.
 
@@ -180,15 +180,15 @@ Evidence: `tests/availability-diagnostics.test.mjs`, `tests/host-setup-journey.t
 
 Gap: None.
 
-EVENT-007 is missing: Group events and capacity.
+EVENT-007 is partial: Group events and capacity.
 
-Evidence: None.
+Evidence: `tests/group-seat-capacity.test.mjs` — native group seats preserve capacity, individual authority and delivery through replay, cancellation and erasure; `tests/export-base-adoption.test.mjs` — the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused (group upgrade and archive journey).
 
-Gap: No implementing code yet.
+Gap: Native owner-session single-host capacity from 2 to 1,000 is implemented for free, unapproved events with one fixed duration and location, without additional guests or a connected calendar; public seats, atomic concurrent admission, individual answers, manage authority, reminders and single-seat cancellation are proven. Held remainder: group controls and browser qualification, displayed remaining seats, early slot closure, ordered waitlist offers and acceptance expiry, whole-slot cancellation, shared destination-calendar event and attendee privacy, priced or approval group combinations, and delegated permissions under OPER-001. Calendar-connected group configuration explicitly refuses until shared-slot delivery exists. The full EVENT-007 acceptance journey remains required; EVENT-010 follows EVENT-007. DATA-002 remains NO, DATA-004 remains held, and existing API, payment, calendar custody and release prerequisites remain unchanged.
 
 EVENT-008 is partial: Bookings that need host approval.
 
-Evidence: `tests/booking-wire/approval-journey.mjs` (approvalJourney), `tests/export-base-adoption.test.mjs`, `scripts/verify-approval-screens.mjs`, `migrations/core/0073_booking_approval_requests.sql`, `ERASURE.md`
+Evidence: `tests/booking-wire/approval-journey.mjs` (approvalJourney), `tests/export-base-adoption.test.mjs`, `scripts/verify-approval-screens.mjs`, `migrations/core/0073_booking_approval_requests.sql`, `ERASURE.md`; `tests/booking-wire/approval-meet-journey.mjs` (approvalMeetJourney; additive Google HTTP-edge timing assertions, pending clause re-judgment)
 
 Gap: A free event without saved-card fees can hold a request for a configurable window (default 24 hours), blocking public and operator booking doors. An authenticated owner approves or declines; only approval creates the booking, calendar event and reminders, once. Decline and expiry release the slot and send one decision notice to the invitee and host recipients only. Pending request status, host decisions, archive history, populated upgrade defaults and person erasure are asserted; screens run at 1440 and 390. Priced and saved-card-fee approval belongs to `PAY-007` (ct, 22 October 2026): the adopted refusal is withdrawn for upfront and deposit prices without saved-card fees, and for free saved-card-fee types, whose authorization/capture-or-void/detach cycles are asserted. Combining a price or deposit with saved-card fees now uses the asserted manual authorization, SetupIntent consent and capture-or-void/detach cycle. Optional tentative destination-calendar display, direct decisions from mail and native mobile approval remain unbuilt and unproved; approval-specific Google Meet conference timing is not yet asserted. Mail links to authenticated Bookings for the decision. Native move-in import uses the shared live approval hold guard; import overlapping a pending approval is not specifically asserted.
 
@@ -236,9 +236,9 @@ Gap: Owner-created polls take up to 50 participants and 2–12 live times for un
 
 BRAND-001 is partial: Branding and custom domain.
 
-Evidence: `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs`
+Evidence: `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs`; `tests/booking-mail-branding.test.mjs` ("workspace branding reaches built-in and edited confirmations once with frozen retries and plain look"), `tests/booking-wire/correspondence-journey.mjs` (confirmationBrandJourney) prove native invitee and host confirmation branding, escaped text, authorized local marks, contrast-safe light and dark HTML colours, plain look and frozen retries.
 
-Gap: The cited paths cover part of the clause; the rest is still to build.
+Gap: The cited paths cover part of the clause; the rest is still to build.  Confirmation mail evidence is bounded to the native invitee and host path; booking-page and embed qualification, remaining controls, credit removal, other mail families, team branding and additional hostname isolation and live-account proof remain unproved.
 
 LOCALE-001 is missing: Languages and time formats.
 
@@ -770,9 +770,9 @@ Gap: None.
 
 NOTIFY-009 is partial: Invitation and message templates.
 
-Evidence: `tests/booking-wire/correspondence-journey.mjs`, `tests/booking-wire/invitation-manage-journey.mjs`, `tests/booking-axe/invitation-manage.mjs`, `tests/booking-wire/reschedule-request-journey.mjs`, `src/core/features/event-types/ui/correspondence-editor.tsx`
+Evidence: `tests/booking-wire/correspondence-journey.mjs`, `tests/booking-wire/invitation-manage-journey.mjs`, `tests/booking-axe/invitation-manage.mjs`, `tests/booking-wire/reschedule-request-journey.mjs`, `src/core/features/event-types/ui/correspondence-editor.tsx` ; `tests/booking-wire.test.mjs` — "saved calendar correspondence follows reschedules and the invitation-link toggle on Google and Microsoft", `tests/booking-wire/calendar-correspondence-journey.mjs` (exact saved title, host-name refresh and time-bearing description on both provider creates and updates; link-on and link-off creation and reschedule; stable event identity, private-answer and manage-capability exclusion, once-only event and mail delivery)
 
-Gap: Native per-event calendar and invitee confirmation/change/cancellation/reminder/request/request-reminder templates, escaped previews, named unknown/private-variable refusal, duplication and deleted-offer retention. Default-on invitation manage capabilities with a per-event toggle now email a replacement link only to the stored invitee, refuse earlier manage links and audit rotation; both email and sessionless page disclose that earlier links no longer work. Unknown/forged links return 404 and expired/canceled links return 410 without booking details. Managed team/locale templates, direct Reschedule/Cancel links, workflow confirmation suppression and From/Reply-To preview await their foundations. This clause owns CAL-003’s direct Reschedule/Cancel links and template scope beyond native Google, including other providers and managed team/locale templates.
+Gap: Native per-event calendar and invitee confirmation/change/cancellation/reminder/request/request-reminder templates, escaped previews, named unknown/private-variable refusal, duplication and deleted-offer retention. Default-on invitation manage capabilities with a per-event toggle now email a replacement link only to the stored invitee, refuse earlier manage links and audit rotation; both email and sessionless page disclose that earlier links no longer work. Unknown/forged links return 404 and expired/canceled links return 410 without booking details. Managed team/locale templates, direct Reschedule/Cancel links, workflow confirmation suppression and From/Reply-To preview await their foundations. This clause owns CAL-003’s direct Reschedule/Cancel links and template scope beyond native Google, including other providers and managed team/locale templates.  Native two-provider calendar title and time-bearing description proof is complete, including the invitation-link toggle on creation and reschedule. Held: UI and browser qualification, managed team and locale templates, direct Reschedule and Cancel capabilities, workflow confirmation suppression, From and Reply-To preview, and remaining provider-template scope. CAL-010 and CAL-011 custody, MEET-002 and CAL-012 prerequisites, and release prerequisites are unchanged.
 
 NOTIFY-010 is missing: Reply-To and sender identity.
 
@@ -818,7 +818,7 @@ Gap: No implementing code yet.
 
 CLIENT-001 is partial: Client records.
 
-Evidence: `tests/person-erasure.test.mjs` ("native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person"), `tests/booking-axe/client-records.mjs`, `tests/booking-axe/remembered-client.mjs`, `tests/erasure/remembered-details.mjs`, `src/core/features/clients/`
+Evidence: `tests/person-erasure.test.mjs` ("native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person"), `tests/booking-axe/client-records.mjs`, `tests/booking-axe/remembered-client.mjs`, `tests/erasure/remembered-details.mjs`, `src/core/features/clients/`; `tests/client-guest-history.test.mjs` ("guest clients keep distinct booking history, annotations and private remembered-details authority through merges"); `tests/export-base-adoption.test.mjs` ("the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused")
 
 Gap: The Bookings Clients workspace groups folded primary-invitee emails, shows viewer-zone history, answers, attendance, read-only payments and booking fields, and opens the exact OPER-004 record. Operator merges preserve booking rows, retain aliases, notes and client text fields, and record the actor; erasure removes the full alias scope. A stored-address-only mailed capability fills saved name, email, phone and answers for one published event after explicit use, once within 15 minutes; requests acknowledge uniformly with a one-minute mail guard. Unbuilt: guest-only, pending-approval and alternative-request histories; shared typed client-field definitions and editing; across-host history (`TEAM-001`), packages (`PAY-004`), SMS consent (`FLOW-002`) and role scope (`OPER-001`).
 
@@ -830,13 +830,13 @@ Gap: Built for today's single-host install and proved on a seeded month: booking
 
 REPORT-002 is partial: Host calendar view and booking workspace.
 
-Evidence: `src/core/features/bookings/ui/calendar-workspace.tsx`, `src/core/features/bookings/ui/calendar-grid.tsx`, `tests/bookings-filters.test.mjs`, `tests/booking-axe/calendar.mjs`
+Evidence: `src/core/features/bookings/ui/calendar-workspace.tsx`, `src/core/features/bookings/ui/calendar-grid.tsx`, `tests/bookings-filters.test.mjs` ("the operator booking route combines every filter and searches literal case-insensitive name and email substrings"; "payment-state filters select exact booking identities and totals before combined filters and pagination without money writes"), `tests/booking-axe/calendar.mjs`
 
 Gap: Day, week and month share the list query, filters and paginated identity set in the viewer profile zone. Attendance filters are applied before count and pagination; the real single host is shown. Native and browser journeys cover the March spring-forward and February/March/April edges, imported placement, keyboard record opening and a real reschedule moving the calendar entry; month is an agenda at mobile width. Open: payment-state filtering, repeated-hour display proof, team filters, member columns and multi-host role scope. The complete mixed-subject acceptance sentence remains intact under ct’s conditional verbatim-carve form.
 
 REPORT-003 is missing: Exports and scheduled reports.
 
-Evidence: None.
+Evidence: `tests/report-booking-csv.test.mjs` — owner CSV exports every filtered booking safely without changing booking, delivery or accounting custody: native HTTP filters, 503 matches beyond display pagination, Unicode and CSV escaping, literal spreadsheet cells, capability and credential exclusion, anonymous and revoked-session refusal, unchanged product rows.; `tests/report-booking-csv/lifecycle.mjs`; a publicly confirmed booking exports without capabilities, person erasure removes it, and replaying its captured confirmation restores no booking or CSV data while control bookings remain.
 
 Gap: Filtered reporting CSVs and scheduled member reports are absent; the owner archive is DATA-001, not this reporting flow.
 
@@ -1061,3 +1061,81 @@ AGENT-011 is missing: Voice booking through a contracted provider.
 Evidence: None.
 
 Gap: No implementing code yet.
+
+BASE-AGENT-001 is missing: One MCP door per seed.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-002 is missing: The seed's jobs are tools, through the UI's own actions.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-003 is partial: Records are resources.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: resources; resourceRefresh not declared in the door (core subset, 2026-10-29).
+
+BASE-AGENT-004 is missing: Business identity and short-lived, audience-bound tokens.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-005 is missing: An agent acts as a person in a role, never more.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-006 is missing: Every action declares its risk class.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-007 is missing: The company's policy decides, at one chokepoint.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-008 is missing: Truthful attribution.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-009 is missing: Every agent action is audited with its class and decision.
+
+Evidence: None.
+
+Gap: Not yet judged through this seed's own doors.
+
+BASE-AGENT-010 is partial: Agents can follow changes.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: CORE `dial.events.list` declares the built-in retained-event reader; complete product change feeds, subscriptions and signed webhook delivery remain unproven.
+
+BASE-AGENT-011 is partial: Limits are policy, and Pause stops everything.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: timedLifecycle; queuedLifecycle not declared in the door (core subset, 2026-10-29).
+
+BASE-AGENT-012 is partial: Writes are idempotent and conflict-safe.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: queuedLifecycle not declared in the door (core subset, 2026-10-29).
+
+BASE-AGENT-013 is partial: Manifest, docs and the conformance journey.
+
+Evidence: `agent-surface.json`, `src/agent-door/README.md` (core declaration; complete family proof remains outstanding)
+
+Gap: 2026-10-29: CORE `dial.events.list` is declared; complete events/subscriptions; resources; multiSponsor; mailEdges; resourceRefresh; timedLifecycle; dualHost; ownerNativeAdministration; queuedLifecycle not declared in the door (core subset, 2026-10-29).

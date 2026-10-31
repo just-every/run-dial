@@ -3,7 +3,7 @@
 Dial can write the durable data of a local or hosted install to one private archive file, and restore that file into a fresh, empty local install. Use it for backups and before every update. The data is yours, and it leaves in a plain, documented format.
 
 > [!NOTE]
-> Hosted export uses your running Dial application and a native owner session. Hosted restore is not exposed. Rehearse restoration into an empty local installation; no live Cloudflare deployment or provider recovery is implied by the local hosted-stand-in tests.
+> Hosted export runs from Settings while you are signed in as an owner. Hosted restore is not offered: restore a backup into an empty local Dial to check that it works.
 
 ## Two commands
 
@@ -26,13 +26,13 @@ Export writes a new file that only you can read, and it refuses to overwrite an 
 2. Open **Settings → Export status** and choose **Download backup**.
 3. Keep Settings open while Dial prepares the archive. Your browser downloads a dated `dial-….rer` file. Check your downloads and move it to your private backup storage; it contains your clients' names, emails and answers.
 
-Your browser supplies the existing secure session automatically. No cookie copying, local checkout or Cloudflare API token is needed. Development/review sessions cannot export. The same native owner owns the export job throughout; cross-origin requests and remote imports are refused.
+Your browser supplies the existing secure session automatically. No cookie copying, local checkout or Cloudflare API token is needed. A local development session cannot use hosted export. The same native owner owns the export job throughout; cross-origin requests and remote imports are refused.
 
 Export briefly puts the source in maintenance after existing request and background work has drained. Requests receive 503, queues retry and the connection watch delays its next check. If writer admissions remain, export refuses with a message to wait or contact installation support. An active export holds maintenance and refuses a competing export. Settings → Export status shows a read-only count and whether an export currently holds maintenance; use **Refresh status** for a new observation. The count does not reserve or guarantee an export.
 
 After the archive reaches your browser, Dial removes the source snapshot and releases maintenance. If preparation or downloading fails, it attempts the same cleanup and shows an error. If cleanup cannot be confirmed, or you close the page mid-export, the maintenance lease expires after five minutes; the old job cannot be downloaded or resumed. Refresh status, then start a new backup. See OPERATIONS.md for export-job cleanup and the support boundary for writer admissions that remain.
 
-A writer admission can remain on any install, including a fresh v0.2.0 install, if the runtime kills an invocation or its final admission cleanup fails. These writer admissions do not expire and can block every subsequent hosted export; local `rer export` is unaffected. Dial cannot establish that a writer has died and provides no Clear action. Keep its admission until independently verified revocation or drain covers all old invocations and already-issued D1 and R2 effects. Pausing ingress, redeploying, waiting, or an owner confirmation does not prove this. Installation support must establish that storage guarantee before any recovery can be designed; deleting receipts without it can produce an inconsistent archive. The status endpoint remains available during maintenance, although opening a new Settings page can itself receive maintenance until the export ends.
+In rare cases a request that was cut off mid-write can keep hosted exports from starting. Export status then shows that a write is still held, and Dial offers no way to clear it, because clearing it could leave a backup that does not match your data. Contact installation support; local `rer export` is unaffected. While an export runs, opening a new Settings page can itself be answered with the maintenance message until the export ends.
 
 The archive captures durable D1 records and all FILES bytes and metadata. Queue messages and coordinator alarms are execution state, not transferable authority: pending deliveries are made historical and provider checks must be re-established after restore. Privately retain the original `SESSION_SECRET`, configuration and exact source revision separately. The hosted archive imports with the ordinary local command below.
 
@@ -45,7 +45,7 @@ Everything durable:
 - Alternative requests, delivery attempts, settings and the audit trail.
 - Calendar connection details and sync state, without the credentials.
 
-Each part of the archive is checked before restore. Use the exact source revision that made the archive, or a later Dial release: a later release restores a backup made before its newest migrations when each of those migrations states what it does to an existing row (0.5.0 restores backups made by 0.4.2 and 0.4.1, before migrations 0064 and 0065, and by the release before them, before 0062 and 0063, filling in exactly what those migrations would have). Otherwise unknown tables or indexes, changed migration hashes, missing entries in the migration ledger, and unfinished hosted migration claims are refused. Local Wrangler history, hosted installer history and the RER Managed migration ledger (`rer_migrations`) have different bookkeeping columns; those differences do not change your application schema, and each one must list exactly the migrations of that revision with their hashes. Restore keeps the destination’s migration ledger. A local database that RER Managed migrated keeps RER Managed as its only migration runner: `rer export` and `rer import` read its ledger first and never apply Wrangler’s migrations to it, and they refuse before changing anything when its `rer_migrations` lacks a migration of this revision (`migration_ledger:unapplied:<file>`) or sits beside another migration ledger (`migration_ledger:multiple:rer_migrations`).
+Each part of the archive is checked before restore. Restore with the same version of Dial that made the archive, or a later one: a later version fills in anything new with its default. Restore refuses an archive from a different or modified version, or one that has been changed since it was written, and says why before it changes anything. A local install that Run Edit Run manages keeps managing its own database upgrades, so export and import work with it as they are.
 
 ## What it leaves out
 

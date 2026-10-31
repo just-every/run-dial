@@ -40,7 +40,10 @@ contract("AVAIL-011", "an install at main's schema with the demo's three events 
   let before, after;
   try {
     await mkdir(join(main, "core"));
-    for (const name of (await readdir(migrations)).filter(name => name.endsWith(".sql") && name < update)) await copyFile(join(migrations, name), join(main, "core", name));
+    // Isolate the hours migration while retaining the later additive fields
+    // today's native fixture needs. Before the update every event still uses
+    // its own weekly windows; the migration alone changes that ownership.
+    for (const name of (await readdir(migrations)).filter(name => name.endsWith(".sql") && name !== update)) await copyFile(join(migrations, name), join(main, "core", name));
     // The same events on a current install, before anything uses your hours, give the week each offered before the update.
     before = await workspace();
     for (const input of demo) await before.publish(input);

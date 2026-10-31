@@ -33,7 +33,8 @@
           "scripts/verify-managed-editor.mjs",
           "rer-project.json",
           ".github/workflows/rer-managed.yml",
-          "scripts/operations.mjs"
+          "scripts/operations.mjs",
+          "agent-surface.json"
         ]
       }
     },
@@ -764,6 +765,27 @@
             "src/storage/sqlite.ts",
             "src/types.ts"
           ]
+        }
+      }
+    },
+    {
+      "id": "just-every/dial-agent-door",
+      "role": "module",
+      "source": {
+        "kind": "local",
+        "paths": [
+          "modules/agent-door"
+        ]
+      },
+      "adaptedFrom": {
+        "repository": "https://github.com/runeditrun/base.git",
+        "revision": "62f07fe6ecfdeae1a90bf6e65a02abae288996b3",
+        "path": "modules/agent-door",
+        "files": {
+          "modules/agent-door/events.ts": "c5e911d9b692551224ae02e564232cfef2c6462dbe91a5d7e07ea0571a85cab9",
+          "modules/agent-door/pipeline.ts": "2cf9442ea7fecd782db5d6e5e1e00babb95b9fde35b059bfe75a91839ed948cf",
+          "modules/agent-door/tests/runtime.mjs": "b2651541158bc28bf6c5f33a75ed7839c90e600d4082f55d0bc8cf5f275021cd",
+          "modules/agent-door/types.ts": "b211807f74bedb2c0b6019b4abea14f85a7abec4c9e4dbd25db991de9f88def0"
         }
       }
     }

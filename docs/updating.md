@@ -4,11 +4,10 @@ Dial is source code that you own. A new version arrives as new commits in the up
 
 ## How updates arrive
 
-Each version of Dial ships three things you read before you change anything:
+Each version of Dial ships two things you read before you change anything:
 
 - **[CHANGELOG.md](../CHANGELOG.md)** says what changed in plain language, including anything that breaks.
 - **[RELEASE.json](../RELEASE.json)** is the exact record for your agent: which behaviors changed, whether the update breaks anything, each database migration with its steps, and written instructions for the agent that applies the update.
-- **[HANDOVER.md](../HANDOVER.md)** says what has and has not been proven, so you know the limits of that version.
 
 Dial does not check for updates or phone home. Nothing changes on your install until you apply it.
 
@@ -21,7 +20,7 @@ Whichever way you take an update, keep your own changes and every authored recor
 ## Update safely
 
 1. **Read the notes.** Open the changelog and `RELEASE.json`. Look for `breaking` changes and for new migrations since your version. Note anything that asks operators to sign in again.
-2. **Back up first.** On your computer, stop dev with `rer dev --stop` (or preview with `rer preview --stop`) and run `rer export --output exports/dial-before-update.rer` with a new filename, then check that the file exists. A migration cannot be undone by deploying the old code, so the archive is your way back. For a hosted install, use the authenticated hosted export in [Backups and export](backups.md) and rehearse an empty local restore. Use the same source revision for that restore rehearsal, before applying the update. Retain `.rer/deploy/production.json`, the exact source revision and original private settings separately; a deployment receipt is not a data backup.
+2. **Back up first.** On your computer, stop dev with `rer dev --stop` (or preview with `rer preview --stop`) and run `rer export --output exports/dial-before-update.rer` with a new filename, then check that the file exists. A migration cannot be undone by deploying the old code, so the archive is your way back. For a hosted install, use the authenticated hosted export in [Backups and export](backups.md) and rehearse an empty local restore. Use the same source revision for that restore rehearsal, before applying the update. Retain `.rer/deploy/production.json`, the exact source revision and original private settings separately; a deploy record is not a data backup.
 
    **From v0.1.0 without pnpm on PATH:** that version's `rer export` needs pnpm **10.12.4** for the entire export, even if `rer dev` fetched it earlier. From the old checkout, use this command instead of the plain export above. npm supplies the pinned pnpm on PATH for this command without a global installation:
 
@@ -30,7 +29,7 @@ Whichever way you take an update, keep your own changes and every authored recor
      rer export --output exports/dial-before-v0.2.0.rer
    ```
 
-3. **Bring the new source in.** Let your agent merge it with your changes, then run the project's checks. They run lint, types, the tests, a replay of the migrations on a local database, the build and accessibility checks on the booking pages. They need a Chromium for Playwright, installed by the first command, and they listen on fixed local ports: free every port that `fixturePortRanges` lists in [scripts/ci-runtime-ports.mjs](../scripts/ci-runtime-ports.mjs) first.
+3. **Bring the new source in.** Let your agent merge it with your changes, then run the project's checks. They cover code style, types, the tests, a replay of the migrations on a local database, the build and accessibility of the booking pages. They need a Chromium for Playwright, which the first command installs, and they start local servers on fixed ports, so stop other local servers first; if a check reports a port in use, close whatever holds it and run it again.
 
    ```bash
    pnpm exec playwright \

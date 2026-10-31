@@ -8,7 +8,15 @@ export async function pollUpgrade(source){const prior=new DatabaseSync(':memory:
  // created yet. Defer those dependent migrations, retaining their real order.
  const tables=[...added.sql.matchAll(/\bCREATE TABLE\s+([a-z_]+)/gi)].map(match=>match[1]);
  const reference=new RegExp(`\\b(?:ON|REFERENCES)\\s+(?:${tables.join('|')})\\b`,'i');
- const dependent=migrations.filter(m=>m!==added&&reference.test(m.sql));
+ const deferred=new Set([added]);
+ // Trigger replacements must wait for their original definitions as well.
+ for(let changed=true;changed;){
+  changed=false;
+  const triggers=[...deferred].flatMap(m=>[...m.sql.matchAll(/\bCREATE TRIGGER\s+([a-z_]+)/gi)].map(match=>match[1]));
+  const drops=new RegExp(`\\bDROP TRIGGER(?: IF EXISTS)?\\s+(?:${triggers.join('|')})\\b`,'i');
+  for(const migration of migrations)if(!deferred.has(migration)&&(reference.test(migration.sql)||(triggers.length&&drops.test(migration.sql)))){deferred.add(migration);changed=true;}
+ }
+ const dependent=migrations.filter(m=>m!==added&&deferred.has(m));
  for(const migration of migrations.filter(m=>m!==added&&!dependent.includes(m)))prior.exec(migration.sql);prior.exec('PRAGMA foreign_keys=OFF');const triggers=prior.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger'").all();for(const trigger of triggers)prior.exec(`DROP TRIGGER ${quote(trigger.name)}`);const before=new Map();
  for(const {name}of prior.prepare(tableQuery).all()){if(name==='sqlite_sequence')continue;const columns=prior.prepare(`PRAGMA table_info(${quote(name)})`).all().map(c=>c.name),selected=columns.map(quote).join(','),rows=source.prepare(`SELECT ${selected} FROM ${quote(name)}`).all();prior.exec(`DELETE FROM ${quote(name)}`);for(const row of rows)prior.prepare(`INSERT INTO ${quote(name)}(${selected}) VALUES(${columns.map(()=>'?').join(',')})`).run(...columns.map(c=>row[c]));before.set(name,{selected,rows});}
  for(const trigger of triggers)prior.exec(trigger.sql);prior.exec(added.sql);for(const migration of dependent)prior.exec(migration.sql);for(const [name,{selected,rows}]of before)assert.deepEqual(prior.prepare(`SELECT ${selected} FROM ${quote(name)}`).all(),rows,`${name}: poll migration preserves populated prior rows`);for(const table of ['meeting_polls','poll_candidates','poll_participants','poll_votes','poll_vote_tokens'])assert.equal(prior.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0);

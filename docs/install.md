@@ -99,14 +99,7 @@ settings and setup's own records. It keeps the source, the dependencies, your
 archives in `exports/` and your deploy records in `.rer/deploy`. The next
 `rer dev` prepares a fresh, empty Dial whose owner starts setup again.
 
-Local setup does not connect Google Calendar. Choosing **Publish event type** turns on automatic bookings for fixed-link, phone and in-person event types using saved weekly availability, existing Dial bookings; locally, booking mail is checked and suppressed, never delivered. Without a connected calendar, external calendar conflicts are not checked. Google Meet requires a healthy connected Google Calendar that supports Meet. To explore calendar integration, run the review demo, which uses a synthetic calendar and mail at `http://127.0.0.1:15702`. Sign in as `operator@dial.test` through its local outbox. Never use it for real bookings.
-
-```bash
-pnpm run review
-```
-
-The review demo is an optional package script that needs pnpm 10.12.4 on your
-`PATH`; it is not part of the normal `rer dev` path.
+Local setup does not connect Google Calendar. Choosing **Publish event type** turns on automatic bookings for fixed-link, phone and in-person event types using saved weekly availability, existing Dial bookings; locally, booking mail is checked and suppressed, never delivered. Without a connected calendar, external calendar conflicts are not checked. Google Meet requires a healthy connected Google Calendar that supports Meet. To try calendar integration, deploy Dial and connect Google Calendar in Settings; see [Calendar and email](calendar-and-email.md#connect-google-calendar).
 
 > [!WARNING]
 > Local mode is for one person on one machine. The `RER_OPEN` link and the dev-key cookie it leaves sign in as the owner, so any process or user on your computer that can read them can sign in as the owner. Keep `.dev.vars`, `.wrangler`, `.seed` and `exports/` private, and out of git.
@@ -131,10 +124,10 @@ Configure the inputs before the dry run:
 
    ```dotenv
    CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
-   CLOUDFLARE_API_TOKEN=synthetic-cloudflare-api-token
+   CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
    OWNER_EMAIL=you@your-domain.example
    MAIL_FROM=bookings@your-verified-domain.example
-   SENDGRID_API_KEY=synthetic-sendgrid-api-key
+   SENDGRID_API_KEY=your-sendgrid-api-key
    ```
 
    The deploy declaration sets `MAIL_PROVIDER=sendgrid` and maps
@@ -172,11 +165,11 @@ The default environment is `production`. To deploy a separate install with its o
 rer deploy --environment staging --env-file /absolute/private/dial-deploy.env
 ```
 
-After a healthy deploy, `rer` claims the hosted owner and removes the one-time setup token. Open `/signin` on the deployed address, enter the deployed owner email, choose **Send magic link**, then open the email and confirm its link. There is no separate first-operator setup step or hosted local outbox. On the first sign-in, Dial opens the setup workspace: work through [Finish setup](#finish-setup), and [Calendar and email](calendar-and-email.md) for the connections.
+After a healthy deploy, `rer` claims the hosted owner and removes the one-time setup token. Open `/signin` on the deployed address, enter the deployed owner email, choose **Send magic link**, then open the email and confirm its link. There is no separate first-owner setup step. On the first sign-in, Dial opens the setup workspace: work through [Finish setup](#finish-setup), and [Calendar and email](calendar-and-email.md) for the connections.
 
 If the email does not arrive, check the owner address, SendGrid credentials, verified sender and mailbox delivery. A successful deploy or health check does not prove email delivery. A setup token cannot sign you in after the owner has been claimed.
 
-Dial pins **rer 0.2.77**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deployment receipt and the same Cloudflare credentials, run:
+Dial pins **rer 0.2.77**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deploy record and the same Cloudflare credentials, run:
 
 ```bash
 rer signin
@@ -200,7 +193,7 @@ Until you finish setup, signing in opens the setup workspace at `/setup`, and an
 6. **Publish or Open requests.** Choose **Publish event type** to enable automatic bookings with saved availability, or **Open requests** to take requests only.
 7. **Copy the booking link.** Copy the event's public booking link. If your browser blocks clipboard access, Dial shows the link in a box to select and copy yourself; choose **I have shared it** to record the step.
 
-You need not finish every step. **Finish setup** asks for a saved host profile and a copied (or shared) link to an event that is published, or open for requests. **Open requests** needs a working mail sender, but no Google Calendar or availability windows. Publishing for bookable times needs saved availability and verified mail, including the local outbox in local mode. A calendar is optional for fixed locations: publishing enables bookings using saved weekly availability and existing Dial bookings, without checking external calendar conflicts. A connected calendar that is unhealthy or missing its selection blocks publication and bookable times until fixed; Google Meet requires a healthy connected calendar that supports Meet. Finishing checks the current readiness again, then opens the operator app at `/app`.
+You need not finish every step. **Finish setup** asks for a saved host profile and a copied (or shared) link to an event that is published, or open for requests. **Open requests** needs a working mail sender, but no Google Calendar or availability windows. Publishing for bookable times needs saved availability and a passed mail check. A calendar is optional for fixed locations: publishing enables bookings using saved weekly availability and existing Dial bookings, without checking external calendar conflicts. A connected calendar that is unhealthy or missing its selection blocks publication and bookable times until fixed; Google Meet requires a healthy connected calendar that supports Meet. Finishing checks the current readiness again, then opens your Dial workspace at `/app`.
 
 Setup stays finished. Later connection problems show in Settings and on Overview, where the same steps appear under "Booking configuration", and they never send you back to setup. The Mail step and, when connected, the Google step count only a check that passed in the last 24 hours, so they return to "To do" until you run the check again; without a Google connection, that step shows "Optional" and counts as done.
 
@@ -237,7 +230,7 @@ alias; setting `MAIL_API_KEY` alone does not supply that declaration's input.
 
 Later deploys retain stored Worker secrets by name. Changing an environment variable or env-file value does not replace an existing Worker secret. Use the explicit `rer deploy --set-secret NAME --env-file /absolute/private/dial-deploy.env` operation for an intentional secret change; it records the new Worker version. Changing `OWNER_EMAIL` is not an owner-transfer or recovery workflow.
 
-### Stripe payments (optional, PAY-001)
+### Stripe payments (optional)
 
 Paid event types need three operator-held secrets from your own Stripe platform account. Free event types work without them.
 
@@ -251,7 +244,7 @@ Declare each in the `secrets` array of your `deploy.json` and set it with a sepa
 
 ## Remove a hosted installation
 
-Export any data you want to keep first; see [Backups and export](backups.md#export-from-a-hosted-install). Keep the deployment receipt in `.rer/deploy/` and use the checkout that deployed this installation, with its Cloudflare credentials available:
+Export any data you want to keep first; see [Backups and export](backups.md#export-from-a-hosted-install). Keep the deploy record in `.rer/deploy/` and use the checkout that deployed this installation, with its Cloudflare credentials available:
 
 ```bash
 rer deploy --remove --yes
@@ -263,4 +256,4 @@ For an installation deployed under another environment, name that same environme
 rer deploy --remove --yes --environment staging
 ```
 
-Removal permanently deletes the Worker and the D1, R2, KV and queue resources that this environment's deploy record proves rer created, then reads back that each is gone. For Dial this includes the hosted database and stored files. It touches no resources outside that record. Do not delete the receipt before removal. Removal also deletes `.rer/deploy/<environment>.secrets.env`, which holds the installation's `SESSION_SECRET`; a hosted backup cannot be restored without it, so copy that file somewhere private first (see [Backups and export](backups.md#keep-your-session-secret)). `rer reset --yes` only clears local state and does not remove a hosted installation.
+Removal permanently deletes the Worker and the D1, R2, KV and queue resources that this environment's deploy record proves rer created, then reads back that each is gone. For Dial this includes the hosted database and stored files. It touches no resources outside that record. Do not delete the deploy record before removal. Removal also deletes `.rer/deploy/<environment>.secrets.env`, which holds the installation's `SESSION_SECRET`; a hosted backup cannot be restored without it, so copy that file somewhere private first (see [Backups and export](backups.md#keep-your-session-secret)). `rer reset --yes` only clears local state and does not remove a hosted installation.

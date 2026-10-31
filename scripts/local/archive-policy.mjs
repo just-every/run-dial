@@ -16,7 +16,9 @@ export async function dialPolicy(db, vars, incoming) {
  const result = await exportPolicy(db, vars, schemaProof);
  // A backup from an earlier migration set restores through its declared row
  // upgrades, and must carry exactly the schema proof of a set with its schema.
- const priors = await priorSchemas(result.policy), current = result.policy.extraPayloads['schema-proof'];
+ // Only an import can select a prior schema. Export keeps the current proof and
+ // validation without replaying every historical schema on each backup.
+ const priors = incoming ? await priorSchemas(result.policy) : [], current = result.policy.extraPayloads['schema-proof'];
  // Base's explicit row upgrades require the archived table inventory. Later
  // additive tables stay empty, rather than acquiring invented historical rows.
  const inherited = priors.find(entry => entry.identity === incoming?.schema);
@@ -49,11 +51,11 @@ export async function dialPolicy(db, vars, incoming) {
     const native = find('oa_operators'), product = find('operators'), ledger = find('oa_bootstrap'), setup = find('operator_setup_identity');
     if (find('operator_erasure_subjects').length || product.some(row => row.erased_at
       ? row.removed_at === null || row.email !== 'erased:' + row.id || row.normalized_email !== row.email
-      : !native.some(account => account.id === row.id)) || native.some(row => row.role !== 'owner' || !product.some(owner =>
+      : !native.some(account => account.id === row.id)) || native.some(row => !['owner','admin','member'].includes(row.role) || !product.some(owner =>
         owner.id === row.id && owner.normalized_email === row.email && (owner.removed_at === null) === (row.status === 'active')
         && (!owner.erased_at || row.status === 'inactive' && row.display_name === 'Removed operator')))) throw Error('archive-inconsistent-operator-authority');
     if (native.length ? setup.length !== 1 || setup[0].operator_id !== ledger[0]?.claim_id : ledger.length || setup.length) throw Error('archive-missing-bootstrap-authority');
-    if (native.length && (ledger.length !== 1 || !native.some(row => row.status === 'active') || !native.some(row => row.id === ledger[0].claim_id))) throw Error('archive-missing-bootstrap-authority');
+    if (native.length && (ledger.length !== 1 || !native.some(row => row.status === 'active') || !native.some(row => row.id === ledger[0].claim_id&&row.role==='owner'))) throw Error('archive-missing-bootstrap-authority');
  };
  return result;
 }

@@ -1,3 +1,4 @@
+import { eraseAgentCustody } from "../../../agent-door/erasure";
 import { entitlementRemainders } from "./entitlements";
 import { NoticeErasure } from '../workspace-notices';
 import { importPersonValues, erasePersonSourceCustody, erasePersonSharedCustody, finishPersonCustody } from "../move-in";
@@ -50,6 +51,7 @@ export class PersonErasure {
     const pending=await this.db.prepare("SELECT addresses_json FROM person_erasure_locks WHERE email=?").bind(email).first<{addresses_json:string}>();
     if(!pending)throw new ErasureError("erasure_incomplete",503);
     const addresses=[...new Set([...records.addresses,...JSON.parse(pending.addresses_json) as string[]])];
+    await eraseAgentCustody(this.db, [...records.emails, ...records.bookings, ...records.requests, ...records.approvals]);
     for (const alias of records.emails) {
       await this.processors?.prepare(alias,id,session.id);
       await erasePendingPayments(this.db,alias,session,cleanupPending);

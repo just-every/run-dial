@@ -14,10 +14,10 @@ export class OperatorManagementRepository {
     const setup = await this.binding.prepare("SELECT operator_id FROM operator_setup_identity WHERE singleton_key='default'").first<{ operator_id: string }>();
     if (!setup) return undefined;
     const erased = new Set((await this.binding.prepare("SELECT id FROM operators WHERE erased_at IS NOT NULL").all<{id:string}>()).results.map(row => row.id));
-    return entries.filter(entry => !erased.has(entry.id)).map((entry) => ({ id: entry.id, email: entry.email, setupOperator: entry.id === setup.operator_id, status: entry.status }));
+    return entries.filter(entry => !erased.has(entry.id)).map((entry) => ({ id: entry.id, email: entry.email, setupOperator: entry.id === setup.operator_id, status: entry.status,role:entry.role }));
   }
 
-  async invite(request: Request, email: string) {
+  async invite(request: Request, email: string, role:"owner"|"admin"="owner") {
     const actor = await this.operators.requireMutation(request);
     const setup = await this.binding.prepare("SELECT operator_id FROM operator_setup_identity WHERE singleton_key='default'").first();
     if (!setup) throw new AuthError("operator_setup_missing", 503);
@@ -31,7 +31,7 @@ export class OperatorManagementRepository {
         await revokeOperatorMail(this.binding, { email, actorId: actor.operator.id }, nowIso()).run();
         const cancelled = await this.binding.prepare("SELECT 1 FROM oa_invitation_cancellations WHERE operator_id=?").bind(existing.id).first();
         if (cancelled) {
-          await this.operators.auth.invite(request, { email, displayName: email, role: "owner", returnTo: "/setup" });
+          await this.operators.auth.invite(request, { email, displayName: email, role, returnTo: "/setup" });
         } else {
           await this.operators.auth.setOperatorStatus(request, existing.id, "active");
           await this.operators.auth.requestMagicLink(request, { email, returnTo: "/setup" });
@@ -39,7 +39,7 @@ export class OperatorManagementRepository {
       } else if (existing?.status === "active") {
         await this.operators.auth.requestMagicLink(request, { email, returnTo: "/setup" });
       } else {
-        await this.operators.auth.invite(request, { email, displayName: email, role: "owner", returnTo: "/setup" });
+        await this.operators.auth.invite(request, { email, displayName: email, role, returnTo: "/setup" });
       }
     } catch (error) {
       if (!(error instanceof AuthError) || error.code !== "mail_unavailable") throw error;

@@ -28,6 +28,8 @@ const correspondence = JSON.stringify({ inviteeConfirmationEnabled: false, invit
 } });
 const overrides = {
   workflow_rules: {name:"Synthetic Dial booking workflow",operator_id:"owner",enabled:1,enabled_at:instant,subject:"Booking preparation",text:"Please review the agreed preparation."},
+  api_oauth_grants: {operator_id:"owner",scopes_json:'["bookings:read"]',expires_at:end,revoked_at:null},
+  api_credential_audit: {actor_id:"owner",action:"consent_approved",subject_id:"api_oauth_grants-1"},
   api_oauth_applications: {name:"Synthetic Dial connected app",operator_id:"owner",scopes_json:'["bookings:read"]',client_secret_hash:secret+"_API_CLIENT",expires_at:end,revoked_at:null},
   api_credentials: {name:"Synthetic Dial integration",operator_id:"owner",scopes_json:'["bookings:read"]',secret_hash:secret+"_API_TOKEN",expires_at:end,revoked_at:null,last_used_at:instant},
   webhook_subscriptions: {endpoint:'https://receiver.synthetic.test/archive',events_json:'["booking.created.v1"]',scope:'workspace',scope_id:null,secret_ciphertext:secret+'_HOOK',enabled:1},
@@ -147,6 +149,7 @@ export async function fixture() {
     INSERT INTO rer_mail_development_outbox(id,created_at,message) VALUES('captured-signin',1791331200000,'{"deliveryId":"old-token","from":"mail@example.test","to":["owner@example.test"],"subject":"Your sign-in link for Dial","text":"https://dial.example.test/auth/confirm?token=${secret}_MAGIC"}');
     INSERT INTO oa_sessions VALUES('old-session','${secret}_SESSION','owner',1,'native','old-token',1,9999999999999,NULL);
     INSERT INTO oa_step_up_challenges VALUES('old-proof','${secret}_STEP_UP','old-session','owner',1,'domain-rule:set','/app',1,9999999999999,NULL);`);
+  db.prepare("INSERT INTO api_oauth_codes(id,grant_id,code_hash,challenge,redirect_uri,expires_at,created_at,updated_at) VALUES('synthetic-dial-consent-code','api_oauth_grants-1',?,'synthetic-dial-proof','https://client.example.test/callback',?,?,?)").run(secret+'_CONSENT_CODE',end,instant,instant);
   db.exec('COMMIT');
   if (db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('fixture foreign keys');
   return model;

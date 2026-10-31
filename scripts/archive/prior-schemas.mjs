@@ -12,14 +12,24 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Existing event types remain ordinary appointments after a capacity upgrade.
+  'core/0102_group_seat_capacity.sql': (table, row) => table === 'event_types' ? { ...row, group_capacity: null } : row,
   'core/0094_coupon_issuance_receipts.sql': (table,row) => table==='payment_products'?{...row,issuance_key_hash:null}:row,
   // Existing credits keep their previous meaning; no historical coupon or discount is invented.
   'core/0093_payment_coupons.sql': (table,row) => ['payment_products','payment_entitlements'].includes(table)?{...row,is_coupon:0}:table==='payment_redemptions'?{...row,discount_cents:0}:row,
+  'core/0095_api_consent.sql': (table,row) => table==='api_oauth_applications'?{...row,grant_type:'client_credentials',redirect_uri:null}:table==='api_credentials'?{...row,oauth_grant_id:null}:row,
+  'core/0096_api_authority_cleanup.sql': (_table,row)=>row,
+  'core/0097_api_authority_revocation.sql': (_table,row)=>row,
+  'core/0098_booking_webhook_hosts.sql': (_table,row)=>row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.
   'core/0090_api_credentials.sql': (_table, row) => row,
   'core/0091_public_api.sql': (_table, row) => row,
+  // Installation-local Business/agent stores start empty and never alter an archived product row.
+  'core/0099_business_settings.sql': (_table, row) => row,
+  'core/0100_business_people.sql': (_table, row) => row,
+  'core/0101_agent_door.sql': (_table, row) => row,
   // Relationship cleanup triggers do not change any existing archived row.
   'core/0089_event_type_webhook_cleanup.sql': (_table, row) => row,
   'core/0087_webhook_sources.sql': (_table,row) => row,

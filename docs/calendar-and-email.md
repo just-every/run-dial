@@ -3,7 +3,7 @@
 SendGrid delivers sign-in links and booking emails on a deployed Dial. Google Calendar is optional for fixed-link, phone and in-person events. Choosing **Publish event type** enables automatic bookings using saved weekly availability and existing Dial bookings; without a connected calendar, Dial does not check external calendar conflicts. Connect Google Calendar in **Settings** to check busy time and put bookings on your calendar. Google Meet requires a healthy connected calendar that supports Meet.
 
 > [!NOTE]
-> Nothing about Google has been proven against a real account yet: connecting, Google Meet links, creating, changing and deleting events, change notifications, and how long a connection lasts. Automated tests use synthetic providers. Try a test calendar first.
+> Connect a test calendar first and make a test booking before you rely on the connection for real appointments.
 
 ## Connect Google Calendar
 
@@ -85,7 +85,7 @@ To turn tracking on:
 
 This opt-in declaration is needed because the current `rer` deployment tool only provisions declared secrets; it has no optional-secret field. For a first deploy with tracking already enabled, add the declaration first and supply the key alongside your other deploy inputs. Without this opt-in, no webhook key is required. Subsequent deploys retain stored Worker secrets.
 
-Use `rer` for the secret change: it records the Worker's new version in the deployment receipt. Editing the secret directly in the provider dashboard would leave that receipt stale and can block later deployments. To turn tracking off, keep the declaration and run `pnpm exec rer deploy --environment production --unset-secret MAIL_WEBHOOK_KEY`; rer records the removal so later deploys do not require the retired secret. Set it again with the command above to resume tracking.
+Use `rer` for the secret change: it records the Worker's new version in the deploy record. Editing the secret directly in the provider dashboard would leave that record stale and can block later deployments. To turn tracking off, keep the declaration and run `pnpm exec rer deploy --environment production --unset-secret MAIL_WEBHOOK_KEY`; rer records the removal so later deploys do not require the retired secret. Set it again with the command above to resume tracking.
 
 ## Local mail
 

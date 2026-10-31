@@ -1,3 +1,4 @@
+import { groupClaimPredicate, slotLedgerPredicate } from "../group-events";
 import { offeredHoldPredicate } from "../booking-links";
 import { BookingLimits, approvalHoldPredicate } from "../availability";
 import { blockedAddressSql, blockedAddressValues } from "../public-abuse";
@@ -15,18 +16,13 @@ export async function slotClaimGuard(binding: D1Database, input: GuardInput, adm
   const limits = await new BookingLimits(binding).predicate(input.event.id, input.hostTimezone, input.selection.startAt, input.selection.endAt, input.invitee.email, undefined);
   const approval = approvalHoldPredicate(input.occupiedStartAt,input.occupiedEndAt,exceptApprovalId);
   const paid = paymentHoldPredicate(input.occupiedStartAt, input.occupiedEndAt, exceptHoldId);
+  const ledger = slotLedgerPredicate({ eventId: input.event.id, startAt: input.selection.startAt, endAt: input.selection.endAt, occupiedStartAt: input.occupiedStartAt, occupiedEndAt: input.occupiedEndAt });
+  const group = groupClaimPredicate(input.event.id, input.event.groupCapacity);
   return {
     sql: `NOT ${blockedAddressSql}
       AND ${admission.sql}
-      AND NOT EXISTS (
-        SELECT 1 FROM booking_occurrences occurrence
-        JOIN bookings existing ON existing.id = occurrence.booking_id
-        WHERE occurrence.is_current = 1 AND occurrence.blocks_time = 1
-          AND existing.state IN ('confirmed', 'rescheduled')
-          AND occurrence.occupied_start_at < ?
-          AND occurrence.occupied_end_at > ?
-      ) AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND o.blocks_time = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?) AND ${holds.sql} AND ${limits.sql} AND ${paid.sql} AND ${approval.sql}`,
-    params: [...blockedAddressValues(input.invitee.email), ...admission.params, input.occupiedEndAt, input.occupiedStartAt, input.event.hostDayBookingLimit, input.hostDate, input.event.hostDayBookingLimit, ...holds.params, ...limits.params, ...paid.params, ...approval.params],
+      AND ${group.sql} AND ${ledger.sql} AND (? IS NULL OR (SELECT count(*) FROM booking_occurrences o JOIN bookings b ON b.id = o.booking_id WHERE o.is_current = 1 AND o.blocks_time = 1 AND b.state IN ('confirmed', 'rescheduled') AND o.host_date = ?) < ?) AND ${holds.sql} AND ${limits.sql} AND ${paid.sql} AND ${approval.sql}`,
+    params: [...blockedAddressValues(input.invitee.email), ...admission.params, ...group.params, ...ledger.params, input.event.hostDayBookingLimit, input.hostDate, input.event.hostDayBookingLimit, ...holds.params, ...limits.params, ...paid.params, ...approval.params],
   };
 }
 

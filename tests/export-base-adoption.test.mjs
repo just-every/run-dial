@@ -1,19 +1,23 @@
+import { agentUse } from './archive/agent-audit.mjs';
+import { groupSeatArchiveJourney } from './archive/group-upgrade.mjs';
 import { pollUpgrade } from './archive/poll-upgrade.mjs';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { contract } from './contract.mjs';
-import { fixture, testPlatform } from './archive/fixture.mjs';
+import { fixture, testPlatform, sqliteBinding } from './archive/fixture.mjs';
 import { createArchive } from './archive/artifact.mjs';
 import { captures, operators, request, runtime, token } from './archive/auth.mjs';
 import { migrationFiles, schemaModel, tableQuery } from '../scripts/archive/schema.mjs';
 import { restoreArchive } from './archive/artifact.mjs';
 import { assertCoverage, exported, excluded } from '../scripts/archive/policy.mjs';
 import { paymentErasureUpgrade, paidApprovalUpgrade, processorErasureUpgrade, reconciliationUpgrade, noticeUpgrade, entitlementUpgrade } from './archive/payment-erasure-upgrade.mjs';
-import { clientUpgrade } from './archive/client-upgrade.mjs';
+import { clientUpgrade, clientProjectionRestored } from './archive/client-upgrade.mjs';
 
 contract('DATA-001', 'the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused', async () => {
   const source = await fixture(); const target = await schemaModel();
   try {
+    const audit = await agentUse(sqliteBinding(source.db));
+    assert.ok(audit.length >= 16, "native agent calls must leave retained audit facts");
     await entitlementUpgrade(source.db);
     await noticeUpgrade(source.db);
     await reconciliationUpgrade(source.db);
@@ -62,7 +66,10 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec("INSERT INTO payment_products(id,event_type_id,kind,name,sessions,amount_cents,validity_days,created_at,updated_at) VALUES('synthetic-dial-archive-credit','event_types-1','package','Appointment credit',3,300,30,'2026-10-07T00:00:00.000Z','2026-10-07T00:00:00.000Z')");
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-payment-entitlements-not-portable/);
     source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
+    source.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,version,created_at) VALUES(?,?,?,'admin','active',1,1791331200000)").run('synthetic-dial-archive-admin',['synthetic-dial-archive-admin','example.test'].join(String.fromCharCode(64)),'Synthetic Dial administrator');
     const archive = await createArchive(testPlatform(source.db));
+    const archivedAudit = archive.tables.find(table => table.name === 'agent_door_audit')?.rows;
+    assert.deepEqual(archivedAudit, audit, 'owner export retains every agent audit field in sequence order');
     assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
     const archivedWorkflow = archive.tables.find(table => table.name === 'workflow_rules').rows[0];
     assert.equal(archivedWorkflow.enabled, 0, 'restored workflow configuration never carries live outbound authority');
@@ -78,7 +85,8 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
       assert.equal(archived.scopes_json, original.scopes_json);
       assert.equal(JSON.stringify(archive).includes(original[hashColumn]), false, 'a stored machine secret hash is absent from every archived field');
     }
-    assert.equal(archive.tables.some(table => ['api_request_keys', 'api_rate_windows'].includes(table.name)), false, 'private API response replays and rate counters stay local');
+    assert.equal(archive.tables.some(table => ['api_request_keys', 'api_rate_windows','api_oauth_codes'].includes(table.name)), false, 'private API response replays, consent codes and rate counters stay local');
+    assert.ok(archive.tables.find(table=>table.name==='api_oauth_grants').rows.every(row=>row.revoked_at),'restored delegated consent is historical and cannot revive authority');
     const webhookSubscription = archive.tables.find(table => table.name === 'webhook_subscriptions').rows[0];
     assert.equal(webhookSubscription.secret_ciphertext, null, 'signing authority is absent from the archive');
     assert.equal(webhookSubscription.enabled, 0, 'restored subscriptions require a fresh secret');
@@ -110,7 +118,15 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     source.db.exec("INSERT INTO operator_erasure_subjects VALUES('unfinished-subject')");
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-erasure-incomplete/);
     source.db.exec('DELETE FROM operator_erasure_subjects');
+    const changedOwner=await createArchive(testPlatform(source.db),undefined,{transformRow:(name,row)=>name==='oa_operators'&&row.id==='owner'?{...row,role:'admin'}:row});
+    await assert.rejects(restoreArchive(destination,changedOwner),/archive-missing-bootstrap-authority/);
+    assert.equal(target.db.prepare('SELECT count(*) AS n FROM bookings').get().n,0,'an archive cannot demote the protected bootstrap owner');
     await restoreArchive(destination, archive);
+    await clientProjectionRestored(source.db, target.db, remembered);
+    assert.equal(target.db.prepare("SELECT role FROM oa_operators WHERE id='synthetic-dial-archive-admin'").get().role,'admin','native API administrators retain their role without inheriting owner authority');
+    const restoredAudit = target.db.prepare("SELECT * FROM agent_door_audit ORDER BY sequence").all().map(row => ({ ...row }));
+    assert.deepEqual(restoredAudit, audit, "restore retains agent attribution, decisions, evidence and original sequence");
+    console.log(`DATA-001 agent audit round trip: source=${audit.length} archive=${archivedAudit.length} restored=${restoredAudit.length}; order and content equal`);
     for (const [table, hashColumn] of [['api_credentials', 'secret_hash'], ['api_oauth_applications', 'client_secret_hash']]) {
       const restored = target.db.prepare(`SELECT * FROM ${table}`).get();
       assert.equal(restored[hashColumn], null);
@@ -152,6 +168,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     assert.deepEqual(target.db.prepare('SELECT payment_json FROM booking_approval_requests').all(),source.db.prepare('SELECT payment_json FROM booking_approval_requests').all(),'PAY-007 processor history survives without its live claim, hold or capability');
     assert.throws(() => target.db.exec("UPDATE oa_operators SET status='active' WHERE id='zz-cancelled'"), /invitation_required/);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM rer_mail_development_outbox').get().n, 0);
+    await groupSeatArchiveJourney();
     // Future clipboard storage must be classified from its eventual migration,
     // never pre-authorized through a wildcard or guessed table name.
     target.db.exec('CREATE TABLE unclassified_future_data(id TEXT)');
