@@ -8660,15 +8660,23 @@
       "executable": false
     },
     "tests/booking-wire/payment-journey.mjs": {
-      "sha256": "0fbd79a2ec595deabf3e0cacd18e21d3e39c980e6227b5b44d22d85c8386d01f",
+      "sha256": "ffaeae3e74131a44ba19b18444defd69004f9f48eebae0a54cc55143f92631ff",
+      "executable": false
+    },
+    "tests/booking-wire/payment-request.mjs": {
+      "sha256": "9e9c7ad698e2fe6d88c503b73fb10f62cea47a39093122e067bbfb9181f86cf7",
+      "executable": false
+    },
+    "tests/booking-wire/payment-runtime.mjs": {
+      "sha256": "0018ce03871b82e23a10b26b7f30673102ce675e80f8545fc31fdc7c2ce93d0a",
       "executable": false
     },
     "tests/booking-wire/payment-tax-journey.mjs": {
-      "sha256": "55c96084eb39e37603071d1c8e54de6b7b3052a1ba212f5499a870027d4bcb12",
+      "sha256": "838e3a853d75a1c9a25980713ff216868d730768edd90434756911ae265828e0",
       "executable": false
     },
     "tests/booking-wire/payment-terms-journey.mjs": {
-      "sha256": "146b97745a08b9417b29847d5549193cb6361ba5b059ce91487cf8ed3c0ce624",
+      "sha256": "8ac7fd358316c8c525aa6c37ccc1be50a5dd5a827af4a8acf72b481887e519a2",
       "executable": false
     },
     "tests/booking-wire/poll-journey.mjs": {
@@ -9760,7 +9768,7 @@
       "executable": false
     },
     "tests/payments-wire.test.mjs": {
-      "sha256": "648bc1ded9c4bf65ce7e929f0fd713e1028691e33868ed3c419c102ca3f498c8",
+      "sha256": "c3899532494b38a3583c74160b8b3655419a87b34bb8c11e4bd858eb240f87ca",
       "executable": false
     },
     "tests/person-erasure.test.mjs": {
