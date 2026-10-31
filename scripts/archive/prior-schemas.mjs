@@ -18,6 +18,7 @@ export const rowUpgrades = {
   'core/0095_api_consent.sql': (table,row) => table==='api_oauth_applications'?{...row,grant_type:'client_credentials',redirect_uri:null}:table==='api_credentials'?{...row,oauth_grant_id:null}:row,
   'core/0096_api_authority_cleanup.sql': (_table,row)=>row,
   'core/0097_api_authority_revocation.sql': (_table,row)=>row,
+  'core/0098_booking_webhook_hosts.sql': (_table,row)=>row,
   // Authored workflow configuration starts empty in earlier archives.
   'core/0092_workflows.sql': (_table, row) => row,
   // Credential metadata and replay tables are additive and start empty in earlier archives.
