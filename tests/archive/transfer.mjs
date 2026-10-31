@@ -10,7 +10,7 @@ export async function checkout(root) {
   await mkdir(root, { recursive: true });
   // The current source installation has no static public directory. Its native
   // CLI discovers the adapter and setup model through the operations descriptor.
-  for (const name of ['scripts', 'migrations', 'modules', 'deploy', 'src', 'package.json', 'pnpm-lock.yaml', 'OPERATIONS.json', 'OPERATIONS.md', 'ACCEPTANCE.md', 'seed.json', 'edition.json', 'rer-project.json', 'rer-setup.json', 'deploy.json', 'CONTRACT.md', 'BASELINE.md', 'RELEASE.json', 'tsconfig.json', 'vite.config.ts']) {
+  for (const name of ['scripts', 'migrations', 'modules', 'foundation', 'agent-surface.json', 'deploy', 'src', 'package.json', 'pnpm-lock.yaml', 'OPERATIONS.json', 'OPERATIONS.md', 'ACCEPTANCE.md', 'seed.json', 'edition.json', 'rer-project.json', 'rer-setup.json', 'deploy.json', 'CONTRACT.md', 'BASELINE.md', 'RELEASE.json', 'tsconfig.json', 'vite.config.ts']) {
     await cp(resolve(name), join(root, name), { recursive: true });
   }
   await symlink(resolve('node_modules'), join(root, 'node_modules'), 'dir');
