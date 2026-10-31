@@ -1,10 +1,9 @@
 import { WorkspaceLoadState } from "../../../app/ui/route-load-error";
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { api, errorMessage } from "../../../api/client";
 import { EmptyState } from "../../../app/ui/empty-state";
 import { PageHeader } from "../../../app/ui/page-header";
-import { Button, Card, Input, Select, buttonClassName } from "../../../app/ui/primitives";
+import { Button, Card, Input, Select, buttonClassName, PlainLink } from "../../../app/ui/primitives";
 import { useHydrated } from "../../../app/use-hydrated";
 import { operatorDay } from "../../../shared/operator-format";
 import type { EventTypeRecord } from "../../event-types";
@@ -32,7 +31,7 @@ export function SchedulingReportView({ filters, eventTypes, onChange }: { filter
   useEffect(() => { void load(); }, [load]);
   const empty = report && report.tiles.every(tile => tile.count === 0);
   return <div className="grid gap-7">
-    <PageHeader title="Scheduling report" description="What was booked, moved, cancelled, attended and paid for in a period." actions={<Link to="/app/bookings" search={() => ({})} className={buttonClassName("secondary")}>Back to bookings</Link>} />
+    <PageHeader title="Scheduling report" description="What was booked, moved, cancelled, attended and paid for in a period." actions={<PlainLink to="/app/bookings" search={() => ({})} className={buttonClassName("secondary")}>Back to bookings</PlainLink>} />
     <Card className="p-4 sm:p-5"><fieldset disabled={!hydrated} aria-busy={!hydrated} className="grid min-w-0 gap-4 border-0 p-0 sm:grid-cols-2 xl:grid-cols-4">
       <label className={fieldLabel}>From date<Input type="date" value={from ?? report?.period.fromDate ?? ""} max={to} onChange={event => onChange({ from: event.currentTarget.value || undefined })} /></label>
       <label className={fieldLabel}>Through date<Input type="date" value={to ?? report?.period.throughDate ?? ""} min={from} onChange={event => onChange({ to: event.currentTarget.value || undefined })} /></label>
