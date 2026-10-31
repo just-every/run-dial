@@ -1,3 +1,4 @@
+import { delegatedCredentialJourney } from "./consent.mjs";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -28,8 +29,8 @@ export async function machineCredentialJourney(context) {
   console.log("Machine journey: native schema ready");
   const address=name=>`${name}${String.fromCharCode(64)}example.test`;
   let cookie;
-  const call=(path,{body,method=body===undefined?"GET":"POST",secret,key,session=false}={})=>fetch(origin+path,{
-    method,redirect:"manual",headers:{Origin:origin,"content-type":"application/json",...(session&&cookie?{cookie}:{}),...(secret?{Authorization:`Bearer ${secret}`} : {}),...(key?{"Idempotency-Key":key}:{} )},...(body===undefined?{}:{body:JSON.stringify(body)}),
+  const call=(path,{body,method=body===undefined?"GET":"POST",secret,key,session=false,operatorCookie}={})=>fetch(origin+path,{
+    method,redirect:"manual",headers:{Origin:origin,"content-type":"application/json",...(session&&(operatorCookie||cookie)?{cookie:operatorCookie||cookie}:{}),...(secret?{Authorization:`Bearer ${secret}`} : {}),...(key?{"Idempotency-Key":key}:{} )},...(body===undefined?{}:{body:JSON.stringify(body)}),
   });
   const json=async(path,options={},status=200)=>{console.log(`Machine journey: ${path}`);const response=await call(path,options);assert.equal(response.status,status,`${path} status${response.status!==status?" "+JSON.stringify((await response.clone().json().catch(()=>({}))).error?.code??"unclassified"):""}`);return response.json();};
   await json("/wire/init",{body:{}});
@@ -111,6 +112,7 @@ export async function machineCredentialJourney(context) {
   const grant=await fetch(origin+"/api/oauth/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:app.application.id,client_secret:app.clientSecret})});
   assert.equal(grant.status,200);const access=await grant.json();assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,200);
   assert.equal((await call(`/api/app/oauth-applications/${app.application.id}/revoke`,{session:true,body:{}})).status,204);assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,401);
+  await delegatedCredentialJourney({origin,call,json,issue,fixture,week,db,profile,other});
   const beforeExpiry=await writes();
   await db.prepare("UPDATE api_credentials SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(reader.credential.id).run();
   const expired=await call("/api/v1/bookings",{secret:reader.secret});assert.equal(expired.status,401);assert.equal((await expired.json()).error.code,"credential_expired");
