@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { confirmAuthLink } from "../auth-client.mjs";
 
-export async function delegatedCredentialJourney({origin,call,json,issue,week,db,profile,other}) {
+export async function delegatedCredentialJourney({origin,call,json,issue,week,db,profile,other,webhookCaptures}) {
  const address=name=>[name,"example.test"].join(String.fromCharCode(64));
  const expiresAt=new Date(Date.now()+86400000).toISOString();
  const invite=async(name,role)=>{
@@ -26,12 +26,18 @@ export async function delegatedCredentialJourney({origin,call,json,issue,week,db
  const draft={slug:"synthetic-dial-other-host",title:"Other host consultation",description:"A separately owned native event.",durationMinutes:30,color:"#176b5a",locationType:"in_person",locationLabel:"Meeting room",locationValue:"Synthetic meeting room",listed:true,alternativeRequestsEnabled:false,slotIncrementMinutes:30,minimumNoticeMinutes:0,bookingHorizonDays:90,beforeBufferMinutes:0,afterBufferMinutes:0,hostDayBookingLimit:null,questions:[],availability:Array.from({length:7},(_,weekday)=>({weekday,startMinute:0,endMinute:1440}))};
  const event=await json("/api/v1/event-types",{secret:editor.secret,key:"synthetic-dial-other-host-event",body:draft},201);
  await json(`/api/v1/event-types/${event.id}/publish`,{secret:editor.secret,key:"synthetic-dial-other-host-publish",body:{}});
+ const primaryWebhook=await issue(["webhooks:manage"],{hostId:profile.id}),foreignWebhook=await issue(["webhooks:manage"],{hostId:host.id});
+ for(const [credential,path] of [[primaryWebhook,"host-one"],[foreignWebhook,"host-two"]]){
+  await json("/api/v1/webhook-subscriptions",{secret:credential.secret,key:"synthetic-dial-webhook-"+path,body:{endpoint:"https://receiver.synthetic.test/"+path,events:["booking.created.v1"]}},201);
+ }
  await json(`/api/app/api-hosts/${host.id}/events`,{session:true,body:{eventTypeId:event.id,transferBookings:true}});
  const base="/api/public/book/dial-host/"+event.slug;
  const slots=await json(base+"/availability?week="+week+"&inviteeTimezone=UTC");assert.ok(slots.slots.length);
  const slot=slots.slots[0],selection=await json(base+"/selection",{body:{startAt:slot.startAt,inviteeTimezone:"UTC"}},201);
  const booked=await json(base+"/confirm",{body:{nonce:selection.nonce,startAt:slot.startAt,inviteeTimezone:"UTC",name:"Other host guest",email:address("synthetic-dial-1703"),answers:{}}},201);
  const bookingId=booked.bookingReference;assert.ok(bookingId);
+ await json("/__fixtures/webhooks/process",{body:{}});
+ assert.deepEqual(webhookCaptures.filter(row=>row.body.data.bookingId===bookingId).map(row=>row.path),["/host-two"],"a second-host booking reaches only that host's receiver; the primary-host receiver gets nothing");
  const unintended=(await db.prepare("SELECT id FROM delivery_outbox WHERE booking_id=? AND json_extract(payload_json,'$.to')=?").bind(bookingId,address("synthetic-dial-1701")).all()).results;
  assert.deepEqual(unintended,[],"API administrator admission does not opt a person into private booking notices");
  const primary=await issue(["bookings:read","bookings:write"],{hostId:profile.id}),foreign=await issue(["bookings:read","bookings:write"],{hostId:host.id});

@@ -15,7 +15,13 @@ export async function machineCredentialJourney(context) {
   const port=reservation.address().port;
   await new Promise(resolve=>reservation.close(resolve));
   const origin=`http://127.0.0.1:${port}`,state=await mkdtemp(join(tmpdir(),"dial-machine-authority-"));
-  const receiver=httpServer((request,response)=>{
+  const webhookCaptures=[];
+  const receiver=httpServer(async(request,response)=>{
+    if(!request.url.startsWith("/__dns?")){
+      const chunks=[];for await(const chunk of request)chunks.push(chunk);
+      webhookCaptures.push({path:request.url,body:JSON.parse(Buffer.concat(chunks).toString("utf8"))});
+      response.writeHead(204);response.end();return;
+    }
     const type=Number(new URL(request.url,"http://localhost").searchParams.get("type"));
     response.writeHead(200,{"Content-Type":"application"+"/json"});
     response.end(JSON.stringify({Status:0,Answer:type===1?[{type,data:"93.184.216.34"}]:[]}));
@@ -112,7 +118,7 @@ export async function machineCredentialJourney(context) {
   const grant=await fetch(origin+"/api/oauth/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:app.application.id,client_secret:app.clientSecret})});
   assert.equal(grant.status,200);const access=await grant.json();assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,200);
   assert.equal((await call(`/api/app/oauth-applications/${app.application.id}/revoke`,{session:true,body:{}})).status,204);assert.equal((await call("/api/v1/bookings",{secret:access.access_token})).status,401);
-  await delegatedCredentialJourney({origin,call,json,issue,fixture,week,db,profile,other});
+  await delegatedCredentialJourney({origin,call,json,issue,fixture,week,db,profile,other,webhookCaptures});
   const beforeExpiry=await writes();
   await db.prepare("UPDATE api_credentials SET expires_at='2000-01-01T00:00:00.000Z' WHERE id=?").bind(reader.credential.id).run();
   const expired=await call("/api/v1/bookings",{secret:reader.secret});assert.equal(expired.status,401);assert.equal((await expired.json()).error.code,"credential_expired");
