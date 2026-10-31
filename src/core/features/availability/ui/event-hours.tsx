@@ -83,13 +83,14 @@ function HoursContent({ data }: { data: Read }) {
   });
   useEffect(() => { applyCopy.current = windows => form.choose("windows", windows); }, [form.choose]);
   const options = [{ id: "yours", name: "Your hours", windows: hours.yours?.windows ?? [] }, ...hours.others.map(other => ({ id: other.id, name: other.name, windows: other.windows })), { id: "own", name: "Its own hours", windows: form.values.windows }];
+  const duplicates = (option: (typeof options)[number]) => option.id === "own" && options.some(other => other.id !== "own" && hoursSummary(other.windows) === hoursSummary(option.windows));
   const saved = form.state("windows").saved ? form.state("windows") : form.state("copy");
   return <div className="grid min-w-0 gap-5">
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="mb-3 flex w-full items-center justify-between text-sm font-semibold">Hours{profile?.timezone ? ` · ${profile.timezone.replaceAll("_", " ")}` : ""}<SavedMark state={form.state("uses")} /></legend>
       <div className="grid gap-3 sm:grid-cols-2">{options.map(option => <label key={option.id} className={`relative min-w-0 cursor-pointer rounded-[18px] p-4 ${form.values.uses === option.id ? "bg-gold-wash" : "bg-card shadow-panel"}`}>
         <input className="peer absolute inset-0 m-0 cursor-pointer opacity-0" type="radio" name={`hours-${event.id}`} value={option.id} checked={form.values.uses === option.id} aria-label={option.name} onChange={() => form.choose("uses", option.id)} />
-        <span className="block min-h-11 rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"><span className="block font-bold">{option.name}</span><span className="mt-1 block text-sm text-soft">{hoursSummary(option.windows)}</span></span>
+        <span className="block min-h-11 rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"><span className="block font-bold">{option.name}</span><span className="mt-1 block text-sm text-soft">{duplicates(option) ? "Hours for this event only" : hoursSummary(option.windows)}</span></span>
       </label>)}</div>
       <SaveFailed id="event-hours-choice-failed" state={form.state("uses")} what="hours choice" choice onRetry={form.retry} />
     </fieldset>
