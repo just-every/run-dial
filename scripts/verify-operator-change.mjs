@@ -79,7 +79,8 @@ try {
   page.on("request", (request) => { if (request.url() === `${origin}/api/app/bookings/${booking.id}/reschedule`) rescheduleRequests++; });
   async function selectBooking() {
     const response = await page.goto(origin + "/app/bookings"); assert.equal(response.status(), 200);
-    await page.getByRole("button").filter({ hasText: booking.invitee_name }).click();
+    // Each row is a link to its booking's own path (DW6).
+    await page.getByRole("link").filter({ hasText: booking.invitee_name }).click();
     await page.getByRole("heading", { name: booking.invitee_name, exact: true }).waitFor();
   }
   await selectBooking();
@@ -201,7 +202,7 @@ try {
   assert.equal(afterRestore.calendarState, "pending");
   assert.equal(afterRestore.calendarConflicts.find((conflict) => conflict.id === currentConflict.id).state, "restored");
   await page.reload();
-  await page.getByRole("button").filter({ hasText: booking.invitee_name }).click();
+  await page.getByRole("link").filter({ hasText: booking.invitee_name }).click();
   await page.getByRole("heading", { name: booking.invitee_name, exact: true }).waitFor();
   assert.equal(await calendarDelivery.innerText(), "Update pending");
   if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
@@ -224,8 +225,9 @@ try {
   await page.screenshot({ path: evidencePath("operator-change-mobile.png"), fullPage: true });
   assert.equal((await snapshot()).bookings.find((row) => row.id === booking.id).current_occurrence_id, moved.current_occurrence_id);
   await externalConflict({ ...blocked, startAt: slots[8].startAt, endAt: slots[8].endAt });
-  await page.reload();
-  await page.getByRole("button").filter({ hasText: blocked.invitee_name }).click();
+  // At 390 an open booking is its own page, so the other booking is picked from the list.
+  await page.goto(origin + "/app/bookings");
+  await page.getByRole("link").filter({ hasText: blocked.invitee_name }).click();
   await page.getByRole("heading", { name: blocked.invitee_name, exact: true }).waitFor();
   if (await page.locator("details.dial-more").first().getAttribute("open") === null) await page.locator("details.dial-more > summary").first().click(); await page.getByRole("button", { name: "Review calendar conflicts", exact: true }).click();
   await page.getByRole("heading", { name: "Calendar conflicts", exact: true }).waitFor();

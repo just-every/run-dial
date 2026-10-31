@@ -7,7 +7,7 @@ export async function filterEvidence(page, origin, eventId, checks) {
   await page.goto(origin + "/app/bookings"); await search.waitFor(); await settled();
   await search.pressSequentially("Acceptance record", { delay: 45 });
   await page.waitForFunction(() => new URL(globalThis.location.href).searchParams.get("query") === "Acceptance record");
-  await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).waitFor();
+  await page.getByRole("link", { name: /Acceptance record invitee/ }).waitFor();
   checks.push({ check: "Typed multiword search preserves intermediate spaces and finds native booking", passed: true });
   for (const literal of ["false", "null", "123", '{"tag":"value"}', "[1,2]"]) {
     await page.goto(origin + "/app/bookings?" + new URLSearchParams({ query: literal })); await search.waitFor(); await settled();
@@ -40,7 +40,7 @@ export async function filterEvidence(page, origin, eventId, checks) {
     assert.equal(native.get(key), key === "from" ? `${value}T00:00:00.000Z` : key === "to" ? `${value}T23:59:59.999Z` : value);
   }
   assert.equal(await page.getByRole("combobox", { name: "External delivery" }).inputValue(), "clear");
-  await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).waitFor();
+  await page.getByRole("link", { name: /Acceptance record invitee/ }).waitFor();
   await page.reload(); await search.waitFor(); await settled(); assert.equal(await search.inputValue(), combined.query);
   checks.push({ check: "All seven URL filters combine; out-of-range page clamps without losing filters; reload restores native record", passed: true });
   await page.goto(origin + "/app/bookings"); await search.waitFor(); await settled();
@@ -58,7 +58,7 @@ export async function filterEvidence(page, origin, eventId, checks) {
     await page.getByRole("heading", { name: "No bookings match these filters", exact: true }).waitFor();
     release(); await delay(500);
     assert.equal(await search.inputValue(), "NoSuchInvitee");
-    assert.equal(await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("link", { name: /Acceptance record invitee/ }).count(), 0);
     assert.ok(await page.getByRole("heading", { name: "No bookings match these filters", exact: true }).isVisible());
     checks.push({ check: "Stale-body fence rejects delayed real native response after newer query completes", passed: true, transport: "Held original route.fetch response; no invented application response" });
   } finally { release(); await page.unroute(matcher); }

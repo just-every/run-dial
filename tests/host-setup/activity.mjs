@@ -21,14 +21,19 @@ export async function activityJourney(page, origin, eventId, scan) {
   assert.ok(booking.calendar_provider_event_id);
   assert.equal((await page.request.post(origin + "/__fixtures/change", { data: { kind: "changed", bookingId: booking.id, occurrenceId: occurrence.id, providerEventId: booking.calendar_provider_event_id, updatedAt: new Date(Date.now() + 5000).toISOString(), startAt: new Date(Date.parse(occurrence.start_at) + 300000).toISOString(), endAt: new Date(Date.parse(occurrence.end_at) + 300000).toISOString(), location: "External edited room" } })).status(), 204);
   await page.goto(origin + "/app/bookings");
+  // The booking opens at its own path from its row's link (DW6).
+  await page.getByRole("link", { name: /Newest booking/ }).click();
+  await expect(page.getByRole("heading", { name: "Newest booking", exact: true, level: 1 })).toBeVisible();
   await page.locator("details.dial-more > summary").first().click();
   const opener = page.getByRole("button", { name: "Review calendar conflicts", exact: true }); await opener.click();
   const dialog = page.getByRole("dialog", { name: "Calendar conflicts", exact: true }); await expect(dialog).toBeVisible(); await expect(dialog.getByRole("button", { name: "Close", exact: true })).toBeFocused();
   await expect(dialog).toContainText("External edited room"); await expect(dialog).toContainText("America/New_York"); await expect(dialog).toContainText("UTC"); await expect(dialog.getByRole("button", { name: "Restore booking time", exact: true })).toBeEnabled(); await expect(dialog.getByRole("button", { name: "Cancel booking instead", exact: true })).toBeEnabled(); await scan("conflict-dialog");
   await page.keyboard.press("Escape"); await expect(dialog).toHaveCount(0); await expect(opener).toBeFocused();
+  // Its back link returns to the full list, where the filters live.
+  await page.getByRole("link", { name: "‹ Bookings", exact: true }).filter({ visible: true }).click(); await page.waitForURL(url => url.pathname === "/app/bookings");
   const filter = page.getByRole("radiogroup", { name: "Lifecycle state", exact: true });
   await filter.getByRole("radio", { name: "Cancelled", exact: true }).check(); await expect(page.getByRole("heading", { name: "No bookings match these filters", exact: true })).toBeVisible();
-  await filter.getByRole("radio", { name: "Confirmed", exact: true }).check(); await expect(page.getByRole("button", { name: /Newest booking/ })).toBeVisible();
+  await filter.getByRole("radio", { name: "Confirmed", exact: true }).check(); await expect(page.getByRole("link", { name: /Newest booking/ })).toBeVisible();
   await page.request.post(origin + "/__host/imported");
   await page.goto(origin + "/app"); await expect(page.getByText("reauthorization required", { exact: true })).toBeVisible(); await expect(page.getByText("mail check required", { exact: true })).toBeVisible(); await expect(page.getByRole("link", { name: "Google setup guide", exact: true })).toHaveAttribute("href", "/app/settings#calendar-connection");
   await overviewHealth(page, origin, { calendar: "unhealthy", mail: "unhealthy" }); await scan("imported-status");

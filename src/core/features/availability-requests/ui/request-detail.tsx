@@ -1,5 +1,5 @@
 import { ExtensionSlot } from "../../../app/extensions";
-import { Badge, Button, Card, buttonClassName } from "../../../app/ui/primitives";
+import { Badge, Button, buttonClassName } from "../../../app/ui/primitives";
 import { operatorTimestamp } from "../../../shared/operator-format";
 
 export type RequestState = "submitted" | "handled" | "closed";
@@ -7,9 +7,10 @@ export type AvailabilityRequest = { id: string; eventTitle: string; inviteeName:
 
 export function RequestDetail({ request, onTransition, onErase, working, hostTimezone }: { hostTimezone?: string; working: boolean; request: AvailabilityRequest; onTransition: (id: string, state: "handled" | "closed") => Promise<void>; onErase: (id: string) => Promise<void> }) {
   const differentTimezone = hostTimezone && request.inviteeTimezone !== hostTimezone;
-  return <Card className="min-w-0 p-5 sm:p-6">
+  // The record is the page: on the white column with no card, its name the page's one title (DW6).
+  return <article className="min-w-0">
     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div className="min-w-0 break-words"><p className="text-xs font-bold uppercase tracking-[.12em] text-muted">{request.eventTitle}</p><h2 className="mt-2 text-[28px] font-extrabold leading-[1.1] tracking-[-.02em] text-ink">{request.inviteeName}</h2><p className="mt-2 text-[15px] text-soft">{request.inviteeEmail}</p></div>
+      <div className="min-w-0 break-words"><p className="text-xs font-bold uppercase tracking-[.12em] text-muted">{request.eventTitle}</p><h1 className="mt-2 text-[34px] font-extrabold leading-[1.05] tracking-[-.02em] text-ink sm:text-[40px]">{request.inviteeName}</h1><p className="mt-2 text-[15px] text-soft">{request.inviteeEmail}</p>{hostTimezone ? <p className="mt-1 text-sm text-muted">Times in {hostTimezone}</p> : null}</div>
       <RequestStateBadge state={request.state} />
     </div>
     <dl className="mt-6 grid gap-4 border-y border-line-soft py-5 text-[15px]">
@@ -34,7 +35,7 @@ export function RequestDetail({ request, onTransition, onErase, working, hostTim
         </div>
       </details>
     </div>
-  </Card>;
+  </article>;
 }
 
 export function RequestStateBadge({ state }: { state: RequestState }) { return state === "submitted" ? null : <Badge>{state}</Badge>; }

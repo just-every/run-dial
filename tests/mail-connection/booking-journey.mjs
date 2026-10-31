@@ -49,7 +49,8 @@ export async function bookingStatusScreens(page, origin, screenshot, selectClien
     selectClient(width);
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.goto(origin + '/app/bookings?state=cancelled');
-    await expect(page.getByRole('heading', { name: 'Jordan Lee', exact: true })).toBeVisible();
+    await page.getByRole('link', { name: /Jordan Lee/ }).click();
+    await expect(page.getByRole('heading', { name: 'Jordan Lee', exact: true, level: 1 })).toBeVisible();
     await expect(page.getByText('Delivery needs attention', { exact: true })).toHaveCount(0);
     await expect(page.getByText(/mail send · permanent delivery failure/)).toHaveCount(0);
     assert.ok(!(await page.locator('main').innerText()).includes('outcome unknown'));

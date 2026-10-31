@@ -77,7 +77,7 @@ export function BookingChanges({ booking, onChanged, onCancel, renderActions }: 
     </section></FocusDialog> : null}</> : null}
     {notice ? <p role="status" className="text-sm text-[#755010]">{notice}</p> : null}
     {renderActions(
-      booking.state !== "cancelled" && futureStart ? <Button variant="secondary" type="button" disabled={!booking.eventTypeId} onClick={() => { setRequesting(false); setCancelling(false); setEditing(current => !current); }}>Reschedule booking</Button> : null,
+      booking.state !== "cancelled" && futureStart ? <Button type="button" disabled={!booking.eventTypeId} onClick={() => { setRequesting(false); setCancelling(false); setEditing(current => !current); }}>Reschedule booking</Button> : null,
       <>
         {booking.calendarConflicts.length ? <Button ref={conflictsOpener} type="button" variant="secondary" onClick={() => setConflictsOpen(true)}>Review calendar conflicts</Button> : null}
         {booking.state !== "cancelled" ? <>

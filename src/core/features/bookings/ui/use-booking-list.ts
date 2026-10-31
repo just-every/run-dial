@@ -17,7 +17,8 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
   const [loadedFor, setLoadedFor] = useState(initialBookings === undefined ? undefined : initialPath);
   const [listError, setListError] = useState("");
   const latestRequest = useRef(0);
-  const mounted = useRef(false);
+  // The query whose rows are on screen: reading it again refreshes in place, a new query shows Loading (U9).
+  const shownPath = useRef<string | undefined>(undefined);
   const load = useCallback(async (showLoading = true) => {
     const requestId = ++latestRequest.current;
     if (showLoading) setLoading(true);
@@ -58,11 +59,11 @@ export function useBookingList(filters: BookingFilters, page: number, moveToPage
   }, [filters, page, moveToPage, initialPath]);
 
   useEffect(() => {
-    const showLoading = mounted.current || !hasInitialBookings;
-    mounted.current = true;
+    const showLoading = shownPath.current === undefined ? !hasInitialBookings : shownPath.current !== initialPath;
+    shownPath.current = initialPath;
     if (showLoading) setLoading(true);
     const timer = window.setTimeout(() => { void load(showLoading); }, filters.query?.trim() ? 180 : 0);
     return () => { window.clearTimeout(timer); latestRequest.current += 1; };
-  }, [filters, load, hasInitialBookings]);
+  }, [filters, load, hasInitialBookings, initialPath]);
   return { bookings, totalCount, hostTimezone, loading: loading || loadedFor !== initialPath, listError, load };
 }

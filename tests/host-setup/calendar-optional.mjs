@@ -56,18 +56,20 @@ export async function calendarOptionalJourney(browser, owner, origin, eventId, w
     assert.equal(native.bookings.filter(booking => booking.calendar_required === 0).length, 2);
     assert.equal(native.delivery_outbox.filter(job => job.kind.startsWith("calendar_")).length, 0);
     await owner.goto(origin + "/app/bookings");
-    await expect(owner.getByRole("button", { name: /Schedule guest/ })).toBeVisible();
+    await expect(owner.getByRole("link", { name: /Schedule guest/ })).toBeVisible();
     const booked = bookings.find(booking => booking.inviteeName === "Schedule guest");
     assert.notEqual(booked.hostTimezone, booked.inviteeTimezone);
     const hostTime = new Intl.DateTimeFormat("en-US", { timeZone: booked.hostTimezone, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(new Date(booked.occurrence.startAt)).filter(part => part.type !== "literal" && !(part.type === "minute" && part.value === "00")).map(part => part.value);
-    const displayed = await owner.getByRole("button", { name: /Schedule guest/ }).innerText();
+    const displayed = await owner.getByRole("link", { name: /Schedule guest/ }).innerText();
     assert.ok(hostTime.every(value => displayed.includes(value)), "the row shows the booking in the host's local clock");
     await expect(owner.getByText(`Times in ${booked.hostTimezone}`, { exact: true })).toBeVisible();
-    await owner.getByRole("button", { name: /Schedule guest/ }).click();
+    await owner.getByRole("link", { name: /Schedule guest/ }).click();
     await expect(owner.getByText("No connected calendar", { exact: true })).toBeVisible();
     await scan("calendar-optional-host-booking");
+    // The booking has its own path: a reload opens the same booking (DW6).
     await owner.reload();
-    await expect(owner.getByRole("button", { name: /Schedule guest/ })).toBeVisible();
+    await expect(owner.getByRole("heading", { name: "Schedule guest", exact: true, level: 1 })).toBeVisible();
+    await expect(owner.getByText("No connected calendar", { exact: true })).toBeVisible();
     await guest.getByRole("link", { name: "Manage booking", exact: true }).click();
     await guest.locator("main[aria-busy=false]").waitFor();
     await guest.getByRole("button", { name: "Reschedule booking", exact: true }).click();

@@ -43,7 +43,7 @@ export async function confirmationSettingsJourney(browser, owner, origin, eventI
       // The native booking coordinator receives the mail before its calendar job.
       const delivered = await owner.request.post(origin + '/__fixtures/deliver', { data: { id: invitee.id } });
       assert.equal(delivered.status(), 200);
-      await page.goto(origin + `/app/bookings?query=${encodeURIComponent(name)}`);
+      await page.goto(origin + `/app/bookings/${booking.id}?query=${encodeURIComponent(name)}`);
       const row = page.locator(`[data-delivery-id="${invitee.id}"]`);
       await expect(row.getByText('Not sent · calendar invitation', { exact: true })).toBeVisible();
       await expect(row.getByText('Sent', { exact: true })).toHaveCount(0);

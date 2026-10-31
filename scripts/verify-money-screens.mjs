@@ -99,7 +99,8 @@ try {
   for(const width of widths)await capture(width,'payments-open-booking','/app/settings',async page=>{await page.locator('[data-operator-ready="true"]').waitFor();await page.locator('#payment-reconciliation').getByRole('link',{name:/Avery Deposit/u}).first().click();await page.getByRole('heading',{name:'Avery Deposit',exact:true}).waitFor();});
   for (const width of widths) await capture(width, "balance-paid", balance, async page => { await page.getByRole("heading", { name: "Balance paid." }).waitFor(); }, { session: false });
 
-  const record = "/app/bookings?query=Avery%20Deposit";
+  // Each booking opens at its own path (DW6); the search keeps its index to that invitee.
+  const record = `/app/bookings/${(await json(await owner.request.get(`${origin}/api/app/bookings?query=Avery%20Deposit`)))[0].id}?query=Avery%20Deposit`;
   const payments = async page => { await page.getByRole("heading", { name: "Avery Deposit", exact: true }).waitFor(); const section = page.getByRole("region", { name: "Payments" }); await section.getByText("Balance paid", { exact: false }).first().waitFor(); return section; };
   for (const width of widths) {
     await capture(width, "booking-record-refund-form", record, async page => { const section = await payments(page); await section.getByRole("button", { name: "Refund" }).click(); await section.getByRole("form", { name: "Refund" }).waitFor(); await section.scrollIntoViewIfNeeded(); });
@@ -138,7 +139,7 @@ try {
   const invoiceWeek = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   const invoiceSlot = (await json(await owner.request.get(`${origin}/api/public/book/dial-host/coaching/availability?week=${invoiceWeek}&durationMinutes=60`))).slots[0].startAt;
   const invoiced = await json(await owner.request.post(`${origin}/api/app/bookings`, { headers, data: { eventTypeId: event.id, startAt: invoiceSlot, inviteeTimezone: "America/New_York", name: "Ivy Invoice", email: "ivy.invoice@example.test", answers: {} } }), 201);
-  const invoiceRecord = "/app/bookings?query=Ivy%20Invoice";
+  const invoiceRecord = `/app/bookings/${invoiced.id}?query=Ivy%20Invoice`;
   const invoiceSection = async page => { await page.getByRole("heading", { name: "Ivy Invoice", exact: true }).waitFor(); const section = page.getByRole("region", { name: "Payments" }); await section.waitFor(); return section; };
   for (const width of widths) await capture(width, "booking-record-invoice-form", invoiceRecord, async page => { const section = await invoiceSection(page); await section.getByRole("button", { name: "Issue invoice" }).click(); await section.getByRole("form", { name: "Issue invoice" }).getByLabel("ZIP code").waitFor(); await section.scrollIntoViewIfNeeded(); });
   await json(await owner.request.post(`${origin}/api/app/bookings/${invoiced.id}/invoice`, { headers, data: { billingAddress: newYork } }));

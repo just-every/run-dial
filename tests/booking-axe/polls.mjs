@@ -10,7 +10,7 @@ export async function pollScreens(browser,owner,origin,scans,errors){
   const host=await browser.newContext({storageState,viewport:{width,height:900},timezoneId:'America/New_York'}),participants=[];
   try{
    const page=await host.newPage();trackPage(page,errors);const audit=auditor(page,width,scans);
-   await page.goto(origin+'/app/bookings?view=polls');await page.locator('[data-poll-composer-ready="true"]').waitFor();
+   await page.goto(origin+'/app/polls');await page.locator('[data-poll-composer-ready="true"]').waitFor();
    await page.getByLabel('Poll title',{exact:true}).fill('Project planning '+width);
    await page.getByLabel('Event type',{exact:true}).selectOption(event.id);
    await page.getByLabel('Week starting',{exact:true}).fill(week);await page.getByRole('button',{name:'Load live times',exact:true}).click();
@@ -23,7 +23,7 @@ export async function pollScreens(browser,owner,origin,scans,errors){
    await audit('poll-composer');
    const created=page.waitForResponse(r=>r.url().endsWith('/api/app/polls')&&r.request().method()==='POST');
    await page.getByRole('button',{name:'Create poll and invite participants',exact:true}).click();const result=await created;assert.equal(result.status(),201);const {id}=await result.json();
-   await page.locator('[data-poll-detail-ready="true"]').waitFor();await audit('poll-host-open');
+   await page.waitForURL(url=>url.pathname===`/app/polls/${id}`);await page.locator('[data-poll-detail-ready="true"]').waitFor();await audit('poll-host-open');
    const links=pollLinks(await rows(),id);assert.equal(links.length,4);
    const read=await data(`/api/app/polls/${id}`);const publicBase=`/api/public/book/dial-host/${event.slug}`;
    const availability=await data(`${publicBase}/availability?week=${week}`);for(const candidate of read.candidates)assert.ok(!availability.slots.some(s=>s.startAt===candidate.startAt),'held candidate is absent at the public door');

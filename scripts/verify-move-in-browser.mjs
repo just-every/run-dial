@@ -70,7 +70,8 @@ try{
  // The switch-over checklist runs publication's read-only connection checks; the import itself makes no provider call.
  assert.ok(status.fixture_activity.every(row=>['check','busy','sync'].includes(row.kind)),JSON.stringify(status.fixture_activity.map(row=>row.kind)));
  await page.goto(origin+'/app');await page.getByText('10 bookings',{exact:true}).waitFor();await page.getByLabel('Latest bookings').getByText('Imported',{exact:false}).first().waitFor();await audit('overview');
- await page.goto(origin+'/app/bookings');await page.getByText('Imported',{exact:true}).first().waitFor();await page.getByText('Discuss the example project',{exact:false}).first().waitFor();await assertNativeImportedHistory({context,page,origin,report,width,audit});
+ // The list shows rows; the imported booking opens at its own path from its row (DW6), and its record shows the import.
+ await page.goto(origin+'/app/bookings');await assertNativeImportedHistory({context,page,origin,report,width,audit});await page.getByText('Imported',{exact:true}).first().waitFor();await page.getByText('Discuss the example project',{exact:false}).first().waitFor();
  assert.equal((await context.request.post(origin+'/__fixtures/import-public')).status(),200);
  const slotResponse=await context.request.get(origin+'/api/public/book/solo/native-public/availability?week=2027-01-04&inviteeTimezone=America%2FNew_York');assert.equal(slotResponse.status(),200);const slots=await slotResponse.json();assert.equal(slots.state,'available');assert.ok(slots.slots.length>0);assert.ok(!slots.slots.some(s=>s.startAt==='2027-01-05T15:00:00.000Z'));
  await context.request.delete(origin+'/__fixtures/import-public');

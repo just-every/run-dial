@@ -72,8 +72,9 @@ export const navigation: ReadonlyArray<readonly [string, string, IconName]> = [
   ["Settings", "/app/settings", "gear"],
 ];
 
+/** Clients and meeting polls are Bookings' own records until the menu gives them entries of their own (D4). */
 export function currentNavigationPath(pathname: string) {
-  const path = pathname.replace(/\/+$/, "");
+  const path = pathname.replace(/\/+$/, "").replace(/^\/app\/(clients|polls)(?=\/|$)/, "/app/bookings");
   return navigation.map(([, to]) => to).filter(to => path === to || to !== "/app" && path.startsWith(`${to}/`)).sort((left, right) => right.length - left.length)[0];
 }
 

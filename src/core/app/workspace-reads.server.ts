@@ -18,7 +18,10 @@ import { embedRoutes } from "../features/embeds/routes";
 import { publicAbuseRoutes } from "../features/public-abuse/routes";
 import { moveInRoutes } from "../features/move-in/routes";
 import { clientRoutes } from "../features/clients/routes";
-import { clientPage, clientListPath, clientHistoryPath } from "../features/clients/queries";
+import { pollRoutes } from "../features/polls/routes";
+import { clientPage, clientListPath, clientHistoryPath, clientNamePath, clientAddress } from "../features/clients/queries";
+import { readRequestView, requestListPath } from "../features/availability-requests/request-view";
+import { recordIdPattern } from "./record-id";
 import { extensionRoutes } from "./mount.server";
 import { checkPlatformBindings } from "../platform/health";
 import { archiveStatus } from "../features/portability/admission";
@@ -37,7 +40,7 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
     .route("/", hostProfileRoutes).route("/", hostSetupRoutes).route("/", eventTypeRoutes)
     .route("/", bookingOperatorRoutes).route("/", availabilityRequestRoutes).route("/", deliveryRoutes)
     .route("/", calendarConnectionRoutes).route("/", operatorManagementRoutes).route("/", embedRoutes)
-    .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", clientRoutes).route("/", extensionRoutes);
+    .route("/", publicAbuseRoutes).route("/", moveInRoutes).route("/", clientRoutes).route("/", pollRoutes).route("/", extensionRoutes);
   app.onError(appError);
   // Work a handler leaves for after its response (a due provider health refresh) follows this request's deferred reads.
   const execution = { waitUntil: (task: Promise<unknown>) => { deferPrivateRead(task); }, passThroughOnException() {}, props: {} } as ExecutionContext;
@@ -59,18 +62,31 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
   const url = new URL(path, runtime.APP_URL);
   const routes = ["/api/app/profile", "/api/app/host-setup"];
   const name = url.pathname;
-  if (["/app", "/app/", "/app/event-types", "/app/availability", "/app/bookings", "/app/bookings/new", "/app/settings"].includes(name)) routes.push("/api/app/event-types");
+  // A record path reads its list and its record, so a deep link or a reload opens with both drawn (DW6).
+  const record = (list: string) => new RegExp(`^/app/${list}/(${recordIdPattern})$`).exec(name)?.[1];
+  const bookingRecord = record("bookings"), requestRecord = record("requests"), pollRecord = record("polls");
+  const clientRecord = /^\/app\/clients\/([^/]+)$/.exec(name)?.[1];
+  if (["/app", "/app/", "/app/event-types", "/app/availability", "/app/bookings", "/app/bookings/new", "/app/settings", "/app/polls"].includes(name) || bookingRecord || pollRecord) routes.push("/api/app/event-types");
   if (name === "/app" || name === "/app/") {
     routes.push("/api/app/bookings?order=created&limit=3", "/api/app/availability-requests");
     if (new URL(request.url).pathname.startsWith("/app")) routes.push("/api/app/platform-health");
   }
-  if (name === "/app/requests") routes.push("/api/app/availability-requests?state=submitted");
-  let bookingList: string | undefined;
-  if (name === "/app/bookings" && url.searchParams.get("view") !== "clients") {
-    bookingList = "/api/app/bookings?" + new URLSearchParams(bookingListQuery(readBookingFilters(url.search), readBookingPage(url.search)));
-    routes.push(bookingList);
+  if (name === "/app/requests" || requestRecord) routes.push(requestListPath(readRequestView(url.searchParams)));
+  if (requestRecord) routes.push(`/api/app/availability-requests/${requestRecord}`);
+  if (name === "/app/bookings" || bookingRecord) routes.push("/api/app/bookings?" + new URLSearchParams(bookingListQuery(readBookingFilters(url.search), readBookingPage(url.search))));
+  if (bookingRecord) {
+    routes.push(`/api/app/bookings/${bookingRecord}/deliveries`, `/api/app/custom-fields/booking/${bookingRecord}`);
+    const client = clientAddress(url.searchParams.get("client") ?? undefined);
+    if (client) routes.push(clientNamePath(client));
   }
   if (name === "/app/bookings/new" && url.searchParams.get("requestId")) routes.push("/api/app/availability-requests/" + encodeURIComponent(url.searchParams.get("requestId")!));
+  if (name === "/app/clients" || clientRecord) {
+    routes.push(clientListPath(clientPage(url.searchParams.get("clientPage"))));
+    const email = clientRecord ? clientAddress(decodedSegment(clientRecord)) : undefined;
+    if (email) routes.push(clientHistoryPath(email, clientPage(url.searchParams.get("historyPage"))));
+  }
+  if (name === "/app/polls" || pollRecord) routes.push("/api/app/polls");
+  if (pollRecord) routes.push(`/api/app/polls/${pollRecord}`);
   const eventId = /^\/app\/event-types\/([0-9A-Z]{26})$/.exec(name)?.[1];
   if (eventId) {
     routes.push(`/api/app/event-types/${eventId}`, `/api/app/custom-fields/eventType/${eventId}`);
@@ -81,24 +97,20 @@ export async function readWorkspaceReads(path: string, request: Request, bound: 
   }
   if (name === "/app/settings") routes.push(...["session", "calendar/connection", "calendar/setup", "mail/connection", "mail/preferences", "operators", "embed-settings", "blocked-addresses", "custom-fields", "move-in/jobs", "move-in/switch-over"].map(p => "/api/app/" + p));
   const work = routes.map(read);
-  if (name === "/app/bookings" && url.searchParams.get("view") === "clients") {
-    const list = clientListPath(clientPage(url.searchParams.get("clientPage")));
-    work.push(read(list).then(async () => {
-      const response = await reads[readKey(list)];
-      if (response.status !== 200) return;
-      const selected = url.searchParams.get("client") ?? (JSON.parse(response.body).clients[0] as { email: string } | undefined)?.email;
-      if (selected) await read(clientHistoryPath(selected, clientPage(url.searchParams.get("historyPage"))));
-    }));
-    const record = url.searchParams.get("record");
-    if (record) work.push(read(`/api/app/bookings/${encodeURIComponent(record)}`));
-  }
   if (name === "/app/settings" && canInspectArchive) work.push(archiveStatus(bound.DB).then(status => { reads["/api/portability/status"] = { status: 200, body: JSON.stringify(status), headers: { "cache-control": "no-store", "content-type": "application/json" } }; }));
-  if (bookingList) work.push(read(bookingList).then(async () => {
-    const response = await reads[readKey(bookingList!)];
-    if (response.status !== 200) return;
-    const first = JSON.parse(response.body)[0] as { id: string; history: Array<{ actorType: string }> } | undefined;
-    if (first) await Promise.all([read(`/api/app/bookings/${first.id}/deliveries`), read(`/api/app/custom-fields/booking/${first.id}`), ...(first.history.some(entry => entry.actorType === "operator") ? [read("/api/app/operators")] : [])]);
-  }));
+  if (bookingRecord) {
+    const endpoint = `/api/app/bookings/${bookingRecord}`;
+    work.push(read(endpoint).then(async () => {
+      const response = await reads[readKey(endpoint)];
+      if (response.status !== 200) return;
+      // The record's history names the operators who acted on it.
+      if ((JSON.parse(response.body) as { history: Array<{ actorType: string }> }).history.some(entry => entry.actorType === "operator")) await read("/api/app/operators");
+    }));
+  }
   await Promise.all(work);
   return reads;
+}
+
+function decodedSegment(segment: string) {
+  try { return decodeURIComponent(segment); } catch { return undefined; }
 }

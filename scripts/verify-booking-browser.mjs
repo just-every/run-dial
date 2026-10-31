@@ -58,7 +58,7 @@ try {
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await page.waitForURL(/\/app\/?$/);
   await page.getByRole("link", { name: "Bookings", exact: true }).click();
-  await page.getByRole("button").filter({ hasText: inviteeName }).click();
+  await page.getByRole("link").filter({ hasText: inviteeName }).click();
   await page.getByRole("heading", { name: inviteeName, exact: true }).waitFor();
   await page.screenshot({ path: evidencePath("booking-operator-desktop.png"), fullPage: true });
   await page.request.post(origin + "/__fixtures/control", { data: { kind: "cancel", failure: true } });

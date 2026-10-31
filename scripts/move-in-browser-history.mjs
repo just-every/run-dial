@@ -30,7 +30,7 @@ export async function assertNativeImportedHistory({ context, page, origin, repor
   assert.notEqual(booking.createdAt, creation.createdAt);
   assert.ok(creation.reason?.trim());
 
-  const row = page.getByRole('button')
+  const row = page.getByRole('link')
     .filter({ has: page.getByText(listedBooking.inviteeName, { exact: true }) })
     .filter({ hasText: listedBooking.eventTitle });
   await row.waitFor();

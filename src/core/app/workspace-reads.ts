@@ -37,6 +37,12 @@ export function useWorkspaceRead<T>(path: string): T | undefined {
   return useMemo(() => response && !(response instanceof Promise) && response.status < 400 ? JSON.parse(response.body) as T : undefined, [response]);
 }
 
+/** The same read with its status, for a record that may not exist: a 404 is an answer, not a failure. */
+export function useWorkspaceResponse<T>(path: string | undefined): { status: number; data?: T } | undefined {
+  const response = useContext(WorkspaceReadsContext)[path ? readKey(path) : ""];
+  return useMemo(() => response && !(response instanceof Promise) ? { status: response.status, data: response.status < 400 ? JSON.parse(response.body) as T : undefined } : undefined, [response]);
+}
+
 export function useWorkspaceHeader(path: string, name: string) {
   const response = useContext(WorkspaceReadsContext)[readKey(path)];
   return response && !(response instanceof Promise) ? response.headers[name.toLowerCase()] : undefined;

@@ -47,7 +47,10 @@ export async function bookingRecordDeliveryJourney(browser, owner, origin, booki
     try {
       const page = await context.newPage(); trackPage(page, errors);
       await page.goto(origin + "/app/bookings?query=Acceptance%20record");
-      await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).waitFor();
+      // The list shows its rows; the booking's row is a link to its own path, which keeps the list's search (DW6).
+      await page.getByRole("link", { name: /Acceptance record invitee/ }).click();
+      await page.waitForURL(url => url.pathname === `/app/bookings/${booking.id}` && url.searchParams.get("query") === "Acceptance record");
+      await page.getByRole("heading", { name: "Acceptance record invitee", exact: true, level: 1 }).waitFor();
       await page.getByText("Saved value: DISCOVERY-42", { exact: true }).waitFor();
       for (const value of ["Saved value: High", "Saved value: Yes", "Saved value: A private note for follow-up.\nReview the proposed scope before our next conversation."]) assert.ok(await page.getByText(value, { exact: true }).isVisible(), "OPER-004 shows every stored custom-field value");
       assert.ok(await page.getByRole("heading", { name: booking.inviteeName, exact: true }).locator("..").getByText(booking.eventTitle, { exact: true }).isVisible());
@@ -102,6 +105,61 @@ export async function bookingRecordDeliveryJourney(browser, owner, origin, booki
       assert.ok(await row(reminder.id).getByText("Queued", { exact: true }).isVisible(), "OPER-004 keeps the state of each email separate");
       await audit("sent");
       await page.reload(); await row(retry.id).getByText("Sent", { exact: true }).waitFor();
+    } finally { await context.close(); }
+  }
+}
+
+/** REQUEST-003 in the browser: a request opens at its own path from its list, its View in the address, and acts from there (DW6). */
+export async function requestRecordJourney(browser, owner, origin, requestId, scans, errors) {
+  const storageState = await owner.storageState();
+  const read = async () => { const response = await owner.request.get(`${origin}/api/app/availability-requests/${requestId}`); assert.equal(response.status(), 200); return response.json(); };
+  const request = await read();
+  const record = `/app/requests/${requestId}`, stateUrl = `/api/app/availability-requests/${requestId}/state`;
+  for (const width of [1440, 390]) {
+    const context = await browser.newContext({ storageState, viewport: { width, height: width === 1440 ? 1024 : 844 } });
+    try {
+      const page = await context.newPage(); trackPage(page, errors);
+      const list = "/app/requests?state=all";
+      const open = async () => {
+        await page.getByRole("link", { name: new RegExp(request.inviteeName) }).click();
+        await page.waitForURL(url => url.pathname === record && url.searchParams.get("state") === "all");
+        await page.getByRole("heading", { name: request.inviteeName, exact: true, level: 1 }).waitFor();
+      };
+      // Back, by the record's link or the browser's, returns to the list with the same View, focused on the row that was opened.
+      const backAt = async () => {
+        await page.waitForURL(url => url.pathname === "/app/requests" && url.searchParams.get("state") === "all");
+        await page.waitForFunction(path => globalThis.document.activeElement?.getAttribute("href")?.startsWith(path), record);
+      };
+      await page.goto(origin + list);
+      await open();
+      await page.getByText("Saved value: DISCOVERY-42", { exact: true }).waitFor();
+      await auditor(page, width, scans)("REQUEST-003-record");
+      if (width === 1440) {
+        const create = page.getByRole("link", { name: "Create agreed booking", exact: true });
+        assert.equal(await create.getAttribute("href"), `/app/bookings/new?requestId=${requestId}`);
+        await page.getByRole("link", { name: "‹ Requests", exact: true }).filter({ visible: true }).click();
+        await backAt();
+        await open();
+        await create.click();
+        await page.waitForURL(url => url.pathname === "/app/bookings/new" && url.searchParams.get("requestId") === requestId);
+        await page.getByRole("button", { name: "Create agreed booking", exact: true }).waitFor();
+        await page.goBack();
+        await page.getByRole("heading", { name: request.inviteeName, exact: true, level: 1 }).waitFor();
+        let posts = 0;
+        page.on("request", sent => { if (sent.method() === "POST" && new URL(sent.url()).pathname === stateUrl) posts++; });
+        await page.locator("details.dial-more > summary").click();
+        const marked = page.waitForResponse(response => new URL(response.url()).pathname === stateUrl && response.request().method() === "POST");
+        await page.getByRole("button", { name: "Mark handled", exact: true }).click();
+        assert.equal((await marked).status(), 200);
+        await page.getByRole("status").filter({ hasText: "Request marked handled" }).waitFor();
+        assert.equal(posts, 1, "Mark handled sends one request");
+        assert.equal((await read()).state, "handled");
+      } else {
+        await page.getByText("This request has been handled.", { exact: true }).waitFor();
+        assert.equal(await page.locator(`a[href^="${record}"]`).filter({ visible: true }).count(), 0, "the request is its own page: no list row is in view");
+        await page.goBack();
+        await backAt();
+      }
     } finally { await context.close(); }
   }
 }

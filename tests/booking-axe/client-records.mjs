@@ -28,7 +28,10 @@ export async function clientRecordsJourney(browser, owner, origin, fixture, scan
       await page.goto(origin+'/app/bookings');
       await page.locator('[data-operator-ready="true"]').waitFor();
       await page.getByRole('link',{name:'Clients',exact:true}).click();
-      await page.getByRole('button',{name:new RegExp(email.replaceAll('.','\\.'))}).click();
+      await page.waitForURL(url=>url.pathname==='/app/clients');
+      // A client opens at its own path from its row's link (DW6).
+      await page.getByRole('link',{name:new RegExp(email.replaceAll('.','\\.'))}).click();
+      await page.waitForURL(url=>url.pathname===`/app/clients/${encodeURIComponent(email)}`);
       await page.locator('[data-clients-ready="true"]').waitFor();
       await page.locator('[data-client-booking]').first().waitFor();
       assert.equal(await page.locator('[data-client-booking]').count(),3);
@@ -46,16 +49,20 @@ export async function clientRecordsJourney(browser, owner, origin, fixture, scan
       assert.equal((await savedField).status(),201);
       await page.getByText(`CLIENT-${width}`,{exact:true}).waitFor();
       await audit('clients-history');
+      // A client's booking opens at the booking's one path, beside that client's bookings, and its back link names the client.
       await page.locator(`[data-client-booking="${bookings[0].id}"]`).getByRole('link',{name:'Open booking record',exact:true}).click();
-      const record=page.getByRole('region',{name:'Selected client booking'});
-      await record.getByRole('heading',{name:'Alex Rivera',exact:true}).waitFor();
-      assert.ok(new URL(page.url()).searchParams.get('record')===bookings[0].id);
+      await page.waitForURL(url=>url.pathname===`/app/bookings/${bookings[0].id}`);
+      await page.getByRole('heading',{name:'Alex Rivera',exact:true,level:1}).waitFor();
+      assert.equal(new URL(page.url()).searchParams.get('record'),null);
       await audit('clients-booking-record');
-      await page.getByRole('button',{name:'Close booking record',exact:true}).click();
+      await page.getByRole('link',{name:'‹ Alex Rivera',exact:true}).filter({visible:true}).click();
+      await page.waitForURL(url=>url.pathname===`/app/clients/${encodeURIComponent(email)}`);
+      await page.locator('[data-clients-ready="true"]').waitFor();
+      await page.getByRole('button',{name:'Add note, field or merge',exact:true}).click();
       await page.getByLabel('Merge this client into',{exact:true}).fill(target);
       page.once('dialog',async dialog=>{assert.equal(dialog.type(),'confirm');await dialog.accept();});
       await page.getByRole('button',{name:'Merge clients',exact:true}).click();
-      await page.waitForURL(url=>new URL(url).searchParams.get('client')===target);
+      await page.waitForURL(url=>url.pathname===`/app/clients/${encodeURIComponent(target)}`);
       await page.locator('[data-clients-ready="true"]').waitFor();
       assert.equal(await page.locator('[data-client-booking]').count(),4);
       await page.getByText(`Prepare the proposal together at ${width}.`,{exact:true}).waitFor();

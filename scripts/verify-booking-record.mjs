@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { confirmationSettingsJourney } from "../tests/booking-axe/confirmation-settings.mjs";
 import { chromium } from "@playwright/test";
 import { completeEmptyWorkspace } from "../tests/booking-axe/first-run-fixture.mjs";
-import { seedAcceptanceRecords, bookingRecordDeliveryJourney } from "../tests/booking-axe/acceptance-records.mjs";
+import { seedAcceptanceRecords, bookingRecordDeliveryJourney, requestRecordJourney } from "../tests/booking-axe/acceptance-records.mjs";
 import { clientRecordsJourney } from "../tests/booking-axe/client-records.mjs";
 
 const origin = process.env.DIAL_REVIEW_ORIGIN ?? "http://127.0.0.1:15752";
@@ -19,8 +19,9 @@ try {
   const response = await owner.request.post(origin + "/__fixtures/setup", { data: {} });
   assert.equal(response.status(), 200);
   const fixture = await response.json();
-  const { booking } = await seedAcceptanceRecords(owner, origin, fixture);
+  const { booking, requestId } = await seedAcceptanceRecords(owner, origin, fixture);
   await bookingRecordDeliveryJourney(browser, owner, origin, booking, scans, errors);
+  await requestRecordJourney(browser, owner, origin, requestId, scans, errors);
   await clientRecordsJourney(browser, owner, origin, fixture, scans, errors);
   await pollScreens(browser, owner, origin, scans, errors);
   await confirmationSettingsJourney(browser, owner, origin, fixture.eventId, scans, errors);

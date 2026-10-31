@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDocumentInstant } from "../../../app/document-data";
 import { ExtensionSlot } from "../../../app/extensions";
-import { Badge, Button, Card } from "../../../app/ui/primitives";
+import { Badge, Button, Input } from "../../../app/ui/primitives";
 import type { BookingRecord } from "../types";
 import { BookingChanges } from "./booking-changes";
 import { useBookingDeliveries } from "./delivery-actions";
@@ -11,10 +11,12 @@ import { calendarStatus, meetingStatus } from "../../../shared/booking-status";
 import { RescheduleRequestSummary } from "./reschedule-request-summary";
 import { BookingMoney } from "./booking-money";
 
-export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onErased, showTimezone = true }: { booking: BookingRecord; onChanged(notice?: string): Promise<void>; onCancel(id: string): Promise<void>; onAttendance(id: string, status: "attended" | "no_show"): Promise<void>; onErased(notice: string, id: string): void; showTimezone?: boolean }) {
+/** The booking record (OPER-004) as its own page: on the white column with no card, the invitee's name its one title (DW6). */
+export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onErased }: { booking: BookingRecord; onChanged(notice?: string): Promise<void>; onCancel(id: string): Promise<void>; onAttendance(id: string, status: "attended" | "no_show", note: string): Promise<void>; onErased(notice: string, id: string): void }) {
   const delivery = useBookingDeliveries({ bookingId: booking.id, onErased });
   const instant = useDocumentInstant();
   const [now, setNow] = useState(instant);
+  const [note, setNote] = useState("");
   useEffect(() => {
     const update = () => setNow(new Date().toISOString());
     update(); const timer = window.setInterval(update, 60_000);
@@ -22,10 +24,12 @@ export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onEr
   }, []);
   const ended = Date.parse(booking.occurrence.endAt) <= Date.parse(now);
   const canAttend = booking.state !== "cancelled" && !booking.attendance;
-  const attended = <Button variant="secondary" type="button" onClick={() => void onAttendance(booking.id, "attended")}>Mark attended</Button>;
-  return <Card className="min-w-0 p-5 sm:p-6" data-booking-detail={booking.id}>
-    <div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0 break-words"><p className="text-xs font-bold uppercase tracking-[.12em] text-muted">{booking.eventTitle}</p><h2 className="mt-2 text-[28px] font-extrabold leading-[1.1] tracking-[-.02em]">{booking.inviteeName}</h2><p className="mt-2 text-[15px] text-soft">{booking.inviteeEmail}</p></div><div className="flex flex-wrap gap-2">{booking.imported ? <Badge>Imported</Badge> : null}<BookingBadge state={booking.state} /></div></div>
-    {showTimezone ? <p className="mt-4 text-sm text-muted">Times in {booking.hostTimezone}</p> : null}
+  // The attendance note (BOOK-011) is optional and goes in the same request as the mark; it never asks through a browser prompt.
+  const mark = (status: "attended" | "no_show") => void onAttendance(booking.id, status, note.trim());
+  // An ended booking's next step is its mark, the record's one ink pill; before it ends the mark waits in More.
+  const attended = <Button variant={ended ? "primary" : "secondary"} type="button" onClick={() => mark("attended")}>Mark attended</Button>;
+  return <article className="min-w-0" data-booking-detail={booking.id}>
+    <div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0 break-words"><p className="text-xs font-bold uppercase tracking-[.12em] text-muted">{booking.eventTitle}</p><h1 className="mt-2 text-[34px] font-extrabold leading-[1.05] tracking-[-.02em] sm:text-[40px]">{booking.inviteeName}</h1><p className="mt-2 text-[15px] text-soft">{booking.inviteeEmail}</p><p className="mt-1 text-sm text-muted">Times in {booking.hostTimezone}</p></div><div className="flex flex-wrap gap-2">{booking.imported ? <Badge>Imported</Badge> : null}<BookingBadge state={booking.state} /></div></div>
     <dl className="mt-6 grid gap-x-6 gap-y-4 border-y border-line-soft py-5 sm:grid-cols-2">
       <Fact label={booking.inviteeTimezone === booking.hostTimezone ? "Time" : "Host time"} value={timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.hostTimezone)} />
       {booking.inviteeTimezone !== booking.hostTimezone ? <Fact label="Invitee time" value={`${timeRange(booking.occurrence.startAt, booking.occurrence.endAt, booking.inviteeTimezone)} (${booking.inviteeTimezone})`} /> : null}
@@ -41,13 +45,16 @@ export function BookingDetail({ booking, onChanged, onCancel, onAttendance, onEr
       <div className="flex flex-wrap gap-3">{primary}{canAttend && ended ? attended : null}</div>
       <details className="dial-more"><summary>More</summary><div className="flex flex-wrap gap-3 pt-3">
         {advanced}
-        {canAttend ? <>{!ended ? attended : null}<Button variant="secondary" type="button" onClick={() => void onAttendance(booking.id, "no_show")}>Mark no-show</Button></> : null}
+        {canAttend ? <div className="flex basis-full flex-wrap items-end gap-3">
+          <label className="grid w-full min-w-0 gap-2 text-sm font-[650] text-ink sm:w-64">Note<Input value={note} maxLength={4000} onChange={event => setNote(event.target.value)} /></label>
+          {!ended ? attended : null}<Button variant="secondary" type="button" onClick={() => mark("no_show")}>Mark no-show</Button>
+        </div> : null}
         {delivery.actions}
       </div></details>
     </>} />
     {delivery.content}
     <BookingHistory booking={booking} />
-  </Card>;
+  </article>;
 }
 export function BookingBadge({ state }: { state: BookingRecord["state"] }) { return state === "confirmed" ? null : <Badge tone={state === "cancelled" ? "danger" : state === "rescheduled" ? "warning" : "success"}>{state}</Badge>; }
 function Fact({ label, value }: { label: string; value: string }) { return <div className="min-w-0"><dt className="text-[13px] font-[650] text-muted">{label}</dt><dd className="mt-1 break-words text-[15px] text-ink">{value}</dd></div>; }

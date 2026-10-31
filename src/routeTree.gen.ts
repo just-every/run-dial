@@ -17,7 +17,9 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAvailabilityRouteImport } from './routes/app.availability'
 import { Route as AppBookingsRouteImport } from './routes/app.bookings'
+import { Route as AppClientsRouteImport } from './routes/app.clients'
 import { Route as AppEventTypesRouteImport } from './routes/app.event-types'
+import { Route as AppPollsRouteImport } from './routes/app.polls'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
@@ -32,8 +34,10 @@ import { Route as SetupProfileRouteImport } from './routes/setup.profile'
 import { Route as SetupSettingsRouteImport } from './routes/setup.settings'
 import { Route as AppBookingsIdRouteImport } from './routes/app.bookings.$id'
 import { Route as AppBookingsNewRouteImport } from './routes/app.bookings_.new'
+import { Route as AppClientsEmailRouteImport } from './routes/app.clients.$email'
 import { Route as AppEventTypesIdRouteImport } from './routes/app.event-types_.$id'
 import { Route as AppEventTypesNewRouteImport } from './routes/app.event-types_.new'
+import { Route as AppPollsIdRouteImport } from './routes/app.polls.$id'
 import { Route as AppRequestsIdRouteImport } from './routes/app.requests.$id'
 import { Route as AppSettingsHoursRouteImport } from './routes/app.settings_.hours'
 import { Route as BookHandleSlugRouteImport } from './routes/book.$handle_.$slug'
@@ -98,9 +102,19 @@ const AppBookingsRoute = AppBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppClientsRoute = AppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEventTypesRoute = AppEventTypesRouteImport.update({
   id: '/event-types',
   path: '/event-types',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPollsRoute = AppPollsRouteImport.update({
+  id: '/polls',
+  path: '/polls',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -173,6 +187,11 @@ const AppBookingsNewRoute = AppBookingsNewRouteImport.update({
   path: '/bookings/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppClientsEmailRoute = AppClientsEmailRouteImport.update({
+  id: '/$email',
+  path: '/$email',
+  getParentRoute: () => AppClientsRoute,
+} as any)
 const AppEventTypesIdRoute = AppEventTypesIdRouteImport.update({
   id: '/event-types_/$id',
   path: '/event-types/$id',
@@ -182,6 +201,11 @@ const AppEventTypesNewRoute = AppEventTypesNewRouteImport.update({
   id: '/event-types_/new',
   path: '/event-types/new',
   getParentRoute: () => AppRoute,
+} as any)
+const AppPollsIdRoute = AppPollsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppPollsRoute,
 } as any)
 const AppRequestsIdRoute = AppRequestsIdRouteImport.update({
   id: '/$id',
@@ -311,7 +335,9 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
   '/app/bookings': typeof AppBookingsRouteWithChildren
+  '/app/clients': typeof AppClientsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
+  '/app/polls': typeof AppPollsRouteWithChildren
   '/app/profile': typeof AppProfileRoute
   '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
@@ -327,8 +353,10 @@ export interface FileRoutesByFullPath {
   '/setup/': typeof SetupIndexRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
+  '/app/clients/$email': typeof AppClientsEmailRoute
   '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types/new': typeof AppEventTypesNewRoute
+  '/app/polls/$id': typeof AppPollsIdRoute
   '/app/requests/$id': typeof AppRequestsIdRoute
   '/app/settings/hours': typeof AppSettingsHoursRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
@@ -359,7 +387,9 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
   '/app/bookings': typeof AppBookingsRouteWithChildren
+  '/app/clients': typeof AppClientsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
+  '/app/polls': typeof AppPollsRouteWithChildren
   '/app/profile': typeof AppProfileRoute
   '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
@@ -375,8 +405,10 @@ export interface FileRoutesByTo {
   '/setup': typeof SetupIndexRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings/new': typeof AppBookingsNewRoute
+  '/app/clients/$email': typeof AppClientsEmailRoute
   '/app/event-types/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types/new': typeof AppEventTypesNewRoute
+  '/app/polls/$id': typeof AppPollsIdRoute
   '/app/requests/$id': typeof AppRequestsIdRoute
   '/app/settings/hours': typeof AppSettingsHoursRoute
   '/book/$handle/$slug': typeof BookHandleSlugRoute
@@ -410,7 +442,9 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/app/availability': typeof AppAvailabilityRoute
   '/app/bookings': typeof AppBookingsRouteWithChildren
+  '/app/clients': typeof AppClientsRouteWithChildren
   '/app/event-types': typeof AppEventTypesRoute
+  '/app/polls': typeof AppPollsRouteWithChildren
   '/app/profile': typeof AppProfileRoute
   '/app/requests': typeof AppRequestsRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
@@ -426,8 +460,10 @@ export interface FileRoutesById {
   '/setup/': typeof SetupIndexRoute
   '/app/bookings/$id': typeof AppBookingsIdRoute
   '/app/bookings_/new': typeof AppBookingsNewRoute
+  '/app/clients/$email': typeof AppClientsEmailRoute
   '/app/event-types_/$id': typeof AppEventTypesIdRouteWithChildren
   '/app/event-types_/new': typeof AppEventTypesNewRoute
+  '/app/polls/$id': typeof AppPollsIdRoute
   '/app/requests/$id': typeof AppRequestsIdRoute
   '/app/settings_/hours': typeof AppSettingsHoursRoute
   '/book/$handle_/$slug': typeof BookHandleSlugRoute
@@ -462,7 +498,9 @@ export interface FileRouteTypes {
     | '/signin'
     | '/app/availability'
     | '/app/bookings'
+    | '/app/clients'
     | '/app/event-types'
+    | '/app/polls'
     | '/app/profile'
     | '/app/requests'
     | '/app/settings'
@@ -478,8 +516,10 @@ export interface FileRouteTypes {
     | '/setup/'
     | '/app/bookings/$id'
     | '/app/bookings/new'
+    | '/app/clients/$email'
     | '/app/event-types/$id'
     | '/app/event-types/new'
+    | '/app/polls/$id'
     | '/app/requests/$id'
     | '/app/settings/hours'
     | '/book/$handle/$slug'
@@ -510,7 +550,9 @@ export interface FileRouteTypes {
     | '/signin'
     | '/app/availability'
     | '/app/bookings'
+    | '/app/clients'
     | '/app/event-types'
+    | '/app/polls'
     | '/app/profile'
     | '/app/requests'
     | '/app/settings'
@@ -526,8 +568,10 @@ export interface FileRouteTypes {
     | '/setup'
     | '/app/bookings/$id'
     | '/app/bookings/new'
+    | '/app/clients/$email'
     | '/app/event-types/$id'
     | '/app/event-types/new'
+    | '/app/polls/$id'
     | '/app/requests/$id'
     | '/app/settings/hours'
     | '/book/$handle/$slug'
@@ -560,7 +604,9 @@ export interface FileRouteTypes {
     | '/signin'
     | '/app/availability'
     | '/app/bookings'
+    | '/app/clients'
     | '/app/event-types'
+    | '/app/polls'
     | '/app/profile'
     | '/app/requests'
     | '/app/settings'
@@ -576,8 +622,10 @@ export interface FileRouteTypes {
     | '/setup/'
     | '/app/bookings/$id'
     | '/app/bookings_/new'
+    | '/app/clients/$email'
     | '/app/event-types_/$id'
     | '/app/event-types_/new'
+    | '/app/polls/$id'
     | '/app/requests/$id'
     | '/app/settings_/hours'
     | '/book/$handle_/$slug'
@@ -686,11 +734,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBookingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/clients': {
+      id: '/app/clients'
+      path: '/clients'
+      fullPath: '/app/clients'
+      preLoaderRoute: typeof AppClientsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/event-types': {
       id: '/app/event-types'
       path: '/event-types'
       fullPath: '/app/event-types'
       preLoaderRoute: typeof AppEventTypesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/polls': {
+      id: '/app/polls'
+      path: '/polls'
+      fullPath: '/app/polls'
+      preLoaderRoute: typeof AppPollsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/profile': {
@@ -791,6 +853,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBookingsNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/clients/$email': {
+      id: '/app/clients/$email'
+      path: '/$email'
+      fullPath: '/app/clients/$email'
+      preLoaderRoute: typeof AppClientsEmailRouteImport
+      parentRoute: typeof AppClientsRoute
+    }
     '/app/event-types_/$id': {
       id: '/app/event-types_/$id'
       path: '/event-types/$id'
@@ -804,6 +873,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/event-types/new'
       preLoaderRoute: typeof AppEventTypesNewRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/polls/$id': {
+      id: '/app/polls/$id'
+      path: '/$id'
+      fullPath: '/app/polls/$id'
+      preLoaderRoute: typeof AppPollsIdRouteImport
+      parentRoute: typeof AppPollsRoute
     }
     '/app/requests/$id': {
       id: '/app/requests/$id'
@@ -981,6 +1057,30 @@ const AppBookingsRouteWithChildren = AppBookingsRoute._addFileChildren(
   AppBookingsRouteChildren,
 )
 
+interface AppClientsRouteChildren {
+  AppClientsEmailRoute: typeof AppClientsEmailRoute
+}
+
+const AppClientsRouteChildren: AppClientsRouteChildren = {
+  AppClientsEmailRoute: AppClientsEmailRoute,
+}
+
+const AppClientsRouteWithChildren = AppClientsRoute._addFileChildren(
+  AppClientsRouteChildren,
+)
+
+interface AppPollsRouteChildren {
+  AppPollsIdRoute: typeof AppPollsIdRoute
+}
+
+const AppPollsRouteChildren: AppPollsRouteChildren = {
+  AppPollsIdRoute: AppPollsIdRoute,
+}
+
+const AppPollsRouteWithChildren = AppPollsRoute._addFileChildren(
+  AppPollsRouteChildren,
+)
+
 interface AppRequestsRouteChildren {
   AppRequestsIdRoute: typeof AppRequestsIdRoute
 }
@@ -1010,7 +1110,9 @@ const AppEventTypesIdRouteWithChildren = AppEventTypesIdRoute._addFileChildren(
 interface AppRouteChildren {
   AppAvailabilityRoute: typeof AppAvailabilityRoute
   AppBookingsRoute: typeof AppBookingsRouteWithChildren
+  AppClientsRoute: typeof AppClientsRouteWithChildren
   AppEventTypesRoute: typeof AppEventTypesRoute
+  AppPollsRoute: typeof AppPollsRouteWithChildren
   AppProfileRoute: typeof AppProfileRoute
   AppRequestsRoute: typeof AppRequestsRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
@@ -1026,7 +1128,9 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAvailabilityRoute: AppAvailabilityRoute,
   AppBookingsRoute: AppBookingsRouteWithChildren,
+  AppClientsRoute: AppClientsRouteWithChildren,
   AppEventTypesRoute: AppEventTypesRoute,
+  AppPollsRoute: AppPollsRouteWithChildren,
   AppProfileRoute: AppProfileRoute,
   AppRequestsRoute: AppRequestsRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,

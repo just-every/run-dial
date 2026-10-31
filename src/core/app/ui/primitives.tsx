@@ -90,12 +90,13 @@ export function IconTile({ icon }: { icon: IconName }) {
 /**
  * A single choice shown as pills in a wash track: a radio group named by its visible label. Changing it calls `onChange` with
  * the option's value, as the select it replaces did. The label sits above the track on phones (always, when `stacked`), and on
- * phones the options form a two-column grid of equal pills, so no option is cut off or scrolled out of view.
+ * phones the options form a two-column grid of equal pills, so no option is cut off or scrolled out of view. `columns` keeps that
+ * grid at every width, for a narrow column such as a record page's index.
  */
-export function Segmented<T extends string>({ label, name, value, options, onChange, stacked = false }: { label: string; name: string; value: T; options: ReadonlyArray<readonly [NoInfer<T>, string]>; onChange(value: NoInfer<T>): void; stacked?: boolean }) {
+export function Segmented<T extends string>({ label, name, value, options, onChange, stacked = false, columns = false }: { label: string; name: string; value: T; options: ReadonlyArray<readonly [NoInfer<T>, string]>; onChange(value: NoInfer<T>): void; stacked?: boolean; columns?: boolean }) {
   return <div className={`grid min-w-0 gap-2 ${stacked ? "" : "sm:flex sm:items-center sm:gap-3"}`}>
     <span id={`${name}-label`} className="shrink-0 text-sm font-[650] text-ink">{label}</span>
-    <div role="radiogroup" aria-labelledby={`${name}-label`} className="grid w-full min-w-0 grid-cols-2 gap-[3px] rounded-[20px] bg-wash p-[3px] sm:flex sm:w-fit sm:gap-0 sm:rounded-full">
+    <div role="radiogroup" aria-labelledby={`${name}-label`} className={`grid w-full min-w-0 grid-cols-2 gap-[3px] rounded-[20px] bg-wash p-[3px] ${columns ? "" : "sm:flex sm:w-fit sm:gap-0 sm:rounded-full"}`}>
       {options.map(([option, text]) => <label key={option} className="relative min-w-0 cursor-pointer">
         <input type="radio" name={name} value={option} checked={value === option} onChange={() => onChange(option)} className="peer absolute inset-0 m-0 cursor-pointer opacity-0" />
         <span className="flex min-h-11 items-center justify-center whitespace-nowrap sm:min-h-9 rounded-full px-3 text-sm font-semibold text-soft peer-checked:bg-gold-wash peer-checked:text-ink peer-checked:shadow-lift peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink sm:px-4">{text}</span>

@@ -1,3 +1,5 @@
 /** Browser-safe client record and remembered-details controls. */
-export { ClientsWorkspace } from "./ui/clients-workspace";
+export { ClientsPage } from "./ui/clients-page";
 export { RememberDetails } from "./ui/remember-details";
+export { clientAddress, clientNamePath } from "./queries";
+export type { ClientHistory } from "./types";

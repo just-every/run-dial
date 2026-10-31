@@ -32,7 +32,8 @@ export async function schedulerJourney({page,context,origin,audit}){
   await audit(calendar?'calendar-applied':'csv-applied');
   const menu=page.getByRole('button',{name:'Menu',exact:true});if(await menu.isVisible())await menu.click();
   await page.getByRole('navigation',{name:'Operator navigation'}).getByRole('link',{name:'Bookings',exact:true}).click();
-  await page.getByText('Ada Example',{exact:true}).first().waitFor();await page.getByText('Imported',{exact:true}).first().waitFor();await audit(calendar?'calendar-booking':'csv-booking');
+  // The list shows rows; the imported booking opens at its own path from its row (DW6), and its record says it was imported.
+  await page.getByText('Ada Example',{exact:true}).first().waitFor();await page.getByRole('link',{name:/Ada Example/}).first().click();await page.getByRole('heading',{name:'Ada Example',exact:true,level:1}).waitFor();await page.getByText('Imported',{exact:true}).first().waitFor();await audit(calendar?'calendar-booking':'csv-booking');
   const status=await(await context.request.get(origin+'/__fixtures/import-status')).json();assert.equal(status.delivery_outbox.length,0);assert.equal(status.fixture_mail.length,0);assert.equal(status.fixture_events.length,0);
   await page.goto(origin+'/app/settings#move-in');
   await card.getByRole('button',{name:/completed ·/u}).first().click();

@@ -26,6 +26,9 @@ export async function operatorKeyboardJourney(browser, origin, storageState, che
       await page.goto(origin + "/app");
       await keys.navigate("Bookings");
       await bookingFilterKeyboardJourney(page, origin, width, keys, checks, booking);
+      // Enter on the booking's row opens it at its own path, keeping the list's search (DW6).
+      await keys.activate(page.getByRole("link", { name: new RegExp(booking.inviteeName) }), "Open booking record");
+      await page.waitForURL(url => url.pathname === `/app/bookings/${booking.id}` && url.searchParams.get("query") === booking.inviteeEmail);
       const attendance = button(page, "Mark attended"); await attendance.waitFor();
       await bookingKeyboardJourney(page, origin, width, keys, checks, booking);
       await eventKeyboardJourney(page, origin, width, keys, checks, errors);

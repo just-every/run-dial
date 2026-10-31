@@ -19,7 +19,7 @@ export function DifferencesList({differences,zone,applied,busy,onDecide}:{differ
    {applied&&!item.resolved?<div className="mt-2 flex flex-wrap gap-2">
     {item.kind==='cancelled'?<Button type="button" disabled={busy} onClick={()=>onDecide(`/api/app/bookings/${item.bookingId}/release-imported`)}>Release this time</Button>:null}
     <Button type="button" variant="secondary" disabled={busy} onClick={()=>onDecide(`/api/app/move-in/differences/${item.bookingId}/keep`)}>{keepLabel[item.kind]}</Button>
-    <a className="inline-flex min-h-11 items-center text-sm font-semibold underline" href={`/app/bookings?query=${encodeURIComponent(item.name)}`}>{item.kind==='cancelled'?'Cancel with an email in Bookings':item.kind==='moved'?'Reschedule in Bookings':'Open in Bookings'}</a>
+    <a className="inline-flex min-h-11 items-center text-sm font-semibold underline" href={`/app/bookings/${encodeURIComponent(item.bookingId)}?query=${encodeURIComponent(item.name)}`}>{item.kind==='cancelled'?'Cancel with an email in Bookings':item.kind==='moved'?'Reschedule in Bookings':'Open in Bookings'}</a>
    </div>:null}
    {applied&&!item.resolved&&item.kind==='cancelled'?<p className="mt-1 text-xs">Release frees the time and records you and the reason in history without emailing the invitee, because Calendly already told them. Cancelling in Bookings sends the invitee one ordinary cancellation email.</p>:null}
   </li>)}</ul>

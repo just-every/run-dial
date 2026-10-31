@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api, errorMessage } from "../../../api/client";
-import { Card, Button, Input, Textarea, noticeClassName } from "../../../app/ui/primitives";
+import { Button, Input, Textarea, noticeClassName } from "../../../app/ui/primitives";
 import type { ClientHistory } from "../types";
 import { useHydrated } from "../../../app/use-hydrated";
 import { ClientNote } from "./client-note";
@@ -20,7 +20,8 @@ export function ClientAnnotations({ history, timezone, onChanged, onMerged }: { 
     } catch { setNotice("The client change could not be saved."); }
     finally { setBusy(false); }
   }
-  return <div data-client-annotations-ready={hydrated&&!busy}><Card className="min-w-0 p-5 sm:p-6">
+  // A section of the client's page, a hairline under its bookings: the record has no card (DW6).
+  return <section data-client-annotations-ready={hydrated&&!busy} className="min-w-0 border-t border-line-soft pt-6">
     <h2 className="text-xl font-bold">Client notes and custom fields</h2>
     {history.aliases.length > 1 ? <p className="mt-3 break-all text-sm text-soft">Addresses: {history.aliases.join(", ")}</p> : null}
     <ul className="mt-4 grid gap-3" aria-label="Client notes">{history.notes.map(note=><ClientNote key={note.id} note={note} email={history.email} timezone={timezone} disabled={!hydrated||busy} onChanged={onChanged} />)}</ul>
@@ -32,5 +33,5 @@ export function ClientAnnotations({ history, timezone, onChanged, onMerged }: { 
     <form className="mt-6 grid gap-3 border-t border-line-soft pt-5" onSubmit={event=>{event.preventDefault();void save("field");}}><label className="grid gap-2 text-sm font-semibold">Custom field name<Input disabled={!hydrated||busy} required maxLength={120} value={label} onChange={event=>setLabel(event.target.value)} /></label><label className="grid gap-2 text-sm font-semibold">Custom field value<Input disabled={!hydrated||busy} required maxLength={5000} value={value} onChange={event=>setValue(event.target.value)} /></label><Button disabled={!hydrated||busy} type="submit" variant="secondary" className="justify-self-start">Add client field</Button></form>
     <form className="mt-6 grid gap-3 border-t border-line-soft pt-5" onSubmit={event=>{event.preventDefault();if(window.confirm("Merge these clients? Their bookings, notes and fields will belong to one client. Erasing that client erases every merged address."))void save("merge");}}><label className="grid gap-2 text-sm font-semibold">Merge this client into<Input disabled={!hydrated||busy} type="email" required value={target} onChange={event=>setTarget(event.target.value)} /></label><p className="text-sm text-muted">The other address must already be a client. Every booking stays intact and this address becomes an alias.</p><Button disabled={!hydrated||busy} type="submit" variant="secondary" className="justify-self-start">Merge clients</Button></form>
     </div>
-  </Card></div>;
+  </section>;
 }

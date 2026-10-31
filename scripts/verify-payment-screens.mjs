@@ -59,10 +59,12 @@ try {
   const status = await (await owner.request.get(`${origin}/api/public/payments/${new URL(payment.returnUrl).searchParams.get("return")}`)).json();
   assert.equal(status.state, "confirmed");
   const token = new URL(status.manageUrl).pathname.split("/").at(-1);
+  // The booking record opens at its own path (DW6).
+  const payer = (await (await owner.request.get(`${origin}/api/app/bookings?query=Avery%20Payer`)).json())[0];
   for (const width of [1440, 390]) {
     await capture(width, "receipt", `/book/dial-host/paid-session/confirmed?token=${token}`, async page => { await page.getByText("Paid $90.00 USD", { exact: false }).waitFor(); await page.getByText(sessionId).waitFor(); });
     await capture(width, "manage", `/manage/${token}`, async page => { await page.getByRole("region", { name: "Cancellation policy" }).waitFor(); await page.getByText(sessionId).waitFor(); });
-    await capture(width, "booking-record", "/app/bookings?query=Avery%20Payer", async page => { await page.getByRole("heading", { name: "Avery Payer", exact: true }).waitFor(); await page.getByRole("region", { name: "Payments" }).getByText("$90.00 USD · Stripe", { exact: false }).waitFor(); }, true);
+    await capture(width, "booking-record", `/app/bookings/${payer.id}?query=Avery%20Payer`, async page => { await page.getByRole("heading", { name: "Avery Payer", exact: true }).waitFor(); await page.getByRole("region", { name: "Payments" }).getByText("$90.00 USD · Stripe", { exact: false }).waitFor(); }, true);
   }
   console.log(`PAY-001 browser proof: ${shots.length} screenshots (${shots.join(", ")}).`);
 } finally { await owner.close(); await browser.close(); }

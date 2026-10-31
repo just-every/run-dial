@@ -87,7 +87,7 @@ async function scanPages(pages, storageState) {
         else await page.getByRole("heading", { name: heading, exact: true }).waitFor();
         await page.waitForFunction(() => !globalThis.document.body.innerText.includes("Loading "));
         if (name === "booking-record") {
-          await page.getByRole("button").filter({ hasText: "Acceptance record invitee" }).click();
+          await page.getByRole("link").filter({ hasText: "Acceptance record invitee" }).click();
           await page.getByRole("heading", { name: "Acceptance record invitee", exact: true }).waitFor();
           await page.getByText("Saved value: DISCOVERY-42", { exact: true }).waitFor();
         }
