@@ -236,9 +236,9 @@ Gap: Owner-created polls take up to 50 participants and 2–12 live times for un
 
 BRAND-001 is partial: Branding and custom domain.
 
-Evidence: `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs`
+Evidence: `src/core/features/host-profile/profile-writes.ts`, `src/core/features/event-types/details-writes.ts`, `tests/avatar-upload.test.mjs`; `tests/booking-mail-branding.test.mjs` ("workspace branding reaches built-in and edited confirmations once with frozen retries and plain look"), `tests/booking-wire/correspondence-journey.mjs` (confirmationBrandJourney) prove native invitee and host confirmation branding, escaped text, authorized local marks, contrast-safe light and dark HTML colours, plain look and frozen retries.
 
-Gap: The cited paths cover part of the clause; the rest is still to build.
+Gap: The cited paths cover part of the clause; the rest is still to build.  Confirmation mail evidence is bounded to the native invitee and host path; booking-page and embed qualification, remaining controls, credit removal, other mail families, team branding and additional hostname isolation and live-account proof remain unproved.
 
 LOCALE-001 is missing: Languages and time formats.
 
