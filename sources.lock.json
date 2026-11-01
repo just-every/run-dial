@@ -919,7 +919,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "20fc941203cd1df49451219c15644f75fd1df51390f3025ec6cfcb163d256705",
+      "sha256": "8034ea052dd46ad18843b929d46a0642f6b27455c6079ab7abac3e5e25565059",
       "executable": false
     },
     "DEMO.md": {
@@ -967,7 +967,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "32c52946ae1f9896302f8de6b7ce732b16d1b975fe9841c6dc1a4ff2f89986b2",
+      "sha256": "a27c60e9ba7a1265910af6cbd492c38ea229b977a618c2ae36e9b67fa851b7f0",
       "executable": false
     },
     "docs/getting-started.md": {
@@ -9243,7 +9243,7 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "e876109482db7d3bb9128d3e4b2964135df08e2cd21c8e946816c47b838f242e",
+      "sha256": "3a811678ff12b1b93e117058fbb9de350e913290e2ef112801fd2c328d9738e8",
       "executable": false
     },
     "tests/booking-wire/accounting-wire.ts": {
@@ -9264,6 +9264,10 @@
     },
     "tests/booking-wire/approval-journey.mjs": {
       "sha256": "421db736c3c34f9b52fdb64a83bf2c2e71c09f8f86627d69ad08a980212e8a28",
+      "executable": false
+    },
+    "tests/booking-wire/approval-meet-journey.mjs": {
+      "sha256": "b88eba2bb6223888424dd16632b5b9776ecc64a25bb0da127c651c17a4fbbf70",
       "executable": false
     },
     "tests/booking-wire/booking-links-journey.mjs": {
@@ -9287,7 +9291,7 @@
       "executable": false
     },
     "tests/booking-wire/feature-journey.mjs": {
-      "sha256": "b6767167f93f3c54f33c66015599a43d19c81865ea2727bfbf3b24095b030840",
+      "sha256": "a6d1c4b21a693f97a39950c9cb34a1d0a440592acd4ea34ccb3508f489a76f0d",
       "executable": false
     },
     "tests/booking-wire/group-seat-journey.mjs": {
