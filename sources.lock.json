@@ -919,7 +919,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "8034ea052dd46ad18843b929d46a0642f6b27455c6079ab7abac3e5e25565059",
+      "sha256": "66ac135bcf6a7c48e1136be2666189b46fcb3d8436cbdf8fdd88d21b86aeeec8",
       "executable": false
     },
     "DEMO.md": {
@@ -9243,7 +9243,7 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "3a811678ff12b1b93e117058fbb9de350e913290e2ef112801fd2c328d9738e8",
+      "sha256": "668ac24185554fcdf95b0cbc07d62721f9bd41c8b127c9e4ebd64ee93021c69c",
       "executable": false
     },
     "tests/booking-wire/accounting-wire.ts": {
@@ -9276,6 +9276,10 @@
     },
     "tests/booking-wire/booking-policy-journey.mjs": {
       "sha256": "efcc9a1ea7082d95f8b80ab168c8356c521ee593fa7464e8023468a65eae646a",
+      "executable": false
+    },
+    "tests/booking-wire/calendar-correspondence-journey.mjs": {
+      "sha256": "1ae8910e160955ad52cd96fe0a93aeef796fe769472b315497779db8066e1d6c",
       "executable": false
     },
     "tests/booking-wire/correspondence-journey.mjs": {
