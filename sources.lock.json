@@ -6307,7 +6307,7 @@
       "executable": false
     },
     "src/core/features/clients/ui/clients-page.tsx": {
-      "sha256": "c2dd383a759ed28d45415c25ae1c5a269d5b1fd353638d9924e23803d6ff5a5d",
+      "sha256": "497594f18c0061742dd58de08d940380b59e068bdfddcb5c99442253088d8c31",
       "executable": false
     },
     "src/core/features/clients/ui/remember-details.tsx": {
