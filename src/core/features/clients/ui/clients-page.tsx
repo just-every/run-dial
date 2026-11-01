@@ -13,6 +13,19 @@ import { ClientHistoryView } from "./client-history";
 import { ClientAnnotations } from "./client-annotations";
 import { clientAddress, clientPage, clientPageSize, clientListPath, clientHistoryPath } from "../queries";
 
+/**
+ * The last answer drawn for each client-history path. A booking opened from a client is another route tree, so Back mounts the
+ * client page again; drawing this answer in its first frame gives the router a page of full height to put the window's scroll
+ * back on, and the fresh read replaces it in place. Only an answer is kept, never a missing record or an error.
+ */
+const drawnHistories = new Map<string, ClientHistory>();
+const drawnHistoryLimit = 16;
+function rememberHistory(path: string, history: ClientHistory) {
+  drawnHistories.delete(path);
+  drawnHistories.set(path, history);
+  if (drawnHistories.size > drawnHistoryLimit) drawnHistories.delete(drawnHistories.keys().next().value!);
+}
+
 /** The clients list at /app/clients, and a client at its own path /app/clients/<email> (CLIENT-001, DW6). */
 export function ClientsPage() {
   const router = useRouter();
@@ -26,7 +39,14 @@ export function ClientsPage() {
   const list = `/app/clients${page > 1 ? `?clientPage=${page}` : ""}`;
   const listRead = useClientRead<ClientList>(clientListPath(page), revision);
   const email = clientAddress(routeEmail);
-  const history = useRecordRead<ClientHistory>(email && clientHistoryPath(email, historyPage), revision);
+  const historyPath = email && clientHistoryPath(email, historyPage);
+  const history = useRecordRead<ClientHistory>(historyPath, revision);
+  const drawn = history.data ?? (historyPath && !history.error ? drawnHistories.get(historyPath) : undefined);
+  useEffect(() => {
+    if (!historyPath) return;
+    if (history.data) rememberHistory(historyPath, history.data);
+    else if (history.missing) drawnHistories.delete(historyPath);
+  }, [historyPath, history.data, history.missing]);
   const profile = useWorkspaceRead<{ timezone: string }>("/api/app/profile");
   const open = routeEmail !== undefined;
   useReturnFocus(list, open);
@@ -45,11 +65,11 @@ export function ClientsPage() {
   const record = open ? <div className="grid min-w-0 gap-5" data-clients-ready={ready}>
     <RecordBack href={list} label="Clients" className="xl:hidden" />
     {history.error ? <WorkspaceLoadState error={history.error} onRetry={refresh} /> : null}
-    {history.data && profile ? <div className="grid min-w-0 gap-8">
-      <ClientHistoryView history={history.data} timezone={profile.timezone} />
-      {history.data.totalCount > clientPageSize ? <nav aria-label="Client history pages" className="flex flex-wrap items-center gap-3"><button type="button" className={buttonClassName("secondary")} disabled={historyPage === 1} onClick={() => navigateHistory(historyPage - 1)}>Earlier history page</button><span>History page {historyPage}</span><button type="button" className={buttonClassName("secondary")} disabled={historyPage * clientPageSize >= history.data.totalCount} onClick={() => navigateHistory(historyPage + 1)}>Later history page</button></nav> : null}
-      <ClientAnnotations key={history.data.email} history={history.data} timezone={profile.timezone} onChanged={refresh} onMerged={merged => { refresh(); void router.navigate({ to: "/app/clients/$email", params: { email: merged }, search: () => pageSearch, state: previous => previous, replace: true }); }} />
-    </div> : history.data ? <p role="alert" className={noticeClassName("error")}>The viewer’s time zone could not be loaded.</p>
+    {drawn && profile ? <div className="grid min-w-0 gap-8">
+      <ClientHistoryView history={drawn} timezone={profile.timezone} />
+      {drawn.totalCount > clientPageSize ? <nav aria-label="Client history pages" className="flex flex-wrap items-center gap-3"><button type="button" className={buttonClassName("secondary")} disabled={historyPage === 1} onClick={() => navigateHistory(historyPage - 1)}>Earlier history page</button><span>History page {historyPage}</span><button type="button" className={buttonClassName("secondary")} disabled={historyPage * clientPageSize >= drawn.totalCount} onClick={() => navigateHistory(historyPage + 1)}>Later history page</button></nav> : null}
+      <ClientAnnotations key={drawn.email} history={drawn} timezone={profile.timezone} onChanged={refresh} onMerged={merged => { refresh(); void router.navigate({ to: "/app/clients/$email", params: { email: merged }, search: () => pageSearch, state: previous => previous, replace: true }); }} />
+    </div> : drawn ? <p role="alert" className={noticeClassName("error")}>The viewer’s time zone could not be loaded.</p>
       : history.error ? null : <WorkspaceLoadState label="Loading client history…" onRetry={refresh} />}
   </div> : undefined;
 
