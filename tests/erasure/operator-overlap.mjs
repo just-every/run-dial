@@ -74,6 +74,13 @@ export async function eraseOperatorInviteeRecords(rt, context) {
     assert.equal((await rt.data('/api/app/availability-requests')).some(row => row.id === subject.requestId), false);
     const audit = (await rt.db.prepare('SELECT * FROM anonymized_audit').all()).results;
     assert.equal(containsPersonal(audit, [subject.email, subject.name, subject.text, subject.operator.id, subject.bookingId, subject.requestId]), false, 'anonymized audit has no matching identity bridge');
+    const visible = await rt.data('/api/app/audit/erasures');
+    assert.equal(visible.length, outcomes.length * 2 + 2, 'each aggregate erasure retains one booking and one request action');
+    assert.equal(visible.filter(row => row.subjectKind === 'booking').length, outcomes.length + 1);
+    assert.equal(visible.filter(row => row.subjectKind === 'availability_request').length, outcomes.length + 1);
+    const visibleCsv = await (await rt.api('/api/app/audit/erasures.csv')).text();
+    assert.equal(containsPersonal([visible, visibleCsv], [subject.email, subject.name, subject.text, subject.operator.id, subject.bookingId, subject.requestId]), false, 'public audit projections cannot recover an erased operator-invitee bridge');
+    if (subject.kind === 'self-protected-setup-owner') assert.ok(visible.every(row => row.actorType === 'operator' && row.actorId === null), 'self-erasure remains visible with every matching actor anonymized');
     const deadManage = await rt.api(new URL(subject.booking.manageUrl).pathname.replace('/manage/', '/api/public/manage/'));
     assert.ok([404, 410].includes(deadManage.status)); await deadManage.arrayBuffer();
     const replay = await rt.api(`/api/public/events/dial-host/intro/request?nonce=${subject.review.nonce}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(subject.composition) });
@@ -103,6 +110,10 @@ export async function eraseOperatorInviteeRecords(rt, context) {
   assert.equal(removed.status, 204); await removed.arrayBuffer();
   const endedSession = await rt.api('/api/app/profile', { headers: { cookie: ordinaryCookie } });
   assert.equal(endedSession.status, 401); await endedSession.arrayBuffer();
+  for (const path of ['/api/app/audit/erasures', '/api/app/audit/erasures.csv']) {
+    const refused = await rt.api(path, { headers: { cookie: ordinaryCookie } });
+    assert.equal(refused.status, 401, 'removed native authority cannot read a surviving erasure action'); await refused.arrayBuffer();
+  }
   assert.equal((await rt.db.prepare('SELECT count(*) AS n FROM oa_operators WHERE id=?').bind(ordinary.id).first()).n, 0, 'separate ordinary removal still erases its native account');
   await assert.rejects(() => rt.db.prepare('DELETE FROM oa_operators WHERE id=?').bind(owner.id).run(), /last_owner/, 'native last-owner invariant remains enforced');
   context.diagnostic(JSON.stringify({ overlapCases: outcomes, accountsAndSessionsPreserved: true, separateOperatorRemovalVerified: true }));
