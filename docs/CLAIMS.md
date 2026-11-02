@@ -782,9 +782,9 @@ Gap: No implementing code yet.
 
 FLOW-001 is partial: Workflow builder.
 
-Evidence: `src/core/features/bookings/reminder-commands.ts`, `src/core/features/delivery/booking-mails.ts`, `tests/coordination.test.mjs`, `tests/lifecycle-journey.test.mjs`
+Evidence: `src/core/features/bookings/reminder-commands.ts`, `src/core/features/delivery/booking-mails.ts`, `tests/coordination.test.mjs`, `tests/lifecycle-journey.test.mjs`; `tests/workflow-duplication.test.mjs` — "owner duplication copies attached workflow configuration independently without history or implicit sends": native owner-session draft duplication preserves enabled and disabled attachments with fresh rule identities, excludes removed rules and source runs, copies no booking or outbound command, refuses anonymous and revoked sessions without writes, permits independent edits and sends once for a later eligible copy booking while retaining active-owner admission; `tests/export-base-adoption.test.mjs` — "the actual Base cancellation ledger survives the full populated census and unknown future schema remains refused": copied workflow configuration restores disabled with no execution receipts.
 
-Gap: The cited paths cover part of the clause; the rest is still to build.
+Gap: The cited paths cover part of the clause; the rest is still to build. Native event duplication is proven for the current booking-created invitee-email rules. Held: workflow UI and browser qualification; additional triggers, actions and recipients; multiple event and team attachments and delegated permissions; built-in reminder.schedule.v1 integration; custom 2-hour SMS, 15-minute email and 1-day-after timing with reschedule, cancellation and per-action run outcomes; template variables and real-booking preview including locked-zone rendering; unsubscribe capabilities; assigned-host From and Reply-To and connected-Gmail sending under NOTIFY-010. The current statuses, evidence and gaps of FLOW-002, FLOW-006, API-001, AUTH-008, DATA-002 and DATA-004 remain as recorded in their own rows; this duplication evidence changes none of those judgments or the existing queue, custody and release prerequisites.
 
 FLOW-002 is missing: SMS reminders and confirmations.
 
