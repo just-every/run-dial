@@ -1,3 +1,4 @@
+import { build } from 'esbuild';
 import { agentUse } from './archive/agent-audit.mjs';
 import { groupSeatArchiveJourney } from './archive/group-upgrade.mjs';
 import { pollUpgrade } from './archive/poll-upgrade.mjs';
@@ -67,7 +68,17 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(createArchive(testPlatform(source.db)), /archive-payment-entitlements-not-portable/);
     source.db.exec("DELETE FROM payment_products WHERE id='synthetic-dial-archive-credit'");
     source.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,version,created_at) VALUES(?,?,?,'admin','active',1,1791331200000)").run('synthetic-dial-archive-admin',['synthetic-dial-archive-admin','example.test'].join(String.fromCharCode(64)),'Synthetic Dial administrator');
+    const compiled = await build({ entryPoints: ['src/core/features/event-types/duplicate.ts'], bundle: true, write: false, platform: 'node', format: 'esm' });
+    const { duplicateEvent } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`);
+    const workflowCopyId = await duplicateEvent(sqliteBinding(source.db), 'event_types-1');
+    const copiedWorkflow = source.db.prepare('SELECT * FROM workflow_rules WHERE event_type_id=?').get(workflowCopyId);
+    assert.ok(copiedWorkflow, 'the actual event duplication creates an attached workflow');
+    assert.equal(copiedWorkflow.enabled, 1, 'local duplication preserves explicit enablement');
+    assert.notEqual(copiedWorkflow.id, source.db.prepare("SELECT id FROM workflow_rules WHERE event_type_id='event_types-1'").get().id);
     const archive = await createArchive(testPlatform(source.db));
+    const archivedCopy = archive.tables.find(table => table.name === 'workflow_rules').rows.find(row => row.id === copiedWorkflow.id);
+    assert.deepEqual({ ...archivedCopy, enabled: copiedWorkflow.enabled, enabled_at: copiedWorkflow.enabled_at }, { ...copiedWorkflow }, 'archive preserves the complete copied configuration with only outbound authority disabled');
+    assert.equal(archivedCopy.enabled, 0); assert.equal(archivedCopy.enabled_at, null);
     const archivedAudit = archive.tables.find(table => table.name === 'agent_door_audit')?.rows;
     assert.deepEqual(archivedAudit, audit, 'owner export retains every agent audit field in sequence order');
     assert.equal(archive.tables.some(table => table.name === 'routing_capabilities'), false, 'routing replay authority stays local');
@@ -135,6 +146,9 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     }
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM workflow_rules WHERE enabled=1 OR enabled_at IS NOT NULL').get().n, 0, 'imported workflow configuration requires a fresh owner enable');
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM workflow_dispatches').get().n, 0);
+    assert.deepEqual({ ...target.db.prepare('SELECT * FROM workflow_rules WHERE id=?').get(copiedWorkflow.id) }, archivedCopy, 'the copied rule restores disabled with its own identity and configuration');
+    assert.equal(target.db.prepare('SELECT status FROM event_types WHERE id=?').get(workflowCopyId).status, 'draft');
+    console.log('PROBE FLOW-001 archive: actual copied workflow through Base export and restore -> independent draft and equivalent configuration, disabled outbound authority and zero execution receipts');
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_subscriptions WHERE enabled=1 OR secret_ciphertext IS NOT NULL").get().n, 0, 'restore never enables outbound authority');
     assert.equal(target.db.prepare("SELECT count(*) AS n FROM webhook_deliveries WHERE state IN ('pending','sending')").get().n, 0, 'restore never resumes historical webhook commands');
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM routing_capabilities').get().n, 0);

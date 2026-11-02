@@ -1,3 +1,4 @@
+import { duplicateWorkflowStatements } from "../workflows/duplicate";
 import { createId, nowIso } from "../../shared/ids";
 
 type Source = { slug: string; title: string; updated_at: string };
@@ -71,6 +72,7 @@ export async function duplicateEvent(binding: D1Database, id: string): Promise<s
       WHERE id = ? AND override_id = ? ${guard}
     `).bind(createId(), overrideId, timestamp, timestamp, child.id, child.parent_id, duplicateId));
   }
+  statements.push(...await duplicateWorkflowStatements(binding, id, duplicateId, timestamp));
   const results = await binding.batch(statements);
   if (results[0].results.length === 0) throw new Error("Event type changed while duplicating; reload and try again.");
   return duplicateId;

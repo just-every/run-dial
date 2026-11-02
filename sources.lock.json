@@ -919,7 +919,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "66ac135bcf6a7c48e1136be2666189b46fcb3d8436cbdf8fdd88d21b86aeeec8",
+      "sha256": "d7924903654c7dcfdfa5a3a67a3f661462cb79f6005f9dedf664a550ce56f1b3",
       "executable": false
     },
     "DEMO.md": {
@@ -6583,7 +6583,7 @@
       "executable": false
     },
     "src/core/features/event-types/duplicate.ts": {
-      "sha256": "760d95d4e6e795d8b5dfed9ca6debf1fc596b4682a13a0465c6ff56a27d87bd5",
+      "sha256": "fa2dde0e0c68d6e9c1a02154d2d7c42e75cb488816de84787e1b2fc7c73145f0",
       "executable": false
     },
     "src/core/features/event-types/event-input.ts": {
@@ -8104,6 +8104,10 @@
     },
     "src/core/features/webhooks/ui/settings-card.tsx": {
       "sha256": "519d1e8eeed06364c56c201fa35d2050fe7bccb8a88e542de88602e44f8c4ad8",
+      "executable": false
+    },
+    "src/core/features/workflows/duplicate.ts": {
+      "sha256": "58325deb6a49e478f0266da1decbdd09c673e97d476dfda86ad0c5559bc4d568",
       "executable": false
     },
     "src/core/features/workflows/engine.ts": {
@@ -9755,7 +9759,7 @@
       "executable": false
     },
     "tests/export-base-adoption.test.mjs": {
-      "sha256": "2347d63f1ab8fbfa41e78aacec41953c8e7f26bd0df2fa2124a499efae6e2805",
+      "sha256": "1f5254548973fdacf49a7a864978cd4ceb343c06e28aa2ff029870f8cd00267a",
       "executable": false
     },
     "tests/export-creation-guards.test.mjs": {
@@ -10812,6 +10816,10 @@
     },
     "tests/webhook-settings.test.mjs": {
       "sha256": "93cdacc4a83b21d99b5020fb603053d72ce08ceda6b0481f0c96e15e5f1a3bf2",
+      "executable": false
+    },
+    "tests/workflow-duplication.test.mjs": {
+      "sha256": "c949e452c0a17b11f564da1287aded99089b9c46cc1ef28cfa193d1f552041bd",
       "executable": false
     },
     "tests/your-hours.test.mjs": {
