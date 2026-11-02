@@ -2,7 +2,9 @@ import { groupConfigurationIssue } from "../group-events";
 import type { EventBookingPolicy } from "../../shared/booking-policy";
 import { duplicateEvent } from "./duplicate";
 import { eventScheduleBindings } from "../../platform/db/availability-schema";
-import { NamedSchedules, bindEvent, yoursId } from "../availability";
+import { NamedSchedules, createYoursForEvent, bindCreatedEventToYours } from "../availability";
+import { eventTypeUseSql, eventCapacityGuard, eventCapacityParams, eventCapacityRefusal } from "./event-capacity";
+import { guardedCreationInsert } from "./event-capacity/repository";
 import { hydrateEventTypes, readEventType } from "./hydration/repository";
 import { afterPersistedTimestampSql, nextEventTimestampSql } from "../../shared/event-revision";
 import { replaceDateOverride, deleteDateOverride } from "./override-writes";
@@ -160,16 +162,27 @@ export class EventTypesRepository {
     return record ? toPublicEventType(await this.hydrate(record)) : undefined;
   }
 
-  /** On your hours, the event is bound to them and takes their windows in the same batch (made first when the install has none). */
+  /** Capacity, the event, its children and any first Your hours share one transaction. */
   async create(input: EventTypeInput, hours: "own" | "yours" = "own"): Promise<EventTypeRecord> {
     const id = createId();
     const timestamp = nowIso();
-    const scheduleId = hours === "yours" ? await yoursId(this.binding) : undefined;
-    const writes = [
-      this.db.insert(eventTypes).values({ id, status: "draft", ...eventColumns(input), createdAt: timestamp, updatedAt: timestamp }),
-      ...childWrites(this.db, id, scheduleId ? { ...input, availability: [] } : input, timestamp),
-    ].map(write => write.toSQL()).map(({ sql: text, params }) => this.binding.prepare(text).bind(...params));
-    await this.binding.batch([...writes, ...scheduleId ? bindEvent(this.binding, id, scheduleId, timestamp) : []]);
+    const guard = "EXISTS (SELECT 1 FROM event_types WHERE id=?)";
+    const results = await this.binding.batch([
+      this.binding.prepare(eventTypeUseSql),
+      guardedCreationInsert(this.binding, eventTypes, { id, status: "draft", ...eventColumns(input), createdAt: timestamp, updatedAt: timestamp }, eventCapacityGuard, eventCapacityParams),
+      ...input.questions.map((question, position) => guardedCreationInsert(this.binding, eventQuestions, {
+        id: createId(), eventTypeId: id, publicKey: question.key ?? `q_${createId()}`, position,
+        kind: question.kind, label: question.label, required: question.required, private: question.private ?? false,
+        optionsJson: JSON.stringify(question.options), createdAt: timestamp, updatedAt: timestamp,
+      }, guard, [id])),
+      ...(hours === "yours" ? [createYoursForEvent(this.binding, id, timestamp), ...bindCreatedEventToYours(this.binding, id, timestamp)] :
+        input.availability.map(window => guardedCreationInsert(this.binding, recurringAvailabilityWindows, {
+          id: createId(), eventTypeId: id, ...window, createdAt: timestamp, updatedAt: timestamp,
+        }, guard, [id]))),
+    ]);
+    if (results[1].meta.changes === 0) {
+      throw eventCapacityRefusal((results[0].results[0] as { currentUse: number }).currentUse);
+    }
     const result = await this.get(id);
     if (!result) throw new Error("Event type was not persisted");
     return result;

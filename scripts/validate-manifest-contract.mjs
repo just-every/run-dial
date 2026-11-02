@@ -14,6 +14,11 @@ const [contract, baseline, manifestText] = await Promise.all([
 ]);
 execFileSync(process.execPath, ["scripts/contract-docs.mjs", "check"], { cwd: root, stdio: "inherit" });
 const manifest = JSON.parse(manifestText);
+// Only these event-type floors are implemented here; other capacity remains a target.
+for (const [name, floor] of [["maxEventTypesPerHost", 50], ["maxEventTypes", 5000]]) {
+  assert.ok(Number.isSafeInteger(manifest.limits[name]) && manifest.limits[name] >= floor,
+    `limits.${name} must be an integer at least ${floor}`);
+}
 const clauseIds = parseContract(contract).clauses.map(clause => clause.id);
 const sharedAgentClauses = matches(await readFile(resolve(root, "modules/agent-door/CLAUSES.md"), "utf8"), /^#### (BASE-AGENT-\d{3})\s+—/gm);
 await validateContractStatus(root, contract, clauseIds);
