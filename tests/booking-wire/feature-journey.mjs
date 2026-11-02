@@ -8,10 +8,11 @@ import { guestJourney } from "./guest-journey.mjs";
 import { approvalJourney } from "./approval-journey.mjs";
 import { approvalMeetJourney } from "./approval-meet-journey.mjs";
 import { approvalAccessJourney } from "./approval-access-journey.mjs";
+import { rescheduleRequestContextJourney } from "./reschedule-request-context-journey.mjs";
 
 // Each feature gets a fresh production Worker and an independent registration; only providers are synthetic.
 const origin = process.env.DIAL_REVIEW_ORIGIN, feature = process.argv[2], checks = [];
-const journeys = { analytics: analyticsJourney, webhooks: webhookJourney, guests: guestJourney, approval: approvalJourney, "approval-meet": approvalMeetJourney, "approval-access": approvalAccessJourney };
+const journeys = { analytics: analyticsJourney, webhooks: webhookJourney, guests: guestJourney, approval: approvalJourney, "approval-meet": approvalMeetJourney, "approval-access": approvalAccessJourney, "reschedule-request-context": rescheduleRequestContextJourney };
 assert.ok(Object.hasOwn(journeys, feature));
 let cookie;
 async function call(path, body, expected = 200, method = body === undefined ? "GET" : "POST") {
