@@ -9498,6 +9498,10 @@
       "sha256": "f43bee8eb627623684be9e3123518b19d51f5cdfc3fed74371a8a6a228630101",
       "executable": false
     },
+    "tests/booking-wire/reschedule-request-context-journey.mjs": {
+      "sha256": "b7c3cff3ba544d15ac45ac7050b6cf3a1b13dbcc4c6677a251d227751912554b",
+      "executable": false
+    },
     "tests/booking-wire/reschedule-request-journey.mjs": {
       "sha256": "6237882ac4a805a2685f2bf6e86111ea9badfa0433fc9bb5373ab3ddf99d5f41",
       "executable": false

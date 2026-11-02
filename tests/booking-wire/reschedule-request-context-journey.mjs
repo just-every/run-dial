@@ -97,19 +97,23 @@ export async function rescheduleRequestContextJourney({ data, call, state, deliv
     async function refuseStrangers() {
       const before = await state();
       const request = { message: "Untrusted guest request", releaseTime, expiresInDays: 14, reminderHours: null };
-      const anonymous = await fetch(new URL(`/api/app/bookings/${id}/reschedule-request`, subject.receipt.manageUrl), {
-        method: "POST", headers: { origin: new URL(subject.receipt.manageUrl).origin, "content-type": ["application", "json"].join("/") },
-        body: JSON.stringify({ ...request, email: subject.guests[0] }),
-      });
-      assert.equal(anonymous.status, 401); await anonymous.arrayBuffer();
+      async function anonymous(path, body, status, method = body === undefined ? "GET" : "POST") {
+        const response = await fetch(new URL(path, subject.receipt.manageUrl), {
+          method, headers: { origin: new URL(subject.receipt.manageUrl).origin, "content-type": ["application", "json"].join("/") },
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        });
+        assert.equal(response.status, status, "a guest address is no owner session or manage capability");
+        await response.arrayBuffer();
+      }
+      await anonymous(`/api/app/bookings/${id}/reschedule-request`, { ...request, email: subject.guests[0] }, 401);
       for (const guest of subject.guests) {
         const manage = `/api/public/manage/${encodeURIComponent(guest)}`;
-        await call(manage, undefined, 404);
-        await call(`${manage}/reschedule/availability?week=${future}`, undefined, 404);
-        await call(`${manage}/reschedule/selection`, { startAt: subject.receipt.occurrence.startAt, inviteeTimezone: "UTC" }, 404);
-        await call(`${manage}/reschedule`, { nonce: "synthetic-dial-unknown", startAt: subject.receipt.occurrence.startAt, inviteeTimezone: "UTC" }, 404);
-        await call(`${manage}/guests`, { guests: [] }, 404, "PUT");
-        await call(`${manage}/cancel`, {}, 404);
+        await anonymous(manage, undefined, 404);
+        await anonymous(`${manage}/reschedule/availability?week=${future}`, undefined, 404);
+        await anonymous(`${manage}/reschedule/selection`, { startAt: subject.receipt.occurrence.startAt, inviteeTimezone: "UTC" }, 404);
+        await anonymous(`${manage}/reschedule`, { nonce: "synthetic-dial-unknown", startAt: subject.receipt.occurrence.startAt, inviteeTimezone: "UTC" }, 404);
+        await anonymous(`${manage}/guests`, { guests: [] }, 404, "PUT");
+        await anonymous(`${manage}/cancel`, {}, 404);
       }
       assert.deepEqual(businessState(await state()), businessState(before), "refused outsiders change no booking or effects");
     }
@@ -124,6 +128,9 @@ export async function rescheduleRequestContextJourney({ data, call, state, deliv
     assert.deepEqual(openRecord.occurrence, record.occurrence, "request creation keeps the original occurrence");
     assert.equal(open.booking_occurrences.find(row => row.id === subject.booking.current_occurrence_id).blocks_time, releaseTime ? 0 : 1);
     assert.equal(calendarWrites(open, subject.booking).length, releaseTime ? 2 : 1);
+    const openProvider = JSON.parse(open.wire_events.find(row => row.id === originalProvider.id).payload);
+    assert.deepEqual(openProvider.attendees, originalProvider.attendees, "request creation retains every provider attendee");
+    assert.deepEqual(openProvider.conferenceData, originalProvider.conferenceData);
     for (const guest of subject.guests) {
       assert.equal(bookingMail(open, id).filter(mail => recipient(mail).includes(guest)).length, 1,
         "opening a request sends the guest no new notice");
@@ -169,7 +176,7 @@ export async function rescheduleRequestContextJourney({ data, call, state, deliv
       const notices = mail.filter(row => row.subject === `Guest invitation changed: ${event.title}`);
       assert.equal(notices.length, 1);
       assert.ok(textBody(notices[0]).includes(next.startAt) && textBody(notices[0]).includes(pickedRecord.occurrence.endAt));
-      assert.ok(Object.values(answers).every(value => !JSON.stringify(mail).includes(value)), "guest mail contains no answers");
+      assert.ok(mail.every(row => row.content.every(part => Object.values(answers).every(value => !part.value.includes(value)))), "guest mail contains no answers");
       assert.ok(!JSON.stringify(mail).includes(subject.token) && !JSON.stringify(mail).includes("/manage/"), "guest mail grants no manage authority");
     }
     const replay = await data(`${subject.manage}/reschedule`, pick);
