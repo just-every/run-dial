@@ -122,9 +122,9 @@ Gap: No implementing code yet.
 
 ADMIN-002 is partial: Admin audit log.
 
-Evidence: `src/core/features/bookings/service.ts`, `tests/person-erasure.test.mjs`
+Evidence: `tests/audit-erasure.test.mjs` ("owner reads and exports native erasure actions once without personal bridges or writes"); `tests/person-erasure.test.mjs` ("native email preview is inert; one confirmation erases personal rows, private mail and capabilities while preserving a control person", "one confirmation erases operator and self-owner invitee records while retaining native identity; unknown tables fail closed"); `tests/erasure/operator-overlap.mjs`
 
-Gap: The cited paths cover part of the clause; the rest is still to build.
+Gap: Owner-session JSON and full CSV now expose existing booking and availability-request erasure actions with audit ID, actor or anonymized actor, original time, action and subject kind, without an erased subject reference. Remaining: workspace log UI and browser qualification; capture of sign-ins, role changes, connection grants and revocations, event-type publication, routing and workflow changes, payment-setting changes, exports, agent actions and refused actions; admin and member permission qualification under `OPER-001`. The current `DATA-002` partial owner-case judgment, `DATA-004` done classification and current-kind round-trip judgment, API grant custody and release prerequisites remain unchanged; erasure writers, authority and retention are unchanged.
 
 PROFILE-001 is done: Host profile.
 
