@@ -919,7 +919,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "66ac135bcf6a7c48e1136be2666189b46fcb3d8436cbdf8fdd88d21b86aeeec8",
+      "sha256": "85d1f7b755fb118e8edb37b0582915f92ac87985adb8274e2a7f132a297f36ad",
       "executable": false
     },
     "DEMO.md": {
@@ -5495,7 +5495,7 @@
       "executable": false
     },
     "src/core/app/hono.ts": {
-      "sha256": "acce414655f69d161aa9f93130d758348c8151ac06c130f08fe898984d493e87",
+      "sha256": "6a6ce7fa0675172970a367e132146c6fa53f1379bdaef9a2f9d3af3de493eaeb",
       "executable": false
     },
     "src/core/app/loaders.ts": {
@@ -7956,6 +7956,18 @@
     },
     "src/core/features/public-site/paths.ts": {
       "sha256": "9663b0603d166ca273ebab89508fa8d31ef7327d63e3c38e39e80f2a2fc839ca",
+      "executable": false
+    },
+    "src/core/features/recurring-bookings/input.ts": {
+      "sha256": "06209e1d5a46edf692438e2063d33fa5ef1793f8b9768c891285707121705c61",
+      "executable": false
+    },
+    "src/core/features/recurring-bookings/preview.ts": {
+      "sha256": "478f80e02db29ae1de58e455f843cf0568171c3e295ea16667c4483d8113c692",
+      "executable": false
+    },
+    "src/core/features/recurring-bookings/routes.ts": {
+      "sha256": "b7a54f8922c240b10666f34080b5c155e27acf673130f612e8a1238a053fd452",
       "executable": false
     },
     "src/core/features/reports/booking-csv.ts": {
@@ -10680,6 +10692,10 @@
     },
     "tests/public-blocking/worker.wrangler.toml": {
       "sha256": "54349696688d0f5557dd2796c157589d49d7545ee45d27e43545e69283fdafb4",
+      "executable": false
+    },
+    "tests/recurring-preview.test.mjs": {
+      "sha256": "055a6fdacf60ef1ddcf44eb814f8305134fc333ccf85ef4723042ef00d41ecb9",
       "executable": false
     },
     "tests/report-booking-csv.test.mjs": {

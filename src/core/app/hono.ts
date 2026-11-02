@@ -38,6 +38,7 @@ import { hostProfileRoutes } from "../features/host-profile/routes";
 import { operatorManagementRoutes } from "../features/operators/management-routes";
 import { AuthError } from "../features/operators/service";
 import { operatorRoutes } from "../features/operators/routes";
+import { recurringPreviewRoutes } from "../features/recurring-bookings/routes";
 import { publicBookingRoutes } from "../features/public-booking/routes";
 import { checkPlatformBindings } from "../platform/health";
 import { apiError, discardRequestBody } from "../shared/http";
@@ -129,6 +130,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", routingRoutes)
     .route("/", noticeRoutes)
     .route("/", reportRoutes())
+    .route("/", recurringPreviewRoutes)
     .route("/", publicBookingRoutes)
     .route("/", rememberRoutes)
     .get("/", (context) => (documents ?? context.env.ASSETS).fetch(context.req.raw))
