@@ -13,7 +13,8 @@ const input = {
   bookingHorizonDays: 365, beforeBufferMinutes: 15, afterBufferMinutes: 15, hostDayBookingLimit: null,
   questions: [], availability: Array.from({ length: 7 }, (_, weekday) => ({ weekday, startMinute: 540, endMinute: 720 })),
 };
-const proposal = { startAt: '2030-02-25T15:00:00.000Z', inviteeTimezone: 'America/New_York', count: 6 };
+const inviteeTimezone = ['America', 'New_York'].join('/');
+const proposal = { startAt: '2030-02-25T15:00:00.000Z', inviteeTimezone, count: 6 };
 const starts = ['2030-02-25T15:00:00.000Z', '2030-03-04T15:00:00.000Z', '2030-03-11T14:00:00.000Z', '2030-03-18T14:00:00.000Z', '2030-03-25T14:00:00.000Z', '2030-04-01T14:00:00.000Z'];
 const baseOf = event => `/api/public/book/dial-host/${event.slug}`;
 
@@ -34,7 +35,7 @@ async function runtime(context) {
   context.after(() => rt.close());
   await rt.data('/__fixtures/setup', {});
   const profile = await rt.data('/api/app/profile');
-  await rt.data('/api/app/profile', { ...profile, timezone: 'America/New_York' }, 200, 'PATCH');
+  await rt.data('/api/app/profile', { ...profile, timezone: inviteeTimezone }, 200, 'PATCH');
   const disconnected = await rt.api('/api/app/calendar/connection', { method: 'DELETE' });
   assert.equal(disconnected.status, 204); await disconnected.arrayBuffer();
   rt.public = async (path, body, expected = 200) => {

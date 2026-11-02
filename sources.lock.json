@@ -10743,7 +10743,7 @@
       "executable": false
     },
     "tests/recurring-preview.test.mjs": {
-      "sha256": "055a6fdacf60ef1ddcf44eb814f8305134fc333ccf85ef4723042ef00d41ecb9",
+      "sha256": "be3328f747a7b27b7e6f3c1b85ddd3a9688e2202ccc12d9c6d7f85e90703f5ab",
       "executable": false
     },
     "tests/report-booking-csv.test.mjs": {
