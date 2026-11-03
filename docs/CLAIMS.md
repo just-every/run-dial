@@ -548,9 +548,9 @@ Gap: Native single-host held/released requests, message, one optional reminder, 
 
 BOOK-015 is partial: Per-event-type invitee change cut-off.
 
-Evidence: `tests/booking-wire/booking-policy-journey.mjs`, `tests/booking-wire/reschedule-request-journey.mjs`
+Evidence: `tests/booking-wire/booking-policy-journey.mjs`, `tests/booking-wire/reschedule-request-journey.mjs`, `tests/booking-wire/paid-booking-policy-journey.mjs` (BOOK-015 paid invitee cut-offs refuse changes without effects while permitted changes and refunds succeed once, registered in `tests/payments-wire.test.mjs`); `tests/booking-wire/payment-terms-journey.mjs` (both native window_inside_cutoff configuration refusals)
 
-Gap: Native separate cut-offs, reschedule cap, atomic typed refusals, terms and direct contact with invitee Reply-To; operators and active host requests bypass. Paid-event money-window compatibility awaits PAY-003. RER Managed Mail cannot send Reply-To, so hosted contact explicitly refuses with no queued mail; direct providers are proven at the wire.
+Gap: Native separate cut-offs, reschedule cap, atomic typed refusals, terms and direct contact with invitee Reply-To are proved for free bookings; operators and active host requests bypass. Upfront-paid, unapproved single-host bookings now prove reschedule selection, reschedule commit and cancellation refusals inside 24 hours with unchanged booking authority, occurrence, history, reminders, calendar event and money; an equivalent booking outside the cut-off reschedules and a permitted free-window cancellation refunds once despite replay under PAY-003. Both native window_inside_cutoff configuration assertions remain. Open: hosted Contact the host sending and assigned-host Reply-To need Base Managed Mail Reply-To; booking, manage and editor UI and browser qualification, including adjacent money-window display; wider paid cap and host-request qualification, approval, deposit, tax, entitlement, saved-card-fee and multi-host combinations. Hosted contact still explicitly refuses with no queued mail; direct providers remain proved at the wire.
 
 CAL-001 is partial: Calendar connections.
 
