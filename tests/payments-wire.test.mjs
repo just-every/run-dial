@@ -35,3 +35,5 @@ test("PAY-001 a paid booking confirms only after Stripe's signed event", async t
 test("PAY-003/PAY-006 deposits, refunds, fees and reconciled accounting exports move or record money once, only as shown", async t => { await wireJourney(t, "tests/booking-wire/payment-terms-journey.mjs", 15760, "payment-terms-wire-worker.log"); await runAxe(t, "scripts/verify-money-screens.mjs"); });
 
 test("PAY-005 Stripe Tax shows and charges tax by address, and receipts and invoices carry matching amounts", t => wireJourney(t, "tests/booking-wire/payment-tax-journey.mjs", 15764, "payment-tax-wire-worker.log"));
+
+test("BOOK-015 paid invitee cut-offs refuse changes without effects while permitted changes and refunds succeed once", t => wireJourney(t, "tests/booking-wire/paid-booking-policy-journey.mjs", 15761, "paid-booking-policy-worker.log"));
