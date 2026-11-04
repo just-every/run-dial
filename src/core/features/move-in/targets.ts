@@ -15,6 +15,9 @@ function scope(kind:string,table:string){const key=groups[kind]?.[table];if(!key
 // Search columns are a deterministic projection, not source-owned content.
 // Keep old applied snapshots and undo guards comparable after the additive upgrade.
 function sourceRows(table:string,rows:Row[]){
+ // English is the unchanged additive default. Spanish remains owner-authored
+ // content, and exact custody below guards absent language as English only.
+ if(table==='event_types')return rows.map(row=>{if(row.confirmation_language!=='en')return row;const source={...row};delete source.confirmation_language;return source;});
  if(table==='bookings')return rows.map(row=>{const source={...row};delete source.invitee_name_folded;delete source.invitee_email_folded;return source;});
  // Saved source profiles have no avatar. Absent additive defaults are not an
  // authored change, while a later uploaded avatar remains visible to undo.
@@ -68,6 +71,7 @@ function exact(table:string,where:string,id:string,rows:Row[]):D1Sql{
   if(!columns.includes('post_booking_redirect_url'))predicates.push('actual.post_booking_redirect_url IS NULL');
  }
  if(table==='event_types'){
+  if(!columns.includes('confirmation_language'))predicates.push("actual.confirmation_language IS 'en'");
   if(!columns.includes('duration_options_json'))predicates.push("actual.duration_options_json IS json_array(actual.duration_minutes)");
   if(!columns.includes('booking_horizon_mode'))predicates.push("actual.booking_horizon_mode IS 'calendar_days'");
   for(const key of ['booking_start_date','booking_end_date','group_capacity'])if(!columns.includes(key))predicates.push(`actual.${key} IS NULL`);
