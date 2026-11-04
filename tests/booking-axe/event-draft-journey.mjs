@@ -60,6 +60,14 @@ export async function eventDraftJourney(page, origin, eventId, keys, checks, wid
     await page.waitForFunction(() => globalThis.document.activeElement?.matches("[data-autosave-attention]"));
     assert.equal(new URL(page.url()).pathname, `/app/event-types/${eventId}/advanced`, "an incomplete question holds sheet close");
     assert.equal((await get(page, origin, `/api/app/event-types/${eventId}`)).questions.length, questionCount);
+    const stagedQuestion = field(page, `Question ${questionCount + 1} label`);
+    assert.ok(await stagedQuestion.evaluate(element => element === globalThis.document.activeElement), "refused close focuses the unfinished question label");
+    assert.equal(await stagedQuestion.getAttribute("aria-invalid"), "true");
+    const questionBounds = await stagedQuestion.boundingBox(), contentBounds = await page.locator(".event-sheet-content").boundingBox();
+    assert.ok(questionBounds.y >= contentBounds.y && questionBounds.y + questionBounds.height <= contentBounds.y + contentBounds.height, "the unfinished question is fully inside the sheet scrollport");
+    assert.ok(questionBounds.x >= 0 && questionBounds.x + questionBounds.width <= width && questionBounds.y >= 0 && questionBounds.y + questionBounds.height <= page.viewportSize().height, "the unfinished question is fully inside the viewport");
+    checks.push({ width, check: "Refused close focuses the unfinished question inside the sheet and viewport", questionBounds, contentBounds, passed: true });
+    await keys.screenshot("staged-question-refusal");
     const label = `New keyboard question ${width}`;
     await mutation(page, path, async () => { await keys.type(field(page, `Question ${questionCount + 1} label`), label, "Complete the staged question"); await page.keyboard.press("Tab"); });
     assert.equal(writes.length, 4, "completing a staged question writes once");

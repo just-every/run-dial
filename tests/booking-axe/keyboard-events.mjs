@@ -58,6 +58,7 @@ export async function eventKeyboardJourney(page, origin, width, keys, checks, er
   await page.reload();
   await keys.activate(page.getByRole("button", { name: /^Questions/ }), "Reopen saved event questions");
   assert.equal(await question.inputValue(), questionText, "a question label persists after leaving its field and reloading");
+  if (width === 390) await keys.screenshot("question-settings");
   await keys.activate(page.getByRole("button", { name: /^Emails and calendar invite/ }), "Open invitation wording");
   assert.equal(await question.isVisible(), false, "opening another group folds the question group");
   const invitationTitle = page.getByRole("textbox", { name: /^Title/ });
