@@ -246,7 +246,9 @@ export class ProviderDeliveryService {
             return undefined;
           }
         }
-        if (data) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now), kind === "confirmation" ? brand : undefined);
+        const localizedBuiltIn = kind === "confirmation" && payload.confirmationLanguage === "es"
+          && !data?.config.templates.confirmationSubject && !data?.config.templates.confirmationBody;
+        if (data && !localizedBuiltIn) payload = templatedMail(payload, kind, data, await this.currentInviteeManageUrl(record, now), kind === "confirmation" ? brand : undefined);
       }
     }
     const message = toMailMessage(frozen ?? payload, providerKey);

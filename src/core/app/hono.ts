@@ -1,3 +1,4 @@
+import { confirmationLanguageRoutes } from "../features/locales";
 import { consentRoutes } from "../features/api-credentials/consent";
 import { credentialRoutes } from "../features/api-credentials/routes";
 import { credentialOAuthRoutes } from "../features/api-credentials/oauth";
@@ -111,6 +112,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", eventTypeRoutes)
     .route("/", bookingLinkRoutes)
     .route("/", bookingPolicyRoutes)
+    .route("/", confirmationLanguageRoutes)
     .route("/", correspondenceRoutes)
     .route("/", hostSetupRoutes)
     .route("/", availabilityDiagnosticRoutes)

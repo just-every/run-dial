@@ -5,3 +5,8 @@ export type { BookingCancellationTemplate } from "../booking-mails";
 export { requestSubmissionMail, requestUpdateMail } from "../request-mails";
 export { operatorRecipientAdmission } from "../operator-mail";
 export { renderBrandedMail } from "../branded-layout";
+
+export { bookingTimeFacts, timeFactsText } from "../booking-mail-times";
+export { inviteeCalendarUrl } from "../branded-layout";
+export type { BrandedMailInput, BrandedMailFact } from "../branded-layout";
+export type { BookingMailDetails } from "../booking-mails";
