@@ -542,9 +542,9 @@ Gap: Per-routing-route configuration and the popup widget are carried by `ROUTE-
 
 BOOK-014 is partial: Ask the invitee to pick a new time.
 
-Evidence: `tests/booking-wire/reschedule-request-journey.mjs`, `src/core/features/bookings/reschedule-requests.ts`
+Evidence: `tests/booking-wire/reschedule-request-journey.mjs`, `tests/booking-wire/reschedule-request-context-journey.mjs` ("host reschedule requests preserve stored answers and guests through released and held invitee picks"), `src/core/features/bookings/reschedule-requests.ts`
 
-Gap: Native single-host held/released requests, message, one optional reminder, chosen expiry, unchanged booking/manage/UID, Google event and Meet update, request history/filter and invitee cut-off/cap bypass. Roles/delegation, pool reassignment, Zoom, guests, payment/approval, timed workflows, webhooks and assigned-host Reply-To await OPER-001, TEAM-003/007, MEET-001, EVENT-008/009, PAY-001, FLOW-001, API-002 and upstream NOTIFY-010 support.
+Gap: Native single-host held and released requests, message, one optional reminder, chosen expiry, unchanged booking identity and manage capability and UID, Google event and Meet update, request history and filters and invitee cut-off and cap bypass are implemented. Nonempty public and private stored answers and both existing guests now survive the request and invitee pick on a free, unapproved 60-minute booking; each guest receives one ordinary change notice without answers or manage authority, and replay adds no occurrence, notice or provider event. Reschedule-page integration and browser qualification remain held with the existing UI work. Roles and delegation, pool reassignment, Zoom, payment and approval combinations, timed workflows, wider webhook qualification and assigned-host Reply-To await OPER-001, TEAM-003, TEAM-007, MEET-001, EVENT-008, PAY-001, FLOW-001, API-002 and upstream NOTIFY-010 support, including the Base Managed Mail Reply-To boundary. Wider guest combinations remain under EVENT-009.
 
 BOOK-015 is partial: Per-event-type invitee change cut-off.
 

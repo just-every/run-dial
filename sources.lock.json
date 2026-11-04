@@ -883,7 +883,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "0d11c60d80b6621f058772d8b7d0d519b2935a33a0435605f1dcea383f04ea40",
+      "sha256": "ddd47f5c0b9b46b527ae36703bc10bf92904ba2ec2d83318cd07a0480317848b",
       "executable": false
     },
     "ADAPTERS.md": {
@@ -967,7 +967,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "0dbe0a10a63d240bfe0a842b3d5a81402369d65b4fd5db7c8ac0e3fc6be66c4e",
+      "sha256": "d7b259f15fa2669547ebee3f034451f75346d992d8f22b4cb158879b5867aab0",
       "executable": false
     },
     "docs/getting-started.md": {
