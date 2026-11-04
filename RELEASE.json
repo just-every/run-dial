@@ -26,7 +26,8 @@
     "OPER-002": "DONE on its owner case; role refusals carried by OPER-001.",
     "CUSTOM-001": "DONE on its owner case; role refusals carried by OPER-001.",
     "EDITOR-001": "DONE on its owner case; role refusals carried by OPER-001.",
-    "EVENT-007": "PARTIAL: native owner-session group capacity from 2 to 1,000 for free, unapproved single-host events with one fixed duration and location and no additional guests or connected calendar. Atomic seat admission, private per-invitee booking authority and reminders, individual cancellation, upgrade and archive custody are implemented. Controls, waitlist, whole-slot cancellation, shared calendar delivery and priced or approval group combinations remain unimplemented."
+    "EVENT-007": "PARTIAL: native owner-session group capacity from 2 to 1,000 for free, unapproved single-host events with one fixed duration and location and no additional guests or connected calendar. Atomic seat admission, private per-invitee booking authority and reminders, individual cancellation, upgrade and archive custody are implemented. Controls, waitlist, whole-slot cancellation, shared calendar delivery and priced or approval group combinations remain unimplemented.",
+    "LOCALE-001": "MISSING judgment retained pending clause review; added native proof: native owner-session English or Spanish confirmation language, defaulting existing events to English. Built-in invitee confirmations snapshot the language, keep operator text and named timezones, render Spanish dates with explicit 12-hour times, and freeze delivery bytes for retries. Ordinary edits, draft duplication and native archive restoration preserve configuration. Other languages, invitee surfaces, mail families, managed locale templates and browser qualification remain held."
   },
   "extensionPointChanges": [],
   "migrations": [
@@ -281,8 +282,12 @@
     {
       "id": "0102_group_seat_capacity.sql",
       "buyerSteps": "Apply in filename order after a verified backup. Existing events retain null group capacity and ordinary overlap exclusion. Group capacity is configured through the native authenticated event endpoints; disconnect the calendar first. Existing booking records remain the seat ledger; the migration adds configuration guards and a slot lookup index."
+    },
+    {
+      "id": "0104_confirmation_language.sql",
+      "buyerSteps": "Back up and apply in filename order after 0103. Adds per-event confirmation language with English as the default; existing events, bookings and queued messages remain unchanged. Configure English or Spanish through the authenticated native event confirmation-language endpoint. Restore a verified backup with matching code to recover; do not reset populated state."
     }
   ],
   "breaking": false,
-  "agentUpdateInstructions": "Read this release record's contractChanges before updating from 0.4.2. This update adds migrations 0064–0065: back up first (rer export --output exports/NAME.rer locally, keeping .dev.vars with it; hosted: Settings, Export status, Download backup, and keep .rer/deploy/<environment>.secrets.env), then pull and run rer install, then rer setup locally or rer deploy from the same deploying checkout. Do not reset or replace state to upgrade. A backup made by 0.4.2 or 0.4.1, or by the release listed before them, can be restored into an empty destination with its original SESSION_SECRET: rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
+  "agentUpdateInstructions": "Read this release record's contractChanges before updating from 0.4.2. This update adds migrations 0064\u20130065: back up first (rer export --output exports/NAME.rer locally, keeping .dev.vars with it; hosted: Settings, Export status, Download backup, and keep .rer/deploy/<environment>.secrets.env), then pull and run rer install, then rer setup locally or rer deploy from the same deploying checkout. Do not reset or replace state to upgrade. A backup made by 0.4.2 or 0.4.1, or by the release listed before them, can be restored into an empty destination with its original SESSION_SECRET: rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
 }

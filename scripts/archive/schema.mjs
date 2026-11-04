@@ -59,6 +59,7 @@ export function validateRows(archive, model) {
       if (!row || Array.isArray(row) || JSON.stringify(Object.keys(row).sort()) !== JSON.stringify([...model.columns[table.name]].sort()) || Object.values(row).some(value => !validSqlValue(value))) throw new Error('archive-invalid-row');
       if (table.name === 'bookings' && (row.invitee_name_folded !== foldBookingSearch(row.invitee_name) || row.invitee_email_folded !== foldBookingSearch(row.invitee_email))) throw new Error('archive-invalid-search-values');
       if (table.name === 'event_types') {
+        if (!['en', 'es'].includes(row.confirmation_language)) throw new Error('archive-invalid-confirmation-language');
         const options = JSON.parse(row.duration_options_json);
         if (!Array.isArray(options) || options.length < 1 || options.length > 4 || options.some(value => !Number.isInteger(value) || value < 5 || value > 480) || new Set(options).size !== options.length || !options.includes(row.duration_minutes)) throw new Error('archive-invalid-event-durations');
         if (row.post_booking_redirect_json !== null) {

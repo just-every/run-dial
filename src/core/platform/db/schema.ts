@@ -59,6 +59,7 @@ export const eventTypes = sqliteTable("event_types", {
   durationMinutes: integer("duration_minutes").notNull(),
   durationOptionsJson: text("duration_options_json").notNull().default("[]"),
   groupCapacity: integer("group_capacity"),
+  confirmationLanguage: text("confirmation_language", { enum: ["en", "es"] }).notNull().default("en"),
   color: text("color").notNull(),
   locationType: text("location_type").notNull(),
   locationLabel: text("location_label").notNull(),

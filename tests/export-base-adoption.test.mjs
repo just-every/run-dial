@@ -2,6 +2,7 @@ import { build } from 'esbuild';
 import { agentUse } from './archive/agent-audit.mjs';
 import { groupSeatArchiveJourney } from './archive/group-upgrade.mjs';
 import { pollUpgrade } from './archive/poll-upgrade.mjs';
+import { localeUpgrade, localeProjectionRestored } from './archive/locale-upgrade.mjs';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { contract } from './contract.mjs';
@@ -27,6 +28,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await processorErasureUpgrade(source.db);
     const remembered=await clientUpgrade(source.db);
     const poll=await pollUpgrade(source.db);
+    await localeUpgrade(source.db);
     source.db.exec("UPDATE payment_movements SET stripe_customer_id='synthetic-dial-customer-1',stripe_customer_observed=1; UPDATE person_erasure_receipts SET stripe_sessions_retained=1; UPDATE anonymized_audit SET reason='Person erasure before payment confirmation'");
     source.db.exec("UPDATE event_types SET booking_horizon_mode='fixed_range', booking_start_date='2026-10-07', booking_end_date='2026-10-31', slot_increment_minutes=45");
     const names = source.db.prepare(tableQuery).all().map(row => row.name);
@@ -134,6 +136,7 @@ contract('DATA-001', 'the actual Base cancellation ledger survives the full popu
     await assert.rejects(restoreArchive(destination,changedOwner),/archive-missing-bootstrap-authority/);
     assert.equal(target.db.prepare('SELECT count(*) AS n FROM bookings').get().n,0,'an archive cannot demote the protected bootstrap owner');
     await restoreArchive(destination, archive);
+    await localeProjectionRestored(source.db, target.db, workflowCopyId);
     await clientProjectionRestored(source.db, target.db, remembered);
     assert.equal(target.db.prepare("SELECT role FROM oa_operators WHERE id='synthetic-dial-archive-admin'").get().role,'admin','native API administrators retain their role without inheriting owner authority');
     const restoredAudit = target.db.prepare("SELECT * FROM agent_door_audit ORDER BY sequence").all().map(row => ({ ...row }));

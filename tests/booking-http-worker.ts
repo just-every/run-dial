@@ -1,3 +1,4 @@
+import { EventConfirmationLanguages } from "../src/core/features/locales";
 import { ProcessorRequestsRepository } from "../src/core/features/erasure";
 import { PaymentsService } from "../src/core/features/payments";
 import { ensureTestOperator } from "./auth-fixture";
@@ -70,7 +71,7 @@ function servicesFor(binding: D1Database) {
     invitationManage: new InvitationManageService(binding, runtime),
     bookings: new BookingsService(new BookingsRepository(binding), availability, hostProfile, eventTypes, runtime, {
       probes: new CalendarDeletionProbesRepository(binding), inspect: async () => { throw new Error("The booking HTTP Worker has no calendar provider."); },
-    }, bookingLinks, payments),
+    }, new EventConfirmationLanguages(binding), bookingLinks, payments),
     spaSurface: { async serve(_request: Request, status: number) { return new Response("surface", { status }); } },
   };
 }
