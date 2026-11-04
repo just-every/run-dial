@@ -9279,7 +9279,7 @@
       "executable": false
     },
     "tests/booking-axe/run-axe.mjs": {
-      "sha256": "6e3c0539708fd93ee8b52c471bdc95cfa360eea00fc12b8f09536bf758efc6d8",
+      "sha256": "24ad0bf30befc177295fd6b945e35c61a80de9a0297e2f0597f2d5758db1cab9",
       "executable": false
     },
     "tests/booking-axe/timezone.mjs": {
