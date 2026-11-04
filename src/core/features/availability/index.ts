@@ -7,8 +7,8 @@ export type { AvailabilityResult, CalendarBusyRead, CalendarBusyReader } from ".
 export { datePlus, firstInstantOfHostDate, wallClockInstants, zonedParts, zonedOffsetLabel } from "./timezone";
 export type { RecommendationContext } from "./recommendations";
 export { unavailableTimeMessage } from "./diagnostics";
-export { NamedSchedules, bindEvent } from "./named-schedules";
-export { YourHours, startingHours, yoursId } from "./your-hours";
+export { NamedSchedules, bindEvent, bindCreatedEventToYours } from "./named-schedules";
+export { YourHours, startingHours, yoursId, createYoursForEvent } from "./your-hours";
 export type { Closures, HoursChoice, HoursRead } from "./your-hours";
 export { BookingLimits, bookingLimitsSchema, emptyBookingLimits } from "./booking-limits";
 export type { BookingLimitsConfig, BookingLimitExclusion } from "./booking-limits";

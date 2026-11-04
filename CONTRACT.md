@@ -547,7 +547,7 @@ Done means implemented with a test exercising the clause through its public or o
 | `EDITOR-001` | Owner editor | published | done | `scripts/verify-managed-editor.mjs` | Role refusals carried by `OPER-001`. |
 | `OPER-005` | Durable first run | published | done | `tests/first-run.test.mjs`, `tests/host-setup-journey.test.mjs` |  |
 | `OPER-006` | Editing a member's availability and event types | target | missing |  | No implementing code yet. |
-| `OPER-007` | Workspace capacity | target | missing |  | No implementing code yet. |
+| `OPER-007` | Workspace capacity | target | missing | `tests/event-type-capacity.test.mjs` exercises transactional native owner creation: all statuses count, concurrent admission respects host/workspace limits, refusal has no side effects, and existing over-capacity records remain editable and survive archive restoration. | Main’s missing judgment is retained pending clause acceptance. This bounded creation implementation does not establish the whole clause: duplicate admission, capacity controls and browser qualification, 90% warning/re-arm, independent multi-host/team capacity, invitation/JIT SSO/SCIM/API/move-in admission, managed-template publication, audit/refusal capture, other manifest floors and the retained/monthly booking performance fixture remain unqualified. |
 | `TEAM-001` | Hosts as independent schedulers | target | missing |  | No implementing code yet. |
 | `TEAM-002` | Teams and team pages | target | missing |  | No implementing code yet. |
 | `ADMIN-001` | Single sign-on and provisioning | target | missing |  | No implementing code yet. |
