@@ -200,9 +200,9 @@ Gap: Guest access defaults off; the host configures a maximum. The invitee adds 
 
 EVENT-010 is missing: Recurring bookings.
 
-Evidence: None.
+Evidence: `tests/recurring-preview.test.mjs` — "weekly public preview offers fresh alternates without booking authority or side effects" and "weekly preview bounds proposals and refuses hidden events and unsupported configurations without writes".
 
-Gap: No implementing code yet.
+Gap: Main’s current missing judgment is retained pending clause review; the added read-only preview is advisory evidence, not series-booking acceptance. Native sessionless advisory weekly preview supports 2 to 24 proposed occurrences for an ordinary published single-host, free, unapproved event with one fixed duration and location, without a connected calendar, additional guests, group capacity or restricted booking link. The six-week journey identifies the blocked third week and offers current ordinary-public-availability alternates; repeated previews issue no authority, change no event configuration or stored data and contact no provider. Held remainder: recurrence controls and browser qualification in the held UI, stored event-type recurrence settings, every-two-weeks and monthly modes, confirmation-time AVAIL-002 validation and atomic series admission, booking available occurrences or committed alternates, occurrence rescheduling and individual or this-and-following cancellation, one recurring calendar event with exceptions, per-occurrence reminders, future series archive and erasure carriers, and payment, approval, guest, group or multi-host combinations. The full EVENT-010 acceptance journey remains required; EVENT-007 precedes EVENT-010, then OPER-001 and TEAM-001. CAL-010 and CAL-011 custody, MEET-002 and CAL-012 prerequisites, existing API, payment and calendar custody, DATA-002 NO, DATA-004 hold, sd-dial-c-f26 gate and landing, every existing queue entry, note, hold and release prerequisite remain unchanged.
 
 EVENT-011 is done: Invitee-selectable durations.
 
