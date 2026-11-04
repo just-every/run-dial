@@ -67,7 +67,7 @@ export class EventTypesService {
     return this.repository.listPublishedListed();
   }
 
-  /** A new event uses your hours unless it gives its own: `hours`, or windows in the weekly `availability` the API has always taken. */
+  /** New events use your hours unless given their own. Repository admission refuses capacity atomically before any hours are created. */
   createEventType({ hours, availability, ...input }: NewEventType) {
     const own = hours?.uses === "own" ? hours.windows : hours ? undefined : availability?.length ? availability : undefined;
     return own ? this.repository.create({ ...input, availability: own }) : this.repository.create({ ...input, availability: [] }, "yours");

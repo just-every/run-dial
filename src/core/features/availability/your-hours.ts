@@ -28,6 +28,12 @@ export async function yoursId(binding: D1Database) {
   return (await binding.prepare("SELECT id FROM availability_schedules WHERE is_default=1").first<{ id: string }>())!.id;
 }
 
+/** A refused new event must not leave a preliminary default schedule behind. */
+export function createYoursForEvent(binding: D1Database, eventId: string, now: string) {
+  return binding.prepare("INSERT INTO availability_schedules (id,name,windows_json,block_us_holidays,reopened_holidays_json,time_off_json,is_default,created_at,updated_at) SELECT ?,'Your hours',?,0,'[]','[]',1,?,? WHERE EXISTS (SELECT 1 FROM event_types WHERE id=?) AND NOT EXISTS (SELECT 1 FROM availability_schedules WHERE is_default=1)")
+    .bind(createId(), JSON.stringify(startingHours), now, now, eventId);
+}
+
 export class YourHours {
   constructor(private readonly binding: D1Database) {}
 

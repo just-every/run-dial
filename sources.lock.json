@@ -919,7 +919,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c1d5971df906755834190a10f9dd6a90f241ecb1f18fa10bce60ec0a8649df53",
+      "sha256": "1c9e639f01ebd9d890651325133569c11b8fd2d9506ff6604e1553db1e393278",
       "executable": false
     },
     "DEMO.md": {
@@ -5023,7 +5023,7 @@
       "executable": false
     },
     "scripts/validate-manifest-contract.mjs": {
-      "sha256": "75372eccba2f79d0958bb94de42b76c450dbe56e6a8a7efb79d1a3e77e55b360",
+      "sha256": "dcc14b5b8443861c33d7cbe6d79d5e76248bba7575b9eb1e20265c04adcf3f98",
       "executable": false
     },
     "scripts/verify-acceptance-audit.mjs": {
@@ -5179,7 +5179,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "afa48b1ad4b771c8abd7664f29c4a908fa2ce19e2af19f4909411456d29e0721",
+      "sha256": "5c291732249600495d2ce3ffe4afe48733f460138367fe23d3f65a562d8601b1",
       "executable": false
     },
     "src/agent-door/accounting-tools.ts": {
@@ -5807,7 +5807,7 @@
       "executable": false
     },
     "src/core/features/availability/index.ts": {
-      "sha256": "cd3c3b95d193a956b888839ebe6b3905cfcf0d3887862df08f7d5a08ce44e795",
+      "sha256": "e242ba303a928879609980265558399a4071acbd53efccafdd8d6a5035e40b95",
       "executable": false
     },
     "src/core/features/availability/input.ts": {
@@ -5819,7 +5819,7 @@
       "executable": false
     },
     "src/core/features/availability/named-schedules.ts": {
-      "sha256": "e14bae92821b9dc5df5ad38f7729849911c34a819ef7914a7d60ac80ed356091",
+      "sha256": "bee6bc7cb4bfbfb268c809f9428bbf9152ec9f027166a6441e74fdea00125bc2",
       "executable": false
     },
     "src/core/features/availability/recommendations.ts": {
@@ -5891,7 +5891,7 @@
       "executable": false
     },
     "src/core/features/availability/your-hours.ts": {
-      "sha256": "89787a05169b62d0c7a7e9fcc0ce77a0334832ed1b82866091e488d02ad44e17",
+      "sha256": "e50e9340f336e349280cb406f80315b5aee2b96267795274c26cf957baacfdd2",
       "executable": false
     },
     "src/core/features/booking-links/client.ts": {
@@ -6606,6 +6606,14 @@
       "sha256": "3e20a76a90b0ab435f40c089888dff831de9387603379d6e35c5486c4d428fd6",
       "executable": false
     },
+    "src/core/features/event-types/event-capacity.ts": {
+      "sha256": "2d54cd3f8774f57517e1b7c962be0489cb4598551c09396c818fd824ec2a7b9d",
+      "executable": false
+    },
+    "src/core/features/event-types/event-capacity/repository.ts": {
+      "sha256": "6b10f36c0a60a28a5338c9fe41d1c671729fddaf5763b059f161d05adba38eef",
+      "executable": false
+    },
     "src/core/features/event-types/event-input.ts": {
       "sha256": "399d0f5eff96d405b801644a504591a07a7e75fa749d3db1885d208474222f37",
       "executable": false
@@ -6655,15 +6663,15 @@
       "executable": false
     },
     "src/core/features/event-types/repository.ts": {
-      "sha256": "c0480d2f1ed75403837bde9f1e2065f9ab8fc39e3b2ef3f94f02246dab229b40",
+      "sha256": "34d10ca972c09cc893e48e927babbae1613a7e4d2a6dc4668a53036f2600d9aa",
       "executable": false
     },
     "src/core/features/event-types/routes.ts": {
-      "sha256": "5717f220492db447b984efbff43903c39fa78b938a47e93a242e58b493b45c12",
+      "sha256": "414c1056c1d37179fe898347c7c2d8c9add681e60d4018663b826676e8b2a854",
       "executable": false
     },
     "src/core/features/event-types/service.ts": {
-      "sha256": "e1a764ad626a77431a4f74d94ce55fd1de76242548a5364609f60164bb11cb0c",
+      "sha256": "2f4b92d76e29fde99038fd8774d7b45af01a972b443deffb025b8dc7c7c3370f",
       "executable": false
     },
     "src/core/features/event-types/ui/advanced-groups/address-and-listing.tsx": {
@@ -9795,11 +9803,15 @@
       "executable": false
     },
     "tests/event-status-trigger/fixture.mjs": {
-      "sha256": "4677febf022069f4fba663da06888d130b368fe92f0d05d3db9fe64d0ee65d1b",
+      "sha256": "079cc65e1a255cc6ec440caeff11a4a488f07bb237939a90fab843946be3c09a",
       "executable": false
     },
     "tests/event-status-trigger/worker.mjs": {
       "sha256": "05e461feb2384437cebcaea1e28cfd2197caf12663d5e6a46cb4b0ab0c0a0f16",
+      "executable": false
+    },
+    "tests/event-type-capacity.test.mjs": {
+      "sha256": "0786dc60aedd3615ab6510a5faafb5e72de0d51e0f4b94ac5b89a070783c8c4d",
       "executable": false
     },
     "tests/export-base-adoption.test.mjs": {
