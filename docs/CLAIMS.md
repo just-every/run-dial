@@ -242,9 +242,9 @@ Gap: The cited paths cover part of the clause; the rest is still to build.  Conf
 
 LOCALE-001 is missing: Languages and time formats.
 
-Evidence: None.
+Evidence: `tests/booking-wire/confirmation-locale-journey.mjs` — confirmationLocaleJourney: owner configuration, public nonce confirmation, Spanish built-in subject and MIME bodies, explicit 12-hour local and locked-zone times, unchanged escaped operator content, English control, replay, frozen retries, edit and duplication, revoked authority and person erasure; `tests/archive/locale-upgrade.mjs` — localeUpgrade and localeProjectionRestored within the DATA-001 Base export and restore journey: populated upgrade defaults and preserved Spanish configuration.
 
-Gap: No implementing code yet.
+Gap: Main's missing judgment is retained pending clause review; the added native proof does not qualify the whole language requirement. Native Spanish built-in invitee confirmation only for an ordinary single-host free unapproved fixed-location event without guests or a connected calendar. Remaining: held language controls and browser qualification; translated booking pages, routing forms, polls, embeds and manage pages; browser negotiation and German-browser acceptance; page language and 12-hour or 24-hour switching; French, German, Brazilian Portuguese, Italian and Dutch; the complete seven-language invitee-string catalog; other invitee mail families and SMS; paid, approval, guest, group and multi-host combinations. Managed team and locale edited templates and fallback remain with NOTIFY-009; Base Managed Mail Reply-To remains unchanged. No whole-clause completion or release is claimed.
 
 TEAM-003 is missing: Round-robin events.
 
