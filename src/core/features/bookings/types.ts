@@ -157,6 +157,7 @@ export type BookingConfirmation = {
 };
 
 export type BookingEmail = {
+  confirmationLanguage?: "en" | "es";
   guest?: true;
   changeReason?: string;
   messageKind?: "confirmation" | "reschedule" | "cancellation";

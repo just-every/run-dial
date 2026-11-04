@@ -12,6 +12,8 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Older events retain the same English confirmation after restoration.
+  'core/0104_confirmation_language.sql': (table, row) => table === 'event_types' ? { ...row, confirmation_language: 'en' } : row,
   // Poll reminder configuration starts disabled on every existing poll.
   'core/0103_poll_reminders.sql': (table,row) => table==='meeting_polls'?{...row,reminder_offsets_json:'[]'}:row,
   // Existing event types remain ordinary appointments after a capacity upgrade.

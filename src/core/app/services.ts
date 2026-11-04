@@ -1,3 +1,4 @@
+import { EventConfirmationLanguages } from "../features/locales";
 import { MailBrandReader } from "../features/delivery/mail-brand";
 import { TeamsRepository } from "../features/teams";
 import { RoutingRepository } from "../features/routing";
@@ -72,9 +73,10 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   const bookingsRepository = new BookingsRepository(binding);
   const payments = new PaymentsService(binding, runtime, new ProcessorRequestsRepository(binding), adapters.paymentsTransport,adapters.paymentsClock);
   payments.setConversion((claim, payment, approval) => bookingsRepository.claim(claim, payment, approval));
+  const confirmationLanguages = new EventConfirmationLanguages(binding);
   const bookings = new BookingsService(bookingsRepository, availability, hostProfile, eventTypes, runtime, {
     probes: new CalendarDeletionProbesRepository(binding), inspect: (input) => calendar.inspectManagedEvent(input),
-  }, bookingLinks, payments);
+  }, confirmationLanguages, bookingLinks, payments);
   calendar.setExternalChangeHandler(adapters.calendarChanges ?? bookings);
   if (adapters.connectionWatch) calendar.setWatchObservers(adapters.connectionWatch);
   const authMail = adapters.authMail ?? (adapters.mail ? { async send(message: import("../../../modules/operator-auth/index.mjs").MailMessage) {
@@ -83,6 +85,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    confirmationLanguages,
     polls: new PollsService(binding,runtime.SESSION_SECRET,runtime.APP_URL,availability,bookingLinks),
     clients: new ClientsRepository(binding),
     rememberedDetails: new RememberedDetails(binding,runtime.SESSION_SECRET,runtime.APP_URL,bookings),

@@ -1,3 +1,4 @@
+import { spanishConfirmationMail, type ConfirmationLanguage } from "../locales";
 import { calendarStatus } from "../../shared/booking-status";
 import { inviteeCalendarUrl, renderBrandedMail, type BrandedMailAction, type BrandedMailFact, type BrandedMailInput } from "./branded-layout";
 import { mailJoinActions } from "./mail-action-url";
@@ -5,6 +6,7 @@ import { bookingTimeFacts, previousBookingTimeFacts, timeFactsText } from "./boo
 export { formatTimeRange } from "./booking-mail-times";
 
 export type BookingMailDetails = {
+  confirmationLanguage?: ConfirmationLanguage;
   hostName: string;
   eventTitle: string;
   startAt: string;
@@ -66,6 +68,7 @@ export function bookingConfirmationMail(input: BookingMailDetails & {
   answers: Array<{ label: string; value: string }>;
 }) {
   if (input.recipientRole === "invitee" && !input.manageUrl) throw new TypeError("Invitee confirmation requires its manage capability");
+  if (input.recipientRole === "invitee" && input.confirmationLanguage === "es") return spanishConfirmationMail({ ...input, manageUrl: input.manageUrl!, renderedLocation: locationText(input), joinUrl: bookingJoinUrl(input), paymentFacts: paymentFacts(input), paymentText: paymentText(input) });
   const location = locationText(input);
   const timeFacts = bookingTimeFacts(input);
   const facts: BrandedMailFact[] = [

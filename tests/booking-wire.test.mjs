@@ -40,11 +40,19 @@ async function wireJourney(t, feature) {
     child.stdout.on("data", chunk => { log += chunk; }); child.stderr.on("data", chunk => { log += chunk; });
     child.on("error", reject); child.on("exit", code => code === 0 ? done(log) : reject(new Error(log)));
   });
-  if (feature !== "webhooks") await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
+  const native = ["webhooks", "confirmation-locale"].includes(feature);
+  if (!native) await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
   const microsoft = ["microsoft", "calendar-correspondence-microsoft"].includes(feature) ? ["--var", "CALENDAR_PROVIDER:microsoft", "--var", "MICROSOFT_OAUTH_CLIENT_ID:synthetic-dial-801-client", "--var", "MICROSOFT_OAUTH_CLIENT_SECRET:synthetic-dial-802-secret"] : [];
-  if (feature === "webhooks") {
+  if (native) {
     const { startWebhookRuntime } = await import("./booking-wire/webhook-runtime.mjs");
     nativeRuntime = await startWebhookRuntime({ state, port, origin, receiver });
+    if (feature === "confirmation-locale") {
+      const db = await nativeRuntime.getD1Database("DB");
+      const colours = { background: "#ffffff", ink: "#1d1c1a", accent: "#275b83", buttonInk: "#ffffff" };
+      // The owner already read this site's look; the journey edits its values through native HTTP.
+      await db.prepare("INSERT INTO site_looks(id,website_url,read_at,name,colours_json,look,created_at,updated_at) VALUES(?,?,?,?,?,'site',?,?)")
+        .bind("synthetic-dial-1600", "https://studio.example.test", "2026-01-01T12:00:00.000Z", "Synthetic Studio", JSON.stringify({ read: colours, used: colours, adjusted: [] }), "2026-01-01T12:00:00.000Z", "2026-01-01T12:00:00.000Z").run();
+    }
   } else {
     server = spawn("pnpm", ["exec", "wrangler", "dev", "--local", "--persist-to", state, "--config", config, "--ip", "127.0.0.1", "--port", String(port), "--inspector-port", String(inspector), ...microsoft], { env, stdio: "pipe", detached: true });
     server.stdout.on("data", chunk => { output += chunk; }); server.stderr.on("data", chunk => { output += chunk; });
@@ -81,3 +89,5 @@ test("configured booking analytics uploads click-only conversions once and honor
 test("booking analytics emits configured events once and stays silent without tags at desktop and mobile", t => runAxe(t, "tests/booking-axe/analytics.mjs"));
 
 test("unanswered poll reminders follow explicit durable offsets and stop at every terminal transition", t => wireJourney(t, "poll-reminders"));
+
+test("Spanish built-in confirmation preserves saved language, local times, authority and frozen retry content", t => wireJourney(t, "confirmation-locale"));

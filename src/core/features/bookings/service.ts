@@ -1,3 +1,4 @@
+import { spanishConfirmation, type EventConfirmationLanguages } from "../locales";
 import { clickIdsSchema, type ClickIds } from "../analytics";
 import { ApprovalService } from "./approval-service";
 import type { ApprovalSettings } from "./approvals";
@@ -78,6 +79,7 @@ export class BookingsService {
     private readonly eventTypes: EventTypesService,
     private readonly runtime: RuntimeEnvironment,
     private readonly deletions: Pick<DeletionReconciliationDependencies, "inspect" | "probes">,
+    private readonly confirmationLanguages: EventConfirmationLanguages,
     private readonly bookingLinks?: BookingLinksService,
     private readonly payments?: PaymentsService,
   ) { this.approvals=new ApprovalService({repository,availability,profiles,eventTypes,runtime,payments,confirmationEmails:input=>this.confirmationEmails(input),toConfirmation:(booking,profile,token)=>this.toConfirmation(booking,profile,token)}); }
@@ -704,6 +706,9 @@ export class BookingsService {
 
   private async confirmationEmails(input: { profile: ProfileRecord; event: EventTypeRecord; invitee: { name: string; email: string; answers: Record<string, string | string[]>; guests?: string[] }; startAt: string; endAt: string; inviteeTimezone: string; browserTimezone?: string | null; manageToken: string; bookingId: string; calendarRequired?: boolean; payment?: PaymentMailFacts }): Promise<BookingEmail[]> {
     const { profile, event, invitee, startAt, endAt, inviteeTimezone, manageToken, bookingId } = input;
+    const languageConfiguration = await this.confirmationLanguages.read(event.id);
+    if (!languageConfiguration) throw new Error("Event disappeared before confirmation content was queued.");
+    const { confirmationLanguage } = languageConfiguration;
     const manageUrl = new URL(`/manage/${manageToken}`, this.runtime.APP_URL).toString();
     const location = event.locationType === "google_meet" ? "Google Meet link pending" : event.locationValue;
     const answerDetails = event.questions.flatMap((question) => {
@@ -723,7 +728,7 @@ export class BookingsService {
       ...(input.payment ? { payment: input.payment } : {}),
     };
     return [
-      { to: invitee.email, recipientRole: "invitee", messageKind: "confirmation", manageUrl, subject: `Confirmed: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "invitee", manageUrl }), ...calendarFile },
+      { to: invitee.email, recipientRole: "invitee", messageKind: "confirmation", confirmationLanguage, manageUrl, subject: `${confirmationLanguage === "es" ? spanishConfirmation.subject : "Confirmed"}: ${event.title}`, ...bookingConfirmationMail({ ...details, confirmationLanguage, recipientRole: "invitee", manageUrl }), ...calendarFile },
       ...(invitee.guests ?? []).map(to => guestNotice({ eventTitle: event.title, startAt, endAt, location: event.locationType === "google_meet" ? undefined : event.locationValue }, to, "confirmation")),
       ...operators.map(({ email: to, id, generation }) => ({ to, operatorAccess: { id, generation }, recipientRole: "operator" as const, subject: `New booking: ${event.title}`, ...bookingConfirmationMail({ ...details, recipientRole: "operator" }) })),
     ];

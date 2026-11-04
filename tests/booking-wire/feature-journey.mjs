@@ -1,3 +1,4 @@
+import { confirmationLocaleJourney } from "./confirmation-locale-journey.mjs";
 import { pollReminderJourney } from "./poll-reminder-journey.mjs";
 import { webhookJourney } from "./webhook-journey.mjs";
 import { analyticsJourney } from "./analytics-journey.mjs";
@@ -12,7 +13,7 @@ import { approvalAccessJourney } from "./approval-access-journey.mjs";
 
 // Each feature gets a fresh production Worker and an independent registration; only providers are synthetic.
 const origin = process.env.DIAL_REVIEW_ORIGIN, feature = process.argv[2], checks = [];
-const journeys = { "poll-reminders": pollReminderJourney, analytics: analyticsJourney, webhooks: webhookJourney, guests: guestJourney, approval: approvalJourney, "approval-meet": approvalMeetJourney, "approval-access": approvalAccessJourney };
+const journeys = { "confirmation-locale": confirmationLocaleJourney, "poll-reminders": pollReminderJourney, analytics: analyticsJourney, webhooks: webhookJourney, guests: guestJourney, approval: approvalJourney, "approval-meet": approvalMeetJourney, "approval-access": approvalAccessJourney };
 assert.ok(Object.hasOwn(journeys, feature));
 let cookie;
 const phase=process.env.DIAL_POLL_PHASE;

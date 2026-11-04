@@ -1,3 +1,4 @@
+import { spanishConfirmation, type ConfirmationLanguage } from "../locales";
 import type { BrandedMailFact } from "./branded-layout";
 
 type BookingMailTimes = {
@@ -9,8 +10,9 @@ type BookingMailTimes = {
   browserTimezone?: string | null;
 };
 
-export function formatTimeRange(startAt: string, endAt: string, timeZone: string, numericUtcOffset = false) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
+export function formatTimeRange(startAt: string, endAt: string, timeZone: string, numericUtcOffset = false, language: ConfirmationLanguage = "en") {
+  const formatter = new Intl.DateTimeFormat(language === "es" ? "es-US" : "en-US", {
+    hour12: true,
     timeZone, year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
     timeZoneName: numericUtcOffset ? "longOffset" : "shortOffset",
   });
@@ -22,18 +24,19 @@ export function formatTimeRange(startAt: string, endAt: string, timeZone: string
   return `${format(startAt)}–${format(endAt)} (${timeZone})`;
 }
 
-export function bookingTimeFacts(input: BookingMailTimes, prefix = ""): BrandedMailFact[] {
+export function bookingTimeFacts(input: BookingMailTimes, prefix = "", language: ConfirmationLanguage = "en"): BrandedMailFact[] {
+  const labels = language === "es" ? spanishConfirmation : { time: "Time", browserTime: "Browser time", browserZone: "Invitee browser zone", missingZone: "Zone not provided by invitee", inviteeTime: "Invitee time", hostTime: "Host time" };
   if (input.lockedTimezone) {
     return [
-      { label: prefix ? `${prefix} time` : "Time", value: formatTimeRange(input.startAt, input.endAt, input.lockedTimezone, true) },
+      { label: prefix ? `${prefix} time` : labels.time, value: formatTimeRange(input.startAt, input.endAt, input.lockedTimezone, true, language) },
       ...(input.browserTimezone && input.browserTimezone !== input.lockedTimezone
-        ? [{ label: prefix ? `${prefix} browser time` : "Browser time", value: formatTimeRange(input.startAt, input.endAt, input.browserTimezone, true) }]
-        : input.browserTimezone ? [] : [{ label: "Invitee browser zone", value: "Zone not provided by invitee" }]),
+        ? [{ label: prefix ? `${prefix} browser time` : labels.browserTime, value: formatTimeRange(input.startAt, input.endAt, input.browserTimezone, true, language) }]
+        : input.browserTimezone ? [] : [{ label: labels.browserZone, value: labels.missingZone }]),
     ];
   }
   return [
-    { label: prefix ? `${prefix} invitee time` : "Invitee time", value: formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone) },
-    { label: prefix ? `${prefix} host time` : "Host time", value: formatTimeRange(input.startAt, input.endAt, input.hostTimezone) },
+    { label: prefix ? `${prefix} invitee time` : labels.inviteeTime, value: formatTimeRange(input.startAt, input.endAt, input.inviteeTimezone, false, language) },
+    { label: prefix ? `${prefix} host time` : labels.hostTime, value: formatTimeRange(input.startAt, input.endAt, input.hostTimezone, false, language) },
   ];
 }
 
