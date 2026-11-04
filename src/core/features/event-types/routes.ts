@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { EventCapacityReached } from "./event-capacity";
 import { toPublicEventType } from "./public";
 import { z } from "zod";
 import { isPaid } from "../payments";
@@ -22,6 +23,9 @@ const publicEventSchema = z.object({ handle: z.string().regex(/^[a-z0-9-]+$/), s
 
 export const eventTypeRoutes = new Hono<AppEnvironment>()
   .onError((error, context) => {
+    if (error instanceof EventCapacityReached) return context.json({ error: {
+      code: error.code, message: error.message, limit: error.limit, value: error.value, currentUse: error.currentUse,
+    } }, 409);
     const issue = groupWriteConflict(error);
     if (issue) return apiError(context, 409, issue, groupConfigurationMessages[issue]);
     throw error;

@@ -44,6 +44,18 @@ export function bindEvent(binding: D1Database, eventId: string, scheduleId: stri
   ];
 }
 
+/** Bind only an admitted new event, selecting the default schedule inside its transaction. */
+export function bindCreatedEventToYours(binding: D1Database, eventId: string, now: string) {
+  return [
+    binding.prepare("INSERT INTO event_schedule_bindings (event_type_id,schedule_id,created_at,updated_at) SELECT ?,id,?,? FROM availability_schedules WHERE is_default=1 AND EXISTS (SELECT 1 FROM event_types WHERE id=?)")
+      .bind(eventId, now, now, eventId),
+    binding.prepare(`INSERT INTO recurring_availability_windows (id,event_type_id,weekday,start_minute,end_minute,created_at,updated_at)
+      SELECT ${windowRowIdSql()}, b.event_type_id, json_extract(w.value,'$.weekday'),json_extract(w.value,'$.startMinute'),json_extract(w.value,'$.endMinute'),?,?
+      FROM event_schedule_bindings b JOIN availability_schedules s ON s.id=b.schedule_id, json_each(s.windows_json) w WHERE b.event_type_id=?`)
+      .bind(now, now, eventId),
+  ];
+}
+
 /** Shared windows are materialized atomically so all existing booking paths see the same hours. */
 export class NamedSchedules {
   constructor(private readonly binding: D1Database) {}
