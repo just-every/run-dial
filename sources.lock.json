@@ -919,7 +919,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c1d5971df906755834190a10f9dd6a90f241ecb1f18fa10bce60ec0a8649df53",
+      "sha256": "242dd2ff82716d3936520e2c059c08f20605a7fd9584a77767236ed10ab023eb",
       "executable": false
     },
     "DEMO.md": {
@@ -9307,7 +9307,7 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "7424f44d3992a9e5c1f25e8f376cec6c36048ae880972f92b4852ec2c90213b1",
+      "sha256": "788ca33e04a91d5cb50b1c8272379418892fdbbded33c86aa6d798b3c26b4fa2",
       "executable": false
     },
     "tests/booking-wire/accounting-wire.ts": {
@@ -9359,7 +9359,7 @@
       "executable": false
     },
     "tests/booking-wire/feature-journey.mjs": {
-      "sha256": "899b588e56ed98e15187f0f6923a05c389342c6e23affd282b15e23144f64a52",
+      "sha256": "8f6df73a4311aac5a93da793a88ec3db48e6782071a8803b670558858d3adb2a",
       "executable": false
     },
     "tests/booking-wire/group-seat-journey.mjs": {
@@ -9544,6 +9544,10 @@
     },
     "tests/booking-wire/reminder-cadence.mjs": {
       "sha256": "f43bee8eb627623684be9e3123518b19d51f5cdfc3fed74371a8a6a228630101",
+      "executable": false
+    },
+    "tests/booking-wire/reschedule-request-context-journey.mjs": {
+      "sha256": "b7c3cff3ba544d15ac45ac7050b6cf3a1b13dbcc4c6677a251d227751912554b",
       "executable": false
     },
     "tests/booking-wire/reschedule-request-journey.mjs": {

@@ -72,6 +72,7 @@ test("saved calendar correspondence follows reschedules and the invitation-link 
   await wireJourney(t, "calendar-correspondence-microsoft");
 });
 test("EVENT-009/POLL-001 invitee guests receive invitations and changes without booking authority", t => wireJourney(t, "guests"));
+test("host reschedule requests preserve stored answers and guests through released and held invitee picks", t => wireJourney(t, "reschedule-request-context"));
 test("EVENT-008/PAY-007 approval requests authorize shown terms and confirm only after host approval and signed capture", t => wireJourney(t, "approval"));
 test("approval creates one Google Meet conference only after the owner decides and never on decline or expiry", t => wireJourney(t, "approval-meet"));
 test("an approved request link stops opening the booking once its manage link is replaced or expires", t => wireJourney(t, "approval-access"));
