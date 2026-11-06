@@ -1,0 +1,36 @@
+TAP version 13
+# FLOW-005: PASS signed/session-bound/single-use/expired Slack OAuth refusals, sealed credentials, channel and Teams destinations, one private-answer-free message per create/reschedule/cancel on duplicate public callback
+# FLOW-005: PASS 429 Retry-After retry without failure, revoked destinations stop sends, one operator mail alert, DM reconnect resumes new events without replay
+# FLOW-005: PASS erased invitee stops future sends, Slack deletion receipt, honest Teams pending cleanup, no invitee values in notice logs, ambiguous send no replay and disconnect removes credentials
+# Production Google + Base SendGrid lifecycle and native request-only journey passed.
+# Microsoft calendar public-door journey passed.
+# Subtest: Native Google and Microsoft calendar lifecycles and Base SendGrid outbox preserve request-only scheduling
+ok 1 - Native Google and Microsoft calendar lifecycles and Base SendGrid outbox preserve request-only scheduling
+  ---
+  duration_ms: 116466.675862
+  type: 'test'
+  ...
+# google calendar correspondence public-door journey passed.
+# microsoft calendar correspondence public-door journey passed.
+# Subtest: saved calendar correspondence follows reschedules and the invitation-link toggle on Google and Microsoft
+ok 2 - saved calendar correspondence follows reschedules and the invitation-link toggle on Google and Microsoft
+  ---
+  duration_ms: 70449.980552
+  type: 'test'
+  ...
+# reschedule-request-context public-door journey passed.
+# Subtest: host reschedule requests preserve stored answers and guests through released and held invitee picks
+ok 3 - host reschedule requests preserve stored answers and guests through released and held invitee picks
+  ---
+  duration_ms: 35259.803506
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 222253.451639

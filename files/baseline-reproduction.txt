@@ -1,0 +1,91 @@
+TAP version 13
+# ▲ [WARNING] Proxy environment variables detected. We'll use your proxy for fetch requests.
+# Subtest: Google owned outage duplicates recover only for a current authorized booking and verified provider pair
+not ok 1 - Google owned outage duplicates recover only for a current authorized booking and verified provider pair
+  ---
+  duration_ms: 6280.205566
+  type: 'test'
+  location: '/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/tests/booking-wire.test.mjs:96:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    node:internal/modules/run_main:123
+        triggerUncaughtException(
+        ^
+    
+    AssertionError [ERR_ASSERTION]: a lost cleanup response recovers by reading provider state without sending another invitation
+    + actual - expected
+    ... Skipped lines
+    
+      [
+        {
+          at: '2026-11-06T14:57:48.411Z',
+          body: null,
+          headers: '{"authorization":"Bearer [synthetic credential redacted]","if-match":"\\"synthetic-dial-1803\\""}',
+    ...
+        },
+    +   {
+    +     at: '2026-11-06T14:57:48.459Z',
+    +     body: '{"summary":"Synthetic studio visit","transparency":"opaque","description":"Dial booking with Synthetic Invitee\\n\\nManage this booking: http://127.0.0.1:15754/manage/[redacted]\\nThis link emails a booking management link to the invitee.","location":"Room 4","start":{"dateTime":"2026-11-16T10:00:00.000Z","timeZone":"UTC"},"end":{"dateTime":"2026-11-16T10:30:00.000Z","timeZone":"UTC"},"attendees":[{"email":"[synthetic address redacted]"}],"extendedProperties":{"private":{"dial-idempotency-key":"booking:01M6RNVAPZS8K7D4G090NJJPGN:occurrence:01M6RNVAPZYR6NBHEHX9X1NYP5:calendar","dial-booking-id":"01M6RNVAPZS8K7D4G090NJJPGN","dial-occurrence-id":"01M6RNVAPZYR6NBHEHX9X1NYP5","dial-ical-uid":"dial-01M6RNVAPZS8K7D4G090NJJPGN@dial"}}}',
+    +     headers: '{"authorization":"Bearer [synthetic credential redacted]","content-type":"application/json","if-match":"\\"f32b56e8-3aeb-4d65-9bd5-b963f10008de\\""}',
+    +     id: 47,
+    +     method: 'PATCH',
+    +     url: 'https://www.googleapis.com/calendar/v3/calendars/synthetic-calendar/events/d142f13cd2eb1a1e232d1f0cf724641b549553c7d7411fc3c9c8c694dba8fcf7?conferenceDataVersion=1&sendUpdates=all'
+    +   }
+      ]
+    
+        at file:///home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/tests/booking-wire/google-duplicate-recovery-journey.mjs:118:12
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: [
+        {
+          id: 45,
+          url: 'https://www.googleapis.com/calendar/v3/calendars/synthetic-calendar/events/deadbeef1803?sendUpdates=none',
+          method: 'DELETE',
+          body: null,
+          headers: '{"authorization":"Bearer [synthetic credential redacted]","if-match":"\\"synthetic-dial-1803\\""}',
+          at: '2026-11-06T14:57:48.411Z'
+        },
+        {
+          id: 47,
+          url: 'https://www.googleapis.com/calendar/v3/calendars/synthetic-calendar/events/d142f13cd2eb1a1e232d1f0cf724641b549553c7d7411fc3c9c8c694dba8fcf7?conferenceDataVersion=1&sendUpdates=all',
+          method: 'PATCH',
+          body: '{"summary":"Synthetic studio visit","transparency":"opaque","description":"Dial booking with Synthetic Invitee\\n\\nManage this booking: http://127.0.0.1:15754/manage/[redacted]\\nThis link emails a booking management link to the invitee.","location":"Room 4","start":{"dateTime":"2026-11-16T10:00:00.000Z","timeZone":"UTC"},"end":{"dateTime":"2026-11-16T10:30:00.000Z","timeZone":"UTC"},"attendees":[{"email":"[synthetic address redacted]"}],"extendedProperties":{"private":{"dial-idempotency-key":"booking:01M6RNVAPZS8K7D4G090NJJPGN:occurrence:01M6RNVAPZYR6NBHEHX9X1NYP5:calendar","dial-booking-id":"01M6RNVAPZS8K7D4G090NJJPGN","dial-occurrence-id":"01M6RNVAPZYR6NBHEHX9X1NYP5","dial-ical-uid":"dial-01M6RNVAPZS8K7D4G090NJJPGN@dial"}}}',
+          headers: '{"authorization":"Bearer [synthetic credential redacted]","content-type":"application/json","if-match":"\\"f32b56e8-3aeb-4d65-9bd5-b963f10008de\\""}',
+          at: '2026-11-06T14:57:48.459Z'
+        }
+      ],
+      expected: [
+        {
+          id: 45,
+          url: 'https://www.googleapis.com/calendar/v3/calendars/synthetic-calendar/events/deadbeef1803?sendUpdates=none',
+          method: 'DELETE',
+          body: null,
+          headers: '{"authorization":"Bearer [synthetic credential redacted]","if-match":"\\"synthetic-dial-1803\\""}',
+          at: '2026-11-06T14:57:48.411Z'
+        }
+      ],
+      operator: 'deepStrictEqual',
+      diff: 'simple'
+    }
+    
+    Node.js v22.20.0
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    file:///home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/tests/booking-wire/google-duplicate-recovery-journey.mjs:118:12
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+    ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/tests/booking-wire.test.mjs:41:89)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess.emit (node:domain:489:12)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6350.631491

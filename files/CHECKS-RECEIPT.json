@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "tag": "sd-dial-c-f37",
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f37",
+  "head": "8b0da35380662df3fda363534a1dbdb91338bb28",
+  "created_at": "2026-11-06T15:09:43.140361+00:00",
+  "node": "22.20.0",
+  "pnpm": "10.12.4",
+  "commands": [
+    {
+      "command": "node --test --test-name-pattern=Google-owned-outage-duplicates tests/booking-wire.test.mjs",
+      "exact_arguments": [
+        "node",
+        "--test",
+        "--test-name-pattern=Google owned outage duplicates",
+        "tests/booking-wire.test.mjs"
+      ],
+      "exit": 0,
+      "head": "8b0da35380662df3fda363534a1dbdb91338bb28",
+      "tests": 1,
+      "probes": 33,
+      "output": "recovery-tests.txt"
+    },
+    {
+      "command": "node --test --test-name-pattern=Native-Google-and-Microsoft-or-saved-calendar-correspondence-or-host-reschedule-requests-preserve tests/booking-wire.test.mjs",
+      "exact_arguments": [
+        "node",
+        "--test",
+        "--test-name-pattern=Native Google and Microsoft|saved calendar correspondence|host reschedule requests preserve",
+        "tests/booking-wire.test.mjs"
+      ],
+      "exit": 0,
+      "tests": 3,
+      "output": "calendar-regression-tests.txt",
+      "binding": "Run on saved source; final diff changes only focused fixture support and focused assertions. Production bytes identical."
+    },
+    {
+      "command": "pnpm run typecheck",
+      "exit": 0,
+      "output": "typecheck.txt"
+    },
+    {
+      "command": "pnpm exec eslint src/core/platform/calendar/google-duplicate-recovery.ts src/core/platform/calendar/types.ts src/core/features/delivery/repository.ts tests/booking-wire/google-duplicate-recovery-journey.mjs tests/booking-wire/google-duplicate-fixtures.ts --max-warnings=0",
+      "exit": 0,
+      "output": "touched-lint.txt"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "output": "build.txt"
+    },
+    {
+      "command": "pnpm run deployment-spec:check",
+      "exit": 0,
+      "output": "deployment-spec.txt"
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "head": "8b0da35380662df3fda363534a1dbdb91338bb28",
+      "output": "first-party.txt"
+    },
+    {
+      "command": "node scripts/contract-docs.mjs write --clauses AGENT-004; node scripts/contract-docs.mjs check --clauses AGENT-004",
+      "exits": [
+        0,
+        0
+      ],
+      "output": "views.txt",
+      "generated_views_restored": true
+    },
+    {
+      "command": "node scripts/contract-docs.mjs check --clauses AGENT-004",
+      "exit": 0,
+      "head": "8b0da35380662df3fda363534a1dbdb91338bb28",
+      "output": "views-restored-check.txt"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+      "exits": [
+        0,
+        0
+      ],
+      "head": "8b0da35380662df3fda363534a1dbdb91338bb28",
+      "outputs": [
+        "lock-write.json",
+        "lock-check.json"
+      ]
+    }
+  ],
+  "source_sha256": {
+    "sources.lock.json": "1760d59974d7b3021972c50980b1d4b229af2acaf4316c8699a0ae5fd7bbe02a",
+    "src/core/features/delivery/repository.ts": "89ea142ff72b1e4a891b05d10cccae3e9df890afd16f1c401cf5cdb38e277883",
+    "src/core/platform/calendar/google-duplicate-recovery.ts": "79c3ea24457b48075b4e0b8de0e396ddf91d85ff7a9d9e995c829268d65ab27b",
+    "src/core/platform/calendar/types.ts": "e56ab90096fa06ba7ac56a4781b5ed6a5bd79ee62a51f7e886c9f7baff3b021b",
+    "tests/booking-wire/google-duplicate-fixtures.ts": "d0c44b0d209c0c0c68c829eda93dd6551ceed329edb772729f290003a82067f9",
+    "tests/booking-wire/google-duplicate-recovery-journey.mjs": "22df03ab7dde5aa314e9aec36ae0c13546fa0c0d9b20d6ca822dfe2e8a2ceeb7"
+  },
+  "counts_before": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "counts_after": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "clause": "AGENT-004",
+  "status_before": "PARTIAL",
+  "status_after": "PARTIAL",
+  "proven_points": [
+    1
+  ],
+  "pr": null,
+  "ci": [
+    {
+      "conclusion": null,
+      "event": "push",
+      "head_sha": "8b0da35380662df3fda363534a1dbdb91338bb28",
+      "html_url": "https://github.com/just-every/run-dial/actions/runs/42240250935",
+      "id": 42240250935,
+      "name": "Verify",
+      "status": "in_progress"
+    }
+  ],
+  "publication_scan": {
+    "commit": "8b0da35380662df3fda363534a1dbdb91338bb28",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "reason": "Guarded Mac lander owns the publication scan."
+  },
+  "full_history": true,
+  "contract_changed": false,
+  "generated_views_changed": false,
+  "test_registrations_added": 0,
+  "test_registrations_removed": 0,
+  "local_failures": [
+    {
+      "exit": 1,
+      "kind": "baseline bug reproduced",
+      "output": "baseline-reproduction.txt"
+    },
+    {
+      "exit": 1,
+      "kind": "local orchestration port overlap, rerun serially passed",
+      "output": "local-port-conflict.txt"
+    }
+  ],
+  "migration_ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration changed."
+  },
+  "product_push": {
+    "exit": 0,
+    "output": "product-push.txt"
+  },
+  "github_api_calls": 3
+}

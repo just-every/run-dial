@@ -1,0 +1,35 @@
+TAP version 13
+# ▲ [WARNING] Proxy environment variables detected. We'll use your proxy for fetch requests.
+# *** Fatal uncaught kj::Exception: kj/async-io-unix.c++:941: failed: ::bind(sockfd, &addr.generic, addrlen): Address already in use; toString() = 127.0.0.1:15754
+# stack: /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@569f006 /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@569edd9 /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@569d12c /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@248676c /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@24870c1 /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@2487bed /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@24891ba /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@23bda69 /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a67d35 /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a68286 /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a65cbe /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a65abe /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@23a4d6c /lib/x86_64-linux-gnu/libc.so.6@29ca7 /lib/x86_64-linux-gnu/libc.so.6@29d64 /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@23a4024
+# Subtest: Google owned outage duplicates recover only for a current authorized booking and verified provider pair
+not ok 1 - Google owned outage duplicates recover only for a current authorized booking and verified provider pair
+  ---
+  duration_ms: 2019.098066
+  type: 'test'
+  location: '/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/tests/booking-wire.test.mjs:96:1'
+  failureType: 'testCodeFailure'
+  error: 'Address already in use (127.0.0.1:15754). Please check that you are not already running a server on this address or specify a different port with --port.'
+  code: 'ERR_ADDRESS_IN_USE'
+  name: 'MiniflareCoreError [ERR_ADDRESS_IN_USE]'
+  stack: |-
+    StartupLogBuffer.handleStartupFailure (/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:65097:13)
+    Runtime.updateConfig (/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:65184:24)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async #assembleAndUpdateConfig (/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:82869:30)
+    async /home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:81664:7
+    async Mutex.runWith (/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:54769:16)
+    async #waitForReady (/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:82994:5)
+    async _Miniflare._getProxyClient (/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:83215:5)
+    async #getProxy (/home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/node_modules/.pnpm/miniflare@5.20260907.0-alpha_@types+node@22.19.17/node_modules/miniflare/dist/src/index.js:83275:25)
+    async startWebhookRuntime (file:///home/agent/rer-consolidation/work/sd-dial-c-f37/run-dial/tests/booking-wire/webhook-runtime.mjs:33:16)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2092.397269
