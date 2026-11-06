@@ -1,0 +1,66 @@
+Static and migrations	Run verification partition	﻿2026-11-06T13:26:35.2024866Z ##[group]Run node scripts/monitor-test-workers.mjs &
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2025314Z [36;1mnode scripts/monitor-test-workers.mjs &[0m
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2045657Z [36;1mmonitor="$!"[0m
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2046084Z [36;1mtrap 'kill "$monitor" 2>/dev/null || true; wait "$monitor" 2>/dev/null || true' EXIT[0m
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2046756Z [36;1mexport NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$PWD/scripts/test-worker-diagnostics.mjs"[0m
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2047287Z [36;1mnode scripts/ci-verify.mjs static[0m
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2067623Z shell: /usr/bin/bash -e {0}
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2067880Z env:
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2068062Z   CI: true
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2068315Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2068759Z   DIAL_TEST_DIAGNOSTICS_DIR: /home/runner/work/_temp/dial-test-diagnostics
+Static and migrations	Run verification partition	2026-11-06T13:26:35.2069150Z ##[endgroup]
+Static and migrations	Run verification partition	2026-11-06T13:26:35.7461210Z 
+Static and migrations	Run verification partition	2026-11-06T13:26:35.7462065Z > dial@0.5.0 lint /home/runner/work/run-dial/run-dial
+Static and migrations	Run verification partition	2026-11-06T13:26:35.7462762Z > eslint src tests scripts vite.config.ts --max-warnings=0
+Static and migrations	Run verification partition	2026-11-06T13:26:35.7463034Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:04.0344199Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:04.0345112Z > dial@0.5.0 boundaries /home/runner/work/run-dial/run-dial
+Static and migrations	Run verification partition	2026-11-06T13:27:04.0345663Z > node scripts/check-boundaries.mjs
+Static and migrations	Run verification partition	2026-11-06T13:27:04.0345910Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:05.6728138Z Boundary check passed for 882 source files.
+Static and migrations	Run verification partition	2026-11-06T13:27:05.9816170Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:05.9816918Z > dial@0.5.0 validate /home/runner/work/run-dial/run-dial
+Static and migrations	Run verification partition	2026-11-06T13:27:05.9817450Z > node scripts/validate-manifest-contract.mjs
+Static and migrations	Run verification partition	2026-11-06T13:27:05.9817710Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0681762Z file:///home/runner/work/run-dial/run-dial/scripts/contract-docs.mjs:23
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0683924Z  if(command==="check"&&current!==value)throw new Error(`${path}: generated content differs; run contract-docs write.`);
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0685423Z                                              ^
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0685721Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0686117Z Error: docs/CLAIMS.md: generated content differs; run contract-docs write.
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0686905Z     at file:///home/runner/work/run-dial/run-dial/scripts/contract-docs.mjs:23:46
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0687335Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0687457Z Node.js v22.20.0
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0720155Z node:internal/errors:983
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0720923Z   const err = new Error(message);
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0721468Z               ^
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0721754Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0722827Z Error: Command failed: /opt/hostedtoolcache/node/22.20.0/x64/bin/node scripts/contract-docs.mjs check
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0723809Z     at genericNodeError (node:internal/errors:983:15)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0724419Z     at wrappedFn (node:internal/errors:537:14)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0725018Z     at checkExecSyncError (node:child_process:916:11)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0747276Z     at execFileSync (node:child_process:952:15)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0748231Z     at file:///home/runner/work/run-dial/run-dial/scripts/validate-manifest-contract.mjs:15:1 {
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0749037Z   status: 1,
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0749408Z   signal: null,
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0749819Z   output: [ null, null, null ],
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0750251Z   pid: 2720,
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0750601Z   stdout: null,
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0750948Z   stderr: null
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0751507Z }
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0751689Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0752093Z Node.js v22.20.0
+Static and migrations	Run verification partition	2026-11-06T13:27:06.0936958Z  ELIFECYCLE  Command failed with exit code 1.
+Static and migrations	Run verification partition	2026-11-06T13:27:06.3997215Z Verification evidence: /tmp/dial-ci-verify-448w8e
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4004785Z file:///home/runner/work/run-dial/run-dial/scripts/ci-verify.mjs:37
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4006301Z     child.once("exit", (code, signal) => code === 0 ? done() : reject(new Error(`${command} ${args.join(" ")} failed: ${signal ?? code}`)));
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4008803Z                                                                       ^
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4009357Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4009880Z Error: pnpm run validate failed: 1
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4011152Z     at ChildProcess.<anonymous> (file:///home/runner/work/run-dial/run-dial/scripts/ci-verify.mjs:37:71)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4013170Z     at Object.onceWrapper (node:events:634:26)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4013618Z     at ChildProcess.emit (node:events:519:28)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4014071Z     at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4014359Z 
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4014457Z Node.js v22.20.0
+Static and migrations	Run verification partition	2026-11-06T13:27:06.4160228Z ##[error]Process completed with exit code 1.

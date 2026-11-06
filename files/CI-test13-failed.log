@@ -1,0 +1,280 @@
+Tests 13 of 22	Run verification partition	﻿2026-11-06T13:26:48.3524308Z ##[group]Run node scripts/monitor-test-workers.mjs &
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3524843Z [36;1mnode scripts/monitor-test-workers.mjs &[0m
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3525210Z [36;1mmonitor="$!"[0m
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3526077Z [36;1mtrap 'kill "$monitor" 2>/dev/null || true; wait "$monitor" 2>/dev/null || true' EXIT[0m
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3526933Z [36;1mexport NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$PWD/scripts/test-worker-diagnostics.mjs"[0m
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3527583Z [36;1mnode scripts/ci-verify.mjs test 12[0m
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3548855Z shell: /usr/bin/bash -e {0}
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3549146Z env:
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3549359Z   CI: true
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3549654Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3550186Z   DIAL_TEST_DIAGNOSTICS_DIR: /home/runner/work/_temp/dial-test-diagnostics
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.3550676Z ##[endgroup]
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.6467702Z CI test 12: tests/bookings-filters.test.mjs, tests/first-run.test.mjs, tests/operator-auth-boundary.test.mjs, tests/runtime.test.mjs
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:48.6991217Z TAP version 13
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:56.4515121Z # Subtest: [OPER-003] [REPORT-002] the operator booking route combines every filter and searches literal case-insensitive name and email substrings
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:56.4524491Z ok 1 - [OPER-003] [REPORT-002] the operator booking route combines every filter and searches literal case-insensitive name and email substrings
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:56.4525990Z   ---
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:56.4526440Z   duration_ms: 6327.338277
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:56.4526878Z   type: 'test'
+Tests 13 of 22	Run verification partition	2026-11-06T13:26:56.4527242Z   ...
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0279082Z # Subtest: [REPORT-002] payment-state filters select exact booking identities and totals before combined filters and pagination without money writes
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0326993Z ok 2 - [REPORT-002] payment-state filters select exact booking identities and totals before combined filters and pagination without money writes
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0327797Z   ---
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0328022Z   duration_ms: 5575.99268
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0328304Z   type: 'test'
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0328513Z   ...
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0857363Z # Subtest: [OPER-005] native D1 setup gates documents and completes request-only through genuine auth and development mail
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0859750Z ok 3 - [OPER-005] native D1 setup gates documents and completes request-only through genuine auth and development mail
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0861114Z   ---
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0861679Z   duration_ms: 6227.307993
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0862266Z   type: 'test'
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:02.0862781Z   ...
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:18.4219225Z TEST-WORKER {"file":"tests/bookings-filters.test.mjs","pid":2777,"phase":"exited","elapsedMs":13312,"resources":["PipeWrap","PipeWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false}],"children":[]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:18.4230177Z TEST-WORKER {"file":"tests/first-run.test.mjs","pid":2778,"phase":"exited","elapsedMs":7664,"resources":["PipeWrap","PipeWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false}],"children":[]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:18.4236660Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":1553,"resources":["FSReqPromise","PipeWrap","PipeWrap"],"requests":["FSReqPromise"],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false}],"children":[]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:18.4248878Z TEST-WORKER {"file":"tests/runtime.test.mjs","pid":2907,"phase":"running","elapsedMs":1001,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","Timeout"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":2919,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:48.4461098Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":30001,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":2842,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:27:48.4476740Z TEST-WORKER {"file":"tests/runtime.test.mjs","pid":2907,"phase":"running","elapsedMs":30001,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","Timeout"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":2919,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:28:18.4769192Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":60001,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","Timeout"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":4069,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:28:18.4778428Z TEST-WORKER {"file":"tests/runtime.test.mjs","pid":2907,"phase":"exited","elapsedMs":60946,"resources":["PipeWrap","PipeWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false}],"children":[]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:28:48.5064960Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":90001,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","ProcessWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":4069,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":4644,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:28:58.4995839Z # Machine journey: starting native runtime
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.4220423Z # Machine journey: native schema ready
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.4226425Z # Machine journey: /wire/init
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.4743173Z # Machine journey: /__fixtures/setup
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.5759034Z # Machine journey: /wire/control
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.5799260Z # Machine journey: /api/app/profile
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.5876601Z # Machine journey: /api/app/event-types/01M6RGRSV0XZ5DK6PN3J68KAPR
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.6004045Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.6138112Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.6319836Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.6556524Z # Machine journey: /api/public/book/dial-host/intro/availability?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:02.9212678Z # Machine journey: /api/v1/availability?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.2485944Z # Machine journey: /api/v1/bookings
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.5273013Z # Machine journey: /api/v1/bookings/01M6RGRTKQ40ZCGA11TQH1VWMH
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.5503533Z # Machine journey: /api/v1/bookings?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.5749510Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.6326786Z # Machine journey: /api/v1/bookings
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.7780668Z # Machine journey: /api/v1/bookings?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.8161082Z # Machine journey: /api/v1/bookings?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:03.8401039Z # Machine journey: /api/v1/bookings/01M6RGRTKQ40ZCGA11TQH1VWMH/reschedule
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:04.1381841Z # Machine journey: /api/v1/bookings/01M6RGRTZJ3EC1RGPV6N8KQHYD/attendance
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:04.2048077Z # Machine journey: /__fixtures/deliver
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:04.4063384Z # Machine journey: /api/v1/bookings/01M6RGRTKQ40ZCGA11TQH1VWMH/cancel
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:04.5982404Z # Machine journey: /__fixtures/deliver
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:04.7060007Z # Machine journey: /__fixtures/deliver
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:04.7165524Z # Machine journey: /wire/state
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:04.8024979Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:06.2332604Z # Machine journey: /api/app/bookings/01M6RGRTKQ40ZCGA11TQH1VWMH
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.5071254Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.5166858Z # Machine journey: /api/v1/hosts
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.5330647Z # Machine journey: /api/v1/event-types
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.5490610Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.5589788Z # Machine journey: /api/v1/event-types
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.5824292Z # Machine journey: /api/v1/event-types/01M6RGRYQNNZVZVRHHV2N1B1RV
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.6069056Z # Machine journey: /api/v1/event-types/01M6RGRYQNNZVZVRHHV2N1B1RV
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.6399039Z # Machine journey: /api/v1/event-types/01M6RGRYQNNZVZVRHHV2N1B1RV/publish
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.6903026Z # Machine journey: /api/public/events/dial-host/synthetic-api-event
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.7067733Z # Machine journey: /api/v1/event-types/01M6RGRYQNNZVZVRHHV2N1B1RV/disable
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.7352812Z # Machine journey: /api/v1/event-types/01M6RGRYQNNZVZVRHHV2N1B1RV
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.7735981Z # Machine journey: /api/v1/teams
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.7943278Z # Machine journey: /api/v1/teams
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.8115176Z # Machine journey: /api/v1/routing-forms
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.8300460Z # Machine journey: /api/v1/routing-forms
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.8944302Z # Machine journey: /api/v1/routing-submissions
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.9737958Z # Machine journey: /api/v1/teams
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:07.9875830Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.0036480Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.0184285Z # Machine journey: /api/v1/bookings
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.0499122Z # Machine journey: /api/v1/bookings/01M6RGRTZJ3EC1RGPV6N8KQHYD
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.1085572Z # Machine journey: /api/v1/bookings
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.1164577Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.1605123Z # Machine journey: /api/v1/routing-submissions
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.1698233Z # Machine journey: /api/v1/polls
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.2647584Z # Machine journey: /api/v1/polls
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.2813471Z # Machine journey: /api/v1/polls/01M6RGRZD2FZ7YT3PDW24Q99AM
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.3178139Z # Machine journey: /api/v1/polls/01M6RGRZD2FZ7YT3PDW24Q99AM/close
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.3687072Z # Machine journey: /api/v1/webhook-subscriptions
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.3945858Z # Machine journey: /api/v1/webhook-subscriptions
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.4237403Z # Machine journey: /api/v1/webhook-subscriptions
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.4443798Z # Machine journey: /api/v1/webhook-subscriptions/01M6RGRZH4RY7Z6125ZPQ5CEQ3
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.4753858Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.5052945Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.5144442Z # Machine journey: /api/v1/workflows
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.5384763Z # Machine journey: /api/v1/availability?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.7613868Z # Machine journey: /api/app/event-types/01M6RGRSV0XZ5DK6PN3J68KAPR
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:08.7698840Z # Machine journey: /api/v1/bookings
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:09.0276481Z # Machine journey: /api/v1/workflows/01M6RGRZNKAVS6H4DM53HMZCYH
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:09.1519336Z # Machine journey: /api/v1/bookings
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:09.4916850Z # Machine journey: /__fixtures/deliver
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:09.7054164Z # Machine journey: /__fixtures/deliver
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:09.7489007Z # Machine journey: /wire/state
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:09.8079563Z # Machine journey: /api/v1/bookings
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.1216824Z # Machine journey: /api/v1/workflows/01M6RGRZNKAVS6H4DM53HMZCYH
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.1399143Z # Machine journey: /__fixtures/deliver
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.2472876Z # Machine journey: /wire/state
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.3240388Z # Machine journey: /api/v1/workflows/01M6RGRZNKAVS6H4DM53HMZCYH
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.5098788Z # Machine journey: /api/v1/workflows
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.5207438Z # Machine journey: /api/v1/workflows/01M6RGRZNKAVS6H4DM53HMZCYH
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.5645818Z # Machine journey: /api/app/oauth-applications
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.6988239Z # Machine journey: /api/app/api-administrators
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.7239307Z # Machine journey: /__test/mail
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.8345811Z # Machine journey: /api/app/operators
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.8584497Z # Machine journey: /__test/mail
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.8921746Z # Machine journey: /api/app/api-hosts
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.9117349Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.9309448Z # Machine journey: /api/v1/event-types
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:10.9543275Z # Machine journey: /api/v1/event-types/01M6RGS211RHRJKFAXQ05089KM/publish
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.0198689Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.0365994Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.0546655Z # Machine journey: /api/v1/webhook-subscriptions
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.0828067Z # Machine journey: /api/v1/webhook-subscriptions
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.1109221Z # Machine journey: /api/app/api-hosts/01M6RGS1ZS8S2CDF5D13Q6PF2G/events
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.1287168Z # Machine journey: /api/public/book/dial-host/synthetic-dial-other-host/availability?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.3550813Z # Machine journey: /api/public/book/dial-host/synthetic-dial-other-host/selection
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.4032772Z # Machine journey: /api/public/book/dial-host/synthetic-dial-other-host/confirm
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.5274969Z # Machine journey: /__fixtures/webhooks/process
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.5708885Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.5823748Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.6032389Z # Machine journey: /api/v1/bookings/01M6RGRTZJ3EC1RGPV6N8KQHYD
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.6352804Z # Machine journey: /api/v1/bookings/01M6RGS2HH3C2B0MGGTJ56RMC8
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.6647407Z # Machine journey: /api/v1/bookings?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.8864530Z # Machine journey: /api/v1/event-types
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.9077142Z # Machine journey: /api/v1/hosts
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:11.9367270Z # Machine journey: /api/app/oauth-applications
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.0342640Z # Machine journey: /api/app/oauth/authorize?[query redacted]
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.0719521Z # Machine journey: /api/app/oauth/authorize
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.1831553Z # Machine journey: /api/app/oauth/authorize
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.2953310Z # Machine journey: /api/v1/bookings/01M6RGS2HH3C2B0MGGTJ56RMC8
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.3972895Z # Machine journey: /api/app/oauth/grants
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.4316932Z # Machine journey: /api/app/oauth/authorize
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.4473436Z # Machine journey: /api/app/operators/55746140-dafd-4e58-8c18-8642a5d0ea0c/api-role
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.4832374Z # Machine journey: /api/app/operators/55746140-dafd-4e58-8c18-8642a5d0ea0c/api-role
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.5094527Z # Machine journey: /api/app/api-credentials
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.5173335Z # Machine journey: /api/app/oauth-applications
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.5342291Z # Machine journey: /api/app/oauth/grants
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:12.5496984Z # Machine journey: /wire/state
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:18.5368806Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":120000,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","ProcessWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":4069,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":5267,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:29:48.5665598Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":150001,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","ProcessWrap","ProcessWrap","TCPServerWrap","TCPServerWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":4069,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":5362,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":true,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":5391,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:18.5967375Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":180001,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","ProcessWrap","ProcessWrap","TCPServerWrap","TCPServerWrap","Timeout"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":4069,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":5362,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":true,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":5969,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:48.6261946Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"running","elapsedMs":210002,"resources":["PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","PipeWrap","ProcessWrap","ProcessWrap","ProcessWrap","ProcessWrap","TCPServerWrap","TCPServerWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false},{"readyState":"open","destroyed":false,"readableEnded":false,"writableFinished":false}],"children":[{"pid":4069,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":5362,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":true,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":5969,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]},{"pid":6027,"exitCode":null,"signalCode":null,"stdio":[{"destroyed":false,"readableEnded":true},{"destroyed":false,"readableEnded":false},{"destroyed":false,"readableEnded":false}]}]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.5604667Z # API Settings: one-time secrets, scoped access, last use, revocation and delegated approval or refusal pass; screens captured at 1440 and 390.
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.6539918Z # Subtest: [AUTH-001] [AUTH-008] [API-001] direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.6543255Z ok 4 - [AUTH-001] [AUTH-008] [API-001] direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.6544798Z   ---
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.6545458Z   duration_ms: 238631.228222
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.6545924Z   type: 'test'
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.6546827Z   ...
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8472436Z # Subtest: operator authentication is non-enumerating, local-only, replay-safe, and revocable
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8475907Z not ok 5 - operator authentication is non-enumerating, local-only, replay-safe, and revocable
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8477385Z   ---
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8477978Z   duration_ms: 60804.778153
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8478460Z   type: 'test'
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8479631Z   location: '/home/runner/work/run-dial/run-dial/tests/runtime.test.mjs:15:1'
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8480430Z   failureType: 'testCodeFailure'
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8481219Z   error: |-
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8482413Z     pnpm dev did not become healthy within 60 seconds:                       │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8483484Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8484182Z     │ 0086_import_role_boundary.sql               │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8484821Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8485671Z     │ 0087_webhook_sources.sql                    │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8486315Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8486903Z     │ 0088_webhooks.sql                           │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8487519Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8488336Z     │ 0089_event_type_webhook_cleanup.sql         │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8489323Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8490103Z     │ 0090_api_credentials.sql                    │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8491085Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8491803Z     │ 0091_public_api.sql                         │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8492590Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8493191Z     │ 0092_workflows.sql                          │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8493963Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8494461Z     │ 0093_payment_coupons.sql                    │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8495147Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8495813Z     │ 0094_coupon_issuance_receipts.sql           │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8496714Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8497578Z     │ 0095_api_consent.sql                        │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8498378Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8499155Z     │ 0096_api_authority_cleanup.sql              │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8499990Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8500745Z     │ 0097_api_authority_revocation.sql           │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8501272Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8501734Z     │ 0098_booking_webhook_hosts.sql              │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8502219Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8502678Z     │ 0099_business_settings.sql                  │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8503163Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8503761Z     │ 0100_business_people.sql                    │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8504240Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8505180Z     │ 0101_agent_door.sql                         │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8505983Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8506502Z     │ 0102_group_seat_capacity.sql                │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8507032Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8507457Z     │ 0103_poll_reminders.sql                     │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8507945Z     ├─────────────────────────────────────────────┼────────┤
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8508388Z     │ 0104_confirmation_language.sql              │ ✅     │
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8508853Z     └─────────────────────────────────────────────┴────────┘
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8509860Z     [33m(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8510941Z       - import "./scripts/client-chunks" without a file extension (vite.config.ts:1:36). Add the file extension
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8511874Z       - import "./scripts/archive/schema-plugin" without a file extension (vite.config.ts:11:31). Add the file extension
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8513005Z       - import "./scripts/build-assets" without a file extension (vite.config.ts:12:29). Add the file extension
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8513791Z     Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.[39m
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8514474Z     (node:4130) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8515125Z     (Use `node --trace-warnings ...` to show where the warning was created)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8516606Z     [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing .wrangler-runtime-15710.toml configuration:[0m
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8517117Z     
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8517454Z         - No environment found in configuration with name "runtime-15710".
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8518158Z           Before using `--env=runtime-15710` there should be an equivalent environment section in the configuration.
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8518794Z       
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8519319Z           Consider adding an environment configuration section to the wrangler.toml file:
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8520071Z           ```
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8520312Z           [env.runtime-15710]
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8520630Z           ```
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8520987Z       
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8521214Z     
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8521511Z     
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8522625Z     [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing .wrangler-runtime-15710.toml configuration:[0m
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8523502Z     
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8524061Z         - No environment found in configuration with name "runtime-15710".
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8525088Z           Before using `--env=runtime-15710` there should be an equivalent environment section in the configuration.
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8526094Z       
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8526739Z           Consider adding an environment configuration section to the wrangler.toml file:
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8527681Z           ```
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8528026Z           [env.runtime-15710]
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8528415Z           ```
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8528730Z       
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8528999Z     
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8529266Z     
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8529679Z     Using secrets defined in .dev.vars.runtime-15710
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8530702Z     [2m1:27:49 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [optimizer] scanning dependencies...
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8531350Z     
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8531652Z   code: 'ERR_TEST_FAILURE'
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8532015Z   stack: |-
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8532693Z     waitForHealth (file:///home/runner/work/run-dial/run-dial/tests/runtime.test.mjs:309:9)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8533958Z     async TestContext.<anonymous> (file:///home/runner/work/run-dial/run-dial/tests/runtime.test.mjs:29:3)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8534962Z     async Test.run (node:internal/test_runner/test:1054:7)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8536113Z     async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8536762Z   ...
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8537052Z 1..5
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8537379Z # tests 5
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8537967Z # suites 0
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8538299Z # pass 4
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8538604Z # fail 1
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8538914Z # cancelled 0
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8539231Z # skipped 0
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8539511Z # todo 0
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:56.8539812Z # duration_ms 248166.036598
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1259155Z Verification evidence: /tmp/dial-ci-verify-INRbZz
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1263771Z file:///home/runner/work/run-dial/run-dial/scripts/ci-verify.mjs:37
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1265199Z     child.once("exit", (code, signal) => code === 0 ? done() : reject(new Error(`${command} ${args.join(" ")} failed: ${signal ?? code}`)));
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1266977Z                                                                       ^
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1267405Z 
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1269109Z Error: /opt/hostedtoolcache/node/22.20.0/x64/bin/node --test --test-concurrency=2 tests/bookings-filters.test.mjs tests/first-run.test.mjs tests/operator-auth-boundary.test.mjs tests/runtime.test.mjs failed: 1
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1271041Z     at ChildProcess.<anonymous> (file:///home/runner/work/run-dial/run-dial/scripts/ci-verify.mjs:37:71)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1271920Z     at Object.onceWrapper (node:events:634:26)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1272472Z     at ChildProcess.emit (node:events:519:28)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1273154Z     at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1273624Z 
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1273767Z Node.js v22.20.0
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1419672Z TEST-WORKER {"file":"tests/operator-auth-boundary.test.mjs","pid":2826,"phase":"exited","elapsedMs":240337,"resources":["PipeWrap","PipeWrap"],"requests":[],"sockets":[{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false},{"readyState":"writeOnly","destroyed":false,"readableEnded":true,"writableFinished":false}],"children":[]}
+Tests 13 of 22	Run verification partition	2026-11-06T13:30:57.1467147Z ##[error]Process completed with exit code 1.

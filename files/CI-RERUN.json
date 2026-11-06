@@ -1,0 +1,12 @@
+{
+  "repository": "just-every/run-dial",
+  "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+  "run_id": 42225269667,
+  "failed_job_id": 127917774004,
+  "command": "gh api --method POST repos/just-every/run-dial/actions/jobs/127917774004/rerun --silent",
+  "exit": 0,
+  "status": "single permitted failed-job rerun accepted; final result not queried",
+  "reason": "Known dev-server startup timeout; exact failed shard passes on the candidate",
+  "workflow_dispatches": 0,
+  "failed_job_reruns": 1
+}

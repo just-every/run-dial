@@ -1,5 +1,5 @@
 {
-  "calls_used": 4,
+  "calls_used": 10,
   "last_discovery_epoch": 1793971528.4754348,
   "runs": [
     {
@@ -12,11 +12,23 @@
       "status": "pending"
     }
   ],
-  "last_poll_epoch": 1793971828.4757307,
+  "last_poll_epoch": 1793972428.4772046,
   "latest": {
-    "conclusion": null,
+    "conclusion": "failure",
     "head_sha": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
     "html_url": "https://github.com/just-every/run-dial/actions/runs/42225269667",
-    "status": "in_progress"
+    "status": "completed"
+  },
+  "rerun": {
+    "repository": "just-every/run-dial",
+    "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+    "run_id": 42225269667,
+    "failed_job_id": 127917774004,
+    "command": "gh api --method POST repos/just-every/run-dial/actions/jobs/127917774004/rerun --silent",
+    "exit": 0,
+    "status": "single permitted failed-job rerun accepted; final result not queried",
+    "reason": "Known dev-server startup timeout; exact failed shard passes on the candidate",
+    "workflow_dispatches": 0,
+    "failed_job_reruns": 1
   }
 }

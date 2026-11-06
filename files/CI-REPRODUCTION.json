@@ -1,0 +1,45 @@
+{
+  "run": 42225269667,
+  "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+  "job": 127917774004,
+  "job_name": "Tests 13 of 22",
+  "command": "node scripts/ci-verify.mjs test 12",
+  "node": "22.20.0",
+  "environment": {
+    "CI": "true",
+    "candidate_NODE_OPTIONS": "--import=/workspace/run-dial/scripts/test-worker-diagnostics.mjs",
+    "main_NODE_OPTIONS": "--import=/workspace/run-dial-main/scripts/test-worker-diagnostics.mjs",
+    "candidate_DIAL_TEST_DIAGNOSTICS_DIR": "/tmp/sd-dial-fe1c5e3-diagnostics",
+    "main_DIAL_TEST_DIAGNOSTICS_DIR": "/tmp/sd-dial-main-diagnostics"
+  },
+  "ci_failure": {
+    "test": "operator authentication is non-enumerating, local-only, replay-safe, and revocable",
+    "path": "tests/runtime.test.mjs:15",
+    "error": "pnpm dev did not become healthy within 60 seconds"
+  },
+  "candidate_reproduction": {
+    "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+    "exit": 0,
+    "tests_pass": 7,
+    "tests_fail": 0,
+    "log": "candidate-shard12.log"
+  },
+  "main_reproduction": {
+    "head": "c466f49767ff0fe4647b09b8208a6bfa0569c874",
+    "exit": 0,
+    "tests_pass": 7,
+    "tests_fail": 0,
+    "log": "main-shard12.log",
+    "runner": "same cloud VM and Node 22.20.0 as candidate reproduction"
+  },
+  "repair_rounds": 0,
+  "source_changed_for_ci": false,
+  "booking_wire_ci": {
+    "shard": "Tests 12 of 22",
+    "job": 127917773961,
+    "conclusion": "success",
+    "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3"
+  },
+  "classification": "Known infrastructure flake: dev-server startup timeout; no data or authentication assertion failed in CI, and both exact-shard local reproductions pass.",
+  "single_failed_job_rerun": "accepted; no remaining GitHub API calls to establish its final result"
+}

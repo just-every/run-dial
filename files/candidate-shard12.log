@@ -1,0 +1,175 @@
+CI test 12: tests/bookings-filters.test.mjs, tests/first-run.test.mjs, tests/operator-auth-boundary.test.mjs, tests/runtime.test.mjs
+TAP version 13
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# Subtest: [OPER-003] [REPORT-002] the operator booking route combines every filter and searches literal case-insensitive name and email substrings
+ok 1 - [OPER-003] [REPORT-002] the operator booking route combines every filter and searches literal case-insensitive name and email substrings
+  ---
+  duration_ms: 5767.224689
+  type: 'test'
+  ...
+# Subtest: [REPORT-002] payment-state filters select exact booking identities and totals before combined filters and pagination without money writes
+ok 2 - [REPORT-002] payment-state filters select exact booking identities and totals before combined filters and pagination without money writes
+  ---
+  duration_ms: 5111.36967
+  type: 'test'
+  ...
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# Subtest: [OPER-005] native D1 setup gates documents and completes request-only through genuine auth and development mail
+ok 3 - [OPER-005] native D1 setup gates documents and completes request-only through genuine auth and development mail
+  ---
+  duration_ms: 5480.990767
+  type: 'test'
+  ...
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# Machine journey: starting native runtime
+# Machine journey: native schema ready
+# Machine journey: /wire/init
+# Machine journey: /__fixtures/setup
+# Machine journey: /wire/control
+# Machine journey: /api/app/profile
+# Machine journey: /api/app/event-types/01M6RHS7S4YRSYPB70F1KJ3WMK
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/public/book/dial-host/intro/availability?[query redacted]
+# Machine journey: /api/v1/availability?[query redacted]
+# Machine journey: /api/v1/bookings
+# Machine journey: /api/v1/bookings/01M6RHS8C686F66YFSX5CPRVHA
+# Machine journey: /api/v1/bookings?[query redacted]
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/bookings
+# Machine journey: /api/v1/bookings?[query redacted]
+# Machine journey: /api/v1/bookings?[query redacted]
+# Machine journey: /api/v1/bookings/01M6RHS8C686F66YFSX5CPRVHA/reschedule
+# Machine journey: /api/v1/bookings/01M6RHS8MVCWBK2J88HP76GDF2/attendance
+# Machine journey: /__fixtures/deliver
+# Machine journey: /api/v1/bookings/01M6RHS8C686F66YFSX5CPRVHA/cancel
+# Machine journey: /__fixtures/deliver
+# Machine journey: /__fixtures/deliver
+# Machine journey: /wire/state
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/bookings/01M6RHS8C686F66YFSX5CPRVHA
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/hosts
+# Machine journey: /api/v1/event-types
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/event-types
+# Machine journey: /api/v1/event-types/01M6RHSB7GZZ31GJZ68ND8NWAW
+# Machine journey: /api/v1/event-types/01M6RHSB7GZZ31GJZ68ND8NWAW
+# Machine journey: /api/v1/event-types/01M6RHSB7GZZ31GJZ68ND8NWAW/publish
+# Machine journey: /api/public/events/dial-host/synthetic-api-event
+# Machine journey: /api/v1/event-types/01M6RHSB7GZZ31GJZ68ND8NWAW/disable
+# Machine journey: /api/v1/event-types/01M6RHSB7GZZ31GJZ68ND8NWAW
+# Machine journey: /api/v1/teams
+# Machine journey: /api/v1/teams
+# Machine journey: /api/v1/routing-forms
+# Machine journey: /api/v1/routing-forms
+# Machine journey: /api/v1/routing-submissions
+# Machine journey: /api/v1/teams
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/bookings
+# Machine journey: /api/v1/bookings/01M6RHS8MVCWBK2J88HP76GDF2
+# Machine journey: /api/v1/bookings
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/routing-submissions
+# Machine journey: /api/v1/polls
+# Machine journey: /api/v1/polls
+# Machine journey: /api/v1/polls/01M6RHSBP06RN6Y8E6AK7THCTW
+# Machine journey: /api/v1/polls/01M6RHSBP06RN6Y8E6AK7THCTW/close
+# Machine journey: /api/v1/webhook-subscriptions
+# Machine journey: /api/v1/webhook-subscriptions
+# Machine journey: /api/v1/webhook-subscriptions
+# Machine journey: /api/v1/webhook-subscriptions/01M6RHSBRY77RWR4NS3F7JP863
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/workflows
+# Machine journey: /api/v1/availability?[query redacted]
+# Machine journey: /api/app/event-types/01M6RHS7S4YRSYPB70F1KJ3WMK
+# Machine journey: /api/v1/bookings
+# Machine journey: /api/v1/workflows/01M6RHSBVQ4VDHFCW0X21SFJ4B
+# Machine journey: /api/v1/bookings
+# Machine journey: /__fixtures/deliver
+# Machine journey: /__fixtures/deliver
+# Machine journey: /wire/state
+# Machine journey: /api/v1/bookings
+# Machine journey: /api/v1/workflows/01M6RHSBVQ4VDHFCW0X21SFJ4B
+# Machine journey: /__fixtures/deliver
+# Machine journey: /wire/state
+# Machine journey: /api/v1/workflows/01M6RHSBVQ4VDHFCW0X21SFJ4B
+# Machine journey: /api/v1/workflows
+# Machine journey: /api/v1/workflows/01M6RHSBVQ4VDHFCW0X21SFJ4B
+# Machine journey: /api/app/oauth-applications
+# Machine journey: /api/app/api-administrators
+# Machine journey: /__test/mail
+# Machine journey: /api/app/operators
+# Machine journey: /__test/mail
+# Machine journey: /api/app/api-hosts
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/event-types
+# Machine journey: /api/v1/event-types/01M6RHSDEJ766KNFAM7D45VTWC/publish
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/webhook-subscriptions
+# Machine journey: /api/v1/webhook-subscriptions
+# Machine journey: /api/app/api-hosts/01M6RHSDDW37AXNS4G2A40J4Y1/events
+# Machine journey: /api/public/book/dial-host/synthetic-dial-other-host/availability?[query redacted]
+# Machine journey: /api/public/book/dial-host/synthetic-dial-other-host/selection
+# Machine journey: /api/public/book/dial-host/synthetic-dial-other-host/confirm
+# Machine journey: /__fixtures/webhooks/process
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/v1/bookings/01M6RHS8MVCWBK2J88HP76GDF2
+# Machine journey: /api/v1/bookings/01M6RHSDSAJ4RXC1J63KVJC2HS
+# Machine journey: /api/v1/bookings?[query redacted]
+# Machine journey: /api/v1/event-types
+# Machine journey: /api/v1/hosts
+# Machine journey: /api/app/oauth-applications
+# Machine journey: /api/app/oauth/authorize?[query redacted]
+# Machine journey: /api/app/oauth/authorize
+# Machine journey: /api/app/oauth/authorize
+# Machine journey: /api/v1/bookings/01M6RHSDSAJ4RXC1J63KVJC2HS
+# Machine journey: /api/app/oauth/grants
+# Machine journey: /api/app/oauth/authorize
+# Machine journey: /api/app/operators/c66102ac-7152-4f4c-b3c8-7a426eb5bf6e/api-role
+# Machine journey: /api/app/operators/c66102ac-7152-4f4c-b3c8-7a426eb5bf6e/api-role
+# Machine journey: /api/app/api-credentials
+# Machine journey: /api/app/oauth-applications
+# Machine journey: /api/app/oauth/grants
+# Machine journey: /wire/state
+# API Settings: one-time secrets, scoped access, last use, revocation and delegated approval or refusal pass; screens captured at 1440 and 390.
+# Subtest: [AUTH-001] [AUTH-008] [API-001] direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail
+ok 4 - [AUTH-001] [AUTH-008] [API-001] direct Base administrative aliases cannot mutate authority and fixture capture never returns stale or unrelated mail
+  ---
+  duration_ms: 205263.508155
+  type: 'test'
+  ...
+# Subtest: operator authentication is non-enumerating, local-only, replay-safe, and revocable
+    # Subtest: [HOME-001] a fresh installation serves the unclaimed Lobby and setup state without a session
+    ok 1 - [HOME-001] a fresh installation serves the unclaimed Lobby and setup state without a session
+      ---
+      duration_ms: 207.573955
+      type: 'test'
+      ...
+    # Subtest: [HOME-001] an owner claim keeps the unfinished Lobby until onboarding completes
+    ok 2 - [HOME-001] an owner claim keeps the unfinished Lobby until onboarding completes
+      ---
+      duration_ms: 32.213503
+      type: 'test'
+      ...
+    1..2
+ok 5 - operator authentication is non-enumerating, local-only, replay-safe, and revocable
+  ---
+  duration_ms: 72548.737762
+  type: 'test'
+  ...
+1..5
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 213780.799507
+Verification evidence: /tmp/dial-ci-verify-m94RAo
