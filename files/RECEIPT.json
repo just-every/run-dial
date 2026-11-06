@@ -146,5 +146,17 @@
     "PROBE AGENT-004 deterministic conflict: hidden canonical produces 409; retry retains the original provider ID",
     "PROBE AGENT-004 cancellation and stale upsert: native cancellation keeps ambiguous pair lookup; stale original upsert makes no provider request"
   ],
-  "ci_observed_at": "2026-11-06T16:37:54Z"
+  "ci_observed_at": "2026-11-06T16:43:02Z",
+  "handoff": "PUSHED; exact-SHA Verify remains in progress; no READY, green, landing or whole-clause DONE claim",
+  "github_budget": {
+    "invocations": 8,
+    "limit": 10,
+    "remaining": 2,
+    "note": "Two calls remain; preserve diagnostic capacity rather than further polling. No failed run was retried or dispatched."
+  },
+  "evidence_initial_verification": {
+    "head": "2a79e5b7a55eab38e42d9591f3362c9a5bb814a5",
+    "status": "restored",
+    "verified_files": 20
+  }
 }

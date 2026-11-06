@@ -60,3 +60,9 @@ All existing plan holds and ordering remain: EVENT-007 before EVENT-010 then OPE
 CLAIM AGENT-004 PARTIAL points=none tests=tests/booking-wire.test.mjs#Google owned outage duplicates recover only for a current authorized booking and verified provider pair
 
 GAP AGENT-004: Only the assigned native Google duplicate-removal subpoint is proved; the held whole-clause obligations listed above remain unchanged.
+
+## Terminal custody
+
+PUSHED branch=cloud/sd-dial-c-f36-pc1 head=c7d036ce4be1d735bb03ecf94e01a3c0a5325b4d
+
+Verify 42253259266 remains in progress at the latest permitted poll. Eight of the ten budgeted GitHub invocations were used, leaving two for diagnostics; further polling is stopped under the cloud handoff rule. No failed candidate check is known and no READY, green CI, main landing, publication scan completion or whole-clause DONE is claimed. All local checks pass. The independent fleet gate can qualify this exact pushed branch. The initial evidence packet was fetched back with all 20 selected file hashes verified. Final packet publication is separate from product custody. The clean pushed clone is removed after evidence publication and verification.
