@@ -1,0 +1,15 @@
+{
+  "head": "3cb5efe115c55fd1ed14b411ba22e8e30cb40502",
+  "run": 42246662008,
+  "job": 127990609290,
+  "command": "CI=true node scripts/ci-verify.mjs test 2",
+  "node": "22.20.0",
+  "exit": 1,
+  "reportedTest": "[OPER-005] local dev identity signs in as the owner and a persona only behind the checkout's key, through any proxy, and never survives it",
+  "reportedFailure": "The dev runtime did not start: ... [optimizer] scanning dependencies...",
+  "reportedFailureReproduced": false,
+  "reportedTestLocalResult": "passed",
+  "otherLocalFailure": "approval screens: Playwright bundled Chromium executable absent",
+  "repairs": [],
+  "classification": "Original failure is a dev-server startup timeout; no speculative repair. Browser qualification is outside this target."
+}

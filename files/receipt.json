@@ -1,0 +1,147 @@
+{
+  "tag": "sd-dial-c-f39",
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f39",
+  "startingHead": "3cb5efe115c55fd1ed14b411ba22e8e30cb40502",
+  "mainAtInspection": "7416c12f5ecf1807453a6f41a22bac849adb4068",
+  "clause": "AGENT-004",
+  "statusBefore": "partial",
+  "statusAfter": "partial",
+  "countsBefore": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "countsAfter": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "localChecks": [
+    {
+      "command": "node --test --test-name-pattern=\"Google owned outage duplicates\" tests/booking-wire.test.mjs",
+      "exit": 0,
+      "tests": 1,
+      "runtimeProbes": 45,
+      "head": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+      "committedRun": true,
+      "durationMs": 31717.822882,
+      "probeReceipt": "recovery/google-duplicate-recovery-wire.json"
+    },
+    {
+      "command": "pnpm run typecheck",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec eslint <four touched source and journey files> --max-warnings=0",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node --test --test-name-pattern=\"Native Google and Microsoft calendar lifecycles|saved calendar correspondence\" tests/booking-wire.test.mjs",
+      "exit": 0,
+      "tests": 2
+    },
+    {
+      "command": "node scripts/contract-docs.mjs write --clauses AGENT-004",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/contract-docs.mjs check --clauses AGENT-004",
+      "exit": 0
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0,
+      "generatedViewsCommitted": false
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node --test tests/providers-d1.test.mjs",
+      "exit": 0,
+      "tests": 7
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check (after final rebase)",
+      "exit": 0
+    }
+  ],
+  "ciPrior": {
+    "head": "3cb5efe115c55fd1ed14b411ba22e8e30cb40502",
+    "run": 42246662008,
+    "job": 127990609290,
+    "conclusion": "failure",
+    "class": "dev-server start timeout",
+    "reportedFailureReproduced": false,
+    "repairs": 0
+  },
+  "mainCI": {
+    "verify": [
+      42235457149,
+      42232968849
+    ],
+    "runSite": 42235457024,
+    "conclusion": "success"
+  },
+  "publicationScan": {
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "state": "not run in cloud; exact-tree scan belongs to guarded fleet lander",
+    "head": "b571279e853fa019a40b18564c6a88bdcbab7f21"
+  },
+  "mainEquality": false,
+  "landing": "not performed",
+  "ui": "untouched and excluded",
+  "liveProvider": "not claimed",
+  "testRegistrationDelta": 0,
+  "existingAssertionsRemoved": 0,
+  "newPolicyDefaults": [],
+  "head": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+  "tree": "aa1b9db5926f4c61da24be2ea372237727b12d20",
+  "productPush": {
+    "status": "pushed",
+    "attempts": 1,
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sd-dial-c-f39",
+    "exit": 0
+  },
+  "candidateCI": [
+    {
+      "conclusion": null,
+      "event": "push",
+      "head_sha": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+      "html_url": "https://github.com/just-every/run-dial/actions/runs/42253160826",
+      "id": 42253160826,
+      "name": "Verify",
+      "status": "in_progress"
+    }
+  ],
+  "sourceLockSha256": "3275d3fa384af7e39d38aa69e91731d6711eeb4a9cb710ed6b869a0e5d3ce9b4",
+  "integration": {
+    "command": "git fetch origin main && git rebase origin/main",
+    "exit": 0,
+    "result": "already up to date; no history rewritten",
+    "main": "7416c12f5ecf1807453a6f41a22bac849adb4068"
+  },
+  "identity": {
+    "candidateCommits": 4,
+    "authors": "Run Edit Run fleet",
+    "committers": "Run Edit Run fleet",
+    "trailers": "none",
+    "checked": "all candidates including side parents"
+  },
+  "contractStatusDelta": false,
+  "ciCallsUsed": 5,
+  "candidateVerifyGreenClaimed": false,
+  "branchCustodyVerified": true
+}

@@ -1,0 +1,8 @@
+Starting runtime source: 3cb5efe115c55fd1ed14b411ba22e8e30cb40502
+Command: node --test --test-name-pattern="Google owned outage duplicates" tests/booking-wire.test.mjs
+New network-edge regression before production fix: exit=1
+AssertionError [ERR_ASSERTION]: missing marker: a hidden active extra is not completed cleanup
+Observed calendar_state: succeeded
+Expected: any state other than succeeded while the recorded extra is still active
+After production fix: same journey exit=0, including missing and foreign booking-marker drift.
+An intermediate new replay assertion incorrectly used the fixture due endpoint, which explicitly revives failed commands. The test now replays ordinary Queue delivery without rewriting the outbox. No existing assertion was changed.
