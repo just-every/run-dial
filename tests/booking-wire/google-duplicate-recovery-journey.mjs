@@ -115,6 +115,8 @@ for (const lost of [false, true]) {
     assert.equal(snapshot.bookings.find(row => row.id === fixture.booking.id).calendar_state, 'pending');
     await due(fixture.command.id); await deliver(fixture.command.id);
     snapshot = await state();
+    assert.deepEqual(writes(snapshot).slice(writes(before).length).map(row => row.method), ['DELETE'], 'a lost cleanup response recovers by reading provider state without sending another invitation');
+    assert.deepEqual(eventFor(snapshot, fixture.canonical.id), fixture.canonical, 'a lost cleanup response never rewrites the surviving canonical event');
   } else {
     const afterDelete = recoveryCalls.filter(row => row.id > deletes[0].id);
     assert.ok(afterDelete.some(row => row.method === 'GET' && new URL(row.url).searchParams.get('privateExtendedProperty') === `dial-booking-id=${fixture.booking.id}`), 'delivery verifies an exhaustive post-cleanup provider list');
@@ -142,6 +144,102 @@ for (const lost of [false, true]) {
   checks.push(`PROBE AGENT-004 owned duplicate${lost ? ' with cleanup response loss' : ''}: native booking and current delivery -> extra removed, canonical verified, original authority retained and replay inert`);
 }
 
+// A filtered list cannot prove that a previously identified extra was removed:
+// an external marker edit can hide the still-active event after a transport loss.
+for (const mode of ['missing marker', 'foreign marker']) {
+  const fixture = await pair();
+  await control(`google-recovery-delete-interrupted:${fixture.extra.id}`, 1);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  const interrupted = await state();
+  assert.equal(interrupted.delivery_outbox.find(row => row.id === fixture.command.id).state, 'pending');
+  assert.equal(eventFor(interrupted, fixture.extra.id).status, 'confirmed');
+  const changed = structuredClone(fixture.extra);
+  if (mode === 'missing marker') delete changed.extendedProperties.private['dial-booking-id'];
+  else changed.extendedProperties.private['dial-booking-id'] = untouched.booking.id;
+  changed.etag = '"synthetic-dial-extra-edited"';
+  await data('/wire/event', { id: changed.id, payload: changed });
+  const before = await state(), beforeAuthority = authority(before, fixture.booking.id);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  const after = await state();
+  assert.notEqual(after.bookings.find(row => row.id === fixture.booking.id).calendar_state, 'succeeded', `${mode}: a hidden active extra is not completed cleanup`);
+  assert.notEqual(after.delivery_outbox.find(row => row.id === fixture.command.id).state, 'succeeded');
+  assert.deepEqual(writes(after), writes(before), `${mode}: ambiguous recovery changes neither provider event`);
+  assert.deepEqual(eventFor(after, fixture.extra.id), changed);
+  assert.deepEqual(eventFor(after, fixture.canonical.id), fixture.canonical);
+  assert.deepEqual(authority(after, fixture.booking.id), beforeAuthority);
+  assert.deepEqual(authority(after, untouched.booking.id), authority(controlSnapshot, untouched.booking.id));
+  assert.deepEqual(after.bookings.find(row => row.id === untouched.booking.id), controlRows(controlSnapshot).booking);
+  const extraRead = after.wire_calls.slice(before.wire_calls.length).find(row => row.method === 'GET' && new URL(row.url).pathname.endsWith('/' + fixture.extra.id));
+  assert.ok(extraRead, 'the recorded extra is read even after its marker hides it from the list');
+  assert.equal(JSON.parse(extraRead.headers)['if-match'], undefined, 'absence verification does not require the deleted revision');
+  const calls = after.wire_calls;
+  await deliver(fixture.command.id); await deliver(fixture.command.id);
+  assert.deepEqual((await state()).wire_calls, calls, 'refused recovery stays inert on Queue replay');
+  checks.push(`PROBE AGENT-004 uncertain cleanup and ${mode}: native delivery retry -> hidden extra read by recorded ID, completion refused and both events unchanged`);
+  // Restore the synthetic marker so later control snapshots see only their own events.
+  await data('/wire/event', { id: fixture.extra.id, payload: fixture.extra });
+}
+
+// Google can expose a deleted event as a changed-revision tombstone or absence.
+for (const mode of ['tombstone', '404', '410', 'unavailable']) {
+  const fixture = await pair();
+  await control(`google-recovery-delete-lost:${fixture.extra.id}`, 1);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  if (mode === 'tombstone') await data('/wire/event', { id: fixture.extra.id, payload: { ...fixture.extra, status: 'cancelled', etag: '"synthetic-dial-deleted-revision"' } });
+  else await control(`google-get-status:${fixture.extra.id}`, mode === 'unavailable' ? 503 : Number(mode));
+  const before = await state(), beforeAuthority = authority(before, fixture.booking.id);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  let after = await state();
+  if (mode === 'unavailable') {
+    assert.equal(after.delivery_outbox.find(row => row.id === fixture.command.id).state, 'pending', 'an unavailable deletion check is not completion proof');
+    assert.equal(after.bookings.find(row => row.id === fixture.booking.id).calendar_state, 'pending');
+    await control(`google-get-status:${fixture.extra.id}`, 0);
+    await due(fixture.command.id); await deliver(fixture.command.id);
+    after = await state();
+  }
+  assert.equal(after.delivery_outbox.find(row => row.id === fixture.command.id).state, 'succeeded');
+  assert.equal(after.bookings.find(row => row.id === fixture.booking.id).calendar_provider_event_id, fixture.canonical.id);
+  assert.equal(after.bookings.find(row => row.id === fixture.booking.id).calendar_state, 'succeeded');
+  assert.deepEqual(writes(after), writes(before), 'confirming deletion adds no provider write');
+  assert.deepEqual(eventFor(after, fixture.canonical.id), fixture.canonical);
+  assert.deepEqual(authority(after, fixture.booking.id), beforeAuthority);
+  assert.deepEqual(controlRows(after), controlRows(controlSnapshot));
+  checks.push(`PROBE AGENT-004 removed extra ${mode}: native delivery retry -> deletion verified before completion, canonical and authority unchanged`);
+}
+
+// Cleanup may have committed even though delivery is still pending. A later
+// retry cannot overwrite changed provider facts or reuse expired command authority.
+for (const mode of ['facts', 'supersede', 'archive', 'claim', 'pagination', 'supersede-before-list', 'archive-before-list', 'claim-before-list', 'command-before-list', 'identity-before-list', 'etag-before-list', 'missing-before-list']) {
+  const fixture = await pair();
+  await control(`google-recovery-delete-lost:${fixture.extra.id}`, 1);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  const removed = await state();
+  assert.equal(active(removed, fixture.booking.id).length, 1);
+  assert.equal(removed.delivery_outbox.find(row => row.id === fixture.command.id).state, 'pending');
+  if (['command-before-list', 'identity-before-list', 'etag-before-list', 'missing-before-list'].includes(mode)) {
+    const survivor = structuredClone(fixture.canonical);
+    if (mode === 'command-before-list') survivor.extendedProperties.private['dial-idempotency-key'] = 'synthetic-dial-changed-command';
+    if (mode === 'identity-before-list') delete survivor.extendedProperties.private['dial-booking-id'];
+    if (mode === 'etag-before-list') survivor.etag = '"synthetic-dial-new-revision"';
+    await data('/wire/event', { id: survivor.id, ...(mode === 'missing-before-list' ? { remove: true } : { payload: survivor }) });
+  } else if (mode.endsWith('-before-list')) await control(`google-recovery-before-list:${fixture.booking.id}`, mode.split('-')[0]);
+  else if (mode === 'pagination') await control(`google-list-mode:${fixture.booking.id}`, 'paginated');
+  else await control(`google-recovery-read:${fixture.canonical.id}`, mode);
+  const before = await state(), beforeAuthority = authority(before, fixture.booking.id);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  const after = await state();
+  assert.notEqual(after.bookings.find(row => row.id === fixture.booking.id).calendar_state, 'succeeded', `${mode}: uncertain cleanup recovery is not completion`);
+  assert.deepEqual(writes(after).map(row => [row.id, row.method]), writes(before).map(row => [row.id, row.method]), `${mode}: cleanup recovery never writes the canonical event`);
+  assert.deepEqual(authority(after, fixture.booking.id), beforeAuthority);
+  assert.deepEqual(controlRows(after), controlRows(controlSnapshot));
+  if (mode.startsWith('archive')) {
+    const calls = after.wire_calls;
+    await due(fixture.command.id); await deliver(fixture.command.id);
+    assert.deepEqual((await state()).wire_calls, calls, 'archived cleanup recovery stays inert on queue replay');
+  }
+  checks.push(`PROBE AGENT-004 cleanup response loss and ${mode}: native delivery retry -> refused without canonical writes or authority changes`);
+}
+
 const scenarios = [
   ['occurrence marker', extra => { extra.extendedProperties.private['dial-occurrence-id'] = 'synthetic-dial-other'; }],
   ['command marker', extra => { extra.extendedProperties.private['dial-idempotency-key'] = 'synthetic-dial-other'; }],
@@ -159,6 +257,8 @@ const scenarios = [
   ['pagination', () => {}, 'pagination'],
   ['missing deterministic canonical', () => {}, 'canonical'],
   ['fresh changed facts', () => {}, 'facts'],
+  ['canonical read ETag conflict', () => {}, 'canonical-etag'],
+  ['extra read ETag conflict', () => {}, 'extra-etag'],
   ['delete ETag conflict', () => {}, 'etag'],
   ['superseded command', () => {}, 'supersede'],
   ['archived command', () => {}, 'archive'],
@@ -181,6 +281,7 @@ for (const [label, mutate, mode] of scenarios) {
     await data('/wire/event', { id: `feedbeef${index}`, payload: { ...fixture.canonical, id: `feedbeef${index}` } });
   }
   if (['facts', 'supersede', 'archive', 'claim'].includes(mode)) await control(`google-recovery-read:${fixture.extra.id}`, mode);
+  if (['canonical-etag', 'extra-etag'].includes(mode)) await control(`google-recovery-read:${mode === 'canonical-etag' ? fixture.canonical.id : fixture.extra.id}`, 'revision');
   if (mode === 'etag') await control(`google-recovery-delete-conflict:${fixture.extra.id}`, 1);
   const before = await state(), beforeWrites = writes(before), beforeAuthority = authority(before, fixture.booking.id);
   await due(fixture.command.id); await deliver(fixture.command.id);
@@ -193,7 +294,7 @@ for (const [label, mutate, mode] of scenarios) {
   assert.equal(newWrites.filter(row => row.method !== 'DELETE').length, 0, `${label}: no canonical event mutation`);
   assert.equal(newWrites.filter(row => row.method === 'DELETE').length, mode === 'etag' ? 1 : 0, `${label}: unsafe deletion refused`);
   assert.equal(eventFor(after, fixture.extra.id).status, 'confirmed', `${label}: extra event retained`);
-  if (mode !== 'canonical') assert.deepEqual(eventFor(after, fixture.canonical.id), fixture.canonical);
+  if (mode !== 'canonical') assert.deepEqual(eventFor(after, fixture.canonical.id), mode === 'canonical-etag' ? { ...fixture.canonical, etag: '"synthetic-dial-changed"' } : fixture.canonical);
   assert.deepEqual(controlRows(after), controlRows(controlSnapshot), `${label}: unrelated booking preserved`);
   if (mode === 'archive') {
     const archivedCalls = after.wire_calls;

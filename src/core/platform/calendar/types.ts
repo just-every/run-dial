@@ -76,8 +76,19 @@ export type ManagedCalendarEvent = {
   requestGoogleMeet: boolean;
 };
 
-/** Fresh authority for a destructive duplicate cleanup, supplied by the delivery owner. */
-export type ManagedCalendarCommandAdmission = () => Promise<boolean>;
+/** The provider revisions authorized by one command's destructive cleanup. */
+export type ManagedCalendarRecoveryPair = {
+  canonicalId: string;
+  canonicalEtag: string;
+  extraId: string;
+  extraEtag: string;
+};
+
+/** Fresh admission also durably fences cleanup retries to the originally authorized pair. */
+export type ManagedCalendarCommandAdmission = (beginCleanup?: ManagedCalendarRecoveryPair) => Promise<{
+  state: "current" | "stale" | "unsupported";
+  recovery?: ManagedCalendarRecoveryPair;
+}>;
 
 export type ManagedCalendarEventResult = {
   providerEventId: string;

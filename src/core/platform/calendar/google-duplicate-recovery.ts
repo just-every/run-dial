@@ -1,6 +1,6 @@
 import { googleEventPayload } from "./google-managed-events";
 import { isRecord } from "./google-wire";
-import { ProviderFailure, type ManagedCalendarCommandAdmission, type ManagedCalendarEvent } from "./types";
+import { ProviderFailure, type ManagedCalendarCommandAdmission, type ManagedCalendarEvent, type ManagedCalendarRecoveryPair } from "./types";
 
 type ProviderEvent = Record<string, unknown> & { id: string; etag: string };
 type RecoveryInput = {
@@ -8,7 +8,7 @@ type RecoveryInput = {
   event: ManagedCalendarEvent;
   canonicalId: string;
   readList(url: string): Promise<Record<string, unknown>>;
-  readEvent(url: string, etag: string): Promise<Record<string, unknown>>;
+  readEvent(url: string, etag?: string): Promise<Record<string, unknown> | undefined>;
   removeEvent(url: string, etag: string): Promise<unknown>;
   admit?: ManagedCalendarCommandAdmission;
 };
@@ -22,7 +22,32 @@ export async function resolveGoogleUpsertEvent(input: RecoveryInput): Promise<{ 
   url.searchParams.set("maxResults", "3");
   const list = () => input.readList(url.toString());
   const events = listed(await list());
-  if (events.length < 2) return { event: events[0], recovered: false };
+  const command = await input.admit?.();
+  if (command?.state === "stale") throw new ProviderFailure("superseded_occurrence", false);
+  const recovery = command?.recovery;
+  if (recovery) {
+    await admit(input);
+    if (recovery.canonicalId !== input.canonicalId || events.length === 0) refuse();
+    const canonical = events.find(event => event.id === recovery.canonicalId);
+    if (!canonical || canonical.etag !== recovery.canonicalEtag) refuse();
+    if (events.length === 1) return { event: await verifyCanonical(input, canonical, list, recovery.extraId), recovered: true };
+    if (events.length !== 2 || !events.some(event => event.id === recovery.extraId && event.etag === recovery.extraEtag)) refuse();
+  }
+  if (events.length < 2) {
+    const existing = events[0];
+    // A lost cleanup response leaves only the canonical event. The same command
+    // must verify it without another PATCH and another provider invitation.
+    const properties = existing && isRecord(existing.extendedProperties) && isRecord(existing.extendedProperties.private)
+      ? existing.extendedProperties.private : undefined;
+    if (existing?.id === input.canonicalId && properties?.["dial-idempotency-key"] === input.event.idempotencyKey
+      && !input.event.requestGoogleMeet && !input.event.guestEmails?.length && input.event.transparency !== "transparent"
+      && command && command.state !== "unsupported") {
+      assertIntended(existing, input.event);
+      const verified = await verifyCanonical(input, existing, list);
+      return { event: verified, recovered: true };
+    }
+    return { event: existing, recovered: false };
+  }
   if (events.length !== 2 || input.event.requestGoogleMeet || input.event.guestEmails?.length
     || input.event.transparency === "transparent" || !input.admit) refuse();
   const canonical = events.find(event => event.id === input.canonicalId);
@@ -33,26 +58,38 @@ export async function resolveGoogleUpsertEvent(input: RecoveryInput): Promise<{ 
   // Both identities and ETags must survive a fresh provider read before any deletion.
   for (const event of [canonical, extra]) {
     const fresh = await input.readEvent(eventUrl(input, event.id), event.etag);
-    if (fresh.id !== event.id || fresh.etag !== event.etag) throw new ProviderFailure("provider_write_conflict", true);
+    if (!fresh || fresh.id !== event.id || fresh.etag !== event.etag) throw new ProviderFailure("provider_write_conflict", true);
     assertIntended(fresh, input.event);
   }
-  await admit(input);
+  await admit(input, { canonicalId: canonical.id, canonicalEtag: canonical.etag, extraId: extra.id, extraEtag: extra.etag });
   await input.removeEvent(`${eventUrl(input, extra.id)}?sendUpdates=none`, extra.etag);
 
+  return { event: await verifyCanonical(input, canonical, list, extra.id), recovered: true };
+}
+
+async function verifyCanonical(input: RecoveryInput, canonical: ProviderEvent, list: () => Promise<Record<string, unknown>>, removedId?: string) {
   // A successful cleanup response alone is not proof of the provider's resulting state.
+  await admit(input);
   const remaining = listed(await list());
   if (remaining.length !== 1 || remaining[0].id !== canonical.id || remaining[0].etag !== canonical.etag) refuse();
   assertIntended(remaining[0], input.event);
   const verified = await input.readEvent(eventUrl(input, canonical.id), canonical.etag);
-  if (verified.id !== canonical.id || verified.etag !== canonical.etag) throw new ProviderFailure("provider_write_conflict", true);
+  if (!verified || verified.id !== canonical.id || verified.etag !== canonical.etag) throw new ProviderFailure("provider_write_conflict", true);
   assertIntended(verified, input.event);
+  if (removedId) {
+    // An edited booking marker can hide an active extra from the filtered list.
+    // Read its durable identity without the old ETag: deletion changes revisions
+    // and Google can return either a tombstone or an absent resource.
+    const removed = await input.readEvent(eventUrl(input, removedId));
+    if (removed && (removed.id !== removedId || removed.status !== "cancelled")) refuse();
+  }
   await admit(input);
-  return { event: verified as ProviderEvent, recovered: true };
+  return verified as ProviderEvent;
 }
 
 function eventUrl(input: RecoveryInput, id: string) { return `${input.collectionUrl}/${encodeURIComponent(id)}`; }
-async function admit(input: RecoveryInput) {
-  if (!await input.admit?.()) throw new ProviderFailure("superseded_occurrence", false);
+async function admit(input: RecoveryInput, beginCleanup?: ManagedCalendarRecoveryPair) {
+  if ((await input.admit?.(beginCleanup))?.state !== "current") throw new ProviderFailure("superseded_occurrence", false);
 }
 function refuse(): never { throw new ProviderFailure("invalid_provider_response", false); }
 function listed(body: Record<string, unknown>): ProviderEvent[] {
