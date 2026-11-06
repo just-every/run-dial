@@ -1,0 +1,53 @@
+
+> dial@0.5.0 lint /workspace/run-dial
+> eslint src tests scripts vite.config.ts --max-warnings=0
+
+
+> dial@0.5.0 boundaries /workspace/run-dial
+> node scripts/check-boundaries.mjs
+
+Boundary check passed for 882 source files.
+
+> dial@0.5.0 validate /workspace/run-dial
+> node scripts/validate-manifest-contract.mjs
+
+file:///workspace/run-dial/scripts/contract-docs.mjs:23
+ if(command==="check"&&current!==value)throw new Error(`${path}: generated content differs; run contract-docs write.`);
+                                             ^
+
+Error: docs/CLAIMS.md: generated content differs; run contract-docs write.
+    at file:///workspace/run-dial/scripts/contract-docs.mjs:23:46
+
+Node.js v22.20.0
+node:internal/errors:983
+  const err = new Error(message);
+              ^
+
+Error: Command failed: /home/agent/.rer/toolchain/node-22.20.0/node_modules/node/bin/node scripts/contract-docs.mjs check
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:916:11)
+    at execFileSync (node:child_process:952:15)
+    at file:///workspace/run-dial/scripts/validate-manifest-contract.mjs:15:1 {
+  status: 1,
+  signal: null,
+  output: [ null, null, null ],
+  pid: 1047,
+  stdout: null,
+  stderr: null
+}
+
+Node.js v22.20.0
+ ELIFECYCLE  Command failed with exit code 1.
+Verification evidence: /tmp/dial-ci-verify-49wsnu
+file:///workspace/run-dial/scripts/ci-verify.mjs:37
+    child.once("exit", (code, signal) => code === 0 ? done() : reject(new Error(`${command} ${args.join(" ")} failed: ${signal ?? code}`)));
+                                                                      ^
+
+Error: pnpm run validate failed: 1
+    at ChildProcess.<anonymous> (file:///workspace/run-dial/scripts/ci-verify.mjs:37:71)
+    at Object.onceWrapper (node:events:634:26)
+    at ChildProcess.emit (node:events:519:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+
+Node.js v22.20.0

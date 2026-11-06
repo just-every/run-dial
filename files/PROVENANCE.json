@@ -1,0 +1,16 @@
+{
+  "head": "c7d036ce4be1d735bb03ecf94e01a3c0a5325b4d",
+  "parents": [
+    "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+    "7416c12f5ecf1807453a6f41a22bac849adb4068"
+  ],
+  "candidate_identity_and_trailers": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>",
+  "candidate_messages": "Merge the landed contract-view repair into Google recovery continuation",
+  "parent_status_rows": 189,
+  "candidate_status_rows": 189,
+  "origin_main_ancestor": true,
+  "product_diff_against_main": "",
+  "changes_against_saved_head": "docs/CLAIMS.md    | 4 ++--\n sources.lock.json | 2 +-\n 2 files changed, 3 insertions(+), 3 deletions(-)",
+  "status_porcelain": "",
+  "credential_scan": "explicit selected packet files checked for recognized tokens and private key material; no findings"
+}
