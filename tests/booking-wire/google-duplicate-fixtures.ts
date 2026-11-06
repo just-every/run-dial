@@ -36,6 +36,11 @@ export async function googleDuplicateEdge(db: D1Database, application: D1Databas
   if (method !== "DELETE") return;
   const conflict = await db.prepare("SELECT value FROM wire_controls WHERE name=?").bind(`google-recovery-delete-conflict:${id}`).first();
   if (conflict?.value || headers.get("if-match") !== event.etag) return Response.json({}, { status: 412 });
+  const interrupted = await db.prepare("SELECT value FROM wire_controls WHERE name=?").bind(`google-recovery-delete-interrupted:${id}`).first();
+  if (interrupted?.value) {
+    await db.prepare("DELETE FROM wire_controls WHERE name=?").bind(`google-recovery-delete-interrupted:${id}`).run();
+    throw new Error("Google cleanup request interrupted before removal");
+  }
   await db.prepare("UPDATE wire_events SET payload=json_set(payload,'$.status','cancelled') WHERE id=?").bind(id).run();
   const lost = await db.prepare("SELECT value FROM wire_controls WHERE name=?").bind(`google-recovery-delete-lost:${id}`).first();
   if (lost?.value) {

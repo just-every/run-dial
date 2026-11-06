@@ -85,7 +85,9 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     const resolved = await resolveGoogleUpsertEvent({
       collectionUrl: `${calendarApi}/calendars/${encodeURIComponent(calendarId)}/events`, event, canonicalId,
       readList: url => this.authorizedJson(accessToken, url),
-      readEvent: (url, etag) => this.authorizedJson(accessToken, url, { headers: { "if-match": etag } }),
+      readEvent: (url, etag) => requestOptionalJsonWithTimeout(this.request, url, {
+        headers: { authorization: `Bearer ${accessToken}`, ...(etag ? { "if-match": etag } : {}) },
+      }),
       removeEvent: (url, etag) => this.authorized(accessToken, url, { method: "DELETE", headers: { "if-match": etag } }),
       admit: admitDuplicateRecovery,
     });

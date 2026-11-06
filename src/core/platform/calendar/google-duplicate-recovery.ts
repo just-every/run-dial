@@ -8,7 +8,7 @@ type RecoveryInput = {
   event: ManagedCalendarEvent;
   canonicalId: string;
   readList(url: string): Promise<Record<string, unknown>>;
-  readEvent(url: string, etag: string): Promise<Record<string, unknown>>;
+  readEvent(url: string, etag?: string): Promise<Record<string, unknown> | undefined>;
   removeEvent(url: string, etag: string): Promise<unknown>;
   admit?: ManagedCalendarCommandAdmission;
 };
@@ -30,7 +30,7 @@ export async function resolveGoogleUpsertEvent(input: RecoveryInput): Promise<{ 
     if (recovery.canonicalId !== input.canonicalId || events.length === 0) refuse();
     const canonical = events.find(event => event.id === recovery.canonicalId);
     if (!canonical || canonical.etag !== recovery.canonicalEtag) refuse();
-    if (events.length === 1) return { event: await verifyCanonical(input, canonical, list), recovered: true };
+    if (events.length === 1) return { event: await verifyCanonical(input, canonical, list, recovery.extraId), recovered: true };
     if (events.length !== 2 || !events.some(event => event.id === recovery.extraId && event.etag === recovery.extraEtag)) refuse();
   }
   if (events.length < 2) {
@@ -58,24 +58,31 @@ export async function resolveGoogleUpsertEvent(input: RecoveryInput): Promise<{ 
   // Both identities and ETags must survive a fresh provider read before any deletion.
   for (const event of [canonical, extra]) {
     const fresh = await input.readEvent(eventUrl(input, event.id), event.etag);
-    if (fresh.id !== event.id || fresh.etag !== event.etag) throw new ProviderFailure("provider_write_conflict", true);
+    if (!fresh || fresh.id !== event.id || fresh.etag !== event.etag) throw new ProviderFailure("provider_write_conflict", true);
     assertIntended(fresh, input.event);
   }
   await admit(input, { canonicalId: canonical.id, canonicalEtag: canonical.etag, extraId: extra.id, extraEtag: extra.etag });
   await input.removeEvent(`${eventUrl(input, extra.id)}?sendUpdates=none`, extra.etag);
 
-  return { event: await verifyCanonical(input, canonical, list), recovered: true };
+  return { event: await verifyCanonical(input, canonical, list, extra.id), recovered: true };
 }
 
-async function verifyCanonical(input: RecoveryInput, canonical: ProviderEvent, list: () => Promise<Record<string, unknown>>) {
+async function verifyCanonical(input: RecoveryInput, canonical: ProviderEvent, list: () => Promise<Record<string, unknown>>, removedId?: string) {
   // A successful cleanup response alone is not proof of the provider's resulting state.
   await admit(input);
   const remaining = listed(await list());
   if (remaining.length !== 1 || remaining[0].id !== canonical.id || remaining[0].etag !== canonical.etag) refuse();
   assertIntended(remaining[0], input.event);
   const verified = await input.readEvent(eventUrl(input, canonical.id), canonical.etag);
-  if (verified.id !== canonical.id || verified.etag !== canonical.etag) throw new ProviderFailure("provider_write_conflict", true);
+  if (!verified || verified.id !== canonical.id || verified.etag !== canonical.etag) throw new ProviderFailure("provider_write_conflict", true);
   assertIntended(verified, input.event);
+  if (removedId) {
+    // An edited booking marker can hide an active extra from the filtered list.
+    // Read its durable identity without the old ETag: deletion changes revisions
+    // and Google can return either a tombstone or an absent resource.
+    const removed = await input.readEvent(eventUrl(input, removedId));
+    if (removed && (removed.id !== removedId || removed.status !== "cancelled")) refuse();
+  }
   await admit(input);
   return verified as ProviderEvent;
 }
