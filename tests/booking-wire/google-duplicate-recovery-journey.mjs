@@ -146,14 +146,15 @@ for (const lost of [false, true]) {
 
 // Cleanup may have committed even though delivery is still pending. A later
 // retry cannot overwrite changed provider facts or reuse expired command authority.
-for (const mode of ['facts', 'supersede', 'archive', 'claim', 'pagination']) {
+for (const mode of ['facts', 'supersede', 'archive', 'claim', 'pagination', 'supersede-before-list', 'archive-before-list', 'claim-before-list']) {
   const fixture = await pair();
   await control(`google-recovery-delete-lost:${fixture.extra.id}`, 1);
   await due(fixture.command.id); await deliver(fixture.command.id);
   const removed = await state();
   assert.equal(active(removed, fixture.booking.id).length, 1);
   assert.equal(removed.delivery_outbox.find(row => row.id === fixture.command.id).state, 'pending');
-  if (mode === 'pagination') await control(`google-list-mode:${fixture.booking.id}`, 'paginated');
+  if (mode.endsWith('-before-list')) await control(`google-recovery-before-list:${fixture.booking.id}`, mode.split('-')[0]);
+  else if (mode === 'pagination') await control(`google-list-mode:${fixture.booking.id}`, 'paginated');
   else await control(`google-recovery-read:${fixture.canonical.id}`, mode);
   const before = await state(), beforeAuthority = authority(before, fixture.booking.id);
   await due(fixture.command.id); await deliver(fixture.command.id);
@@ -162,7 +163,7 @@ for (const mode of ['facts', 'supersede', 'archive', 'claim', 'pagination']) {
   assert.deepEqual(writes(after).map(row => [row.id, row.method]), writes(before).map(row => [row.id, row.method]), `${mode}: cleanup recovery never writes the canonical event`);
   assert.deepEqual(authority(after, fixture.booking.id), beforeAuthority);
   assert.deepEqual(controlRows(after), controlRows(controlSnapshot));
-  if (mode === 'archive') {
+  if (mode.startsWith('archive')) {
     const calls = after.wire_calls;
     await due(fixture.command.id); await deliver(fixture.command.id);
     assert.deepEqual((await state()).wire_calls, calls, 'archived cleanup recovery stays inert on queue replay');
