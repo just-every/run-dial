@@ -1,0 +1,11 @@
+{
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f38",
+  "head": "3cb5efe115c55fd1ed14b411ba22e8e30cb40502",
+  "command": "timeout 1200 node --test --test-name-pattern='Google owned outage duplicates' tests/booking-wire.test.mjs",
+  "node": "v22.20.0",
+  "exit": 0,
+  "log": "exact-head-journey.log",
+  "log_sha256": "83d3ff94f720dbc1778c6d387cf602fe26edf4863c4399a9fd6ed6e7eb79f0b4",
+  "scope": "Native public booking and production delivery with Google synthetic at the HTTP edge; no UI or live provider qualification"
+}

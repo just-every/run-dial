@@ -1,0 +1,26 @@
+fleet Git: removed 0 credential-bearing GitHub URL rewrite sections
+PUSH attempt=1/5 command=git push --porcelain origin HEAD:refs/heads/cloud/sd-dial-c-f38
+PUSH_CREDENTIAL sha256_16=8addacf6ac95b0bc bundle_file_age_seconds=726 token_issue_age=unknown
+PUSH_IDENTITY_AUDIT
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+
+
+fleet Git: removed 0 credential-bearing GitHub URL rewrite sections
+To https://github.com/just-every/run-dial.git
+*	HEAD:refs/heads/cloud/sd-dial-c-f38	[new branch]
+Done
+remote: 
+remote: Create a pull request for 'cloud/sd-dial-c-f38' on GitHub by visiting:        
+remote:      https://github.com/just-every/run-dial/pull/new/cloud/sd-dial-c-f38        
+remote: 
+remote: GitHub found 23 vulnerabilities on just-every/run-dial's default branch (13 high, 9 moderate, 1 low). To find out more, visit:        
+remote:      https://github.com/just-every/run-dial/security/dependabot        
+remote: 
+PUSH_OK branch=cloud/sd-dial-c-f38

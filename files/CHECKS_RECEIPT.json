@@ -1,0 +1,64 @@
+{
+  "head": "3cb5efe115c55fd1ed14b411ba22e8e30cb40502",
+  "branch": "cloud/sd-dial-c-f38",
+  "base": "7416c12f5ecf1807453a6f41a22bac849adb4068",
+  "created_at": "2026-11-06T15:50:36.057960+00:00",
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log",
+      "log_sha256": "cd99679099e49fa594ae5000181459de5a4464f8790ee0b9b1826cb6a8030df9"
+    },
+    {
+      "command": "pnpm exec eslint <six touched source and test files> --max-warnings=0",
+      "exit": 0,
+      "log": "touched-lint.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "pnpm boundaries",
+      "exit": 0,
+      "log": "boundaries.log",
+      "log_sha256": "75731d3598b64319d7ea627991878bdb08dfd7530056be87f354e0326eaec316"
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "node scripts/contract-docs.mjs write --clauses AGENT-004 && node scripts/contract-docs.mjs check --clauses AGENT-004; restore generated views from origin/main",
+      "exit": 0,
+      "log": "mechanical.log",
+      "log_sha256": "1f3e9f37e49f09902c35a40dea39dc211895e8b009820ee0b8b5dc687b98e2c3"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock && node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "mechanical.log",
+      "log_sha256": "1f3e9f37e49f09902c35a40dea39dc211895e8b009820ee0b8b5dc687b98e2c3"
+    },
+    {
+      "command": "timeout 1200 node --test --test-name-pattern='Google owned outage duplicates|Native Google and Microsoft calendar lifecycles' tests/booking-wire.test.mjs",
+      "exit": 0,
+      "tests": 2,
+      "log": "touched-journeys.log",
+      "log_sha256": "6bd2ff9d71f41fbde8b29e495e62d238ddfaa967bcba0e289611f46c407f6249"
+    }
+  ],
+  "generated_views_committed": false,
+  "contract_changed": false,
+  "new_test_registrations": 0,
+  "migration_ledger": "none: no migration change",
+  "source_files": {
+    "sources.lock.json": "9dbe71b9d58887ed84831ad4e0870c38b227bc03a34264d501521b43a06385c2",
+    "src/core/features/delivery/repository.ts": "03c4d7b4f335d49ea5dc940ca22ac4753c4981f4d30f48da29198e9206bfcd1c",
+    "src/core/features/delivery/service.ts": "ccb75d43f33c58733c7ebe78cf88841f7135a2f0d820b1f4a44fb54bbe47e6b0",
+    "src/core/platform/calendar/google-duplicate-recovery.ts": "f43913cd07679ed77b040b87deedd6fe221be73bf95ca9134540b6c7bbe229b8",
+    "src/core/platform/calendar/types.ts": "476bdbe1ae213818b3b274e66acffc8437d20d2fb973d0f4d06cc812703a12b2",
+    "tests/booking-wire/google-duplicate-fixtures.ts": "71dc0064ea8775dd975804f1186f5f9b205390196b16fb1bbd3be5e4bae84200",
+    "tests/booking-wire/google-duplicate-recovery-journey.mjs": "5f5c78c526a5f894ee385219fe7c15817c2f7dae5536f3c30122305f51b87991"
+  }
+}
