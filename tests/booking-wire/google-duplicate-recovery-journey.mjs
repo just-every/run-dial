@@ -146,6 +146,7 @@ const scenarios = [
   ['UID marker', extra => { extra.extendedProperties.private['dial-ical-uid'] = 'synthetic-dial-other'; }],
   ['missing identity', extra => { delete extra.extendedProperties.private['dial-booking-id']; }, 'foreign'],
   ['changed title', extra => { extra.summary = 'Changed outside Dial'; }],
+  ['changed canonical facts', () => {}, 'canonical-facts'],
   ['changed description', extra => { extra.description = 'Changed outside Dial'; }],
   ['changed location', extra => { extra.location = 'Another room'; }],
   ['changed time', extra => { extra.start.dateTime = new Date(Date.parse(extra.start.dateTime) + 60000).toISOString(); }],
@@ -166,6 +167,10 @@ for (const [label, mutate, mode] of scenarios) {
   const fixture = await pair();
   mutate(fixture.extra);
   await data('/wire/event', { id: fixture.extra.id, payload: fixture.extra });
+  if (mode === 'canonical-facts') {
+    fixture.canonical.summary = 'Canonical changed outside Dial';
+    await data('/wire/event', { id: fixture.canonical.id, payload: fixture.canonical });
+  }
   if (mode === 'foreign') await control(`google-list-mode:${fixture.booking.id}`, `include:${fixture.extra.id}`);
   if (mode === 'third') await data('/wire/event', { id: `cafebeef${index}`, payload: { ...fixture.extra, id: `cafebeef${index}` } });
   if (mode === 'pagination') await control(`google-list-mode:${fixture.booking.id}`, 'paginated');
@@ -188,6 +193,11 @@ for (const [label, mutate, mode] of scenarios) {
   assert.equal(eventFor(after, fixture.extra.id).status, 'confirmed', `${label}: extra event retained`);
   if (mode !== 'canonical') assert.deepEqual(eventFor(after, fixture.canonical.id), fixture.canonical);
   assert.deepEqual(controlRows(after), controlRows(controlSnapshot), `${label}: unrelated booking preserved`);
+  if (mode === 'archive') {
+    const archivedCalls = after.wire_calls;
+    await due(fixture.command.id); await deliver(fixture.command.id);
+    assert.deepEqual((await state()).wire_calls, archivedCalls, 'an archived command cannot be revived by queue replay');
+  }
   checks.push(`PROBE AGENT-004 ${label}: native delivery recovery -> refused, canonical and booking authority unchanged`);
 }
 
