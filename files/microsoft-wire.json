@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Common OAuth accepts both work and personal grants through the production callback, consumes its session-bound state once and reads the Graph calendar list",
+    "Fresh getSchedule reads for the primary work mailbox and calendarView for a selected secondary exclude busy time; a per-schedule Graph error refuses the final booking check and marks health unhealthy without provider diagnostics",
+    "A physical-location booking survives a lost create response with one attendee event and saved templates and manage link, retains the Graph event ID and UID on reschedule, then deletes the same event on cancellation",
+    "A refused Microsoft refresh token latches reauthorization_required and reconnecting through the OAuth door restores healthy reads",
+    "A Graph mailbox subscription is replaced before expiry; validation is plain text and authenticated notifications invalidate the busy cache while invalid clientState is refused",
+    "OAuth refuses switching a singleton provider while historical calendar bookings remain, preserving the prior provider and subscriptions"
+  ],
+  "scope": "Production Worker and native D1; Microsoft Graph synthetic at its HTTP edge; no Teams or tenant-admin proof"
+}

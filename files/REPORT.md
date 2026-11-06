@@ -48,7 +48,7 @@ These are checked to explain the PARTIAL claim, not to claim DONE.
 | --- | --- | --- |
 | 1 | PARTIAL overall; assigned slice PASS locally | R1 to R10 above. Zoom and external-edit outcomes and the broader held remainder are unproved. |
 | 2 | PASS for assigned slice | Allowed deletion and dangerous refusals operate on populated native bookings, check actual provider mutations and preserve authority and a control booking; journey lines 94 to 241. |
-| 3 | CI qualification pending at initial receipt | Registered test is discovered by existing push Verify. Candidate run 42246662008, event push; final status is recorded in candidate-ci.json and CI_RECEIPT.json when available. |
+| 3 | CI qualification pending at handoff | Registered test is discovered by existing push Verify. Candidate run 42246662008, event push; latest exact-head status is recorded in candidate-ci-status.json and CI_RECEIPT.json: in_progress at 16:00:12Z, conclusion null. |
 | 4 | PASS local | RECOVERY_RECEIPT.json binds the completed native journey to full candidate 3cb5efe115c55fd1ed14b411ba22e8e30cb40502. CHECKS_RECEIPT.json hashes the candidate source and corresponding logs. |
 | 5 | INSPECTED, unchanged | No acceptance, inheritance, grants, archive, payment, API or Base obligation was rewritten or promoted. The retained prerequisites remain held. |
 | 6 | PASS mechanical | Contract generator write and check passed for AGENT-004; generated views restored whole from main and not committed. Status cells and counts are unchanged. |
@@ -79,7 +79,7 @@ MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; vi
 
 ## CI, publication and custody
 
-Base main 7416c12f5ecf1807453a6f41a22bac849adb4068 had successful exact-head push Verify 42235457149 and Run site 42235457024. Candidate Verify is push run 42246662008 on full SHA 3cb5efe115c55fd1ed14b411ba22e8e30cb40502. No PR, dispatch or rerun was created. A mistaken discovery request for an incorrect full hash returned no runs and was discarded; the next discovery used git rev-parse HEAD. Three API discovery calls were used before the first status poll, within the ten-call limit. Status calls are separated by at least 300 seconds per run.
+Base main 7416c12f5ecf1807453a6f41a22bac849adb4068 had successful exact-head push Verify 42235457149 and Run site 42235457024. Candidate Verify is push run 42246662008 on full SHA 3cb5efe115c55fd1ed14b411ba22e8e30cb40502. No PR, dispatch or rerun was created. A mistaken discovery request for an incorrect full hash returned no runs and was discarded; the next discovery used git rev-parse HEAD. Three API discovery calls were used before the first status poll, within the ten-call limit. Five total API calls were used, including two status polls separated by at least 300 seconds. No workflow or job was rerun.
 
 Publication scan: commit=3cb5efe115c55fd1ed14b411ba22e8e30cb40502; status=NOT RUN in cloud; complete=unestablished; historyScanned=unestablished; findings=unestablished. This is not a COMPLETE or zero-findings claim. The fleet must perform the full-history scan and all landing gates. Main equality for the candidate and candidate Run site are not established.
 
@@ -87,4 +87,6 @@ The complete non-secret packet is returned separately on evidence/sd-dial-c-f38,
 
 No remaining assigned native POINTS are blocked. The held remainder above prevents a whole-clause DONE claim. Fleet publication and landing custody remain separate from this completed slice.
 
-Latest CI observation at 2026-11-06T15:55:10Z: run 42246662008 is in_progress on the exact candidate, conclusion null. Four API calls used; no green candidate Verify is claimed in this observation. The next permitted poll is after 16:00:10Z.
+Final CI observation at 2026-11-06T16:00:12Z: run 42246662008 remains in_progress on the exact candidate, conclusion null. Five API calls used. There is no known red check and no green candidate Verify claim. The native slice is complete and pushed; the maintained fleet must continue exact-head CI and publication qualification. Handoff is PUSHED, not a declaration that Verify is green. No account or implementation blocker remains for the assigned native slice.
+
+Existing lifecycle summary receipts booking-wire.json (38 checks) and microsoft-wire.json (6 checks) are included with the complete packet. Local source and test bytes were unchanged between the completed two-test lifecycle run and the exact-head recovery run, as bound by CHECKS_RECEIPT.json. The product checkout is clean and the remote branch head matches the candidate.

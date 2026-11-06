@@ -7,10 +7,10 @@
       "sha256": "bcbb5bb73c99b2031e89576683d37df3c03508b6c249e42dade4a0f42849b469"
     },
     {
-      "blob": "30b003be969ff634c9ad9f3cb12a381a36ff0275",
+      "blob": "e9a6ba05e842bb6e514f4442f2305f6aaf3b0794",
       "bytes": 413,
       "path": "CI_RECEIPT.json",
-      "sha256": "607b7b36ef7cfc8b8cf6a7dbbe84c9267fb75323b0e221ad0d9d51f899e64da4"
+      "sha256": "33c79864f137a7b67f0f6c2e9f84a69a7eb54832f39b34de84f26b0bc42ed5dc"
     },
     {
       "blob": "3ba7a06ea5d72a98029267c5e4988e7caa7d4cda",
@@ -31,16 +31,22 @@
       "sha256": "82fea7f32e18c7f4eff57f0fd60a17ac5ef73dcbd1941b401f6d5e7c61fded0c"
     },
     {
-      "blob": "d25e12726d6df190bc5439215c5b9e364c91a0e3",
-      "bytes": 13774,
+      "blob": "09ff5d343df3fb0c50a933f3e2e5b7447e95f9ae",
+      "bytes": 14475,
       "path": "REPORT.md",
-      "sha256": "f7a08f5187c6d83b7642433f3ffeadb3e091e65c7baaa9cf8b0256044ffa78ef"
+      "sha256": "2a4a29345d4339f01dfc0b48ddec34896143e037b6bf5e1579fa6544a658fd7a"
     },
     {
       "blob": "d15f1a4f54bff1eea4f01a4a83980ab8e7149b31",
       "bytes": 5170,
       "path": "baseline-journey.log",
       "sha256": "e999dc02e64ef1d955ff3fba062c12a7fb2ee5ef1d4f4a41f9a2ee75fd765c47"
+    },
+    {
+      "blob": "f3834d978f2395c76d5573cf0cab10d5c1359b58",
+      "bytes": 5838,
+      "path": "booking-wire.json",
+      "sha256": "d5c8e104641c40cbe1008d0b7dc78d5b016a793d8da70c5e384f2f998fccfeb5"
     },
     {
       "blob": "6b1f187b6d5ccf8960427912783c4d70f197d7e5",
@@ -107,6 +113,12 @@
       "bytes": 1817268,
       "path": "mechanical.log",
       "sha256": "1f3e9f37e49f09902c35a40dea39dc211895e8b009820ee0b8b5dc687b98e2c3"
+    },
+    {
+      "blob": "50c3ca98a23ce577b0656f4200a9c3601520adf8",
+      "bytes": 1226,
+      "path": "microsoft-wire.json",
+      "sha256": "cea8d9872e6cf0b4f1f9788da02d8dae45fd9c2967e41a87a8600fa103088691"
     },
     {
       "blob": "ca4e20e897182737a29da5712040f9e8e27cd27a",
