@@ -1016,9 +1016,9 @@ Gap: No implementing code yet.
 
 AGENT-004 is partial: Calendar drift reconciler.
 
-Evidence: `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs`
+Evidence: `src/core/features/bookings/calendar-reconciliation.ts`, `src/core/features/calendar-connection/external-sync.ts`, `tests/booking-wire.test.mjs`; `tests/booking-wire/google-duplicate-recovery-journey.mjs` — Google owned outage duplicates recover only for a current authorized booking and verified provider pair
 
-Gap: The cited paths cover part of the clause; the rest is still to build.
+Gap: Native recovery of a current authorized Google upsert for a single-host, free, unapproved fixed-location booking without guests removes one exhaustively identified owned duplicate and verifies the deterministic canonical event; ambiguous markers, facts, pagination, ETags and stale or archived commands refuse cleanup. Continuous and autonomous reconciliation with AGENT-001 grants, approvals, pause and ADMIN-002 audit integration, held UI qualification, Zoom recreation and link-ready mail, external-edit proposals and approved adoption, broader attendee, conference, account and host drift, revoked-token and lapsed-subscription handling remain unproved. Existing API and payment custody, CAL-010 and CAL-011 custody, MEET-002 and CAL-012 prerequisites and release holds remain unchanged.
 
 AGENT-005 is missing: Meeting happened check.
 
