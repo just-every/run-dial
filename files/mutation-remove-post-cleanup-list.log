@@ -1,0 +1,38 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ Google owned outage duplicates recover only for a current authorized booking and verified provider pair (5495.704372ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5614.102357
+
+✖ failing tests:
+
+test at tests/booking-wire.test.mjs:96:1
+✖ Google owned outage duplicates recover only for a current authorized booking and verified provider pair (5495.704372ms)
+  Error: node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: delivery verifies an exhaustive post-cleanup provider list
+      at file:///workspace/run-dial/tests/booking-wire/google-duplicate-recovery-journey.mjs:120:12
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+  
+  Node.js v24.19.0
+  
+      at ChildProcess.<anonymous> (file:///workspace/run-dial/tests/booking-wire.test.mjs:41:89)
+      at ChildProcess.emit (node:events:509:28)
+      at ChildProcess.emit (node:domain:489:12)
+      at ChildProcess._handle.onexit (node:internal/child_process:295:12)

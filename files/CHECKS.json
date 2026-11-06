@@ -1,0 +1,75 @@
+{
+  "recorded_at": "2026-11-06T13:14:17.518205+00:00",
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "candidate-typecheck.log",
+      "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3"
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3"
+    },
+    {
+      "command": "node scripts/check-boundaries.mjs",
+      "exit": 0,
+      "log": "boundaries.log",
+      "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3"
+    },
+    {
+      "command": "pnpm exec eslint <touched source and test files> --max-warnings=0",
+      "exit": 0,
+      "log": "lint.log",
+      "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3"
+    },
+    {
+      "command": "node --test --test-name-pattern='Native Google and Microsoft|saved calendar correspondence|Google owned outage' tests/booking-wire.test.mjs",
+      "exit": 0,
+      "log": "touched-journeys.log",
+      "registrations": 3,
+      "scope": "Google and Microsoft lifecycles, provider correspondence and focused owned duplicate recovery",
+      "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3"
+    }
+  ],
+  "candidate_final_checks": "All touched public-door journeys, typecheck, lint, first-party check and source-lock check pass on the exact candidate.",
+  "candidate_head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+  "exact_candidate": [
+    {
+      "command": "node --test --test-name-pattern='Google owned outage' tests/booking-wire.test.mjs",
+      "exit": 0,
+      "log": "candidate-journey.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "candidate-typecheck.log"
+    },
+    {
+      "command": "pnpm exec eslint <touched source and test files> --max-warnings=0",
+      "exit": 0,
+      "log": "candidate-lint.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "candidate-first-party.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node --test --test-name-pattern='Native Google and Microsoft|saved calendar correspondence|Google owned outage' tests/booking-wire.test.mjs",
+      "exit": 0,
+      "registrations": 3,
+      "log": "touched-journeys.log"
+    }
+  ],
+  "production_sources_unchanged_since_regressions": true,
+  "candidate_source_sha256": "01c3e32233021c3bb399bfb19e2c813670151f3aab3ebed922b443e7948cb225",
+  "candidate_journey_sha256": "7cccc929a86fe0fa6a8790ec500ef157baf5293de53b4dd40c62bab58233e57c",
+  "regression_source_blob": "1e0806f65d8d5b6dc75ea50cb8da290680622013"
+}

@@ -1,0 +1,58 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+Checking refusal: occurrence marker
+Checking refusal: command marker
+Checking refusal: UID marker
+Checking refusal: missing identity
+Checking refusal: changed title
+Checking refusal: changed canonical facts
+Checking refusal: changed description
+Checking refusal: changed location
+Checking refusal: changed time
+Checking refusal: changed attendee
+Checking refusal: conference
+Checking refusal: missing ETag
+Checking refusal: extra candidate
+Checking refusal: pagination
+Checking refusal: missing deterministic canonical
+Checking refusal: fresh changed facts
+Checking refusal: delete ETag conflict
+Checking refusal: superseded command
+Checking refusal: archived command
+Checking refusal: reclaimed command
+PROBE AGENT-004 owned duplicate: native booking and current delivery -> extra removed, canonical verified, original authority retained and replay inert
+PROBE AGENT-004 owned duplicate with cleanup response loss: native booking and current delivery -> extra removed, canonical verified, original authority retained and replay inert
+PROBE AGENT-004 occurrence marker: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 command marker: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 UID marker: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 missing identity: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 changed title: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 changed canonical facts: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 changed description: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 changed location: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 changed time: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 changed attendee: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 conference: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 missing ETag: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 extra candidate: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 pagination: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 missing deterministic canonical: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 fresh changed facts: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 delete ETag conflict: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 superseded command: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 archived command: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 reclaimed command: native delivery recovery -> refused, canonical and booking authority unchanged
+PROBE AGENT-004 provider verification: cleanup followed by paginated verification -> delivery not completed
+PROBE AGENT-004 deterministic conflict: hidden canonical produces 409; retry retains the original provider ID
+PROBE AGENT-004 cancellation and stale upsert: native cancellation keeps ambiguous pair lookup; stale original upsert makes no provider request
+Google duplicate recovery public-door journey passed.
+✔ Google owned outage duplicates recover only for a current authorized booking and verified provider pair (18248.459257ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18380.085446

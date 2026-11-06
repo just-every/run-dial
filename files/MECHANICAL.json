@@ -1,0 +1,24 @@
+{
+  "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+  "lock": {
+    "write": "node scripts/edition-authoring/cli.mjs lock",
+    "check": "node scripts/edition-authoring/cli.mjs check",
+    "write_exit": 0,
+    "check_exit": 0,
+    "exact_candidate_check_exit": 0
+  },
+  "views": {
+    "write": "node scripts/contract-docs.mjs write --clauses AGENT-004",
+    "check": "node scripts/contract-docs.mjs check --clauses AGENT-004",
+    "write_exit": 0,
+    "check_exit": 0,
+    "restored": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+    "generated_views_committed": false
+  },
+  "ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration change"
+  },
+  "authority": "Whole clause remains PARTIAL; no release or landing claimed"
+}

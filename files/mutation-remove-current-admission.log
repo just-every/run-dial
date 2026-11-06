@@ -1,0 +1,56 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ Google owned outage duplicates recover only for a current authorized booking and verified provider pair (14846.91723ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14954.937502
+
+✖ failing tests:
+
+test at tests/booking-wire.test.mjs:96:1
+✖ Google owned outage duplicates recover only for a current authorized booking and verified provider pair (14846.91723ms)
+  Error: Checking refusal: occurrence marker
+  Checking refusal: command marker
+  Checking refusal: UID marker
+  Checking refusal: missing identity
+  Checking refusal: changed title
+  Checking refusal: changed canonical facts
+  Checking refusal: changed description
+  Checking refusal: changed location
+  Checking refusal: changed time
+  Checking refusal: changed attendee
+  Checking refusal: conference
+  Checking refusal: missing ETag
+  Checking refusal: extra candidate
+  Checking refusal: pagination
+  Checking refusal: missing deterministic canonical
+  Checking refusal: fresh changed facts
+  Checking refusal: delete ETag conflict
+  Checking refusal: superseded command
+  node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: superseded command: refuses delivery completion
+      at file:///workspace/run-dial/tests/booking-wire/google-duplicate-recovery-journey.mjs:189:32
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'succeeded',
+    expected: 'succeeded',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+  
+  Node.js v24.19.0
+  
+      at ChildProcess.<anonymous> (file:///workspace/run-dial/tests/booking-wire.test.mjs:41:89)
+      at ChildProcess.emit (node:events:509:28)
+      at ChildProcess.emit (node:domain:489:12)
+      at ChildProcess._handle.onexit (node:internal/child_process:295:12)

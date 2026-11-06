@@ -1,0 +1,50 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ Google owned outage duplicates recover only for a current authorized booking and verified provider pair (4936.513312ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5035.163756
+
+✖ failing tests:
+
+test at tests/booking-wire.test.mjs:96:1
+✖ Google owned outage duplicates recover only for a current authorized booking and verified provider pair (4936.513312ms)
+  Error: node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: only the deterministic canonical event stays active
+  + actual - expected
+  
+    [
+      'eeb911df311101777aba17ab376f4bec97efdce4f9c9dd7cb56de9efc8d19037',
+  +   'deadbeef1802'
+    ]
+  
+      at file:///workspace/run-dial/tests/booking-wire/google-duplicate-recovery-journey.mjs:100:10
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [
+      'eeb911df311101777aba17ab376f4bec97efdce4f9c9dd7cb56de9efc8d19037',
+      'deadbeef1802'
+    ],
+    expected: [
+      'eeb911df311101777aba17ab376f4bec97efdce4f9c9dd7cb56de9efc8d19037'
+    ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+  
+  Node.js v24.19.0
+  
+      at ChildProcess.<anonymous> (file:///workspace/run-dial/tests/booking-wire.test.mjs:41:89)
+      at ChildProcess.emit (node:events:509:28)
+      at ChildProcess.emit (node:domain:489:12)
+      at ChildProcess._handle.onexit (node:internal/child_process:295:12)

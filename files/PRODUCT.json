@@ -1,0 +1,36 @@
+{
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f36",
+  "head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+  "remote_head": "fe1c5e3fab2169796cfe2425173917a9eb123ee3",
+  "product_push": "verified",
+  "landing": "not performed; fleet custody",
+  "pr": null,
+  "base": "c466f49767ff0fe4647b09b8208a6bfa0569c874",
+  "commits": [
+    "41b5baee54ba11cf3fc8a9b2a991d58b33f18ed0",
+    "a8ebe8c9d2488ceee687bc4406e07e78dfebacbd",
+    "fe1c5e3fab2169796cfe2425173917a9eb123ee3"
+  ],
+  "contract_counts_before": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63,
+    "total": 189
+  },
+  "contract_counts_after": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63,
+    "total": 189
+  },
+  "clause": {
+    "id": "AGENT-004",
+    "before": "partial",
+    "after": "partial",
+    "closed": "native owned Google duplicate removal during current authorized upsert recovery"
+  },
+  "identity": "All candidate authors and committers are the fleet identity; trailers absent",
+  "publication_scan": "not run in cloud; required by fleet lander",
+  "source_lock_sha256": "2a1b438d7b6c4fcec349adb5058ffc581263006f1a212f24f3e7fdc06084c83c"
+}

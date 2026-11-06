@@ -1,0 +1,74 @@
+[
+  {
+    "mutation": "reject-omitted-empty-items",
+    "command": [
+      "node",
+      "--test",
+      "--test-name-pattern=Google owned outage",
+      "tests/booking-wire.test.mjs"
+    ],
+    "exit": 1,
+    "detected": true,
+    "failure": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:"
+  },
+  {
+    "mutation": "remove-cleanup",
+    "command": [
+      "node",
+      "--test",
+      "--test-name-pattern=Google owned outage",
+      "tests/booking-wire.test.mjs"
+    ],
+    "exit": 1,
+    "detected": true,
+    "failure": "AssertionError [ERR_ASSERTION]: only the deterministic canonical event stays active"
+  },
+  {
+    "mutation": "remove-marker-guard",
+    "command": [
+      "node",
+      "--test",
+      "--test-name-pattern=Google owned outage",
+      "tests/booking-wire.test.mjs"
+    ],
+    "exit": 1,
+    "detected": true,
+    "failure": "AssertionError [ERR_ASSERTION]: occurrence marker: refuses delivery completion"
+  },
+  {
+    "mutation": "remove-current-admission",
+    "command": [
+      "node",
+      "--test",
+      "--test-name-pattern=Google owned outage",
+      "tests/booking-wire.test.mjs"
+    ],
+    "exit": 1,
+    "detected": true,
+    "failure": "AssertionError [ERR_ASSERTION]: superseded command: refuses delivery completion"
+  },
+  {
+    "mutation": "remove-post-cleanup-list",
+    "command": [
+      "node",
+      "--test",
+      "--test-name-pattern=Google owned outage",
+      "tests/booking-wire.test.mjs"
+    ],
+    "exit": 1,
+    "detected": true,
+    "failure": "AssertionError [ERR_ASSERTION]: delivery verifies an exhaustive post-cleanup provider list"
+  },
+  {
+    "mutation": "remove-title-guard",
+    "command": [
+      "node",
+      "--test",
+      "--test-name-pattern=Google owned outage",
+      "tests/booking-wire.test.mjs"
+    ],
+    "exit": 1,
+    "detected": true,
+    "failure": "AssertionError [ERR_ASSERTION]: changed title: refuses delivery completion"
+  }
+]
