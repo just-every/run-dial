@@ -21,8 +21,8 @@ export async function googleDuplicateEdge(db: D1Database, application: D1Databas
     const control = await db.prepare("SELECT value FROM wire_controls WHERE name=?").bind(`google-recovery-read:${id}`).first<{ value: string }>();
     if (control?.value) {
       await db.prepare("DELETE FROM wire_controls WHERE name=?").bind(`google-recovery-read:${id}`).run();
-      if (control.value === "facts") {
-        event.summary = "Changed outside Dial";
+      if (["facts", "revision"].includes(control.value)) {
+        if (control.value === "facts") event.summary = "Changed outside Dial";
         event.etag = '"synthetic-dial-changed"';
         await db.prepare("UPDATE wire_events SET payload=? WHERE id=?").bind(JSON.stringify(event), id).run();
       } else {

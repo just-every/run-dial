@@ -1,3 +1,4 @@
+import type { ManagedCalendarCommandAdmission, ManagedCalendarRecoveryPair } from "../../platform/calendar/types";
 import { duePollReminderIds, pollReminderAuthorized } from "./poll-reminders";
 import { ConfirmationDeliveryRepository } from "./confirmation-repository";
 import { BookingCorrespondenceRepository } from "./correspondence-repository";
@@ -279,9 +280,9 @@ export class DeliveryRepository {
   }
 
   /** Admit only the still-claimed command and the narrow ordinary booking recovery. */
-  async calendarDuplicateRecoveryAdmitted(record: DeliveryOutboxRecord) {
-    if (record.kind !== "calendar_upsert" || !record.bookingId || !record.occurrenceId) return "stale" as const;
-    const result = await this.binding.prepare(`SELECT CASE WHEN d.state='processing' AND d.attempts=? AND d.kind='calendar_upsert'
+  async calendarDuplicateRecoveryAdmitted(record: DeliveryOutboxRecord, beginCleanup?: ManagedCalendarRecoveryPair): ReturnType<ManagedCalendarCommandAdmission> {
+    if (record.kind !== "calendar_upsert" || !record.bookingId || !record.occurrenceId) return { state: "stale" };
+    const admissionQuery = `SELECT CASE WHEN d.state='processing' AND d.attempts=? AND d.kind='calendar_upsert'
        AND d.idempotency_key=? AND d.payload_json=? AND d.booking_id=b.id AND d.occurrence_id=?
        AND CASE WHEN json_valid(d.payload_json) THEN json_extract(d.payload_json,'$.archiveHistorical') END IS NOT 1
        AND b.current_occurrence_id=d.occurrence_id AND b.state IN ('confirmed','rescheduled')
@@ -300,10 +301,26 @@ export class DeliveryRepository {
        AND NOT EXISTS (SELECT 1 FROM booking_payments WHERE booking_id=b.id)
        AND NOT EXISTS (SELECT 1 FROM booking_payment_terms WHERE booking_id=b.id)
        AND NOT EXISTS (SELECT 1 FROM payment_redemptions WHERE booking_id=b.id)
-       AND NOT EXISTS (SELECT 1 FROM team_event_types WHERE event_type_id=e.id)`)
-      .bind(record.attempts, record.idempotencyKey, record.payloadJson, record.occurrenceId, record.id, record.bookingId)
-      .first<{ admission: "current" | "stale" }>();
-    return result?.admission ?? "unsupported" as const;
+       AND NOT EXISTS (SELECT 1 FROM team_event_types WHERE event_type_id=e.id)`;
+    const params = [record.attempts, record.idempotencyKey, record.payloadJson, record.occurrenceId, record.id, record.bookingId];
+    const result = await this.binding.prepare(admissionQuery).bind(...params).first<{ admission: "current" | "stale" }>();
+    const state = result?.admission ?? "unsupported";
+    const payload = JSON.parse(record.payloadJson);
+    const recovery = payload.googleDuplicateRecovery as ManagedCalendarRecoveryPair | undefined;
+    if (state !== "current") return { state, recovery };
+    if (!beginCleanup) return { state, recovery };
+    if (recovery) {
+      const keys = ["canonicalId", "canonicalEtag", "extraId", "extraEtag"] as const;
+      return keys.every(key => recovery[key] === beginCleanup[key]) ? { state, recovery } : { state: "stale" };
+    }
+    // Persist the pair before DELETE: a lost response or Worker restart must
+    // never turn this command back into an ordinary create or update.
+    const nextPayload = JSON.stringify({ ...payload, googleDuplicateRecovery: beginCleanup });
+    const written = await this.binding.prepare(`UPDATE delivery_outbox SET payload_json=? WHERE id=? AND (${admissionQuery})='current'`)
+      .bind(nextPayload, record.id, ...params).run();
+    if (written.meta.changes !== 1) return { state: "stale" };
+    record.payloadJson = nextPayload;
+    return { state, recovery: beginCleanup };
   }
 
   async markCalendarDelivered(record: DeliveryOutboxRecord, input: { providerEventId: string; providerUpdatedAt: string; conferenceState: "pending" | "ready" | "not_requested" | "failed"; conferenceUrl?: string }) {

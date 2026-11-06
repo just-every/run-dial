@@ -146,14 +146,20 @@ for (const lost of [false, true]) {
 
 // Cleanup may have committed even though delivery is still pending. A later
 // retry cannot overwrite changed provider facts or reuse expired command authority.
-for (const mode of ['facts', 'supersede', 'archive', 'claim', 'pagination', 'supersede-before-list', 'archive-before-list', 'claim-before-list']) {
+for (const mode of ['facts', 'supersede', 'archive', 'claim', 'pagination', 'supersede-before-list', 'archive-before-list', 'claim-before-list', 'command-before-list', 'identity-before-list', 'etag-before-list', 'missing-before-list']) {
   const fixture = await pair();
   await control(`google-recovery-delete-lost:${fixture.extra.id}`, 1);
   await due(fixture.command.id); await deliver(fixture.command.id);
   const removed = await state();
   assert.equal(active(removed, fixture.booking.id).length, 1);
   assert.equal(removed.delivery_outbox.find(row => row.id === fixture.command.id).state, 'pending');
-  if (mode.endsWith('-before-list')) await control(`google-recovery-before-list:${fixture.booking.id}`, mode.split('-')[0]);
+  if (['command-before-list', 'identity-before-list', 'etag-before-list', 'missing-before-list'].includes(mode)) {
+    const survivor = structuredClone(fixture.canonical);
+    if (mode === 'command-before-list') survivor.extendedProperties.private['dial-idempotency-key'] = 'synthetic-dial-changed-command';
+    if (mode === 'identity-before-list') delete survivor.extendedProperties.private['dial-booking-id'];
+    if (mode === 'etag-before-list') survivor.etag = '"synthetic-dial-new-revision"';
+    await data('/wire/event', { id: survivor.id, ...(mode === 'missing-before-list' ? { remove: true } : { payload: survivor }) });
+  } else if (mode.endsWith('-before-list')) await control(`google-recovery-before-list:${fixture.booking.id}`, mode.split('-')[0]);
   else if (mode === 'pagination') await control(`google-list-mode:${fixture.booking.id}`, 'paginated');
   else await control(`google-recovery-read:${fixture.canonical.id}`, mode);
   const before = await state(), beforeAuthority = authority(before, fixture.booking.id);
@@ -188,6 +194,8 @@ const scenarios = [
   ['pagination', () => {}, 'pagination'],
   ['missing deterministic canonical', () => {}, 'canonical'],
   ['fresh changed facts', () => {}, 'facts'],
+  ['canonical read ETag conflict', () => {}, 'canonical-etag'],
+  ['extra read ETag conflict', () => {}, 'extra-etag'],
   ['delete ETag conflict', () => {}, 'etag'],
   ['superseded command', () => {}, 'supersede'],
   ['archived command', () => {}, 'archive'],
@@ -210,6 +218,7 @@ for (const [label, mutate, mode] of scenarios) {
     await data('/wire/event', { id: `feedbeef${index}`, payload: { ...fixture.canonical, id: `feedbeef${index}` } });
   }
   if (['facts', 'supersede', 'archive', 'claim'].includes(mode)) await control(`google-recovery-read:${fixture.extra.id}`, mode);
+  if (['canonical-etag', 'extra-etag'].includes(mode)) await control(`google-recovery-read:${mode === 'canonical-etag' ? fixture.canonical.id : fixture.extra.id}`, 'revision');
   if (mode === 'etag') await control(`google-recovery-delete-conflict:${fixture.extra.id}`, 1);
   const before = await state(), beforeWrites = writes(before), beforeAuthority = authority(before, fixture.booking.id);
   await due(fixture.command.id); await deliver(fixture.command.id);
@@ -222,7 +231,7 @@ for (const [label, mutate, mode] of scenarios) {
   assert.equal(newWrites.filter(row => row.method !== 'DELETE').length, 0, `${label}: no canonical event mutation`);
   assert.equal(newWrites.filter(row => row.method === 'DELETE').length, mode === 'etag' ? 1 : 0, `${label}: unsafe deletion refused`);
   assert.equal(eventFor(after, fixture.extra.id).status, 'confirmed', `${label}: extra event retained`);
-  if (mode !== 'canonical') assert.deepEqual(eventFor(after, fixture.canonical.id), fixture.canonical);
+  if (mode !== 'canonical') assert.deepEqual(eventFor(after, fixture.canonical.id), mode === 'canonical-etag' ? { ...fixture.canonical, etag: '"synthetic-dial-changed"' } : fixture.canonical);
   assert.deepEqual(controlRows(after), controlRows(controlSnapshot), `${label}: unrelated booking preserved`);
   if (mode === 'archive') {
     const archivedCalls = after.wire_calls;

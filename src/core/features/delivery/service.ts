@@ -178,7 +178,7 @@ export class ProviderDeliveryService {
       }
       event = { ...event, guestEmails: record.bookingId ? await this.repository.guestEmails(record.bookingId) : [] };
       if (record.bookingId && await this.repository.guestsEnabled(record.bookingId)) event = { ...event, description: "Dial booking invitation. The invitee manages this booking." };
-      const result = await this.calendar.upsertManagedEvent(event, () => this.repository.calendarDuplicateRecoveryAdmitted(record));
+      const result = await this.calendar.upsertManagedEvent(event, beginCleanup => this.repository.calendarDuplicateRecoveryAdmitted(record, beginCleanup));
       const delivered = await this.repository.markCalendarDelivered(record, result);
       if (delivered.meetingFailed) throw new ProviderFailure("meeting_creation_failed", false);
       return result.providerEventId;
