@@ -77,7 +77,7 @@ export type ManagedCalendarEvent = {
 };
 
 /** Fresh authority for a destructive duplicate cleanup, supplied by the delivery owner. */
-export type ManagedCalendarCommandAdmission = () => Promise<boolean>;
+export type ManagedCalendarCommandAdmission = () => Promise<"current" | "stale" | "unsupported">;
 
 export type ManagedCalendarEventResult = {
   providerEventId: string;

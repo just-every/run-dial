@@ -115,6 +115,8 @@ for (const lost of [false, true]) {
     assert.equal(snapshot.bookings.find(row => row.id === fixture.booking.id).calendar_state, 'pending');
     await due(fixture.command.id); await deliver(fixture.command.id);
     snapshot = await state();
+    assert.deepEqual(writes(snapshot).slice(writes(before).length).map(row => row.method), ['DELETE'], 'a lost cleanup response recovers by reading provider state without sending another invitation');
+    assert.deepEqual(eventFor(snapshot, fixture.canonical.id), fixture.canonical, 'a lost cleanup response never rewrites the surviving canonical event');
   } else {
     const afterDelete = recoveryCalls.filter(row => row.id > deletes[0].id);
     assert.ok(afterDelete.some(row => row.method === 'GET' && new URL(row.url).searchParams.get('privateExtendedProperty') === `dial-booking-id=${fixture.booking.id}`), 'delivery verifies an exhaustive post-cleanup provider list');
@@ -140,6 +142,32 @@ for (const lost of [false, true]) {
   assert.deepEqual(repeated.wire_events, replay.wire_events);
   assert.deepEqual(controlRows(repeated), controlRows(controlSnapshot));
   checks.push(`PROBE AGENT-004 owned duplicate${lost ? ' with cleanup response loss' : ''}: native booking and current delivery -> extra removed, canonical verified, original authority retained and replay inert`);
+}
+
+// Cleanup may have committed even though delivery is still pending. A later
+// retry cannot overwrite changed provider facts or reuse expired command authority.
+for (const mode of ['facts', 'supersede', 'archive', 'claim', 'pagination']) {
+  const fixture = await pair();
+  await control(`google-recovery-delete-lost:${fixture.extra.id}`, 1);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  const removed = await state();
+  assert.equal(active(removed, fixture.booking.id).length, 1);
+  assert.equal(removed.delivery_outbox.find(row => row.id === fixture.command.id).state, 'pending');
+  if (mode === 'pagination') await control(`google-list-mode:${fixture.booking.id}`, 'paginated');
+  else await control(`google-recovery-read:${fixture.canonical.id}`, mode);
+  const before = await state(), beforeAuthority = authority(before, fixture.booking.id);
+  await due(fixture.command.id); await deliver(fixture.command.id);
+  const after = await state();
+  assert.notEqual(after.bookings.find(row => row.id === fixture.booking.id).calendar_state, 'succeeded', `${mode}: uncertain cleanup recovery is not completion`);
+  assert.deepEqual(writes(after).map(row => [row.id, row.method]), writes(before).map(row => [row.id, row.method]), `${mode}: cleanup recovery never writes the canonical event`);
+  assert.deepEqual(authority(after, fixture.booking.id), beforeAuthority);
+  assert.deepEqual(controlRows(after), controlRows(controlSnapshot));
+  if (mode === 'archive') {
+    const calls = after.wire_calls;
+    await due(fixture.command.id); await deliver(fixture.command.id);
+    assert.deepEqual((await state()).wire_calls, calls, 'archived cleanup recovery stays inert on queue replay');
+  }
+  checks.push(`PROBE AGENT-004 cleanup response loss and ${mode}: native delivery retry -> refused without canonical writes or authority changes`);
 }
 
 const scenarios = [
