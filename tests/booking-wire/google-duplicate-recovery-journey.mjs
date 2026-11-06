@@ -45,7 +45,7 @@ await data(`/api/app/event-types/${event.id}/publish`, {});
 const base = '/api/public/book/duplicate-host/owned-duplicate';
 const future = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
 let index = 1800;
-async function book({ interrupted = true } = {}) {
+async function book({ interrupted = true, emptyListing = false } = {}) {
   assert.equal((await data('/api/app/calendar/check', {})).kind, 'healthy');
   const email = [`synthetic-dial-${++index}`, 'example.test'].join('@');
   const availability = await data(`${base}/availability?week=${future}`);
@@ -58,6 +58,7 @@ async function book({ interrupted = true } = {}) {
   let snapshot = await state();
   const booking = snapshot.bookings.find(row => row.id === receipt.bookingReference);
   const command = snapshot.delivery_outbox.find(row => row.booking_id === booking.id && row.kind === 'calendar_upsert');
+  if (emptyListing) await control(`google-list-mode:${booking.id}`, 'empty-once');
   if (interrupted) await control('google-lost-response', 1);
   await deliver(command.id);
   snapshot = await state();
@@ -85,8 +86,9 @@ function authority(snapshot, id) {
     identity: snapshot.bookings.filter(row => row.id === id).map(row => [row.id, row.event_type_id, row.current_occurrence_id, row.ical_uid, row.invitee_email, row.location_value]),
   };
 }
-const untouched = await book({ interrupted: false });
+const untouched = await book({ interrupted: false, emptyListing: true });
 const controlSnapshot = await state();
+assert.equal(controlSnapshot.bookings.find(row => row.id === untouched.booking.id).calendar_state, 'succeeded', 'an empty Google list without an items field still admits an ordinary booking');
 const controlRows = snapshot => ({ authority: authority(snapshot, untouched.booking.id), booking: snapshot.bookings.find(row => row.id === untouched.booking.id), provider: eventsFor(snapshot, untouched.booking.id) });
 
 for (const lost of [false, true]) {

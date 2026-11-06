@@ -78,6 +78,10 @@ export function wireTransport(db: D1Database, application: D1Database = db): typ
       const booking = url.searchParams.get("privateExtendedProperty")?.split("=")[1];
       const mode = booking && await control(db, `google-list-mode:${booking}`);
       if (mode === "paginated") return Response.json({ kind: "calendar#events", items: [], nextPageToken: "unread-page" });
+      if (mode === "empty-once") {
+        await db.prepare("DELETE FROM wire_controls WHERE name=?").bind(`google-list-mode:${booking}`).run();
+        return Response.json({ kind: "calendar#events" });
+      }
       if (mode === "hidden-once") {
         await db.prepare("DELETE FROM wire_controls WHERE name=?").bind(`google-list-mode:${booking}`).run();
         return Response.json({ kind: "calendar#events", items: [] });

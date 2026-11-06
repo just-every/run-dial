@@ -56,9 +56,10 @@ async function admit(input: RecoveryInput) {
 }
 function refuse(): never { throw new ProviderFailure("invalid_provider_response", false); }
 function listed(body: Record<string, unknown>): ProviderEvent[] {
-  if (!Array.isArray(body.items) || body.nextPageToken !== undefined) refuse();
+  if ((body.items !== undefined && !Array.isArray(body.items)) || body.nextPageToken !== undefined) refuse();
   const items: ProviderEvent[] = [];
-  for (const value of body.items) {
+  // Google can omit the items field for an empty collection.
+  for (const value of (body.items ?? []) as unknown[]) {
     if (!isRecord(value) || typeof value.id !== "string" || !value.id || typeof value.etag !== "string" || !value.etag) refuse();
     if (value.status === "cancelled") refuse();
     items.push(value as ProviderEvent);
