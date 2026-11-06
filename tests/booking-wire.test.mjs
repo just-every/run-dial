@@ -40,7 +40,7 @@ async function wireJourney(t, feature) {
     child.stdout.on("data", chunk => { log += chunk; }); child.stderr.on("data", chunk => { log += chunk; });
     child.on("error", reject); child.on("exit", code => code === 0 ? done(log) : reject(new Error(log)));
   });
-  const native = ["webhooks", "confirmation-locale"].includes(feature);
+  const native = ["webhooks", "confirmation-locale", "google-duplicate-recovery"].includes(feature);
   if (!native) await run(["pnpm", "exec", "wrangler", "d1", "migrations", "apply", "dial-booking-wire-test", "--local", "--persist-to", state, "--config", config]);
   const microsoft = ["microsoft", "calendar-correspondence-microsoft"].includes(feature) ? ["--var", "CALENDAR_PROVIDER:microsoft", "--var", "MICROSOFT_OAUTH_CLIENT_ID:synthetic-dial-801-client", "--var", "MICROSOFT_OAUTH_CLIENT_SECRET:synthetic-dial-802-secret"] : [];
   if (native) {
@@ -59,7 +59,7 @@ async function wireJourney(t, feature) {
   }
   for (let attempt = 0; ; attempt++) { if ((server && server.exitCode !== null) || attempt > 480) throw new Error(output.slice(-15000)); try { if ((await fetch(origin + "/health")).ok) break; } catch { /* starting */ } await new Promise(done => setTimeout(done, 125)); }
   assert.equal((await fetch(origin + "/wire/init", { method: "POST" })).status, 200);
-  const journey = feature?.startsWith("calendar-correspondence-")
+  const journey = feature === "google-duplicate-recovery" ? ["node", "tests/booking-wire/google-duplicate-recovery-journey.mjs"] : feature?.startsWith("calendar-correspondence-")
     ? ["node", "tests/booking-wire/calendar-correspondence-journey.mjs", feature.split("-").at(-1)]
     : feature === "microsoft" ? ["node", "tests/booking-wire/microsoft-journey.mjs"] : feature ? ["node", "tests/booking-wire/feature-journey.mjs", feature] : ["node", "tests/booking-wire/journey.mjs"];
   console.log((await run(journey)).trim());
@@ -92,3 +92,5 @@ test("booking analytics emits configured events once and stays silent without ta
 test("unanswered poll reminders follow explicit durable offsets and stop at every terminal transition", t => wireJourney(t, "poll-reminders"));
 
 test("Spanish built-in confirmation preserves saved language, local times, authority and frozen retry content", t => wireJourney(t, "confirmation-locale"));
+
+test("Google owned outage duplicates recover only for a current authorized booking and verified provider pair", t => wireJourney(t, "google-duplicate-recovery"));

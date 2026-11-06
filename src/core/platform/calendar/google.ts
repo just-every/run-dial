@@ -1,8 +1,10 @@
 // @ts-expect-error Base's effects module is portable ESM; the public declaration lives in demo/index.d.mts.
 import { fetchDemoRead } from "../../../../modules/demo/effects.mjs";
+import { resolveGoogleUpsertEvent } from "./google-duplicate-recovery";
 import { inspectGoogleManagedEvent } from "./google-inspection";
 import type {
   CalendarAdapter,
+  ManagedCalendarCommandAdmission,
   CalendarCredentials,
   GoogleCalendarDescriptor,
   ManagedCalendarEvent,
@@ -78,9 +80,18 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     return busyReadFromGoogle(body, input.calendarIds);
   }
 
-  async upsertManagedEvent(accessToken: string, calendarId: string, event: ManagedCalendarEvent): Promise<ManagedCalendarEventResult> {
-    const existing = await this.findManagedEvent(accessToken, calendarId, event.bookingId);
-    const payload = { ...googleEventPayload(event, Boolean(existing?.conferenceData) && !conferenceFailed(existing?.conferenceData), false), ...(!existing ? { id: await managedEventId(event.bookingId) } : {}) };
+  async upsertManagedEvent(accessToken: string, calendarId: string, event: ManagedCalendarEvent, admitDuplicateRecovery?: ManagedCalendarCommandAdmission): Promise<ManagedCalendarEventResult> {
+    const canonicalId = await managedEventId(event.bookingId);
+    const resolved = await resolveGoogleUpsertEvent({
+      collectionUrl: `${calendarApi}/calendars/${encodeURIComponent(calendarId)}/events`, event, canonicalId,
+      readList: url => this.authorizedJson(accessToken, url),
+      readEvent: (url, etag) => this.authorizedJson(accessToken, url, { headers: { "if-match": etag } }),
+      removeEvent: (url, etag) => this.authorized(accessToken, url, { method: "DELETE", headers: { "if-match": etag } }),
+      admit: admitDuplicateRecovery,
+    });
+    const existing = resolved.event;
+    if (resolved.recovered && existing) return managedResult(existing);
+    const payload = { ...googleEventPayload(event, isRecord(existing?.conferenceData) && !conferenceFailed(existing.conferenceData), false), ...(!existing ? { id: canonicalId } : {}) };
     const url = existing
       ? `${calendarApi}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(existing.id)}?conferenceDataVersion=1&sendUpdates=all`
       : `${calendarApi}/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`;

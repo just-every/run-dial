@@ -187,13 +187,13 @@ export class CalendarConnectionService implements CalendarAvailabilityReader {
     return this.busyReader.readBusy(input);
   }
 
-  async upsertManagedEvent(event: ManagedCalendarEvent) {
+  async upsertManagedEvent(event: ManagedCalendarEvent, admitDuplicateRecovery?: import("../../platform/calendar/types").ManagedCalendarCommandAdmission) {
     try {
       const connection = await this.repository.get();
       const destination = connection?.selection.find((entry) => entry.purpose === "destination");
       if (!destination) throw new ProviderFailure("missing_configuration", false);
       const credentials = await this.credentials(connection);
-      return await this.calendar.upsertManagedEvent(credentials.accessToken, destination.calendarId, event);
+      return await this.calendar.upsertManagedEvent(credentials.accessToken, destination.calendarId, event, admitDuplicateRecovery);
     } catch (error) {
       await this.markFailure(error);
       throw error;

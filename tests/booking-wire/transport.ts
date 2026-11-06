@@ -1,10 +1,11 @@
+import { googleDuplicateEdge } from "./google-duplicate-fixtures";
 import { analyticsHosts, analyticsWire } from "./analytics-wire";
 import { isMicrosoftHost, microsoftWire } from "./microsoft-wire";
 import { isNoticeHost,noticeWire } from './notice-wire';
 import { accountingHosts, accountingWire } from "./accounting-wire";
 import { initializeStripeWire, stripeHosts, stripeWire } from "./stripe-wire";
 /** Contract-shaped provider wire fixtures; production Google and Base mail adapters consume these. */
-export function wireTransport(db: D1Database): typeof fetch {
+export function wireTransport(db: D1Database, application: D1Database = db): typeof fetch {
   return async (input, init = {}) => {
     const url = new URL(String(input)), method = init.method ?? "GET";
     if (analyticsHosts.includes(url.hostname)) return analyticsWire(db, url, init);
@@ -57,10 +58,12 @@ export function wireTransport(db: D1Database): typeof fetch {
     const events = (await db.prepare("SELECT payload FROM wire_events").all<{ payload: string }>()).results.map(row => JSON.parse(row.payload));
     // A conflict calendar free/busy cannot read (unshared or deleted): Google answers 200 with the calendar's errors.
     if (url.pathname.endsWith("/freeBusy") && await control(db, "google-busy-error")) return Response.json({ calendars: { "synthetic-calendar": { errors: [{ domain: "global", reason: "notFound" }], busy: [] } } });
-    if (url.pathname.endsWith("/freeBusy")) return Response.json({ calendars: { "synthetic-calendar": { busy: events.filter(event => event.status !== "cancelled" && event.transparency !== "transparent").map(event => ({ start: event.start.dateTime, end: event.end.dateTime })) } } });
+    if (url.pathname.endsWith("/freeBusy")) return Response.json({ calendars: { "synthetic-calendar": { busy: [...new Map(events.filter(event => event.status !== "cancelled" && event.transparency !== "transparent").map(event => [`${event.start.dateTime}:${event.end.dateTime}`, { start: event.start.dateTime, end: event.end.dateTime }])).values()] } } });
     const match = /\/events(?:\/([^/]+))?$/.exec(url.pathname);
     if (!match) throw new Error("Unexpected Google request");
     const id = match[1];
+    const recovery = await control(db, `google-get-status:${id}`) ? undefined : await googleDuplicateEdge(db, application, url, init);
+    if (recovery) return recovery;
     if (method === "GET" && id) {
       const status = await control(db, `google-get-status:${id}`);
       if (status) return Response.json({ error: { code: Number(status), message: "Private provider diagnostic must not be persisted" } }, { status: Number(status) });
@@ -75,8 +78,12 @@ export function wireTransport(db: D1Database): typeof fetch {
       const booking = url.searchParams.get("privateExtendedProperty")?.split("=")[1];
       const mode = booking && await control(db, `google-list-mode:${booking}`);
       if (mode === "paginated") return Response.json({ kind: "calendar#events", items: [], nextPageToken: "unread-page" });
+      if (mode === "hidden-once") {
+        await db.prepare("DELETE FROM wire_controls WHERE name=?").bind(`google-list-mode:${booking}`).run();
+        return Response.json({ kind: "calendar#events", items: [] });
+      }
       if (mode === "malformed") return Response.json({ kind: "calendar#events", items: "not-a-list" });
-      return Response.json({ kind: "calendar#events", items: events.filter(event => (!booking || event.extendedProperties.private["dial-booking-id"] === booking) && (url.searchParams.get("showDeleted") !== "false" || event.status !== "cancelled")), nextSyncToken: "wire-cursor" });
+      return Response.json({ kind: "calendar#events", items: events.filter(event => (!booking || event.extendedProperties.private["dial-booking-id"] === booking || mode === `include:${event.id}`) && (url.searchParams.get("showDeleted") !== "false" || event.status !== "cancelled")), nextSyncToken: "wire-cursor" });
     }
     const existing = id ? events.find(event => event.id === id) : undefined;
     if (method === "PATCH" && (!existing || new Headers(init.headers).get("if-match") !== existing.etag)) return Response.json({ error: { code: 412 } }, { status: 412 });

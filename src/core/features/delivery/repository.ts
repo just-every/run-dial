@@ -278,6 +278,31 @@ export class DeliveryRepository {
     return "stale" as const;
   }
 
+  /** Admit only the still-claimed command and the narrow ordinary booking recovery. */
+  async calendarDuplicateRecoveryAdmitted(record: DeliveryOutboxRecord) {
+    if (record.kind !== "calendar_upsert" || !record.bookingId || !record.occurrenceId) return false;
+    return Boolean(await this.binding.prepare(`SELECT 1 FROM delivery_outbox d
+      JOIN bookings b ON b.id=d.booking_id JOIN booking_occurrences o ON o.id=b.current_occurrence_id
+      JOIN event_types e ON e.id=b.event_type_id
+      WHERE d.id=? AND d.state='processing' AND d.attempts=? AND d.kind='calendar_upsert'
+       AND d.idempotency_key=? AND d.payload_json=? AND d.booking_id=? AND d.occurrence_id=?
+       AND CASE WHEN json_valid(d.payload_json) THEN json_extract(d.payload_json,'$.archiveHistorical') END IS NOT 1
+       AND b.current_occurrence_id=d.occurrence_id AND b.state IN ('confirmed','rescheduled') AND b.imported=0
+       AND o.booking_id=b.id AND o.is_current=1 AND o.state='current'
+       AND b.location_type IN ('fixed_link','in_person','custom','phone') AND b.meeting_state='not_required'
+       AND b.guest_limit=0 AND e.group_capacity IS NULL AND e.approval_required=0
+       AND NOT EXISTS (SELECT 1 FROM booking_guests WHERE booking_id=b.id)
+       AND NOT EXISTS (SELECT 1 FROM booking_approval_requests WHERE booking_id=b.id)
+       AND NOT EXISTS (SELECT 1 FROM booking_payments WHERE booking_id=b.id)
+       AND NOT EXISTS (SELECT 1 FROM booking_payment_terms WHERE booking_id=b.id)
+       AND NOT EXISTS (SELECT 1 FROM payment_redemptions WHERE booking_id=b.id)
+       AND NOT EXISTS (SELECT 1 FROM team_event_types WHERE event_type_id=e.id)
+       AND NOT EXISTS (SELECT 1 FROM delivery_outbox newer WHERE newer.booking_id=b.id
+         AND newer.kind IN ('calendar_upsert','calendar_cancel') AND newer.id<>d.id
+         AND (newer.rowid>d.rowid OR newer.idempotency_key='retry:' || d.id))`)
+      .bind(record.id, record.attempts, record.idempotencyKey, record.payloadJson, record.bookingId, record.occurrenceId).first());
+  }
+
   async markCalendarDelivered(record: DeliveryOutboxRecord, input: { providerEventId: string; providerUpdatedAt: string; conferenceState: "pending" | "ready" | "not_requested" | "failed"; conferenceUrl?: string }) {
     if (!record.bookingId || !record.occurrenceId) return { updated: false, meetingFailed: false };
     let meetingFailed = input.conferenceState === "failed";

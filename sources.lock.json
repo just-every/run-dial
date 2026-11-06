@@ -919,7 +919,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5cd45c05d9c386f9bb96eadbc4e296cb078a849c8f6e441bc8826f0d0cd00df5",
+      "sha256": "626186b24ef28160ca431ce482daf539699a35a5f57bc4c40453d55e27d1db04",
       "executable": false
     },
     "DEMO.md": {
@@ -6271,7 +6271,7 @@
       "executable": false
     },
     "src/core/features/calendar-connection/service.ts": {
-      "sha256": "9ca1375145cb64dda804810d2744f44eb605140e9ff7e54a4a8dc28ad24999ab",
+      "sha256": "2a2e3e8d2a89f41ac1e1519611966dc18e27c2c248a810e7098e1ad52c9a390b",
       "executable": false
     },
     "src/core/features/clients/client.ts": {
@@ -6415,7 +6415,7 @@
       "executable": false
     },
     "src/core/features/delivery/repository.ts": {
-      "sha256": "f6f4e6fc5815558fe344e3b38d2c4f08cb7e3e3e7f81542dcac714c28a64ec6e",
+      "sha256": "61cfa900290aafdcc4d90a44bcdfdda9e3599a2f8f8d7fde6ff63852eef9254d",
       "executable": false
     },
     "src/core/features/delivery/request-mails.ts": {
@@ -6431,7 +6431,7 @@
       "executable": false
     },
     "src/core/features/delivery/service.ts": {
-      "sha256": "30bbc8387ad92bb5040c9826d10dd78a98d9d9a35dc1499a2103e53fd2aa59e1",
+      "sha256": "95a243fda448a3c9d9c640585ddd2cccbe14c48311d4f444cef9a6d308625edd",
       "executable": false
     },
     "src/core/features/delivery/ui/mail-preferences.tsx": {
@@ -8263,7 +8263,7 @@
       "executable": false
     },
     "src/core/platform/calendar/google.ts": {
-      "sha256": "1c0d57f7e6546f6bc7794ac4b23c2421c8d4eaeee4ca52b8d4dcf78de5c75072",
+      "sha256": "4c68690d62651a76d715195ff36ab2e545a57c4fc20ac7f82fdd800d1ff5bdc1",
       "executable": false
     },
     "src/core/platform/calendar/index.ts": {
@@ -8283,7 +8283,7 @@
       "executable": false
     },
     "src/core/platform/calendar/types.ts": {
-      "sha256": "31d96985c29d9f6ea6b6fc9ec119e1fe7bda0f7585e4a49ac09ac0a2d1b23856",
+      "sha256": "4060cf96fc72e1c7494bddf121bef9e5abf3240bd303bfe407d02bd9e7028b6c",
       "executable": false
     },
     "src/core/platform/crypto/sealed.ts": {
@@ -9347,7 +9347,7 @@
       "executable": false
     },
     "tests/booking-wire.test.mjs": {
-      "sha256": "fcdeb5d09d063013a3ddbe645f66ca9a32cb36c16032e24a6164dc0c8b06c0ff",
+      "sha256": "4a10ccf15fb06d3a02bf5bf9d6328f70c07d337a090f1e2d23b647c62b7ebd35",
       "executable": false
     },
     "tests/booking-wire/accounting-wire.ts": {
@@ -9619,7 +9619,7 @@
       "executable": false
     },
     "tests/booking-wire/transport.ts": {
-      "sha256": "bb0b8f6d97a4f2454d13c0918ffa14f084181f0cf460593ef2828362a1450048",
+      "sha256": "3ffba807cbfa1aa7cebd645c05452269bab500198c001040a7e11dbd3cdf3d3a",
       "executable": false
     },
     "tests/booking-wire/webhook-fixtures.ts": {
@@ -9647,7 +9647,7 @@
       "executable": false
     },
     "tests/booking-wire/worker.ts": {
-      "sha256": "b2c04b795cb40ebb474dd00519619678bc3ba750a14897c64ff43c1cc67fda7e",
+      "sha256": "131dfa5360caa07c79d6123547ed89e1247d414579f14f91b241bdb22fc91858",
       "executable": false
     },
     "tests/booking-wire/worker.wrangler.toml": {

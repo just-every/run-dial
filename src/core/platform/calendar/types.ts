@@ -76,6 +76,9 @@ export type ManagedCalendarEvent = {
   requestGoogleMeet: boolean;
 };
 
+/** Fresh authority for a destructive duplicate cleanup, supplied by the delivery owner. */
+export type ManagedCalendarCommandAdmission = () => Promise<boolean>;
+
 export type ManagedCalendarEventResult = {
   providerEventId: string;
   providerUpdatedAt: string;
@@ -112,7 +115,7 @@ export interface CalendarAdapter {
   listCalendars(accessToken: string): Promise<GoogleCalendarDescriptor[]>;
   checkDestination(accessToken: string, calendarId: string): Promise<GoogleCalendarDescriptor>;
   readBusy(accessToken: string, input: { calendarIds: string[]; startsAt: string; endsAt: string; timeZone: string }): Promise<BusyRead>;
-  upsertManagedEvent(accessToken: string, calendarId: string, event: ManagedCalendarEvent): Promise<ManagedCalendarEventResult>;
+  upsertManagedEvent(accessToken: string, calendarId: string, event: ManagedCalendarEvent, admitDuplicateRecovery?: ManagedCalendarCommandAdmission): Promise<ManagedCalendarEventResult>;
   inspectManagedEvent(accessToken: string, calendarId: string, input: { bookingId: string; providerEventId: string }): Promise<ManagedEventInspection>;
   cancelManagedEvent(accessToken: string, calendarId: string, bookingId: string): Promise<void>;
   syncManagedEvents(accessToken: string, calendarId: string, syncCursor?: string): Promise<ManagedCalendarSync>;
