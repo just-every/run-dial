@@ -71,6 +71,7 @@ return {
    if (isPrivateLocalPath(url.pathname)) return new Response("Not found", { status: 404 });
    const runtime = parseRuntimeEnvironment(env);
    if (url.host !== new URL(runtime.APP_URL).host || (request.headers.has("host") && request.headers.get("host") !== new URL(runtime.APP_URL).host)) return new Response("Not found", { status: 404 });
+   if (url.pathname === "/docs/agents") return (await dialAgentDoor(env, runtime, servicesFor(env)).handle(request))!;
    // Browsers ask for this path on documents with no icon link (the sign-in confirmation); answer with Dial's own icon.
    if (url.pathname === "/favicon.ico" && (request.method === "GET" || request.method === "HEAD")) return new Response(favicon, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
    if (url.pathname.startsWith("/api/portability/")) return hostedExport(request, env, servicesFor(env).operators);

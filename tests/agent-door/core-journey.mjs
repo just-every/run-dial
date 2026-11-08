@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import documentationJourney from './documentation-journey.mjs';
+export { documentationJourney };
 import {randomUUID} from 'node:crypto';
 import {profile,mergeAudits} from './native-owner.mjs';
 import {errorCode as code} from '../../modules/agent-door/conformance/protocol.mjs';
@@ -17,6 +19,7 @@ export async function afterStep({step,result,phase}) {
  assert.equal(attribution.approvers.length,phase==='held'?1:0,'only a real held-policy decision supplies an approver');
 }
 export default async function coreJourney({request,origin,cookie,tool}) {
+ await documentationJourney();
  const headers={Origin:origin,Cookie:cookie,'Content-Type':'application/json'};
  // The pinned Base mounts this read-only tool even for the CORE subset.
  // Its native store supplies stable policy facts, never invented product events.
