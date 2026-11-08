@@ -9,8 +9,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { serveHosted, HOSTED_ORIGIN } from '@runeditrun/rer/internal/cli/hosted-output.mjs';
 import { signJws, seconds, autonomousPolicy, heldPolicy } from '../../modules/agent-door/conformance/crypto.mjs';
 import { createProtocol } from '../../modules/agent-door/conformance/protocol.mjs';
-import initialize from './native-owner.mjs';
-import { createFixtureControl } from '@runeditrun/rer/internal/cli/agent-fixtures.mjs';
 import { evidencePath } from '../../scripts/evidence-path.mjs';
 
 // One public-door journey, reused by the native conformance leg and push Verify.
@@ -32,9 +30,14 @@ export default async function documentationJourney() {
       const url = new URL(absolute); assert.equal(url.origin, origin);
       return hosted.fetch(url.href.slice(origin.length + 1), { ...init, headers: Object.fromEntries(new Headers(init.headers)) });
     };
+    const unclaimed = await request(origin + '/docs/agents');
+    assert.equal(unclaimed.status, 200, 'the public inventory is available before owner setup or policy answers');
+    assert.equal(unclaimed.headers.get('set-cookie'), null);
+    const unclaimedHtml = await unclaimed.text();
     const iat = seconds();
     const signed = await signJws(pair.privateKey, kid, 'rer-owner-claim+jwt', { v: 1, iss: issuer, aud: origin, installationId, email, jti: randomUUID(), iat, exp: iat + 300 });
-    const owner = await initialize({ request, origin, token, claim: { path: '/auth/owner-claim', token: signed }, database: hosted.database, fixtures: createFixtureControl(new Set(surface.verification.network.origins)) });
+    const owner = await request(origin + '/auth/owner-claim', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ token: signed, displayName: 'Avery Chen', returnTo: '/app' }) });
+    assert.equal(owner.status, 303, 'claim the disposable production installation through its native signed door');
     const cookie = owner.headers.getSetCookie().map(value => value.split(';', 1)[0]).join('; ');
     await owner.body?.cancel();
     const db = await hosted.database('DB');
@@ -67,6 +70,7 @@ export default async function documentationJourney() {
         assert.equal(response.status, 200); assert.match(response.headers.get('content-type'), /text\/html/);
         assert.equal(response.headers.get('set-cookie'), null);
         const html = await response.text();
+        assert.equal(html, unclaimedHtml, 'private configuration and policy do not alter public registry metadata');
         assert.deepEqual([...html.matchAll(/data-agent-tool="([^"]+)"/g)].map(match => match[1]), expectedTools, phase + ' tool names and order');
         assert.deepEqual([...html.matchAll(/data-agent-resource="([^"]+)"/g)].map(match => match[1]), expectedResources, phase + ' mounted resource names and order');
         assert.equal(html.includes(privateText), false); assert.equal(html.includes('synthetic-dial-private'), false);
@@ -123,7 +127,7 @@ export default async function documentationJourney() {
     assert.ok((await page.locator('main').textContent()).includes(hostile));
     assert.deepEqual(errors, []);
     assert.equal(providerCalls, 0);
-    const receipt = { policies: pages.map(({ phase, expectedTools, expectedResources }) => ({ phase, tools: expectedTools, resourceTemplates: expectedResources })), widths: [1440, 390], databaseUnchanged: true, providerCalls, escapedMetadata: true, privateDataAbsent: true, cookiesSet: false, existingDocs: 200, unknownDocs: 404 };
+    const receipt = { policies: pages.map(({ phase, expectedTools, expectedResources }) => ({ phase, tools: expectedTools, resourceTemplates: expectedResources })), widths: [1440, 390], databaseUnchanged: true, providerCalls, escapedMetadata: true, privateDataAbsent: true, cookiesSet: false, unclaimedInventory: true, existingDocs: 200, unknownDocs: 404 };
     await writeFile(evidencePath('agent-documentation-receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
     console.log('Agent documentation journey: both policies match live MCP ordering; read-only and escaped; desktop axe and both widths pass.');
     return receipt;

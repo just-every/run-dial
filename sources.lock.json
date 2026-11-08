@@ -9015,7 +9015,7 @@
       "executable": false
     },
     "tests/agent-door/documentation-journey.mjs": {
-      "sha256": "0c4d465f4d602706f94fb44c5ed58a15ca89e3bbea4cef7b874111c3dca65daa",
+      "sha256": "d9d01d05d0dde923852479c3550580c0f1e5e1f1d158cc40351339b2728c4193",
       "executable": false
     },
     "tests/agent-door/native-calendar.mjs": {
