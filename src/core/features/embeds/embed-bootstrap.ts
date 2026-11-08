@@ -10,6 +10,19 @@ import { floatingPopup } from "./floating-popup";
  */
 export const embedBootstrap = String.raw`(() => {
   const current = document.currentScript;
+  if (current && current.dataset.dialKeyboard === 'true') {
+    if (window.parent === window || !window.location.pathname.startsWith('/embed/')) return;
+    const parents = new URLSearchParams(window.location.search).getAll('parent');
+    if (parents.length !== 1) return;
+    const parent = parents[0];
+    try { if (new URL(parent).origin !== parent) return; } catch { return; }
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !event.defaultPrevented) {
+        event.preventDefault(); window.parent.postMessage({ type: 'dial:close' }, parent);
+      }
+    });
+    return;
+  }
   const stateKey = Symbol.for('dial.embed.mounts');
   const state = window[stateKey] || (window[stateKey] = { booked: new Set(), popups: new Set() });
   const booked = state.booked;
@@ -36,10 +49,11 @@ export const embedBootstrap = String.raw`(() => {
         if (values.size < 50 && !values.has(value)) { values.add(value); query.append(key, value); }
         answerKeys.set(key, values);
       }
-      const frames = new Set();
+      const frames = new Set(), dismissers = new Map();
       window.addEventListener('message', message => {
         if (message.origin !== source || !Array.from(frames).some(f => f.contentWindow === message.source)) return;
         const data = message.data;
+        if (data && data.type === 'dial:close') { dismissers.get(message.source)?.(); return; }
         if (!data || typeof data !== 'object' || data.type !== 'dial:booked' || typeof data.bookingReference !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(data.bookingReference) || booked.has(data.bookingReference)) return;
         let redirectUrl;
         if (typeof data.redirectUrl === 'string') {

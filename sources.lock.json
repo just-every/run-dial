@@ -6455,11 +6455,15 @@
       "executable": false
     },
     "src/core/features/embeds/embed-bootstrap.ts": {
-      "sha256": "d7aca463515d84207dbe75e3293168204b301e08c961551a983b4b127d3ac6ca",
+      "sha256": "8fec0944d17c66ce7aa4b060512f6897166de83075c79d870807fa3ea9963fca",
+      "executable": false
+    },
+    "src/core/features/embeds/embed-keyboard.ts": {
+      "sha256": "8e486d2e7777e3c8ab1377f259682aba0149d928f8761b3f30304c658eeae328",
       "executable": false
     },
     "src/core/features/embeds/floating-popup.ts": {
-      "sha256": "a361a3244825a12601fb2cc3fc8aa9c4dde026c122d1ac7e5ee155f9ce90ded7",
+      "sha256": "5cea887f12b77f7b9b4b0910ae3a192ec855baf6acfb016b6fbc83860fbd7691",
       "executable": false
     },
     "src/core/features/embeds/index.ts": {
@@ -6471,7 +6475,7 @@
       "executable": false
     },
     "src/core/features/embeds/routes.ts": {
-      "sha256": "2e20f4daedef65be90c879973c4bf56a0c4e9db205b45e664b8b2c0ae274eb1a",
+      "sha256": "fa31191849f5fb2ec541578f355082e988b1cdab4ab49a7bcade1e2650d99bca",
       "executable": false
     },
     "src/core/features/embeds/service.ts": {
@@ -9816,6 +9820,26 @@
     },
     "tests/embed-document-authorization/worker.wrangler.toml": {
       "sha256": "af3097fbef1ec426d4fa0c09de598bb2b2f766ce672084621ca89a30bd88aa39",
+      "executable": false
+    },
+    "tests/embed-popup.test.mjs": {
+      "sha256": "b68b962dc06bd595385d9f7eb7bc66c6cf1844178f58e4924ed1019460f13b34",
+      "executable": false
+    },
+    "tests/embed-popup/journey.mjs": {
+      "sha256": "c6dc3b2c6a8060067ea9ecf1dc76fdeea392b0e5fc34f6d4fdb9ae9e35edb9ed",
+      "executable": false
+    },
+    "tests/embed-popup/parent-page.mjs": {
+      "sha256": "1b4543228e0934da6f7107e45b499888ed55c19859540f1208ca8c645762a10e",
+      "executable": false
+    },
+    "tests/embed-popup/runtime.mjs": {
+      "sha256": "5208fff7771994dceee8f78df2cef5f540bafdac3bc126b1e3ec93e8fd5d36c0",
+      "executable": false
+    },
+    "tests/embed-popup/worker.ts": {
+      "sha256": "5bc7a5582f79cc83a34836a1732bc63127a4de28976cf3d96d9b255cd5348531",
       "executable": false
     },
     "tests/empty-workspace/journey.mjs": {

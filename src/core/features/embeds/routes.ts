@@ -6,6 +6,7 @@ import { ianaTimeZoneSchema } from "../../shared/scheduling";
 import { validate } from "../../shared/validation";
 import { normaliseEmbedOrigin } from "./service";
 import { embedBootstrap } from "./embed-bootstrap";
+import { withEmbedKeyboard } from "./embed-keyboard";
 
 const embedParamsSchema = z.object({ handle: z.string().regex(/^[a-z0-9-]+$/).max(80), slug: z.string().regex(/^[a-z0-9-]+$/).max(80) });
 const originsSchema = z.object({
@@ -88,12 +89,12 @@ async function allowedManageEmbedParent(context: Context<AppEnvironment>, parent
   return parentOrigin && await context.get("services").embeds.isOriginAllowed(parentOrigin) ? parentOrigin : undefined;
 }
 
-function embeddedSurface(context: Context<AppEnvironment>, parentOrigin: string) {
-  return context.get("services").spaSurface.serve(context.req.raw, 200, { frameAncestors: [parentOrigin] });
+async function embeddedSurface(context: Context<AppEnvironment>, parentOrigin: string) {
+  return withEmbedKeyboard(await context.get("services").spaSurface.serve(context.req.raw, 200, { frameAncestors: [parentOrigin] }));
 }
 
-function embeddedRecoverySurface(context: Context<AppEnvironment>, parentOrigin: string, status: 404 | 410) {
-  return context.get("services").spaSurface.serve(context.req.raw, status, { frameAncestors: [parentOrigin] });
+async function embeddedRecoverySurface(context: Context<AppEnvironment>, parentOrigin: string, status: 404 | 410) {
+  return withEmbedKeyboard(await context.get("services").spaSurface.serve(context.req.raw, status, { frameAncestors: [parentOrigin] }));
 }
 
 function blockedEmbedSurface(context: Parameters<typeof apiError>[0]) {
