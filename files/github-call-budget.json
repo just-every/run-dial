@@ -1,0 +1,46 @@
+{
+  "limit": 10,
+  "used": 8,
+  "convention": "Each failed-job archive command counts once as instructed. One watcher; at least 300 seconds between reads for a run, including discovery.",
+  "calls": [
+    {
+      "command": "gh api repos/just-every/run-dial/actions/runs/42522810633/jobs",
+      "purpose": "identify failed jobs"
+    },
+    {
+      "command": "gh run view 42522810633 --repo just-every/run-dial --job 128859856599 --log-failed",
+      "result": "exit 0, zero bytes"
+    },
+    {
+      "command": "gh run view 42522810633 --repo just-every/run-dial --job 128859856624 --log-failed",
+      "result": "exit 0, zero bytes"
+    },
+    {
+      "command": "gh api repos/just-every/run-dial/actions/runs/42522810633/logs",
+      "result": "workflow archive retrieved; actual assertion excerpts retained"
+    },
+    {
+      "command": "gh api repos/just-every/run-dial/actions/runs?head_sha=ce4d503e84399a50618979dd40493b227e5a60a2&per_page=100",
+      "purpose": "exact-SHA run discovery",
+      "at": "2026-11-08T23:34:39Z"
+    },
+    {
+      "command": "gh api repos/just-every/run-dial/actions/runs/42535830422 --jq {status,conclusion,head_sha,html_url}",
+      "at": "2026-11-08T23:39:40.000279+00:00",
+      "purpose": "exact-SHA Verify poll",
+      "exit": 0
+    },
+    {
+      "command": "gh api repos/just-every/run-dial/actions/runs/42535830422 --jq {status,conclusion,head_sha,html_url}",
+      "at": "2026-11-08T23:44:42.460760+00:00",
+      "purpose": "exact-SHA Verify poll",
+      "exit": 0
+    },
+    {
+      "command": "gh api repos/just-every/run-dial/actions/runs/42535830422 --jq {status,conclusion,head_sha,html_url}",
+      "at": "2026-11-08T23:49:44.957464+00:00",
+      "purpose": "exact-SHA Verify poll",
+      "exit": 0
+    }
+  ]
+}

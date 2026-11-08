@@ -1,0 +1,38 @@
+{
+  "views": {
+    "write": "node scripts/contract-docs.mjs write --clauses BASE-AGENT-013",
+    "write_exit": 0,
+    "check": "node scripts/contract-docs.mjs check --clauses BASE-AGENT-013",
+    "check_exit": 0,
+    "generated_views_restored_from": "origin/main",
+    "committed": false
+  },
+  "lock": {
+    "write": "node scripts/edition-authoring/cli.mjs lock",
+    "write_exit": 0,
+    "check": "node scripts/edition-authoring/cli.mjs check",
+    "check_exit": 0
+  },
+  "ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration changed"
+  },
+  "typecheck": {
+    "command": "pnpm run typecheck",
+    "exit": 0
+  },
+  "first_party": {
+    "command": "npx -y @runeditrun/rer check --profile first-party",
+    "exit": 0
+  },
+  "lint": {
+    "command": "pnpm exec eslint tests/managed-mail.test.mjs tests/operator-management.test.mjs --max-warnings=0",
+    "exit": 0
+  },
+  "merge": {
+    "main": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+    "result": "Already up to date; no history rewritten"
+  },
+  "head": "ce4d503e84399a50618979dd40493b227e5a60a2"
+}

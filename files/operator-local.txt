@@ -1,0 +1,16 @@
+# Subtest: [OPER-002] native destructive management preserves authorship and protects self and setup owner
+ok 1 - [OPER-002] native destructive management preserves authorship and protects self and setup owner
+# {"scenario":"same-window","now":1794181499999,"tokenLimit":5,"statuses":[303,400,400,400,400,429,429,429],"replenished":400,"renewed":[400,400,400,400,429],"sessionDelta":1}
+# Subtest: [OPER-002] native confirmation limits reset at the bucket boundary without reviving a consumed link
+ok 2 - [OPER-002] native confirmation limits reset at the bucket boundary without reviving a consumed link
+# {"scenario":"split-window","times":[1794181499999,1794181500000],"tokenLimit":5,"statuses":[303,400,400,400,400,400,400,400],"overflow":[400,429],"sessionDelta":1,"counters":[{"count":4},{"count":4}]}
+# Subtest: [AUTH-001] clean native bootstrap installs only the setup-input identity and every private surface uses its Base session
+ok 3 - [AUTH-001] clean native bootstrap installs only the setup-input identity and every private surface uses its Base session
+# Subtest: [OPER-002] cancelling an unaccepted invitation returns success and permanently retires its link
+ok 4 - [OPER-002] cancelling an unaccepted invitation returns success and permanently retires its link
+# Subtest: [PROFILE-001] native empty bootstrap keeps profile setup actionable after desktop and mobile hydration
+ok 5 - [PROFILE-001] native empty bootstrap keeps profile setup actionable after desktop and mobile hydration
+# tests 5
+# pass 5
+# fail 0
+# duration_ms 394152.133396

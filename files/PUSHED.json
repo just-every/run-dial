@@ -1,0 +1,15 @@
+{
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f40-pc1",
+  "head": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "product_push": "success",
+  "save_head": "e0294c97f12580a5280afaafb3ff4bc866b2f741",
+  "candidate_push_attempt": 1,
+  "identity_and_trailers": "all candidate commits checked, including side parents; fleet authors and committers, no trailers",
+  "pr": null,
+  "verify_run": 42535830422,
+  "verify_event": "push",
+  "verify_discovered_status": "queued",
+  "verify_final_status": "completed",
+  "verify_final_conclusion": "success"
+}

@@ -1,0 +1,22 @@
+{
+  "head": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "command": "CI=true node --test --test-name-pattern='production agent documentation matches the current MCP inventory without effects' tests/managed-mail.test.mjs",
+  "exit": 0,
+  "tests": 1,
+  "pass": 1,
+  "fail": 0,
+  "node": "22.20.0",
+  "pnpm": "10.12.4",
+  "browser": "/usr/bin/chromium",
+  "widths": [
+    1440,
+    390
+  ],
+  "test_registration": "tests/managed-mail.test.mjs:216",
+  "journey": "tests/agent-door/documentation-journey.mjs",
+  "generated_receipt": "agent-documentation-receipt.json",
+  "screenshots": [
+    "agent-documentation-1440.png",
+    "agent-documentation-390.png"
+  ]
+}

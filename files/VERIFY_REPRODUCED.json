@@ -1,0 +1,38 @@
+[
+  {
+    "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+    "job": 128859856599,
+    "command": "CI=true NODE_OPTIONS=--import=./scripts/test-worker-diagnostics.mjs node scripts/ci-verify.mjs test 2",
+    "test": "NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner",
+    "exit": 1,
+    "failure": "Command failed: pnpm exec rer build; An active local operation owns the state: PID 2490 (node).",
+    "outcome": "reproduced"
+  },
+  {
+    "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+    "job": 128859856624,
+    "command": "CI=true NODE_OPTIONS=--import=./scripts/test-worker-diagnostics.mjs node scripts/ci-verify.mjs test 18",
+    "test": "native destructive management preserves authorship and protects self and setup owner",
+    "exit": 1,
+    "failure": "Port 41868 is already in use",
+    "outcome": "local infrastructure failure; isolated assertion reproduction follows"
+  },
+  {
+    "head": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+    "job": 128859856624,
+    "command": "CI=true node --test --test-name-pattern='native destructive management' tests/operator-management.test.mjs",
+    "test": "native destructive management preserves authorship and protects self and setup owner",
+    "exit": 1,
+    "failure": "setup owner is protected until ownership transfer; 403 !== 409",
+    "outcome": "also fails on main with identical test, fixture and erasure-guard bytes"
+  },
+  {
+    "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+    "job": 128859856624,
+    "command": "CI=true node --test --test-name-pattern='native destructive management' tests/operator-management.test.mjs",
+    "test": "native destructive management preserves authorship and protects self and setup owner",
+    "exit": 1,
+    "failure": "setup owner is protected until ownership transfer; 403 !== 409",
+    "outcome": "reproduced in original candidate with byte-identical operator test and product source; unrelated test registration moved while this command ran"
+  }
+]

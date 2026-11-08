@@ -1,0 +1,9 @@
+# Subtest: NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner
+ok 1 - NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner
+# Agent documentation journey: both policies match live MCP ordering; read-only and escaped; desktop axe and both widths pass.
+# Subtest: [BASE-AGENT-013] production agent documentation matches the current MCP inventory without effects
+ok 2 - [BASE-AGENT-013] production agent documentation matches the current MCP inventory without effects
+# tests 2
+# pass 2
+# fail 0
+# duration_ms 75445.047477

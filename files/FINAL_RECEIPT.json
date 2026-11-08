@@ -1,0 +1,50 @@
+{
+  "repository": "just-every/run-dial",
+  "head": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "branch": "cloud/sd-dial-c-f40-pc1",
+  "local_tests": {
+    "managed_and_documentation": {
+      "passed": 2,
+      "failed": 0
+    },
+    "operator_management": {
+      "passed": 5,
+      "failed": 0
+    },
+    "exact_sha_documentation": {
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "verify": {
+    "run": 42535830422,
+    "event": "push",
+    "conclusion": "success",
+    "head_sha": "ce4d503e84399a50618979dd40493b227e5a60a2",
+    "html_url": "https://github.com/just-every/run-dial/actions/runs/42535830422",
+    "status": "completed"
+  },
+  "claim": {
+    "clause": "BASE-AGENT-013",
+    "status": "PARTIAL",
+    "points": [
+      1
+    ]
+  },
+  "counts_before": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "counts_after": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "product_push": "success",
+  "ready_for_fleet_gates": true,
+  "main_written": false,
+  "publication_scan": "fleet required",
+  "run_site": "fleet required",
+  "pr": null
+}

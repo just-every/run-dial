@@ -1,0 +1,12 @@
+{
+  "head": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "command": "node --input-type=module -e (buildDocumentationWorker then documentationJourney)",
+  "result": "terminated after approximately two minutes during disposable Worker initialization; no assertion result",
+  "owned_processes_stopped": [
+    21190,
+    21326,
+    21332
+  ],
+  "retry": "committed native Node test entry point, without direct-module invocation",
+  "product_changes": false
+}

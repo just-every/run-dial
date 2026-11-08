@@ -1,0 +1,24 @@
+{
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f40-pc1",
+  "head": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "main": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+  "main_equals_candidate": false,
+  "starting_published_head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+  "starting_head_preserved": true,
+  "full_history": true,
+  "source_lock_sha256": "8e06abf468ef5bdc3ecc514cf9ea14a1c66516af1fd03ac8e813e29cbca317a5",
+  "contract_diff_empty": true,
+  "generated_view_diff_empty": true,
+  "publication_scan": {
+    "commit": "ce4d503e84399a50618979dd40493b227e5a60a2",
+    "status": "NOT RUN: cloud branch handoff; fleet owns scan",
+    "complete": null,
+    "historyScanned": false,
+    "findings": null
+  },
+  "run_site": {
+    "status": "not run; main was not written"
+  },
+  "pr": null
+}
