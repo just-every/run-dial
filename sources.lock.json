@@ -9006,10 +9006,6 @@
       "sha256": "ef1e5801d05a7c682ed6532c6bcc3acd19b0661875c4c9f81b6c266da6ea4514",
       "executable": false
     },
-    "tests/agent-door-documentation.test.mjs": {
-      "sha256": "fc9e3fe286244d3869ad8389e335656f5ab7230e74599521e0a0adff172b21eb",
-      "executable": false
-    },
     "tests/agent-door/core-journey.mjs": {
       "sha256": "277ee8781a7994bf19be1d025ed733df0e1cf655b8219a4b816554d4c03107ce",
       "executable": false
@@ -10163,7 +10159,7 @@
       "executable": false
     },
     "tests/managed-mail.test.mjs": {
-      "sha256": "5e03cce1439dadc41221cd12ee005d891d98935908b83b8d9ba098adfa704c54",
+      "sha256": "2b16ff70d255f7b060232936840ddcb868d69eceb5a64e0dac3226d3724bb382",
       "executable": false
     },
     "tests/move-in-booking-actions.test.mjs": {
