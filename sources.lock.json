@@ -6463,7 +6463,11 @@
       "executable": false
     },
     "src/core/features/embeds/embed-bootstrap.ts": {
-      "sha256": "9af6039a505f38fd98e4f96d8a6b281c497794913d057786076a78a052f40ab0",
+      "sha256": "d7aca463515d84207dbe75e3293168204b301e08c961551a983b4b127d3ac6ca",
+      "executable": false
+    },
+    "src/core/features/embeds/floating-popup.ts": {
+      "sha256": "a361a3244825a12601fb2cc3fc8aa9c4dde026c122d1ac7e5ee155f9ce90ded7",
       "executable": false
     },
     "src/core/features/embeds/index.ts": {
@@ -6483,7 +6487,7 @@
       "executable": false
     },
     "src/core/features/embeds/snippet.ts": {
-      "sha256": "28f9496bb2ccfac39863845d4a7eedd98d9da740942550a97b9be66f3483c571",
+      "sha256": "165749fd8340377e1680fbc0e0fc914fa43584c60d5e9e230842e815cc2b1c9b",
       "executable": false
     },
     "src/core/features/embeds/ui/embed-settings.tsx": {
