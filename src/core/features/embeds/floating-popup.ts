@@ -9,20 +9,26 @@ export const floatingPopup = String.raw`
       close.type = 'button'; close.textContent = 'Close'; close.setAttribute('aria-label', 'Close scheduling window');
       close.style.cssText = 'display:block;margin:0 0 8px auto;min-height:44px;padding:0 16px;border:1px solid #d5ddd8;border-radius:8px;background:white;color:#1d1c1a;font:600 14px system-ui;cursor:pointer';
       let activeFrame, previousOverflow;
-      const dismiss = () => dialog.close();
+      const cleanup = () => {
+        if (!activeFrame) return;
+        frames.delete(activeFrame); dismissers.delete(activeFrame.contentWindow); activeFrame.remove(); activeFrame = undefined;
+        document.documentElement.style.overflow = previousOverflow;
+        launcher.setAttribute('aria-expanded', 'false'); launcher.focus();
+      };
+      const dismiss = () => { dialog.close(); cleanup(); };
       close.addEventListener('click', dismiss);
+      dialog.addEventListener('cancel', event => { event.preventDefault(); dismiss(); });
       dialog.addEventListener('click', event => { if (event.target === dialog) {
         const bounds = dialog.getBoundingClientRect();
         if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dismiss();
       } });
-      dialog.addEventListener('close', () => {
-        if (activeFrame) { frames.delete(activeFrame); activeFrame.remove(); activeFrame = undefined; }
-        document.documentElement.style.overflow = previousOverflow;
-        launcher.setAttribute('aria-expanded', 'false'); launcher.focus();
-      });
+      // Native close events are queued and can arrive after a new opening.
+      dialog.addEventListener('close', () => { if (!dialog.open) cleanup(); });
       launcher.addEventListener('click', () => {
         if (dialog.open) { close.focus(); return; }
+        cleanup();
         activeFrame = frame(); activeFrame.loading = 'eager'; dialog.append(activeFrame);
+        dismissers.set(activeFrame.contentWindow, dismiss);
         previousOverflow = document.documentElement.style.overflow;
         document.documentElement.style.overflow = 'hidden';
         dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); close.focus();
