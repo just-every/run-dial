@@ -1,22 +1,31 @@
+import { floatingPopup } from "./floating-popup";
+
 /**
  * Self-contained async embed bootstrap. Prefills are supplied in the script src query:
  * name (160 chars), email (320), answer.<questionKey> (repeat for multiple choice,
  * up to 25 keys / 50 values per key / 4000 chars per value), and utm_source,
  * utm_medium, utm_campaign, utm_term, utm_content or source (500 chars each).
  * Only these bounded fields are copied to the iframe; data attributes retain their
- * existing handle, event slug and inline/modal meanings. Values never verify identity.
+ * existing handle, event slug and mounting meanings. Values never verify identity.
  */
 export const embedBootstrap = String.raw`(() => {
   const current = document.currentScript;
-  const booked = new Set();
+  const stateKey = Symbol.for('dial.embed.mounts');
+  const state = window[stateKey] || (window[stateKey] = { booked: new Set(), popups: new Set() });
+  const booked = state.booked;
   const boot = () => {
     const scripts = current ? [current] : Array.from(document.querySelectorAll('script[data-dial-embed][src*="/embed/dial.js"]'));
     scripts.forEach(script => {
       if (script.dataset.dialMounted) return;
       const handle = script.dataset.dialHandle, slug = script.dataset.dialEmbed, mode = script.dataset.dialMode || 'inline';
-      if (!handle || !slug || !['inline', 'modal'].includes(mode)) return;
+      if (!handle || !slug || !['inline', 'modal', 'popup'].includes(mode)) return;
       script.dataset.dialMounted = 'true';
       const scriptUrl = new URL(script.src, window.location.href), source = scriptUrl.origin;
+      if (mode === 'popup') {
+        const identity = JSON.stringify([source, handle, slug]);
+        if (state.popups.has(identity)) return;
+        state.popups.add(identity);
+      }
       const query = new URLSearchParams(), answerKeys = new Map();
       const limits = { name: 160, email: 320, utm_source: 500, utm_medium: 500, utm_campaign: 500, utm_term: 500, utm_content: 500, source: 500 };
       for (const [key, value] of scriptUrl.searchParams) {
@@ -49,6 +58,9 @@ export const embedBootstrap = String.raw`(() => {
         frames.add(f); return f;
       };
       if (mode === 'inline') { script.insertAdjacentElement('afterend', frame()); return; }
+      if (mode === 'popup') {` + floatingPopup + String.raw`
+        return;
+      }
       Array.from(document.querySelectorAll('[data-dial-embed]')).filter(trigger => trigger !== script && trigger.getAttribute('data-dial-embed') === slug).forEach(trigger => {
         const open = event => {
           event.preventDefault();
