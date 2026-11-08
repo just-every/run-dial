@@ -1,0 +1,88 @@
+{
+  "files": [
+    {
+      "blob": "70d95f285ab5e822b1f681996f37ae741bb5e21d",
+      "bytes": 10581,
+      "path": "REPORT.md",
+      "sha256": "e1245040e9db966d8c558da6fc7ff8592fbbb0023052ed2f926dbc532271eeb2"
+    },
+    {
+      "blob": "a448aec6e8b2f55394c42ed2e82fc5b541a5714a",
+      "bytes": 2200557,
+      "path": "agent-documentation-1440.png",
+      "sha256": "75c43d226f6555332177d189390e8c70c8936d6cd042fbecbfe47563d618ff82"
+    },
+    {
+      "blob": "50f7688533709d583e23fd3efcf5d81923e26a9d",
+      "bytes": 2069325,
+      "path": "agent-documentation-390.png",
+      "sha256": "a3275f2be0ff524a71d35191bdf67640de5bde97ed462a209e082f4d56eedc95"
+    },
+    {
+      "blob": "efb1f9ec8d425dab9b5920e4d663ee6162260b45",
+      "bytes": 6971,
+      "path": "agent-documentation-receipt.json",
+      "sha256": "78e986a1172e5803592debb7d4753e0d1241a33b8319444fe4a6d21bc984bb38"
+    },
+    {
+      "blob": "b14b3f756839c144d6f838f2f8fd316b2f0bfb76",
+      "bytes": 164,
+      "path": "boundaries.log",
+      "sha256": "40e6a1da353183057b464f4f69969b062e6be3652fe6b1e3ff627d20d6807695"
+    },
+    {
+      "blob": "e881bd9830a6e7dcec9922f738cf2c2219a2ff62",
+      "bytes": 174,
+      "path": "candidate-ci-final.json",
+      "sha256": "3d45bf9e417561585715a392a2740a1ba6f1782b3bc3c99d55b7de767d5eefc7"
+    },
+    {
+      "blob": "528fa507d0f760e64965e6f654cbaa0da3ae473f",
+      "bytes": 222,
+      "path": "candidate-ci.jsonl",
+      "sha256": "5be89217b3885d0c76e7dda4c67fcfbfa8c2da5627ea576e8b841003b755ee98"
+    },
+    {
+      "blob": "983683d1dee776b468d23fa690ec6aef1a811b35",
+      "bytes": 24738,
+      "path": "documentation-test.log",
+      "sha256": "b124df6e859aab261be29ea5cf5c6342d10f0d60869cffd66f0955bb87e5b327"
+    },
+    {
+      "blob": "93a231258714663db850097b2e97988c000b4b0c",
+      "bytes": 140006,
+      "path": "first-party.json",
+      "sha256": "eb6cde9b11e4b27cf5e2bd98427383f0856afbddc1f66f1d0f2ba69dcc003bb9"
+    },
+    {
+      "blob": "95b250b5d6683bdf591c99c779aa50b31f86185d",
+      "bytes": 1138,
+      "path": "main-ci.jsonl",
+      "sha256": "cc47d06a561d6039847d8934af419fac62acf4ff348b991e189a168dd3de25da"
+    },
+    {
+      "blob": "60a1013c73304f8e00a887f2db59c7db2ca50ddf",
+      "bytes": 3823,
+      "path": "qualification.json",
+      "sha256": "e6a89e7acbe8e4b667e9655a418ab9ebd78bf661f1f241f54d21a86bfe952640"
+    },
+    {
+      "blob": "621785e4e795f9fe147795a956524d7dc36efc2c",
+      "bytes": 98,
+      "path": "typecheck.log",
+      "sha256": "0906a5c988b5c15c3d61e7470f72f6537290387a47fade53de7dc56c92c6b895"
+    },
+    {
+      "blob": "2a90d315de4851fea3db9fb8607f8d3e1a342e4b",
+      "bytes": 64,
+      "path": "views.log",
+      "sha256": "25a02a33a0338ea8ca590c2ec43c19f79395d0ef7f027b259b1a633642b73f00"
+    }
+  ],
+  "product_branch": "cloud/sd-dial-c-f40",
+  "product_head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+  "ref": "refs/heads/evidence/sd-dial-c-f40",
+  "repository": "just-every/run-dial",
+  "schema": 1,
+  "tag": "sd-dial-c-f40"
+}

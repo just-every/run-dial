@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "tag": "sd-dial-c-f40",
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f40",
+  "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+  "recordedAt": "2026-11-08T21:00:52.448748+00:00",
+  "countsBefore": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "countsAfter": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "toolsByPolicy": {
+    "autonomous": 93,
+    "held": 93
+  },
+  "resourcesByPolicy": {
+    "autonomous": 0,
+    "held": 0
+  },
+  "checks": [
+    {
+      "command": "timeout 1200 node --test tests/agent-door-documentation.test.mjs",
+      "exit": 0,
+      "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+      "node": "22.20.0",
+      "receipt": "documentation-test.log"
+    },
+    {
+      "command": "pnpm run typecheck",
+      "exit": 0,
+      "node": "22.20.0",
+      "relevantSourceUnchanged": true
+    },
+    {
+      "command": "pnpm exec eslint <all touched source and journey files> --max-warnings=0",
+      "exit": 0,
+      "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68"
+    },
+    {
+      "command": "pnpm run boundaries",
+      "exit": 0,
+      "sourceFiles": 884
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party --json",
+      "exit": 0,
+      "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+      "receipt": "first-party.json"
+    },
+    {
+      "command": "node scripts/contract-docs.mjs write --clauses BASE-AGENT-013",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/contract-docs.mjs check --clauses BASE-AGENT-013",
+      "exit": 0
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0,
+      "generatedViewsCommitted": false
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/projects/deployment-spec.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "git fetch origin main; git merge origin/main",
+      "exit": 0,
+      "result": "Already up to date",
+      "publishedHistoryRewritten": false
+    },
+    {
+      "command": "git diff --cached -- CONTRACT.md; git diff origin/main...HEAD -- CONTRACT.md",
+      "exit": 0,
+      "result": "empty"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "migrationLedger": "not applicable: no migrations changed",
+  "publicationScan": {
+    "commit": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "NOT RUN: guarded Mac lander owns the full-history scan"
+  },
+  "mainAtSynchronization": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+  "candidateEqualsMain": false,
+  "productPush": "success",
+  "pr": null,
+  "existingAssertionsRemovedOrWeakened": false,
+  "candidateVerify": {
+    "id": 42522810633,
+    "event": "push",
+    "head": "e9e5f1675fc63b86452941ae195dbb9cc026ea68",
+    "status": "in_progress",
+    "conclusion": null,
+    "url": "https://github.com/just-every/run-dial/actions/runs/42522810633"
+  },
+  "staticTestRegistrationCalls": {
+    "before": 179,
+    "after": 180,
+    "note": "static registration calls in top-level test sources, including nested test calls; no new table-generated cases"
+  },
+  "screenshots": [
+    {
+      "path": "agent-documentation-1440.png",
+      "sha256": "75c43d226f6555332177d189390e8c70c8936d6cd042fbecbfe47563d618ff82"
+    },
+    {
+      "path": "agent-documentation-390.png",
+      "sha256": "a3275f2be0ff524a71d35191bdf67640de5bde97ed462a209e082f4d56eedc95"
+    }
+  ],
+  "handoff": "PUSHED: local proof passes; exact-SHA Verify still in progress",
+  "githubApiCalls": 3,
+  "ciObservedAt": "2026-11-08T21:04:53.389155+00:00"
+}
