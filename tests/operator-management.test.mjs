@@ -7,7 +7,9 @@ import { configure } from "../modules/operator-auth/config.mjs";
 // Read the same native defaults used by Dial's adapter, without changing limits.
 const { emailLimit: tokenLimit, limitWindowSeconds } = configure({ origin, local: true, OWNER_EMAIL: "operator@dial.test", SESSION_SECRET: "test-only-native-defaults-configuration" });
 const windowMs = limitWindowSeconds * 1000;
-const boundary = Math.ceil(Date.UTC(2026, 9, 9, 19, 30) / windowMs) * windowMs;
+// Choose an upcoming native-time bucket once, then pin the Worker clock around
+// it. A calendar-date anchor eventually expires sessions against SQLite time.
+const boundary = (Math.ceil(Date.now() / windowMs) + 1) * windowMs;
 const sessionRows = (runtime) => runtime.query("SELECT id, created_at FROM oa_sessions ORDER BY id");
 async function assertRejectedConfirmations(responses) {
   for (const response of responses.filter((response) => response.status !== 303)) {

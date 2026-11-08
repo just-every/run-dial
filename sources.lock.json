@@ -10655,7 +10655,7 @@
       "executable": false
     },
     "tests/operator-management.test.mjs": {
-      "sha256": "2d5acdb725224a75a26b3f6a7fe9b2b0e305f4ba30164eedf1e5b937b7635fec",
+      "sha256": "67c224def15fb3ed99f3675dcd5ba554b23dc66bb8636efcde12a1f5b96f4f84",
       "executable": false
     },
     "tests/operator-management/clock.ts": {
