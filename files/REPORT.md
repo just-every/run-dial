@@ -18,7 +18,7 @@ DEFAULT AGENT-002: Existing owner-only authority and sensitive dial:read Core po
 
 ## Results
 
-Candidate `0fd7c1d26f50f3a700356c6d70140e38bd42187a` is pushed. All three focused native sanity journeys pass again on this committed source, including production HTTP and actual MCP. Typecheck, touched ESLint, feature boundaries, manifest validation, production build, 1,905 first-party structural checks, generated-view write and check, and source lock check pass. Full Core conformance passed 12,911 checks at `9ce120113332c8ae9fa0302d75f055d9de2b8e05`; the only later changes are the CI selector and source lock, with every production and test byte identical. Initial Verify `42545734764` failed in a shared-listener fixture combination; it reproduced both on the failed SHA and main. The integration correction preserves every existing main partition and runs the new exception journey once in partition 6. Current exact-SHA Verify `42547958015` is in progress. No deployment, production release, main equality or cloud publication-scan claim is made. The Mac lander owns the publication scan, guarded landing and Run site.
+Candidate `0fd7c1d26f50f3a700356c6d70140e38bd42187a` is pushed. All three focused native sanity journeys pass again on this committed source, including production HTTP and actual MCP. Typecheck, touched ESLint, feature boundaries, manifest validation, production build, 1,905 first-party structural checks, generated-view write and check, and source lock check pass. Full Core conformance passed 12,911 checks at `9ce120113332c8ae9fa0302d75f055d9de2b8e05`; the only later changes are the CI selector and source lock, with every production and test byte identical. Initial Verify `42545734764` failed in a shared-listener fixture combination; it reproduced both on the failed SHA and main. The integration correction preserves every existing main partition and runs the new exception journey once in partition 6. Current exact-SHA Verify `42547958015` completed with failure. This candidate is BLOCKED from handoff as READY. The ten-call GitHub read budget is exhausted; its failed-job details were not inspected, and no further repair was guessed. No deployment, production release, main equality or cloud publication-scan claim is made. The Mac lander owns the publication scan, guarded landing and Run site.
 
 
 ## Product provenance and counts
@@ -60,7 +60,7 @@ This is a PARTIAL claim; the table does not assert whole-clause completion.
 | --- | --- |
 | 1 | Selected advisory outcome PASS through R1–R5; whole-clause approval, send and booking outcomes held, so no DONE claim |
 | 2 | PASS for selected slice: nonempty seeded request and expected exact times; supported owner and policy reads succeed, unsafe reads refuse and snapshots remain unchanged |
-| 3 | PENDING exact-SHA Verify; the new native test file invokes the production MCP journey directly through the existing test glob, and Core journey integration also remains present |
+| 3 | FAIL for READY: current exact-SHA Verify 42547958015 is red; the new native test file invokes the production MCP journey directly through the existing test glob, and Core journey integration also remains present |
 | 4 | PASS local proof bound to committed candidate; native tests and production build rerun on the candidate |
 | 5 | INSPECTED: no new inherited-duty completion claim or contract citation change; existing owner-only and Core policy authority is retained |
 | 6 | Mechanical PASS: contract generator write then check, generated views restored from main, source lock generated last and checked. Status cells and provenance remain main's judgment |
@@ -72,7 +72,7 @@ This is a PARTIAL claim; the table does not assert whole-clause completion.
 
 ## Pre-handoff self-check
 
-1. All selected visible outcomes have native public-door proof, including the real production MCP transport. Exact-SHA Verify remains separately observed and recorded.
+1. All selected visible outcomes have native public-door proof, including the real production MCP transport. Exact-SHA Verify 42547958015 is red; local selected-slice proof does not waive that standing bar.
 2. No existing assertion was removed, narrowed, skipped or hidden behind a flag. Three permanent sanity-journey registrations were added; the MCP proof is folded into the first journey and the existing Core leg.
 3. Revoked credentials and sessions, erased request data and replayed public review cannot regain access or create scheduling authority; control request and bookings remain intact.
 4. No screen, branding, icon control or settings UI was changed; all UI qualification remains held.
@@ -103,3 +103,12 @@ The new discovered filename had rotated the old round-robin assignments, placing
 The native exception suite was rerun on the corrected committed head and all three journeys passed. Full Core evidence remains applicable by exact production and test byte identity. The normal main partition shape remains supported by main's recorded green Verify; the deliberately forced four-file combination demonstrates the fixture collision, not a claim that normal main CI is red. This is one CI integration correction and no product behavior repair.
 
 VERIFY_REPRODUCED {"head":"9ce120113332c8ae9fa0302d75f055d9de2b8e05","job":128930255217,"command":"node scripts/ci-verify.mjs test 2","test":"PAY-001 a paid booking confirms only after Stripe's signed event","exit":1,"failure":"409 !== 303 at payment-entitlements-screens.mjs:36 and verify-money-screens.mjs:25"}
+
+
+## Terminal outcome
+
+BLOCKED branch=cloud/sd-dial-c-f42 head=0fd7c1d26f50f3a700356c6d70140e38bd42187a: exact-SHA Verify 42547958015 completed with failure. The ten-call GitHub read budget was consumed by main qualification, initial discovery and polling, one failed-job listing and archive read, and corrected-head discovery and polling. The latest failed job and assertion are uninspected; no claim is made that the latest failure matches the prior bootstrap collision. No second repair was guessed. All product work is pushed; the reports and actual receipts are retained and published separately.
+
+The first failed candidate was reproduced exactly and its forced test combination also fails on main. The later integration correction and every local selected-slice check pass, but the latest red workflow prevents READY. Neither product acceptance, landing, whole-clause completion nor release is claimed. Contract Status, Gap, Evidence and counts remain unchanged. The lane should inspect Verify 42547958015 on the recorded full SHA before any further repair.
+
+CLAIM AGENT-002 PARTIAL points=1 tests=tests/exception-proposals.test.mjs#owner exception reads intersect stored windows and saved host hours with fresh native constraints without execution; tests/exception-proposals.test.mjs#exception reads retain closures date bounds notice increment caps invitee gaps holds and DST; tests/exception-proposals.test.mjs#unsupported exception requests and revoked native authority refuse without recovery or side effects

@@ -1,10 +1,10 @@
 {
   "files": [
     {
-      "blob": "cab578194cb0c87776d1dfbbf2f4b1de70849db0",
-      "bytes": 15545,
+      "blob": "8cd6ead103aaa0040a97a9636544febf2ca4193d",
+      "bytes": 17321,
       "path": "REPORT.md",
-      "sha256": "7f18da05a2d17658b552a1af3ba1c4ede66c34321743240f6c6946c892d49a75"
+      "sha256": "9d6eb65a8d2e5b6bdc0e90f6ac6429ee4f6b8c098880fd316224bf43af14e875"
     },
     {
       "blob": "b3694dd51206affc683a6df3addee20a225b525c",
@@ -91,16 +91,22 @@
       "sha256": "4efd1a70055d0b5ac76e8b56238b94f7b4b8f1644355af39b42cede7895efc4b"
     },
     {
-      "blob": "4786b4d74d07448e27c19961a1ca8dd489c39cf4",
-      "bytes": 310,
+      "blob": "936e1abf320c43f6fee54704c33f6093665743cc",
+      "bytes": 620,
       "path": "repaired-ci-observations.json",
-      "sha256": "5432f3baf8a9b9a9517b40b7dd56313156ce3f5b964d8a493b294e0101af158c"
+      "sha256": "057aa7f039ad84175d41fd15da2134db867bba4d74c9122971dac6fd2ed1e9de"
     },
     {
       "blob": "c919ab7311a4041398a1a3205ae36d1ab9bebe9d",
       "bytes": 224,
       "path": "repaired-ci-runs.json",
       "sha256": "6d312d7f7fa9365b4de1b1f88ee0818908fbfe1075a71846b72e41e8dddfdd82"
+    },
+    {
+      "blob": "3d122144d60392b84bb3eb859ebc4640625f0fb6",
+      "bytes": 871,
+      "path": "terminal-receipt.json",
+      "sha256": "6f321f71e82cfa9d74bd683ee6b11ac28e72d3b2649b335f2860b37f6197c602"
     }
   ],
   "product_branch": "cloud/sd-dial-c-f42",

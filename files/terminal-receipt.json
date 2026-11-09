@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f42",
+  "head": "0fd7c1d26f50f3a700356c6d70140e38bd42187a",
+  "productPushed": true,
+  "ready": false,
+  "status": "BLOCKED",
+  "verifyRun": 42547958015,
+  "verifyConclusion": "failure",
+  "failedJobDetails": "not inspected; ten-call GitHub budget exhausted",
+  "initialVerifyRun": 42545734764,
+  "initialFailedJob": 128930255217,
+  "initialFailureReproduced": true,
+  "sameForcedCombinationAlsoFailsOnMain": true,
+  "ciIntegrationCorrections": 1,
+  "furtherRepairsGuessed": false,
+  "githubReadCalls": 10,
+  "localNativeTests": {
+    "passed": 3,
+    "failed": 0
+  },
+  "contractCounts": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63,
+    "total": 189
+  },
+  "claim": "AGENT-002 PARTIAL, advisory subpoint only",
+  "landingClaimed": false,
+  "publicationScanClaimed": false
+}
