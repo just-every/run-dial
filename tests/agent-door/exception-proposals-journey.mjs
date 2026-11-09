@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { randomUUID, webcrypto } from 'node:crypto';
+import { createHash, randomUUID, webcrypto } from 'node:crypto';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { serveHosted, HOSTED_ORIGIN } from '@runeditrun/rer/internal/cli/hosted-output.mjs';
@@ -23,7 +23,6 @@ export default async function exceptionProposalsJourney() {
   const publicKeys = JSON.stringify({ [kid]: { ...await webcrypto.subtle.exportKey('jwk', pair.publicKey), kid, alg: 'ES256', use: 'sig' } });
   const sender = email('sender');
   let providerCalls = 0;
-  console.log('Exception proposal journey: starting production runtime.');
   const hosted = await serveHosted(process.cwd(), { bindings: {
     OWNER_EMAIL: ownerEmail, SETUP_TOKEN: token, RER_OWNER_CLAIM_ISSUER: issuer,
     RER_OWNER_CLAIM_INSTALLATION_ID: installationId, RER_OWNER_CLAIM_APP_ORIGIN: origin,
@@ -45,7 +44,6 @@ export default async function exceptionProposalsJourney() {
     assert.fail('Unexpected provider request during read-only exception journey');
   } });
   try {
-    console.log('Exception proposal journey: production runtime ready.');
     const request = (absolute, init = {}) => {
       const url = new URL(absolute); assert.equal(url.origin, origin);
       return hosted.fetch(url.href.slice(origin.length + 1), { ...init, headers: Object.fromEntries(new Headers(init.headers)) });
@@ -58,7 +56,6 @@ export default async function exceptionProposalsJourney() {
     await owner.body?.cancel();
     const headers = { Origin: origin, Cookie: cookie, 'Content-Type': 'application/json' };
     const data = async (path, body, expected = 200, method = body === undefined ? 'GET' : 'POST', publicRead = false) => {
-      console.log('Exception proposal journey native step:', method, path.split('?')[0]);
       const response = await request(origin + path, { method, headers: publicRead ? { Origin: origin, 'Content-Type': 'application/json' } : headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
       const result = response.status === 204 ? (await response.body?.cancel(), null) : await response.json();
       assert.equal(response.status, expected, `${method} ${path.split('?')[0]} HTTP ${response.status}`);
@@ -91,7 +88,7 @@ export default async function exceptionProposalsJourney() {
       const tables = (await db.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'oa_%' AND name NOT LIKE 'agent_door_%' AND name<>'public_rate_events' AND name<>'dial_portability_admission' ORDER BY name").all()).results;
       const rows = {};
       for (const { name } of tables) rows[name] = (await db.prepare(`SELECT * FROM "${name.replaceAll('"', '""')}"`).all()).results;
-      return rows;
+      return createHash('sha256').update(JSON.stringify(rows)).digest('hex');
     };
     const drainFixtureWork = async () => {
       const deadline = Date.now() + 15_000;

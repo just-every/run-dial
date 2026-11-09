@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { contract } from './contract.mjs';
 import { bookingRuntime } from './move-in/booking-runtime.mjs';
+import { buildDocumentationWorker } from './agent-door/documentation-journey.mjs';
+import exceptionProposalsJourney from './agent-door/exception-proposals-journey.mjs';
 
 const zone = ['America', 'New_York'].join('/');
 const email = number => [`synthetic-dial-${number}`, 'example.test'].join('@');
@@ -97,6 +99,8 @@ async function snapshot(rt) {
 }
 
 contract('AGENT-002', 'owner exception reads intersect stored windows and saved host hours with fresh native constraints without execution', async context => {
+  await buildDocumentationWorker();
+  await exceptionProposalsJourney();
   const rt = await runtime(context), event = await rt.create(), request = await rt.submit(event);
   const missing = await snapshot(rt);
   assert.equal((await rt.propose(request, 409)).error.code, 'host_hours_required');

@@ -9031,7 +9031,7 @@
       "executable": false
     },
     "tests/agent-door/exception-proposals-journey.mjs": {
-      "sha256": "0fc777c3d6bf3bfde6d7d9db13de526a79e151ad91fb53286867bc488aba7152",
+      "sha256": "2e475821b709ee4dda00ab11f32571fdfec2dbbecf9786dfcebc533c0c4d483a",
       "executable": false
     },
     "tests/agent-door/native-calendar.mjs": {
@@ -9895,7 +9895,7 @@
       "executable": false
     },
     "tests/exception-proposals.test.mjs": {
-      "sha256": "f607085b33d8019d5c13a2b110f43295a4239c48d6cb3e1e9d6ad8acf4cc4655",
+      "sha256": "a0e872798acf0b17be1d29c1c19665b5cfe588a7636ce2ba7d3c71ef0b550db2",
       "executable": false
     },
     "tests/export-base-adoption.test.mjs": {
