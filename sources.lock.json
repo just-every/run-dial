@@ -9335,7 +9335,7 @@
       "executable": false
     },
     "tests/booking-axe/run-axe.mjs": {
-      "sha256": "6e3c0539708fd93ee8b52c471bdc95cfa360eea00fc12b8f09536bf758efc6d8",
+      "sha256": "3dd2d67d89f354186a1e4967a67d4b2fb4c15492743b5acffd979d9b67754323",
       "executable": false
     },
     "tests/booking-axe/timezone.mjs": {
