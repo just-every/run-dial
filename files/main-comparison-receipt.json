@@ -1,0 +1,14 @@
+{
+  "mainHead": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "command": "node --test --test-concurrency=2 tests/approval-screens.test.mjs tests/dev-identity.test.mjs tests/managed-mail.test.mjs tests/payments-wire.test.mjs",
+  "exit": 1,
+  "tests": 8,
+  "passed": 6,
+  "failed": 2,
+  "failure": "The same payment-screen bootstrap assertions return 409 instead of 303.",
+  "sameCloudRunner": true,
+  "sameNode": "22.20.0",
+  "browser": "system Chromium with no sandbox",
+  "normalMainPartitionsDiffer": true,
+  "classification": "Concurrent fixed-listener fixture collision; no product behavior regression."
+}

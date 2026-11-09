@@ -27,7 +27,7 @@
     "Times alone cannot confirm without a native nonce"
   ],
   "held": "Approval, persistence, offered-time execution, grants, UI and wider combinations remain unclaimed",
-  "productHead": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+  "productHead": "0fd7c1d26f50f3a700356c6d70140e38bd42187a",
   "node": "22.20.0",
   "localRuntimeNote": "Local production Miniflare readiness required an external no-op workerd control-pipe data listener. No application, provider, dependency, assertion or policy was replaced. The candidate test file itself invokes the real production MCP journey in branch Verify."
 }

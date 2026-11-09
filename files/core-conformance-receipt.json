@@ -7,5 +7,7 @@
   "pointsTotal": 12911,
   "productionWorker": true,
   "heldScopeExpanded": false,
-  "runtimeNote": "External no-op workerd control-pipe listener used locally; no product or dependency changes."
+  "runtimeNote": "External no-op workerd control-pipe listener used locally; no product or dependency changes.",
+  "candidateHead": "0fd7c1d26f50f3a700356c6d70140e38bd42187a",
+  "candidateQualification": "Only scripts/ci-test-files.mjs and sources.lock.json changed after this run. All production and test bytes remain identical."
 }

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "productHead": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+  "productHead": "0fd7c1d26f50f3a700356c6d70140e38bd42187a",
   "views": {
     "write": "node scripts/contract-docs.mjs write --clauses AGENT-002",
     "writeExit": 0,
@@ -70,5 +70,8 @@
     "exit": 0,
     "passed": 12911,
     "total": 12911
-  }
+  },
+  "repairedVerify": 42547958015,
+  "initialFailedVerify": 42545734764,
+  "ciIntegrationCorrection": "Existing main assignments preserved; new exception journey in partition 6; every test selected once."
 }

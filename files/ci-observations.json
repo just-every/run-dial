@@ -7,5 +7,23 @@
     "run_id": 42545734764,
     "observedAt": "2026-11-09T01:33:35.506969+00:00",
     "watcherCall": 1
+  },
+  {
+    "conclusion": null,
+    "head_sha": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+    "html_url": "https://github.com/just-every/run-dial/actions/runs/42545734764",
+    "status": "in_progress",
+    "run_id": 42545734764,
+    "observedAt": "2026-11-09T01:38:35.586276+00:00",
+    "watcherCall": 2
+  },
+  {
+    "conclusion": "failure",
+    "head_sha": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+    "html_url": "https://github.com/just-every/run-dial/actions/runs/42545734764",
+    "status": "completed",
+    "run_id": 42545734764,
+    "observedAt": "2026-11-09T01:43:35.573768+00:00",
+    "watcherCall": 3
   }
 ]

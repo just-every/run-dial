@@ -13,7 +13,7 @@ TAP version 13
 #   - import "./scripts/archive/schema-plugin" without a file extension (vite.config.ts:11:31). Add the file extension
 #   - import "./scripts/build-assets" without a file extension (vite.config.ts:12:29). Add the file extension
 # Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
-# (node:5757) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (node:17766) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
 #   - import "./scripts/client-chunks" without a file extension (vite.config.ts:1:36). Add the file extension
@@ -104,7 +104,7 @@ TAP version 13
 # - Using dynamic import() to code-split the application
 # - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
 # - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-# ✓ built in 1.69s
+# ✓ built in 1.74s
 # vite v8.2.2 building ssr environment for production...
 # transforming...
 # [plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts?tss-serverfn-split:5:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
@@ -239,28 +239,28 @@ TAP version 13
 # dist/server/assets/availability-ssFb2CLi.js                             871.76 kB │ gzip: 211.95 kB
 # dist/server/index.js                                                  1,335.73 kB │ gzip: 277.62 kB
 # dist/server/assets/request-response-Ct78WbHn.js                       1,869.03 kB │ gzip: 468.80 kB
-# ✓ built in 1.83s
+# ✓ built in 1.95s
 # Your application is built
 # build: complete (exit 0)
 # Exception proposal journey: three native owner and MCP proposals agree; fresh conflicts, authority, read audit and no scheduling effects pass.
 # Subtest: [AGENT-002] owner exception reads intersect stored windows and saved host hours with fresh native constraints without execution
 ok 1 - [AGENT-002] owner exception reads intersect stored windows and saved host hours with fresh native constraints without execution
   ---
-  duration_ms: 32820.918944
+  duration_ms: 35626.283901
   type: 'test'
   ...
 # PROBE AGENT-002 advisory: public request review and submit then owner GET -> three concrete outside-event, inside-host times; repeated reads change nothing and a fresh buffered booking removes two candidates.
 # Subtest: [AGENT-002] exception reads retain closures date bounds notice increment caps invitee gaps holds and DST
 ok 2 - [AGENT-002] exception reads retain closures date bounds notice increment caps invitee gaps holds and DST
   ---
-  duration_ms: 9925.338224
+  duration_ms: 11995.54095
   type: 'test'
   ...
 # PROBE AGENT-002 constraints: owner GET after native closures, date restrictions, notice, horizon, increment, count and minute caps, invitee gap, offered and approval holds, spring and fall requests -> invalid candidates excluded.
 # Subtest: [AGENT-002] unsupported exception requests and revoked native authority refuse without recovery or side effects
 ok 3 - [AGENT-002] unsupported exception requests and revoked native authority refuse without recovery or side effects
   ---
-  duration_ms: 29848.937524
+  duration_ms: 45911.177002
   type: 'test'
   ...
 # PROBE AGENT-002 refusal: anonymous, revoked session, unsupported configurations, resolved request and connected or unhealthy calendar -> explicit refusals with no proposal execution, recovery or provider activity.
@@ -272,4 +272,4 @@ ok 3 - [AGENT-002] unsupported exception requests and revoked native authority r
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 74117.311156
+# duration_ms 95124.311538
