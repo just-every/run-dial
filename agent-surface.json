@@ -675,6 +675,17 @@
       ]
     },
     {
+      "name": "dial.requests.exception_proposals",
+      "scope": "dial:read",
+      "readOnly": true,
+      "classes": [
+        "sensitive"
+      ],
+      "clauses": [
+        "AGENT-002"
+      ]
+    },
+    {
       "name": "dial.reports.scheduling",
       "scope": "dial:read",
       "readOnly": true,
@@ -3591,6 +3602,21 @@
         },
         {
           "class": "destructive"
+        }
+      ]
+    },
+    {
+      "id": "exception_proposals",
+      "tool": "dial.requests.exception_proposals",
+      "args": {
+        "id": {
+          "$fixture": "exceptionRequest",
+          "pointer": "/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "sensitive"
         }
       ]
     }

@@ -4,7 +4,7 @@ export { activeApprovalIntervals, approvalHoldPredicate } from "./approval-holds
 export { AvailabilityRepository } from "./repository";
 export { AvailabilityService } from "./service";
 export type { AvailabilityResult, CalendarBusyRead, CalendarBusyReader } from "./service";
-export { datePlus, firstInstantOfHostDate, wallClockInstants, zonedParts, zonedOffsetLabel } from "./timezone";
+export { datePlus, hostDateAt, weekdayForDate, firstInstantOfHostDate, wallClockInstants, zonedParts, zonedOffsetLabel } from "./timezone";
 export type { RecommendationContext } from "./recommendations";
 export { unavailableTimeMessage } from "./diagnostics";
 export { NamedSchedules, bindEvent } from "./named-schedules";
@@ -15,3 +15,5 @@ export type { BookingLimitsConfig, BookingLimitExclusion } from "./booking-limit
 export { closureFields, scheduleInputSchema } from "./schedule-input";
 export type { NamedSchedule, ScheduleInput } from "./schedule-input";
 export { usFederalHolidays } from "./us-holidays";
+export { loadAvailabilityInput } from "./input";
+export { fitsWindow, windowSpans } from "./window-spans";

@@ -1,3 +1,4 @@
+import { exceptionProposalRoutes } from "../features/exception-proposals/routes";
 import { confirmationLanguageRoutes } from "../features/locales";
 import { consentRoutes } from "../features/api-credentials/consent";
 import { credentialRoutes } from "../features/api-credentials/routes";
@@ -118,6 +119,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", hostSetupRoutes)
     .route("/", availabilityDiagnosticRoutes)
     .route("/", availabilityControlRoutes)
+    .route("/", exceptionProposalRoutes)
     .route("/", availabilityRequestRoutes)
     .route("/", calendarConnectionRoutes)
     .route("/", deliveryRoutes)

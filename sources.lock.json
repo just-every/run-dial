@@ -891,7 +891,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "44916fb21e414cf47ee6e4d53a2e37956f27dff83b1e134d7fbd4d7307264af3",
+      "sha256": "72ae1e993b012151ee89c7d9c6630983094dd904dacd1b7c064679a25e315e54",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -5323,7 +5323,7 @@
       "executable": false
     },
     "src/agent-door/request-tools.ts": {
-      "sha256": "f8e29c2544a048f6b5a722d7df3d805c230eda037ad19ebb92106d75c73f622c",
+      "sha256": "474ca920a18150e7037cbe7414ec2651d9a698cd4c4e6470612ac714b3402715",
       "executable": false
     },
     "src/agent-door/resource-bookings.ts": {
@@ -5511,7 +5511,7 @@
       "executable": false
     },
     "src/core/app/hono.ts": {
-      "sha256": "551b9666c6d750f806f1138ea407d03b6d63e56c66e987faf763826d723c2d9f",
+      "sha256": "fd731f9f34fb98d847a9e1626b7ff2dac2f6e3a6366d03702a5d72f006b771ae",
       "executable": false
     },
     "src/core/app/loaders.ts": {
@@ -5543,7 +5543,7 @@
       "executable": false
     },
     "src/core/app/services.ts": {
-      "sha256": "32f67dd6d01c2acba088b194c0e460e9c5317bc204880c81ce07e9a0ccb62508",
+      "sha256": "8fa624d9633699b0fda4ca6d563470e7c868c76074f1a778dad6d7aba7aefae8",
       "executable": false
     },
     "src/core/app/signin-options.server.ts": {
@@ -5819,7 +5819,7 @@
       "executable": false
     },
     "src/core/features/availability/index.ts": {
-      "sha256": "cd3c3b95d193a956b888839ebe6b3905cfcf0d3887862df08f7d5a08ce44e795",
+      "sha256": "0cccb571b7150557e8414adf88b44db323e6108984899bbab941cef3b1eb2ecd",
       "executable": false
     },
     "src/core/features/availability/input.ts": {
@@ -6816,6 +6816,22 @@
     },
     "src/core/features/event-types/ui/scheduling-limits.tsx": {
       "sha256": "1296dc180ccc80cff1fc38368940867837d8366d02df1e6b132bd4731bc7e9c5",
+      "executable": false
+    },
+    "src/core/features/exception-proposals/input.ts": {
+      "sha256": "ed2049894ca95a713e3d13f678ad3087a3411c343e9f0f1eb9a74df5e8eeac65",
+      "executable": false
+    },
+    "src/core/features/exception-proposals/planner.ts": {
+      "sha256": "f952b1a152f5cc14b3d0bd2a79e75978227a0f9a900692055e48af57f3cff6a1",
+      "executable": false
+    },
+    "src/core/features/exception-proposals/routes.ts": {
+      "sha256": "d3c8a89f27d1d779bf64598da9ea92bb30a6ccd8c476a37428302a1fc67b220a",
+      "executable": false
+    },
+    "src/core/features/exception-proposals/service.ts": {
+      "sha256": "04f8a55b0154af29457b33613539f6c7804b13730d2b285fe972cbd2bc648858",
       "executable": false
     },
     "src/core/features/group-events/configuration.ts": {
@@ -9007,11 +9023,15 @@
       "executable": false
     },
     "tests/agent-door/core-journey.mjs": {
-      "sha256": "277ee8781a7994bf19be1d025ed733df0e1cf655b8219a4b816554d4c03107ce",
+      "sha256": "f607ed6539ea8d17b7ac570de1ebfb0146a1092f69806b1a936b5765b132ce99",
       "executable": false
     },
     "tests/agent-door/documentation-journey.mjs": {
       "sha256": "d9d01d05d0dde923852479c3550580c0f1e5e1f1d158cc40351339b2728c4193",
+      "executable": false
+    },
+    "tests/agent-door/exception-proposals-journey.mjs": {
+      "sha256": "0fc777c3d6bf3bfde6d7d9db13de526a79e151ad91fb53286867bc488aba7152",
       "executable": false
     },
     "tests/agent-door/native-calendar.mjs": {
@@ -9023,7 +9043,7 @@
       "executable": false
     },
     "tests/agent-door/phase-fixtures.mjs": {
-      "sha256": "1b5b30c9e7aef5d7b046cb0891e3339971733eff68c38f00c83347bfe2129d44",
+      "sha256": "814c419400abbba49e2cafebe882bfb2ac56291cdcaf77c637575c19ed10a20b",
       "executable": false
     },
     "tests/agent-door/provider-edge.mjs": {
@@ -9872,6 +9892,10 @@
     },
     "tests/event-status-trigger/worker.mjs": {
       "sha256": "05e461feb2384437cebcaea1e28cfd2197caf12663d5e6a46cb4b0ab0c0a0f16",
+      "executable": false
+    },
+    "tests/exception-proposals.test.mjs": {
+      "sha256": "f607085b33d8019d5c13a2b110f43295a4239c48d6cb3e1e9d6ad8acf4cc4655",
       "executable": false
     },
     "tests/export-base-adoption.test.mjs": {

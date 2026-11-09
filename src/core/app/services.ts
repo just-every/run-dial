@@ -1,3 +1,4 @@
+import { ExceptionProposalsService } from "../features/exception-proposals/service";
 import { EventConfirmationLanguages } from "../features/locales";
 import { MailBrandReader } from "../features/delivery/mail-brand";
 import { TeamsRepository } from "../features/teams";
@@ -85,6 +86,7 @@ export function createServices(binding: D1Database, runtime: RuntimeEnvironment,
   } } : undefined);
   const operators = new OperatorsService(binding, runtime, authMail);
   return {
+    exceptionProposals: new ExceptionProposalsService(binding, eventTypes, hostProfile, calendar),
     confirmationLanguages,
     polls: new PollsService(binding,runtime.SESSION_SECRET,runtime.APP_URL,availability,bookingLinks),
     clients: new ClientsRepository(binding),

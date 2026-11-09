@@ -1,3 +1,4 @@
+import { ToolRefusal } from "../../modules/agent-door/errors.ts";
 import { z } from "zod";
 import type { ToolDefinition } from "../../modules/agent-door/types.ts";
 
@@ -15,6 +16,20 @@ function safeRequest(request: OperatorRequest) {
 
 export function requestTools(services: AppServices): ToolDefinition[] {
   return [
+    nativeTool({
+      name: "dial.requests.exception_proposals", title: "Read advisory exception times", scope: "dial:read", readOnly: true,
+      description: "Read up to three fresh advisory times for a submitted native alternative request, outside recurring event hours but inside saved host hours and stored invitee windows. No approval, booking, hold or sending authority is created. Connected calendars and unsupported event combinations refuse.",
+      input: bookingId, outputSchema: objectOutput, classes: ["sensitive"], clauses: ["AGENT-002"], untrusted: true,
+      classify: () => bookingReadClass(),
+      async run({ id }) {
+        const result = await services.exceptionProposals.read(id);
+        if (result.kind === "proposals") return { result: result.result };
+        throw new ToolRefusal(result.kind === "not_found" ? "availability_request_not_found"
+          : result.kind === "resolved" ? "availability_request_resolved"
+          : result.kind === "unsupported" ? "exception_proposals_unsupported"
+          : result.kind === "host_hours_required" ? "host_hours_required" : "availability_unavailable");
+      },
+    }),
     nativeTool({
       name: "dial.requests.list", title: "List alternative-time requests", scope: "dial:read", readOnly: true,
       description: "List native alternative-time requests in submitted, handled or closed state. Output is paged up to 500 records, default 100; totalCount covers the full native result.",

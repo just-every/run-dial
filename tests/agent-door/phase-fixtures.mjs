@@ -11,6 +11,9 @@ export default async function prepare(context) {
  const clientTarget=`synthetic-dial-${index*4+1}@example.invalid`,clientSource=`synthetic-dial-${index*4+2}@example.invalid`;
  const data=async(path,body,method=body===undefined?'GET':'POST')=>{const response=await request(new URL(path,origin).href,{method,redirect:'manual',headers,...(body===undefined?{}:{body:JSON.stringify(body)})});assert.ok(response.ok,`Native phase fixture ${method} ${path.split('?')[0]} HTTP ${response.status}`);return response.status===204?null:response.json();};
  await data('/api/app/profile',profile,'PATCH');
+ await data('/api/app/hours/closures',{blockUsHolidays:false,reopenedHolidays:[],timeOff:[]},'PUT');
+ const yours=(await data('/api/app/hours')).yours;
+ await data(`/api/app/availability-schedules/${yours.id}`,{name:'Your hours',windows:Array.from({length:7},(_,weekday)=>({weekday,startMinute:540,endMinute:1020})),blockUsHolidays:false,reopenedHolidays:[],timeOff:[]},'PUT');
  await connectCalendar({...context,data});
  for (const existing of await data('/api/app/event-types')) if(existing.status==='published') await data(`/api/app/event-types/${existing.id}/disable`,{});
  const event=await data('/api/app/event-types',eventInput('synthetic-dial-'+randomUUID()));
@@ -28,5 +31,7 @@ export default async function prepare(context) {
  const requestBody={inviteeName:'Taylor Brooks',inviteeEmail:'synthetic-dial-4@example.invalid',inviteeTimezone:'UTC',note:'Please find another time.',windows:[{date:date.toISOString().slice(0,10),startMinute:1020,endMinute:1080}]};
  const review=await data(`/api/public/events/${profile.handle}/${event.slug}/request/review`,requestBody);
  await data(`/api/public/events/${profile.handle}/${event.slug}/request?nonce=${encodeURIComponent(review.nonce)}`,requestBody);
- return {values:{nativeEvent:event,link,poll,clientTarget,clientSource,agentSlug:'synthetic-dial-agent-'+randomUUID()}};
+ const exceptionRequest=(await data('/api/app/availability-requests')).find(item=>item.eventTypeId===event.id);
+ assert.ok(exceptionRequest?.id,'native alternative request fixture retains its identity');
+ return {values:{nativeEvent:event,exceptionRequest,link,poll,clientTarget,clientSource,agentSlug:'synthetic-dial-agent-'+randomUUID()}};
 }

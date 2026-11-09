@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import documentationJourney from './documentation-journey.mjs';
+import exceptionProposalsJourney from './exception-proposals-journey.mjs';
 export { documentationJourney };
 import {randomUUID} from 'node:crypto';
 import {profile,mergeAudits} from './native-owner.mjs';
@@ -20,6 +21,7 @@ export async function afterStep({step,result,phase}) {
 }
 export default async function coreJourney({request,origin,cookie,tool}) {
  await documentationJourney();
+ await exceptionProposalsJourney();
  const headers={Origin:origin,Cookie:cookie,'Content-Type':'application/json'};
  // The pinned Base mounts this read-only tool even for the CORE subset.
  // Its native store supplies stable policy facts, never invented product events.
