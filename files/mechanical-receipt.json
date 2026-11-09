@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "productHead": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+  "views": {
+    "write": "node scripts/contract-docs.mjs write --clauses AGENT-002",
+    "writeExit": 0,
+    "check": "node scripts/contract-docs.mjs check --clauses AGENT-002",
+    "checkExit": 0,
+    "restoredFromOriginMain": [
+      "ACCEPTANCE.md",
+      "docs/CLAIMS.md"
+    ],
+    "committedGeneratedViews": false
+  },
+  "lock": {
+    "write": "node scripts/edition-authoring/cli.mjs lock",
+    "writeExit": 0,
+    "check": "node scripts/edition-authoring/cli.mjs check",
+    "checkExit": 0,
+    "exactCandidate": true
+  },
+  "migrationLedger": {
+    "command": "none",
+    "reason": "No migration or schema change"
+  },
+  "typecheck": {
+    "command": "pnpm run typecheck",
+    "exit": 0
+  },
+  "lint": {
+    "command": "pnpm exec eslint <touched source and test files> --max-warnings=0",
+    "exit": 0
+  },
+  "boundaries": {
+    "command": "pnpm run boundaries",
+    "exit": 0,
+    "sourceFiles": 888
+  },
+  "manifest": {
+    "command": "pnpm run validate",
+    "exit": 0
+  },
+  "firstParty": {
+    "command": "npx -y @runeditrun/rer check --profile first-party --json",
+    "exit": 0,
+    "ok": true,
+    "clauses": 1905,
+    "exactCandidate": true
+  },
+  "build": {
+    "command": "npx -y @runeditrun/rer build",
+    "exit": 0
+  },
+  "contractCellsChanged": false,
+  "basePinChanged": false,
+  "workflowChanged": false,
+  "publishedSave": "5170f1503092bc52aa0de78d4183f40fef44e8a9",
+  "mainRead": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "mainVerify": 42539000891,
+  "mainVerifyConclusion": "success",
+  "mainRunSite": 42539000893,
+  "mainRunSiteConclusion": "success",
+  "publicationScan": {
+    "status": "not run in cloud",
+    "owner": "Mac guarded lander"
+  },
+  "mainEquality": false,
+  "releaseOrDeploymentClaimed": false,
+  "coreConformance": {
+    "exit": 0,
+    "passed": 12911,
+    "total": 12911
+  }
+}

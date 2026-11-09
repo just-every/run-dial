@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "scope": "AGENT-002 first advisory exception subpoint only",
+  "runtime": "native Hono, D1, Durable Object; providers synthetic at HTTP edge",
+  "clock": "2030-02-18T12:00:00.000Z with explicit one-second fixture advances",
+  "command": "node --test --test-concurrency=1 tests/exception-proposals.test.mjs",
+  "exit": 0,
+  "tests": 3,
+  "passed": 3,
+  "failed": 0,
+  "proof": [
+    "Native public request review and submission persist invitee windows",
+    "Exactly three outside-event, inside-host proposals with zones and source facts",
+    "Absent and untouched automatic host hours refuse",
+    "Repeated reads leave all native databases, provider state and queue count unchanged",
+    "Fresh native public booking and both occupied buffers remove proposals",
+    "Host time off and holiday closures; event closed and open date overrides",
+    "Notice, horizon, fixed date range and original host-anchored increment",
+    "Host and event day, week and month count and minute limits",
+    "Stored invitee identity governs minimum gap; host-day cap includes other events",
+    "Native offered-time, approval and Stripe payment holds retain occupied intervals",
+    "Stored window duration and host-hours containment; spring and fall DST spans",
+    "Unknown and resolved requests and unsupported event combinations refuse",
+    "Anonymous and revoked native sessions refuse",
+    "Connected and unhealthy calendars refuse before recovery and provider calls",
+    "Erased request and replayed public review cannot resurrect data; control request retained",
+    "Times alone cannot confirm without a native nonce"
+  ],
+  "held": "Approval, persistence, offered-time execution, grants, UI and wider combinations remain unclaimed",
+  "productHead": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+  "node": "22.20.0",
+  "localRuntimeNote": "Local production Miniflare readiness required an external no-op workerd control-pipe data listener. No application, provider, dependency, assertion or policy was replaced. The candidate test file itself invokes the real production MCP journey in branch Verify."
+}

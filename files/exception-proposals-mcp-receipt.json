@@ -1,0 +1,19 @@
+{
+  "nativeRequest": true,
+  "proposalCount": 3,
+  "matchingDoors": true,
+  "repeatedReadOnly": true,
+  "freshConflictRemoved": true,
+  "remainingProposals": 2,
+  "anonymousRefused": true,
+  "unsupportedRefused": true,
+  "missingScopeRefused": true,
+  "blockedPolicyRefused": true,
+  "revokedConsentRefused": true,
+  "revokedSessionRefused": true,
+  "noSchedulingAuthority": true,
+  "readAudits": 3,
+  "policyAuditDifferences": 0,
+  "providerCallsDuringReads": 0,
+  "productHead": "9ce120113332c8ae9fa0302d75f055d9de2b8e05"
+}

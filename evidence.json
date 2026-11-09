@@ -1,0 +1,70 @@
+{
+  "files": [
+    {
+      "blob": "e57b2133bd434f80a29dbb82aa379045b52d86a6",
+      "bytes": 12817,
+      "path": "REPORT.md",
+      "sha256": "539e3a89296d70b695861a3ec651c506474e520edfbbe270f64ad2e68e14e976"
+    },
+    {
+      "blob": "b3694dd51206affc683a6df3addee20a225b525c",
+      "bytes": 7061,
+      "path": "agent-documentation-receipt.json",
+      "sha256": "cf76e06eea3689a5fdcab3457e22add60a7e9d5c5e5297814e31d89afef376b3"
+    },
+    {
+      "blob": "b5407f51a9fff4368cd9a14f7357c42621b0e00f",
+      "bytes": 310,
+      "path": "ci-observations.json",
+      "sha256": "b12214ae58863e976e6e19d2f32217852bfcfe95db5a46764352d20ab8a2d34c"
+    },
+    {
+      "blob": "1ddf860c08ee31fcb8d32a1e0b75815dd6045f58",
+      "bytes": 224,
+      "path": "ci-runs.json",
+      "sha256": "46cd97d9afb3ef06086279e52c9f9c442bc7a2184742f1a1421e142db4a93c57"
+    },
+    {
+      "blob": "419e811e84858fde4547a503c165c3113b9dd9f3",
+      "bytes": 383,
+      "path": "core-conformance-receipt.json",
+      "sha256": "18c45a0e74acf75903b388afcc67f80d00716e9def087e423e827a390e5d12cd"
+    },
+    {
+      "blob": "a2cc13a5d0802079faa6f2a854849922ae949b73",
+      "bytes": 493283,
+      "path": "core-conformance.log",
+      "sha256": "7ac5c1712b162821c9fff24385c790ad9be7a12e7f0d56b41b404bca76818473"
+    },
+    {
+      "blob": "37b15786a94e273a9f3ef2418555c631e339587f",
+      "bytes": 526,
+      "path": "exception-proposals-mcp-receipt.json",
+      "sha256": "736ed4bbb093661b085501aabde8d0b351db24c092c3fbc6f94ba0f083a034ce"
+    },
+    {
+      "blob": "2a1968e257eb0d8dc925692c51610ca49e4a6554",
+      "bytes": 1908,
+      "path": "mechanical-receipt.json",
+      "sha256": "7d79b59b9a20273e8e69eb60f916fa386051f079bb58a2499e65a429b994e041"
+    },
+    {
+      "blob": "a33e6f728c15d928fb12a1c63d0b8720f5a775ab",
+      "bytes": 2118,
+      "path": "native-receipt.json",
+      "sha256": "f9026f357d7668e661da850b8a6d8bd13cb5690fb4b224c1526ab47ba54877cb"
+    },
+    {
+      "blob": "706f263a8b1745753348452f1a5bb55c0a12592a",
+      "bytes": 25959,
+      "path": "native-test.log",
+      "sha256": "ffc8f2dd0e9170e7be54c9f3ec7a42bd9c6485d95738ae998fd36bd7ca0a2f46"
+    }
+  ],
+  "product_branch": "cloud/sd-dial-c-f42",
+  "product_head": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+  "ref": "refs/heads/evidence/sd-dial-c-f42",
+  "repository": "just-every/run-dial",
+  "schema": 1,
+  "tag": "sd-dial-c-f42"
+}

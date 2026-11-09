@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "productHead": "9ce120113332c8ae9fa0302d75f055d9de2b8e05",
+  "command": "node node_modules/@runeditrun/rer/cli/agent-door.mjs .",
+  "exit": 0,
+  "pointsPassed": 12911,
+  "pointsTotal": 12911,
+  "productionWorker": true,
+  "heldScopeExpanded": false,
+  "runtimeNote": "External no-op workerd control-pipe listener used locally; no product or dependency changes."
+}
