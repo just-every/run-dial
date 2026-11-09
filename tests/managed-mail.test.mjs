@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { contract } from './contract.mjs';
+import { documentationJourney } from './agent-door/core-journey.mjs';
+import { buildDocumentationWorker } from './agent-door/documentation-journey.mjs';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
@@ -206,4 +209,11 @@ test('NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirec
   await editorReadinessJourney({ page, origin, f, event, calls, screenshot, selectClient: width => { browserIp = width === 1440 ? '198.18.0.9' : '198.18.0.10'; } });
   assert.deepEqual(errors, []);
   t.diagnostic('1440/390: login_hint survives SSR and hydration, bare/invalid hints stay empty, explicit submission succeeds, owner sees credential recovery');
+});
+
+// Both emitted-Worker journeys own a build. Keep their registrations in this
+// file so Node runs them sequentially, including each journey's cleanup.
+contract('BASE-AGENT-013', 'production agent documentation matches the current MCP inventory without effects', async () => {
+  await buildDocumentationWorker();
+  await documentationJourney();
 });

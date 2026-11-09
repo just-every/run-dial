@@ -7,6 +7,8 @@ import { dialPeople } from "./people";
 import { dialTools } from "./tools";
 import { dialResources } from "./resources";
 import { templateMatches } from "../../modules/agent-door/registry.ts";
+import { registryMetadata } from "./registry-metadata";
+import { agentDocumentation } from "./documentation";
 
 export const capabilities = ["tools", "policy", "pause", "audit", "idempotency"] as const;
 export const specialist = "scheduling coordinator";
@@ -37,5 +39,8 @@ export function dialAgentDoor(env: AppBindings, runtime: RuntimeEnvironment, ser
     }],
   } satisfies AgentDoorOptions & { capabilities: typeof capabilities };
   const door = createAgentDoor(options);
-  return { door, async handle(request: Request) { return await business.handle(request) ?? await door.handle(request); } };
+  return { door, async handle(request: Request) {
+    if (new URL(request.url).pathname === "/docs/agents") return agentDocumentation(request, registryMetadata(options));
+    return await business.handle(request) ?? await door.handle(request);
+  } };
 }

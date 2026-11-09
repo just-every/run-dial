@@ -5242,6 +5242,10 @@
       "sha256": "9ca7e00fd5127720248add71ab00f793d4eb53c1e2ec19c4ee0894d1ee073d88",
       "executable": false
     },
+    "src/agent-door/documentation.ts": {
+      "sha256": "be361ee6ebca2e150e91c26ccd70c318d82bd64730152276989e19a0069d4e26",
+      "executable": false
+    },
     "src/agent-door/entitlement-tools.ts": {
       "sha256": "1f5b92084d49cb3cacc0e6852b2b01725e8672b40f588175435773ceba01b06e",
       "executable": false
@@ -5267,7 +5271,7 @@
       "executable": false
     },
     "src/agent-door/index.server.ts": {
-      "sha256": "11ea79c146f28338d9c1c53209ef17efc29dcc7cd4aa9d3686595244174cda10",
+      "sha256": "92f86267d57b385ee451d3708910d5a98b56ed97c2d3c4cb2d82b241b0970a39",
       "executable": false
     },
     "src/agent-door/link-tools.ts": {
@@ -5304,6 +5308,10 @@
     },
     "src/agent-door/README.md": {
       "sha256": "6702fd2b96a05344f06994a49bff9d756a2bd60cf3265980a5e2feca1be48ff3",
+      "executable": false
+    },
+    "src/agent-door/registry-metadata.ts": {
+      "sha256": "21fd108690f3f52439fe82e33960a6bc8f7faf5463b3801ca9288f91aab7655f",
       "executable": false
     },
     "src/agent-door/registry.md": {
@@ -5635,7 +5643,7 @@
       "executable": false
     },
     "src/core/app/worker.ts": {
-      "sha256": "c2cbfc477be8a4852981ea74702033186bdf6151399387ded336f6a2204fec3e",
+      "sha256": "4eb871bb1f1ddd0b7b239cd30dffafb377c78d0246566977ee507bbe53f45432",
       "executable": false
     },
     "src/core/app/workspace-reads.server.ts": {
@@ -9007,7 +9015,11 @@
       "executable": false
     },
     "tests/agent-door/core-journey.mjs": {
-      "sha256": "8c0ae8c624d9738eb38e86042ee751ae3e120b6401714d8180e96b3e4b589e61",
+      "sha256": "277ee8781a7994bf19be1d025ed733df0e1cf655b8219a4b816554d4c03107ce",
+      "executable": false
+    },
+    "tests/agent-door/documentation-journey.mjs": {
+      "sha256": "d9d01d05d0dde923852479c3550580c0f1e5e1f1d158cc40351339b2728c4193",
       "executable": false
     },
     "tests/agent-door/native-calendar.mjs": {
@@ -10175,7 +10187,7 @@
       "executable": false
     },
     "tests/managed-mail.test.mjs": {
-      "sha256": "5e03cce1439dadc41221cd12ee005d891d98935908b83b8d9ba098adfa704c54",
+      "sha256": "2b16ff70d255f7b060232936840ddcb868d69eceb5a64e0dac3226d3724bb382",
       "executable": false
     },
     "tests/move-in-booking-actions.test.mjs": {
@@ -10671,7 +10683,7 @@
       "executable": false
     },
     "tests/operator-management.test.mjs": {
-      "sha256": "2d5acdb725224a75a26b3f6a7fe9b2b0e305f4ba30164eedf1e5b937b7635fec",
+      "sha256": "67c224def15fb3ed99f3675dcd5ba554b23dc66bb8636efcde12a1f5b96f4f84",
       "executable": false
     },
     "tests/operator-management/clock.ts": {
