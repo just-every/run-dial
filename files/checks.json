@@ -1,0 +1,63 @@
+{
+  "head": "daa0f616393b588dffb04db95b696d2c9971f20b",
+  "node": "22.20.0",
+  "pnpm": "10.12.4",
+  "browser": {
+    "path": "/usr/bin/chromium",
+    "version": "154.0.8037.57",
+    "headless": true,
+    "no_sandbox": true,
+    "adapter": "task-only lazy preload outside product repository"
+  },
+  "checks": [
+    {
+      "command": "pnpm exec eslint tests/booking-axe/run-axe.mjs --max-warnings=0",
+      "exit": 0
+    },
+    {
+      "command": "pnpm run typecheck",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer setup --non-interactive (required owner supplied)",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "pnpm run deployment-spec:check",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node --test --test-concurrency=2 tests/embed-popup.test.mjs tests/embed-document-authorization.test.mjs",
+      "exit": 0,
+      "tests": 7,
+      "passed": 7
+    },
+    {
+      "command": "node scripts/ci-verify.mjs test 2",
+      "exit": 0,
+      "tests": 8,
+      "passed": 8
+    },
+    {
+      "command": "node scripts/ci-verify.mjs test 18",
+      "exit": 0,
+      "tests": 10,
+      "passed": 10
+    }
+  ],
+  "ci": {
+    "conclusion": "failure",
+    "head_sha": "daa0f616393b588dffb04db95b696d2c9971f20b",
+    "html_url": "https://github.com/just-every/run-dial/actions/runs/42554159361",
+    "status": "completed"
+  },
+  "disposition": "BLOCKED: CI shard 3 does not reproduce locally"
+}

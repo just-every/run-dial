@@ -1,0 +1,11 @@
+{
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f41-pc1",
+  "head": "daa0f616393b588dffb04db95b696d2c9971f20b",
+  "push_guard_exit": 0,
+  "advertised_head": "daa0f616393b588dffb04db95b696d2c9971f20b",
+  "main": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "pr": null,
+  "verify_run": 42554159361,
+  "product_and_evidence_custody_are_separate": true
+}

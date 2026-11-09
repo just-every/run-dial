@@ -1,0 +1,244 @@
+CI test 2: tests/approval-screens.test.mjs, tests/dev-identity.test.mjs, tests/managed-mail.test.mjs, tests/payments-wire.test.mjs
+TAP version 13
+# Waiting one native public-admission minute before paid approval screens.
+# Waiting one native public-admission minute before combined approval screens.
+# PAY-007 approval screens: PASS 68 screens at 1440 and 390, no overflow or serious axe finding; all controls visibly labeled.
+# EVENT-008 browser proof passed: 14 screenshots at 1440 and 390.
+# Subtest: [PAY-007] single and combined approval screens share one existing browser at 1440 and 390
+ok 1 - [PAY-007] single and combined approval screens share one existing browser at 1440 and 390
+  ---
+  duration_ms: 467309.204763
+  type: 'test'
+  ...
+# Subtest: [OPER-005] local dev identity signs in as the owner and a persona only behind the checkout's key, through any proxy, and never survives it
+not ok 2 - [OPER-005] local dev identity signs in as the owner and a persona only behind the checkout's key, through any proxy, and never survives it
+  ---
+  duration_ms: 61858.194316
+  type: 'test'
+  location: '/workspace/run-dial/tests/dev-identity.test.mjs:17:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The dev runtime did not start: ───────────┼────────┤
+    │ 0072_invitee_guests.sql                     │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0073_booking_approval_requests.sql          │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0074_payment_erasure.sql                    │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0075_paid_approval.sql                      │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0076_processor_erasure_requests.sql         │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0077_client_records.sql                     │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0078_meeting_polls.sql                      │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0079_payment_reconciliation.sql             │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0080_workspace_notices.sql                  │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0081_your_hours.sql                         │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0082_site_look.sql                          │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0083_payment_entitlements.sql               │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0084_microsoft_calendar.sql                 │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0085_analytics.sql                          │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0086_import_role_boundary.sql               │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0087_webhook_sources.sql                    │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0088_webhooks.sql                           │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0089_event_type_webhook_cleanup.sql         │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0090_api_credentials.sql                    │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0091_public_api.sql                         │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0092_workflows.sql                          │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0093_payment_coupons.sql                    │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0094_coupon_issuance_receipts.sql           │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0095_api_consent.sql                        │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0096_api_authority_cleanup.sql              │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0097_api_authority_revocation.sql           │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0098_booking_webhook_hosts.sql              │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0099_business_settings.sql                  │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0100_business_people.sql                    │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0101_agent_door.sql                         │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0102_group_seat_capacity.sql                │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0103_poll_reminders.sql                     │ 🕒️    │
+    ├─────────────────────────────────────────────┼────────┤
+    │ 0104_confirmation_language.sql              │ 🕒️    │
+    └─────────────────────────────────────────────┴────────┘
+    🌀 Executing on local database dial-local (00000000-0000-0000-0000-000000000000) from ../../tmp/dial-dev-identity-umjKU6/d1/v3/d1:
+    🌀 To execute on your remote database, add a --remote flag to your wrangler command.
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/run-dial/tests/dev-identity.test.mjs:34:59)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# 1440px saved appearance: {"display":"flex","fontSize":"13px","iconHeight":16}
+# 1440px production Advanced sheet: {"x":820,"y":0,"width":620,"height":900}
+# 390px saved appearance: {"display":"flex","fontSize":"13px","iconHeight":16}
+# 390px production Advanced sheet: {"x":0,"y":0,"width":390,"height":844}
+# Subtest: NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner
+ok 3 - NOTIFY-005: the emitted Worker sends Managed sign-in mail, refuses redirects, queues throttled mail and shows a retired credential to its owner
+  ---
+  duration_ms: 42231.649228
+  type: 'test'
+  ...
+# 401: permanent failure, unhealthy sender, publication blocked; provider response body stays private
+# 307: rejected, no redirect destination requested; fetch redirect=manual
+# sign-in: exact POST URL, bearer authorization, JSON recipient/subject/text/html; Auto-Submitted is relay-owned
+# 429: Retry-After=180 persisted for invitee and owner; early delivery skipped; due retry accepted once
+# real booking: relay 202 with a null receipt is durably accepted; both cancellation notices succeed; invitee calendar file is available through the mail’s private download link
+# 1440/390: login_hint survives SSR and hydration, bare/invalid hints stay empty, explicit submission succeeds, owner sees credential recovery
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# PAY-004 packages, coupons, atomic redemptions, cancellation credit, expiry and signed membership renewal passed.
+# PAY-001 paid booking journey passed.
+# Subtest: PAY-001 a paid booking confirms only after Stripe's signed event
+not ok 4 - PAY-001 a paid booking confirms only after Stripe's signed event
+  ---
+  duration_ms: 95067.757779
+  type: 'test'
+  location: '/workspace/run-dial/tests/payments-wire.test.mjs:33:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    node:internal/modules/run_main:123
+        triggerUncaughtException(
+        ^
+    
+    AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+    
+    409 !== 303
+    
+        at file:///workspace/run-dial/tests/booking-wire/payment-entitlements-screens.mjs:36:10 {
+      generatedMessage: true,
+      code: 'ERR_ASSERTION',
+      actual: 409,
+      expected: 303,
+      operator: 'strictEqual',
+      diff: 'simple'
+    }
+    
+    Node.js v22.20.0
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    file:///workspace/run-dial/tests/booking-wire/payment-entitlements-screens.mjs:36:10 {
+    ChildProcess.<anonymous> (file:///workspace/run-dial/tests/booking-axe/run-axe.mjs:32:89)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess.emit (node:domain:489:12)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# PROBE stale fee consent: PASS
+# PROBE pending refund and later failure: PASS
+# PROBE transient refund response recovers once: PASS
+# PROBE lost invoice finalization response: PASS
+# PROBE cancellation settling payments: PASS (nine deterministic orders)
+# PROBE erasure does not count a refused invoice Customer: PASS
+# PROBE erasure counts a Customer created before invoice refusal: PASS
+# PROBE erasure reconciles Checkout paid before its webhook without confirming: PASS
+# DATA-007: PASS exact detach/anonymize/calendar request list, named refusal, pending recovery, local erasure, control isolation and idempotency
+# PROBE DATA-007 processor requests match Stripe and calendar outcomes without retaining personal data: PASS
+# PAY-006: PASS dashboard refund, invalid signature/stale/foreign refusal, duplicate once, refundable cap and no money-moving call
+# PROBE PAY-006 signed dashboard refund reconciles once without moving money: PASS
+# PAY-006: PASS charge and processor fee lookup, payout allocation/dedupe, dispute flag/close/stale replay and credential-free CSV
+# PROBE PAY-006 dispute flags and closes without reopening on old events: PASS
+# PAY-006: PASS QuickBooks missing/unsigned/mismatched/anonymous/expired/replayed OAuth state and sealed token custody
+# PROBE PAY-006 QuickBooks OAuth refusals store no credential and valid state is single-use: PASS
+# PAY-006: PASS sandbox base for every accounting call, mapped income account, one anonymous sales receipt/payment, lost response recovery, repeated/concurrent retry and revoked token stops sends
+# PROBE PAY-006 QuickBooks one receipt per captured payment survives response loss, repeat and concurrent export: PASS
+# PAY-006: PASS payer erasure removes live facts and exports while anonymous amounts/references survive
+# PROBE PAY-006 erasure keeps reconciliation and export references only in anonymous audit: PASS
+# PAY-003 deposits, refunds and fees journey passed.
+# Subtest: PAY-003/PAY-006 deposits, refunds, fees and reconciled accounting exports move or record money once, only as shown
+not ok 5 - PAY-003/PAY-006 deposits, refunds, fees and reconciled accounting exports move or record money once, only as shown
+  ---
+  duration_ms: 120454.755525
+  type: 'test'
+  location: '/workspace/run-dial/tests/payments-wire.test.mjs:35:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    node:internal/modules/run_main:123
+        triggerUncaughtException(
+        ^
+    
+    AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+    
+    409 !== 303
+    
+        at file:///workspace/run-dial/scripts/verify-money-screens.mjs:25:10 {
+      generatedMessage: true,
+      code: 'ERR_ASSERTION',
+      actual: 409,
+      expected: 303,
+      operator: 'strictEqual',
+      diff: 'simple'
+    }
+    
+    Node.js v22.20.0
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    file:///workspace/run-dial/scripts/verify-money-screens.mjs:25:10 {
+    ChildProcess.<anonymous> (file:///workspace/run-dial/tests/booking-axe/run-axe.mjs:32:89)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess.emit (node:domain:489:12)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# PAY-005 sales tax, receipts and invoices journey passed.
+# Subtest: PAY-005 Stripe Tax shows and charges tax by address, and receipts and invoices carry matching amounts
+ok 6 - PAY-005 Stripe Tax shows and charges tax by address, and receipts and invoices carry matching amounts
+  ---
+  duration_ms: 8627.323652
+  type: 'test'
+  ...
+# PROBE BOOK-015 paid reschedule: original manage selection and commit at approximately 23 hours -> 409 reschedule_cutoff twice; booking, authority, reminders, calendar and money unchanged
+# PROBE BOOK-015 paid cancellation: original manage cancel at approximately 23 hours -> 409 cancellation_cutoff twice; booking, authority, reminders, calendar and money unchanged
+# PROBE BOOK-015 paid control: original manage outside 24 hours -> reschedule succeeds; free-window cancellation refunds 9000 cents exactly once despite repeated cancellation and signed capture replay
+# Subtest: BOOK-015 paid invitee cut-offs refuse changes without effects while permitted changes and refunds succeed once
+ok 7 - BOOK-015 paid invitee cut-offs refuse changes without effects while permitted changes and refunds succeed once
+  ---
+  duration_ms: 6458.75543
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 4
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 467844.168897
+Verification evidence: /home/agent/rer-consolidation/work/sd-dial-c-f41-pc1/repro3-chromium
+file:///workspace/run-dial/scripts/ci-verify.mjs:37
+    child.once("exit", (code, signal) => code === 0 ? done() : reject(new Error(`${command} ${args.join(" ")} failed: ${signal ?? code}`)));
+                                                                      ^
+
+Error: /home/agent/.rer/toolchain/node-22.20.0/node_modules/node/bin/node --test --test-concurrency=2 tests/approval-screens.test.mjs tests/dev-identity.test.mjs tests/managed-mail.test.mjs tests/payments-wire.test.mjs failed: 1
+    at ChildProcess.<anonymous> (file:///workspace/run-dial/scripts/ci-verify.mjs:37:71)
+    at Object.onceWrapper (node:events:634:26)
+    at ChildProcess.emit (node:events:519:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+
+Node.js v22.20.0

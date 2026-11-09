@@ -1,0 +1,50 @@
+{
+  "runtime": "production Worker and native D1; separate parent site; no live provider",
+  "checks": [
+    {
+      "unallowlistedParent": "404, frame-ancestors none, no booking content, cookies or writes"
+    },
+    {
+      "width": 1440,
+      "redirect": true,
+      "bookingCountDelta": 1,
+      "eventCount": 1,
+      "parentNavigations": 1,
+      "nativeReplay": true,
+      "messageReplay": false,
+      "cookies": 0,
+      "keyboard": "open, close, frame Escape, focus containment and return"
+    },
+    {
+      "width": 1440,
+      "redirect": false,
+      "bookingCountDelta": 1,
+      "eventCount": 1,
+      "parentNavigations": 0,
+      "nativeReplay": true,
+      "messageReplay": true,
+      "cookies": 0,
+      "keyboard": "open, close, frame Escape, focus containment and return"
+    },
+    {
+      "width": 390,
+      "redirect": true,
+      "bookingCountDelta": 1,
+      "eventCount": 1,
+      "parentNavigations": 1,
+      "nativeReplay": true,
+      "messageReplay": false,
+      "cookies": 0,
+      "keyboard": "phone booking smoke"
+    }
+  ],
+  "screenshots": [
+    "popup-1440-launcher.png",
+    "popup-1440-picker.png",
+    "popup-1440-details.png",
+    "popup-1440-receipt.png",
+    "popup-390-launcher.png",
+    "popup-390-picker.png",
+    "popup-390-details.png"
+  ]
+}

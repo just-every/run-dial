@@ -1,0 +1,32 @@
+{
+  "head": "daa0f616393b588dffb04db95b696d2c9971f20b",
+  "branch": "cloud/sd-dial-c-f41-pc1",
+  "main_included": "ce4d503e84399a50618979dd40493b227e5a60a2",
+  "full_history": true,
+  "contract_write": {
+    "command": "node scripts/contract-docs.mjs write --clauses EMBED-001 BOOK-013",
+    "exit": 0,
+    "output": "Contract documents regenerated."
+  },
+  "contract_check": {
+    "command": "node scripts/contract-docs.mjs check --clauses EMBED-001 BOOK-013",
+    "exit": 0,
+    "output": "Contract documents are current."
+  },
+  "generated_views": "restored from origin/main; not committed",
+  "lock": {
+    "write": "node scripts/edition-authoring/cli.mjs lock",
+    "check": "node scripts/edition-authoring/cli.mjs check",
+    "exit": 0,
+    "ok": true,
+    "sha256": "087d00771c5504460eea00bc58364021dd62ba8a5cfc5d53be337d863eb94f9a"
+  },
+  "ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration added or edited"
+  },
+  "contract_unchanged": true,
+  "worktree_clean": true,
+  "candidate_identity": "All four candidate commits including side parents passed identity and trailer checks before push."
+}

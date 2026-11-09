@@ -1,0 +1,20 @@
+[
+  {
+    "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+    "job": 128908503803,
+    "command": "CI=true node scripts/ci-verify.mjs test 18",
+    "test": "native destructive management preserves authorship and protects self and setup owner",
+    "exit": 1,
+    "failure": "setup owner is protected until ownership transfer: 403 !== 409",
+    "repair": "Merge main ce4d503e84399a50618979dd40493b227e5a60a2, which anchors the pinned native test clock to a current bucket. No authority code or assertion changes."
+  },
+  {
+    "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+    "job": 128908503833,
+    "command": "CI=true NODE_OPTIONS=--require=/tmp/cloud-browser.cjs node scripts/ci-verify.mjs test 2",
+    "test": "PAY-001 a paid booking confirms only after Stripe's signed event; PAY-003 and PAY-006 money screens",
+    "exit": 1,
+    "failure": "payment-entitlements-screens.mjs:36 and verify-money-screens.mjs:25: 409 !== 303",
+    "repair": "Give each existing browser Worker fixture a separate native origin and disable its unused inspector. Keep all assertions and registrations."
+  }
+]

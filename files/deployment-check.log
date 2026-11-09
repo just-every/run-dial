@@ -1,0 +1,5 @@
+
+> dial@0.5.0 deployment-spec:check /workspace/run-dial
+> node scripts/projects/deployment-spec.mjs check
+
+{"ok":true,"path":"management/integration/deployment-spec.json","mode":"check"}

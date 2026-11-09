@@ -1,0 +1,17 @@
+TAP version 13
+# Subtest: [OPER-002] native destructive management preserves authorship and protects self and setup owner
+ok 1 - [OPER-002] native destructive management preserves authorship and protects self and setup owner
+  ---
+  duration_ms: 68198.585789
+  type: 'test'
+  ...
+# {"scenario":"same-window","now":1794194999999,"tokenLimit":5,"statuses":[303,400,400,400,400,429,429,429],"replenished":400,"renewed":[400,400,400,400,429],"sessionDelta":1}
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 68318.503628

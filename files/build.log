@@ -1,0 +1,247 @@
+Heavy job admitted: Dial build:workflow [49b7826ea445]
+Checking pinned pnpm
+10.12.4
+Building your application
+
+> dial@0.5.0 build:app [REDACTED]
+> node scripts/render-wrangler.mjs && vite build
+
+▲ [WARNING] Proxy environment variables detected. We'll use your proxy for fetch requests.
+
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./scripts/client-chunks" without a file extension (vite.config.ts:1:36). Add the file extension
+  - import "./scripts/archive/schema-plugin" without a file extension (vite.config.ts:11:31). Add the file extension
+  - import "./scripts/build-assets" without a file extension (vite.config.ts:12:29). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:47558) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./scripts/client-chunks" without a file extension (vite.config.ts:1:36). Add the file extension
+  - import "./scripts/archive/schema-plugin" without a file extension (vite.config.ts:11:31). Add the file extension
+  - import "./scripts/build-assets" without a file extension (vite.config.ts:12:29). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "./scripts/client-chunks" without a file extension (vite.config.ts:1:36). Add the file extension
+  - import "./scripts/archive/schema-plugin" without a file extension (vite.config.ts:11:31). Add the file extension
+  - import "./scripts/build-assets" without a file extension (vite.config.ts:12:29). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+vite v8.2.2 building client environment for production...
+transforming...
+[plugin tanstack-start-core::server-fn:client] [REDACTED]/src/core/app/loaders.ts:5:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:client] [REDACTED]/src/core/app/loaders.ts:12:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:client] [REDACTED]/src/core/app/loaders.ts:19:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+✓ 1066 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/client/.assetsignore                                              0.02 kB
+dist/client/assets/favicon-Dlryyr0G.svg                                0.36 kB │ gzip:   0.26 kB
+dist/client/assets/figtree-latin-ext-wght-normal-DCwSJGxG.woff2       10.28 kB
+dist/client/assets/figtree-latin-wght-normal-D_ZTVpCC.woff2           20.15 kB
+dist/client/assets/tooltip-rQZQDSVA.css                                0.26 kB │ gzip:   0.20 kB
+dist/client/assets/autosave-B8_E1T0M.css                               1.11 kB │ gzip:   0.51 kB
+dist/client/assets/fonts-7nhrF4gA.css                                  1.65 kB │ gzip:   0.52 kB
+dist/client/assets/event-settings-routes-CJNb6H4B.css                  2.54 kB │ gzip:   0.94 kB
+dist/client/assets/DocsPage-DpXUojm-.css                              17.44 kB │ gzip:   4.11 kB
+dist/client/assets/index-DQJZhzrC.css                                 76.81 kB │ gzip:  15.60 kB
+dist/client/assets/app.event-types_._id_.availability-BvRk9kiK.js      0.00 kB │ gzip:   0.02 kB
+dist/client/assets/setup.profile-CUdt8Aja.js                           0.07 kB │ gzip:   0.09 kB
+dist/client/assets/app.event-types_._id.advanced-gQ449vHJ.js           0.08 kB │ gzip:   0.09 kB
+dist/client/assets/setup.event-types_._id.advanced-gQ449vHJ.js         0.08 kB │ gzip:   0.09 kB
+dist/client/assets/setup.event-types-DN68Z4Ik.js                       0.12 kB │ gzip:   0.13 kB
+dist/client/assets/poll._id-BdJinMmC.js                                0.18 kB │ gzip:   0.16 kB
+dist/client/assets/docs._slug-DRoBqegD.js                              0.20 kB │ gzip:   0.17 kB
+dist/client/assets/docs.index-BF2f9ouh.js                              0.20 kB │ gzip:   0.17 kB
+dist/client/assets/manage._token-S2QMSb8G.js                           0.21 kB │ gzip:   0.18 kB
+dist/client/assets/app.event-types_._id_.preview-CpzGpDgJ.js           0.21 kB │ gzip:   0.18 kB
+dist/client/assets/embed.manage._token-9BftIE41.js                     0.22 kB │ gzip:   0.19 kB
+dist/client/assets/book._handle_._slug-BHmv-hxP.js                     0.23 kB │ gzip:   0.19 kB
+dist/client/assets/book._handle_._slug_.request-QgnQFgNb.js            0.23 kB │ gzip:   0.19 kB
+dist/client/assets/embed._handle._slug-D8ifSAx7.js                     0.24 kB │ gzip:   0.20 kB
+dist/client/assets/embed._handle._slug_.request-BbllXaQJ.js            0.25 kB │ gzip:   0.20 kB
+dist/client/assets/index-D8H1qkoK.js                                   0.25 kB │ gzip:   0.20 kB
+dist/client/assets/book._handle_._slug_.confirmed-Cb4LNBmp.js          0.26 kB │ gzip:   0.21 kB
+dist/client/assets/embed._handle._slug_.confirmed-ylvOztdR.js          0.27 kB │ gzip:   0.22 kB
+dist/client/assets/app.event-types_._id.hours-CUhPwDgm.js              0.27 kB │ gzip:   0.21 kB
+dist/client/assets/setup.event-types_._id.hours-BLSwOZhC.js            0.27 kB │ gzip:   0.21 kB
+dist/client/assets/book._handle_._slug_.details-DSLm7Avv.js            0.31 kB │ gzip:   0.24 kB
+dist/client/assets/embed._handle._slug_.details-BN5_3CfN.js            0.32 kB │ gzip:   0.25 kB
+dist/client/assets/rolldown-runtime-CbXtAM7H.js                        0.58 kB │ gzip:   0.36 kB
+dist/client/assets/flow-shell-BRMeXZz_.js                              0.67 kB │ gzip:   0.34 kB
+dist/client/assets/timezone-lock-DI_yop-5.js                           0.94 kB │ gzip:   0.54 kB
+dist/client/assets/route-load-error-BKcPKdyv.js                        0.97 kB │ gzip:   0.39 kB
+dist/client/assets/manage.invite._token-BFiYfu7n.js                    1.62 kB │ gzip:   0.82 kB
+dist/client/assets/invitee-time-DlwjZcwv.js                            1.64 kB │ gzip:   0.82 kB
+dist/client/assets/_virtual_dial-docs-Cx9jQfBa.js                      1.90 kB │ gzip:   0.67 kB
+dist/client/assets/booking-recovery-draft-BKg4j3qB.js                  2.20 kB │ gzip:   1.00 kB
+dist/client/assets/getting-started-BgHNQpvI.js                         2.24 kB │ gzip:   0.96 kB
+dist/client/assets/privacy-BpqP6Vhg.js                                 2.25 kB │ gzip:   1.09 kB
+dist/client/assets/setup.index-Cz_YZFuY.js                             2.43 kB │ gzip:   1.28 kB
+dist/client/assets/navigation-BgOQO2ID.js                              2.63 kB │ gzip:   1.17 kB
+dist/client/assets/manage.balance._token-CCaLhQkw.js                   3.08 kB │ gzip:   1.45 kB
+dist/client/assets/signin-B9JKiuhX.js                                  3.75 kB │ gzip:   1.59 kB
+dist/client/assets/book._handle-to9U9Kva.js                            3.86 kB │ gzip:   1.46 kB
+dist/client/assets/book._handle_._slug_.paid-CQ86XrJM.js               4.10 kB │ gzip:   1.67 kB
+dist/client/assets/document-seeds-7xJP1H6H.js                          4.75 kB │ gzip:   1.55 kB
+dist/client/assets/importing-schedulers-73bW6BD-.js                    6.06 kB │ gzip:   2.15 kB
+dist/client/assets/importing-templates-QbThdMmE.js                     6.63 kB │ gzip:   2.45 kB
+dist/client/assets/DocsPage-4f63N_Ex.js                                7.10 kB │ gzip:   2.07 kB
+dist/client/assets/hours-row-C021JM2h.js                               7.63 kB │ gzip:   2.62 kB
+dist/client/assets/updating-BV0VAP45.js                                8.73 kB │ gzip:   3.14 kB
+dist/client/assets/page-GtvHWFLO.js                                    9.04 kB │ gzip:   3.50 kB
+dist/client/assets/booking-page-lrbAluHO.js                            9.82 kB │ gzip:   3.60 kB
+dist/client/assets/event-hours-Bmm1YRaj.js                            11.50 kB │ gzip:   3.90 kB
+dist/client/assets/backups-DfvJqB_U.js                                12.18 kB │ gzip:   4.30 kB
+dist/client/assets/request-page-BMHlZl51.js                           12.40 kB │ gzip:   4.40 kB
+dist/client/assets/app.settings_.hours-ByExUTnY.js                    13.22 kB │ gzip:   4.19 kB
+dist/client/assets/importing-BeLhw9W7.js                              14.06 kB │ gzip:   5.42 kB
+dist/client/assets/calendar-and-email-B8ZYKCEc.js                     14.62 kB │ gzip:   4.84 kB
+dist/client/assets/install-CPUutmkE.js                                29.56 kB │ gzip:   8.55 kB
+dist/client/assets/event-settings-routes-DwB88dMD.js                  39.25 kB │ gzip:  11.44 kB
+dist/client/assets/event-page-Cr-yWKUZ.js                             65.12 kB │ gzip:  18.43 kB
+dist/client/assets/app-runtime-DjkqwODt.js                         1,087.62 kB │ gzip: 314.26 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.14s
+vite v8.2.2 building ssr environment for production...
+transforming...
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts?tss-serverfn-split:5:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts?tss-serverfn-split:12:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts?tss-serverfn-split:19:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts:5:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts:12:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts:19:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+✓ 1814 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/server/assets/favicon-Dlryyr0G.svg                                   0.36 kB │ gzip:   0.26 kB
+dist/server/wrangler.json                                                 1.94 kB │ gzip:   0.94 kB
+dist/server/assets/figtree-latin-ext-wght-normal-DCwSJGxG.woff2          10.28 kB
+dist/server/assets/figtree-latin-wght-normal-D_ZTVpCC.woff2              20.15 kB
+dist/server/.vite/manifest.json                                          37.63 kB │ gzip:   4.70 kB
+dist/server/assets/tooltip-rQZQDSVA.css                                   0.26 kB │ gzip:   0.20 kB
+dist/server/assets/saved-state-B8_E1T0M.css                               1.11 kB │ gzip:   0.51 kB
+dist/server/assets/fonts-7nhrF4gA.css                                     1.65 kB │ gzip:   0.52 kB
+dist/server/assets/event-settings-routes-CJNb6H4B.css                     2.54 kB │ gzip:   0.94 kB
+dist/server/assets/DocsPage-DpXUojm-.css                                 17.44 kB │ gzip:   4.11 kB
+dist/server/assets/router-DQJZhzrC.css                                   76.81 kB │ gzip:  15.60 kB
+dist/server/assets/app.event-types_._id_.availability-BvRk9kiK.js         0.00 kB │ gzip:   0.02 kB
+dist/server/assets/public-booking-C9UYM86z.js                             0.03 kB │ gzip:   0.05 kB
+dist/server/assets/setup.profile-03vC_Krb.js                              0.20 kB │ gzip:   0.15 kB
+dist/server/assets/app.event-types_._id.advanced-CDGFcVW-.js              0.24 kB │ gzip:   0.18 kB
+dist/server/assets/setup.event-types_._id.advanced-BbInnfvg.js            0.25 kB │ gzip:   0.18 kB
+dist/server/assets/empty-plugin-adapters-D_0twvAa.js                      0.28 kB │ gzip:   0.18 kB
+dist/server/assets/start-D5-J66Wq.js                                      0.28 kB │ gzip:   0.21 kB
+dist/server/assets/setup.event-types-dCYc3qJV.js                          0.40 kB │ gzip:   0.25 kB
+dist/server/assets/poll._id-BiBZ7gUX.js                                   0.47 kB │ gzip:   0.29 kB
+dist/server/assets/use-hydrated-1-HATqAg.js                               0.48 kB │ gzip:   0.32 kB
+dist/server/assets/manage._token-B_J4kMWQ.js                              0.56 kB │ gzip:   0.33 kB
+dist/server/assets/public-config-DPtB-dGt.js                              0.58 kB │ gzip:   0.37 kB
+dist/server/assets/embed.manage._token-TqbTr9cr.js                        0.59 kB │ gzip:   0.34 kB
+dist/server/assets/book._handle_._slug-DIuLSNZQ.js                        0.59 kB │ gzip:   0.34 kB
+dist/server/assets/event-price-pgfO0YIR.js                                0.59 kB │ gzip:   0.33 kB
+dist/server/assets/app.event-types_._id_.preview-CgPyr-qJ.js              0.60 kB │ gzip:   0.34 kB
+dist/server/assets/embed._handle._slug-BRMiLZe-.js                        0.61 kB │ gzip:   0.36 kB
+dist/server/assets/book._handle_._slug_.request-DIW8CRLR.js               0.62 kB │ gzip:   0.35 kB
+dist/server/assets/app.event-types_._id.hours-Dr92vz7X.js                 0.64 kB │ gzip:   0.34 kB
+dist/server/assets/document-data-SU1px10g.js                              0.64 kB │ gzip:   0.34 kB
+dist/server/assets/setup.event-types_._id.hours-DVd6LJi2.js               0.64 kB │ gzip:   0.34 kB
+dist/server/assets/embed._handle._slug_.request-Bcddi9nk.js               0.64 kB │ gzip:   0.36 kB
+dist/server/assets/docs._slug-E7A7ygeA.js                                 0.64 kB │ gzip:   0.39 kB
+dist/server/assets/host-avatar-9VW4fDsU.js                                0.67 kB │ gzip:   0.42 kB
+dist/server/assets/docs.index-6e4I8uW6.js                                 0.68 kB │ gzip:   0.42 kB
+dist/server/assets/book._handle_._slug_.confirmed-BAvY2Zk9.js             0.72 kB │ gzip:   0.39 kB
+dist/server/assets/embed._handle._slug_.confirmed-I88dW6wU.js             0.75 kB │ gzip:   0.41 kB
+dist/server/assets/utils-DYen6U__.js                                      0.81 kB │ gzip:   0.44 kB
+dist/server/assets/book._handle_._slug_.details-CUQe1n3z.js               0.87 kB │ gzip:   0.44 kB
+dist/server/assets/embed._handle._slug_.details-DiiJK9Ej.js               0.90 kB │ gzip:   0.46 kB
+dist/server/assets/page-load-transport-C9awLnPk.js                        0.90 kB │ gzip:   0.51 kB
+dist/server/assets/not-found-DhdZhR3a.js                                  0.94 kB │ gzip:   0.51 kB
+dist/server/assets/booking-search-C-HQqkfd.js                             1.10 kB │ gzip:   0.42 kB
+dist/server/assets/useNavigate-vrLjABdP.js                                1.12 kB │ gzip:   0.62 kB
+dist/server/assets/host-profile-Cd1DuPzA.js                               1.14 kB │ gzip:   0.60 kB
+dist/server/assets/__23tanstack-start-server-fn-resolver-DoVZNxYy.js      1.33 kB │ gzip:   0.60 kB
+dist/server/assets/empty-state-5-KMKzvh.js                                1.45 kB │ gzip:   0.67 kB
+dist/server/assets/flow-shell-z_lWR7MX.js                                 1.45 kB │ gzip:   0.55 kB
+dist/server/assets/day-picker-model-BK1CAgYe.js                           1.52 kB │ gzip:   0.70 kB
+dist/server/assets/redirect-BDbpra0T.js                                   1.75 kB │ gzip:   0.85 kB
+dist/server/assets/timezone-choices-YmsSq9LG.js                           1.84 kB │ gzip:   0.81 kB
+dist/server/assets/timezone-lock-Bx2YgFSo.js                              2.11 kB │ gzip:   0.90 kB
+dist/server/assets/useRouterState-DGff7GRn.js                             2.23 kB │ gzip:   0.88 kB
+dist/server/assets/_virtual_dial-docs-BsDmPVAi.js                         2.28 kB │ gzip:   0.70 kB
+dist/server/assets/config-69gvdvqz.js                                     2.30 kB │ gzip:   0.90 kB
+dist/server/assets/getting-started-DYkjnSUP.js                            2.43 kB │ gzip:   1.02 kB
+dist/server/assets/signin-options.server-CKgWHQ3t.js                      2.49 kB │ gzip:   1.13 kB
+dist/server/assets/load-DAkZ2hQt.js                                       2.50 kB │ gzip:   1.14 kB
+dist/server/assets/scheduling-Do8Fu06u.js                                 2.59 kB │ gzip:   1.16 kB
+dist/server/assets/redirect-policy-B1g67_nI.js                            3.01 kB │ gzip:   1.28 kB
+dist/server/assets/invitee-time-q0GcF-kM.js                               3.09 kB │ gzip:   1.17 kB
+dist/server/assets/DialRing-C1TDuYGK.js                                   3.12 kB │ gzip:   1.31 kB
+dist/server/assets/loaders-DpXxlGPm.js                                    3.18 kB │ gzip:   1.05 kB
+dist/server/assets/privacy-P1mBsaqj.js                                    3.31 kB │ gzip:   1.32 kB
+dist/server/assets/manage.invite._token-hW8lBG_0.js                       3.34 kB │ gzip:   1.22 kB
+dist/server/assets/page-header-BsNIWQz9.js                                3.38 kB │ gzip:   1.11 kB
+dist/server/assets/operator-format-DMAr_zlM.js                            3.56 kB │ gzip:   1.22 kB
+dist/server/assets/us-holidays-D1CGjKT5.js                                3.56 kB │ gzip:   1.57 kB
+dist/server/assets/MiniDial-BpVydSQr.js                                   3.67 kB │ gzip:   1.28 kB
+dist/server/assets/setup.index-DpOP0XEs.js                                4.20 kB │ gzip:   1.72 kB
+dist/server/assets/booking-recovery-draft-DcJplaVW.js                     4.24 kB │ gzip:   1.47 kB
+dist/server/assets/tooltip-NU34q8AZ.js                                    4.29 kB │ gzip:   1.73 kB
+dist/server/assets/hash-B514ezwO.js                                       4.69 kB │ gzip:   2.15 kB
+dist/server/assets/storage-BYHLyOaQ.js                                    4.91 kB │ gzip:   1.95 kB
+dist/server/assets/navigation-MN_m60HA.js                                 5.33 kB │ gzip:   1.87 kB
+dist/server/assets/host-setup-BRitcKWi.js                                 5.49 kB │ gzip:   1.88 kB
+dist/server/assets/manage.balance._token-Dp4eyEdM.js                      6.09 kB │ gzip:   2.09 kB
+dist/server/assets/importing-schedulers-1rQIoTCl.js                       6.32 kB │ gzip:   2.23 kB
+dist/server/assets/react-dom-Cr7rZ9b3.js                                  6.62 kB │ gzip:   1.94 kB
+dist/server/assets/booking-filters-BOfuMdmn.js                            6.65 kB │ gzip:   2.22 kB
+dist/server/assets/importing-templates-BLkEpdHH.js                        6.96 kB │ gzip:   2.53 kB
+dist/server/assets/signin-DRrc8dSm.js                                     7.00 kB │ gzip:   2.15 kB
+dist/server/assets/document-seeds-D7eQZedI.js                             7.13 kB │ gzip:   2.06 kB
+dist/server/assets/book._handle_._slug_.paid-DyiLo_Jg.js                  7.17 kB │ gzip:   2.28 kB
+dist/server/assets/public-shell-DNu2trAb.js                               7.86 kB │ gzip:   2.22 kB
+dist/server/assets/primitives-6l59ArR1.js                                 8.08 kB │ gzip:   2.66 kB
+dist/server/assets/book._handle-BR3NhS3i.js                               8.20 kB │ gzip:   2.18 kB
+dist/server/assets/route-load-error-Ck3N6yXJ.js                           8.29 kB │ gzip:   2.85 kB
+dist/server/assets/updating-BvN6YQSR.js                                   9.14 kB │ gzip:   3.24 kB
+dist/server/assets/page-WIDljXRl.js                                       9.43 kB │ gzip:   3.59 kB
+dist/server/assets/_tanstack-start-manifest_v-B8QfUsHf.js                 9.68 kB │ gzip:   1.50 kB
+dist/server/assets/use-record-read-BPtgkms7.js                            9.83 kB │ gzip:   3.77 kB
+dist/server/assets/booking-page-BpEqQCUB.js                              10.20 kB │ gzip:   3.70 kB
+dist/server/assets/correspondence-BK0nswo3.js                            10.80 kB │ gzip:   3.27 kB
+dist/server/assets/documents.server-T4N3CoYI.js                          12.30 kB │ gzip:   3.91 kB
+dist/server/assets/lazyRouteComponent-DkWuEtZc.js                        12.37 kB │ gzip:   3.03 kB
+dist/server/assets/backups-hZcLjVNB.js                                   12.70 kB │ gzip:   4.41 kB
+dist/server/assets/createMiddleware-C60DEulJ.js                          13.25 kB │ gzip:   3.75 kB
+dist/server/assets/hours-row-n4Ls2162.js                                 14.26 kB │ gzip:   3.80 kB
+dist/server/assets/importing-CF1M60eh.js                                 14.50 kB │ gzip:   5.55 kB
+dist/server/assets/saved-state-VMYBUKGf.js                               15.15 kB │ gzip:   5.15 kB
+dist/server/assets/calendar-and-email-BMQZdbTV.js                        15.18 kB │ gzip:   4.96 kB
+dist/server/assets/connection-message-CcjTUaVF.js                        15.81 kB │ gzip:   5.12 kB
+dist/server/assets/health-status-BbB6kzCM.js                             16.94 kB │ gzip:   4.66 kB
+dist/server/assets/extensions-Cv39OguG.js                                17.13 kB │ gzip:   3.82 kB
+dist/server/assets/DocsPage-ffBU-IOB.js                                  17.29 kB │ gzip:   3.95 kB
+dist/server/assets/event-hours-BauVKDwZ.js                               22.21 kB │ gzip:   5.59 kB
+dist/server/assets/app.settings_.hours-t_P7JFaU.js                       24.00 kB │ gzip:   5.76 kB
+dist/server/assets/request-page-Bir_Qkd_.js                              24.92 kB │ gzip:   6.13 kB
+dist/server/assets/install-fYzf5iEY.js                                   30.50 kB │ gzip:   8.70 kB
+dist/server/assets/event-settings-routes-DrDkOJ46.js                     66.00 kB │ gzip:  14.42 kB
+dist/server/assets/icons-CqM3Snal.js                                     70.86 kB │ gzip:  21.31 kB
+dist/server/assets/client-CzMFeL31.js                                    79.67 kB │ gzip:  16.10 kB
+dist/server/assets/Match-ByfDQoGl.js                                    121.37 kB │ gzip:  29.36 kB
+dist/server/assets/event-page--RbWf4k5.js                               124.37 kB │ gzip:  25.77 kB
+dist/server/assets/hono-CbRxUXP8.js                                     159.00 kB │ gzip:  36.63 kB
+dist/server/assets/schemas-DgsIkp-Z.js                                  181.25 kB │ gzip:  39.00 kB
+dist/server/assets/locations-1bruUf_W.js                                215.72 kB │ gzip:  42.28 kB
+dist/server/assets/router-CZroczeq.js                                   646.46 kB │ gzip: 133.12 kB
+dist/server/assets/availability-B1cpXeOL.js                             871.63 kB │ gzip: 211.91 kB
+dist/server/index.js                                                  1,334.57 kB │ gzip: 277.33 kB
+dist/server/assets/request-response-Dd3YrSGq.js                       1,866.67 kB │ gzip: 468.07 kB
+
+✓ built in 2.66s
+Your application is built
+build: complete (exit 0)

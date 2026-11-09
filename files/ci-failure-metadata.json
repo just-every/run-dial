@@ -1,0 +1,26 @@
+{
+  "head": "daa0f616393b588dffb04db95b696d2c9971f20b",
+  "run": 42554159361,
+  "event": "push",
+  "conclusion": "failure",
+  "failed_partition": {
+    "name": "Tests 3 of 22",
+    "job": 128956087168,
+    "step": "Run verification partition",
+    "observed_annotation": "Process completed with exit code 1.",
+    "duration": "10m 4s"
+  },
+  "aggregate_job": 128960210635,
+  "public_metadata_source": "https://github.com/just-every/run-dial/actions/runs/42554159361",
+  "assertion_log": "unavailable within exhausted ten-call API budget; public job page did not expose assertion detail",
+  "api_calls": 10,
+  "local_reproduction": {
+    "command": "CI=true NODE_OPTIONS=--require=/tmp/cloud-browser.cjs node scripts/ci-verify.mjs test 2",
+    "exit": 0,
+    "tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "result": "NOT REPRODUCED on exact candidate; no second repair guessed"
+  },
+  "disposition": "BLOCKED under the brief's non-reproducing Verify rule"
+}

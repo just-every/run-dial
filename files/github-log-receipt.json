@@ -1,0 +1,12 @@
+{
+  "run": 42534917583,
+  "attempt": 2,
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "jobs": [
+    128908503803,
+    128908503833
+  ],
+  "cli": "gh 2.46.0",
+  "result": "Log archive commands exited 0 with empty stdout, including an explicit attempt and full-log read; no remote assertion text recovered. No blob-redirect download attempted. Local reproduction output is retained separately.",
+  "api_budget_calls_used": 8
+}

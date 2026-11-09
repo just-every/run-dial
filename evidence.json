@@ -1,0 +1,232 @@
+{
+  "files": [
+    {
+      "blob": "2377f8a5323396d0265e97dd6cd30cb7510d99f0",
+      "bytes": 1604,
+      "path": "PLAN.md",
+      "sha256": "549349fae2a0372c3e7b867c51e7b56b495a1f32e2ef85bbc56b1cb2b8530d22"
+    },
+    {
+      "blob": "d9478f10b1a60b01c1cdad3773a1eed39edb13d8",
+      "bytes": 17292,
+      "path": "REPORT.md",
+      "sha256": "6a49a2f7b9e399e64cbc2a8d900ff718b6749f826b13d5570a6272594a66d3b9"
+    },
+    {
+      "blob": "802289d067f9aa595c0eacd40936b9e1cd4659a5",
+      "bytes": 562,
+      "path": "authority-tests.log",
+      "sha256": "c462d67be2bc7b2ebbd18f57c590bd55cefd687654b9cee2dd6b32728e228966"
+    },
+    {
+      "blob": "6b603e6b01bec843e1e46a1d6111948d1748ddc7",
+      "bytes": 23517,
+      "path": "build.log",
+      "sha256": "468ae6fc42947cbb5a8d26ed31d043b317cd8638919dbe0c887172a209c4ceeb"
+    },
+    {
+      "blob": "43993d70d443fc3486133af7a6aff2a1f5c65e62",
+      "bytes": 1589,
+      "path": "checks.json",
+      "sha256": "b352ddabaeeff275b72d91d14750427f2989421ad1fdcb15f6104cb046f05fe7"
+    },
+    {
+      "blob": "b710f3a41e495ac8444475b8f6615dbc38583de2",
+      "bytes": 258,
+      "path": "ci-discovery.json",
+      "sha256": "ec55ae4fb10413625f479056ffa146de22d18a842da84d6fad128af8a572ba22"
+    },
+    {
+      "blob": "975f888ab478931249c901e1dcf54f1b3d8d09ca",
+      "bytes": 960,
+      "path": "ci-failure-metadata.json",
+      "sha256": "8f9ff34a6004f0c38f59b1ee8660e788149ae2c335e8eb10573c80b98b5094a5"
+    },
+    {
+      "blob": "44c65494f15011e7686a0af91cdb9734f3d49147",
+      "bytes": 177,
+      "path": "ci-final.json",
+      "sha256": "c30328fb0ea08305ceb74ce759c93e046901dd0ed80aa2ba487c8fb56ba465d6"
+    },
+    {
+      "blob": "ae869b2fafd3acf46a2dc6ce35ec869497ae9cfb",
+      "bytes": 32,
+      "path": "contract-check.log",
+      "sha256": "c21aae40192141751d6d5c7a3a1d0eb701a6852f305d592d77b4dcab9c2536ab"
+    },
+    {
+      "blob": "462298644fd734b205b65f873a7b2cf5db893184",
+      "bytes": 32,
+      "path": "contract-write.log",
+      "sha256": "eb0e970a64475b7686bee5ce021d43a956d286f57c72fc5f9fb663173b320e39"
+    },
+    {
+      "blob": "81b8b9374313513c159479a5c5b3358842d26676",
+      "bytes": 187,
+      "path": "deployment-check.log",
+      "sha256": "ac7f2ad40dc81a3eff4b533ad1a0e8cf0fa326898e0770a53e737d5c21bad8ff"
+    },
+    {
+      "blob": "558fa422847c6103b773d51de6e52075ec8f9f21",
+      "bytes": 472,
+      "path": "dev-identity-tests.log",
+      "sha256": "da12043ecd7a402255cae4c7c6b013ed5a8f40b2ebb0d1f060e8ea4de6269817"
+    },
+    {
+      "blob": "65cb2764a3acf56db978b401741924f56851b077",
+      "bytes": 1296,
+      "path": "embed-popup-receipt.json",
+      "sha256": "61072a113a8c3c4fbb2cb373127770125cbecadf859708675e699cb32aba5fe0"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "8fbc8cedf1fc555f80a986991e0e131ebe432d93",
+      "bytes": 7684,
+      "path": "fixed19.log",
+      "sha256": "0b361a3868957196e049d8dacab901c9117a0a054962550ee9c4d3c50e54e3f9"
+    },
+    {
+      "blob": "99eb8df123004b67397b62743b2445aee72c1031",
+      "bytes": 46655,
+      "path": "fixed3.log",
+      "sha256": "e229c0aa005ab2e4685a3f9766cfb768f277b263d8545abe7db6456da8f54421"
+    },
+    {
+      "blob": "3c40d8700d02b8432aed53964ce7d34942c23cf2",
+      "bytes": 435,
+      "path": "github-log-receipt.json",
+      "sha256": "fa4fc4347ae9eca01e3afdf33924b75dfafbde205285b928ec5c55baa0a24fa4"
+    },
+    {
+      "blob": "d1dc1dbf46e3720d267a73b8df6765db6369f738",
+      "bytes": 46052,
+      "path": "main-shard3.log",
+      "sha256": "e382dd388546cc630a0c68b4b85acf9cd2ad321ec7ff3b7c2a5e56bc4edb61b4"
+    },
+    {
+      "blob": "4fd809085c5c1eca13006e8312d945e9cd9a0c62",
+      "bytes": 1127,
+      "path": "mechanical-receipt.json",
+      "sha256": "2c7e61223648989bdfbc072f4bab1b310e52d0e35f8d8e8be143dcff6f162f21"
+    },
+    {
+      "blob": "329e4f270845efcc7c24256e2448104e64a88217",
+      "bytes": 66133,
+      "path": "popup-1440-details.png",
+      "sha256": "dd2bcc26b18295e7d6be669afdb7d989b6b884e6b784fca5782b149cfb6324f6"
+    },
+    {
+      "blob": "21a1ba52c273fb7844166c9650f556564f9ab58d",
+      "bytes": 20381,
+      "path": "popup-1440-launcher.png",
+      "sha256": "77e0d35169851948efcc0ceaf792ebe5773e8f60633f4dc83923ea37376c242b"
+    },
+    {
+      "blob": "97b26b2f3f67263bc1655a6bc357284a6de7b9f2",
+      "bytes": 86237,
+      "path": "popup-1440-picker.png",
+      "sha256": "b585521210877f909b3dc0b016a2baf0ee4fa3f3c131c2b5d64bd761cb6339cb"
+    },
+    {
+      "blob": "e68770b7ca534afcd6fabd1daff5c2343bf468f6",
+      "bytes": 57744,
+      "path": "popup-1440-receipt.png",
+      "sha256": "88aa1f9e0c778ea4ac0c4cc8a627f33294e5fee90fd61d3bb825943b60188271"
+    },
+    {
+      "blob": "fc90365d254c1b16134859c93f22a58d434bd790",
+      "bytes": 44736,
+      "path": "popup-390-details.png",
+      "sha256": "9dfcce36ff6c9d37beb9c09b795f02762477004357166e06202278585a5e4a15"
+    },
+    {
+      "blob": "bedd617b0714032dd820355ce6abdca8823f60a6",
+      "bytes": 16313,
+      "path": "popup-390-launcher.png",
+      "sha256": "3b37f2421659b9f02fbfb6d39701fa59a1501c37f83fc10cc94aab8d271583a0"
+    },
+    {
+      "blob": "a83538b2d6f59b91b10dfc900994e00c597dc006",
+      "bytes": 61100,
+      "path": "popup-390-picker.png",
+      "sha256": "2f7b96fa4388bc545e79bfb6b50b079095e5b923169f39eedfb0b10cfef8b11e"
+    },
+    {
+      "blob": "02f8bab790e70945ad67267ad4bebfff37fcb15d",
+      "bytes": 2373,
+      "path": "popup-tests.log",
+      "sha256": "3874fbc00b96291f711b284024861d41af3b99b329b65c35b79539c49dd0bde7"
+    },
+    {
+      "blob": "120acef03698ce9e698ce97165c9959591bd9772",
+      "bytes": 374,
+      "path": "product-receipt.json",
+      "sha256": "5642964ef36e2543a5cd3cc5914670b6f6cf9c93d12f73e0946854a4e2f9dd6b"
+    },
+    {
+      "blob": "1411ec4b143545b3850ca6a7c1e6af10ab60a258",
+      "bytes": 7999,
+      "path": "repro19.log",
+      "sha256": "7366b048f4bd301411e4fdcda22746fc308096f03be2ed44f1dbb28d1d4dd91f"
+    },
+    {
+      "blob": "baae2ac98bb030b713f61084e7cb24793c06dd8c",
+      "bytes": 18190,
+      "path": "repro3-chromium.log",
+      "sha256": "f2c194a57574f5df76bcd66ddaf545ac04c4c55df0db716f9f38dc6b8787c2ef"
+    },
+    {
+      "blob": "6869e792116a69924bdd21352c52df9613e33ff3",
+      "bytes": 9930,
+      "path": "retry-native.log",
+      "sha256": "a41cc0db2202078d6aee8ba38cde6a086bdd5b5e97fe8ee4bf8ecc6145fa7fea"
+    },
+    {
+      "blob": "b50b098aaca7128ac551715275cc370b094a9aa3",
+      "bytes": 62,
+      "path": "shard19-nonmutation.json",
+      "sha256": "941a4ce016f7d5e433d5eacbde709d13766212976b071de71b0faa9ad36da8cc"
+    },
+    {
+      "blob": "42457ed9462328fab94394be5a8b2d8e66f5f40d",
+      "bytes": 3806,
+      "path": "shard19-tests.log",
+      "sha256": "65f64a475ce84c41cab527d34044f1c45d29dba4a40e97215b879c7d91b87c92"
+    },
+    {
+      "blob": "b50b098aaca7128ac551715275cc370b094a9aa3",
+      "bytes": 62,
+      "path": "shard3-nonmutation.json",
+      "sha256": "941a4ce016f7d5e433d5eacbde709d13766212976b071de71b0faa9ad36da8cc"
+    },
+    {
+      "blob": "e5301a74c647d87fe45392fc12712f1bd9bd26d1",
+      "bytes": 33338,
+      "path": "shard3-tests.log",
+      "sha256": "6b2ef985c7387de5086cfe97f33126fa5c30f4e2dcefc4f3412de9ff41c82e19"
+    },
+    {
+      "blob": "452dc423fe12a06ebaadc7ccca72eff585890841",
+      "bytes": 60,
+      "path": "typecheck-final.log",
+      "sha256": "db620267fe2ad508a296c1c3778117b605b3b432af9079a751fa7501fdb7e953"
+    },
+    {
+      "blob": "573a9570b3e6c9e64cec03edb4fda81bddd11130",
+      "bytes": 1104,
+      "path": "verify-reproduced.json",
+      "sha256": "6e207c285a68dd00037eacbfab8272fb62137ceeb5949095b407beb2db47b229"
+    }
+  ],
+  "product_branch": "cloud/sd-dial-c-f41-pc1",
+  "product_head": "daa0f616393b588dffb04db95b696d2c9971f20b",
+  "ref": "refs/heads/evidence/sd-dial-c-f41-pc1",
+  "repository": "just-every/run-dial",
+  "schema": 1,
+  "tag": "sd-dial-c-f41-pc1"
+}
