@@ -21,6 +21,9 @@ export async function testPartitions() {
   shards[0].push("tests/booking-axe.test.mjs");
   shards[1].push("tests/host-setup-journey.test.mjs");
   shards[6].push("tests/booking-record.test.mjs");
+  // Add the production exception journey without rotating existing files into
+  // shared fixed-listener fixtures that must remain on separate runners.
+  shards[6].push("tests/exception-proposals.test.mjs");
   const dedicated = [...Object.values(journeys).flat(), ...shards.flat()];
   for (const file of dedicated) if (!files.includes(file)) throw new Error(`Missing CI test file: ${file}`);
   files.filter(file => !dedicated.includes(file)).forEach((file, index) => {
