@@ -1,0 +1,18 @@
+# sd-dial-c-f41 plan
+
+Scope: add the floating booking launcher to the served embed script and snippet builder. Reuse the production booking iframe and retain existing booking, manage, Settings and authorization sources. EMBED-001 stays PARTIAL: this round is explicitly limited to floating-popup booking and its BOOK-013 parent redirect subpoint.
+
+1. Read the target clause, current gap, embed bootstrap, production document runtime and existing redirect proof. Map missing outcomes to one focused browser journey.
+2. Add popup mode with one launcher per event and origin, native modal focus handling, visible close control, bounded mobile layout and existing origin plus frame authority. Preserve bounded prefill and UTM forwarding.
+3. Run the real production Worker in an isolated fixture and a separate allowed parent origin. Exercise bookings, selected HTTPS redirect and redirect-off receipt, replay, repeated mounting, foreign messages, cookie absence, keyboard operation, overflow and axe. Assert once at desktop and collect changed-screen proof at desktop and phone widths.
+4. Run focused tests, typecheck and first-party check. Generate contract views then check and restore generated files; regenerate the source lock last and check it. Do not edit contract status, gap or evidence cells.
+5. Commit with fleet identity, inspect every candidate identity and trailer, publish named cloud branch through its guard. Merge fresh main after any published save. Discover exact-head Verify through REST without excess polling.
+6. Save actual non-secret reports and receipts in this packet, publish through the separate evidence ref, and hand over exact product provenance. The Mac lander owns publication scan, main equality and Run site.
+
+Held: popup-text and inline lifecycle qualification, operator controls, other parent lifecycle events, builder installation coverage, styling configuration and broader event combinations. All prior holds and custody remain unchanged.
+
+Implementation finding: native parent dialogs do not receive Escape pressed inside a cross-origin child. Added a focused embed keyboard helper and a small response decoration after existing allowed-document decisions in the embed routes. The child uses the already-served script, and the parent accepts a close message only from its own active popup frame and script origin. No authorization predicate or booking, manage, Settings or held UI implementation changed. Real browser proof keeps the iframe-focused Escape assertion and adds forged close-message refusals.
+
+Repeated-open finding: native dialog close events are queued. Closing and immediately reopening could retain two frames. Cleanup now runs synchronously for button, child Escape and native cancel paths, is idempotent, and an older queued close event ignores a newly open dialog. The unchanged strict repeated-open journey checks the resulting single-frame behavior.
+
+CI follow-up: full Verify 42534917583 failed in payment bootstrap and operator-management assertions outside the popup test. Read each failed assertion job's archived log exactly once. Preserve the candidate and run each failed partition on its exact SHA before considering any edit. Compare the same tests against baseline main on this VM. A first local diagnostic ran both partitions concurrently; because their browser fixtures can share a fixed listener, it is explicitly marked diagnostic only and the payment partition is repeated in isolation. Baseline main already reproduces the operator assertion with exit 1 and the same 403-versus-409 error. No authorization or payment repair has been attempted.

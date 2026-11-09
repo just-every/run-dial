@@ -1,0 +1,6 @@
+{
+  "command": "gh run view 42534917583 --repo just-every/run-dial --job 128897005940 --log-failed",
+  "exit": 0,
+  "url_queries_and_capability_paths_redacted": true,
+  "ci_environment_header_omitted": true
+}

@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: [BASE-PUBLIC-002] denied parent has neither SSR booking content nor loader payload for every embed step
+ok 1 - [BASE-PUBLIC-002] denied parent has neither SSR booking content nor loader payload for every embed step
+  ---
+  duration_ms: 52630.696122
+  type: 'test'
+  ...
+# Subtest: [BASE-PUBLIC-002] missing, malformed and ambiguous embed parents fail closed before public document projection
+ok 2 - [BASE-PUBLIC-002] missing, malformed and ambiguous embed parents fail closed before public document projection
+  ---
+  duration_ms: 324.805394
+  type: 'test'
+  ...
+# Subtest: [PUBLIC-005] unsupported embed paths cannot project a profile, event or manage capability
+ok 3 - [PUBLIC-005] unsupported embed paths cannot project a profile, event or manage capability
+  ---
+  duration_ms: 80.219127
+  type: 'test'
+  ...
+# Subtest: [PUBLIC-005] unpublished and unknown event embeds return no receipt projection while valid standalone manage remains usable
+ok 4 - [PUBLIC-005] unpublished and unknown event embeds return no receipt projection while valid standalone manage remains usable
+  ---
+  duration_ms: 646.216403
+  type: 'test'
+  ...
+# Subtest: [PUBLIC-004] allowed event, details, confirmation, manage and request-only SSR preserve standalone projections; BOOK-013 the served bootstrap navigates the parent to an HTTPS redirect after dial:booked and ignores any other
+ok 5 - [PUBLIC-004] allowed event, details, confirmation, manage and request-only SSR preserve standalone projections; BOOK-013 the served bootstrap navigates the parent to an HTTPS redirect after dial:booked and ignores any other
+  ---
+  duration_ms: 822.633543
+  type: 'test'
+  ...
+# Subtest: [PUBLIC-004] authorized embed manage keeps native reschedule, token expiry and cancellation behavior
+ok 6 - [PUBLIC-004] authorized embed manage keeps native reschedule, token expiry and cancellation behavior
+  ---
+  duration_ms: 756.447771
+  type: 'test'
+  ...
+# Subtest: [EMBED-001] [BOOK-013] floating popup books once through a separate parent and redirects only after its safe booked event
+ok 7 - [EMBED-001] [BOOK-013] floating popup books once through a separate parent and redirects only after its safe booked event
+  ---
+  duration_ms: 78814.970544
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 79508.865894

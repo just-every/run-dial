@@ -1,0 +1,54 @@
+{
+  "product_head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "branch": "cloud/sd-dial-c-f41",
+  "baseline_main": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+  "shallow": false,
+  "worktree_clean": true,
+  "tracked_files": [
+    {
+      "path": "sources.lock.json",
+      "sha256": "12de2de24ddd19a32cea06094dbf131fb2f70f73b71d647a4a48b58bde2cb49c"
+    },
+    {
+      "path": "src/core/features/embeds/embed-bootstrap.ts",
+      "sha256": "8fec0944d17c66ce7aa4b060512f6897166de83075c79d870807fa3ea9963fca"
+    },
+    {
+      "path": "src/core/features/embeds/embed-keyboard.ts",
+      "sha256": "8e486d2e7777e3c8ab1377f259682aba0149d928f8761b3f30304c658eeae328"
+    },
+    {
+      "path": "src/core/features/embeds/floating-popup.ts",
+      "sha256": "5cea887f12b77f7b9b4b0910ae3a192ec855baf6acfb016b6fbc83860fbd7691"
+    },
+    {
+      "path": "src/core/features/embeds/routes.ts",
+      "sha256": "fa31191849f5fb2ec541578f355082e988b1cdab4ab49a7bcade1e2650d99bca"
+    },
+    {
+      "path": "src/core/features/embeds/snippet.ts",
+      "sha256": "165749fd8340377e1680fbc0e0fc914fa43584c60d5e9e230842e815cc2b1c9b"
+    },
+    {
+      "path": "tests/embed-popup.test.mjs",
+      "sha256": "b68b962dc06bd595385d9f7eb7bc66c6cf1844178f58e4924ed1019460f13b34"
+    },
+    {
+      "path": "tests/embed-popup/journey.mjs",
+      "sha256": "c6dc3b2c6a8060067ea9ecf1dc76fdeea392b0e5fc34f6d4fdb9ae9e35edb9ed"
+    },
+    {
+      "path": "tests/embed-popup/parent-page.mjs",
+      "sha256": "1b4543228e0934da6f7107e45b499888ed55c19859540f1208ca8c645762a10e"
+    },
+    {
+      "path": "tests/embed-popup/runtime.mjs",
+      "sha256": "5208fff7771994dceee8f78df2cef5f540bafdac3bc126b1e3ec93e8fd5d36c0"
+    },
+    {
+      "path": "tests/embed-popup/worker.ts",
+      "sha256": "5bc7a5582f79cc83a34836a1732bc63127a4de28976cf3d96d9b255cd5348531"
+    }
+  ],
+  "browser_receipt_sha256": "61072a113a8c3c4fbb2cb373127770125cbecadf859708675e699cb32aba5fe0"
+}

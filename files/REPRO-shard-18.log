@@ -1,0 +1,131 @@
+CI test 18: tests/deletion-ordering.test.mjs, tests/mail-connection.test.mjs, tests/operator-management.test.mjs, tests/webhook-settings.test.mjs
+TAP version 13
+# Subtest: [CAL-007] untimestamped deletion inspection protects replacement events and survives process restart
+ok 1 - [CAL-007] untimestamped deletion inspection protects replacement events and survives process restart
+  ---
+  duration_ms: 99493.527265
+  type: 'test'
+  ...
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# Subtest: mail readiness starts unchecked, records sender checks and permits publication only after fresh provider verification
+ok 2 - mail readiness starts unchecked, records sender checks and permits publication only after fresh provider verification
+  ---
+  duration_ms: 16677.462971
+  type: 'test'
+  ...
+# Subtest: provider webhooks refuse unsigned or oversized bodies before verifying them
+ok 3 - provider webhooks refuse unsigned or oversized bodies before verifying them
+  ---
+  duration_ms: 5607.832133
+  type: 'test'
+  ...
+# Subtest: SendGrid callbacks stay closed without a key or valid signature and signed bounce receipts remain idempotent
+ok 4 - SendGrid callbacks stay closed without a key or valid signature and signed bounce receipts remain idempotent
+  ---
+  duration_ms: 10161.395171
+  type: 'test'
+  ...
+# Subtest: [OPER-002] native destructive management preserves authorship and protects self and setup owner
+not ok 5 - [OPER-002] native destructive management preserves authorship and protects self and setup owner
+  ---
+  duration_ms: 137671.076891
+  type: 'test'
+  location: '/home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/tests/contract.mjs:10:10'
+  failureType: 'testCodeFailure'
+  error: |-
+    setup owner is protected until ownership transfer
+    
+    403 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 403
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/tests/operator-management.test.mjs:66:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# {"scenario":"same-window","now":1791574199999,"tokenLimit":5,"statuses":[303,400,400,400,400,429,429,429],"replenished":400,"renewed":[400,400,400,400,429],"sessionDelta":1}
+# Subtest: [OPER-002] native confirmation limits reset at the bucket boundary without reviving a consumed link
+ok 6 - [OPER-002] native confirmation limits reset at the bucket boundary without reviving a consumed link
+  ---
+  duration_ms: 128651.234739
+  type: 'test'
+  ...
+# {"scenario":"split-window","times":[1791574199999,1791574200000],"tokenLimit":5,"statuses":[303,400,400,400,400,400,400,400],"overflow":[400,429],"sessionDelta":1,"counters":[{"count":4},{"count":4}]}
+# Subtest: [AUTH-001] clean native bootstrap installs only the setup-input identity and every private surface uses its Base session
+ok 7 - [AUTH-001] clean native bootstrap installs only the setup-input identity and every private surface uses its Base session
+  ---
+  duration_ms: 86455.657691
+  type: 'test'
+  ...
+# Subtest: [OPER-002] cancelling an unaccepted invitation returns success and permanently retires its link
+ok 8 - [OPER-002] cancelling an unaccepted invitation returns success and permanently retires its link
+  ---
+  duration_ms: 87820.789998
+  type: 'test'
+  ...
+# Subtest: [PROFILE-001] native empty bootstrap keeps profile setup actionable after desktop and mobile hydration
+ok 9 - [PROFILE-001] native empty bootstrap keeps profile setup actionable after desktop and mobile hydration
+  ---
+  duration_ms: 101419.979827
+  type: 'test'
+  ...
+# Subtest: webhook Settings creates and deletes subscriptions and shows signed delivery status at desktop and phone widths
+not ok 10 - webhook Settings creates and deletes subscriptions and shows signed delivery status at desktop and phone widths
+  ---
+  duration_ms: 85727.472123
+  type: 'test'
+  location: '/home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/tests/webhook-settings.test.mjs:4:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    node:internal/modules/run_main:123
+        triggerUncaughtException(
+        ^
+    
+    AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+    
+    409 !== 303
+    
+        at file:///home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/scripts/verify-webhook-settings.mjs:16:214 {
+      generatedMessage: true,
+      code: 'ERR_ASSERTION',
+      actual: 409,
+      expected: 303,
+      operator: 'strictEqual',
+      diff: 'simple'
+    }
+    
+    Node.js v22.20.0
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    file:///home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/scripts/verify-webhook-settings.mjs:16:214 {
+    ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/tests/booking-axe/run-axe.mjs:32:89)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 8
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 577837.796077
+Verification evidence: /tmp/dial-f41-repro-18
+file:///home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/scripts/ci-verify.mjs:37
+    child.once("exit", (code, signal) => code === 0 ? done() : reject(new Error(`${command} ${args.join(" ")} failed: ${signal ?? code}`)));
+                                                                      ^
+
+Error: /home/agent/.rer/toolchain/node-22.20.0/node_modules/node/bin/node --test --test-concurrency=2 tests/deletion-ordering.test.mjs tests/mail-connection.test.mjs tests/operator-management.test.mjs tests/webhook-settings.test.mjs failed: 1
+    at ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/scripts/ci-verify.mjs:37:71)
+    at Object.onceWrapper (node:events:634:26)
+    at ChildProcess.emit (node:events:519:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+
+Node.js v22.20.0

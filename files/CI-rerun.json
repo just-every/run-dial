@@ -1,0 +1,10 @@
+{
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "run": 42534917583,
+  "command": "gh api --include --method POST repos/just-every/run-dial/actions/runs/42534917583/rerun-failed-jobs",
+  "exit": 0,
+  "HTTP": 201,
+  "requested_utc": "2026-11-09T00:09:36.413009+00:00",
+  "reason": "both original failed assertion signatures also reproduce on baseline main; one permitted failed-job rerun",
+  "rerun_conclusion": "unobserved; repository API budget exhausted"
+}

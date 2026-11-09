@@ -1,0 +1,15 @@
+{
+  "head": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern=native destructive management preserves authorship and protects self and setup owner",
+    "tests/operator-management.test.mjs"
+  ],
+  "exit": 1,
+  "seconds": 93.76,
+  "comparison": "same failed native operator test on main, same cloud runner and Node22; system Chromium launch adaptation retained",
+  "test": "native destructive management preserves authorship and protects self and setup owner",
+  "failure": "setup owner is protected until ownership transfer: 403 !== 409",
+  "matched_ci_failure": true
+}

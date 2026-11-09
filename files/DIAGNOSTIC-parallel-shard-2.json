@@ -1,0 +1,11 @@
+{
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "job": 128897005875,
+  "command": "node scripts/ci-verify.mjs test 2",
+  "exit": 1,
+  "seconds": 493.71,
+  "CI": "true",
+  "node": "22.20.0",
+  "browser_adaptation": "preload selects /usr/bin/chromium with --no-sandbox; assertions unchanged",
+  "qualification": "diagnostic only: concurrent partition 18 also uses fixed booking browser listener; authoritative isolated reproduction follows"
+}

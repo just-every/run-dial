@@ -1,0 +1,14 @@
+{
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "job": 128897005940,
+  "command": "node scripts/ci-verify.mjs test 18",
+  "exit": 1,
+  "seconds": 579.08,
+  "CI": "true",
+  "node": "22.20.0",
+  "browser_adaptation": "preload selects /usr/bin/chromium with --no-sandbox; assertions unchanged",
+  "test": "native destructive management preserves authorship and protects self and setup owner",
+  "failure": "setup owner is protected until ownership transfer: 403 !== 409",
+  "matched_ci_failure": true,
+  "baseline_comparison": "MAIN-operator.json"
+}

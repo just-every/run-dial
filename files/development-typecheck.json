@@ -1,0 +1,6 @@
+{
+  "command": "pnpm typecheck",
+  "exit": 0,
+  "node": "22.20.0",
+  "phase": "development; exact candidate receipt is CHECKS.json"
+}

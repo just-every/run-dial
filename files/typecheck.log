@@ -1,0 +1,4 @@
+
+> dial@0.5.0 typecheck /home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial
+> tsc --noEmit
+

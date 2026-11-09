@@ -1,0 +1,36 @@
+{
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "views": {
+    "write": [
+      "node",
+      "scripts/contract-docs.mjs",
+      "write",
+      "--clauses",
+      "EMBED-001"
+    ],
+    "write_exit": 0,
+    "check_exit": 0,
+    "restored_from": "origin/main",
+    "restored_files": [
+      "ACCEPTANCE.md",
+      "docs/CLAIMS.md"
+    ]
+  },
+  "lock": {
+    "generate": [
+      "node",
+      "scripts/edition-authoring/cli.mjs",
+      "lock"
+    ],
+    "generate_exit": 0,
+    "check_exit": 0
+  },
+  "migration_ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "no migration changed"
+  },
+  "contract_source_changed": false,
+  "candidate_authors_and_committers": "fleet identity; all candidate commits inspected",
+  "coauthor_trailers": []
+}

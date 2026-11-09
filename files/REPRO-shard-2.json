@@ -1,0 +1,15 @@
+{
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "job": 128897005875,
+  "command": "node scripts/ci-verify.mjs test 2",
+  "exit": 1,
+  "seconds": 430.86,
+  "CI": "true",
+  "node": "22.20.0",
+  "browser_adaptation": "preload selects /usr/bin/chromium with --no-sandbox; assertions unchanged",
+  "test": "PAY-001 a paid booking confirms only after Stripe's signed event; PAY-003 and PAY-006 deposits, refunds, fees and reconciled accounting",
+  "failure": "payment screen bootstrap: 409 !== 303",
+  "matched_ci_failure": true,
+  "isolation": "partition ran alone after all other reproduction runtimes exited",
+  "additional_cloud_failure": "dev runtime startup exceeded its existing startup wait"
+}

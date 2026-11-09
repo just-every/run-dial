@@ -1,0 +1,35 @@
+{
+  "repository": "just-every/run-dial",
+  "branch": "cloud/sd-dial-c-f41",
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "custody": "PUSHED",
+  "claim": {
+    "EMBED-001": "PARTIAL"
+  },
+  "counts_before": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "counts_after": {
+    "done": 90,
+    "partial": 36,
+    "missing": 63
+  },
+  "verify": {
+    "run": 42534917583,
+    "first_conclusion": "failure",
+    "failure_jobs": [
+      128897005875,
+      128897005940
+    ],
+    "same_original_failures_on_main": true,
+    "one_permitted_rerun_requested": true,
+    "rerun_request_HTTP": 201,
+    "rerun_conclusion": "unobserved"
+  },
+  "repository_API_calls": 10,
+  "READY_claimed": false,
+  "publication_scan": "Mac lander obligation; unestablished here",
+  "main_landing": "not performed"
+}

@@ -1,0 +1,16 @@
+{
+  "head": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+  "candidate_head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "job": 128897005875,
+  "command": "node /home/agent/rer-consolidation/work/sd-dial-c-f41/run-dial/scripts/ci-verify.mjs test 2",
+  "exit": 1,
+  "seconds": 420.62,
+  "CI": "true",
+  "node": "22.20.0",
+  "browser_adaptation": "preload selects /usr/bin/chromium with --no-sandbox; assertions unchanged",
+  "comparison": "unchanged candidate CI runner selects the exact failed file set; all tests and application source execute from baseline main worktree",
+  "test": "PAY-001 and PAY-003 and PAY-006 payment screen bootstrap",
+  "failure": "409 !== 303",
+  "matched_ci_failure": true,
+  "additional_cloud_failure": "same dev-runtime startup wait as the candidate"
+}

@@ -1,0 +1,5 @@
+{
+  "command": "npx -y @runeditrun/rer check --profile first-party",
+  "exit": 0,
+  "phase": "development; exact candidate receipt is CHECKS.json"
+}

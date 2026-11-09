@@ -1,0 +1,78 @@
+{
+  "budget": 10,
+  "used": 10,
+  "calls": [
+    {
+      "purpose": "initial discovery with incorrect head argument",
+      "result": "no runs; ignored"
+    },
+    {
+      "purpose": "baseline exact main workflow discovery",
+      "head": "b571279e853fa019a40b18564c6a88bdcbab7f21",
+      "verify": 42266157020,
+      "verifyConclusion": "success",
+      "runSite": 42266156970,
+      "runSiteConclusion": "success"
+    },
+    {
+      "purpose": "candidate exact-head Verify discovery",
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+      "verify": 42534917583,
+      "status": "in_progress",
+      "event": "push",
+      "observed_utc": "2026-11-08T23:23:14Z"
+    },
+    {
+      "purpose": "candidate Verify poll",
+      "run": 42534917583,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+      "observed_utc": "2026-11-08T23:28:32Z",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "purpose": "candidate Verify poll",
+      "run": 42534917583,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+      "observed_utc": "2026-11-08T23:33:37Z",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "purpose": "candidate Verify poll",
+      "run": 42534917583,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+      "observed_utc": "2026-11-08T23:38:41Z",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "purpose": "completed failed job discovery",
+      "run": 42534917583,
+      "assertion_jobs": [
+        128897005875,
+        128897005940
+      ],
+      "aggregate_job": 128900516318
+    },
+    {
+      "purpose": "failed log archive read once",
+      "run": 42534917583,
+      "job": 128897005875,
+      "exit": 0
+    },
+    {
+      "purpose": "failed log archive read once",
+      "run": 42534917583,
+      "job": 128897005940,
+      "exit": 0
+    },
+    {
+      "purpose": "one permitted failed-job rerun after both failures reproduced on main",
+      "run": 42534917583,
+      "exit": 0,
+      "HTTP": 201,
+      "observed_utc": "2026-11-09T00:09:36.413009+00:00"
+    }
+  ]
+}

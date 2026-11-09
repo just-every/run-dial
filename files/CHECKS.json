@@ -1,0 +1,117 @@
+{
+  "head": "1b1a7a23cc0db79febd39132a2b64c097a373459",
+  "node": "v22.20.0",
+  "checks": [
+    {
+      "name": "build",
+      "command": [
+        "npx",
+        "-y",
+        "@runeditrun/rer",
+        "build"
+      ],
+      "exit": 0,
+      "seconds": 9.358,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "deployment-spec",
+      "command": [
+        "node",
+        "scripts/projects/deployment-spec.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "seconds": 0.078,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "exit": 0,
+      "seconds": 20.916,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "lint",
+      "command": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "src/core/features/embeds",
+        "tests/embed-popup.test.mjs",
+        "tests/embed-popup",
+        "--max-warnings=0"
+      ],
+      "exit": 0,
+      "seconds": 1.845,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "touched-tests",
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--test",
+        "--test-concurrency=2",
+        "tests/embed-document-authorization.test.mjs",
+        "tests/embed-popup.test.mjs"
+      ],
+      "exit": 0,
+      "seconds": 79.541,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "first-party",
+      "command": [
+        "npx",
+        "-y",
+        "@runeditrun/rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "exit": 0,
+      "seconds": 1.952,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "boundaries",
+      "command": [
+        "node",
+        "scripts/check-boundaries.mjs"
+      ],
+      "exit": 0,
+      "seconds": 1.278,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "contract-views",
+      "command": [
+        "node",
+        "scripts/contract-docs.mjs",
+        "check",
+        "--clauses",
+        "EMBED-001"
+      ],
+      "exit": 0,
+      "seconds": 0.049,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    },
+    {
+      "name": "source-lock",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "seconds": 0.281,
+      "head": "1b1a7a23cc0db79febd39132a2b64c097a373459"
+    }
+  ]
+}
