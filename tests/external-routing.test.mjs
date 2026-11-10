@@ -17,6 +17,9 @@ const fullMap = [
 let browser, parent, formId, eventId, scans = [];
 const state = () => data("/__fixtures/external-routing/state");
 const inviteeEmail = ["synthetic-dial-1501", "example.test"].join("@");
+let visitors = 0;
+// Each browser context is its own client to Dial's per-address public admission, as separate visitors would be.
+const client = () => ({ "CF-Connecting-IP": `198.19.${Math.floor(visitors / 250)}.${visitors++ % 250 + 1}` });
 const tokenShape = /[A-Za-z0-9_-]{43}/;
 
 before(async () => {
@@ -30,7 +33,7 @@ after(async () => { await browser?.close(); await parent?.close(); await stop();
 
 /** A visitor on the website (a different origin from Dial) with the form filled in. */
 async function visitor(width, { map = fullMap, mounts = 2, routing = formId, topic = "consult", goal = "Launch plan", tag = "site", fill = true } = {}) {
-  const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 } });
+  const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, extraHTTPHeaders: client() });
   const page = await context.newPage();
   await page.goto(`${parentOrigin}/form?${new URLSearchParams({ routing, map: JSON.stringify(map), mounts: String(mounts), tag })}`);
   if (fill) {
@@ -57,10 +60,14 @@ async function delta(action) {
   const after = await state();
   return { result, submissions: after.submissions.length - before.submissions.length, bookings: after.bookings - before.bookings, outbox: after.delivery_outbox - before.delivery_outbox, after };
 }
-async function settle(popup) { await popup.waitForURL(bookingPath, { timeout: 30000 }); await popup.getByRole("button").first().waitFor(); }
+async function settle(popup) {
+  await popup.waitForURL(bookingPath, { timeout: 30000 }).catch(async error => { throw new Error(`${error.message}\nstuck at ${popup.url()}: ${await popup.locator("body").innerText()}`); });
+  await popup.getByRole("button").first().waitFor();
+}
 
 contract("ROUTE-004", "a plain HTML form hands its mapped answers to routing and the visitor lands on the native booking page with editable answers, one submission through every duplicate path", async () => {
   for (const width of widths) {
+    const started = await state();
     // Duplicate script mounting, a double submit, the keyboard and the booking confirmation step.
     const first = await delta(async () => {
       const { page, context } = await visitor(width, { mounts: 2, tag: `first-${width}` });
@@ -79,15 +86,16 @@ contract("ROUTE-004", "a plain HTML form hands its mapped answers to routing and
       assert.equal(landed.searchParams.get("answer.q_goal"), "Launch plan");
       assert.ok(!tokenShape.test(landed.href), "no capability appears in the booking URL");
       assert.ok(!/Acme|consult/.test(landed.search), "routing-only answers are not copied to the booking page");
-      const stored = await popup.evaluate(() => globalThis.sessionStorage.getItem("dial-external-routing:v1"));
-      assert.ok(stored && !tokenShape.test(stored) && !stored.includes("nonce") && !stored.includes("Acme"), "the finished handoff keeps no capability and none of the routing-only answers");
+      const stored = JSON.parse(await popup.evaluate(() => globalThis.sessionStorage.getItem("dial-external-routing:v1")));
+      assert.deepEqual(Object.keys(stored).sort(), ["key", "stage", "target"], "the finished handoff keeps no capability and no routing-only answer");
+      assert.equal(stored.stage, "done");
+      assert.ok(!stored.target.includes("Acme"));
       return { popup, context };
     });
     assert.equal(first.submissions, 1, `${width}: exactly one routing submission`);
     assert.equal(first.after.submissions.at(-1).state, "matched");
     const { popup, context } = first.result;
-    assert.equal(first.bookings, 0, "routing books nothing");
-    assert.equal(first.outbox, 0, "routing sends nothing");
+    assert.equal(first.bookings + first.outbox, 0, "routing books and sends nothing");
     await popup.getByRole("heading", { level: 1 }).first().waitFor();
     const audit = auditor(popup, width, scans);
     await keyboardActivate(popup, popup.locator(".pb-slot-button").first());
@@ -99,8 +107,8 @@ contract("ROUTE-004", "a plain HTML form hands its mapped answers to routing and
     assert.equal(await popup.getByLabel("Team size", { exact: true }).inputValue(), "", "unmapped booking questions stay empty");
     await audit("prefilled-details");
     const idle = await state();
-    assert.equal(idle.bookings, 0, "nothing is booked before the visitor confirms");
-    assert.equal(idle.delivery_outbox, 0, "nothing is sent before the visitor confirms");
+    assert.equal(idle.bookings, started.bookings, "nothing is booked before the visitor confirms");
+    assert.equal(idle.delivery_outbox, started.delivery_outbox, "nothing is sent before the visitor confirms");
     if (width === 1440) {
       await name.fill("Alex R. Rivera");
       await goal.fill("Launch plan, edited");
@@ -224,6 +232,33 @@ contract("ROUTE-004", "native disqualification, an invalid map, an unavailable t
     assert.equal(expired.submissions, 0);
   }
 
+  // Maps and values the website script itself refuses: it never opens Dial, and the website's own form still submits.
+  const refusedMaps = [
+    ["a map that is not a list", "{", "invalid_map"],
+    ["the same field twice", [fullMap[0], fullMap[0]], "invalid_map"],
+    ["two fields for one question", [{ field: "topic", question: "purpose" }, { field: "company", question: "purpose" }], "invalid_map"],
+    ["an unusable prefill target", [{ field: "goal", prefill: "answer.bad key" }], "invalid_map"],
+    ["a password field", [{ field: "secret", question: "company" }], "invalid_map"],
+    ["a field the form does not have", [{ field: "nowhere", question: "company" }], "invalid_map"],
+    ["an unknown property", [{ field: "goal", question: "company", redirect: "https://evil.example.test/" }], "invalid_map"],
+    ["a malformed routing form id", fullMap, "invalid_map", { routing: "not-a-form" }],
+    ["a value over its bound", fullMap, "invalid_values", { goal: "x".repeat(4001), submit: true }],
+  ];
+  for (const [index, [name, map, code, options = {}]] of refusedMaps.entries()) {
+    const tag = `refused-${index}`;
+    const refused = await delta(async () => {
+      const { page, context } = await visitor(390, { map, tag, mounts: 1, routing: options.routing ?? formId, goal: options.goal ?? "Launch plan" });
+      await page.focus("[name=work_email]"); await page.keyboard.press("Enter");
+      await page.waitForFunction(() => globalThis.window.dialEvents.length > 0);
+      await page.waitForTimeout(500);
+      assert.deepEqual(await page.evaluate(() => globalThis.window.dialEvents), [{ type: "dial:routing-refused", code }], name);
+      assert.equal(context.pages().length, 1, `${name}: no Dial window opens`);
+      await context.close();
+    });
+    assert.equal(refused.submissions + refused.bookings + refused.outbox, 0, name);
+    assert.ok(parent.received.includes(tag), `${name}: the website's own form still submits`);
+  }
+
   // The same refusals at the public doors the handoff reuses.
   const door = await data(`/api/public/routing/${formId}`);
   const answers = { purpose: "consult" };
@@ -243,7 +278,7 @@ contract("ROUTE-004", "native disqualification, an invalid map, an unavailable t
 
 contract("ROUTE-004", "the handoff leaks no capability or answer and cannot be steered to another site", async () => {
   const encode = value => "v1." + Buffer.from(JSON.stringify(value)).toString("base64url");
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: client() });
   const requests = [];
   context.on("request", request => { if (request.url().startsWith(origin)) requests.push({ url: request.url(), body: request.postData() ?? "" }); });
   const open = async fragment => {
