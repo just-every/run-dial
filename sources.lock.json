@@ -5511,7 +5511,7 @@
       "executable": false
     },
     "src/core/app/hono.ts": {
-      "sha256": "551b9666c6d750f806f1138ea407d03b6d63e56c66e987faf763826d723c2d9f",
+      "sha256": "f8caa35952dd46421fe4cd838fc9857ffd645d92b23b4658f58f1e3020719878",
       "executable": false
     },
     "src/core/app/loaders.ts": {
@@ -6816,6 +6816,26 @@
     },
     "src/core/features/event-types/ui/scheduling-limits.tsx": {
       "sha256": "1296dc180ccc80cff1fc38368940867837d8366d02df1e6b132bd4731bc7e9c5",
+      "executable": false
+    },
+    "src/core/features/external-routing/bootstrap.ts": {
+      "sha256": "f18b50077ceb0247e3c38cf1a155a13dc8654d4917d20d0ecfd4c6dee593996e",
+      "executable": false
+    },
+    "src/core/features/external-routing/handoff.ts": {
+      "sha256": "b85c22d140c9ba2674cd7966883a5a697a36c9daedb2eb694f52dedc85605292",
+      "executable": false
+    },
+    "src/core/features/external-routing/index.ts": {
+      "sha256": "6d3d87ecbb91acfad4a7c9952a252ea46bc92c3d283a9dee23a22987fd527f5a",
+      "executable": false
+    },
+    "src/core/features/external-routing/mapping.ts": {
+      "sha256": "c87211b6cbac44a9f361974d32645aa3c417b1389dcaee8c361dd2a6c91ec3f7",
+      "executable": false
+    },
+    "src/core/features/external-routing/routes.ts": {
+      "sha256": "a8707badf9947c371faea99cd0e389ae6e0ad825c2927e4f7378db4831957370",
       "executable": false
     },
     "src/core/features/group-events/configuration.ts": {
@@ -9898,6 +9918,26 @@
       "sha256": "266bb7ae004f8682d6667d2d780dbbb6535f58a8cdbf9f137b1e2cdb752e7b4e",
       "executable": false
     },
+    "tests/external-routing.test.mjs": {
+      "sha256": "263303950ceb3fbe4d409277805e5c16aa034930671e819c7e2f469902d68484",
+      "executable": false
+    },
+    "tests/external-routing/parent-page.mjs": {
+      "sha256": "831d06a22ebd872bbf10c1f907015cd6bf648ec5ddb167d8619f4e9fcdec4fb3",
+      "executable": false
+    },
+    "tests/external-routing/runtime.mjs": {
+      "sha256": "be4c36bdcca70c455b52198e5febd4f8687f400edec29e6357e2319122ad96f3",
+      "executable": false
+    },
+    "tests/external-routing/worker.ts": {
+      "sha256": "7e6b4d631bbc22ce6539358fc448499dc56cba509fd9a923f4c2d117aba1c30f",
+      "executable": false
+    },
+    "tests/external-routing/worker.wrangler.toml": {
+      "sha256": "007be9c9f9b070212cc5f36f9ba76dd1d2f7444a0cd22f0b1663edf3248231a2",
+      "executable": false
+    },
     "tests/first-run.test.mjs": {
       "sha256": "6e24a39e77942271c5bf17d9400490947a04b795f918bde40c0ec5a869605e9f",
       "executable": false
@@ -10599,7 +10639,7 @@
       "executable": false
     },
     "tests/operator-auth-boundary.test.mjs": {
-      "sha256": "8cced245e28ce27234cb459ea688af14511e8299d1f17557617e5b555b4c4120",
+      "sha256": "5c68044dee62699b5a6d95f39714292252fab6a0c27803dfcae6c3fa55883905",
       "executable": false
     },
     "tests/operator-change.test.mjs": {
