@@ -6,6 +6,7 @@ import { publicApiRoutes } from "../features/public-api/routes";
 import { webhookRoutes } from "../features/webhooks/routes";
 import { teamRoutes } from "../features/teams";
 import { routingRoutes } from "../features/routing";
+import { externalRoutingRoutes } from "../features/external-routing";
 import { analyticsRoutes } from "../features/analytics";
 import { pollRoutes } from "../features/polls";
 import { clientRoutes, rememberRoutes } from "../features/clients";
@@ -131,6 +132,7 @@ export function createApp(documents?: { fetch(request: Request): Promise<Respons
     .route("/", webhookRoutes)
     .route("/", teamRoutes)
     .route("/", routingRoutes)
+    .route("/", externalRoutingRoutes)
     .route("/", noticeRoutes)
     .route("/", reportRoutes())
     .route("/", auditRoutes)

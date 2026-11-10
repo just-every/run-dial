@@ -121,6 +121,15 @@ contract(["AUTH-001", "AUTH-008", "API-001"], "direct Base administrative aliase
   assert.equal((await fetch(origin + "/api/v1/bookings", { headers: { Authorization: `Bearer ${removedCredential.secret}` } })).status, 401, "ordinary owner removal revokes machine authority");
   assert.deepEqual(await runtime.query(`SELECT id FROM api_credentials WHERE operator_id='${target}'`), [], "owner removal erases machine credentials");
   assert.deepEqual(await runtime.query("SELECT operator_id FROM oa_invitation_cancellations"), []);
+  // ROUTE-004 publishes four session-free documents under the existing public admission and nothing else.
+  for (const path of ["dial-form.js", "handoff", "handoff.js", "handoff.css"]) {
+    const served = await fetch(`${origin}/api/public/external-routing/${path}`);
+    assert.equal(served.status, 200, `${path} needs no operator session`);
+    assert.equal(served.headers.get("set-cookie"), null, `${path} sets no cookie`);
+  }
+  assert.equal((await fetch(`${origin}/api/public/external-routing/handoff`, { method: "POST", headers: { Origin: origin, "content-type": "application/json" }, body: "{}" })).status, 404, "the handoff accepts no submission of its own");
+  assert.equal((await fetch(`${origin}/api/public/external-routing/anything-else`)).status, 404);
+  assert.equal((await fetch(`${origin}/api/app/external-routing/handoff`)).status, 401, "no private external routing door exists");
   await machineCredentialJourney(context);
   await runAxe(context,"scripts/verify-api-credentials.mjs");
 });
