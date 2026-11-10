@@ -4567,7 +4567,7 @@
       "executable": false
     },
     "scripts/ci-test-files.mjs": {
-      "sha256": "287b15e797a6ee9b4fce7f17133660cef0d0b1700240446ce583aec18f973a9c",
+      "sha256": "773d1b9f4194f9d1713ae99fc98bffa55343132b7c374a87e9314868bf9881ac",
       "executable": false
     },
     "scripts/ci-verify.mjs": {
