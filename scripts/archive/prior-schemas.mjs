@@ -12,6 +12,8 @@ const json = new DatabaseSync(':memory:');
 const confirmation = json.prepare("SELECT CASE WHEN json_type(?1, '$.inviteeConfirmationEnabled') IS NULL THEN json_set(?1, '$.inviteeConfirmationEnabled', json('true')) ELSE ?1 END AS templates_json");
 const invitation = json.prepare("SELECT CASE WHEN json_type(?1, '$.invitationManageLinkEnabled') IS NULL THEN json_set(?1, '$.invitationManageLinkEnabled', json('true')) ELSE ?1 END AS templates_json");
 export const rowUpgrades = {
+  // Indexes only: every restored row stays as it was.
+  'core/0105_scheduled_work_indexes.sql': (_table, row) => row,
   // Older events retain the same English confirmation after restoration.
   'core/0104_confirmation_language.sql': (table, row) => table === 'event_types' ? { ...row, confirmation_language: 'en' } : row,
   // Poll reminder configuration starts disabled on every existing poll.

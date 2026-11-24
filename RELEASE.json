@@ -286,6 +286,10 @@
     {
       "id": "0104_confirmation_language.sql",
       "buyerSteps": "Back up and apply in filename order after 0103. Adds per-event confirmation language with English as the default; existing events, bookings and queued messages remain unchanged. Configure English or Spanish through the authenticated native event confirmation-language endpoint. Restore a verified backup with matching code to recover; do not reset populated state."
+    },
+    {
+      "id": "0105_scheduled_work_indexes.sql",
+      "buyerSteps": "Back up and apply in filename order after 0104. Adds indexes only, so the minute Cron reads the same small number of rows however many bookings, payments and polls a company has stored; no existing row changes. Restore a verified backup with matching code to recover; do not reset populated state."
     }
   ],
   "breaking": false,
