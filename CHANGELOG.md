@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 — 2026-11-25
+
+Dial 0.5.1 supports hosted setup with mail off and owner sign-in through rer. It pins rer 0.2.134.
+
+Deploy with `MAIL_PROVIDER=none` to set up hosted Dial without a mail sender or API key. The setup owner signs in with `rer signin`. Configure a mail provider before opening booking pages that send confirmations or management links.
+
+This release also adds group seat capacity and English or Spanish booking confirmations. Archive preflight matches installed files against the rer migration ledger.
+
+Back up Dial 0.5.0 before updating in place. Adopt 0.5.1 with the pinned rer 0.2.134 and apply the 39 pending migrations through the normal upgrade runner. Preserve the existing migration ledger and already applied SQL. Confirm owner access and check existing records before resuming writes.
+
 ## 0.5.0 — 2026-10-20
 
 Dial 0.5.0 is the next regular release after 0.4.2. It is cut from main and pins rer 0.2.68.

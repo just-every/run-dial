@@ -911,7 +911,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "734b11292c9e5d2319b1be5586c60df7c4e7ea33b7c82e83a7ab4bc5117ae961",
+      "sha256": "4f5e35b76bfd246337070075a2e527b9f849060798163a3ab74a7e506e7812d5",
       "executable": false
     },
     "CLAUDE.md": {
@@ -4339,7 +4339,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "21826d38799043fc0c7215ddce25980237fca9a1409d04c0319392f48c1b9253",
+      "sha256": "6c19086d9f8ffe8b150e612cbe6d381b8fdef7b941c85edfdb6299f128e40b30",
       "executable": false
     },
     "pnpm-lock.yaml": {
@@ -4371,11 +4371,11 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "4ce31331870dfae04c8d318d9706114bc2c238051adfab6efc3e276d57e7ef6d",
+      "sha256": "8d7d15aaa4941f6168c1ab6c23a96a86f3c2603d354094114841ca0b60bcd492",
       "executable": false
     },
     "RELEASE.md": {
-      "sha256": "7aa82b10588ee4dada503374152dec3cc99c1c374ffff9977589cad625ff5dc0",
+      "sha256": "a4dc85b965f4139ce8668d5ae9d2f428a70645d450d319fcdac29e65dd128625",
       "executable": false
     },
     "RENDERING.md": {
@@ -5183,7 +5183,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "afa48b1ad4b771c8abd7664f29c4a908fa2ce19e2af19f4909411456d29e0721",
+      "sha256": "2bee1e79a56006a5521467cd1ab4b69be733ab6c13f5b12b019882d40cfd869f",
       "executable": false
     },
     "src/agent-door/accounting-tools.ts": {

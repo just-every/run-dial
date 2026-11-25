@@ -1,8 +1,8 @@
 {
-  "version": "0.5.0",
-  "previousVersion": "0.4.2",
-  "date": "2026-10-20",
-  "publicReleaseNotes": "Dial 0.5.0: choose who is emailed about each alternative request, and manage links in calendar invitations. Each event type has an Alternative request email setting: every host (the default), selected people, or no email; every request still appears in Requests and the client still gets an acknowledgment. When a connected calendar's invitation replaces Dial's confirmation, it carries a private link the invitee uses to get a fresh manage link by email, on by default per event type. Blocked addresses show who added them and when, and a backup made by 0.4.2 restores. Migrations 0064 and 0065 keep existing data. Pins rer 0.2.68. Product screenshot: .github/assets/screenshots/bookings-1440.png",
+  "version": "0.5.1",
+  "previousVersion": "0.5.0",
+  "date": "2026-11-25",
+  "publicReleaseNotes": "Dial 0.5.1 supports hosted setup with mail off and owner sign-in through rer. It pins rer 0.2.134.\n\nDeploy with `MAIL_PROVIDER=none` to set up hosted Dial without a mail sender or API key. The setup owner signs in with `rer signin`. Configure a mail provider before opening booking pages that send confirmations or management links.\n\nThis release also adds group seat capacity and English or Spanish booking confirmations. Archive preflight matches installed files against the rer migration ledger.\n\nBack up Dial 0.5.0 before updating in place. Adopt 0.5.1 with the pinned rer 0.2.134 and apply the 39 pending migrations through the normal upgrade runner. Preserve the existing migration ledger and already applied SQL. Confirm owner access and check existing records before resuming writes.",
   "screenshots": [
     {
       "path": ".github/assets/screenshots/bookings-1440.png",
@@ -11,257 +11,126 @@
     }
   ],
   "contractChanges": {
-    "REQUEST-004": "DONE: each event type has an alternative-request routing setting stored with its email settings (Every host, the default; Selected people, at least one person with current access; No email). It applies when a request is created; the request is listed and the invitee acknowledged under every setting. Invalid selections are refused with nothing saved. No migration.",
-    "NOTIFY-008": "DONE on the single-host recipient set: the invitee and every operator receive booking mail; a muted operator's booking mail is suppressed without affecting the others. Alternative-request notices reach every host recipient whatever the mute, narrowed only by REQUEST-004. Clauses that add recipients (TEAM-005, TEAM-007, EVENT-008, EVENT-009, PAY-005, OPER-001, NOTIFY-010) carry the two-host journey.",
-    "AUTH-001": "DONE: every /app, /setup and /api/app route sits behind one native-session check; declared public paths authorize only by their capability. The NOTIFY-009 invitation page and the booking manage page each refuse the other's token. OPER-001 carries the role check and AUTH-008 the API-credential check.",
-    "DATA-003": "DONE on its owner case: move-in import from Calendly. Role refusals are carried by OPER-001; validation stays synthetic-only until an owner-supplied account export is checked.",
-    "DATA-001": "rer import restores a native archive made by 0.4.2 or 0.4.1 (migrations up to 0063) into the current schema: rows get 0064's invitationManageLinkEnabled true and 0065 keeps every history row. Archives from the release before them (before 0062) still restore as in 0.4.2. The archive's schema proof must equal the proof of an earlier migration set with the same schema, byte for byte. No migration.",
-    "NOTIFY-001": "DONE: provider invitations carry the NOTIFY-009 invitation manage link. Confirmation is on by default; a successful provider invitation replaces Dial's confirmation only when it is switched off, and absent or failed calendar writes still send Dial's confirmation.",
-    "NOTIFY-009": "Partial: per-event invitation manage links are on by default (0064 turns them on for existing events and retained booking correspondence). An explicit request rotates the booking's manage capability, records a token-free audit (0065), emails a replacement only to the stored invitee address, and states that earlier manage links no longer work. Team and locale templates, direct links, workflow suppression and From/Reply-To previews remain.",
-    "PUBLIC-006": "DONE on its owner case: each blocked address or domain lists who added it and when, in the host's zone.",
-    "BOOK-011": "DONE on its owner case; role refusals carried by OPER-001.",
-    "BOOK-009": "DONE on its owner case; role refusals carried by OPER-001.",
-    "BOOK-012": "DONE on its owner case; role refusals carried by OPER-001.",
-    "REQUEST-003": "DONE on its owner case; role refusals carried by OPER-001.",
-    "OPER-002": "DONE on its owner case; role refusals carried by OPER-001.",
-    "CUSTOM-001": "DONE on its owner case; role refusals carried by OPER-001.",
-    "EDITOR-001": "DONE on its owner case; role refusals carried by OPER-001.",
     "EVENT-007": "PARTIAL: native owner-session group capacity from 2 to 1,000 for free, unapproved single-host events with one fixed duration and location and no additional guests or connected calendar. Atomic seat admission, private per-invitee booking authority and reminders, individual cancellation, upgrade and archive custody are implemented. Controls, waitlist, whole-slot cancellation, shared calendar delivery and priced or approval group combinations remain unimplemented.",
     "LOCALE-001": "MISSING judgment retained pending clause review; added native proof: native owner-session English or Spanish confirmation language, defaulting existing events to English. Built-in invitee confirmations snapshot the language, keep operator text and named timezones, render Spanish dates with explicit 12-hour times, and freeze delivery bytes for retries. Ordinary edits, draft duplication and native archive restoration preserve configuration. Other languages, invitee surfaces, mail families, managed locale templates and browser qualification remain held."
   },
   "extensionPointChanges": [],
   "migrations": [
     {
-      "id": "0001_configuration_spine.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0066_calendar_connection_health_changes.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0002_operator_workspace.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0067_request_browser_timezone.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0003_date_availability_overrides.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0068_stripe_payments.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0004_provider_delivery.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0069_deposits_refunds_fees.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0005_booking_lifecycle.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0070_sales_tax_receipts_invoices.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0006_requests_embeds.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0071_erasure_stripe_customers.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0007_calendar_reconciliation.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0072_invitee_guests.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0008_delivery_recovery_erasure.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0073_booking_approval_requests.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0009_calendar_deletion_probes.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0074_payment_erasure.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0010_public_admission.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0075_paid_approval.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0011_operator_creation_receipts.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0076_processor_erasure_requests.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0012_operator_creation_tombstones.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0077_client_records.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0013_operator_access.sql",
-      "buyerSteps": "Apply in filename order through the accepted deploy kit after preserving a verified backup. Existing applied migration bytes must remain unchanged."
+      "id": "0078_meeting_polls.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0014_operator_mail_invocations.sql",
-      "buyerSteps": "Additive delivery custody for operator mail invocations. Preserve existing outbox and attempt history and apply in filename order through the accepted deploy kit after a verified backup."
+      "id": "0079_payment_reconciliation.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0015_operator_notification_generation.sql",
-      "buyerSteps": "Additive operator-access generation fencing for notification recipients. Preserve prior operator, delivery and attempt records and apply in filename order through the accepted deploy kit after a verified backup."
+      "id": "0080_workspace_notices.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0016_base_operator_auth.sql",
-      "buyerSteps": "Additive Base operator-auth adoption. Preserve Dial operator IDs, the explicitly recorded setup identity and all authored records. The migration revokes all legacy operator sessions and consumes outstanding legacy magic links because they cannot cross the new authentication protocol; operators must sign in again. Apply only in filename order through the accepted deploy kit after reviewing an existing-data upgrade and verified backup."
+      "id": "0081_your_hours.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0017_base_mail_dispatch.sql",
-      "buyerSteps": "Additive durable SendGrid invocation custody, including uncertain outcomes with no provider receipt. Preserve existing delivery attempts and apply in filename order through the accepted deploy kit after a verified backup."
+      "id": "0082_site_look.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0018_sendgrid_provider_identity.sql",
-      "buyerSteps": "Expands provider identity constraints to include SendGrid while retaining existing health, webhook-event and public-admission rows. Verify the old-data transition and preserve a verified backup before applying in filename order through the accepted deploy kit."
+      "id": "0083_payment_entitlements.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0019_request_only_events.sql",
-      "buyerSteps": "Additive request-only event mode; existing events default to normal booking mode. Preserve existing migration bytes, review a verified backup, and apply in filename order. Database guards reject new bookings and current booking occurrences for request-only events. Cancellation/history occurrences for existing bookings remain permitted."
+      "id": "0084_microsoft_calendar.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0020_base_development_outbox.sql",
-      "buyerSteps": "Adds the bounded Base development-mail outbox. Preserve existing records and migration bytes; take a verified backup and apply in filename order. Local captures contain authentication links and remain private, excluded from archives."
+      "id": "0085_analytics.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0021_remove_development_magic_link_sink.sql",
-      "buyerSteps": "Retires only the obsolete local-development magic-link sink after Base outbox adoption. Review a verified backup and apply after 0020 in filename order. Old local links in that sink are removed; authored application data and real provider history remain unchanged."
+      "id": "0086_import_role_boundary.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0022_development_mail_health.sql",
-      "buyerSteps": "Expands provider health to the explicit development provider while preserving all existing provider health rows. Review a verified backup and apply in filename order. Development mail never establishes live-provider delivery."
+      "id": "0087_webhook_sources.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0023_base_invitation_cancellation.sql",
-      "buyerSteps": "Adds Base durable invitation-cancellation admission state and triggers without inferring historical invitation acceptance. Preserve operator identities/status and earlier migration bytes, review a verified backup and apply in filename order. Reissue cancelled invitations through the Base invitation API; older capabilities remain invalid."
+      "id": "0088_webhooks.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0024_archive_historical_effects.sql",
-      "buyerSteps": "Adds archive_historical flags to deletion probes and erased-calendar targets. Existing rows default to zero and retain live authority and diagnostic facts. Review a verified backup, preserve all earlier migration bytes and apply in filename order before export/import. Restored historical rows are marked and cannot resume provider effects."
+      "id": "0089_event_type_webhook_cleanup.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0025_host_link_copy_reports.sql",
-      "buyerSteps": "Adds one durable authenticated booking-link copy report per event type, retaining the canonical URL and server-accepted/created/updated timestamps. Reports are browser reports, not independent attestations of clipboard contents. Relevant event slug/status/request-only/alternative-request changes and host handle/name/timezone changes invalidate reports; event deletion cascades and profile deletion clears reports. Preserve prior data and every applied migration byte, review an archive backup made before this schema change and apply in filename order. Existing installs start with no report; the copy checklist remains pending until a native copy/report succeeds. No first-owner, setup or session authority changes. Confirm the archive census supports the new table before exporting or restoring this schema."
+      "id": "0090_api_credentials.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0026_portability.sql",
-      "buyerSteps": "Apply after prior migrations. Adds transfer bookkeeping only; preserve every existing applied migration byte. Export and retain a verified archive before updating."
+      "id": "0091_public_api.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0027_first_run_setup.sql",
-      "buyerSteps": "Apply in order after backing up. Adds nullable onboarding_completed_at to operator_setup_identity and backfills only existing rows to created_at for upgrade access compatibility. New claims remain unfinished. Preserve this column during whole-install transfer; older archives must use original-revision restore, upgrade and re-export."
+      "id": "0092_workflows.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0028_owner_claim.sql",
-      "buyerSteps": "Apply after existing numbered migrations. Preserve oc_owner_claims permanently, including through archive/restore. Existing installations with any operator or bootstrap record cannot claim another first owner."
+      "id": "0093_payment_coupons.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
-      "id": "0029_move_in_import.sql",
-      "buyerSteps": "Additive saved-data import custody, permanent erasure guards and imported-booking marker. Preserve applied migrations and native records; back up before applying in filename order. Source capabilities remain private to this installation and are excluded from whole-install archives."
-    },
-    {
-      "id": "0030_dev_sessions.sql",
-      "buyerSteps": "Additive Base local development credentials, isolated from deployed authentication and excluded from archives. Preserve prior applied migration bytes and back up before applying in filename order. No live account or provider acceptance is established."
-    },
-    {
-      "id": "0031_auth_domain_rules_step_up.sql",
-      "buyerSteps": "Back up before applying this additive Base authentication migration in filename order. It adds domain rules and session-bound step-up proofs without changing existing rows, sessions or sign-in links. Keep every applied migration byte. Recovery is the pre-upgrade backup with its matching code; do not reset a populated installation. Current archives retain domain rules and exclude step-up proofs; older archives require their original revision for restore, then upgrade and re-export."
-    },
-    {
-      "id": "0032_host_avatar.sql",
-      "buyerSteps": "Back up before applying after the existing authentication migrations. Adds nullable avatar metadata and durable object cleanup state, preserving populated profiles and prior timestamps. Original avatar bytes and content type travel in compatible whole-install archives. Preserve every previously applied migration byte; never reset populated state."
-    },
-    {
-      "id": "0033_booking_search.sql",
-      "buyerSteps": "Back up before applying in filename order. Adds derived full Unicode folded invitee search values and maintenance triggers for existing and future bookings. Existing records and NUL-containing text remain intact. Upgrade the complete schema before creating a new archive; earlier archives require original-revision restore then upgrade and re-export."
-    },
-    {
-      "id": "0034_extension_custom_fields.sql",
-      "buyerSteps": "Back up before applying in filename order. Adds extension-owned definition and value sidecars with core foreign keys; no core custom-field column is introduced and existing data is unchanged. Current archives preserve private annotations. Earlier archives require their original revision for restore followed by upgrade and re-export; keep all applied migration bytes."
-    },
-    {
-      "id": "0041_import_custody_retirement.sql",
-      "buyerSteps": "Back up with the installed revision before updating, preserve every applied migration byte and apply after 0040 in filename order. Adds import reversal fences, permanent retirement records and append-only erasure evidence without deleting existing product records. Preserve retirement and erasure history during transfer; never clear it to replay an import. Recover using the pre-upgrade backup and its matching revision rather than resetting populated state."
-    },
-    {
-      "id": "0042_optional_calendar.sql",
-      "buyerSteps": "Back up before updating, preserve all existing migration bytes and apply in filename order. Existing bookings retain calendar_required=1; newly created schedule-only bookings use 0. Restore an older archive with its original revision, then apply this additive migration and export again."
-    },
-    {
-      "id": "0043_hosted_portability.sql",
-      "buyerSteps": "Apply after 0042. Adds non-expiring writer admissions and an expiring export lease, both excluded from archives. Deploy this revision consistently and quiesce direct owner-account D1/R2 writes during hosted export. Preserve original SESSION_SECRET and exact source revision; restore hosted archives only into an empty local destination. A crashed writer on any install blocks hosted export and requires proven source quiescence before recovery; see OPERATIONS.md rather than deleting receipts speculatively."
-    },
-    {
-      "id": "0044_local_dependency_setup.sql",
-      "buyerSteps": "Back up and apply after 0043, preserving all prior migration bytes. Adds native authentication settings and the first-owner dependency-setup marker. Existing bootstrap installations remain complete for dependency setup; future first-owner bootstrap starts pending. Preserve existing authentication settings and use the normal setup workflow for new installations; do not reset an existing owner to rerun setup."
-    },
-    {
-      "id": "0045_import_preparation_steps.sql",
-      "buyerSteps": "Back up and apply after 0044 before running the updated import or erasure paths. Adds durable preparation state for imports prepared across requests, with immutable upload bindings and checked revision advancement. Preserve existing import custody and permanent erasure records; do not manually change preparation bindings or revisions. Recover an interrupted upgrade from the matching pre-upgrade backup."
-    },
-    {
-      "id": "0046_import_stream_sources.sql",
-      "buyerSteps": "Back up and apply after 0045. Adds source-digest custody for import streams published by stepped preparation. Existing stream rows are unchanged and no digest is guessed for them. Resume imports through the supported workflow; replay of a newly prepared published operation requires its original upload. Preserve all applied migration bytes and restore older archives with their original revision before upgrading and exporting again."
-    },
-    {
-      "id": "0047_auth_provider_controls.sql",
-      "buyerSteps": "Back up and apply after 0046, preserving all prior migration bytes. Additive identity-provider controls, provider sessions and credentials; an absent setting means off, including on upgrade."
-    },
-    {
-      "id": "0048_auth_dependency_setup.sql",
-      "buyerSteps": "Back up and apply after 0047. Adds ephemeral, never-exported setup attempts bound to the first native claim. Existing owners are unaffected; do not reset an owner to rerun setup."
-    },
-    {
-      "id": "0049_auth_owner_signin.sql",
-      "buyerSteps": "Back up and apply after 0048. Adds one-time owner sign-in links for rer signin, storing only token hashes. Additive only; existing sessions and links are unchanged."
-    },
-    {
-      "id": "0050_managed_mail_health.sql",
-      "buyerSteps": "Back up and apply after 0049. Rebuilds provider_connection_health with the same columns and rows, adding the rer provider to its allowed values. Existing provider health is copied unchanged."
-    },
-    {
-      "id": "0051_phone_dropdown_questions.sql",
-      "buyerSteps": "Back up and apply after 0050. Rebuilds event_questions with the same rows to allow phone-number and dropdown questions; existing questions are copied unchanged."
-    },
-    {
-      "id": "0052_booking_horizons.sql",
-      "buyerSteps": "Back up and apply after 0051. Replaces event_types.slot_increment_minutes with a copy that also allows 45 (values copied unchanged) and adds booking horizon columns; existing event types keep their rolling calendar-day horizon."
-    },
-    {
-      "id": "0053_event_duration_options.sql",
-      "buyerSteps": "Back up and apply after 0052. Adds duration options to event_types, filled from each event's existing duration."
-    },
-    {
-      "id": "0054_booking_link_context.sql",
-      "buyerSteps": "Back up and apply after 0053. Adds nullable redirect and link-attribution columns to event types, questions and bookings; existing rows are unchanged."
-    },
-    {
-      "id": "0055_availability_controls.sql",
-      "buyerSteps": "Back up and apply after 0054. Adds named schedules, schedule bindings and booking-limit tables and their indexes; existing events keep their own hours."
-    },
-    {
-      "id": "0056_booking_policy.sql",
-      "buyerSteps": "Back up and apply after 0055. Adds per-event booking-policy and locked-timezone presentation tables; absent rows keep the deployment's policy."
-    },
-    {
-      "id": "0057_correspondence.sql",
-      "buyerSteps": "Back up and apply after 0056. Adds per-event correspondence templates and their per-booking snapshots; events without a template keep the built-in wording."
-    },
-    {
-      "id": "0058_reschedule_requests.sql",
-      "buyerSteps": "Back up and apply after 0057. Adds reschedule-request tables and an occurrence column that marks held time; existing occurrences keep blocking their time."
-    },
-    {
-      "id": "0060_event_location_options.sql",
-      "buyerSteps": "Back up and apply after 0058 (there is no 0059). Adds a nullable locations column to event_types; existing events keep their single location."
-    },
-    {
-      "id": "0061_booking_links.sql",
-      "buyerSteps": "Back up and apply after 0060. Adds private booking-link tables (token hashes only) and a nullable link column on booking nonces."
-    },
-    {
-      "id": "0062_offered_times.sql",
-      "buyerSteps": "Back up and apply after 0061. Adds offered-time and hold columns to booking links and an index for active holds."
-    },
-    {
-      "id": "0063_invitee_confirmation.sql",
-      "buyerSteps": "Back up and apply after 0062. Sets the new invitee-confirmation choice to on for every existing event and booking, so they keep sending confirmations."
-    },
-    {
-      "id": "0064_invitation_manage_link.sql",
-      "buyerSteps": "Back up and apply after 0063. Enables invitation manage access in existing event and retained booking correspondence. Per-event settings can turn it off."
-    },
-    {
-      "id": "0065_invitation_rotation_audit.sql",
-      "buyerSteps": "Apply after 0064. Expands the existing request-history action constraint to record token-free replacement-link audits. Every existing history row is preserved."
+      "id": "0094_coupon_issuance_receipts.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
       "id": "0095_api_consent.sql",
@@ -280,8 +149,24 @@
       "buyerSteps": "Back up before applying in filename order after 0094. Preserve every previously applied migration byte. Binds booking webhook receivers and queued delivery authority to the booking event host, including active native host partitions. Preserves prior booking and delivery history. Recover with the pre-upgrade backup and matching code rather than resetting populated state."
     },
     {
+      "id": "0099_business_settings.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
+    },
+    {
+      "id": "0100_business_people.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
+    },
+    {
+      "id": "0101_agent_door.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
+    },
+    {
       "id": "0102_group_seat_capacity.sql",
       "buyerSteps": "Apply in filename order after a verified backup. Existing events retain null group capacity and ordinary overlap exclusion. Group capacity is configured through the native authenticated event endpoints; disconnect the calendar first. Existing booking records remain the seat ledger; the migration adds configuration guards and a slot lookup index."
+    },
+    {
+      "id": "0103_poll_reminders.sql",
+      "buyerSteps": "Back up first. Apply once through the normal upgrade runner in migration order, keeping previous entries in the migration ledger."
     },
     {
       "id": "0104_confirmation_language.sql",
@@ -289,5 +174,5 @@
     }
   ],
   "breaking": false,
-  "agentUpdateInstructions": "Read this release record's contractChanges before updating from 0.4.2. This update adds migrations 0064\u20130065: back up first (rer export --output exports/NAME.rer locally, keeping .dev.vars with it; hosted: Settings, Export status, Download backup, and keep .rer/deploy/<environment>.secrets.env), then pull and run rer install, then rer setup locally or rer deploy from the same deploying checkout. Do not reset or replace state to upgrade. A backup made by 0.4.2 or 0.4.1, or by the release listed before them, can be restored into an empty destination with its original SESSION_SECRET: rer import --input exports/NAME.rer --yes. Hosted restore is not exposed. No live Google Calendar, Meet or capacity acceptance is claimed."
+  "agentUpdateInstructions": "Back up Dial 0.5.0 before updating in place. Adopt 0.5.1 with the pinned rer 0.2.134 and apply the 39 pending migrations through the normal upgrade runner. Preserve the existing migration ledger and already applied SQL. Confirm owner access and check existing records before resuming writes. Deploy with `MAIL_PROVIDER=none` to set up hosted Dial without a mail sender or API key. The setup owner signs in with `rer signin`. Configure a mail provider before opening booking pages that send confirmations or management links. Keep existing provider configuration where the workspace needs mail."
 }
