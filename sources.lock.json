@@ -4843,7 +4843,7 @@
       "executable": false
     },
     "scripts/local/migration-replay.mjs": {
-      "sha256": "686dde33246b7512becc72cd088d6327fdcc2de37aa53ac34c8a4d3d06019429",
+      "sha256": "3db8d86e244b2cd94d98a7634077182d56ee93aae0a930f2b04e9d4626d01f16",
       "executable": false
     },
     "scripts/local/observability-processes.mjs": {
