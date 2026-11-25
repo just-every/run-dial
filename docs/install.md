@@ -31,7 +31,7 @@ You need none of the provider accounts to try Dial on your computer. A deployed 
    ```
 
    A tag retains its own dependency pins. This guide describes current `main`,
-   which pins **rer 0.2.77**.
+   which pins **rer 0.2.134**.
 
 2. From a checkout you cloned yourself, start Dial:
 
@@ -169,7 +169,7 @@ After a healthy deploy, `rer` claims the hosted owner and removes the one-time s
 
 If the email does not arrive, check the owner address, SendGrid credentials, verified sender and mailbox delivery. A successful deploy or health check does not prove email delivery. A setup token cannot sign you in after the owner has been claimed.
 
-Dial pins **rer 0.2.77**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deploy record and the same Cloudflare credentials, run:
+Dial pins **rer 0.2.134**, including hosted owner sign-in without email delivery. From the same checkout that deployed the installation, with its deploy record and the same Cloudflare credentials, run:
 
 ```bash
 rer signin
@@ -178,6 +178,8 @@ rer signin --environment staging
 ```
 
 The default environment is `production`. Open the printed private link and choose **Confirm**. It works once, expires after 15 minutes and signs in the active owner; it does not create a new owner. Keep it out of logs and messages. Email sign-in remains the normal path, and working transactional mail is still required for booking notifications.
+
+To deploy with outbound email off, for a Business that has no mail provider, set `MAIL_PROVIDER=none` in the deploy environment and give no sender or mail key. `rer deploy --dry-run` then says outbound email is off and names `rer signin` for owner entry. With mail off Dial sends nothing: every booking notice, reminder and emailed sign-in link is refused with `mail_off`, Settings shows transactional mail as off, and an event type cannot be published until a mail provider is set. Turn mail on later with `rer deploy --set-secret MAIL_PROVIDER=sendgrid --set-secret MAIL_API_KEY --set-secret MAIL_FROM --env-file <file>`.
 
 [OPERATIONS.md](../OPERATIONS.md#owner-account-deployment-and-release) describes the deployment and release boundaries for maintainers.
 

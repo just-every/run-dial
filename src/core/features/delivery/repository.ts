@@ -32,7 +32,7 @@ export class DeliveryRepository {
   private readonly db;
   readonly confirmations: ConfirmationDeliveryRepository;
 
-  constructor(private readonly binding: D1Database, readonly mailProvider: "resend" | "sendgrid" | "rer" | "development" = "resend", private readonly webhookConfigured = false) {
+  constructor(private readonly binding: D1Database, readonly mailProvider: "resend" | "sendgrid" | "rer" | "development" | "none" = "resend", private readonly webhookConfigured = false) {
     this.db = createDatabase(binding);
     this.confirmations = new ConfirmationDeliveryRepository(binding);
   }
@@ -131,12 +131,15 @@ export class DeliveryRepository {
   }
 
   async mailHealth() {
+    // Mail off is a deployment choice, not a provider's health: nothing is recorded and every check reports it.
+    if (this.mailProvider === "none") return { state: "unhealthy" as const, checkedAt: null, reason: "mail_off", provider: this.mailProvider, eventTracking: "not_applicable" as const };
     const [record] = await this.db.select().from(providerConnectionHealth).where(eq(providerConnectionHealth.provider, this.mailProvider));
     const health = record ? { state: record.status, checkedAt: record.lastCheckedAt, reason: record.unhealthyCode } : { state: "unchecked" as const, checkedAt: null, reason: null };
     return { ...health, provider: this.mailProvider, eventTracking: ["development", "rer"].includes(this.mailProvider) ? "not_applicable" as const : this.webhookConfigured ? "on" as const : "off" as const };
   }
 
   async setMailHealth(status: "healthy" | "unhealthy", reason: string | null) {
+    if (this.mailProvider === "none") return { changed: false, alertCycle: 0 };
     return this.setConnectionHealth(this.mailProvider, status, reason);
   }
 
@@ -159,7 +162,7 @@ export class DeliveryRepository {
     return { changed, alertCycle };
   }
 
-  async enqueueConnectionAlert(input: { provider: "google_calendar" | "resend" | "sendgrid" | "rer" | "development"; status: "healthy" | "unhealthy"; reason: string | null; alertCycle: number }) {
+  async enqueueConnectionAlert(input: { provider: "google_calendar" | "resend" | "sendgrid" | "rer" | "development" | "none"; status: "healthy" | "unhealthy"; reason: string | null; alertCycle: number }) {
     const recipients = await this.db.select({ id: operators.id, email: operators.email, generation: operators.accessGeneration }).from(operators).where(isNull(operators.removedAt)).orderBy(asc(operators.email));
     if (recipients.length === 0) return;
     const timestamp = nowIso();

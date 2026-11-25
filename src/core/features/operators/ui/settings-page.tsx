@@ -19,7 +19,7 @@ import { MiniDial } from "../../../shared/drawing/MiniDial";
 type Session = { operator: { email: string; expiresAt: string } };
 type CalendarHealth = { recentChanges: CalendarHealthChange[]; provider: "google_calendar"; state: "healthy" | "unhealthy" | "disconnected"; checkedAt: string | null; reason: string | null; destinationSelected: boolean; destinationCalendarId: string | null; conflictCalendarIds: string[]; conflictCalendarCount: number; conferenceCapable: boolean };
 type Calendar = { id: string; accessRole: "freeBusyReader" | "reader" | "writer" | "owner" | "none"; primary: boolean; conferenceCapable: boolean };
-type MailHealth = { state: "healthy" | "unhealthy" | "unchecked"; checkedAt: string | null; reason: string | null; provider: "sendgrid" | "resend" | "rer" | "development"; eventTracking: "on" | "off" | "not_applicable" };
+type MailHealth = { state: "healthy" | "unhealthy" | "unchecked"; checkedAt: string | null; reason: string | null; provider: "sendgrid" | "resend" | "rer" | "development" | "none"; eventTracking: "on" | "off" | "not_applicable" };
 
 export function SettingsPage({ embedSettings, blockingSettings, mailPreferences, privacySettings, paymentSettings }: { embedSettings?: ReactNode; blockingSettings?: ReactNode; mailPreferences?: ReactNode; privacySettings?: ReactNode; paymentSettings?: (timezone: string | null) => ReactNode }) {
   const initialSession = useWorkspaceRead<Session>("/api/app/session");

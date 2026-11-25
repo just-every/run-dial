@@ -20,12 +20,17 @@ export function operationsCheckout() {
     copyFileSync(join(source, name), target);
   }
   symlinkSync(join(source, 'node_modules'), join(checkout, 'node_modules'), 'dir');
+  writeLocalSettings();
+  return checkout;
+}
+// rer doctor judges the checkout's own .dev.vars (local inputs only); a case that needs a missing local setting omits it.
+function writeLocalSettings(omit = []) {
   const settings = {
     OWNER_EMAIL: 'doctor-owner@fixture.test', APP_URL: 'http://127.0.0.1:8787',
     SESSION_SECRET: 'synthetic-doctor-local-settings-secret-'.repeat(2),
   };
+  for (const name of omit) delete settings[name];
   writeFileSync(join(checkout, '.dev.vars'), Object.entries(settings).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join('\n') + '\n', { mode: 0o600 });
-  return checkout;
 }
 after(() => { if (checkout) rmSync(checkout, { recursive: true, force: true }); });
 
@@ -62,7 +67,7 @@ function doctorResult(env, ready) {
 }
 
 let prerequisitesChecked = false;
-export function checkDoctor(env, ready) {
+export function checkDoctor(env, ready, { omitLocal = [] } = {}) {
   if (!prerequisitesChecked) {
     // Prove this real checkout can pass doctor before accepting configuration refusals.
     // Doctor itself validates the installed tools, private settings and state.
@@ -76,5 +81,6 @@ export function checkDoctor(env, ready) {
     }, true);
     prerequisitesChecked = true;
   }
-  return doctorResult(env, ready);
+  writeLocalSettings(omitLocal);
+  try { return doctorResult(env, ready); } finally { writeLocalSettings(); }
 }

@@ -26,6 +26,8 @@ export function createAuthenticationMail(runtime: RuntimeEnvironment): AuthMailS
     } };
   }
   if (runtime.MAIL_PROVIDER === "development") throw new Error("Development mail is unavailable outside a loopback development install or demo mode");
+  // Mail off (MAIL_PROVIDER=none, rer's mail-off deploy): every send is refused at once and the owner signs in with `rer signin`.
+  if (runtime.MAIL_PROVIDER === "none") return { async send() { return { status: "rejected", provider: "none", providerMessageId: null, code: "mail_off" }; } } as AuthMailSender;
   const config = mailConfiguration(runtime);
   if (!config.apiKey || !config.from) return undefined;
   if (config.provider === "rer") {
@@ -42,12 +44,14 @@ export class BaseMailSender implements MailSender {
     if (suppressesMail(this.runtime)) {
       return { checkedAt: new Date().toISOString() };
     }
+    if (config.provider === "none") throw new ProviderFailure("mail_off", false);
     if (!config.from) throw new ProviderFailure("missing_configuration", false);
     if (config.provider === "rer") return checkManagedRelay({ apiKey: config.apiKey, relayUrl: config.relayUrl }, this.request);
     return checkMailProvider(config as { provider: "resend" | "sendgrid"; apiKey?: string; from?: string }, this.request);
   }
   async send(message: MailMessage): Promise<MailSendResult> {
     const config = mailConfiguration(this.runtime);
+    if (config.provider === "none" && !suppressesMail(this.runtime)) throw new ProviderFailure("mail_off", false);
     if ((!config.apiKey && !suppressesMail(this.runtime)) || !config.from) throw new ProviderFailure("missing_configuration", false);
     const sender = suppressesMail(this.runtime)
       ? createMailSender({ provider: "development", mode: "development" }, {}) as BaseSender

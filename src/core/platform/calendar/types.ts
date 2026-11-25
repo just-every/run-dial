@@ -9,6 +9,7 @@ export type ProviderFailureCode =
   | "operator_notification_coordination_failed"
   | "operator_notification_coordination_missing"
   | "missing_configuration"
+  | "mail_off"
   | "reauthorization_required"
   | "permanent_delivery_failure"
   | "mail_outcome_unknown"

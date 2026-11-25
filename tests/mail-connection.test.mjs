@@ -32,10 +32,10 @@ async function verifyPublication(f) {
   const declaration = JSON.parse(await readFile('deploy.json', 'utf8'));
   const { secretBindings } = await import('../node_modules/@runeditrun/rer/modules/deploy-kit/worker.mjs');
   const { ownerPlan } = await import('../node_modules/@runeditrun/rer/modules/deploy-kit/owner.mjs');
-  const plan = ownerPlan({ project: declaration.project, environment: 'production', worker: 'mail-fixture', origin: configuration.APP_URL }, declaration, { migrations: [] });
+  const plan = ownerPlan({ project: declaration.project, environment: 'production', worker: 'mail-fixture', origin: configuration.APP_URL }, declaration, { migrations: [] }, { publicDefaults: { MAIL_PROVIDER: 'sendgrid' } });
   const inputs = { OWNER_EMAIL: configuration.OWNER_EMAIL, SESSION_SECRET: configuration.SESSION_SECRET, SETUP_TOKEN: configuration.SETUP_TOKEN, SENDGRID_API_KEY: configuration.MAIL_API_KEY, MAIL_FROM: configuration.MAIL_FROM };
   await secretBindings({}, 'fixture-worker', plan, inputs, false);
-  for (const missing of ['SENDGRID_API_KEY', 'MAIL_FROM']) await assert.rejects(secretBindings({}, 'fixture-worker', plan, { ...inputs, [missing]: undefined }, false), /missing-secret/);
+  for (const missing of ['OWNER_EMAIL', 'SESSION_SECRET']) await assert.rejects(secretBindings({}, 'fixture-worker', plan, { ...inputs, [missing]: undefined }, false), /missing-secret/);
   const event = await (await f.request('/__fixture/seed')).json();
   const beforeRefusalCalls = f.calls;
   f.verified = false;
@@ -94,4 +94,22 @@ test('SendGrid callbacks stay closed without a key or valid signature and signed
     } else assert.deepEqual(await f.snapshot(), before);
     await f.close();
   }
+});
+
+test('mail off (MAIL_PROVIDER=none) needs no sender or key, refuses every send with mail_off and sends nothing', async t => {
+  const f = await fixture(t, { MAIL_PROVIDER: 'none', MAIL_API_KEY: undefined, MAIL_FROM: undefined });
+  const before = await f.snapshot();
+  const health = await (await f.request('/api/app/mail/connection')).json();
+  assert.deepEqual({ provider: health.provider, state: health.state, reason: health.reason }, { provider: 'none', state: 'unhealthy', reason: 'mail_off' });
+  assert.equal((await f.request('/api/app/mail/check', {})).status, 503);
+  assert.deepEqual(await f.snapshot(), before, 'mail off records no provider health');
+  const link = await f.request('/auth/magic-link', { email: 'owner@example.test' });
+  assert.equal(link.status, 503, 'an emailed sign-in link is refused while mail is off');
+  const at = new Date().toISOString();
+  await f.db.prepare("INSERT INTO delivery_outbox(id,kind,idempotency_key,payload_json,state,attempts,next_attempt_at,created_at,updated_at) VALUES('mail-off-send','mail_send','mail-off-send',?,'pending',0,?,?,?)")
+    .bind(JSON.stringify({ to: 'invitee@example.test', subject: 'Confirmation', text: 'Booking confirmed.' }), at, at, at).run();
+  assert.equal((await (await f.request('/__fixture/process', { outboxId: 'mail-off-send', now: at })).json()).result, 'failed');
+  const row = await f.db.prepare("SELECT state,last_error_code FROM delivery_outbox WHERE id='mail-off-send'").first();
+  assert.equal(row.last_error_code, 'mail_off');
+  assert.equal(f.calls, 0, 'nothing reached a mail provider');
 });

@@ -935,7 +935,7 @@
       "executable": false
     },
     "deploy.json": {
-      "sha256": "39597d60586921c8328cf4826164dbcd881271675a51e38b55e088fe4ccd35b5",
+      "sha256": "dade164cc4dc7f0ba205e2867d01b407606ce26fbd956d0ff15cc96cc8006875",
       "executable": false
     },
     "deploy/origin.json": {
@@ -987,7 +987,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "b5dd2ad08e7ad4f1964ca934520d8a9c64736477cc938b8deaae0d84dbed02cd",
+      "sha256": "2588d843add09078638d90349df6dbddf68c227200df01b6e688d3f198b8a196",
       "executable": false
     },
     "docs/overview.md": {
@@ -4339,11 +4339,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "0650da02d92f7a70ca20e66af3b114acddcb2f69803e53c75f0d1d7d73f8f35f",
+      "sha256": "21826d38799043fc0c7215ddce25980237fca9a1409d04c0319392f48c1b9253",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "c67a5167850875f90ba5274d2a0038d158f650c9cc4b000df5a92f6bb450c094",
+      "sha256": "24b522c1f122579e2091486f1f18bcc68912d59f15d32709e9d1ebe9ecc26570",
       "executable": false
     },
     "public/brand/band.svg": {
@@ -4367,7 +4367,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "4cd986979dd99a2da06201b4188957cac7df0366882433ee08262e8c5a05c471",
+      "sha256": "808856e19ce265cbf3355f02672c21538541bac35a137c954db51256582d1f2c",
       "executable": false
     },
     "RELEASE.json": {
@@ -4795,7 +4795,7 @@
       "executable": false
     },
     "scripts/installer/local.mjs": {
-      "sha256": "72eb3364504f72d9819240bea1b022dbe4563c8e3630648bee363ca1c7323d2d",
+      "sha256": "9a8a0c970f06b78ed22398c9ce39fa62e2b217b88150b8d436b81deabae491c5",
       "executable": false
     },
     "scripts/installer/seed.mjs": {
@@ -5471,7 +5471,7 @@
       "executable": false
     },
     "src/core/app/bindings.ts": {
-      "sha256": "e3feeb4e4c55f0861d5488bf6d518a7d6fca6bc5092e53fe754e0b816d54bba9",
+      "sha256": "de4e35ace2a1165ee2b36e3fe29b3411299e3f5bdc00927051e6a0603ed57c63",
       "executable": false
     },
     "src/core/app/booking-coordination.ts": {
@@ -5543,7 +5543,7 @@
       "executable": false
     },
     "src/core/app/services.ts": {
-      "sha256": "32f67dd6d01c2acba088b194c0e460e9c5317bc204880c81ce07e9a0ccb62508",
+      "sha256": "7e4606ef59fcf415a0521480f8fd05cacb36aa1600c52e54c7731afd76b6ccf2",
       "executable": false
     },
     "src/core/app/signin-options.server.ts": {
@@ -6423,7 +6423,7 @@
       "executable": false
     },
     "src/core/features/delivery/repository.ts": {
-      "sha256": "03c4d7b4f335d49ea5dc940ca22ac4753c4981f4d30f48da29198e9206bfcd1c",
+      "sha256": "1f470995bbc8a2eed22eb96a6ff086a642e2ccd33a037d3db65622c9674e9561",
       "executable": false
     },
     "src/core/features/delivery/request-mails.ts": {
@@ -7211,7 +7211,7 @@
       "executable": false
     },
     "src/core/features/operators/ui/mail-tracking.tsx": {
-      "sha256": "60b4c297ef5f63cc03ad8f66a4ed75e51b418b0c59f8d562f9eec19a55a61061",
+      "sha256": "43b90fb9b2cdf61f6b84cb8afd736adf97044602e6bf2cee431d2c8a0d0429f2",
       "executable": false
     },
     "src/core/features/operators/ui/operator-access.tsx": {
@@ -7223,7 +7223,7 @@
       "executable": false
     },
     "src/core/features/operators/ui/settings-page.tsx": {
-      "sha256": "0ed72aaac23e457c7b2b8dbcdc833ec2efec7a6638dc7323d77361872b9cfa35",
+      "sha256": "52c22418ef5d35b3db433d7cf94bada9ac7ed38048b5a93085e5c3d2f6bb3912",
       "executable": false
     },
     "src/core/features/operators/ui/sign-in-page.tsx": {
@@ -8315,7 +8315,7 @@
       "executable": false
     },
     "src/core/platform/calendar/types.ts": {
-      "sha256": "476bdbe1ae213818b3b274e66acffc8437d20d2fb973d0f4d06cc812703a12b2",
+      "sha256": "9ab0b971a16d75793a604fce7215383ed71285070f8cea3b22faff4eef7f3c3c",
       "executable": false
     },
     "src/core/platform/crypto/sealed.ts": {
@@ -8351,11 +8351,11 @@
       "executable": false
     },
     "src/core/platform/mail/base-mail.ts": {
-      "sha256": "e3967e624a22a14ce7dd8659af2d2c375463d231af363450950a43283ec20582",
+      "sha256": "27a2dafbe450e6148c65683c6edc0366eacd84e318540e09937f8525fc9173ff",
       "executable": false
     },
     "src/core/platform/mail/connection-message.ts": {
-      "sha256": "5ca698ad0d0210a9fca17b993a97319424fc477ff458d05db50a13d22f549b18",
+      "sha256": "cd4f4edb6b3e9272275b09ba14f1c95d29df4a2c5d15a0fcd6b6c896817b3287",
       "executable": false
     },
     "src/core/platform/mail/connection.ts": {
@@ -8607,11 +8607,11 @@
       "executable": false
     },
     "src/core/shared/runtime-env-schema.d.mts": {
-      "sha256": "3df8867d72d3996a14a4ad1075ccd1d8234f286cfb6051fb9cd22912283a1417",
+      "sha256": "d7155e473bd505e65eb7e2108a00d0e0986d5c12894dfc98fd5e073c68735e66",
       "executable": false
     },
     "src/core/shared/runtime-env-schema.mjs": {
-      "sha256": "72d8003cd1531b09b51cc97e9554b969b645033dfe6b67ce61e148aeefac68ad",
+      "sha256": "c1531505165f82c4c618a3ea7e598a33ea84be857d1178a2fb99f903773a7289",
       "executable": false
     },
     "src/core/shared/runtime-env.ts": {
@@ -10115,7 +10115,7 @@
       "executable": false
     },
     "tests/mail-connection.test.mjs": {
-      "sha256": "3408d248b4cf611b4af320d75c41ba03de9afa5a4cc98967ad31e69d27b38d68",
+      "sha256": "262836c8b0610586626e103d9d35bf12d83777f6e96ce3d16fe3d0de45f762cf",
       "executable": false
     },
     "tests/mail-connection/booking-journey.mjs": {
@@ -10627,11 +10627,11 @@
       "executable": false
     },
     "tests/operations-command/fixture.mjs": {
-      "sha256": "5e1b45a89df2c58351df1aa9442e6ff78daf7eea54f24c3078c96e476f60eccb",
+      "sha256": "31a54722ad2c86edc48e238c9f1c99a1fcec244df29d36cd7d5dc6608be7b5e8",
       "executable": false
     },
     "tests/operations-summary.test.mjs": {
-      "sha256": "e9ca180e21fedf2b00fe48eadf28c796228b218b607abf3a9da9beaa92783413",
+      "sha256": "774ed000f12669064579b6aa0a607fccf5214dcbfd05b49e29670fbd4fe9315f",
       "executable": false
     },
     "tests/operator-access-migration.test.mjs": {

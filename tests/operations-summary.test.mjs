@@ -28,7 +28,7 @@ contract('OPER-001', 'fresh operations check and describe use the maintained RER
 });
 
 contract('OPER-001', 'doctor distinguishes missing configuration from complete local prerequisites', () => {
-  const missing = checkDoctor({}, false);
+  const missing = checkDoctor({}, false, { omitLocal: ['APP_URL'] });
   assert.ok(missing.output.missingInputs.includes('APP_URL'));
   assert.ok(missing.output.sources.APP_URL);
   const completeResult = checkDoctor(complete, true);
@@ -38,7 +38,7 @@ contract('OPER-001', 'doctor distinguishes missing configuration from complete l
 contract('BASE-SECRET-001', 'doctor names missing origin without exposing supplied secrets', () => {
   const env = { ...complete };
   delete env.APP_URL;
-  const result = checkDoctor(env, false);
+  const result = checkDoctor(env, false, { omitLocal: ['APP_URL'] });
   assert.ok(result.output.missingInputs.includes('APP_URL'));
 });
 

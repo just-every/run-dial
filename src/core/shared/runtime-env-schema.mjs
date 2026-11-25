@@ -13,7 +13,7 @@ export const runtimeEnvironmentSchema = z.object({
   RER_OWNER_CLAIM_INSTALLATION_ID: z.string().min(1).optional(),
   RER_OWNER_CLAIM_APP_ORIGIN: z.string().url().optional(),
   RER_OWNER_CLAIM_PUBLIC_KEYS: z.string().min(1).optional(),
-  MAIL_PROVIDER: z.enum(["sendgrid", "resend", "rer", "development"]).optional(),
+  MAIL_PROVIDER: z.enum(["sendgrid", "resend", "rer", "development", "none"]).optional(),
   MAIL_API_KEY: z.string().min(1).optional(),
   MAIL_FROM: z.string().email().optional(),
   MAIL_RELAY_URL: z.string().refine(value => value === "" || z.string().url().safeParse(value).success, "Invalid mail relay URL").optional(),

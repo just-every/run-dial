@@ -21,7 +21,7 @@ export type AppBindings = {
   RER_OWNER_CLAIM_APP_ORIGIN?: string;
   RER_OWNER_CLAIM_PUBLIC_KEYS?: string;
   SETUP_TOKEN?: string;
-  MAIL_PROVIDER?: "sendgrid" | "resend" | "rer" | "development";
+  MAIL_PROVIDER?: "sendgrid" | "resend" | "rer" | "development" | "none";
   MAIL_API_KEY?: string;
   MAIL_FROM?: string;
   MAIL_RELAY_URL?: string;
