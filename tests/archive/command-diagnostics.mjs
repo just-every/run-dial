@@ -29,8 +29,8 @@ export function archiveDiagnostic(output, verb, state, phase = 'command') {
     if (event?.version !== 1 || event.event !== 'error' || event.verb !== verb || event.exitCode !== exitCode) continue;
     if (codes.has(event.code)) diagnostic.code = event.code;
     const reason = typeof event.message === 'string'
-      ? (/^The portability module refused or failed the archive operation \(([^()\r\n]+)\)\.$/.exec(event.message)
-        ?? /^Dial transfer failed \(([^()\r\n]+)\); preserve the archive and inspect the private log\.$/.exec(event.message))?.[1] : undefined;
+      ? (/^The portability module refused or failed the archive operation \(([^()\r\n]+)\)\.(?:\r?\nFull output: [^\r\n]*)?$/.exec(event.message)
+        ?? /^Dial transfer failed \(([^()\r\n]+)\); preserve the archive and inspect the private log\.(?:\r?\nFull output: [^\r\n]*)?$/.exec(event.message))?.[1] : undefined;
     diagnostic.reason = codes.has(event.code) && reasons.has(reason) ? reason : 'unclassified';
   }
   return diagnostic;

@@ -9083,7 +9083,7 @@
       "executable": false
     },
     "tests/archive/command-diagnostics.mjs": {
-      "sha256": "7ad02e993ede9c164e34a6fcd6b040de3dee85287fc1a58ad2516bb2107fa7aa",
+      "sha256": "f52a3a16d253f2981779a7e008bc30b09947e571729c75b838e22ef5dcd59eed",
       "executable": false
     },
     "tests/archive/deployed-fixture.mjs": {
