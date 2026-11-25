@@ -1699,7 +1699,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "bd7bf84ad31835bc94464f5e412d0a65feadd05a8c04bbeea81985a56ec61fdc",
+      "sha256": "5fbc6517e387cab91a34b04699d75a850dd2249e4dbf888e12581e29d10243a2",
       "executable": false
     },
     "migrations/core/0001_configuration_spine.sql": {
@@ -4371,7 +4371,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "4ce31331870dfae04c8d318d9706114bc2c238051adfab6efc3e276d57e7ef6d",
+      "sha256": "3bb24820aa08426aa11783a07242005e9dc8b521ee50b0eabd62553a79c18841",
       "executable": false
     },
     "RELEASE.md": {
@@ -4479,7 +4479,7 @@
       "executable": false
     },
     "scripts/archive/prior-schemas.mjs": {
-      "sha256": "de7288e72ce39aca1818f225a53cfdd3f11659910a3746994afdd5eed571d3d4",
+      "sha256": "ed0935435b9ad8ac12648ff74df35475846c7c23cdf5cc7b91e2e0bc207533b4",
       "executable": false
     },
     "scripts/archive/private-links.mjs": {
@@ -8199,7 +8199,7 @@
       "executable": false
     },
     "src/core/features/workflows/engine.ts": {
-      "sha256": "f2c8b4ea150118b169636623b28c58a4fabcdcea5d60fc93fb973245bd1ecd78",
+      "sha256": "c89b5cbf68e507a6a89609bf3f24b278f122bbe96bc5912a157cf10a36b5f8e7",
       "executable": false
     },
     "src/core/features/workflows/index.ts": {
@@ -8219,7 +8219,7 @@
       "executable": false
     },
     "src/core/features/workspace-notices/delivery.ts": {
-      "sha256": "7d50651d32f608322de52338c48d37fd1e78496f3112f1a2cb2f844ffa76cb89",
+      "sha256": "46af9ff9fd25fdbbbc32a6210d6e3d22d00c345deace947719d91ad701b78069",
       "executable": false
     },
     "src/core/features/workspace-notices/destinations.ts": {

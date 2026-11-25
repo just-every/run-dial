@@ -2,17 +2,22 @@ import { createId } from "../../shared/ids";
 import type { RuntimeEnvironment } from "../../shared/runtime-env";
 
 type Candidate={workflowId:string;version:number;operatorId:string;subject:string;text:string;bookingId:string;occurrenceId:string;inviteeEmail:string};
-/** Only explicit owner-enabled rules can queue mail, and only for bookings made after that enablement. */
+/** Only explicit owner-enabled rules can queue mail, and only for bookings made after that enablement.
+ * Candidates are taken oldest first and a booking is only ever created confirmed, so every booking made more than an hour
+ * before a rule's newest dispatched booking is already dispatched or can never qualify. The scan starts there, which keeps
+ * a run's reads independent of how many bookings the rule has already served. */
 export async function runWorkflows(db:D1Database,_runtime?:RuntimeEnvironment,now=new Date()) {
  const timestamp=now.toISOString();
- const candidates=(await db.prepare(`SELECT r.id AS workflowId,r.version,r.operator_id AS operatorId,r.subject,r.text,
+ const candidates=(await db.prepare(`WITH scan AS MATERIALIZED (SELECT r.id AS ruleId,
+   MAX(r.enabled_at,r.created_at,COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ',(SELECT served.created_at FROM workflow_dispatches d JOIN bookings served ON served.id=d.booking_id
+    WHERE d.workflow_id=r.id ORDER BY d.created_at DESC LIMIT 1),'-1 hour'),'')) AS since
+   FROM workflow_rules r WHERE r.enabled=1 AND r.removed_at IS NULL AND r.enabled_at IS NOT NULL)
+  SELECT r.id AS workflowId,r.version,r.operator_id AS operatorId,r.subject,r.text,
   b.id AS bookingId,b.current_occurrence_id AS occurrenceId,b.invitee_email AS inviteeEmail
-  FROM workflow_rules r JOIN oa_operators owner ON owner.id=r.operator_id
-  JOIN bookings b ON b.event_type_id=r.event_type_id
-  WHERE r.enabled=1 AND r.removed_at IS NULL AND r.enabled_at IS NOT NULL
-   AND owner.status='active' AND owner.role='owner'
-   AND b.created_at>=r.enabled_at AND b.created_at>=r.created_at AND b.created_at<=?
-   AND b.state IN ('confirmed','rescheduled')
+  FROM scan CROSS JOIN workflow_rules r ON r.id=scan.ruleId JOIN oa_operators owner ON owner.id=r.operator_id
+  CROSS JOIN bookings b ON b.event_type_id=r.event_type_id AND b.created_at>=scan.since
+  WHERE owner.status='active' AND owner.role='owner'
+   AND b.created_at<=? AND b.state IN ('confirmed','rescheduled')
    AND NOT EXISTS(SELECT 1 FROM workflow_dispatches d WHERE d.workflow_id=r.id AND d.booking_id=b.id)
   ORDER BY b.created_at,b.id,r.id LIMIT 100`).bind(timestamp).all<Candidate>()).results;
  let queued=0;

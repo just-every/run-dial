@@ -636,6 +636,12 @@
       "name": "0104_confirmation_language.sql",
       "sha256": "519d02ef06ca59680a388d21b0422d9b138e8b251dbe75b5965501a6cc1616e9",
       "sql": "-- Existing event types retain the English built-in confirmation until explicitly changed.\nALTER TABLE event_types ADD COLUMN confirmation_language TEXT NOT NULL DEFAULT 'en'\n CHECK(confirmation_language IN ('en', 'es'));\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0105_scheduled_work_indexes.sql",
+      "sha256": "593529c905896ca2a7a8d473198b8168aef8a4604cd9789d0e9fd51807078a29",
+      "sql": "-- Indexes that keep each minute's scheduled work independent of how much history a company has stored.\nCREATE INDEX bookings_event_created_idx ON bookings(event_type_id, created_at);\nCREATE INDEX workflow_dispatches_rule_time ON workflow_dispatches(workflow_id, created_at);\nCREATE INDEX payment_movements_void_pending_idx ON payment_movements(updated_at) WHERE status = 'failed' AND failure_code = 'void_pending';\nCREATE INDEX meeting_polls_open_closing_idx ON meeting_polls(closes_at) WHERE state = 'open';\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
