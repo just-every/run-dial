@@ -1,8 +1,9 @@
 {
   "version": "0.5.1",
   "previousVersion": "0.5.0",
+  "rer": "0.2.140",
   "date": "2026-11-25",
-  "publicReleaseNotes": "Dial 0.5.1 supports hosted setup with mail off and owner sign-in through rer. It pins rer 0.2.134.\n\nDeploy with `MAIL_PROVIDER=none` to set up hosted Dial without a mail sender or API key. The setup owner signs in with `rer signin`. Configure a mail provider before opening booking pages that send confirmations or management links.\n\nThis release also adds group seat capacity and English or Spanish booking confirmations. Archive preflight matches installed files against the rer migration ledger.\n\nBack up Dial 0.5.0 before updating in place. Adopt 0.5.1 with the pinned rer 0.2.134 and apply the 39 pending migrations through the normal upgrade runner. Preserve the existing migration ledger and already applied SQL. Confirm owner access and check existing records before resuming writes.",
+  "publicReleaseNotes": "Dial 0.5.1 supports hosted setup with mail off and owner sign-in through rer. It pins rer 0.2.140.\n\nDeploy with `MAIL_PROVIDER=none` to set up hosted Dial without a mail sender or API key. The setup owner signs in with `rer signin`. Configure a mail provider before opening booking pages that send confirmations or management links.\n\nThis release also adds group seat capacity and English or Spanish booking confirmations. Archive preflight matches installed files against the rer migration ledger.\n\nBack up Dial 0.5.0 before updating in place. Adopt 0.5.1 with the pinned rer 0.2.140 and apply the 39 pending migrations through the normal upgrade runner. Preserve the existing migration ledger and already applied SQL. Confirm owner access and check existing records before resuming writes.",
   "screenshots": [
     {
       "path": ".github/assets/screenshots/bookings-1600.webp",
@@ -176,5 +177,5 @@
     }
   ],
   "breaking": false,
-  "agentUpdateInstructions": "Back up Dial 0.5.0 before updating in place. Adopt 0.5.1 with the pinned rer 0.2.134 and apply the 39 pending migrations through the normal upgrade runner. Preserve the existing migration ledger and already applied SQL. Confirm owner access and check existing records before resuming writes. Deploy with `MAIL_PROVIDER=none` to set up hosted Dial without a mail sender or API key. The setup owner signs in with `rer signin`. Configure a mail provider before opening booking pages that send confirmations or management links. Keep existing provider configuration where the workspace needs mail."
+  "agentUpdateInstructions": "Back up Dial 0.5.0 before updating in place. Adopt 0.5.1 with the pinned rer 0.2.140 and apply the 39 pending migrations through the normal upgrade runner. Preserve the existing migration ledger and already applied SQL. Confirm owner access and check existing records before resuming writes. Deploy with `MAIL_PROVIDER=none` to set up hosted Dial without a mail sender or API key. The setup owner signs in with `rer signin`. Configure a mail provider before opening booking pages that send confirmations or management links. Keep existing provider configuration where the workspace needs mail."
 }
