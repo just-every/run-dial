@@ -854,6 +854,10 @@
       "sha256": "d0a0735c5b3b0bcdf75650eef6175ac1cf404de3838748365aa535ec802b3d6c",
       "executable": false
     },
+    ".github/assets/screenshots/bookings-1600.webp": {
+      "sha256": "099b5702de050e76825f05d0b8dcd1a6f63976cce0d734290958f8182d19b451",
+      "executable": false
+    },
     ".github/workflows/nightly-journeys.yml": {
       "sha256": "be27cdb6947b33f2e840b9846cf11635a45c2aaede0940fcaa023c4cc1b73fe4",
       "executable": false
@@ -4371,7 +4375,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "8d7d15aaa4941f6168c1ab6c23a96a86f3c2603d354094114841ca0b60bcd492",
+      "sha256": "4e62bff7e65460dc3337dbe17044023085aac40c78f09126f422d0c26039ba8b",
       "executable": false
     },
     "RELEASE.md": {
